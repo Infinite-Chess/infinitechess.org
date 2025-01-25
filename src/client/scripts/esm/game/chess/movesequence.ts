@@ -66,6 +66,9 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
+	// Whenever a move is made in the game, the color of the legal move highlights
+	// of the hovered arrows often changes.
+	// Erase the list so they can be regenerated next frame with the correct color.
 	arrows.clearListOfHoveredPieces();
 
 	return move;

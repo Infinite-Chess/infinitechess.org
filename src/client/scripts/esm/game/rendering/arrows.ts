@@ -9,13 +9,14 @@
 
 import type { BufferModel, BufferModelInstanced } from './buffermodel.js';
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
-// @ts-ignore
-import type { LegalMoves } from '../chess/selection.js';
+import type { Piece } from '../../chess/logic/boardchanges.js';
 import type { Color } from '../../chess/util/colorutil.js';
 import type { Corner, Vec2, Vec2Key } from '../../util/math.js';
 import type { LineKey, LinesByStep, PieceLinesByKey } from '../../chess/logic/organizedlines.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
+// @ts-ignore
+import type { LegalMoves } from '../chess/selection.js';
 
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
@@ -30,6 +31,7 @@ import organizedlines from '../../chess/logic/organizedlines.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import legalmovehighlights from './highlights/legalmovehighlights.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+import frametracker from './frametracker.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -54,8 +56,6 @@ import board from './board.js';
 import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import space from '../misc/space.js';
-import { Piece } from '../../chess/logic/boardchanges.js';
-import frametracker from './frametracker.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -64,7 +64,7 @@ import frametracker from './frametracker.js';
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
 interface ArrowLegalMoves {
 	/** The Piece this arrow is pointing to, including its coords & type. */
-	// piece: Piece,
+	piece: Piece,
 	/** The calculated legal moves of the piece. */
 	legalMoves: LegalMoves,
 	/** The buffer model for rendering the non-capturing legal moves of the piece. */
@@ -110,15 +110,11 @@ let modelArrows: BufferModel | undefined;
  */
 let mode: 0 | 1 | 2 | 3 = 1;
 
-/** Whether our mouse is currently hovering over one arrow indicator.
- * Could be used to cancel other mouse events. */
-let hovering: boolean = false;
-
 /**
  * An array storing the LegalMoves, model and other info, for rendering the legal move highlights
  * of piece arrow indicators currently being hovered over!
  */
-let hoveredArrows: Record<CoordsKey, ArrowLegalMoves> = {};
+const hoveredArrows: Array<ArrowLegalMoves> = [];
 
 
 // Functions ------------------------------------------------------------------------------
@@ -126,7 +122,6 @@ let hoveredArrows: Record<CoordsKey, ArrowLegalMoves> = {};
 
 /**
  * Returns the mode the arrow indicators on the edges of the screen is currently in.
- * @returns {number} The current mode
  */
 function getMode(): typeof mode {
 	return mode;
@@ -137,15 +132,15 @@ function getMode(): typeof mode {
  */
 function setMode(value: typeof mode) {
 	mode = value;
-	if (mode === 0) hoveredArrows = {}; // Erase, otherwise their legal move highlights continue to render
+	if (mode === 0) hoveredArrows.length = 0; // Erase, otherwise their legal move highlights continue to render
 }
 
+/** Rotates the current mode of the arrow indicators. */
 function toggleArrows() {
 	frametracker.onVisualChange();
 	mode++;
-	const gamefile = gameslot.getGamefile();
-	const hippogonalsPresent = gamefile !== undefined ? gamefile.startSnapshot.hippogonalsPresent : false;
-	const cap = hippogonalsPresent ? 3 : 2;
+	// Calculate the cap
+	const cap = gameslot.getGamefile()!.startSnapshot.hippogonalsPresent ? 3 : 2;
 	if (mode > cap) mode = 0; // Wrap back to zero
 }
 
@@ -153,7 +148,7 @@ function toggleArrows() {
  * Returns *true* if the mouse is hovering over any one arrow indicator.
  */
 function isMouseHovering(): boolean {
-	return hovering;
+	return hoveredArrows.length > 0;
 }
 
 
@@ -177,8 +172,6 @@ function update() {
 	modelArrows = undefined;
 	const data: number[] = [];
 	const dataArrows: number[] = [];
-
-	hovering = false;
 
 	// How do we find out what pieces are off-screen?
 
@@ -315,11 +308,10 @@ function update() {
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 
-	const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => coordutil.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
-	
-	for (const key of Object.keys(hoveredArrows)) {
-		if (piecesHoveringOverThisFrame_Keys.includes(key as Vec2Key)) continue; // Still being hovered over
-		delete hoveredArrows[key as Vec2Key]; // No longer being hovered over
+	for (let i = hoveredArrows.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
+		const thisHoveredArrow = hoveredArrows[i];
+		// Is this arrow still being hovered over?
+		if (!piecesHoveringOverThisFrame.some(piece => piece.coords === thisHoveredArrow.piece.coords)) hoveredArrows.splice(i, 1) // No longer being hovered over
 	}
 
 	if (data.length === 0) return; // No visible arrows, don't generate the model
@@ -511,8 +503,8 @@ function renderThem() {
  */
 function onPieceIndicatorHover(type: string, pieceCoords: Coords) {
 	// Check if their legal moves and mesh have already been stored
-	const key = coordutil.getKeyFromCoords(pieceCoords);
-	if (key in hoveredArrows) return; // Legal moves and mesh already calculated.
+	// TODO: Make sure this is still often called
+	if (hoveredArrows.some(hoveredArrow => hoveredArrow.piece.coords === pieceCoords)) return; // Legal moves and mesh already calculated.
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
@@ -530,7 +522,8 @@ function onPieceIndicatorHover(type: string, pieceCoords: Coords) {
 
 	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(pieceCoords, thisPieceLegalMoves, color);
 	// Store both these objects inside piecesHoveredOver
-	hoveredArrows[key] = { legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color };
+	const piece: Piece = { type, coords: pieceCoords } as Piece;
+	hoveredArrows.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
 }
 
 /**
@@ -574,16 +567,15 @@ function renderEachHoveredPieceLegalMoves() {
 	const boardScale = movement.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
-	for (const [key, value] of Object.entries(hoveredArrows)) { // 'x,y': { legalMoves, model, color }
-		// Skip it if the rider being hovered over IS the piece selected! (Its legal moves are already being rendered)
+	hoveredArrows.forEach(hoveredArrow => {
+		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)
 		if (selection.isAPieceSelected()) {
-			const coords = coordutil.getCoordsFromKey(key as CoordsKey);
 			const pieceSelectedCoords = selection.getPieceSelected()!.coords;
-			if (coordutil.areCoordsEqual(coords, pieceSelectedCoords)) continue; // Skip (already rendering its legal moves, because it's selected)
+			if (coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, pieceSelectedCoords)) return; // Skip (already rendering its legal moves, because it's selected)
 		}
-		value.model_NonCapture.render(position, scale);
-		value.model_Capture.render(position, scale);
-	}
+		hoveredArrow.model_NonCapture.render(position, scale);
+		hoveredArrow.model_Capture.render(position, scale);
+	});
 }
 
 /**
@@ -592,20 +584,17 @@ function renderEachHoveredPieceLegalMoves() {
  * over to account for the new offset.
  */
 function regenModelsOfHoveredPieces() {
-	if (!Object.keys(hoveredArrows).length) return; // No arrows being hovered over
+	if (hoveredArrows.length === 0) return; // No arrows being hovered over
 
 	console.log("Updating models of hovered piece's legal moves..");
 
-	for (const [coordsKey, hoveredArrow] of Object.entries(hoveredArrows)) { // { legalMoves, model, color }
-		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
-
+	hoveredArrows.forEach(hoveredArrow => {
 		// Calculate the mesh...
-		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(coords, hoveredArrow.legalMoves, hoveredArrow.color);
-		
+		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
 		hoveredArrow.model_Capture = CaptureModel;
-	}
+	})
 }
 
 /**
@@ -613,9 +602,7 @@ function regenModelsOfHoveredPieces() {
  * This is typically called when a move is made in-game, so that the arrows' legal moves don't leak from move to move.
  */
 function clearListOfHoveredPieces() {
-	for (const hoveredPieceKey in hoveredArrows) {
-		delete hoveredArrows[hoveredPieceKey as CoordsKey];
-	}
+	hoveredArrows.length = 0;
 }
 
 export default {
