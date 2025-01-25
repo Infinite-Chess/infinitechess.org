@@ -68,6 +68,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** Whether hippogonal lines, or greater, are present in the gamefile.
 		 * True if there are knightriders, or greater, riders. @type {boolean} */
 		hippogonalsPresent: undefined,
+		/** Whether any single piece has a custom blocking function for the game. */
+		atleastOneCustomBlocking: undefined
 	};
     
 	/** @type {GameRules} */

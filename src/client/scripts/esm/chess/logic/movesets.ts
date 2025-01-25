@@ -49,11 +49,15 @@ interface PieceMoveset {
 	/**
 	 * The initial function that determines how far a piece is legally able to slide
 	 * according to what pieces block it.
+	 * 
+	 * This should be provided if we're not using the default.
 	 */
 	blocking?: BlockingFunction,
 	/**
 	 * The secondary function that *actually* determines whether each individual
 	 * square in a slide is legal to move to.
+	 * 
+	 * This should be provided if we're not using the default.
 	 */
 	ignore?: IgnoreFunction
 }
@@ -287,12 +291,21 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	};
 }
 
+/** Whether the provided movesets contain atleast one custom blocking function. */
+function doMovesetsContainAtleastOneCustomBlocking(movesets: Movesets) {
+	for (const pieceMoveset of Object.values(movesets)) {
+		if ('blocking' in pieceMoveset) return true;
+	}
+	return false;
+}
+
 
 
 export default {
 	getPieceDefaultMovesets,
 	defaultBlockingFunction,
 	defaultIgnoreFunction,
+	doMovesetsContainAtleastOneCustomBlocking,
 };
 
 export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction };
