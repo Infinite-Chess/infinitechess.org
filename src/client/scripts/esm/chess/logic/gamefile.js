@@ -11,6 +11,7 @@ import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 // Type Definitions...
 
+/** @typedef {import('../../util/math.js').Vec2} Vec2 */
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
 /** @typedef {import('./movepiece.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
@@ -23,7 +24,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
 /** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
 
-'use strict';
+'use strict'; 
 
 /**
  * Constructs a gamefile from provided arguments. Use the *new* keyword.
@@ -63,7 +64,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		box: undefined,
 		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
 		existingTypes: undefined,
-		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Coords[]}*/
+		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Vec2[]}*/
 		slidingPossible: undefined,
 		/** Whether hippogonal lines, or greater, are present in the gamefile.
 		 * True if there are knightriders, or greater, riders. @type {boolean} */

@@ -11,7 +11,7 @@ import type { BufferModel, BufferModelInstanced } from './buffermodel.js';
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/logic/boardchanges.js';
 import type { Color } from '../../chess/util/colorutil.js';
-import type { Corner, Vec2, Vec2Key } from '../../util/math.js';
+import type { BoundingBox, Corner, Vec2, Vec2Key } from '../../util/math.js';
 import type { LineKey, LinesByStep, PieceLinesByKey } from '../../chess/logic/organizedlines.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
@@ -74,6 +74,29 @@ interface ArrowLegalMoves {
 	/** The [r,b,g,a] values these legal move highlights should be rendered.
 	 * Depends on whether the piece is ours, a premove, or an opponent's piece. */
 	color: Color
+}
+
+/**
+ * An object containing all existing arrows for a single frame.
+ */
+interface SlideArrows {
+	/** An object containing all existing arrows for a specific slide direction */
+	[vec2Key: Vec2Key]: {
+		/**
+		 * A single line containing what arrows should be visible on the
+		 * sides of the screen for offscreen pieces.
+		 */
+		[lineKey: string]: ArrowsLine
+	}
+}
+
+/**
+ * An object containing the arrows that should actually be present,
+ * for a single organized line intersecting through our screen.
+ */
+interface ArrowsLine {
+	left: Piece[],
+	right: Piece[]
 }
 
 
@@ -151,130 +174,53 @@ function isMouseHovering(): boolean {
 	return hoveredArrows.length > 0;
 }
 
-
 /**
  * Calculates what arrows should be visible this frame.
  * 
  * Needs to be done every frame, even if the mouse isn't moved,
  * since actions such as rewinding/forwarding may change them,
  * or board velocity.
+ * 
+ * DOES NOT GENERATE THE MODEL OF THE hovered arrow legal moves.
+ * This is so that other script have the opportunity to modify the list of
+ * visible arrows before rendering.
  */
 function update() {
-	if (mode === 0) return;
+	if (mode === 0) return; // Arrow indicators are off, nothing is visible.
+	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) return; // Too zoomed out, the arrows would be really tiny.
 
-	// generate model
-	modelPictures = undefined;
+	/**
+	 * To be able to test if a piece is offscreen or not,
+	 * we need to know the bounding box of the visible board.
+	 * 
+	 * Even if a tiny portion of the square the piece is on
+	 * is visible on screen, we will not create an arrow for it.
+	 */
+	const { boundingBoxInt, boundingBoxFloat } = getBoundingBoxesOfVisibleScreen();
 
-	// Are we zoomed in enough?
-	const scaleWhenAtLimit: number = ((camera.getScreenBoundingBox(false).right * 2) / camera.canvas.width) * window.devicePixelRatio * renderZoomLimitVirtualPixels;
-	if (movement.getBoardScale() < scaleWhenAtLimit) return;
+	/**
+	 * Next, we are going to iterate through each slide existing in the game,
+	 * and for each of them, iterate through all organized lines of that slope,
+	 * for each one of those lines, if they intersect our screen bounding box,
+	 * we will iterate through all its pieces, adding an arrow for them
+	 * ONLY if they are not visible on screen...
+	 */
 
-	modelArrows = undefined;
-	const data: number[] = [];
-	const dataArrows: number[] = [];
-
-	// How do we find out what pieces are off-screen?
-
-	// If any part of the square is on screen, this box rounds outward to contain it.
-	const boundingBoxInt = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
-	// Same as above, but doesn't round
-	const boundingBoxFloat = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
-
-	const slideArrows: { [vec2Key: Vec2Key]: { [lineKey: string]: { l?: Piece, r?: Piece } } } = {};
-
-	let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
-	let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
-	// Reverse header and footer pads if we're viewing blacks side
-	if (!perspective.getEnabled() && !gameslot.isLoadedGameViewingWhitePerspective()) {
-		const a = headerPad;
-		headerPad = footerPad;
-		footerPad = a;
-	}
-
-	// Apply the padding to the bounding box
-	if (!perspective.getEnabled()) {
-		boundingBoxFloat.top -= space.convertWorldSpaceToGrid(headerPad);
-		boundingBoxFloat.bottom += space.convertWorldSpaceToGrid(footerPad);
-	}
-
-	const gamefile = gameslot.getGamefile()!;
-	const slidesPossible = gamefile.startSnapshot.slidingPossible;
-
-	for (const slideDir of slidesPossible) {
-		const perpendicularSlideDir: Vec2 = [-slideDir[1], slideDir[0]]; // Rotates left 90deg
-        
-		const boardCornerLeft_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,true);
-		const boardCornerRight_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,false);
-
-		const boardCornerLeft: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerLeft_AB);
-		const boardCornerRight: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerRight_AB);
-
-		const boardSlidesRight: number = organizedlines.getCFromLine(slideDir, boardCornerLeft);
-		const boardSlidesLeft: number = organizedlines.getCFromLine(slideDir, boardCornerRight);
-
-		const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
-		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
-		// For all our lines in the game with this slope...
-		const slideDirKey = coordutil.getKeyFromCoords(slideDir);
-		for (const [lineKey,organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideDirKey])) {
-			const X = organizedlines.getCFromKey(lineKey as LineKey);
-			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen
-			const pieces = calcPiecesOffScreen(slideDir, organizedLine as Piece[]);
-
-			if (jsutil.isEmpty(pieces)) continue; // This line of pieces is empty
-
-			if (!slideArrows[slideDirKey]) slideArrows[slideDirKey] = {};
-            
-			slideArrows[slideDirKey][lineKey] = pieces;
-		}
-	}
-
-	function calcPiecesOffScreen(slideDir: Vec2, organizedline: Array<Piece>): { l?: Piece, r?: Piece } {
-
-		const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
-
-		let left: Piece | undefined;
-		let right: Piece | undefined;
-		for (const piece of organizedline) {
-			if (!piece.coords) continue; // Undefined placeholder
-            
-			// Is the piece off-screen?
-
-			if (math.boxContainsSquare(boundingBoxInt, piece.coords)) continue; // On-screen, no arrow needed
-            
-			const x = piece.coords[0];
-			const y = piece.coords[1];
-			const axis = slideDir[0] === 0 ? 1 : 0;
-
-			const rightSide = x > boundingBoxFloat.right || y > rightCorner[1] === (rightCorner[1] === boundingBoxFloat.top);
-			if (rightSide) {
-				if (right === undefined) right = piece;
-				else if (piece.coords[axis] < right.coords[axis]) right = piece;
-			} else {
-				if (left === undefined) left = piece;
-				else if (piece.coords[axis] > left.coords[axis]) left = piece;
-			}
-		}
-
-		return { l: left, r: right };
-	}
+	/** The object that stores all arrows that should be visible this frame. */
+	const slideArrows: SlideArrows = generateAllArrows(boundingBoxInt, boundingBoxFloat);
 
 	// If we are in only-show-attackers mode
 	removeUnnecessaryArrows(slideArrows);
 
+	// Calculate what arrows are being hovered over...
+
+	// First we need to add the additional padding to the bounding box,
+	// so that the arrows aren't touching the screen edge.
+	addArrowsPaddingToBoundingBox(boundingBoxFloat);
+
+
 	// Calc the model data...
 
-	// What will be the world-space width of our ghost images?
-	const boardScale = movement.getBoardScale();
-	const worldWidth = width * boardScale;
-	let padding = (worldWidth / 2) + sidePadding * boardScale;
-	const cpadding = padding / boardScale;
-	if (perspective.getEnabled()) padding = 0;
-
-	boundingBoxFloat.top -= cpadding;
-	boundingBoxFloat.right -= cpadding;
-	boundingBoxFloat.bottom += cpadding;
-	boundingBoxFloat.left += cpadding;
 
 	/** A running list of of piece arrows being hovered over this frame */
 	const piecesHoveringOverThisFrame: Array<Piece> = [];
@@ -325,13 +271,152 @@ function update() {
 }
 
 /**
+ * Calculates the visible bounding box of the screen for this frame,
+ * both the integer-rounded, and the exact floating point one.
+ * 
+ * These boxes are used to test whether a piece is visible on-screen or not.
+ * As if it's not, it should get an arrow.
+ */
+function getBoundingBoxesOfVisibleScreen(): { boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox } {
+	// If any part of the square is on screen, this box rounds outward to contain it.
+	const boundingBoxInt: BoundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
+	// Same as above, but doesn't round
+	const boundingBoxFloat: BoundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat();
+
+	// Apply the padding of the navigation and gameinfo bars to the screen bounding box.
+	if (!perspective.getEnabled()) {
+		let headerPad = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
+		let footerPad = space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
+		// Reverse header and footer pads if we're viewing black's side
+		if (!perspective.getEnabled() && !gameslot.isLoadedGameViewingWhitePerspective()) [headerPad, footerPad] = [footerPad, headerPad]; // Swap values
+		// TODO: Verify that the values are actually swapped in blacks perspective!!!!!!!!!!!!!!!!!!!!!!!!!!!=================================================
+		// Apply the paddings to the bounding box
+		boundingBoxFloat.top -= space.convertWorldSpaceToGrid(headerPad);
+		boundingBoxFloat.bottom += space.convertWorldSpaceToGrid(footerPad);
+		// EXPERIMENTAL: Does applying the padding the the integer bounding box make
+		// it so arrows will appear for pieces behind the nav bar?
+		boundingBoxInt.top -= space.convertWorldSpaceToGrid(headerPad);
+		boundingBoxInt.bottom += space.convertWorldSpaceToGrid(footerPad);
+	}
+
+	return { boundingBoxInt, boundingBoxFloat };
+}
+
+/**
+ * Adds a little bit of padding to the bounding box, so that the arrows of the
+ * arrows indicators aren't touching the edge of the screen.
+ * 
+ * DESTRUCTIVE, modifies the provided BoundingBox.
+ */
+function addArrowsPaddingToBoundingBox(boundingBoxFloat: BoundingBox) {
+	const boardScale = movement.getBoardScale();
+	const worldWidth = width * boardScale; // The world-space width of our images
+	let padding = (worldWidth / 2) + sidePadding;
+	boundingBoxFloat.top -= padding;
+	boundingBoxFloat.right -= padding;
+	boundingBoxFloat.bottom += padding;
+	boundingBoxFloat.left += padding;
+}
+
+/**
+ * Generates all the arrows for a game, as if All (plus hippogonals) mode was on.
+ */
+function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox): SlideArrows {
+	const slideArrows: SlideArrows = {};
+
+	/**
+	 * TODO:
+	 * 
+	 * Depending on what mode we're on, calculate what slides we should ignore, and ONLY
+	 * add arrows for the non-ignored slides!
+	 */
+
+
+	const orthogsAndDiags: Vec2[] = [[1,0],[0,1],[1,1],[1,-1]];
+
+	const gamefile = gameslot.getGamefile()!;
+	const slidesPossible = gamefile.startSnapshot.slidingPossible;
+	slidesPossible.forEach(slide => { // For each slide direction in the game...
+		// Are arrows visible for this slide direction (correct mode enabled)?
+		if ((mode === 1 || mode === 2) && !orthogsAndDiags.some(thisSlide => coordutil.areCoordsEqual_noValidate(slide, thisSlide))) {
+			console.log(`Skipping calculating arrows for slide ${JSON.stringify(slide)}, it is not visible in the current mode.`);
+			return;
+		}
+
+		const slideKey = math.getKeyFromVec2(slide);
+		const perpendicularSlideDir: Vec2 = [-slide[1], slide[0]]; // Rotates left 90deg
+		const boardCornerLeft_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,true);
+		const boardCornerRight_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,false);
+		const boardCornerLeft: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerLeft_AB);
+		const boardCornerRight: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerRight_AB);
+		const boardSlidesRight: number = organizedlines.getCFromLine(slide, boardCornerLeft);
+		const boardSlidesLeft: number = organizedlines.getCFromLine(slide, boardCornerRight);
+		// The X of the lineKey (`X|C`) with this slide at the very left & right sides of the screen.
+		// Any line of this slope that is not within these 2 are outside of our screen,
+		// so no arrows will be visible for the piece.
+		const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
+		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
+		// For all our lines in the game with this slope...
+		for (const [lineKey, organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideKey])) {
+			const X = organizedlines.getXFromKey(lineKey as LineKey);
+			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen, so no piece arrows are visible
+			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
+			const arrowsLine = calcArrowsLine(boundingBoxInt, boundingBoxFloat, slide, organizedLine as Piece[]);
+			if (!slideArrows[slideKey]) slideArrows[slideKey] = {}; // Make sure this exists first
+			slideArrows[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
+		}
+	});
+
+	return slideArrows;
+}
+
+
+/**
+ * Calculates what arrows should be visible for a single
+ * organized line of pieces intersecting our screen.
+ * 
+ * If the game contains ANY custom blocking functions, which would be true if we were
+ * using the Huygens, then there could be a single arrow pointing to multiple pieces,
+ * since the Huygens can phase through / skip over other pieces.
+ */
+function calcArrowsLine(boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, organizedline: Piece[]): ArrowsLine {
+
+	const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
+
+	let left: Piece[];
+	let right: Piece[];
+	for (const piece of organizedline) {
+		if (!piece.coords) continue; // Undefined placeholder
+		
+		// Is the piece off-screen?
+
+		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) continue; // On-screen, no arrow needed
+		
+		const x = piece.coords[0];
+		const y = piece.coords[1];
+		const axis = slideDir[0] === 0 ? 1 : 0;
+
+		const rightSide = x > boundingBoxFloat.right || y > rightCorner[1] === (rightCorner[1] === boundingBoxFloat.top);
+		if (rightSide) {
+			if (right === undefined) right = piece;
+			else if (piece.coords[axis] < right.coords[axis]) right = piece;
+		} else {
+			if (left === undefined) left = piece;
+			else if (piece.coords[axis] > left.coords[axis]) left = piece;
+		}
+	}
+
+	return { left, right };
+}
+
+/**
  * Removes asrrows based on the mode.
  * mode == 1 Removes arrows to pieces that cant slide in that direction
  * mode == 2 Like mode 1 but will keep any arrows in directions that a selected piece can move
  * Will not return anything as it alters the object it is given.
  * @param {Object} arrows 
  */
-function removeUnnecessaryArrows(arrows: { [vec2Key: Vec2Key]: { [lineKey: LineKey]: { l?: Piece, r?: Piece } } }) {
+function removeUnnecessaryArrows(arrows: SlideArrows) {
 	if (mode === 0) return;
 
 	const gamefile = gameslot.getGamefile()!;
@@ -350,7 +435,7 @@ function removeUnnecessaryArrows(arrows: { [vec2Key: Vec2Key]: { [lineKey: LineK
 		if (jsutil.isEmpty(arrows[direction as Vec2Key]!)) delete arrows[direction as Vec2Key];
 	}
 
-	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: { l?: Piece, r?: Piece } }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
+	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
 		for (const key in object) { // LineKey
 			for (const side in object[key as LineKey]) { // l: Piece | r: Piece
 				// @ts-ignore
@@ -486,6 +571,8 @@ function applyTransform(points: Coords[], rotation: number, translation: Coords)
 }
 
 function renderThem() {
+	regenerateModel();
+
 	// if (mode === 0) return;
 	if (modelPictures === undefined || modelArrows === undefined) return;
 
@@ -493,6 +580,15 @@ function renderThem() {
 	modelPictures.render();
 	// render.renderModel(modelArrows, undefined, undefined, "TRIANGLES")
 	modelArrows.render();
+}
+
+function regenerateModel() {
+	modelPictures = undefined;
+	modelArrows = undefined;
+
+	const data: number[] = [];
+	const dataArrows: number[] = [];
+
 }
 
 /**
