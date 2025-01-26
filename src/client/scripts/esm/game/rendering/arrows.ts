@@ -203,13 +203,6 @@ function toggleArrows() {
 }
 
 /**
- * Returns *true* if the mouse is hovering over any one arrow indicator.
- */
-function isMouseHovering(): boolean {
-	return hoveredArrowsLegalMoves.length > 0;
-}
-
-/**
  * Calculates what arrows should be visible this frame.
  * 
  * Needs to be done every frame, even if the mouse isn't moved,
@@ -540,7 +533,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 	console.log(arrowsData);
 }
 
-function renderThem() {
+function render() {
 	updateLegalMovesOfHoveredPieces();
 	regenerateModelAndRender();
 }
@@ -806,8 +799,7 @@ export default {
 	toggleArrows,
 	
 	update,
-	renderThem,
-	isMouseHovering,
+	render,
 	renderEachHoveredPieceLegalMoves,
 	regenModelsOfHoveredPieces,
 	clearListOfHoveredPieces
