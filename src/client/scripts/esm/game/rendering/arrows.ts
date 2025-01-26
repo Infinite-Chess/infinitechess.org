@@ -211,6 +211,8 @@ function update() {
 
 	// If we are in only-show-attackers mode
 	removeUnnecessaryArrows(slideArrows);
+	console.log("Arrows after removing unnecessary:")
+	console.log(slideArrows)
 
 	// Calculate what arrows are being hovered over...
 
@@ -345,6 +347,8 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen, so no piece arrows are visible
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, organizedLine as Piece[], lineKey as LineKey);
+			// If it is empty, don't add it.
+			if (arrowsLine.left.length === 0 && arrowsLine.right.length === 0) continue;
 			if (!slideArrows[slideKey]) slideArrows[slideKey] = {}; // Make sure this exists first
 			slideArrows[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
 		}
@@ -434,41 +438,38 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 
 /**
  * Removes arrows based on the mode.
- * mode == 1 Removes arrows to pieces that cant slide in that direction
- * mode == 2 Like mode 1 but will keep any arrows in directions that a selected piece can move
- * Will not return anything as it alters the object it is given.
- * @param {Object} arrows 
+ * mode == 1 Removes arrows to only include pieces that can slide in that direction (which may include hippogonals)
+ * mode == 2 Everything in mode 1, PLUS all orthogonals and diagonals, whether or not the piece can slide in that direction
+ * mode == 3 Everything in mode 1 & 2, PLUS all hippogonals, whether or not the piece can slide in that direction
  */
-function removeUnnecessaryArrows(arrows: SlideArrows) {
-	if (mode === 0) return;
-
+function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 	const gamefile = gameslot.getGamefile()!;
-	let attacklines: Array<Vec2Key> = [];
-	attack: {
-		if (mode !== 2) break attack;
-		const piece = selection.getPieceSelected();
-		if (!piece) break attack;
-		const slidingMoveset = legalmoves.getPieceMoveset(gamefile, piece.type).sliding;
-		if (!slidingMoveset) break attack;
-		attacklines = Object.keys(slidingMoveset) as Array<Vec2Key>;
+	if (mode === 3) return; // Don't remove anything
+
+	let slideExceptions: Vec2Key[] = [];
+	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
+	if (mode === 2) {
+		slideExceptions = gamefile.startSnapshot.slidingPossible.filter(slideDir => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) <= 1).map(math.getKeyFromVec2);
 	}
+
 	for (const direction in arrows) {
-		if (attacklines.includes(direction as Vec2Key)) continue;
+		if (slideExceptions.includes(direction as Vec2Key)) continue;
 		removeTypesWithIncorrectMoveset(arrows[direction as Vec2Key]!, direction as Vec2Key);
 		if (jsutil.isEmpty(arrows[direction as Vec2Key]!)) delete arrows[direction as Vec2Key];
 	}
 
 	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
 		for (const key in object) { // LineKey
-			for (const side in object[key as LineKey]) { // l: Piece | r: Piece
-				// @ts-ignore
-				const piece: Piece | undefined = object[key as LineKey][side];
-				if (piece === undefined) continue;
-				const type = piece.type;
-				// @ts-ignore
-				if (!doesTypeHaveMoveset(gamefile, type, direction)) delete object[key as LineKey][side];
+			const line: ArrowsLine = object[key as LineKey];
+			if (line.left.length > 0) {
+				const piece: Piece = line.left[line.left.length - 1]!;
+				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.left.pop();
 			}
-			if (jsutil.isEmpty(object[key as LineKey]!)) delete object[key as LineKey];
+			if (line.right.length > 0) {
+				const piece: Piece = line.right[0]!;
+				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.right.shift();
+			}
+			if (line.left.length === 0 && line.right.length === 0) delete object[key as LineKey];
 		}
 	}
 
