@@ -99,6 +99,22 @@ interface ArrowsLine {
 	right: Piece[]
 }
 
+interface HoveredArrow {
+	/**
+	 * The slide direction / slope / step for this arrow.
+	 * Is the same as the direction the arrow is pointing.
+	 * */
+	slideDir: Vec2,
+	/** The key of the organized line that it is on */
+	lineKey: LineKey,
+	/** A reference to the piece it is pointing to */
+	piece: Piece
+}
+
+
+
+
+
 
 // Variables ----------------------------------------------------------------------------
 
@@ -134,10 +150,35 @@ let modelArrows: BufferModel | undefined;
 let mode: 0 | 1 | 2 | 3 = 1;
 
 /**
+ * A list of all arrows being hovered over this frame.
+ * Other scripts may access this so they can add interaction with them.
+ */
+const hoveredArrows: HoveredArrow[] = [];
+
+/**
  * An array storing the LegalMoves, model and other info, for rendering the legal move highlights
  * of piece arrow indicators currently being hovered over!
+ * 
+ * THIS IS UPDATED AFTER OTHER SCRIPTS have a chance to add/delete pieces to show arrows for,
+ * as hovered arrows have a chance of being removed before rendering!
  */
-const hoveredArrows: Array<ArrowLegalMoves> = [];
+const hoveredArrowsLegalMoves: Array<ArrowLegalMoves> = [];
+
+
+
+/**
+ * A list of all arrows present for the current frame.
+ * 
+ * Other scripts need to be given an opportunity to add/remove
+ * arrows from this list.
+ */
+const arrowsData: Arrow[] = [];
+
+interface Arrow {
+	worldLocation: Coords,
+	slideDir: Vec2,
+	hovered: boolean
+}
 
 
 // Functions ------------------------------------------------------------------------------
@@ -155,7 +196,7 @@ function getMode(): typeof mode {
  */
 function setMode(value: typeof mode) {
 	mode = value;
-	if (mode === 0) hoveredArrows.length = 0; // Erase, otherwise their legal move highlights continue to render
+	if (mode === 0) hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
 }
 
 /** Rotates the current mode of the arrow indicators. */
@@ -171,7 +212,7 @@ function toggleArrows() {
  * Returns *true* if the mouse is hovering over any one arrow indicator.
  */
 function isMouseHovering(): boolean {
-	return hoveredArrows.length > 0;
+	return hoveredArrowsLegalMoves.length > 0;
 }
 
 /**
@@ -223,32 +264,13 @@ function update() {
 
 	// Calc the model data...
 
+	calculateInstanceData_AndArrowsHovered(slideArrows, boundingBoxFloat);
 
-	/** A running list of of piece arrows being hovered over this frame */
-	const piecesHoveringOverThisFrame: Array<Piece> = [];
 
-	for (const strline in slideArrows) {
-		const line = coordutil.getCoordsFromKey(strline as Vec2Key);
-		iterateThroughLines(slideArrows[strline as Vec2Key]!, line);
-	}
 
-	function iterateThroughLines(lines: { [lineKey: string]: { l?: Piece; r?: Piece } }, direction: Vec2) {
-		for (const lineKey in lines) {
-			for (const side in lines[lineKey]) { // 'r' | 'l'
-				// @ts-ignore
-				const piece: Piece | undefined = lines[lineKey][side]; //
-				if (piece === undefined) continue;
-				const intersect = Number(lineKey.split("|")[0]); // 'X|C' => X (the nearest X on or after y=0 that the line intersects)
-				if (piece.type === 'voidsN') continue;
-				const isLeft = side === "l";
-				const corner: Corner = math.getAABBCornerOfLine(direction, isLeft);
-				const renderCoords = math.getLineIntersectionEntryPoint(direction[0], direction[1], intersect, boundingBoxFloat, corner);
-				if (!renderCoords) continue;
-				const arrowDirection: Vec2 = isLeft ? [-direction[0],-direction[1]] : direction;
-				concatData(data, dataArrows, renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
-			}
-		}
-	}
+	// THE STUFF BELOW GOES IN RENDER METHOD
+
+
 
 	// Do not render line highlights upon arrow hover, when game is rewinded,
 	// since calculating their legal moves means overwriting game's move history.
@@ -256,10 +278,10 @@ function update() {
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 
-	for (let i = hoveredArrows.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
-		const thisHoveredArrow = hoveredArrows[i];
+	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
+		const thisHoveredArrow = hoveredArrowsLegalMoves[i];
 		// Is this arrow still being hovered over?
-		if (!piecesHoveringOverThisFrame.some(piece => piece.coords === thisHoveredArrow.piece.coords)) hoveredArrows.splice(i, 1) // No longer being hovered over
+		if (!piecesHoveringOverThisFrame.some(piece => piece.coords === thisHoveredArrow.piece.coords)) hoveredArrowsLegalMoves.splice(i, 1) // No longer being hovered over
 	}
 
 	if (data.length === 0) return; // No visible arrows, don't generate the model
@@ -356,7 +378,6 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 
 	return slideArrows;
 }
-
 
 /**
  * Calculates what arrows should be visible for a single
@@ -482,18 +503,65 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 }
 
 /**
- * 
- * @param data 
- * @param dataArrows 
- * @param renderCoords 
- * @param type 
- * @param paddingDir 
- * @param worldWidth - Of the piece image to render
- * @param padding 
- * @param pieceCoords 
- * @param direction 
- * @param piecesHoveringOverThisFrame 
+ * Calculates the world space coordinate of each arrow on screen,
+ * the piece type,
+ * the direction the arrow points,
+ * the piece the arrow points to,
+ * and constructs a list of all ARROWS (not pieces) being hovered over.
  */
+function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundingBoxFloat: BoundingBox) {
+
+	/**
+	 * A running list of of piece arrows being hovered over this frame
+	 * The ARROW, not the piece which the arrow is pointing to.
+	 */
+	hoveredArrows.length = 0;
+	arrowsData.length = 0;
+	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+	const worldHalfWidth = worldWidth / 2;
+
+	const mouseWorldLocation: Coords = input.getMouseWorldLocation() as Coords; // [x,y]
+	const mouseWorldX: number = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0];
+	const mouseWorldY: number = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1];
+
+	for (const vec2Key in slideArrows) {
+		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!
+		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
+		for (const lineKey in arrowLinesOfSlideDir) { // `X|C`
+			arrowLinesOfSlideDir[lineKey]!.left.forEach(piece => processPiece(lineKey as LineKey, piece, slideDir, true));
+			arrowLinesOfSlideDir[lineKey]!.right.forEach(piece => processPiece(lineKey as LineKey, piece, slideDir, false));
+		}
+	}
+
+	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
+	function processPiece(lineKey: LineKey, piece: Piece, slideDir: Vec2, isLeft: boolean) {
+		const lineKey_X = organizedlines.getXFromKey(lineKey); // 'X|C' => X (the nearest X on or after y=0 that the line intersects)
+		if (piece.type === 'voidsN') return;
+		const corner: Corner = math.getAABBCornerOfLine(slideDir, isLeft);
+		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_X, boundingBoxFloat, corner);
+		if (!renderCoords) return;
+		// const arrowDirection: Vec2 = isLeft ? math.negateVector(slideDir) : slideDir;
+		// concatData(data, dataArrows, renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
+
+		// Does the mouse hover over the piece?
+		const chebyshevDist = math.chebyshevDistance(renderCoords, mouseWorldLocation);
+		let hovered = false;
+		if (chebyshevDist < worldHalfWidth) {
+			hovered = true;
+			// ADD the piece to the list of arrows being hovered over!!!
+			hoveredArrows.push({ slideDir, lineKey, piece });
+		}
+
+		arrowsData.push({ worldLocation: renderCoords, slideDir, hovered });
+	}
+
+	console.log("Arrows hovered over this frame:");
+	console.log(hoveredArrows);
+
+	console.log("Arrows instance data calculated this frame:")
+	console.log(arrowsData);
+}
+
 function concatData(data: number[], dataArrows: number[], renderCoords: Coords, type: string, paddingDir: Corner, worldWidth: number, padding: number, pieceCoords: Coords, direction: Vec2, piecesHoveringOverThisFrame: Array<Piece>) {
 	const worldHalfWidth = worldWidth / 2;
 
@@ -624,7 +692,7 @@ function regenerateModel() {
 function onPieceIndicatorHover(type: string, pieceCoords: Coords) {
 	// Check if their legal moves and mesh have already been stored
 	// TODO: Make sure this is still often called
-	if (hoveredArrows.some(hoveredArrow => hoveredArrow.piece.coords === pieceCoords)) return; // Legal moves and mesh already calculated.
+	if (hoveredArrowsLegalMoves.some(hoveredArrow => hoveredArrow.piece.coords === pieceCoords)) return; // Legal moves and mesh already calculated.
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
@@ -643,7 +711,7 @@ function onPieceIndicatorHover(type: string, pieceCoords: Coords) {
 	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(pieceCoords, thisPieceLegalMoves, color);
 	// Store both these objects inside piecesHoveredOver
 	const piece: Piece = { type, coords: pieceCoords } as Piece;
-	hoveredArrows.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
+	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
 }
 
 /**
@@ -687,7 +755,7 @@ function renderEachHoveredPieceLegalMoves() {
 	const boardScale = movement.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
-	hoveredArrows.forEach(hoveredArrow => {
+	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)
 		if (selection.isAPieceSelected()) {
 			const pieceSelectedCoords = selection.getPieceSelected()!.coords;
@@ -704,11 +772,11 @@ function renderEachHoveredPieceLegalMoves() {
  * over to account for the new offset.
  */
 function regenModelsOfHoveredPieces() {
-	if (hoveredArrows.length === 0) return; // No arrows being hovered over
+	if (hoveredArrowsLegalMoves.length === 0) return; // No arrows being hovered over
 
 	console.log("Updating models of hovered piece's legal moves..");
 
-	hoveredArrows.forEach(hoveredArrow => {
+	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Calculate the mesh...
 		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
@@ -722,7 +790,7 @@ function regenModelsOfHoveredPieces() {
  * This is typically called when a move is made in-game, so that the arrows' legal moves don't leak from move to move.
  */
 function clearListOfHoveredPieces() {
-	hoveredArrows.length = 0;
+	hoveredArrowsLegalMoves.length = 0;
 }
 
 export default {
