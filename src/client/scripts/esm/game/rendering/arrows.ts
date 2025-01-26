@@ -132,13 +132,6 @@ const renderZoomLimitVirtualPixels: number = 10; // virtual pixels. Default: 14
  * We need this because there is no normal edge of the screen like in 2D mode. */
 const perspectiveDist = 17;
 
-/** The buffer model of the piece mini images on
- * the edge of the screen. **Doesn't include** the little arrows. */
-let modelPictures: BufferModel | undefined;
-
-/** The buffer model of the little arrows on
- * the edge of the screen next to the mini piece images. */
-let modelArrows: BufferModel | undefined;
 
 /**
  * The mode the arrow indicators on the edges of the screen is currently in.
@@ -162,7 +155,7 @@ const hoveredArrows: HoveredArrow[] = [];
  * THIS IS UPDATED AFTER OTHER SCRIPTS have a chance to add/delete pieces to show arrows for,
  * as hovered arrows have a chance of being removed before rendering!
  */
-const hoveredArrowsLegalMoves: Array<ArrowLegalMoves> = [];
+const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
 
 
 
@@ -176,6 +169,7 @@ const arrowsData: Arrow[] = [];
 
 interface Arrow {
 	worldLocation: Coords,
+	type: string,
 	slideDir: Vec2,
 	hovered: boolean
 }
@@ -265,33 +259,6 @@ function update() {
 	// Calc the model data...
 
 	calculateInstanceData_AndArrowsHovered(slideArrows, boundingBoxFloat);
-
-
-
-	// THE STUFF BELOW GOES IN RENDER METHOD
-
-
-
-	// Do not render line highlights upon arrow hover, when game is rewinded,
-	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile)) piecesHoveringOverThisFrame.length = 0;
-
-	// Iterate through all pieces in piecesHoveredOver, if they aren't being
-	// hovered over anymore, delete them. Stop rendering their legal moves. 
-	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
-		const thisHoveredArrow = hoveredArrowsLegalMoves[i];
-		// Is this arrow still being hovered over?
-		if (!piecesHoveringOverThisFrame.some(piece => piece.coords === thisHoveredArrow.piece.coords)) hoveredArrowsLegalMoves.splice(i, 1) // No longer being hovered over
-	}
-
-	if (data.length === 0) return; // No visible arrows, don't generate the model
-
-	for (const pieceHovered of piecesHoveringOverThisFrame) {
-		onPieceIndicatorHover(pieceHovered.type, pieceHovered.coords); // Generate their legal moves and highlight model
-	}
-    
-	modelPictures = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
-	modelArrows = createModel(dataArrows, 2, "TRIANGLES", true);
 }
 
 /**
@@ -473,10 +440,10 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 		slideExceptions = gamefile.startSnapshot.slidingPossible.filter(slideDir => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) <= 1).map(math.getKeyFromVec2);
 	}
 
-	for (const direction in arrows) {
+	for (const direction in slideArrows) {
 		if (slideExceptions.includes(direction as Vec2Key)) continue;
-		removeTypesWithIncorrectMoveset(arrows[direction as Vec2Key]!, direction as Vec2Key);
-		if (jsutil.isEmpty(arrows[direction as Vec2Key]!)) delete arrows[direction as Vec2Key];
+		removeTypesWithIncorrectMoveset(slideArrows[direction as Vec2Key]!, direction as Vec2Key);
+		if (jsutil.isEmpty(slideArrows[direction as Vec2Key]!)) delete slideArrows[direction as Vec2Key];
 	}
 
 	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
@@ -546,13 +513,24 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		// Does the mouse hover over the piece?
 		const chebyshevDist = math.chebyshevDistance(renderCoords, mouseWorldLocation);
 		let hovered = false;
-		if (chebyshevDist < worldHalfWidth) {
+		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
 			hovered = true;
 			// ADD the piece to the list of arrows being hovered over!!!
 			hoveredArrows.push({ slideDir, lineKey, piece });
+			
+			// If we also clicked, then teleport!
+			if (input.isMouseDown_Left() || input.getTouchClicked()) {
+				const startCoords = movement.getBoardPos();
+				let telCoords: Coords;
+				if      (corner === 'right' || corner === 'left') telCoords = [piece.coords[0], startCoords[1]];
+				else if (corner === 'top' || corner === 'bottom') telCoords = [startCoords[0], piece.coords[1]];
+				else                                                      telCoords = [piece.coords[0], piece.coords[1]];
+				transition.panTel(startCoords, telCoords);
+				if (input.isMouseDown_Left()) input.removeMouseDown_Left();
+			}
 		}
 
-		arrowsData.push({ worldLocation: renderCoords, slideDir, hovered });
+		arrowsData.push({ worldLocation: renderCoords, type: piece.type, slideDir, hovered });
 	}
 
 	console.log("Arrows hovered over this frame:");
@@ -562,80 +540,155 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 	console.log(arrowsData);
 }
 
-function concatData(data: number[], dataArrows: number[], renderCoords: Coords, type: string, paddingDir: Corner, worldWidth: number, padding: number, pieceCoords: Coords, direction: Vec2, piecesHoveringOverThisFrame: Array<Piece>) {
-	const worldHalfWidth = worldWidth / 2;
+function renderThem() {
+	updateLegalMovesOfHoveredPieces();
+	regenerateModelAndRender();
+}
 
-	// Convert to world-space
-	const worldCoords: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
+function regenerateModelAndRender() {
+	if (arrowsData.length === 0) return; // No visible arrows, don't generate the model
+
+	const data: number[] = [];
+	const dataArrows: number[] = [];
+
+	// ADD THE DATA
+	// ...
+
+	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+	const halfWorldWidh = worldWidth / 2;
+
+	arrowsData.forEach(arrow => concatData(data, dataArrows, arrow, worldWidth, halfWorldWidh));
+
+	/** The buffer model of the piece mini images on
+	 * the edge of the screen. **Doesn't include** the little arrows. */
+	const modelPictures = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+	/** The buffer model of the little arrows on
+	 * the edge of the screen next to the mini piece images. */
+	const modelArrows = createModel(dataArrows, 2, "TRIANGLES", true);
+
+	modelPictures.render();
+	modelArrows.render();
+}
+
+/**
+ * This makes sure that the legal moves of all of the hovered arrows this
+ * frame are already calculated.
+ * 
+ * Pieces that are consecutively hovered over each frame have their
+ * legal moves cached.
+ */
+function updateLegalMovesOfHoveredPieces() {
+	const gamefile = gameslot.getGamefile()!;
+
+	// Do not render line highlights upon arrow hover, when game is rewinded,
+	// since calculating their legal moves means overwriting game's move history.
+	if (!moveutil.areWeViewingLatestMove(gamefile)) {
+		hoveredArrowsLegalMoves.length = 0;
+		return;
+	}
+
+
+	// Iterate through all pieces in piecesHoveredOver, if they aren't being
+	// hovered over anymore, delete them. Stop rendering their legal moves. 
+	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
+		const thisHoveredArrow = hoveredArrowsLegalMoves[i];
+		// Is this arrow still being hovered over?
+		if (!hoveredArrows.some(arrow => arrow.piece.coords === thisHoveredArrow.piece.coords)) hoveredArrowsLegalMoves.splice(i, 1) // No longer being hovered over
+	}
+
+
+	for (const pieceHovered of hoveredArrowsLegalMoves) {
+		onPieceIndicatorHover(pieceHovered.piece); // Generate their legal moves and highlight model
+	}
+}
+
+/**
+ * Call when a piece's arrow is hovered over.
+ * Calculates their legal moves and model for rendering them.
+ * @param piece - The piece this arrow is pointing to
+ */
+function onPieceIndicatorHover(piece: Piece) {
+
+	// Check if their legal moves and mesh have already been stored
+	// TODO: Make sure this is still often called
+	if (hoveredArrowsLegalMoves.some(hoveredArrow => hoveredArrow.piece.coords === piece.coords)) return; // Legal moves and mesh already calculated.
+
+	// Calculate their legal moves and mesh!
+	const gamefile = gameslot.getGamefile()!;
+	const thisRider = gamefileutility.getPieceAtCoords(gamefile, piece.coords)!;
+	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
+
+	// Calculate the mesh...
+
+	// Determine what color the legal move highlights should be...
+	const pieceColor = colorutil.getPieceColorFromType(piece.type);
+	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
+	const isOpponentPiece = pieceColor === opponentColor;
+	const isOurTurn = gamefile.whosTurn === pieceColor;
+	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
+
+	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, color);
+	// Store both these objects inside piecesHoveredOver
+	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
+}
+
+/**
+ * Takes an arrow, generates the vertex data of both the PICTURE and ARROW,
+ * and appends them to their respective vertex data arrays.
+ * */
+function concatData(data: number[], dataArrows: number[], arrow: Arrow, worldWidth: number, halfWorldWidth: number) {
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(arrow.type, rotation);
 
-	const xPad = paddingDir.includes('right') ? -padding
-                : paddingDir.includes('left')  ?  padding
-                : 0;
+	// I DONT THINK this padding needs to be added here because it should be
+	// added into the instance data inside update()
+	// const xPad = paddingDir.includes('right') ? -padding
+    //             : paddingDir.includes('left')  ?  padding
+    //             : 0;
 
-	const yPad = paddingDir.includes('top')          ? -padding
-                : paddingDir.includes('bottom')       ?  padding
-                : 0;
+	// const yPad = paddingDir.includes('top')          ? -padding
+    //             : paddingDir.includes('bottom')       ?  padding
+    //             : 0;
 
-	worldCoords[0] += xPad;
-	worldCoords[1] += yPad;
+	// worldLocation[0] += xPad;
+	// worldLocation[1] += yPad;
 
-	const startX = worldCoords[0] - worldHalfWidth;   
-	const startY = worldCoords[1] - worldHalfWidth;
+	const startX = arrow.worldLocation[0] - halfWorldWidth;   
+	const startY = arrow.worldLocation[1] - halfWorldWidth;
 	const endX = startX + worldWidth;
 	const endY = startY + worldWidth;
 
 	// Color
-	const { r, g, b } = options.getColorOfType(type);
-	let thisOpacity = opacity;
+	const { r, g, b } = options.getColorOfType(arrow.type);
+	// Are we hovering over? If so, opacity needs to be 100%
+	const a = arrow.hovered ? 1 : opacity;
 
 	// Opacity changing with distance
 	// let maxAxisDist = math.chebyshevDistance(movement.getBoardPos(), pieceCoords) - 8;
 	// opacity = Math.sin(maxAxisDist / 40) * 0.5
 
-	// Are we hovering over? If so, opacity needs to be 100%
-	const mouseWorldLocation = input.getMouseWorldLocation(); // [x,y]
-	const mouseWorldX = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0];
-	const mouseWorldY = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1];
-	if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) { // Mouse is hovering over
-		piecesHoveringOverThisFrame.push({ type, coords: pieceCoords } as Piece);
-		thisOpacity = 1;
-		hovering = true;
-		// If we also clicked, then teleport!
-		if (input.isMouseDown_Left() || input.getTouchClicked()) {
-			const startCoords = movement.getBoardPos();
-			let telCoords: Coords;
-			if      (paddingDir === 'right' || paddingDir === 'left') telCoords = [pieceCoords[0], startCoords[1]];
-			else if (paddingDir === 'top' || paddingDir === 'bottom') telCoords = [startCoords[0], pieceCoords[1]];
-			else                                                      telCoords = [pieceCoords[0], pieceCoords[1]];
-			transition.panTel(startCoords, telCoords);
-			if (input.isMouseDown_Left()) input.removeMouseDown_Left();
-		}
-	}
-
-	const thisData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity);
+	const thisData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, a);
 
 	data.push(...thisData);
 
 	// Next append the data of the little arrow!
 
-	const dist = worldHalfWidth * 1;
-	const size = 0.3 * worldHalfWidth;
+	const dist = halfWorldWidth * 1;
+	const size = 0.3 * halfWorldWidth;
 	const points: Coords[] = [
         [dist, -size],
         [dist, +size],
         [dist + size, 0]
     ];
 
-	const angle = Math.atan2(direction[1], direction[0]);
-	const ad = applyTransform(points, angle, worldCoords);
+	const angle = Math.atan2(arrow.slideDir[1], arrow.slideDir[0]);
+	const ad = applyTransform(points, angle, arrow.worldLocation);
 
 	for (let i = 0; i < ad.length; i++) {
 		const thisPoint = ad[i]!;
-		//                   x             y             color
-		dataArrows.push(thisPoint[0], thisPoint[1], 0,0,0, thisOpacity );
+		//                   x             y          color
+		dataArrows.push(thisPoint[0], thisPoint[1], 0,0,0,a );
 	}
 }
 
@@ -662,57 +715,9 @@ function applyTransform(points: Coords[], rotation: number, translation: Coords)
 	return transformedPoints;
 }
 
-function renderThem() {
-	regenerateModel();
 
-	// if (mode === 0) return;
-	if (modelPictures === undefined || modelArrows === undefined) return;
 
-	// render.renderModel(model, undefined, undefined, "TRIANGLES", spritesheet.getSpritesheet())
-	modelPictures.render();
-	// render.renderModel(modelArrows, undefined, undefined, "TRIANGLES")
-	modelArrows.render();
-}
 
-function regenerateModel() {
-	modelPictures = undefined;
-	modelArrows = undefined;
-
-	const data: number[] = [];
-	const dataArrows: number[] = [];
-
-}
-
-/**
- * Call when a piece's arrow is hovered over.
- * Calculates their legal moves and model for rendering them.
- * @param type - The type of piece of this arrow indicator
- * @param pieceCoords - The coordinates of the piece the arrow is pointing to
- */
-function onPieceIndicatorHover(type: string, pieceCoords: Coords) {
-	// Check if their legal moves and mesh have already been stored
-	// TODO: Make sure this is still often called
-	if (hoveredArrowsLegalMoves.some(hoveredArrow => hoveredArrow.piece.coords === pieceCoords)) return; // Legal moves and mesh already calculated.
-
-	// Calculate their legal moves and mesh!
-	const gamefile = gameslot.getGamefile()!;
-	const thisRider = gamefileutility.getPieceAtCoords(gamefile, pieceCoords)!;
-	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
-
-	// Calculate the mesh...
-
-	// Determine what color the legal move highlights should be...
-	const pieceColor = colorutil.getPieceColorFromType(type);
-	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
-	const isOpponentPiece = pieceColor === opponentColor;
-	const isOurTurn = gamefile.whosTurn === pieceColor;
-	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
-
-	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(pieceCoords, thisPieceLegalMoves, color);
-	// Store both these objects inside piecesHoveredOver
-	const piece: Piece = { type, coords: pieceCoords } as Piece;
-	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
-}
 
 /**
  * Tests if the piece type can move in the specified direction in the game.
@@ -743,6 +748,8 @@ function absoluteValueOfDirection(direction: Vec2): Vec2 {
 	}
 	return [dx,dy];
 }
+
+
 
 function renderEachHoveredPieceLegalMoves() {
 	const boardPos = movement.getBoardPos();
