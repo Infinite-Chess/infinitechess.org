@@ -239,8 +239,8 @@ function update() {
 
 	// If we are in only-show-attackers mode
 	removeUnnecessaryArrows(slideArrows);
-	console.log("Arrows after removing unnecessary:")
-	console.log(slideArrows)
+	console.log("Arrows after removing unnecessary:");
+	console.log(slideArrows);
 
 	// Calculate what arrows are being hovered over...
 
@@ -295,7 +295,7 @@ function getBoundingBoxesOfVisibleScreen(): { boundingBoxInt: BoundingBox, bound
 function addArrowsPaddingToBoundingBox(boundingBoxFloat: BoundingBox) {
 	const boardScale = movement.getBoardScale();
 	const worldWidth = width * boardScale; // The world-space width of our images
-	let padding = (worldWidth / 2) + sidePadding;
+	const padding = (worldWidth / 2) + sidePadding;
 	boundingBoxFloat.top -= padding;
 	boundingBoxFloat.right -= padding;
 	boundingBoxFloat.bottom += padding;
@@ -309,7 +309,7 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 	/** The running list of arrows that should be visible */
 	const slideArrows: SlideArrows = {};
 	const gamefile = gameslot.getGamefile()!;
-	gamefile.startSnapshot.slidingPossible.forEach(slide => { // For each slide direction in the game...
+	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
 		const perpendicularSlideDir: Vec2 = [-slide[1], slide[0]]; // Rotates left 90deg
 		const boardCornerLeft_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,true);
@@ -351,8 +351,8 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 
 	const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
 
-	let left: Piece[] = [];
-	let right: Piece[] = [];
+	const left: Piece[] = [];
+	const right: Piece[] = [];
 
 	let closestLeft: Piece | undefined;
 	let closestRight: Piece | undefined;
@@ -410,9 +410,9 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 	// Now sort them.
 	left.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
 	right.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
-	console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`)
-	console.log(left)
-	console.log(right)
+	console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`);
+	console.log(left);
+	console.log(right);
 
 	return { left, right };
 }
@@ -430,7 +430,7 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
 	if (mode === 2) {
-		slideExceptions = gamefile.startSnapshot.slidingPossible.filter(slideDir => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) <= 1).map(math.getKeyFromVec2);
+		slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) <= 1).map(math.getKeyFromVec2);
 	}
 
 	for (const direction in slideArrows) {
@@ -441,7 +441,7 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 
 	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
 		for (const key in object) { // LineKey
-			const line: ArrowsLine = object[key as LineKey];
+			const line: ArrowsLine = object[key as LineKey]!;
 			if (line.left.length > 0) {
 				const piece: Piece = line.left[line.left.length - 1]!;
 				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.left.pop();
@@ -485,7 +485,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 	const mouseWorldY: number = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1];
 
 	for (const vec2Key in slideArrows) {
-		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!
+		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!;
 		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
 		for (const lineKey in arrowLinesOfSlideDir) { // `X|C`
 			arrowLinesOfSlideDir[lineKey]!.left.forEach(piece => processPiece(lineKey as LineKey, piece, slideDir, true));
@@ -529,7 +529,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 	console.log("Arrows hovered over this frame:");
 	console.log(hoveredArrows);
 
-	console.log("Arrows instance data calculated this frame:")
+	console.log("Arrows instance data calculated this frame:");
 	console.log(arrowsData);
 }
 
@@ -584,9 +584,9 @@ function updateLegalMovesOfHoveredPieces() {
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 
 	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
-		const thisHoveredArrow = hoveredArrowsLegalMoves[i];
+		const thisHoveredArrow = hoveredArrowsLegalMoves[i]!;
 		// Is this arrow still being hovered over?
-		if (!hoveredArrows.some(arrow => arrow.piece.coords === thisHoveredArrow.piece.coords)) hoveredArrowsLegalMoves.splice(i, 1) // No longer being hovered over
+		if (!hoveredArrows.some(arrow => arrow.piece.coords === thisHoveredArrow.piece.coords)) hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over
 	}
 
 
@@ -637,12 +637,12 @@ function concatData(data: number[], dataArrows: number[], arrow: Arrow, worldWid
 	// I DONT THINK this padding needs to be added here because it should be
 	// added into the instance data inside update()
 	// const xPad = paddingDir.includes('right') ? -padding
-    //             : paddingDir.includes('left')  ?  padding
-    //             : 0;
+	//             : paddingDir.includes('left')  ?  padding
+	//             : 0;
 
 	// const yPad = paddingDir.includes('top')          ? -padding
-    //             : paddingDir.includes('bottom')       ?  padding
-    //             : 0;
+	//             : paddingDir.includes('bottom')       ?  padding
+	//             : 0;
 
 	// worldLocation[0] += xPad;
 	// worldLocation[1] += yPad;
@@ -782,7 +782,7 @@ function regenModelsOfHoveredPieces() {
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
 		hoveredArrow.model_Capture = CaptureModel;
-	})
+	});
 }
 
 /**
