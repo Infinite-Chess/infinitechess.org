@@ -74,7 +74,7 @@ interface PieceLinesByKey {
 	[line: LineKey]: Array<Piece>
 }
 
-/** A unique identifier for a single line of pieces. */
+/** A unique identifier for a single line of pieces. `X|C` */
 type LineKey = `${number}|${number}`
 
 // (Deleted "use strict" as I don't think it has an effect if we're using typescript)

@@ -188,7 +188,7 @@ function render() {
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		dragAnimation.renderPiece();
-		arrows.renderThem();
+		arrows.render();
 		perspective.renderCrosshair();
 	});
 }

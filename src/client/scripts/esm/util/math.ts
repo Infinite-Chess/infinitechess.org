@@ -297,6 +297,22 @@ function getKeyFromVec2(coords: Vec2): Vec2Key {
 	return `${coords[0]},${coords[1]}`;
 }
 
+/**
+ * Returns the key string of the coordinates: [dx,dy] => 'dx,dy'
+ */
+function getVec2FromKey(vec2Key: Vec2Key): Vec2 {
+	return vec2Key.split(',').map(Number) as Vec2;
+}
+
+/**
+ * Negates the provided length-2 vector so it points in the opposite direction
+ * 
+ * Non-destructive. Returns a new vector.
+ */
+function negateVector(vec2: Vec2): Vec2 {
+	return [-vec2[0],-vec2[1]];
+}
+
 
 // Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
 
@@ -511,6 +527,8 @@ export default {
 	getLineIntersectionEntryPoint,
 	areLinesCollinear,
 	getKeyFromVec2,
+	getVec2FromKey,
+	negateVector,
 	GCD,
 	LCM,
 	euclideanDistance,
