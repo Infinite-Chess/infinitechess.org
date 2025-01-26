@@ -324,16 +324,8 @@ function addArrowsPaddingToBoundingBox(boundingBoxFloat: BoundingBox) {
 function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox): SlideArrows {
 	/** The running list of arrows that should be visible */
 	const slideArrows: SlideArrows = {};
-	/** All lines excluding hippogonals (or ones included in mode 3) */
-	const orthogsAndDiags: Vec2[] = [[1,0],[0,1],[1,1],[1,-1]];
 	const gamefile = gameslot.getGamefile()!;
 	gamefile.startSnapshot.slidingPossible.forEach(slide => { // For each slide direction in the game...
-		// Are arrows visible for this slide direction (correct mode enabled)?
-		if ((mode === 1 || mode === 2) && !orthogsAndDiags.some(thisSlide => coordutil.areCoordsEqual_noValidate(thisSlide, slide))) {
-			console.log(`Skipping calculating arrows for slide ${JSON.stringify(slide)}, it is not visible in the current mode.`);
-			return;
-		}
-
 		const slideKey = math.getKeyFromVec2(slide);
 		const perpendicularSlideDir: Vec2 = [-slide[1], slide[0]]; // Rotates left 90deg
 		const boardCornerLeft_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,true);
@@ -342,17 +334,17 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 		const boardCornerRight: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerRight_AB);
 		const boardSlidesRight: number = organizedlines.getCFromLine(slide, boardCornerLeft);
 		const boardSlidesLeft: number = organizedlines.getCFromLine(slide, boardCornerRight);
-		// The X of the lineKey (`X|C`) with this slide at the very left & right sides of the screen.
 		// Any line of this slope that is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
 		const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
 		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
 		// For all our lines in the game with this slope...
 		for (const [lineKey, organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideKey])) {
+			// The X of the lineKey (`X|C`) with this slide at the very left & right sides of the screen.
 			const X = organizedlines.getXFromKey(lineKey as LineKey);
 			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen, so no piece arrows are visible
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
-			const arrowsLine = calcArrowsLine(boundingBoxInt, boundingBoxFloat, slide, organizedLine as Piece[]);
+			const arrowsLine = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, organizedLine as Piece[], lineKey as LineKey);
 			if (!slideArrows[slideKey]) slideArrows[slideKey] = {}; // Make sure this exists first
 			slideArrows[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
 		}
@@ -370,38 +362,78 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
  * using the Huygens, then there could be a single arrow pointing to multiple pieces,
  * since the Huygens can phase through / skip over other pieces.
  */
-function calcArrowsLine(boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, organizedline: Piece[]): ArrowsLine {
+function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, organizedline: Piece[], lineKey: LineKey): ArrowsLine {
 
 	const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
 
-	let left: Piece[];
-	let right: Piece[];
-	for (const piece of organizedline) {
-		if (!piece.coords) continue; // Undefined placeholder
-		
-		// Is the piece off-screen?
+	let left: Piece[] = [];
+	let right: Piece[] = [];
 
-		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) continue; // On-screen, no arrow needed
+	let closestLeft: Piece | undefined;
+	let closestRight: Piece | undefined;
+
+	const axis = slideDir[0] === 0 ? 1 : 0;
+	organizedline.forEach(piece => {
+		// Is the piece off-screen?
+		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
 		
 		const x = piece.coords[0];
 		const y = piece.coords[1];
-		const axis = slideDir[0] === 0 ? 1 : 0;
 
-		const rightSide = x > boundingBoxFloat.right || y > rightCorner[1] === (rightCorner[1] === boundingBoxFloat.top);
-		if (rightSide) {
-			if (right === undefined) right = piece;
-			else if (piece.coords[axis] < right.coords[axis]) right = piece;
+		const onRightSide = x > boundingBoxFloat.right || y > rightCorner[1] === (rightCorner[1] === boundingBoxFloat.top);
+		if (onRightSide) {
+			if (closestRight === undefined) closestRight = piece;
+			else if (piece.coords[axis] < closestRight.coords[axis]) closestRight = piece;
 		} else {
-			if (left === undefined) left = piece;
-			else if (piece.coords[axis] > left.coords[axis]) left = piece;
+			if (closestLeft === undefined) closestLeft = piece;
+			else if (piece.coords[axis] > closestLeft.coords[axis]) closestLeft = piece;
 		}
-	}
+
+		/**
+		 * If this is true, it's impossible for this piece to skip/phase
+		 * through the closest piece on the line to the screen, which means
+		 * only the closest piece on the line to the screen should be visible!
+		 */
+		if (!gamefile.startSnapshot.atleastOneCustomBlocking) return;
+
+		/**
+		 * Calculate it's maximum slide.
+		 * If it is able to slide (ignoring ignore function, and ignoring check respection)
+		 * into our screen area, then it should be guaranteed an arrow,
+		 * EVEN if it's not the closest piece to us on the line
+		 * (which would mean it phased/skipped over pieces due to a custom blocking function)
+		 */
+
+		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slideDir, lineKey, organizedline);
+		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
+		// It CAN slide along our direction of travel.
+		// ... But can it slide far enough where it can reach our screen?
+
+		if (onRightSide) {
+			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
+			if (slideLegalLimit[0] < boundingBoxSide) right.push(piece);
+		} else /* onLeftSide */ {
+			const boundingBoxSide = axis === 0 ? boundingBoxInt.left : boundingBoxInt.bottom;
+			if (slideLegalLimit[1] > boundingBoxSide) left.push(piece);
+		}
+	});
+
+	// Add the closest left/right pieces if they haven't been added already
+	if (closestLeft !== undefined && !left.includes(closestLeft)) left.push(closestLeft);
+	if (closestRight !== undefined && !right.includes(closestRight)) right.push(closestRight);
+
+	// Now sort them.
+	left.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
+	right.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
+	console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`)
+	console.log(left)
+	console.log(right)
 
 	return { left, right };
 }
 
 /**
- * Removes asrrows based on the mode.
+ * Removes arrows based on the mode.
  * mode == 1 Removes arrows to pieces that cant slide in that direction
  * mode == 2 Like mode 1 but will keep any arrows in directions that a selected piece can move
  * Will not return anything as it alters the object it is given.
