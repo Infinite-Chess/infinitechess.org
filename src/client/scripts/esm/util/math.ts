@@ -298,7 +298,7 @@ function getKeyFromVec2(coords: Vec2): Vec2Key {
 }
 
 /**
- * Returns the key string of the coordinates: [dx,dy] => 'dx,dy'
+ * Returns the vector from the Vec2Key: 'dx,dy' => [dx,dy]
  */
 function getVec2FromKey(vec2Key: Vec2Key): Vec2 {
 	return vec2Key.split(',').map(Number) as Vec2;
