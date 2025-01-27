@@ -406,6 +406,15 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		// It CAN slide along our direction of travel.
 		// ... But can it slide far enough where it can reach our screen?
 
+		// Convert the slide limit from number of steps leftward/rightward
+		// to minimum x to maximum x
+		// (translate by the piece coordinates)
+		// TODO: THIS DOESN'T WORK. WE HAVE TO CALCULATE if the legal slide
+		// can legally move to the first int square intersecting our screen!!
+		// Right now this only cares about the x value or whatever
+		slideLegalLimit[0] = piece.coords[axis] + slideDir[axis] * slideLegalLimit[0];
+		slideLegalLimit[1] = piece.coords[axis] + slideDir[axis] * slideLegalLimit[1];
+
 		if (onRightSide) {
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
 			if (slideLegalLimit[0] < boundingBoxSide) right.push(piece);
