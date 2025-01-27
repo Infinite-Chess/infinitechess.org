@@ -74,7 +74,7 @@ interface PieceLinesByKey {
 	[line: LineKey]: Array<Piece>
 }
 
-/** A unique identifier for a single line of pieces. `X|C` */
+/** A unique identifier for a single line of pieces. `C|X` */
 type LineKey = `${number}|${number}`
 
 // (Deleted "use strict" as I don't think it has an effect if we're using typescript)
@@ -342,7 +342,7 @@ function getXFromLine(step: Coords, coords: Coords): number {
 }
 
 /** Splits the `C` value out of the line key */
-function getXFromKey(lineKey: LineKey): number {
+function getCFromKey(lineKey: LineKey): number {
 	return Number(lineKey.split('|')[0]);
 }
 
@@ -408,7 +408,7 @@ export default {
 	buildStateFromKeyList,
 	getKeyFromLine,
 	getCFromLine,
-	getXFromKey,
+	getCFromKey,
 	areColinearSlidesPresentInGame,
 	areHippogonalsPresentInGame,
 };

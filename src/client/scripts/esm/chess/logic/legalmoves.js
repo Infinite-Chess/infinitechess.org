@@ -15,6 +15,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
+import math from '../../util/math.js';
 // Import End
 
 /** 
@@ -149,7 +150,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 			const lines = gamefile.startSnapshot.slidingPossible;
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i]; // [x,y]
-				const lineKey = coordutil.getKeyFromVec2(line); // 'x,y'
+				const lineKey = math.getKeyFromVec2(line); // 'x,y'
 				if (!thisPieceMoveset.sliding[lineKey]) continue;
 				const key = organizedlines.getKeyFromLine(line, coords);
 				legalSliding[line] = slide_CalcLegalLimit(blockingFunc, gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[lineKey], coords, color);
@@ -178,7 +179,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
  * @param {gamefile} gamefile
  * @param {Piece} piece
  * @param {Vec2} slide
- * @param {Vec2Key} lineKey - The key `X|C` of the specific organized line we need to find out how far this piece can slide on
+ * @param {Vec2Key} lineKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
  * @param {Piece[]} organizedLine - The organized line of the above key that our piece is on
  * @returns {undefined | Coords}
  */
