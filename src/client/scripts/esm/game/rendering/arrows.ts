@@ -270,26 +270,22 @@ function update() {
  * As if it's not, it should get an arrow.
  */
 function getBoundingBoxesOfVisibleScreen(): { boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox } {
-	// If any part of the square is on screen, this box rounds outward to contain it.
-	const boundingBoxInt: BoundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
 	// Same as above, but doesn't round
 	const boundingBoxFloat: BoundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat();
 
 	// Apply the padding of the navigation and gameinfo bars to the screen bounding box.
-	if (!perspective.getEnabled()) {
+	if (!perspective.getEnabled()) { // Perspective is OFF
 		let headerPad = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
 		let footerPad = space.convertPixelsToWorldSpace_Virtual(guigameinfo.getHeightOfGameInfoBar());
 		// Reverse header and footer pads if we're viewing black's side
-		if (!perspective.getEnabled() && !gameslot.isLoadedGameViewingWhitePerspective()) [headerPad, footerPad] = [footerPad, headerPad]; // Swap values
-		// TODO: Verify that the values are actually swapped in blacks perspective!!!!!!!!!!!!!!!!!!!!!!!!!!!=================================================
+		if (!gameslot.isLoadedGameViewingWhitePerspective()) [headerPad, footerPad] = [footerPad, headerPad]; // Swap values
 		// Apply the paddings to the bounding box
 		boundingBoxFloat.top -= space.convertWorldSpaceToGrid(headerPad);
 		boundingBoxFloat.bottom += space.convertWorldSpaceToGrid(footerPad);
-		// EXPERIMENTAL: Does applying the padding the the integer bounding box make
-		// it so arrows will appear for pieces behind the nav bar?
-		boundingBoxInt.top -= space.convertWorldSpaceToGrid(headerPad);
-		boundingBoxInt.bottom += space.convertWorldSpaceToGrid(footerPad);
 	}
+
+	// If any part of the square is on screen, this box rounds outward to contain it.
+	const boundingBoxInt = board.roundAwayBoundingBox(boundingBoxFloat);
 
 	return { boundingBoxInt, boundingBoxFloat };
 }
