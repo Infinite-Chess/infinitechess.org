@@ -93,6 +93,11 @@ interface SlideArrows {
 /**
  * An object containing the arrows that should actually be present,
  * for a single organized line intersecting through our screen.
+ * 
+ * The FIRST index in each of these left/right arrays, is the picture
+ * which gets rendered at the default location.
+ * The FINAL index in each of these, is the picture of the piece
+ * that is CLOSEST to you (or the screen) on the line!
  */
 interface ArrowsLine {
 	left: Piece[],
@@ -124,6 +129,8 @@ const width: number = 0.65;
 /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
 const sidePadding: number = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
 /** Opacity of the mini images of the pieces and arrows. */
+/** How much separation between adjacent pictures pointing to multiple pieces on the same line, in percentage of 1 tile. */
+const paddingBetwAdjacentPictures: number = 0.25;
 const opacity: number = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
 const renderZoomLimitVirtualPixels: number = 10; // virtual pixels. Default: 14
@@ -173,7 +180,10 @@ interface Arrow {
 	slideDir: Vec2,
 	/** Whether the arrow direction is flipped. Also known as left/right side. */
 	flipped: boolean,
-	hovered: boolean
+	hovered: boolean,
+	/** Whether the arrow is an additional picture next to the main arrow,
+	 * IF TRUE, THIS ARROW ONLY RENDERS the picture, not an additional arrow! */
+	isAdjacent: boolean,
 }
 
 
@@ -410,7 +420,7 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 	if (closestRight !== undefined && !right.includes(closestRight)) right.push(closestRight);
 
 	// Now sort them.
-	left.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
+	left.sort((piece1, piece2) => piece1.coords[axis] - piece2.coords[axis]);
 	right.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
 	// console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`);
 	// console.log(left);
@@ -449,8 +459,8 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.left.pop();
 			}
 			if (line.right.length > 0) {
-				const piece: Piece = line.right[0]!;
-				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.right.shift();
+				const piece: Piece = line.right[line.right.length - 1]!;
+				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.right.pop();
 			}
 			if (line.left.length === 0 && line.right.length === 0) delete object[key as LineKey];
 		}
@@ -490,19 +500,27 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!;
 		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
 		for (const lineKey in arrowLinesOfSlideDir) { // `C|X`
-			arrowLinesOfSlideDir[lineKey]!.left.forEach(piece => processPiece(lineKey as LineKey, piece, slideDir, true));
-			arrowLinesOfSlideDir[lineKey]!.right.forEach(piece => processPiece(lineKey as LineKey, piece, slideDir, false));
+			arrowLinesOfSlideDir[lineKey]!.left.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, true));
+			arrowLinesOfSlideDir[lineKey]!.right.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, false));
 		}
 	}
 
 	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
-	function processPiece(lineKey: LineKey, piece: Piece, slideDir: Vec2, isLeft: boolean) {
+	function processPiece(lineKey: LineKey, piece: Piece, index: number, slideDir: Vec2, isLeft: boolean) {
 		const lineKey_C = organizedlines.getCFromKey(lineKey); // 'C|X' => C
 		if (piece.type === 'voidsN') return;
 		const corner: Corner = math.getAABBCornerOfLine(slideDir, isLeft);
 		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_C, boundingBoxFloat, corner);
 		if (!renderCoords) return;
-		// const arrowDirection: Vec2 = isLeft ? math.negateVector(slideDir) : slideDir;
+		
+		// If this picture is an adjacent picture, adjust it's positioning
+		let isAdjacent = false;
+		if (index > 0) {
+			isAdjacent = true;
+			const vector = isLeft ? slideDir : math.negateVector(slideDir);
+			renderCoords[0] += vector[0] * paddingBetwAdjacentPictures * index;
+			renderCoords[1] += vector[1] * paddingBetwAdjacentPictures * index;
+		}
 
 		const worldLocation: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
 
@@ -526,7 +544,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 			}
 		}
 
-		arrowsData.push({ worldLocation, type: piece.type, slideDir, flipped: isLeft, hovered });
+		arrowsData.push({ worldLocation, type: piece.type, slideDir, flipped: isLeft, hovered, isAdjacent });
 	}
 
 	// console.log("Arrows hovered over this frame:");
@@ -667,6 +685,8 @@ function concatData(data: number[], dataArrows: number[], arrow: Arrow, worldWid
 	data.push(...thisData);
 
 	// Next append the data of the little arrow!
+
+	if (arrow.isAdjacent) return; // We can skip, since it is an adjacent picture!
 
 	const dist = halfWorldWidth * 1;
 	const size = 0.3 * halfWorldWidth;
