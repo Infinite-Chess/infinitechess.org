@@ -190,16 +190,22 @@ function getMode(): typeof mode {
  */
 function setMode(value: typeof mode) {
 	mode = value;
-	if (mode === 0) hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
+	if (mode === 0) { // Erase existing
+		arrowsData.length = 0;
+		hoveredArrows.length = 0;
+		hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
+	}
 }
 
 /** Rotates the current mode of the arrow indicators. */
 function toggleArrows() {
 	frametracker.onVisualChange();
-	mode++;
+	// Have to do it weirdly like this, instead of using '++', because typescript complains that nextMode is of type number.
+	let nextMode: typeof mode = mode === 0 ? 1 : mode === 1 ? 2 : mode === 2 ? 3 : /* mode === 3 ? */ 0;
 	// Calculate the cap
 	const cap = gameslot.getGamefile()!.startSnapshot.hippogonalsPresent ? 3 : 2;
-	if (mode > cap) mode = 0; // Wrap back to zero
+	if (nextMode > cap) nextMode = 0; // Wrap back to zero
+	setMode(nextMode);
 }
 
 /**
@@ -239,8 +245,8 @@ function update() {
 
 	// If we are in only-show-attackers mode
 	removeUnnecessaryArrows(slideArrows);
-	console.log("Arrows after removing unnecessary:");
-	console.log(slideArrows);
+	// console.log("Arrows after removing unnecessary:");
+	// console.log(slideArrows);
 
 	// Calculate what arrows are being hovered over...
 
@@ -324,8 +330,8 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
 		// For all our lines in the game with this slope...
 		for (const [lineKey, organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideKey])) {
-			// The X of the lineKey (`X|C`) with this slide at the very left & right sides of the screen.
-			const X = organizedlines.getXFromKey(lineKey as LineKey);
+			// The X of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
+			const X = organizedlines.getCFromKey(lineKey as LineKey);
 			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen, so no piece arrows are visible
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, organizedLine as Piece[], lineKey as LineKey);
@@ -410,9 +416,9 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 	// Now sort them.
 	left.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
 	right.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
-	console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`);
-	console.log(left);
-	console.log(right);
+	// console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`);
+	// console.log(left);
+	// console.log(right);
 
 	return { left, right };
 }
@@ -487,7 +493,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 	for (const vec2Key in slideArrows) {
 		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!;
 		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
-		for (const lineKey in arrowLinesOfSlideDir) { // `X|C`
+		for (const lineKey in arrowLinesOfSlideDir) { // `C|X`
 			arrowLinesOfSlideDir[lineKey]!.left.forEach(piece => processPiece(lineKey as LineKey, piece, slideDir, true));
 			arrowLinesOfSlideDir[lineKey]!.right.forEach(piece => processPiece(lineKey as LineKey, piece, slideDir, false));
 		}
@@ -495,7 +501,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 
 	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
 	function processPiece(lineKey: LineKey, piece: Piece, slideDir: Vec2, isLeft: boolean) {
-		const lineKey_X = organizedlines.getXFromKey(lineKey); // 'X|C' => X (the nearest X on or after y=0 that the line intersects)
+		const lineKey_X = organizedlines.getCFromKey(lineKey); // 'C|X' => X (the nearest X on or after y=0 that the line intersects)
 		if (piece.type === 'voidsN') return;
 		const corner: Corner = math.getAABBCornerOfLine(slideDir, isLeft);
 		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_X, boundingBoxFloat, corner);
@@ -503,8 +509,10 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		// const arrowDirection: Vec2 = isLeft ? math.negateVector(slideDir) : slideDir;
 		// concatData(data, dataArrows, renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
 
+		const worldLocation: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
+
 		// Does the mouse hover over the piece?
-		const chebyshevDist = math.chebyshevDistance(renderCoords, mouseWorldLocation);
+		const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
 		let hovered = false;
 		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
 			hovered = true;
@@ -523,14 +531,14 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 			}
 		}
 
-		arrowsData.push({ worldLocation: renderCoords, type: piece.type, slideDir, hovered });
+		arrowsData.push({ worldLocation, type: piece.type, slideDir, hovered });
 	}
 
-	console.log("Arrows hovered over this frame:");
-	console.log(hoveredArrows);
+	// console.log("Arrows hovered over this frame:");
+	// console.log(hoveredArrows);
 
-	console.log("Arrows instance data calculated this frame:");
-	console.log(arrowsData);
+	// console.log("Arrows instance data calculated this frame:");
+	// console.log(arrowsData);
 }
 
 function render() {
