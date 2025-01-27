@@ -171,6 +171,8 @@ interface Arrow {
 	worldLocation: Coords,
 	type: string,
 	slideDir: Vec2,
+	/** Whether the arrow direction is flipped. Also known as left/right side. */
+	flipped: boolean,
 	hovered: boolean
 }
 
@@ -507,7 +509,6 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_C, boundingBoxFloat, corner);
 		if (!renderCoords) return;
 		// const arrowDirection: Vec2 = isLeft ? math.negateVector(slideDir) : slideDir;
-		// concatData(data, dataArrows, renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
 
 		const worldLocation: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
 
@@ -531,7 +532,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 			}
 		}
 
-		arrowsData.push({ worldLocation, type: piece.type, slideDir, hovered });
+		arrowsData.push({ worldLocation, type: piece.type, slideDir, flipped: isLeft, hovered });
 	}
 
 	// console.log("Arrows hovered over this frame:");
@@ -683,7 +684,8 @@ function concatData(data: number[], dataArrows: number[], arrow: Arrow, worldWid
         [dist + size, 0]
     ];
 
-	const angle = Math.atan2(arrow.slideDir[1], arrow.slideDir[0]);
+	const arrowDir = arrow.flipped ? math.negateVector(arrow.slideDir) : arrow.slideDir;
+	const angle = Math.atan2(arrowDir[1], arrowDir[0]);
 	const ad = applyTransform(points, angle, arrow.worldLocation);
 
 	for (let i = 0; i < ad.length; i++) {
