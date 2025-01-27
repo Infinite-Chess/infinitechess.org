@@ -122,7 +122,7 @@ interface HoveredArrow {
 /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
 const width: number = 0.65;
 /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
-const sidePadding: number = 0.15;
+const sidePadding: number = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
 /** Opacity of the mini images of the pieces and arrows. */
 const opacity: number = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
@@ -301,9 +301,7 @@ function getBoundingBoxesOfVisibleScreen(): { boundingBoxInt: BoundingBox, bound
  * DESTRUCTIVE, modifies the provided BoundingBox.
  */
 function addArrowsPaddingToBoundingBox(boundingBoxFloat: BoundingBox) {
-	const boardScale = movement.getBoardScale();
-	const worldWidth = width * boardScale; // The world-space width of our images
-	const padding = (worldWidth / 2) + sidePadding;
+	const padding = width / 2 + sidePadding;
 	boundingBoxFloat.top -= padding;
 	boundingBoxFloat.right -= padding;
 	boundingBoxFloat.bottom += padding;
