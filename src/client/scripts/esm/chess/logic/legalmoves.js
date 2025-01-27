@@ -183,16 +183,15 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
  * @param {Piece[]} organizedLine - The organized line of the above key that our piece is on
  * @returns {undefined | Coords}
  */
-function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, lineKey, organizedLine) {
+function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, slideKey, lineKey, organizedLine) {
 	const thisPieceMoveset = getPieceMoveset(gamefile, piece.type); // Default piece moveset
 	if (!('sliding' in thisPieceMoveset)) return; // This piece can't slide at all
-	const slideKey = math.getKeyFromVec2(slide);
 	if (!(slideKey in thisPieceMoveset.sliding)) return; // This piece can't slide ALONG the provided line
 	// This piece CAN slide along the provided line.
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = colorutil.getPieceColorFromType(piece.type);
-	return slide_CalcLegalLimit(blockingFunc, gamefile.piecesOrganizedByLines[slideKey][lineKey], organizedLine, thisPieceMoveset.sliding[lineKey], piece.coords, friendlyColor);
+	return slide_CalcLegalLimit(blockingFunc, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
 }
 
 /**

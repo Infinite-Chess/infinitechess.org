@@ -330,7 +330,7 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 			const X = organizedlines.getCFromKey(lineKey as LineKey);
 			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen, so no piece arrows are visible
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
-			const arrowsLine = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, organizedLine as Piece[], lineKey as LineKey);
+			const arrowsLine = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine as Piece[], lineKey as LineKey);
 			// If it is empty, don't add it.
 			if (arrowsLine.left.length === 0 && arrowsLine.right.length === 0) continue;
 			if (!slideArrows[slideKey]) slideArrows[slideKey] = {}; // Make sure this exists first
@@ -349,7 +349,7 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
  * using the Huygens, then there could be a single arrow pointing to multiple pieces,
  * since the Huygens can phase through / skip over other pieces.
  */
-function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, organizedline: Piece[], lineKey: LineKey): ArrowsLine {
+function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: Piece[], lineKey: LineKey): ArrowsLine {
 
 	const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
 
@@ -391,7 +391,7 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		 * (which would mean it phased/skipped over pieces due to a custom blocking function)
 		 */
 
-		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slideDir, lineKey, organizedline);
+		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slideDir, slideKey, lineKey, organizedline);
 		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
 		// It CAN slide along our direction of travel.
 		// ... But can it slide far enough where it can reach our screen?
@@ -507,8 +507,8 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		const worldLocation: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
 
 		// Does the mouse hover over the piece?
-		const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
 		let hovered = false;
+		const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
 		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
 			hovered = true;
 			// ADD the piece to the list of arrows being hovered over!!!
