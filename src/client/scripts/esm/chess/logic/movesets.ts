@@ -289,9 +289,9 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 }
 
 /** Whether the provided movesets contain atleast one custom blocking function. */
-function doMovesetsContainAtleastOneCustomBlocking(movesets: Movesets) {
+function doMovesetsContainAtleastOneCustomBlocking(movesets: { [pieceType: string]: () => PieceMoveset }) {
 	for (const pieceMoveset of Object.values(movesets)) {
-		if ('blocking' in pieceMoveset) return true;
+		if ('blocking' in pieceMoveset()) return true;
 	}
 	return false;
 }

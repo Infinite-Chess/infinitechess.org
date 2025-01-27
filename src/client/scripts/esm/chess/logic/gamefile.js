@@ -9,6 +9,7 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
+import movesets from './movesets.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
@@ -249,7 +250,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
+	// MUST BE BEFORE setting atleastOneCustomBlocking!!!
 	gamefileutility.deleteUnusedMovesets(this);
+	// MUST BE AFTER deleteUnusedMovesets()!!!
+	this.startSnapshot.atleastOneCustomBlocking = movesets.doMovesetsContainAtleastOneCustomBlocking(this.pieceMovesets);
 
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?
