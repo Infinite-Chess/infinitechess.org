@@ -501,10 +501,10 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 
 	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
 	function processPiece(lineKey: LineKey, piece: Piece, slideDir: Vec2, isLeft: boolean) {
-		const lineKey_X = organizedlines.getCFromKey(lineKey); // 'C|X' => X (the nearest X on or after y=0 that the line intersects)
+		const lineKey_C = organizedlines.getCFromKey(lineKey); // 'C|X' => C
 		if (piece.type === 'voidsN') return;
 		const corner: Corner = math.getAABBCornerOfLine(slideDir, isLeft);
-		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_X, boundingBoxFloat, corner);
+		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_C, boundingBoxFloat, corner);
 		if (!renderCoords) return;
 		// const arrowDirection: Vec2 = isLeft ? math.negateVector(slideDir) : slideDir;
 		// concatData(data, dataArrows, renderCoords, piece.type, corner, worldWidth, 0, piece.coords, arrowDirection, piecesHoveringOverThisFrame);
