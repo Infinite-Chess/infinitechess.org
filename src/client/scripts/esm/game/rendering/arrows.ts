@@ -583,7 +583,6 @@ function updateLegalMovesOfHoveredPieces() {
 		return;
 	}
 
-
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves. 
 	for (let i = hoveredArrowsLegalMoves.length - 1; i >= 0; i--) { // Iterate backwards because we are removing elements as we go
@@ -592,8 +591,7 @@ function updateLegalMovesOfHoveredPieces() {
 		if (!hoveredArrows.some(arrow => arrow.piece.coords === thisHoveredArrow.piece.coords)) hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over
 	}
 
-
-	for (const pieceHovered of hoveredArrowsLegalMoves) {
+	for (const pieceHovered of hoveredArrows) {
 		onPieceIndicatorHover(pieceHovered.piece); // Generate their legal moves and highlight model
 	}
 }
@@ -749,6 +747,8 @@ function absoluteValueOfDirection(direction: Vec2): Vec2 {
 
 
 function renderEachHoveredPieceLegalMoves() {
+	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
+
 	const boardPos = movement.getBoardPos();
 	const model_Offset = legalmovehighlights.getOffset();
 	const position: [number,number,number] = [
