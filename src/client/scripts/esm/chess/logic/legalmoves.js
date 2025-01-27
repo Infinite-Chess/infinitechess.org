@@ -198,7 +198,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, lineKey
 /**
  * Shifts/translates the individual/jumping portion
  * of a moveset by the coordinates of a piece.
- * @param {number[][]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
+ * @param {Coords[]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
  */
 function shiftIndividualMovesetByCoords(indivMoveset, coords) {
 	if (!indivMoveset) return;

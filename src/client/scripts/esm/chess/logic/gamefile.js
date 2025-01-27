@@ -249,6 +249,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
+	gamefileutility.deleteUnusedMovesets(this);
 
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?

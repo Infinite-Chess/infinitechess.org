@@ -91,10 +91,10 @@ function getPossibleSlides(gamefile) {
 		if (!moveset) continue;
 		moveset = moveset();
 		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach( slide => { slides.add(slide); });
+		Object.keys(moveset.sliding).forEach(slide => slides.add(slide));
 	}
 	const temp = [];
-	slides.forEach(slideline => { temp.push(coordutil.getCoordsFromKey(slideline)); });
+	slides.forEach(slideline => temp.push(coordutil.getCoordsFromKey(slideline)));
 	return temp;
 }
 

@@ -294,6 +294,17 @@ function getJumpingRoyalCoordsOfColor(gamefile: gamefile, color: string): Coords
 	return royalCoordsList;
 }
 
+/**
+ * Returns a Set of all piece types in the game, without the color extensions.
+ */
+function getAllPieceTypesInGame(gamefile: gamefile): Set<string> {
+	const runningPieceTypes = new Set<string>();
+	for (const key of Object.keys(gamefile.ourPieces)) {
+		const strippedPieceType = colorutil.trimColorExtensionFromType(key);
+		runningPieceTypes.add(strippedPieceType);
+	}
+	return runningPieceTypes;
+}
 
 
 // Finding / Retrieving a Piece by Criteria, Or Getting Information About a Piece -----------------------------------------------------------------
@@ -435,6 +446,18 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: 'white' 
 	return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
 }
 
+/**
+ * Deletes all movesets from a Movesets object for pieces
+ * that aren't included in this game.
+ */
+function deleteUnusedMovesets(gamefile: gamefile) {
+	const allPieceTypes = getAllPieceTypesInGame(gamefile);
+	for (const key of Object.keys(gamefile.pieceMovesets)) {
+		if (!allPieceTypes.has(key)) delete gamefile.pieceMovesets[key];
+	}
+
+}
+
 
 
 
@@ -475,6 +498,7 @@ export default {
 	getCoordsOfAllPiecesByKey,
 	getRoyalCoordsOfColor,
 	getJumpingRoyalCoordsOfColor,
+	getAllPieceTypesInGame,
 	getPieceFromTypeAndCoords,
 	getPieceAtCoords,
 	getPieceTypeAtCoords,
@@ -485,6 +509,7 @@ export default {
 	getCheckCoordsOfCurrentViewedPosition,
 	setTerminationMetadata,
 	isOpponentUsingWinCondition,
+	deleteUnusedMovesets,
 	doGameOverChecks,
 	initStartingAreaBox,
 };
