@@ -128,9 +128,9 @@ interface HoveredArrow {
 const width: number = 0.65;
 /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
 const sidePadding: number = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
-/** Opacity of the mini images of the pieces and arrows. */
 /** How much separation between adjacent pictures pointing to multiple pieces on the same line, in percentage of 1 tile. */
-const paddingBetwAdjacentPictures: number = 0.25;
+const paddingBetwAdjacentPictures: number = 0.35;
+/** Opacity of the mini images of the pieces and arrows. */
 const opacity: number = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
 const renderZoomLimitVirtualPixels: number = 10; // virtual pixels. Default: 14
