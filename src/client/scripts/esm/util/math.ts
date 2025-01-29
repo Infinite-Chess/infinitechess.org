@@ -230,69 +230,77 @@ function closestPointOnLine(lineStart: Coords, lineEnd: Coords, point: Coords): 
 	};
 }
 
-
-
-
-
-
-
-
-// WE SHOULD BE ABLE TO DELETE THESE ------------------------------
-
-
-
-
-
-
-
-
-
 /**
- * Returns the side of the box, in english language, the line intersects with the box.
- * If {@link negateSide} is false, it will return the positive X/Y side.
- * If the line is orthogonal, it will only return top/bottom/left/right.
- * Otherwise, it will return the corner name.
- * @param line - [dx,dy]
- * @param negateSide - If false, it will return the positive X/Y side.
- * @returns Which side/corner the line passes through. [0,1] & false => "top"   [2,1] & true => "bottomleft"
+ * Calculates the distance between two parallel lines given their coefficients in the form Ax + By + C = 0.
+ * @param A - The coefficient A of the line equation (this will be the same for both lines).
+ * @param B - The coefficient B of the line equation (this will be the same for both lines).
+ * @param C1 - The coefficient C for the first line.
+ * @param C2 - The coefficient C for the second line.
+ * @returns The distance between the two parallel lines.
  */
-function getAABBCornerOfLine(line: Vec2, negateSide: boolean): Corner {
-	let corner = "";
-	v: {
-		if (line[1] === 0) break v; // Horizontal so parallel with top/bottom lines
-		corner += ((line[0] > 0 === line[1] > 0) === negateSide === (line[0] !== 0)) ? "bottom" : "top"; 
-		// Gonna be honest I have no idea how this works but it does sooooooo its staying
-	}
-	h: {
-		if (line[0] === 0) break h; // Vertical so parallel with left/right lines
-		corner += negateSide ? "left" : "right";
-	}
-	return corner as Corner;
+function distanceBetweenParallelLines(A: number, B: number, C1: number, C2: number): number {
+    if (A === 0 && B === 0)  throw new Error("Invalid line equation: A and B cannot both be zero.");
+	return Math.abs(C2 - C1) / Math.sqrt(A * A + B * B);
 }
 
 /**
- * Get the corner coordinate of the bounding box.
- * Will revert to top left if the corners sides aren't provided.
+ * Finds the two lines intersecting the corners of a bounding box that are the farthest apart.
+ * The lines are defined by the direction of the given vector and pass through the corners of the bounding box.
+ * @param vector - The direction vector [dx, dy] defining the slope of the lines.
+ * @param boundingBox - The bounding box with left, right, bottom, and top properties.
+ * @returns The pair of corners that define the farthest apart lines.
  */
-function getCornerOfBoundingBox(boundingBox: BoundingBox, corner: Corner): Coords {
-	const yval = corner.startsWith('bottom') ? boundingBox.bottom : boundingBox.top;
-	const xval = corner.endsWith('right') ? boundingBox.right : boundingBox.left;
-	return [xval, yval];
+function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBox): [Coords, Coords] {
+	const { left, right, bottom, top } = boundingBox;
+	const [dx, dy] = vector;
+
+	// Handle edge case: zero direction vector
+	if (dx === 0 && dy === 0) throw new Error("Direction vector cannot be zero.");
+
+	// Define the 4 corners of the bounding box
+	const corners: Coords[] = [
+		[left, top],     // Top-left
+		[right, top],    // Top-right
+		[left, bottom],  // Bottom-left
+		[right, bottom]  // Bottom-right
+	];
+
+	let maxDistance = -Infinity;
+	let farthestLines: [Coords, Coords] = [corners[0], corners[1]];
+
+	// Compare each pair of corners and calculate the distance between parallel lines
+	for (let i = 0; i < corners.length; i++) {
+		for (let j = i + 1; j < corners.length; j++) {
+			const [x1, y1] = corners[i];
+			const [x2, y2] = corners[j];
+
+			// Calculate A, B, and C for the lines passing through the corners
+			const A = dy;
+			const B = -dx;
+			const C1 = dx * y1 - dy * x1;
+			const C2 = dx * y2 - dy * x2;
+
+			// Calculate the distance between the two parallel lines
+			const distance = distanceBetweenParallelLines(A, B, C1, C2);
+
+			// Update if this distance is the greatest so far
+			if (distance > maxDistance) {
+				maxDistance = distance;
+				farthestLines = [corners[i], corners[j]];
+			}
+		}
+	}
+
+	return farthestLines;
 }
 
-
-
-
-
-
-
-
-// WE SHOULD BE ABLE TO DELETE THESE ^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-
-
+/**
+ * Computes the dot product of two 2D vectors.
+ * WILL BE POSITIVE if they roughly point in the same direction.
+ */
+// function dotProduct(v1: Vec2, v2: Vec2): number {
+// 	return v1[0] * v2[0] + v1[1] * v2[1];
+// }
 
 /**
  * Finds the intersection points of a vector starting at a point with a bounding box.
@@ -300,9 +308,9 @@ function getCornerOfBoundingBox(boundingBox: BoundingBox, corner: Corner): Coord
  * @param coords - A point the line intersects.
  * @param direction - The direction of travel of the line (vector).
  * @param box - The bounding box defined by {left, right, bottom, top}.
- * @returns An array of intersection points, or an empty array if no intersections are found.
+ * @returns An array of intersection points, or an empty array if no intersections are found, along with a boolean indicating whether the intersection is in the positive direction of the vector.
  */
-function findLineBoxIntersections(coords: Coords, direction: Vec2, box: BoundingBox): Coords[] {
+function findLineBoxIntersections(coords: Coords, direction: Vec2, box: BoundingBox): { coords: Coords, positiveDotProduct: boolean }[] {
 	const intersections: Coords[] = [];
 
 	// Function to check intersection with a vertical line (x = constant)
@@ -350,21 +358,13 @@ function findLineBoxIntersections(coords: Coords, direction: Vec2, box: Bounding
 		return distA - distB;  // Sort by distance in the direction of the vector
 	});
 
-	return intersections;
+	const result = intersections.map(intersection => {
+		const dotProduct = (intersection[0] - coords[0]) * direction[0] + (intersection[1] - coords[1]) * direction[1];
+		return { coords, positiveDotProduct: dotProduct >= 0 };
+	});
+
+	return result;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
@@ -615,11 +615,8 @@ export default {
 	expandBoxToContainSquare,
 	mergeBoundingBoxes,
 	closestPointOnLine,
-	getAABBCornerOfLine,
-	getCornerOfBoundingBox,
-
+	findFarthestPointsALineSweepsABox,
 	findLineBoxIntersections,
-
 	areLinesCollinear,
 	getKeyFromVec2,
 	getVec2FromKey,
