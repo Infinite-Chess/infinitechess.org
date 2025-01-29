@@ -427,12 +427,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 
 	for (const lineKey of slideLines) { // '1,0'
 		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
-		const C = organizedlines.getCFromLine(line, coords);
-
-		const corner1 = math.getAABBCornerOfLine(line, true); // "right"
-		const corner2 = math.getAABBCornerOfLine(line, false); // "bottomleft"
-		const intsect1Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner1);
-		const intsect2Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner2);
+		const [ intsect1Tile, intsect2Tile ] = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange)
 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) throw Error(`Line only has one intersect with square.`);
@@ -479,8 +474,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
 
 	const lineIsVertical = step[0] === 0;
 	const index: 0 | 1 = lineIsVertical ? 1 : 0;
-	// @ts-ignore
-	const inverseIndex: 0 | 1 = 1 - index;
+	const inverseIndex: 0 | 1 = 1 - index as 0 | 1;
 
 	const stepIsPositive = step[index] > 0;
 	const entryIntsectTile = stepIsPositive ? intsect1Tile : intsect2Tile;

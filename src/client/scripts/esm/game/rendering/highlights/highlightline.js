@@ -70,28 +70,23 @@ function genModel() {
 	let closestPoint;
 	for (const strline in legalmoves.sliding) {
 		const line = coordutil.getCoordsFromKey(strline);
-		const diag = organizedlines.getCFromLine(line, worldSpaceCoords);
 		const lineIsVertical = line[0] === 0;
+
+		const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox);
         
-		const corner1 = math.getAABBCornerOfLine(line, true);
-        
-		let point1 = math.getLineIntersectionEntryPoint(line[0], line[1], diag, boundingBox, corner1);
-		if (!point1) continue;
+		if (!intersectionPoints[0]) continue;
 		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
 		const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
-		point1 = capPointAtSlideLimit(point1, leftLimitPointWorld, false, lineIsVertical);
+		intersectionPoints[0] = capPointAtSlideLimit(intersectionPoints[0], leftLimitPointWorld, false, lineIsVertical);
 
-		const corner2 = math.getAABBCornerOfLine(line, false);
-
-		let point2 = math.getLineIntersectionEntryPoint(line[0], line[1], diag, boundingBox, corner2);
-		if (!point2) continue; // I hate this
+		if (!intersectionPoints[1]) continue; // I hate this
 		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, true);
 		const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
-		point2 = capPointAtSlideLimit(point2, rightLimitPointWorld, true, lineIsVertical);
+		intersectionPoints[1] = capPointAtSlideLimit(intersectionPoints[1], rightLimitPointWorld, true, lineIsVertical);
 
-		appendLineToData(dataLines, point1, point2, color);
+		appendLineToData(dataLines, intersectionPoints[0], intersectionPoints[1], color);
         
-		const snapPoint = math.closestPointOnLine(point1, point2, mouseLocation);
+		const snapPoint = math.closestPointOnLine(intersectionPoints[0], intersectionPoints[1], mouseLocation);
 		if (!closestDistance) { if (snapPoint.distance > snapDist) continue; }
 		else if (snapPoint.distance > closestDistance) {continue;}
 		closestDistance = snapPoint.distance;
@@ -149,20 +144,15 @@ function genModel() {
 	boundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
 
 	const line = closestPoint.line;
-	const diag = organizedlines.getCFromLine(line, pieceCoords);
 	const lineIsVertical = line[0] === 0;
+	
+	const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox);
 
-	const corner1 = math.getAABBCornerOfLine(line, true);
-
-	point1 = math.getLineIntersectionEntryPoint(line[0], line[1], diag, boundingBox, corner1);
 	const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, false);
-	point1 = capPointAtSlideLimit(point1, leftLimitPointCoord, false, lineIsVertical);
+	intersectionPoints[0] = capPointAtSlideLimit(point1, leftLimitPointCoord, false, lineIsVertical);
 
-	const corner2 = math.getAABBCornerOfLine(line, false);
-
-	point2 = math.getLineIntersectionEntryPoint(line[0], line[1], diag, boundingBox, corner2);
 	const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, true);
-	point2 = capPointAtSlideLimit(point2, rightLimitPointCoord, true, lineIsVertical);
+	intersectionPoints[1] = capPointAtSlideLimit(point2, rightLimitPointCoord, true, lineIsVertical);
 
 	let tileMouseFingerOver;
 	if (input.getTouchClicked()) { // Set to what the finger tapped above

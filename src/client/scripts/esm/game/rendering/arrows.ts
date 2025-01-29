@@ -328,8 +328,8 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 		const boardCornerRight_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,false);
 		const boardCornerLeft: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerLeft_AB);
 		const boardCornerRight: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerRight_AB);
-		const boardSlidesRight: number = organizedlines.getCFromLine(slide, boardCornerLeft);
-		const boardSlidesLeft: number = organizedlines.getCFromLine(slide, boardCornerRight);
+		const boardSlidesRight: number = math.getLineCFromCoordsAndVec(boardCornerLeft, slide);
+		const boardSlidesLeft: number = math.getLineCFromCoordsAndVec(boardCornerRight, slide);
 		// Any line of this slope that is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
 		const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
@@ -406,6 +406,19 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		// It CAN slide along our direction of travel.
 		// ... But can it slide far enough where it can reach our screen?
 
+		// First of all, what are the intersection coordinates of its slide
+		// on our screen?
+
+		const intersectionCoords = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt);
+
+		// Next, how do
+
+
+
+
+
+
+
 		// Convert the slide limit from number of steps leftward/rightward
 		// to minimum x to maximum x
 		// (translate by the piece coordinates)
@@ -417,10 +430,10 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 
 		if (onRightSide) {
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
-			if (slideLegalLimit[0] < boundingBoxSide) right.push(piece);
+			if (slideLegalLimit[0] < boundingBoxSide) right.push(piece); // Can(?) reach our screen
 		} else /* onLeftSide */ {
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.left : boundingBoxInt.bottom;
-			if (slideLegalLimit[1] > boundingBoxSide) left.push(piece);
+			if (slideLegalLimit[1] > boundingBoxSide) left.push(piece); // Can(?) reach our screen
 		}
 	});
 
@@ -451,7 +464,7 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
 	if (mode === 2) {
-		slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) <= 1).map(math.getKeyFromVec2);
+		slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
 	}
 
 	for (const direction in slideArrows) {
@@ -516,17 +529,16 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 
 	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
 	function processPiece(lineKey: LineKey, piece: Piece, index: number, slideDir: Vec2, isLeft: boolean) {
-		const lineKey_C = organizedlines.getCFromKey(lineKey); // 'C|X' => C
 		if (piece.type === 'voidsN') return;
 		const corner: Corner = math.getAABBCornerOfLine(slideDir, isLeft);
-		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_C, boundingBoxFloat, corner);
-		if (!renderCoords) return;
+		const vector = isLeft ? slideDir : math.negateVector(slideDir);
+		const renderCoords = math.findLineBoxIntersections(piece.coords, vector, boundingBoxFloat)[0]; // Grab the first intersection point
+		if (renderCoords === undefined) return;
 		
 		// If this picture is an adjacent picture, adjust it's positioning
 		let isAdjacent = false;
 		if (index > 0) {
 			isAdjacent = true;
-			const vector = isLeft ? slideDir : math.negateVector(slideDir);
 			renderCoords[0] += vector[0] * paddingBetwAdjacentPictures * index;
 			renderCoords[1] += vector[1] * paddingBetwAdjacentPictures * index;
 		}

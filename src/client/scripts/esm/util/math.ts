@@ -49,34 +49,63 @@ type Corner = 'top' | 'topright' | 'right' | 'bottomright' | 'bottom' | 'bottoml
 
 
 /**
- * Finds the intersection point of two lines given in the form dx * x + dy * y = c.
- * This will return `null` if there isn't one, or if there's infinite (colinear).
- * @param dx1 - The coefficient of x for the first line.
- * @param dy1 - The coefficient of y for the first line.
- * @param c1 - The constant term for the first line.
- * @param dx2 - The coefficient of x for the second line.
- * @param dy2 - The coefficient of y for the second line.
- * @param c2 - The constant term for the second line.
- * @returns - The intersection point [x, y], or null if there isn't one, or if there's infinite.
+ * Finds the intersection of two lines in general form.
+ * [x, y] or undefined if there is no intersection (or infinite intersections).
  */
-function getLineIntersection(dx1: number, dy1: number, c1: number, dx2: number, dy2: number, c2: number): Coords | null {
-	// Idon us's old code
-	// return [
-	//     ((dx2*c1)-(dx1*c2))/((dx1*dy2)-(dx2*dy1)),
-	//     ((dy2*c1)-(dy1*c2))/((dx1*dy2)-(dx2*dy1))
-	// ]
+function calcIntersectionPointOfLines(A1: number, B1: number, C1: number, A2: number, B2: number, C2: number): Coords | undefined {
+    const determinant = A1 * B2 - A2 * B1;
+	
+    if (determinant === 0) return undefined; // Lines are parallel or identical
 
-	// Naviary's new code
-	const denominator = (dx1 * dy2) - (dx2 * dy1);
-	if (denominator === 0) {
-		// The lines are parallel or coincident (no single intersection point)
-		return null;
-	}
-    
-	const x = ((dx2 * c1) - (dx1 * c2)) / denominator;
-	const y = ((dy2 * c1) - (dy1 * c2)) / denominator;
-    
-	return [x, y];
+    // Calculate the intersection point
+    const x = (C2 * B1 - C1 * B2) / determinant;
+    const y = (A2 * C1 - A1 * C2) / determinant;
+
+    return [x, y];
+}
+
+/**
+ * Calculates the general form coefficients (A, B, C) of a line given a point and a direction vector.
+ */
+function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): [number, number, number] {
+    // General form: Ax + By + C = 0
+    const A = vector[1];
+    const B = -vector[0];
+    const C = vector[0] * coords[1] - vector[1] * coords[0];
+
+    return [A, B, C];
+}
+
+/**
+ * Calculates the general form of a line (Ax + By + C = 0) given two points on the line.
+ * Handles both regular and vertical lines.
+ */
+function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): [number, number, number] {
+    // Handle the case of a vertical line (infinite slope)
+    if (coords1[0] === coords2[0]) {
+        return [1, 0, -coords1[0]];  // The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
+    }
+
+    // Calculate the slope (m)
+    const m = (coords2[1] - coords1[1]) / (coords2[0] - coords1[0]);
+
+    // General form coefficients: A = m, B = -1, and C = y1 - m * x1
+    const A = m;
+    const B = -1;
+    const C = coords1[1] - m * coords1[0];
+
+    return [A, B, C];
+}
+
+/**
+ * Calculates the C coefficient of a line in general form (Ax + By + C = 0) 
+ * given a point (coords) and a direction vector (vector).
+ * 
+ * Step size here is unimportant, but the slope **is**.
+ * This value will be unique for every line that *has the same slope*, but different positions.
+ */
+function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): number {
+	return vector[0] * coords[1] - vector[1] * coords[0];
 }
 
 /**
@@ -201,6 +230,23 @@ function closestPointOnLine(lineStart: Coords, lineEnd: Coords, point: Coords): 
 	};
 }
 
+
+
+
+
+
+
+
+// WE SHOULD BE ABLE TO DELETE THESE ------------------------------
+
+
+
+
+
+
+
+
+
 /**
  * Returns the side of the box, in english language, the line intersects with the box.
  * If {@link negateSide} is false, it will return the positive X/Y side.
@@ -234,47 +280,91 @@ function getCornerOfBoundingBox(boundingBox: BoundingBox, corner: Corner): Coord
 	return [xval, yval];
 }
 
+
+
+
+
+
+
+
+// WE SHOULD BE ABLE TO DELETE THESE ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+
+
 /**
- * Returns the point the line intersects, on the specified side, of the provided box.
- * DOES NOT round to nearest tile, but returns the coordinates as floating points.
- * @param dx - X change of the line
- * @param dy - Y change of the line
- * @param c - The c value of the line
- * @param boundingBox - The box
- * @param corner - What side/corner the line intersects, in english language. "left"/"topright"...
- * @returns {Coords | undefined} - The tile the line intersects, on the specified side, of the provided box, if it does intersect, otherwise undefined.
+ * Finds the intersection points of a vector starting at a point with a bounding box.
+ * SORTS THEM IN ORDER OF FIRST INTERSECTED.
+ * @param coords - A point the line intersects.
+ * @param direction - The direction of travel of the line (vector).
+ * @param box - The bounding box defined by {left, right, bottom, top}.
+ * @returns An array of intersection points, or an empty array if no intersections are found.
  */
-function getLineIntersectionEntryPoint(dx: number, dy: number, c: number, boundingBox: BoundingBox, corner: Corner): Coords | undefined {
-	const { left, right, top, bottom } = boundingBox;
+function findLineBoxIntersections(coords: Coords, direction: Vec2, box: BoundingBox): Coords[] {
+    const intersections: Coords[] = [];
 
-	// Check for intersection with left side of rectangle
-	if (corner.endsWith('left')) {
-		const yIntersectLeft = ((left * dy) + c) / dx;
-		if (yIntersectLeft >= bottom && yIntersectLeft <= top) return [left, yIntersectLeft];
-	}
-    
-	// Check for intersection with bottom side of rectangle
-	if (corner.startsWith('bottom')) {
-		const xIntersectBottom = ((bottom * dx) - c) / dy;
-		if (xIntersectBottom >= left && xIntersectBottom <= right) return [xIntersectBottom, bottom];
-	}
+    // Function to check intersection with a vertical line (x = constant)
+    function checkVerticalEdge(x: number): number | null {
+        if (direction[0] === 0) return null; // No intersection with vertical line if no x-direction
+        const t = (x - coords[0]) / direction[0];
+        return coords[1] + t * direction[1]; // Calculate corresponding y
+    };
 
-	// Check for intersection with right side of rectangle
-	if (corner.endsWith('right')) {
-		const yIntersectRight = ((right * dy) + c) / dx;
-		if (yIntersectRight >= bottom && yIntersectRight <= top) return [right, yIntersectRight];
-	}
+    // Function to check intersection with a horizontal line (y = constant)
+    function checkHorizontalEdge(y: number): number | null {
+        if (direction[1] === 0) return null; // No intersection with horizontal line if no y-direction
+        const t = (y - coords[1]) / direction[1];
+        return coords[0] + t * direction[0]; // Calculate corresponding x
+    };
 
-	// Check for intersection with top side of rectangle
-	if (corner.startsWith('top')) {
-		const xIntersectTop = ((top * dx) - c) / dy;
-		if (xIntersectTop >= left && xIntersectTop <= right) return [xIntersectTop, top];
-	}
+    // Check intersection with the left edge (x = box.left)
+    const yAtLeft = checkVerticalEdge(box.left);
+    if (yAtLeft !== null && yAtLeft > box.bottom && yAtLeft < box.top) {
+        intersections.push([box.left, yAtLeft]);
+    }
 
-	// Doesn't intersect any tile in the box.
+    // Check intersection with the right edge (x = box.right)
+    const yAtRight = checkVerticalEdge(box.right);
+    if (yAtRight !== null && yAtRight > box.bottom && yAtRight < box.top) {
+        intersections.push([box.right, yAtRight]);
+    }
 
-	return; // We need this so typescript is happy
+    // Check intersection with the bottom edge (y = box.bottom)
+    const xAtBottom = checkHorizontalEdge(box.bottom);
+    if (xAtBottom !== null && xAtBottom >= box.left && xAtBottom <= box.right) {
+        intersections.push([xAtBottom, box.bottom]);
+    }
+
+    // Check intersection with the top edge (y = box.top)
+    const xAtTop = checkHorizontalEdge(box.top);
+    if (xAtTop !== null && xAtTop >= box.left && xAtTop <= box.right) {
+        intersections.push([xAtTop, box.top]);
+    }
+
+    // Sort the intersections by distance along the direction of travel
+    intersections.sort((a, b) => {
+        const distA = (a[0] - coords[0]) * direction[0] + (a[1] - coords[1]) * direction[1]; // Dot product
+        const distB = (b[0] - coords[0]) * direction[0] + (b[1] - coords[1]) * direction[1]; // Dot product
+        return distA - distB;  // Sort by distance in the direction of the vector
+    });
+
+    return intersections;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Checks if all lines are colinear aka `[[1,0],[2,0]]` would be as they are both the same direction
@@ -513,7 +603,10 @@ class PseudoRandomGenerator {
 
 
 export default {
-	getLineIntersection,
+	calcIntersectionPointOfLines,
+	getLineGeneralFormFromCoordsAndVec,
+	getLineGeneralFormFrom2Coords,
+	getLineCFromCoordsAndVec,
 	getXYComponents_FromAngle,
 	roundPointToNearestGridpoint,
 	boxContainsBox,
@@ -525,6 +618,9 @@ export default {
 	getAABBCornerOfLine,
 	getCornerOfBoundingBox,
 	getLineIntersectionEntryPoint,
+
+	findLineBoxIntersections,
+
 	areLinesCollinear,
 	getKeyFromVec2,
 	getVec2FromKey,
