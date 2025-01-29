@@ -72,7 +72,7 @@ function genModel() {
 		const line = coordutil.getCoordsFromKey(strline);
 		const lineIsVertical = line[0] === 0;
 
-		const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox);
+		const intersectionPoints = math.findLineBoxIntersections(worldSpaceCoords, line, boundingBox);
         
 		if (!intersectionPoints[0]) continue;
 		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
@@ -138,8 +138,6 @@ function genModel() {
 	if (!input.isMouseDown_Left() && !input.getTouchClicked()) return;
 
 	const moveset = closestPoint.moveset;
-	let point1;
-	let point2;
 
 	boundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
 
@@ -149,10 +147,10 @@ function genModel() {
 	const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox);
 
 	const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, false);
-	intersectionPoints[0] = capPointAtSlideLimit(point1, leftLimitPointCoord, false, lineIsVertical);
+	intersectionPoints[0] = capPointAtSlideLimit(intersectionPoints[0], leftLimitPointCoord, false, lineIsVertical);
 
 	const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, true);
-	intersectionPoints[1] = capPointAtSlideLimit(point2, rightLimitPointCoord, true, lineIsVertical);
+	intersectionPoints[1] = capPointAtSlideLimit(intersectionPoints[1], rightLimitPointCoord, true, lineIsVertical);
 
 	let tileMouseFingerOver;
 	if (input.getTouchClicked()) { // Set to what the finger tapped above
@@ -163,7 +161,7 @@ function genModel() {
 		tileMouseFingerOver = tileMouseOver.tile_Int;
 	} else tileMouseFingerOver = board.gtile_MouseOver_Int();
 
-	const closestCoordCoords = math.closestPointOnLine(point1, point2, tileMouseFingerOver).coords;
+	const closestCoordCoords = math.closestPointOnLine(intersectionPoints[0], intersectionPoints[1], tileMouseFingerOver).coords;
 
 	const tel = { endCoords: closestCoordCoords, endScale: 1 };
 	// console.log("teleporting to " + closestCoordCoords)

@@ -53,27 +53,27 @@ type Corner = 'top' | 'topright' | 'right' | 'bottomright' | 'bottom' | 'bottoml
  * [x, y] or undefined if there is no intersection (or infinite intersections).
  */
 function calcIntersectionPointOfLines(A1: number, B1: number, C1: number, A2: number, B2: number, C2: number): Coords | undefined {
-    const determinant = A1 * B2 - A2 * B1;
+	const determinant = A1 * B2 - A2 * B1;
 	
-    if (determinant === 0) return undefined; // Lines are parallel or identical
+	if (determinant === 0) return undefined; // Lines are parallel or identical
 
-    // Calculate the intersection point
-    const x = (C2 * B1 - C1 * B2) / determinant;
-    const y = (A2 * C1 - A1 * C2) / determinant;
+	// Calculate the intersection point
+	const x = (C2 * B1 - C1 * B2) / determinant;
+	const y = (A2 * C1 - A1 * C2) / determinant;
 
-    return [x, y];
+	return [x, y];
 }
 
 /**
  * Calculates the general form coefficients (A, B, C) of a line given a point and a direction vector.
  */
 function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): [number, number, number] {
-    // General form: Ax + By + C = 0
-    const A = vector[1];
-    const B = -vector[0];
-    const C = vector[0] * coords[1] - vector[1] * coords[0];
+	// General form: Ax + By + C = 0
+	const A = vector[1];
+	const B = -vector[0];
+	const C = vector[0] * coords[1] - vector[1] * coords[0];
 
-    return [A, B, C];
+	return [A, B, C];
 }
 
 /**
@@ -81,20 +81,20 @@ function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): [numb
  * Handles both regular and vertical lines.
  */
 function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): [number, number, number] {
-    // Handle the case of a vertical line (infinite slope)
-    if (coords1[0] === coords2[0]) {
-        return [1, 0, -coords1[0]];  // The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
-    }
+	// Handle the case of a vertical line (infinite slope)
+	if (coords1[0] === coords2[0]) {
+		return [1, 0, -coords1[0]];  // The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
+	}
 
-    // Calculate the slope (m)
-    const m = (coords2[1] - coords1[1]) / (coords2[0] - coords1[0]);
+	// Calculate the slope (m)
+	const m = (coords2[1] - coords1[1]) / (coords2[0] - coords1[0]);
 
-    // General form coefficients: A = m, B = -1, and C = y1 - m * x1
-    const A = m;
-    const B = -1;
-    const C = coords1[1] - m * coords1[0];
+	// General form coefficients: A = m, B = -1, and C = y1 - m * x1
+	const A = m;
+	const B = -1;
+	const C = coords1[1] - m * coords1[0];
 
-    return [A, B, C];
+	return [A, B, C];
 }
 
 /**
@@ -303,54 +303,54 @@ function getCornerOfBoundingBox(boundingBox: BoundingBox, corner: Corner): Coord
  * @returns An array of intersection points, or an empty array if no intersections are found.
  */
 function findLineBoxIntersections(coords: Coords, direction: Vec2, box: BoundingBox): Coords[] {
-    const intersections: Coords[] = [];
+	const intersections: Coords[] = [];
 
-    // Function to check intersection with a vertical line (x = constant)
-    function checkVerticalEdge(x: number): number | null {
-        if (direction[0] === 0) return null; // No intersection with vertical line if no x-direction
-        const t = (x - coords[0]) / direction[0];
-        return coords[1] + t * direction[1]; // Calculate corresponding y
-    };
+	// Function to check intersection with a vertical line (x = constant)
+	function checkVerticalEdge(x: number): number | null {
+		if (direction[0] === 0) return null; // No intersection with vertical line if no x-direction
+		const t = (x - coords[0]) / direction[0];
+		return coords[1] + t * direction[1]; // Calculate corresponding y
+	};
 
-    // Function to check intersection with a horizontal line (y = constant)
-    function checkHorizontalEdge(y: number): number | null {
-        if (direction[1] === 0) return null; // No intersection with horizontal line if no y-direction
-        const t = (y - coords[1]) / direction[1];
-        return coords[0] + t * direction[0]; // Calculate corresponding x
-    };
+	// Function to check intersection with a horizontal line (y = constant)
+	function checkHorizontalEdge(y: number): number | null {
+		if (direction[1] === 0) return null; // No intersection with horizontal line if no y-direction
+		const t = (y - coords[1]) / direction[1];
+		return coords[0] + t * direction[0]; // Calculate corresponding x
+	};
 
-    // Check intersection with the left edge (x = box.left)
-    const yAtLeft = checkVerticalEdge(box.left);
-    if (yAtLeft !== null && yAtLeft > box.bottom && yAtLeft < box.top) {
-        intersections.push([box.left, yAtLeft]);
-    }
+	// Check intersection with the left edge (x = box.left)
+	const yAtLeft = checkVerticalEdge(box.left);
+	if (yAtLeft !== null && yAtLeft > box.bottom && yAtLeft < box.top) {
+		intersections.push([box.left, yAtLeft]);
+	}
 
-    // Check intersection with the right edge (x = box.right)
-    const yAtRight = checkVerticalEdge(box.right);
-    if (yAtRight !== null && yAtRight > box.bottom && yAtRight < box.top) {
-        intersections.push([box.right, yAtRight]);
-    }
+	// Check intersection with the right edge (x = box.right)
+	const yAtRight = checkVerticalEdge(box.right);
+	if (yAtRight !== null && yAtRight > box.bottom && yAtRight < box.top) {
+		intersections.push([box.right, yAtRight]);
+	}
 
-    // Check intersection with the bottom edge (y = box.bottom)
-    const xAtBottom = checkHorizontalEdge(box.bottom);
-    if (xAtBottom !== null && xAtBottom >= box.left && xAtBottom <= box.right) {
-        intersections.push([xAtBottom, box.bottom]);
-    }
+	// Check intersection with the bottom edge (y = box.bottom)
+	const xAtBottom = checkHorizontalEdge(box.bottom);
+	if (xAtBottom !== null && xAtBottom >= box.left && xAtBottom <= box.right) {
+		intersections.push([xAtBottom, box.bottom]);
+	}
 
-    // Check intersection with the top edge (y = box.top)
-    const xAtTop = checkHorizontalEdge(box.top);
-    if (xAtTop !== null && xAtTop >= box.left && xAtTop <= box.right) {
-        intersections.push([xAtTop, box.top]);
-    }
+	// Check intersection with the top edge (y = box.top)
+	const xAtTop = checkHorizontalEdge(box.top);
+	if (xAtTop !== null && xAtTop >= box.left && xAtTop <= box.right) {
+		intersections.push([xAtTop, box.top]);
+	}
 
-    // Sort the intersections by distance along the direction of travel
-    intersections.sort((a, b) => {
-        const distA = (a[0] - coords[0]) * direction[0] + (a[1] - coords[1]) * direction[1]; // Dot product
-        const distB = (b[0] - coords[0]) * direction[0] + (b[1] - coords[1]) * direction[1]; // Dot product
-        return distA - distB;  // Sort by distance in the direction of the vector
-    });
+	// Sort the intersections by distance along the direction of travel
+	intersections.sort((a, b) => {
+		const distA = (a[0] - coords[0]) * direction[0] + (a[1] - coords[1]) * direction[1]; // Dot product
+		const distB = (b[0] - coords[0]) * direction[0] + (b[1] - coords[1]) * direction[1]; // Dot product
+		return distA - distB;  // Sort by distance in the direction of the vector
+	});
 
-    return intersections;
+	return intersections;
 }
 
 
@@ -617,7 +617,6 @@ export default {
 	closestPointOnLine,
 	getAABBCornerOfLine,
 	getCornerOfBoundingBox,
-	getLineIntersectionEntryPoint,
 
 	findLineBoxIntersections,
 
