@@ -100,8 +100,8 @@ interface SlideArrows {
  * that is CLOSEST to you (or the screen) on the line!
  */
 interface ArrowsLine {
-	left: Piece[],
-	right: Piece[]
+	negDotProd: Piece[],
+	posDotProd: Piece[]
 }
 
 interface HoveredArrow {
@@ -344,7 +344,7 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine as Piece[], lineKey as LineKey);
 			// If it is empty, don't add it.
-			if (arrowsLine.left.length === 0 && arrowsLine.right.length === 0) continue;
+			if (arrowsLine.negDotProd.length === 0 && arrowsLine.posDotProd.length === 0) continue;
 			if (!slideArrows[slideKey]) slideArrows[slideKey] = {}; // Make sure this exists first
 			slideArrows[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
 		}
@@ -363,11 +363,11 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
  */
 function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: Piece[], lineKey: LineKey): ArrowsLine {
 
-	const left: Piece[] = [];
-	const right: Piece[] = [];
+	const negDotProd: Piece[] = [];
+	const posDotProd: Piece[] = [];
 
-	let closestLeft: Piece | undefined;
-	let closestRight: Piece | undefined;
+	let closestNegDotProd: Piece | undefined;
+	let closestRightDotProd: Piece | undefined;
 
 	const axis = slideDir[0] === 0 ? 1 : 0;
 	organizedline.forEach(piece => {
@@ -383,11 +383,11 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 
 
 		if (positiveDotProduct) {
-			if (closestLeft === undefined) closestLeft = piece;
-			else if (piece.coords[axis] > closestLeft.coords[axis]) closestLeft = piece;
+			if (closestNegDotProd === undefined) closestNegDotProd = piece;
+			else if (piece.coords[axis] > closestNegDotProd.coords[axis]) closestNegDotProd = piece;
 		} else {
-			if (closestRight === undefined) closestRight = piece;
-			else if (piece.coords[axis] < closestRight.coords[axis]) closestRight = piece;
+			if (closestRightDotProd === undefined) closestRightDotProd = piece;
+			else if (piece.coords[axis] < closestRightDotProd.coords[axis]) closestRightDotProd = piece;
 		}
 
 		/**
@@ -434,25 +434,25 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 
 		if (positiveDotProduct) {
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.left : boundingBoxInt.bottom;
-			if (slideLegalLimit[1] > boundingBoxSide) left.push(piece); // Can(?) reach our screen
+			if (slideLegalLimit[1] > boundingBoxSide) negDotProd.push(piece); // Can(?) reach our screen
 		} else { // Opposite side
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
-			if (slideLegalLimit[0] < boundingBoxSide) right.push(piece); // Can(?) reach our screen
+			if (slideLegalLimit[0] < boundingBoxSide) posDotProd.push(piece); // Can(?) reach our screen
 		}
 	});
 
 	// Add the closest left/right pieces if they haven't been added already
-	if (closestLeft !== undefined && !left.includes(closestLeft)) left.push(closestLeft);
-	if (closestRight !== undefined && !right.includes(closestRight)) right.push(closestRight);
+	if (closestNegDotProd !== undefined && !negDotProd.includes(closestNegDotProd)) negDotProd.push(closestNegDotProd);
+	if (closestRightDotProd !== undefined && !posDotProd.includes(closestRightDotProd)) posDotProd.push(closestRightDotProd);
 
 	// Now sort them.
-	left.sort((piece1, piece2) => piece1.coords[axis] - piece2.coords[axis]);
-	right.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
+	negDotProd.sort((piece1, piece2) => piece1.coords[axis] - piece2.coords[axis]);
+	posDotProd.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
 	// console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`);
 	// console.log(left);
 	// console.log(right);
 
-	return { left, right };
+	return { negDotProd, posDotProd };
 }
 
 /**
@@ -480,15 +480,15 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
 		for (const key in object) { // LineKey
 			const line: ArrowsLine = object[key as LineKey]!;
-			if (line.left.length > 0) {
-				const piece: Piece = line.left[line.left.length - 1]!;
-				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.left.pop();
+			if (line.negDotProd.length > 0) {
+				const piece: Piece = line.negDotProd[line.negDotProd.length - 1]!;
+				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.negDotProd.pop();
 			}
-			if (line.right.length > 0) {
-				const piece: Piece = line.right[line.right.length - 1]!;
-				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.right.pop();
+			if (line.posDotProd.length > 0) {
+				const piece: Piece = line.posDotProd[line.posDotProd.length - 1]!;
+				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.posDotProd.pop();
 			}
-			if (line.left.length === 0 && line.right.length === 0) delete object[key as LineKey];
+			if (line.negDotProd.length === 0 && line.posDotProd.length === 0) delete object[key as LineKey];
 		}
 	}
 
@@ -526,15 +526,15 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!;
 		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
 		for (const lineKey in arrowLinesOfSlideDir) { // `C|X`
-			arrowLinesOfSlideDir[lineKey]!.left.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, true));
-			arrowLinesOfSlideDir[lineKey]!.right.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, false));
+			arrowLinesOfSlideDir[lineKey]!.negDotProd.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, true));
+			arrowLinesOfSlideDir[lineKey]!.posDotProd.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, false));
 		}
 	}
 
 	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
-	function processPiece(lineKey: LineKey, piece: Piece, index: number, slideDir: Vec2, isLeft: boolean) {
+	function processPiece(lineKey: LineKey, piece: Piece, index: number, slideDir: Vec2, posDotProd: boolean) {
 		if (piece.type === 'voidsN') return;
-		const vector = isLeft ? slideDir : math.negateVector(slideDir);
+		const vector = posDotProd ? slideDir : math.negateVector(slideDir);
 		const boxIntersections = math.findLineBoxIntersections(piece.coords, vector, boundingBoxFloat);
 		if (boxIntersections.length < 2) return; // Probably perfectly intersects a corner
 		// If the intersections are in the opposite direction the vector's pointing, then the first intersection is swapped
@@ -578,7 +578,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 			}
 		}
 
-		arrowsData.push({ worldLocation, type: piece.type, slideDir, flipped: isLeft, hovered, isAdjacent });
+		arrowsData.push({ worldLocation, type: piece.type, slideDir, flipped: !posDotProd, hovered, isAdjacent });
 	}
 
 	// console.log("Arrows hovered over this frame:");
@@ -730,7 +730,7 @@ function concatData(data: number[], dataArrows: number[], arrow: Arrow, worldWid
         [dist + size, 0]
     ];
 
-	const arrowDir = arrow.flipped ? math.negateVector(arrow.slideDir) : arrow.slideDir;
+	const arrowDir = arrow.flipped ? arrow.slideDir : math.negateVector(arrow.slideDir);
 	const angle = Math.atan2(arrowDir[1], arrowDir[0]);
 	const ad = applyTransform(points, angle, arrow.worldLocation);
 
@@ -768,35 +768,6 @@ function applyTransform(points: Coords[], rotation: number, translation: Coords)
 
 
 
-/**
- * Tests if the piece type can move in the specified direction in the game.
- * This works even with directions in the negative-x direction.
- * For example, a piece can move [-2,-1] if it has the slide moveset [2,1].
- * @param type - 'knightridersW'
- * @param direction - [dx,dy]  where dx can be negative
- */
-function doesTypeHaveDirection(type: string, direction: Vec2) {
-	const moveset = legalmoves.getPieceMoveset(gameslot.getGamefile()!, type);
-	if (!moveset.sliding) return false;
-
-	const absoluteDirection = absoluteValueOfDirection(direction); // 'dx,dy'  where dx is always positive
-	const key = math.getKeyFromVec2(absoluteDirection);
-	return key in moveset.sliding;
-}
-
-/**
- * Returns the absolute value of the direction/line.
- * If it's in the negative-x direction, it negates it.
- * @param direction - `[dx,dy]`
- */
-function absoluteValueOfDirection(direction: Vec2): Vec2 {
-	let [dx,dy] = direction;
-	if (dx < 0 || dx === 0 && dy < 0) { // Negate
-		dx *= -1;
-		dy *= -1;
-	}
-	return [dx,dy];
-}
 
 
 
