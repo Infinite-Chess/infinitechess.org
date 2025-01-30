@@ -70,8 +70,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** Whether hippogonal lines, or greater, are present in the gamefile.
 		 * True if there are knightriders, or greater, riders. @type {boolean} */
 		hippogonalsPresent: undefined,
-		/** Whether any single piece has a custom blocking function for the game. */
-		atleastOneCustomBlocking: undefined
 	};
     
 	/** @type {GameRules} */
@@ -250,10 +248,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
-	// MUST BE BEFORE setting atleastOneCustomBlocking!!!
 	gamefileutility.deleteUnusedMovesets(this);
-	// MUST BE AFTER deleteUnusedMovesets()!!!
-	this.startSnapshot.atleastOneCustomBlocking = movesets.doMovesetsContainAtleastOneCustomBlocking(this.pieceMovesets);
 
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?

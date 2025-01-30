@@ -73,7 +73,6 @@ function initExistingTypes(gamefile) {
 function initSlidingMoves(gamefile) {
 	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
 	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
-	console.log("Game contains atleast one custom blocking: " + gamefile.startSnapshot.atleastOneCustomBlocking);
 }
 
 /**
