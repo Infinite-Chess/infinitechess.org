@@ -491,7 +491,7 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 		const blockPoint = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
 
 		// Naviary's new code
-		if (blockPoint === null) continue; // None (or infinite) intersection points!
+		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
 		if (!math.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.
 		if (!coordutil.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
 		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
