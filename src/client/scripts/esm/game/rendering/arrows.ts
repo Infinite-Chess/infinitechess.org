@@ -329,7 +329,7 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 		// intersecting the box between them.
 
 		const containingPoints = math.findFarthestPointsALineSweepsABox(slide, boundingBoxInt);
-		const containingPointsLineC = containingPoints.map(point => math.getLineCFromCoordsAndVec(point, slide));
+		const containingPointsLineC = containingPoints.map(point => math.getLineCFromCoordsAndVec(point, slide)) as [number, number];
 		// Any line of this slope of which its C value is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
 		containingPointsLineC.sort((a, b) => a - b); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
@@ -378,7 +378,7 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		const intersectionPoints = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxFloat);
 		if (intersectionPoints.length < 2) return; // Likely intersects perfectly on a corner
 		// If the vector is in the opposite direction, then the first intersection is swapped
-		const positiveDotProduct = intersectionPoints[0].positiveDotProduct;
+		const positiveDotProduct = intersectionPoints[0]!.positiveDotProduct;
 
 
 
@@ -538,7 +538,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		const boxIntersections = math.findLineBoxIntersections(piece.coords, vector, boundingBoxFloat);
 		if (boxIntersections.length < 2) return; // Probably perfectly intersects a corner
 		// If the intersections are in the opposite direction the vector's pointing, then the first intersection is swapped
-		const firstIntersection = boxIntersections[1].positiveDotProduct ? boxIntersections[0] : boxIntersections[1];
+		const firstIntersection = boxIntersections[1]!.positiveDotProduct ? boxIntersections[0]! : boxIntersections[1]!;
 		const renderCoords = firstIntersection.coords;
 		
 		// If this picture is an adjacent picture, adjust it's positioning

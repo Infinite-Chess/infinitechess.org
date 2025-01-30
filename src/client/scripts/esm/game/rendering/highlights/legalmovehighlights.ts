@@ -427,7 +427,8 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 
 	for (const lineKey of slideLines) { // '1,0'
 		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
-		const [ intsect1Tile, intsect2Tile ] = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange)
+		const intersections = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
+		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
 
 		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
 		if (!intsect1Tile || !intsect2Tile) throw Error(`Line only has one intersect with square.`);

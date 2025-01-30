@@ -239,7 +239,7 @@ function closestPointOnLine(lineStart: Coords, lineEnd: Coords, point: Coords): 
  * @returns The distance between the two parallel lines.
  */
 function distanceBetweenParallelLines(A: number, B: number, C1: number, C2: number): number {
-    if (A === 0 && B === 0)  throw new Error("Invalid line equation: A and B cannot both be zero.");
+	if (A === 0 && B === 0)  throw new Error("Invalid line equation: A and B cannot both be zero.");
 	return Math.abs(C2 - C1) / Math.sqrt(A * A + B * B);
 }
 
@@ -266,13 +266,13 @@ function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBo
 	];
 
 	let maxDistance = -Infinity;
-	let farthestLines: [Coords, Coords] = [corners[0], corners[1]];
+	let farthestLines: [Coords, Coords] = [corners[0]!, corners[1]!];
 
 	// Compare each pair of corners and calculate the distance between parallel lines
 	for (let i = 0; i < corners.length; i++) {
 		for (let j = i + 1; j < corners.length; j++) {
-			const [x1, y1] = corners[i];
-			const [x2, y2] = corners[j];
+			const [x1, y1] = corners[i]!;
+			const [x2, y2] = corners[j]!;
 
 			// Calculate A, B, and C for the lines passing through the corners
 			const A = dy;
@@ -286,7 +286,7 @@ function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBo
 			// Update if this distance is the greatest so far
 			if (distance > maxDistance) {
 				maxDistance = distance;
-				farthestLines = [corners[i], corners[j]];
+				farthestLines = [corners[i]!, corners[j]!];
 			}
 		}
 	}
@@ -360,7 +360,7 @@ function findLineBoxIntersections(coords: Coords, direction: Vec2, box: Bounding
 
 	const result = intersections.map(intersection => {
 		const dotProduct = (intersection[0] - coords[0]) * direction[0] + (intersection[1] - coords[1]) * direction[1];
-		return { coords, positiveDotProduct: dotProduct >= 0 };
+		return { coords: intersection, positiveDotProduct: dotProduct >= 0 };
 	});
 
 	return result;
