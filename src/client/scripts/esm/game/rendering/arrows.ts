@@ -323,22 +323,24 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
 	const gamefile = gameslot.getGamefile()!;
 	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
-		const perpendicularSlideDir: Vec2 = [-slide[1], slide[0]]; // Rotates left 90deg
-		const boardCornerLeft_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,true);
-		const boardCornerRight_AB: Corner = math.getAABBCornerOfLine(perpendicularSlideDir,false);
-		const boardCornerLeft: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerLeft_AB);
-		const boardCornerRight: Coords = math.getCornerOfBoundingBox(boundingBoxFloat,boardCornerRight_AB);
-		const boardSlidesRight: number = organizedlines.getCFromLine(slide, boardCornerLeft);
-		const boardSlidesLeft: number = organizedlines.getCFromLine(slide, boardCornerRight);
-		// Any line of this slope that is not within these 2 are outside of our screen,
+
+		// Find the 2 points on opposite sides of the bounding box
+		// that will contain all organized lines of the given vector
+		// intersecting the box between them.
+
+		const containingPoints = math.findFarthestPointsALineSweepsABox(slide, boundingBoxInt);
+		const containingPointsLineC = containingPoints.map(point => math.getLineCFromCoordsAndVec(point, slide)) as [number, number];
+		// Any line of this slope of which its C value is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
-		const boardSlidesStart = Math.min(boardSlidesLeft, boardSlidesRight);
-		const boardSlidesEnd = Math.max(boardSlidesLeft, boardSlidesRight);
+		containingPointsLineC.sort((a, b) => a - b); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
+
 		// For all our lines in the game with this slope...
-		for (const [lineKey, organizedLine] of Object.entries(gamefile.piecesOrganizedByLines[slideKey])) {
-			// The X of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
-			const X = organizedlines.getCFromKey(lineKey as LineKey);
-			if (boardSlidesStart > X || boardSlidesEnd < X) continue; // Next line, this one is off-screen, so no piece arrows are visible
+		const organizedLinesOfDir = gamefile.piecesOrganizedByLines[slideKey];
+		for (const lineKey of Object.keys(organizedLinesOfDir)) {
+			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
+			const C = organizedlines.getCFromKey(lineKey as LineKey);
+			if (C < containingPointsLineC[0] || C > containingPointsLineC[1]) continue; // Next line, this one is off-screen, so no piece arrows are visible
+			const organizedLine = organizedLinesOfDir[lineKey]!;
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine as Piece[], lineKey as LineKey);
 			// If it is empty, don't add it.
@@ -361,8 +363,6 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
  */
 function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: Piece[], lineKey: LineKey): ArrowsLine {
 
-	const rightCorner = math.getCornerOfBoundingBox(boundingBoxFloat, math.getAABBCornerOfLine(slideDir,false));
-
 	const left: Piece[] = [];
 	const right: Piece[] = [];
 
@@ -374,16 +374,20 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		// Is the piece off-screen?
 		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
 		
-		const x = piece.coords[0];
-		const y = piece.coords[1];
+		
+		const intersectionPoints = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxFloat);
+		if (intersectionPoints.length < 2) return; // Likely intersects perfectly on a corner
+		// If the vector is in the opposite direction, then the first intersection is swapped
+		const positiveDotProduct = intersectionPoints[0]!.positiveDotProduct;
 
-		const onRightSide = x > boundingBoxFloat.right || y > rightCorner[1] === (rightCorner[1] === boundingBoxFloat.top);
-		if (onRightSide) {
-			if (closestRight === undefined) closestRight = piece;
-			else if (piece.coords[axis] < closestRight.coords[axis]) closestRight = piece;
-		} else {
+
+
+		if (positiveDotProduct) {
 			if (closestLeft === undefined) closestLeft = piece;
 			else if (piece.coords[axis] > closestLeft.coords[axis]) closestLeft = piece;
+		} else {
+			if (closestRight === undefined) closestRight = piece;
+			else if (piece.coords[axis] < closestRight.coords[axis]) closestRight = piece;
 		}
 
 		/**
@@ -406,6 +410,19 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		// It CAN slide along our direction of travel.
 		// ... But can it slide far enough where it can reach our screen?
 
+		// First of all, what are the intersection coordinates of its slide
+		// on our screen?
+
+		const intersectionCoords = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt);
+
+		// Next, how do find out if it's legal slide protrudes into the screen?
+
+
+
+
+
+
+
 		// Convert the slide limit from number of steps leftward/rightward
 		// to minimum x to maximum x
 		// (translate by the piece coordinates)
@@ -415,12 +432,12 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		slideLegalLimit[0] = piece.coords[axis] + slideDir[axis] * slideLegalLimit[0];
 		slideLegalLimit[1] = piece.coords[axis] + slideDir[axis] * slideLegalLimit[1];
 
-		if (onRightSide) {
-			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
-			if (slideLegalLimit[0] < boundingBoxSide) right.push(piece);
-		} else /* onLeftSide */ {
+		if (positiveDotProduct) {
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.left : boundingBoxInt.bottom;
-			if (slideLegalLimit[1] > boundingBoxSide) left.push(piece);
+			if (slideLegalLimit[1] > boundingBoxSide) left.push(piece); // Can(?) reach our screen
+		} else { // Opposite side
+			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
+			if (slideLegalLimit[0] < boundingBoxSide) right.push(piece); // Can(?) reach our screen
 		}
 	});
 
@@ -451,7 +468,7 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
 	if (mode === 2) {
-		slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) <= 1).map(math.getKeyFromVec2);
+		slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
 	}
 
 	for (const direction in slideArrows) {
@@ -516,17 +533,18 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 
 	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
 	function processPiece(lineKey: LineKey, piece: Piece, index: number, slideDir: Vec2, isLeft: boolean) {
-		const lineKey_C = organizedlines.getCFromKey(lineKey); // 'C|X' => C
 		if (piece.type === 'voidsN') return;
-		const corner: Corner = math.getAABBCornerOfLine(slideDir, isLeft);
-		const renderCoords = math.getLineIntersectionEntryPoint(slideDir[0], slideDir[1], lineKey_C, boundingBoxFloat, corner);
-		if (!renderCoords) return;
+		const vector = isLeft ? slideDir : math.negateVector(slideDir);
+		const boxIntersections = math.findLineBoxIntersections(piece.coords, vector, boundingBoxFloat);
+		if (boxIntersections.length < 2) return; // Probably perfectly intersects a corner
+		// If the intersections are in the opposite direction the vector's pointing, then the first intersection is swapped
+		const firstIntersection = boxIntersections[1]!.positiveDotProduct ? boxIntersections[0]! : boxIntersections[1]!;
+		const renderCoords = firstIntersection.coords;
 		
 		// If this picture is an adjacent picture, adjust it's positioning
 		let isAdjacent = false;
 		if (index > 0) {
 			isAdjacent = true;
-			const vector = isLeft ? slideDir : math.negateVector(slideDir);
 			renderCoords[0] += vector[0] * paddingBetwAdjacentPictures * index;
 			renderCoords[1] += vector[1] * paddingBetwAdjacentPictures * index;
 		}
@@ -543,11 +561,18 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 			
 			// If we also clicked, then teleport!
 			if (input.isMouseDown_Left() || input.getTouchClicked()) {
+
+				// Teleport in the direction of the piece's arrow, NOT straight to the piece.
+
 				const startCoords = movement.getBoardPos();
-				let telCoords: Coords;
-				if      (corner === 'right' || corner === 'left') telCoords = [piece.coords[0], startCoords[1]];
-				else if (corner === 'top' || corner === 'bottom') telCoords = [startCoords[0], piece.coords[1]];
-				else                                                      telCoords = [piece.coords[0], piece.coords[1]];
+				// The direction we will follow when teleporting
+				const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(startCoords, slideDir);
+				// The line perpendicular to the target piece
+				const perpendicularSlideDir: Vec2 = [-slideDir[1], slideDir[0]]; // Rotates left 90deg
+				const line2GeneralForm = math.getLineGeneralFormFromCoordsAndVec(piece.coords, perpendicularSlideDir);
+				// The target teleport coords
+				const telCoords = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
+
 				transition.panTel(startCoords, telCoords);
 				if (input.isMouseDown_Left()) input.removeMouseDown_Left();
 			}

@@ -486,9 +486,9 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 
 	for (const lineKey in moves.sliding) { // 'dx,dy'
 		const line = coordutil.getCoordsFromKey(lineKey); // [dx,dy]
-		const c1 = organizedlines.getCFromLine(line, coords); // Line of our selected piece
-		const c2 = organizedlines.getCFromLine(direction,square2); // Line between our 2 squares
-		const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2); // The intersection point of the 2 lines.
+		const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(coords, line);
+		const line2GeneralForm = math.getLineGeneralFormFrom2Coords(square1, square2);
+		const blockPoint = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
 
 		// Naviary's new code
 		if (blockPoint === null) continue; // None (or infinite) intersection points!
