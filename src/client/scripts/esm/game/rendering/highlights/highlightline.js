@@ -11,7 +11,6 @@ import perspective from '../perspective.js';
 import miniimage from '../miniimage.js';
 import board from '../board.js';
 import transition from '../transition.js';
-import organizedlines from '../../../chess/logic/organizedlines.js';
 import options from '../options.js';
 import selection from '../../chess/selection.js';
 import camera from '../camera.js';
@@ -72,7 +71,7 @@ function genModel() {
 		const line = coordutil.getCoordsFromKey(strline);
 		const lineIsVertical = line[0] === 0;
 
-		const intersectionPoints = math.findLineBoxIntersections(worldSpaceCoords, line, boundingBox);
+		const intersectionPoints = math.findLineBoxIntersections(worldSpaceCoords, line, boundingBox).map(intersection => intersection.coords);
         
 		if (!intersectionPoints[0]) continue;
 		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
@@ -144,7 +143,7 @@ function genModel() {
 	const line = closestPoint.line;
 	const lineIsVertical = line[0] === 0;
 	
-	const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox);
+	const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox).map(intersection => intersection.coords);
 
 	const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, false);
 	intersectionPoints[0] = capPointAtSlideLimit(intersectionPoints[0], leftLimitPointCoord, false, lineIsVertical);
