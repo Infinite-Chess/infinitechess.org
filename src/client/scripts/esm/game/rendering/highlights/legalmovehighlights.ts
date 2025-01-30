@@ -430,8 +430,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 		const intersections = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
 		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
 
-		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
-		if (!intsect1Tile || !intsect2Tile) throw Error(`Line only has one intersect with square.`);
+		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
         
 		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[lineKey], legalMoves.ignoreFunc, gamefile);
 	}

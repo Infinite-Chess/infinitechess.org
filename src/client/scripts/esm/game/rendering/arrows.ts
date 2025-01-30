@@ -90,6 +90,8 @@ interface SlideArrows {
 	}
 }
 
+type Entry = { piece: Piece, canSlideOntoScreen: boolean };
+
 /**
  * An object containing the arrows that should actually be present,
  * for a single organized line intersecting through our screen.
@@ -100,8 +102,11 @@ interface SlideArrows {
  * that is CLOSEST to you (or the screen) on the line!
  */
 interface ArrowsLine {
-	negDotProd: Piece[],
-	posDotProd: Piece[]
+	/** Piece on this line that intersect the screen with a positive dot product. */
+	posDotProd: Entry[],
+	/** Piece on this line that intersect the screen with a negative dot product.
+	 * The arrow direction for these will be flipped to the other side. */
+	negDotProd: Entry[]
 }
 
 interface HoveredArrow {
@@ -233,7 +238,10 @@ function toggleArrows() {
  */
 function update() {
 	if (mode === 0) return; // Arrow indicators are off, nothing is visible.
-	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) return; // Too zoomed out, the arrows would be really tiny.
+	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) { // Too zoomed out, the arrows would be really tiny.
+		hoveredArrowsLegalMoves.length = 0;
+		return;
+	}
 
 	/**
 	 * To be able to test if a piece is offscreen or not,
@@ -363,39 +371,34 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
  */
 function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: Piece[], lineKey: LineKey): ArrowsLine {
 
-	const negDotProd: Piece[] = [];
-	const posDotProd: Piece[] = [];
+	const negDotProd: Entry[] = [];
+	const posDotProd: Entry[] = [];
 
-	let closestNegDotProd: Piece | undefined;
-	let closestRightDotProd: Piece | undefined;
+	let closestNegDotProd: Entry | undefined;
+	let closestRightDotProd: Entry  | undefined;
 
 	const axis = slideDir[0] === 0 ? 1 : 0;
 	organizedline.forEach(piece => {
 		// Is the piece off-screen?
 		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
-		
-		
-		const intersectionPoints = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxFloat);
-		if (intersectionPoints.length < 2) return; // Likely intersects perfectly on a corner
-		// If the vector is in the opposite direction, then the first intersection is swapped
-		const positiveDotProduct = intersectionPoints[0]!.positiveDotProduct;
 
+		// Piece is guaranteed off-screen...
+		
+		const intersectionCoords = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt);
+		if (intersectionCoords.length < 2) return; // Likely intersects perfectly on a corner
+		const positiveDotProduct = intersectionCoords[0]!.positiveDotProduct;
 
+		const entry = { piece, canSlideOntoScreen: false };
 
 		if (positiveDotProduct) {
-			if (closestNegDotProd === undefined) closestNegDotProd = piece;
-			else if (piece.coords[axis] > closestNegDotProd.coords[axis]) closestNegDotProd = piece;
+			if (closestNegDotProd === undefined) closestNegDotProd = entry;
+			else if (piece.coords[axis] > closestNegDotProd.piece.coords[axis]) closestNegDotProd = entry;
 		} else {
-			if (closestRightDotProd === undefined) closestRightDotProd = piece;
-			else if (piece.coords[axis] < closestRightDotProd.coords[axis]) closestRightDotProd = piece;
+			if (closestRightDotProd === undefined) closestRightDotProd = entry;
+			else if (piece.coords[axis] < closestRightDotProd.piece.coords[axis]) closestRightDotProd = entry;
 		}
 
-		/**
-		 * If this is true, it's impossible for this piece to skip/phase
-		 * through the closest piece on the line to the screen, which means
-		 * only the closest piece on the line to the screen should be visible!
-		 */
-		if (!gamefile.startSnapshot.atleastOneCustomBlocking) return;
+		// Game is using atleast one custom blocking function...
 
 		/**
 		 * Calculate it's maximum slide.
@@ -407,37 +410,51 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 
 		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slideDir, slideKey, lineKey, organizedline);
 		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
-		// It CAN slide along our direction of travel.
-		// ... But can it slide far enough where it can reach our screen?
+
+		// It CAN slide along our direction of travel...
+		// But can it slide far enough where it can reach our screen?
 
 		// First of all, what are the intersection coordinates of its slide
 		// on our screen?
 
-		const intersectionCoords = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt);
-
 		// Next, how do find out if it's legal slide protrudes into the screen?
 
+		if (intersectionCoords.length < 2) return; // Probably intersects the screen box exactly on the corner
+		// If the vector is in the opposite direction, then the first intersection is swapped
+		const firstIntersection = positiveDotProduct ? intersectionCoords[0]! : intersectionCoords[1]!;
 
+		// What is the distance to the first intersection point?
 
+		const firstIntersectionDist = math.chebyshevDistance(piece.coords, firstIntersection.coords);
+		// What is the distance to the farthest point this piece can slide along this direction?
+		let farthestSlidePoint: Coords = firstIntersection.positiveDotProduct ? [
+			piece.coords[0] + slideDir[0] * slideLegalLimit[1],
+			piece.coords[1] + slideDir[1] * slideLegalLimit[1],
+		] : [ // Negative dot product
+			piece.coords[0] - slideDir[0] * slideLegalLimit[0],
+			piece.coords[1] - slideDir[1] * slideLegalLimit[0],
+		];
+		// NaNs may occur if zero is multiplied by infinity. Make sure we replace each of those with zero.
+		// (but it doesn't matter whether we replace it with zero, a finite number, or infinity, because
+		// the chebyshev distance is gonna be infinity anyway, since the other coord is infinity)
+		farthestSlidePoint = farthestSlidePoint.map(coord => isNaN(coord) ? 0 : coord) as Coords;
+		const farthestSlidePointDist = math.chebyshevDistance(piece.coords, farthestSlidePoint);
 
+		// If the farthest slide point distance is greater than the first intersection
+		// distance, then the piece is able to slide into the screen bounding box!
 
+		if (farthestSlidePointDist < firstIntersectionDist) return; // This piece cannot slide so far as to intersect the screen bounding box
 
+		// This piece CAN slide far enough to enter our screen...
 
-		// Convert the slide limit from number of steps leftward/rightward
-		// to minimum x to maximum x
-		// (translate by the piece coordinates)
-		// TODO: THIS DOESN'T WORK. WE HAVE TO CALCULATE if the legal slide
-		// can legally move to the first int square intersecting our screen!!
-		// Right now this only cares about the x value or whatever
-		slideLegalLimit[0] = piece.coords[axis] + slideDir[axis] * slideLegalLimit[0];
-		slideLegalLimit[1] = piece.coords[axis] + slideDir[axis] * slideLegalLimit[1];
+		entry.canSlideOntoScreen = true;
 
 		if (positiveDotProduct) {
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.left : boundingBoxInt.bottom;
-			if (slideLegalLimit[1] > boundingBoxSide) negDotProd.push(piece); // Can(?) reach our screen
+			if (slideLegalLimit[1] > boundingBoxSide) negDotProd.push(entry); // Can(?) reach our screen
 		} else { // Opposite side
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
-			if (slideLegalLimit[0] < boundingBoxSide) posDotProd.push(piece); // Can(?) reach our screen
+			if (slideLegalLimit[0] < boundingBoxSide) posDotProd.push(entry); // Can(?) reach our screen
 		}
 	});
 
@@ -446,8 +463,8 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 	if (closestRightDotProd !== undefined && !posDotProd.includes(closestRightDotProd)) posDotProd.push(closestRightDotProd);
 
 	// Now sort them.
-	negDotProd.sort((piece1, piece2) => piece1.coords[axis] - piece2.coords[axis]);
-	posDotProd.sort((piece1, piece2) => piece2.coords[axis] - piece1.coords[axis]);
+	negDotProd.sort((entry1, entry2) => entry1.piece.coords[axis] - entry2.piece.coords[axis]);
+	posDotProd.sort((entry1, entry2) => entry2.piece.coords[axis] - entry1.piece.coords[axis]);
 	// console.log(`Sorted left & right arrays of line of arrows for slideDir ${JSON.stringify(slideDir)}, lineKey ${lineKey}:`);
 	// console.log(left);
 	// console.log(right);
@@ -472,31 +489,24 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 	}
 
 	for (const direction in slideArrows) {
-		if (slideExceptions.includes(direction as Vec2Key)) continue;
-		removeTypesWithIncorrectMoveset(slideArrows[direction as Vec2Key]!, direction as Vec2Key);
+		if (slideExceptions.includes(direction as Vec2Key)) continue; // Keep it anyway, our arrows mode is high enough
+		removeTypesThatCantSlideOntoScreen(slideArrows[direction as Vec2Key]!, direction as Vec2Key);
 		if (jsutil.isEmpty(slideArrows[direction as Vec2Key]!)) delete slideArrows[direction as Vec2Key];
 	}
 
-	function removeTypesWithIncorrectMoveset(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
+	function removeTypesThatCantSlideOntoScreen(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
 		for (const key in object) { // LineKey
 			const line: ArrowsLine = object[key as LineKey]!;
 			if (line.negDotProd.length > 0) {
-				const piece: Piece = line.negDotProd[line.negDotProd.length - 1]!;
-				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.negDotProd.pop();
+				const entry: Entry = line.negDotProd[line.negDotProd.length - 1]!;
+				if (!entry.canSlideOntoScreen) line.negDotProd.pop();
 			}
 			if (line.posDotProd.length > 0) {
-				const piece: Piece = line.posDotProd[line.posDotProd.length - 1]!;
-				if (!doesTypeHaveMoveset(gamefile, piece.type, direction)) line.posDotProd.pop();
+				const entry: Entry = line.posDotProd[line.posDotProd.length - 1]!;
+				if (!entry.canSlideOntoScreen) line.posDotProd.pop();
 			}
 			if (line.negDotProd.length === 0 && line.posDotProd.length === 0) delete object[key as LineKey];
 		}
-	}
-
-	/** Whether the given type of piece can slide in the direction provided. */
-	function doesTypeHaveMoveset(gamefile: gamefile, type: string, direction: Vec2Key) {
-		const moveset = legalmoves.getPieceMoveset(gamefile, type);
-		if (!moveset.sliding) return false;
-		return moveset.sliding[direction] !== undefined;
 	}
 }
 
@@ -526,8 +536,8 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!;
 		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
 		for (const lineKey in arrowLinesOfSlideDir) { // `C|X`
-			arrowLinesOfSlideDir[lineKey]!.negDotProd.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, true));
-			arrowLinesOfSlideDir[lineKey]!.posDotProd.forEach((piece, index) => processPiece(lineKey as LineKey, piece, index, slideDir, false));
+			arrowLinesOfSlideDir[lineKey]!.negDotProd.forEach((entry, index) => processPiece(lineKey as LineKey, entry.piece, index, slideDir, true));
+			arrowLinesOfSlideDir[lineKey]!.posDotProd.forEach((entry, index) => processPiece(lineKey as LineKey, entry.piece, index, slideDir, false));
 		}
 	}
 
@@ -616,6 +626,10 @@ function regenerateModelAndRender() {
 
 	modelPictures.render();
 	modelArrows.render();
+
+	// Reset lists for next frame
+	arrowsData.length = 0;
+	hoveredArrows.length = 0;
 }
 
 /**
