@@ -451,10 +451,10 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 
 		if (positiveDotProduct) {
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.left : boundingBoxInt.bottom;
-			if (slideLegalLimit[1] > boundingBoxSide) negDotProd.push(entry); // Can(?) reach our screen
+			if (slideLegalLimit[1] > boundingBoxSide) negDotProd.push(entry); // Can reach our screen
 		} else { // Opposite side
 			const boundingBoxSide = axis === 0 ? boundingBoxInt.right : boundingBoxInt.top;
-			if (slideLegalLimit[0] < boundingBoxSide) posDotProd.push(entry); // Can(?) reach our screen
+			if (slideLegalLimit[0] < boundingBoxSide) posDotProd.push(entry); // Can reach our screen
 		}
 	});
 
@@ -490,11 +490,11 @@ function removeUnnecessaryArrows(slideArrows: SlideArrows) {
 
 	for (const direction in slideArrows) {
 		if (slideExceptions.includes(direction as Vec2Key)) continue; // Keep it anyway, our arrows mode is high enough
-		removeTypesThatCantSlideOntoScreen(slideArrows[direction as Vec2Key]!, direction as Vec2Key);
+		removeTypesThatCantSlideOntoScreen(slideArrows[direction as Vec2Key]!);
 		if (jsutil.isEmpty(slideArrows[direction as Vec2Key]!)) delete slideArrows[direction as Vec2Key];
 	}
 
-	function removeTypesThatCantSlideOntoScreen(object: { [lineKey: LineKey]: ArrowsLine }, direction: Vec2Key) { // horzRight, vertical/diagonalUp
+	function removeTypesThatCantSlideOntoScreen(object: { [lineKey: LineKey]: ArrowsLine }) { // horzRight, vertical/diagonalUp
 		for (const key in object) { // LineKey
 			const line: ArrowsLine = object[key as LineKey]!;
 			if (line.negDotProd.length > 0) {
@@ -528,9 +528,7 @@ function calculateInstanceData_AndArrowsHovered(slideArrows: SlideArrows, boundi
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const worldHalfWidth = worldWidth / 2;
 
-	const mouseWorldLocation: Coords = input.getMouseWorldLocation() as Coords; // [x,y]
-	const mouseWorldX: number = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[0] : mouseWorldLocation[0];
-	const mouseWorldY: number = input.getTouchClickedWorld() ? input.getTouchClickedWorld()[1] : mouseWorldLocation[1];
+	const mouseWorldLocation = input.getTouchClickedWorld() ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
 
 	for (const vec2Key in slideArrows) {
 		const arrowLinesOfSlideDir = slideArrows[vec2Key as Vec2Key]!;
