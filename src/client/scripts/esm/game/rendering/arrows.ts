@@ -105,13 +105,16 @@ interface SlideArrowsDraft {
  */
 interface ArrowsLineDraft {
 	/** Piece on this line that intersect the screen with a positive dot product. */
-	posDotProd: Entry[],
+	posDotProd: ArrowDraft[],
 	/** Piece on this line that intersect the screen with a negative dot product.
 	 * The arrow direction for these will be flipped to the other side. */
-	negDotProd: Entry[]
+	negDotProd: ArrowDraft[],
+	/** An array of the points this line intersects the screen bounding box
+	 * in order of ascending dot product. */
+	intersections: Coords[],
 }
 
-type Entry = { piece: Piece, canSlideOntoScreen: boolean };
+type ArrowDraft = { piece: Piece, canSlideOntoScreen: boolean };
 
 
 
@@ -401,21 +404,23 @@ function generateAllArrows(boundingBoxInt: BoundingBox, boundingBoxFloat: Boundi
  */
 function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: Piece[], lineKey: LineKey): ArrowsLineDraft {
 
-	const negDotProd: Entry[] = [];
-	const posDotProd: Entry[] = [];
+	const negDotProd: ArrowDraft[] = [];
+	const posDotProd: ArrowDraft[] = [];
 
-	let closestNegDotProd: Entry | undefined;
-	let closestRightDotProd: Entry  | undefined;
+	let closestNegDotProd: ArrowDraft | undefined;
+	let closestRightDotProd: ArrowDraft  | undefined;
 
 	const axis = slideDir[0] === 0 ? 1 : 0;
+
+	const intersections = math.findLineBoxIntersections(organizedline[0].coords, slideDir, boundingBoxInt).map(c => c.coords);
+
 	organizedline.forEach(piece => {
 		// Is the piece off-screen?
 		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
 
 		// Piece is guaranteed off-screen...
 		
-		const intersectionCoords = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt);
-		if (intersectionCoords.length < 2) return; // Likely intersects perfectly on a corner
+		const intersectionCoords = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt); // should THIS BE FLOAT???
 		const positiveDotProduct = intersectionCoords[0]!.positiveDotProduct;
 
 		const entry = { piece, canSlideOntoScreen: false };
@@ -499,7 +504,7 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 	// console.log(left);
 	// console.log(right);
 
-	return { negDotProd, posDotProd };
+	return { negDotProd, posDotProd, intersections };
 }
 
 /**
@@ -528,11 +533,11 @@ function removeUnnecessaryArrows(slideArrows: SlideArrowsDraft) {
 		for (const key in object) { // LineKey
 			const line: ArrowsLineDraft = object[key as LineKey]!;
 			if (line.negDotProd.length > 0) {
-				const entry: Entry = line.negDotProd[line.negDotProd.length - 1]!;
+				const entry: ArrowDraft = line.negDotProd[line.negDotProd.length - 1]!;
 				if (!entry.canSlideOntoScreen) line.negDotProd.pop();
 			}
 			if (line.posDotProd.length > 0) {
-				const entry: Entry = line.posDotProd[line.posDotProd.length - 1]!;
+				const entry: ArrowDraft = line.posDotProd[line.posDotProd.length - 1]!;
 				if (!entry.canSlideOntoScreen) line.posDotProd.pop();
 			}
 			if (line.negDotProd.length === 0 && line.posDotProd.length === 0) delete object[key as LineKey];
@@ -571,21 +576,44 @@ function calculateInstanceData_AndArrowsHovered(slideArrowsDraft: SlideArrowsDra
 	// }
 
 	// Take the arrows draft, construct the actual
-	for (const [vec2Key, slideDraft] of Object.entries(slideArrowsDraft)) {
-		const slide: { [lineKey: string]: ArrowsLine } = slideArrows[vec2Key] = {};
-		for (const [lineKey, arrowLineDraft] of Object.entries(slideDraft)) {
-			const posDotProd = arrowLineDraft.map(entry => processPiece(vec2Key, entry))
-			slide[lineKey] = { posDotProd, negDotProd };
+	for (const [vec2Key, linesOfDirectionDraft] of Object.entries(slideArrowsDraft)) {
+		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
+		const linesOfDirection: { [lineKey: string]: ArrowsLine } = {};
+		let atleastOneLine = false;
+		for (const [lineKey, arrowLineDraft] of Object.entries(linesOfDirectionDraft)) {
+			
+			const posDotProd: Arrow[] = [];
+			const negDotProd: Arrow[] = [];
+			
+			let vector = slideDir;
+			(arrowLineDraft as ArrowsLineDraft).posDotProd.forEach((arrowDraft, index) => {
+				const arrow = processPiece(arrowDraft, slideDir, true, index);
+				if (arrow !== undefined) posDotProd.push(arrow);
+			});
+
+			vector = math.negateVector(slideDir);
+			(arrowLineDraft as ArrowsLineDraft).negDotProd.forEach((arrowDraft, index) => {
+				const arrow = processPiece(arrowDraft, slideDir, false, index);
+				if (arrow !== undefined) negDotProd.push(arrow);
+			});
+
+			if (posDotProd.length > 0 || negDotProd.length > 0) {
+				atleastOneLine = true;
+				linesOfDirection[lineKey] = { posDotProd, negDotProd };
+			}
 		}
+ 
+		if (atleastOneLine) slideArrows[vec2Key] = linesOfDirection;
 	}
 
 
 	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
 	// Adds the arrow the the FINAL arrows, not the drafts.
-	function processPiece(lineKey: LineKey, piece: Piece, index: number, slideDir: Vec2, posDotProd: boolean): Arrow {
-		if (piece.type === 'voidsN') return;
-		const vector = posDotProd ? slideDir : math.negateVector(slideDir);
-		const boxIntersections = math.findLineBoxIntersections(piece.coords, vector, boundingBoxFloat);
+	function processPiece(arrowDraft: ArrowDraft, slideDir: Vec2, intersection: Coords, posDotProd: boolean, index: number): Arrow | undefined {
+		if (arrowDraft.piece.type === 'voidsN') return;
+
+		const vector = posDotProd ? slideDir : 
+		const boxIntersections = math.findLineBoxIntersections(arrowDraft.piece.coords, vector, boundingBoxFloat);
 		if (boxIntersections.length < 2) return; // Probably perfectly intersects a corner
 		// If the intersections are in the opposite direction the vector's pointing, then the first intersection is swapped
 		const firstIntersection = boxIntersections[1]!.positiveDotProduct ? boxIntersections[0]! : boxIntersections[1]!;
