@@ -7,30 +7,22 @@
  * If the pictues are clicked, we initiate a teleport to that piece.
  */
 
-import type { BufferModel, BufferModelInstanced } from '../buffermodel.js';
-import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
-import type { Piece } from '../../../chess/logic/boardchanges.js';
-import type { Color } from '../../../chess/util/colorutil.js';
-import type { BoundingBox, Corner, Vec2, Vec2Key } from '../../../util/math.js';
-import type { LineKey, LinesByStep, PieceLinesByKey } from '../../../chess/logic/organizedlines.js';
+import type { Coords } from '../../../chess/util/coordutil.js';
+import type { Change, Piece } from '../../../chess/logic/boardchanges.js';
+import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math.js';
+import type { LineKey } from '../../../chess/logic/organizedlines.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
-// @ts-ignore
-import type { LegalMoves } from '../../chess/selection.js';
 
 import spritesheet from '../spritesheet.js';
 import gameslot from '../../chess/gameslot.js';
 import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import { createModel } from '../buffermodel.js';
-import colorutil from '../../../chess/util/colorutil.js';
 import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import math from '../../../util/math.js';
 import organizedlines from '../../../chess/logic/organizedlines.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
-import legalmovehighlights from '../highlights/legalmovehighlights.js';
-import onlinegame from '../../misc/onlinegame/onlinegame.js';
 import frametracker from '../frametracker.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
@@ -59,6 +51,7 @@ import space from '../../misc/space.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 // @ts-ignore
 import shapes from '../shapes.js';
+import boardchanges from '../../../chess/logic/boardchanges.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -544,16 +537,20 @@ function removeUnnecessaryArrows(slideArrowsDraft: SlideArrowsDraft) {
 	function removeTypesThatCantSlideOntoScreen(object: { [lineKey: LineKey]: ArrowsLineDraft }) { // horzRight, vertical/diagonalUp
 		for (const key in object) { // LineKey
 			const line: ArrowsLineDraft = object[key as LineKey]!;
-			if (line.negDotProd.length > 0) {
-				const entry: ArrowDraft = line.negDotProd[line.negDotProd.length - 1]!;
-				if (!entry.canSlideOntoScreen) line.negDotProd.pop();
-			}
-			if (line.posDotProd.length > 0) {
-				const entry: ArrowDraft = line.posDotProd[line.posDotProd.length - 1]!;
-				if (!entry.canSlideOntoScreen) line.posDotProd.pop();
-			}
+			removeTypesThatCantSlideOntoScreenFromLineDraft(line);
 			if (line.negDotProd.length === 0 && line.posDotProd.length === 0) delete object[key as LineKey];
 		}
+	}
+}
+
+function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft) {
+	if (line.negDotProd.length > 0) {
+		const entry: ArrowDraft = line.negDotProd[line.negDotProd.length - 1]!;
+		if (!entry.canSlideOntoScreen) line.negDotProd.pop();
+	}
+	if (line.posDotProd.length > 0) {
+		const entry: ArrowDraft = line.posDotProd[line.posDotProd.length - 1]!;
+		if (!entry.canSlideOntoScreen) line.posDotProd.pop();
 	}
 }
 
@@ -587,59 +584,25 @@ function calculateInstanceData_AndArrowsHovered(slideArrowsDraft: SlideArrowsDra
 		const vector = slideDir;
 		const negVector = math.negateVector(slideDir);
 		
-		let atleastOneLine = false;
 		for (const [lineKey, arrowLineDraft] of Object.entries(linesOfDirectionDraft)) {
 			
 			const posDotProd: Arrow[] = [];
 			const negDotProd: Arrow[] = [];
 			
 			(arrowLineDraft as ArrowsLineDraft).posDotProd.forEach((arrowDraft, index) => {
-				const arrow = processPiece(arrowDraft, vector, (arrowLineDraft as ArrowsLineDraft).intersections[0]!, true, index);
-				if (arrow !== undefined) posDotProd.push(arrow);
+				const arrow = processPiece(arrowDraft, vector, (arrowLineDraft as ArrowsLineDraft).intersections[0]!, index, worldHalfWidth, mouseWorldLocation, true);
+				posDotProd.push(arrow);
 			});
 
 			(arrowLineDraft as ArrowsLineDraft).negDotProd.forEach((arrowDraft, index) => {
-				const arrow = processPiece(arrowDraft, negVector, (arrowLineDraft as ArrowsLineDraft).intersections[1]!, false, index);
-				if (arrow !== undefined) negDotProd.push(arrow);
+				const arrow = processPiece(arrowDraft, negVector, (arrowLineDraft as ArrowsLineDraft).intersections[1]!, index, worldHalfWidth, mouseWorldLocation, true);
+				negDotProd.push(arrow);
 			});
 
-			if (posDotProd.length > 0 || negDotProd.length > 0) {
-				atleastOneLine = true;
-				linesOfDirection[lineKey] = { posDotProd, negDotProd };
-			}
+			linesOfDirection[lineKey] = { posDotProd, negDotProd };
 		}
  
-		if (atleastOneLine) slideArrows[vec2Key] = linesOfDirection;
-	}
-
-
-	// Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
-	// Adds the arrow the the FINAL arrows, not the drafts.
-	function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, posDotProd: boolean, index: number): Arrow | undefined {
-		const renderCoords = coordutil.copyCoords(intersection);
-
-		// If this picture is an adjacent picture, adjust it's positioning
-		if (index > 0) {
-			renderCoords[0] += vector[0] * paddingBetwAdjacentPictures * index;
-			renderCoords[1] += vector[1] * paddingBetwAdjacentPictures * index;
-		}
-
-		const worldLocation: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
-
-		// Does the mouse hover over the piece?
-		let hovered = false;
-		const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
-		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
-			hovered = true;
-			// ADD the piece to the list of arrows being hovered over!!!
-			hoveredArrows.push({ piece: arrowDraft.piece });
-			// If we also clicked, then teleport!
-			teleportToPieceIfClicked(arrowDraft.piece, vector);
-		}
-
-		return { worldLocation, piece: arrowDraft.piece, hovered, };
-
-		// arrowsData.push({ worldLocation, type: piece.type, slideDir, flipped: !posDotProd, hovered, isAdjacent });
+		slideArrows[vec2Key] = linesOfDirection;
 	}
 
 	// console.log("Arrows hovered over this frame:");
@@ -647,6 +610,43 @@ function calculateInstanceData_AndArrowsHovered(slideArrowsDraft: SlideArrowsDra
 
 	// console.log("Arrows instance data calculated this frame:");
 	// console.log(slideArrows);
+}
+
+/**
+ * Calculates the world space center of the picture of the arrow, and tests if the mouse is hovering over.
+ * Adds the arrow the the FINAL arrows, not the drafts.
+ * @param arrowDraft 
+ * @param vector 
+ * @param intersection 
+ * @param index 
+ * @param worldHalfWidth 
+ * @param mouseWorldLocation 
+ * @param testHover - Whether the arrow, when hovered over, should add itself to the list of arrows hovered over this frame. Should be false for arrows added by other scripts.
+ * @returns 
+ */
+function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, index: number, worldHalfWidth: number, mouseWorldLocation: Coords, testHover: boolean): Arrow {
+	const renderCoords = coordutil.copyCoords(intersection);
+
+	// If this picture is an adjacent picture, adjust it's positioning
+	if (index > 0) {
+		renderCoords[0] += vector[0] * paddingBetwAdjacentPictures * index;
+		renderCoords[1] += vector[1] * paddingBetwAdjacentPictures * index;
+	}
+
+	const worldLocation: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
+
+	// Does the mouse hover over the piece?
+	let hovered = false;
+	const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
+	if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
+		hovered = true;
+		// ADD the piece to the list of arrows being hovered over!!!
+		if (testHover) hoveredArrows.push({ piece: arrowDraft.piece });
+		// If we also clicked, then teleport!
+		teleportToPieceIfClicked(arrowDraft.piece, vector);
+	}
+
+	return { worldLocation, piece: arrowDraft.piece, hovered, };
 }
 
 
@@ -680,23 +680,115 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 
 
 
+/**
+ * Deletes any arrow indicators present for the provided piece, and creates
+ * new ones, if visible, for its new coordinate location.
+ * 
+ * This is intended for other scripts to utilize, in between this scripts
+ * update() and render() methods!
+ * 
+ * The coordinates CAN be floating points! Quirky, as the piece is temporarily
+ * added to the gamefile with decimal coordinates, but it works!
+ * 
+ * It has to be added to the game so that the arrow lines are calculated correctly,
+ * as it changes how far other pieces can slide along the line.
+ */
+function shiftArrow(piece: Piece, newCoords: Coords) {
+	if (mode === 0) return; // Anything added won't be visible
+	const gamefile = gameslot.getGamefile()!;
+	const animatedPiece = { type: piece.type, index: piece.index, coords: newCoords };
 
+	// Delete the piece from its true location, and add it at its animated location
 
-function addArrow(piece: Piece) {
+	const changes: Change[] = [];
+	boardchanges.queueDeletePiece(changes, piece, true);
+	boardchanges.queueAddPiece(changes, animatedPiece);
+	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
 
+	// Recalculate every single line it is on.
+	recalculateLineOfPiece(gamefile, piece); // Source coords
+	recalculateLineOfPiece(gamefile, animatedPiece); // Destination coords
+
+	// Restore the piece
+
+	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.backward, false);
 }
 
-
-
 /**
- * 
- * @param coords - The coordinates of the piece to delete.
- * @param recalcHover - Whether, on the line affected by the removed piece, to recalculate if the mouse is hovering their new positions, and teleport if they were clicked.
- * This should be true if the piece being removed is the piece currently being animated,
- * but false if the piece being removed is being captured by a drag-drop.
+ * Recalculates all of the arrow lines the given piece
+ * is on, adding them to this frame's list of arrows.
  */
-function removeArrow(coords: Coords, recalcHover: boolean) {
+function recalculateLineOfPiece(gamefile: gamefile, piece: Piece) {
+	// Recalculate every single line it is on.
 
+	const { boundingBoxInt, boundingBoxFloat } = getBoundingBoxesOfVisibleScreen();
+	addArrowsPaddingToBoundingBox(boundingBoxFloat);
+
+	// ENABLING THIS LINE prevents legal move highlights from rendering for
+	// the currently animated arrow indicator when hovering over its destination
+	// hoveredArrows = hoveredArrows.filter(hoveredArrow => hoveredArrow.piece.coords !== piece.coords);
+
+	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
+		const slideKey = math.getKeyFromVec2(slide);
+
+		const lineKey = organizedlines.getKeyFromLine(slide, piece.coords);
+
+		// Delete the original arrow line if it exists
+		if (slideKey in slideArrows) {
+			delete slideArrows[slideKey]![lineKey];
+			if (Object.keys(slideArrows[slideKey]!).length === 0) delete slideArrows[slideKey];
+		}
+		
+		// Recalculate the arrow line...
+
+		// Fetch the organized line that our piece is on this direction.
+		const organizedLine = gamefile.piecesOrganizedByLines[slideKey][lineKey] ?? [];
+		if (organizedLine.length === 0) return; // No pieces on line, empty
+
+		const arrowsLineDraft = calcArrowsLine(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine as Piece[], lineKey as LineKey);
+
+		if (arrowsLineDraft === undefined) return; // Only intersects the corner of our screen, not visible.
+		if (arrowsLineDraft.negDotProd.length === 0 && arrowsLineDraft.posDotProd.length === 0) return; // Completely empty
+
+		// Remove Unnecessary arrows...
+
+		let slideExceptions: Vec2Key[] = [];
+		// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
+		if (mode === 2) {
+			slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
+		}
+
+		if (!slideExceptions.includes(slideKey)) {
+			removeTypesThatCantSlideOntoScreenFromLineDraft(arrowsLineDraft);
+			if (arrowsLineDraft.negDotProd.length === 0 && arrowsLineDraft.posDotProd.length === 0) return; // No more pieces on this line
+		}
+
+		// Calculate instance data...
+
+		const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+		const worldHalfWidth = worldWidth / 2;
+
+		const mouseWorldLocation = input.getTouchClickedWorld() ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
+
+		const vector = slide;
+		const negVector = math.negateVector(slide);
+
+		const posDotProd: Arrow[] = [];
+		const negDotProd: Arrow[] = [];
+		
+		arrowsLineDraft.posDotProd.forEach((arrowDraft, index) => {
+			const arrow = processPiece(arrowDraft, vector, arrowsLineDraft.intersections[0]!, index, worldHalfWidth, mouseWorldLocation, false);
+			posDotProd.push(arrow);
+		});
+
+		arrowsLineDraft.negDotProd.forEach((arrowDraft, index) => {
+			const arrow = processPiece(arrowDraft, negVector, arrowsLineDraft.intersections[1]!, index, worldHalfWidth, mouseWorldLocation, false);
+			negDotProd.push(arrow);
+		});
+
+		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
+		slideArrows[slideKey][lineKey] = { posDotProd, negDotProd }; // Set the new arrow line
+	});
 }
 
 
@@ -860,4 +952,6 @@ export default {
 	getHoveredArrows,
 	update,
 	render,
+
+	shiftArrow,
 };

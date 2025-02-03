@@ -11,6 +11,9 @@ import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';
 import shapes from './shapes.js';
+import arrows from './arrows/arrows.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /**
@@ -44,7 +47,7 @@ const animations = []; // { duration, startTime, type, startCoords, endCoords, c
 /** Used for calculating the duration move animations. */
 const moveAnimationDuration = {
 	/** The base amount of duration, in millis. */
-	baseMillis: 150,
+	baseMillis: 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
 	multiplierMillis: 6,
 };
@@ -122,7 +125,15 @@ function update() {
 		const passedTime = performance.now() - thisAnimation.startTime;
 
 		if (passedTime > thisAnimation.duration) animations.splice(i, 1); // Delete this animation
+		else shiftArrowIndicatorOfAnimatedPiece(thisAnimation); // Animate the arrow indicator
 	}
+}
+
+/** Animates the arrow indicator */
+function shiftArrowIndicatorOfAnimatedPiece(animation) { // { duration, startTime, type, startCoords, endCoords, captured, distIsGreater }
+	const animationCurrentCoords = getCurrentCoordsOfAnimation(animation);
+	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile(), animation.endCoords);
+	arrows.shiftArrow(piece, animationCurrentCoords);
 }
 
 // Set dampen to true if we're skipping quickly through moves
@@ -178,47 +189,7 @@ function genPieceModel() {
 
 	for (const thisAnimation of animations) {
 
-		const passedTime = performance.now() - thisAnimation.startTime;
-		const equaX = passedTime / thisAnimation.duration;
-		const equaY = -0.5 * Math.cos(equaX * Math.PI) + 0.5;
-
-		let diffX = thisAnimation.endCoords[0] - thisAnimation.startCoords[0];
-		let diffY = thisAnimation.endCoords[1] - thisAnimation.startCoords[1];
-
-		// const dist = Math.hypot(diffX, diffY)
-		const dist = thisAnimation.dist;
-
-		let newX;
-		let newY;
-
-		if (!thisAnimation.distIsGreater) {
-			const addX = diffX * equaY;
-			const addY = diffY * equaY;
-
-			newX = thisAnimation.startCoords[0] + addX;
-			newY = thisAnimation.startCoords[1] + addY;
-
-		} else {
-			// 1st half or 2nd half?
-			const firstHalf = equaX < 0.5;
-			const neg = firstHalf ? 1 : -1;
-			const actualEquaY = firstHalf ? equaY : 1 - equaY;
-
-			const ratio = maxDistB4Teleport / dist;
-
-			diffX *= ratio;
-			diffY *= ratio;
-
-			const target = firstHalf ? thisAnimation.startCoords : thisAnimation.endCoords;
-
-			const addX = diffX * actualEquaY * neg;
-			const addY = diffY * actualEquaY * neg;
-
-			newX = target[0] + addX;
-			newY = target[1] + addY;
-		}
-
-		const newCoords = [newX, newY];
+		const newCoords = getCurrentCoordsOfAnimation(thisAnimation);
 
 		if (thisAnimation.captured) appendDataOfPiece(data, thisAnimation.captured.type, thisAnimation.captured.coords);
 
@@ -226,6 +197,56 @@ function genPieceModel() {
 	}
 
 	return createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+}
+
+/**
+ * Returns the coordinate the animation's piece should be rendered this frame.
+ * @param {Object} animation 
+ * @returns {number[]}
+ */
+function getCurrentCoordsOfAnimation(animation) {
+
+	const passedTime = performance.now() - animation.startTime;
+	const equaX = passedTime / animation.duration;
+	const equaY = -0.5 * Math.cos(equaX * Math.PI) + 0.5;
+
+	let diffX = animation.endCoords[0] - animation.startCoords[0];
+	let diffY = animation.endCoords[1] - animation.startCoords[1];
+
+	// const dist = Math.hypot(diffX, diffY)
+	const dist = animation.dist;
+
+	let newX;
+	let newY;
+
+	if (!animation.distIsGreater) {
+		const addX = diffX * equaY;
+		const addY = diffY * equaY;
+
+		newX = animation.startCoords[0] + addX;
+		newY = animation.startCoords[1] + addY;
+
+	} else {
+		// 1st half or 2nd half?
+		const firstHalf = equaX < 0.5;
+		const neg = firstHalf ? 1 : -1;
+		const actualEquaY = firstHalf ? equaY : 1 - equaY;
+
+		const ratio = maxDistB4Teleport / dist;
+
+		diffX *= ratio;
+		diffY *= ratio;
+
+		const target = firstHalf ? animation.startCoords : animation.endCoords;
+
+		const addX = diffX * actualEquaY * neg;
+		const addY = diffY * actualEquaY * neg;
+
+		newX = target[0] + addX;
+		newY = target[1] + addY;
+	}
+
+	return [newX, newY];
 }
 
 function appendDataOfPiece(data, type, coords) {

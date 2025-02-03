@@ -130,7 +130,6 @@ function updateBoard(gamefile: gamefile) {
 	}
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
-	animation.update();
 
 	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
@@ -139,9 +138,10 @@ function updateBoard(gamefile: gamefile) {
 
 	guinavigation.update();
 	selection.update();
-	// NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
-	// The attack lines of the piece selected determines what arrows we draw for that frame.
+	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
+	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();
+	animation.update(); // NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	movement.checkIfBoardDragged(); // ALSO depends on whether or not a piece is selected/being dragged!
 	miniimage.genModel();
 	highlightline.genModel();
