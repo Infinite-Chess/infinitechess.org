@@ -1,32 +1,37 @@
 
-
 /**
- * This script renders the legal moves of all hovered arrow indicators.
+ * This script keeps track of and renders the
+ * legal moves of all arrow indicators being hovered over.
  */
 
+
 import type { Piece } from "../../../chess/logic/boardchanges.js";
-// @ts-ignore
-import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 import type { Color } from "../../../chess/util/colorutil.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
-
 // @ts-ignore
-import legalmoves from "../../../chess/logic/legalmoves.js";
+import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
+
+
+import arrows from "./arrows.js";
 import colorutil from "../../../chess/util/colorutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
-// @ts-ignore
-import moveutil from "../../../chess/util/moveutil.js";
 import gameslot from "../../chess/gameslot.js";
-// @ts-ignore
-import selection from "../../chess/selection.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import legalmovehighlights from "../highlights/legalmovehighlights.js";
 // @ts-ignore
 import movement from "../movement.js";
 // @ts-ignore
 import options from "../options.js";
-import arrows from "./arrows.js";
+// @ts-ignore
+import legalmoves from "../../../chess/logic/legalmoves.js";
+// @ts-ignore
+import moveutil from "../../../chess/util/moveutil.js";
+// @ts-ignore
+import selection from "../../chess/selection.js";
+
+
+// Type Definitions -------------------------------------------------------------------------------------------
 
 
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
@@ -54,12 +59,7 @@ interface ArrowLegalMoves {
 const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
 
 
-
-
-function reset() {
-	hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
-}
-
+// Functions -------------------------------------------------------------------------------------------
 
 
 /**
@@ -124,8 +124,7 @@ function onPieceIndicatorHover(piece: Piece) {
 	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
 }
 
-
-
+/** Renders the pre-cached legal move highlights of all arrow indicators being hovered over */
 function renderEachHoveredPieceLegalMoves() {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
 
@@ -151,9 +150,10 @@ function renderEachHoveredPieceLegalMoves() {
 }
 
 /**
- * Call when our highlights offset, or render range bounding box, changes.
- * This regenerates the mesh of the piece arrow indicators hovered
- * over to account for the new offset.
+ * Regenerates the mesh of the piece arrow indicators hovered legal moves.
+ * 
+ * Call when our highlights offset, or render range bounding box, changes,
+ * so we account for the new offset.
  */
 function regenModelsOfHoveredPieces() {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No arrows being hovered over
@@ -169,6 +169,13 @@ function regenModelsOfHoveredPieces() {
 	});
 }
 
+/** Erases the cached legal moves of the hovered arrow indicators */
+function reset() {
+	hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
+}
+
+
+// -------------------------------------------------------------------------------------------------------------
 
 
 export default {
