@@ -693,7 +693,7 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
  * It has to be added to the game so that the arrow lines are calculated correctly,
  * as it changes how far other pieces can slide along the line.
  */
-function shiftArrow(piece: Piece, newCoords: Coords) {
+function shiftArrow(piece: Piece, newCoords: Coords, capturedPiece?: Piece) {
 	if (mode === 0) return; // Anything added won't be visible
 	const gamefile = gameslot.getGamefile()!;
 	const animatedPiece = { type: piece.type, index: piece.index, coords: newCoords };
@@ -703,6 +703,10 @@ function shiftArrow(piece: Piece, newCoords: Coords) {
 	const changes: Change[] = [];
 	boardchanges.queueDeletePiece(changes, piece, true);
 	boardchanges.queueAddPiece(changes, animatedPiece);
+	// Sometimes the animations coordinates match exactly the captured piece's coordinates
+	// on the last frame of the animation, so skip adding the captured piece in that scenario, or there will be a crash
+	if (capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(newCoords, capturedPiece.coords)) boardchanges.queueAddPiece(changes, capturedPiece);
+	console.log(jsutil.deepCopyObject(changes));
 	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
 
 	// Recalculate every single line it is on.
