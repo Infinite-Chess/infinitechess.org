@@ -42,7 +42,7 @@ title = "Infinite Chess | Página principal – La web oficial" # The tab title
 secondary_title = "¡La página web oficial para jugar!"
 what_is_it_title = "¿Qué es?"
 what_is_it_pargaraphs = [
-"Infinite Chess es una variante de ajedrez en la cual no hay bordes, y es mucho mas grande que el típico tablero de 8x8. La dama, torres y alfiles <em>no tienen ningún límite</em> a como de lejos pueden moverse cada turno. ¡Escoge cualquier numero natural hasta el infinito!",
+"Infinite Chess es una variante de ajedrez en la cual no hay bordes, y es mucho mas grande que el típico tablero de 8x8. La dama, torres y alfiles <em>no tienen ningún límite</em> a como de lejos pueden moverse cada turno. ¡Escoge cualquier número natural hasta el infinito!",
 "Sin límite a como de lejos puedes moverte, hay posiciones en las que el reloj de mate, o mate en <em>x</em>, adquiere el primer ordinal infinito, <strong>omega ω</strong>. De hecho, estudios han demostrado que <strong>cualquier</strong> numero ordinal contable, ¡Es valido para el reloj de mate!",
 "Como puedes imaginar, hay infinitas posibilidades para la posición de inicio, ¡Muchas de las cuales puedes jugar competitivamente! Tu objetivo final sigue siendo el jaque mate, que requiere nuevas estrategias, dado que ya no hay muros para atrapar al rey rival. Las partidas no suelen durar mas que las de ajedrez normal. ¡Los Peones siguen coronando en las filas 1 y 8!",
 ]
