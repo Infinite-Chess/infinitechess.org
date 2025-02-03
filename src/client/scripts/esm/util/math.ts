@@ -403,6 +403,27 @@ function negateVector(vec2: Vec2): Vec2 {
 	return [-vec2[0],-vec2[1]];
 }
 
+/**
+ * Calculates X and Y components of a vector of given length.
+ * @param vector - The direction vector [dx, dy].
+ * @param length - The length of the vector.
+ * @returns The x and y components of the vector.
+ */
+function calculateVectorComponents(vector: Vec2, length: number): Coords {
+	// Normalize the direction vector
+	const magnitude = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
+	if (magnitude === 0) throw new Error("Direction vector cannot be zero.");
+
+	const normalizedDx = vector[0] / magnitude;
+	const normalizedDy = vector[1] / magnitude;
+
+	// Calculate the endpoint
+	return [
+		normalizedDx * length,
+		normalizedDy * length
+	];
+}
+
 
 // Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
 
@@ -621,6 +642,7 @@ export default {
 	getKeyFromVec2,
 	getVec2FromKey,
 	negateVector,
+	calculateVectorComponents,
 	GCD,
 	LCM,
 	euclideanDistance,

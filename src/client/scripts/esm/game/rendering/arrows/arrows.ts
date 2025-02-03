@@ -7,56 +7,56 @@
  * If the pictues are clicked, we initiate a teleport to that piece.
  */
 
-import type { BufferModel, BufferModelInstanced } from './buffermodel.js';
-import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
-import type { Piece } from '../../chess/logic/boardchanges.js';
-import type { Color } from '../../chess/util/colorutil.js';
-import type { BoundingBox, Corner, Vec2, Vec2Key } from '../../util/math.js';
-import type { LineKey, LinesByStep, PieceLinesByKey } from '../../chess/logic/organizedlines.js';
+import type { BufferModel, BufferModelInstanced } from '../buffermodel.js';
+import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
+import type { Piece } from '../../../chess/logic/boardchanges.js';
+import type { Color } from '../../../chess/util/colorutil.js';
+import type { BoundingBox, Corner, Vec2, Vec2Key } from '../../../util/math.js';
+import type { LineKey, LinesByStep, PieceLinesByKey } from '../../../chess/logic/organizedlines.js';
 // @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
+import type gamefile from '../../../chess/logic/gamefile.js';
 // @ts-ignore
-import type { LegalMoves } from '../chess/selection.js';
+import type { LegalMoves } from '../../chess/selection.js';
 
-import spritesheet from './spritesheet.js';
-import gameslot from '../chess/gameslot.js';
-import guinavigation from '../gui/guinavigation.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import { createModel } from './buffermodel.js';
-import colorutil from '../../chess/util/colorutil.js';
-import jsutil from '../../util/jsutil.js';
-import coordutil from '../../chess/util/coordutil.js';
-import math from '../../util/math.js';
-import organizedlines from '../../chess/logic/organizedlines.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
-import legalmovehighlights from './highlights/legalmovehighlights.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import frametracker from './frametracker.js';
+import spritesheet from '../spritesheet.js';
+import gameslot from '../../chess/gameslot.js';
+import guinavigation from '../../gui/guinavigation.js';
+import guigameinfo from '../../gui/guigameinfo.js';
+import { createModel } from '../buffermodel.js';
+import colorutil from '../../../chess/util/colorutil.js';
+import jsutil from '../../../util/jsutil.js';
+import coordutil from '../../../chess/util/coordutil.js';
+import math from '../../../util/math.js';
+import organizedlines from '../../../chess/logic/organizedlines.js';
+import gamefileutility from '../../../chess/util/gamefileutility.js';
+import legalmovehighlights from '../highlights/legalmovehighlights.js';
+import onlinegame from '../../misc/onlinegame/onlinegame.js';
+import frametracker from '../frametracker.js';
 // @ts-ignore
-import bufferdata from './bufferdata.js';
+import bufferdata from '../bufferdata.js';
 // @ts-ignore
-import legalmoves from '../../chess/logic/legalmoves.js';
+import legalmoves from '../../../chess/logic/legalmoves.js';
 // @ts-ignore
-import input from '../input.js';
+import input from '../../input.js';
 // @ts-ignore
-import perspective from './perspective.js';
+import perspective from '../perspective.js';
 // @ts-ignore
-import transition from './transition.js';
+import transition from '../transition.js';
 // @ts-ignore
-import movement from './movement.js';
+import movement from '../movement.js';
 // @ts-ignore
-import options from './options.js';
+import options from '../options.js';
 // @ts-ignore
-import selection from '../chess/selection.js';
+import selection from '../../chess/selection.js';
 // @ts-ignore
-import camera from './camera.js';
+import camera from '../camera.js';
 // @ts-ignore
-import board from './board.js';
+import board from '../board.js';
 // @ts-ignore
-import moveutil from '../../chess/util/moveutil.js';
+import moveutil from '../../../chess/util/moveutil.js';
 // @ts-ignore
-import space from '../misc/space.js';
-import arrowlegalmovehighlights from './arrows/arrowlegalmovehighlights.js';
+import space from '../../misc/space.js';
+import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -254,7 +254,7 @@ function toggleArrows() {
 }
 
 function getHoveredArrows(): HoveredArrow[] {
-	if (stage === 1) throw Error('should not be accessing Hubbard arrows after rendering is finished or before the update stage!');
+	if (stage === 1) throw Error('should not be accessing hovered arrows after rendering is finished or before the update stage!');
 	return hoveredArrows;
 }
 
@@ -272,6 +272,7 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
+	stage = 0;
 	if (mode === 0) return; // Arrow indicators are off, nothing is visible.
 	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) { // Too zoomed out, the arrows would be really tiny.
 		arrowlegalmovehighlights.reset();
@@ -731,6 +732,7 @@ function removeArrow(coords: Coords, recalcHover: boolean) {
 
 
 function render() {
+	stage = 1;
 	arrowlegalmovehighlights.update();
 	regenerateModelAndRender();
 }
@@ -756,8 +758,7 @@ function regenerateModelAndRender() {
 		const vector = slideDir;
 		const negVector = math.negateVector(slideDir);
 
-		for (const [key, value] of Object.entries(slideLinesOfDirection)) {
-			const lineKey = key as LineKey;
+		for (const value of Object.values(slideLinesOfDirection)) {
 			const slideLine = value as ArrowsLine;
 
 			slideLine.posDotProd.forEach((arrow, index) => concatData(data, dataArrows, arrow, vector, index, worldWidth, halfWorldWidth));
@@ -797,7 +798,7 @@ function concatData(data: number[], dataArrows: number[], arrow: Arrow, vector: 
 	const endY = startY + worldWidth;
 
 	// Color
-	const { r, g, b } = options.getColorOfType(arrow.type);
+	const { r, g, b } = options.getColorOfType(arrow.piece.type);
 	// Are we hovering over? If so, opacity needs to be 100%
 	const a = arrow.hovered ? 1 : opacity;
 
@@ -862,32 +863,6 @@ function applyTransform(points: Coords[], rotation: number, translation: Coords)
 
 
 
-/**
- * Call when our highlights offset, or render range bounding box, changes.
- * This regenerates the mesh of the piece arrow indicators hovered
- * over to account for the new offset.
- */
-function regenModelsOfHoveredPieces() {
-	if (hoveredArrowsLegalMoves.length === 0) return; // No arrows being hovered over
-
-	console.log("Updating models of hovered piece's legal moves..");
-
-	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
-		// Calculate the mesh...
-		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, hoveredArrow.color);
-		// Overwrite the model inside piecesHoveredOver
-		hoveredArrow.model_NonCapture = NonCaptureModel;
-		hoveredArrow.model_Capture = CaptureModel;
-	});
-}
-
-/**
- * Erases the list of piece arrows the mouse is currently hovering over & rendering legal moves for.
- * This is typically called when a move is made in-game, so that the arrows' legal moves don't leak from move to move.
- */
-function clearListOfHoveredPieces() {
-	hoveredArrowsLegalMoves.length = 0;
-}
 
 
 
@@ -900,10 +875,6 @@ export default {
 	setMode,
 	toggleArrows,
 	getHoveredArrows,
-	
 	update,
 	render,
-	renderEachHoveredPieceLegalMoves,
-	regenModelsOfHoveredPieces,
-	clearListOfHoveredPieces
 };

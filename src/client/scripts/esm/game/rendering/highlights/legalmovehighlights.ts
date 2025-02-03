@@ -47,6 +47,7 @@ import type { BoundingBox } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../chess/util/colorutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
+import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 
 
 
@@ -170,7 +171,7 @@ function render() {
 	updateOffsetAndBoundingBoxOfRenderRange();
 
 	renderSelectedPiecesLegalMoves();
-	arrows.renderEachHoveredPieceLegalMoves();
+	arrowlegalmovehighlights.renderEachHoveredPieceLegalMoves();
 	renderOutlineofRenderBox();
 }
 
@@ -310,7 +311,7 @@ function getDimensionsOfPerspectiveViewRange(): Coords {
  */
 function regenerateAll() {
 	regenSelectedPieceLegalMovesHighlightsModel();
-	arrows.regenModelsOfHoveredPieces();
+	arrowlegalmovehighlights.regenModelsOfHoveredPieces();
 
 	frametracker.onVisualChange();
 }
