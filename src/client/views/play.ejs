@@ -41,7 +41,17 @@
             </div>
 
             <!-- The webgl context will render the game onto here -->
-            <canvas id="game" class="hidden"></canvas>
+            <canvas id="game"></canvas>
+
+            <!-- The spinny pawn loading animation when a game is loading,
+            whil the svgs are being requested and spritesheet generated -->
+            <div class="game-loading-screen transparent">
+                <svg class="svg-pawn spinny-pawn"><use href="#svg-pawn"></use></svg>
+                <div class="loading-error hidden">
+                    <h1><%=t('play.error')%></h1>
+                    <p class="loading-error-text"></p>
+                </div>
+            </div>
 
             <div id="overlay" class="overlay">
 
@@ -245,8 +255,11 @@
                                 <div class="option">
                                     <select id="option-variant" class="button">
                                         <option value="Classical"><%=t('play.play-menu.Classical')%></option>
+                                        <option value="Confined_Classical"><%=t('play.play-menu.Confined_Classical')%></option>
                                         <option value="Classical_Plus"><%=t('play.play-menu.Classical_Plus')%></option>
                                         <option value="CoaIP"><%=t('play.play-menu.CoaIP')%></option>
+                                        <option value="CoaIP_HO"><%=t('play.play-menu.CoaIP_HO')%></option>
+                                        <option value="Trappist_1"><%=t('play.play-menu.Trappist_1')%></option>
                                         <option value="Knighted_Chess"><%=t('play.play-menu.Knighted_Chess')%></option>
                                         <option value="Pawndard"><%=t('play.play-menu.Pawndard')%></option>
                                         <option value="Knightline"><%=t('play.play-menu.Knightline')%></option>
@@ -257,13 +270,13 @@
                                         <option value="Space"><%=t('play.play-menu.Space')%></option>
                                         <option value="Obstocean"><%=t('play.play-menu.Obstocean')%></option>
                                         <option value="Abundance"><%=t('play.play-menu.Abundance')%></option>
-                                        <option value="Amazon_Chandelier"><%=t('play.play-menu.Amazon_Chandelier')%></option>
-                                        <option value="Containment"><%=t('play.play-menu.Containment')%></option>
-                                        <option value="Classical_Limit_7"><%=t('play.play-menu.Classical_Limit_7')%></option>
-                                        <option value="CoaIP_Limit_7"><%=t('play.play-menu.CoaIP_Limit_7')%></option>
+                                        <!-- <option value="Amazon_Chandelier"><%=t('play.play-menu.Amazon_Chandelier')%></option> -->
+                                        <!-- <option value="Containment"><%=t('play.play-menu.Containment')%></option> -->
+                                        <!-- <option value="Classical_Limit_7"><%=t('play.play-menu.Classical_Limit_7')%></option>
+                                        <option value="CoaIP_Limit_7"><%=t('play.play-menu.CoaIP_Limit_7')%></option> -->
                                         <option value="Chess"><%=t('play.play-menu.Chess')%></option>
-                                        <option value="Classical_KOTH"><%=t('play.play-menu.Classical_KOTH')%></option>
-                                        <option value="CoaIP_KOTH"><%=t('play.play-menu.CoaIP_KOTH')%></option>
+                                        <!-- <option value="Classical_KOTH"><%=t('play.play-menu.Classical_KOTH')%></option>
+                                        <option value="CoaIP_KOTH"><%=t('play.play-menu.CoaIP_KOTH')%></option> -->
                                         <option value="Omega"><%=t('play.play-menu.Omega')%></option>
                                         <option value="Omega_Squared"><%=t('play.play-menu.Omega_Squared')%></option>
                                         <option value="Omega_Cubed"><%=t('play.play-menu.Omega_Cubed')%></option>
@@ -284,7 +297,7 @@
                                         <option value="180+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
                                         <option value="300+2">5<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
                                         <option value="480+3">8<%=t('play.play-menu.minutes')%>+3<%=t('play.play-menu.seconds')%></option>
-                                        <option value="600+6" selected>10<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
+                                        <option value="600+4" selected>10<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
                                         <option value="720+5">12<%=t('play.play-menu.minutes')%>+5<%=t('play.play-menu.seconds')%></option>
                                         <option value="900+6">15<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
                                         <option value="1200+8">20<%=t('play.play-menu.minutes')%>+8<%=t('play.play-menu.seconds')%></option>
@@ -365,123 +378,91 @@
                 </div>
 
                 <!-- Navigation controls -->
-                <div id="navigation" class="hidden unselectable">
-                    <!-- Header navigation -->
-                    <div class="navigation">
-                        <div class="teleport">
-                            <div class="buttoncontainer">
-                                <div id="back" class="button tooltip-dr" data-tooltip="<%=t('play.gamebuttontooltips.undo_transition')%>">
-                                    <svg viewBox="-1.68 -1.68 27.36 27.36" fill="none" stroke="#333" stroke-width="0.45600000000000007"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g> <path fill-rule="evenodd" clip-rule="evenodd" d="M10.5303 5.46967C10.8232 5.76256 10.8232 6.23744 10.5303 6.53033L5.81066 11.25H20C20.4142 11.25 20.75 11.5858 20.75 12C20.75 12.4142 20.4142 12.75 20 12.75H5.81066L10.5303 17.4697C10.8232 17.7626 10.8232 18.2374 10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303L3.46967 12.5303C3.17678 12.2374 3.17678 11.7626 3.46967 11.4697L9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967Z" fill="#333"></path> </g></svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="expand" class="button tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.expand_fit_all')%>">
-                                    <svg viewBox="-3.84 -3.84 31.68 31.68" fill="none"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="M3 7C3 7.55228 2.55228 8 2 8C1.44772 8 1 7.55228 1 7V3C1 1.89543 1.89543 1 3 1H7C7.55228 1 8 1.44772 8 2C8 2.55228 7.55228 3 7 3H4.41421L10.7071 9.29289C11.0976 9.68342 11.0976 10.3166 10.7071 10.7071C10.3166 11.0976 9.68342 11.0976 9.29289 10.7071L3 4.41422V7Z" fill="#333"></path> <path d="M21 17C21 16.4477 21.4477 16 22 16C22.5523 16 23 16.4477 23 17V21C23 22.1046 22.1046 23 21 23H17C16.4477 23 16 22.5523 16 22C16 21.4477 16.4477 21 17 21H19.5858L13.2929 14.7071C12.9024 14.3166 12.9024 13.6834 13.2929 13.2929C13.6834 12.9024 14.3166 12.9024 14.7071 13.2929L21 19.5858V17Z" fill="#333"></path> <path d="M21 7C21 7.55228 21.4477 8 22 8C22.5523 8 23 7.55228 23 7V3C23 1.89543 22.1046 1 21 1H17C16.4477 1 16 1.44772 16 2C16 2.55228 16.4477 3 17 3H19.5858L13.2929 9.29289C12.9024 9.68342 12.9024 10.3166 13.2929 10.7071C13.6834 11.0976 14.3166 11.0976 14.7071 10.7071L21 4.41421V7Z" fill="#333"></path> <path d="M3 17C3 16.4477 2.55228 16 2 16C1.44772 16 1 16.4477 1 17V21C1 22.1046 1.89543 23 3 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H4.41421L10.7071 14.7071C11.0976 14.3166 11.0976 13.6834 10.7071 13.2929C10.3166 12.9024 9.68342 12.9024 9.29289 13.2929L3 19.5858V17Z" fill="#333"></path> </g></svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="recenter" class="button tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.recenter')%>">
-                                    <svg fill="#333" viewBox="-59.11 -59.11 610.81 610.81" stroke="#333" stroke-width="0.0049258900000000005"><g><path d="M468.467,222.168h-28.329c-9.712-89.679-80.46-161.18-169.71-172.258V24.135c0-13.338-10.791-24.134-24.134-24.134 c-13.311,0-24.117,10.796-24.117,24.134V49.91C132.924,60.988,62.177,132.488,52.482,222.168H24.153 C10.806,222.168,0,232.964,0,246.286c0,13.336,10.806,24.132,24.153,24.132h29.228c12.192,86.816,81.551,155.4,168.797,166.229 v31.804c0,13.336,10.806,24.135,24.117,24.135c13.343,0,24.134-10.799,24.134-24.135v-31.804 c87.228-10.829,156.607-79.413,168.775-166.229h29.264c13.33,0,24.122-10.796,24.122-24.132 C492.589,232.964,481.797,222.168,468.467,222.168z M246.294,398.093c-85.345,0-154.804-69.453-154.804-154.813 c0-85.363,69.459-154.813,154.804-154.813c85.376,0,154.823,69.45,154.823,154.813 C401.117,328.639,331.671,398.093,246.294,398.093z"></path> <path d="M246.294,176.93c-36.628,0-66.34,29.704-66.34,66.349c0,36.635,29.711,66.349,66.34,66.349 c36.66,0,66.34-29.713,66.34-66.349C312.634,206.635,282.955,176.93,246.294,176.93z"></path></g></svg>
-                                </div>
+                <div id="navigation-bar" class="navigation-bar hidden">
+                    <div class="teleport">
+                        <div class="buttoncontainer">
+                            <div id="back" class="button tooltip-dr" data-tooltip="<%=t('play.gamebuttontooltips.undo_transition')%>">
+                                <svg viewBox="-1.68 -1.68 27.36 27.36" fill="none" stroke="#333" stroke-width="0.45600000000000007"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g> <path fill-rule="evenodd" clip-rule="evenodd" d="M10.5303 5.46967C10.8232 5.76256 10.8232 6.23744 10.5303 6.53033L5.81066 11.25H20C20.4142 11.25 20.75 11.5858 20.75 12C20.75 12.4142 20.4142 12.75 20 12.75H5.81066L10.5303 17.4697C10.8232 17.7626 10.8232 18.2374 10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303L3.46967 12.5303C3.17678 12.2374 3.17678 11.7626 3.46967 11.4697L9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967Z" fill="#333"></path> </g></svg>
                             </div>
                         </div>
-                        <div class="coords selectable" >
-                            <div id="position">
-                                <div class="x">X: <input type="number" id='x'></input></div>
-                                <div class="y">Y: <input type="number" id='y'></input></div>
+                        <div class="buttoncontainer">
+                            <div id="expand" class="button tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.expand_fit_all')%>">
+                                <svg viewBox="-3.84 -3.84 31.68 31.68" fill="none"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="M3 7C3 7.55228 2.55228 8 2 8C1.44772 8 1 7.55228 1 7V3C1 1.89543 1.89543 1 3 1H7C7.55228 1 8 1.44772 8 2C8 2.55228 7.55228 3 7 3H4.41421L10.7071 9.29289C11.0976 9.68342 11.0976 10.3166 10.7071 10.7071C10.3166 11.0976 9.68342 11.0976 9.29289 10.7071L3 4.41422V7Z" fill="#333"></path> <path d="M21 17C21 16.4477 21.4477 16 22 16C22.5523 16 23 16.4477 23 17V21C23 22.1046 22.1046 23 21 23H17C16.4477 23 16 22.5523 16 22C16 21.4477 16.4477 21 17 21H19.5858L13.2929 14.7071C12.9024 14.3166 12.9024 13.6834 13.2929 13.2929C13.6834 12.9024 14.3166 12.9024 14.7071 13.2929L21 19.5858V17Z" fill="#333"></path> <path d="M21 7C21 7.55228 21.4477 8 22 8C22.5523 8 23 7.55228 23 7V3C23 1.89543 22.1046 1 21 1H17C16.4477 1 16 1.44772 16 2C16 2.55228 16.4477 3 17 3H19.5858L13.2929 9.29289C12.9024 9.68342 12.9024 10.3166 13.2929 10.7071C13.6834 11.0976 14.3166 11.0976 14.7071 10.7071L21 4.41421V7Z" fill="#333"></path> <path d="M3 17C3 16.4477 2.55228 16 2 16C1.44772 16 1 16.4477 1 17V21C1 22.1046 1.89543 23 3 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H4.41421L10.7071 14.7071C11.0976 14.3166 11.0976 13.6834 10.7071 13.2929C10.3166 12.9024 9.68342 12.9024 9.29289 13.2929L3 19.5858V17Z" fill="#333"></path> </g></svg>
                             </div>
                         </div>
-                        <div class="right-nav">
-                            <div class="buttoncontainer">
-                                <div id="move-left" class="button opacity-0_5 tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.rewind_move')%>">
-                                    <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path></g></svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="move-right" class="button opacity-0_5 tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.forward_move')%>">
-                                    <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4">
-                                        <g transform="scale(-1, 1) translate(-25.16, 0)">
-                                          <path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path>
-                                        </g>
-                                      </svg>
-                                </div>
-                            </div>
-                            <div class="buttoncontainer">
-                                <div id="pause" class="button tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.pause')%>">
-                                    <svg viewBox="-2.5 -2.5 29 29" version="1.2" fill="#333" stroke-width="2.4"><g stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6H20M4 12H20M4 18H20"></path></g></svg>
-                                </div>
+                        <div class="buttoncontainer">
+                            <div id="recenter" class="button tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.recenter')%>">
+                                <svg fill="#333" viewBox="-59.11 -59.11 610.81 610.81" stroke="#333" stroke-width="0.0049258900000000005"><g><path d="M468.467,222.168h-28.329c-9.712-89.679-80.46-161.18-169.71-172.258V24.135c0-13.338-10.791-24.134-24.134-24.134 c-13.311,0-24.117,10.796-24.117,24.134V49.91C132.924,60.988,62.177,132.488,52.482,222.168H24.153 C10.806,222.168,0,232.964,0,246.286c0,13.336,10.806,24.132,24.153,24.132h29.228c12.192,86.816,81.551,155.4,168.797,166.229 v31.804c0,13.336,10.806,24.135,24.117,24.135c13.343,0,24.134-10.799,24.134-24.135v-31.804 c87.228-10.829,156.607-79.413,168.775-166.229h29.264c13.33,0,24.122-10.796,24.122-24.132 C492.589,232.964,481.797,222.168,468.467,222.168z M246.294,398.093c-85.345,0-154.804-69.453-154.804-154.813 c0-85.363,69.459-154.813,154.804-154.813c85.376,0,154.823,69.45,154.823,154.813 C401.117,328.639,331.671,398.093,246.294,398.093z"></path> <path d="M246.294,176.93c-36.628,0-66.34,29.704-66.34,66.349c0,36.635,29.711,66.349,66.34,66.349 c36.66,0,66.34-29.713,66.34-66.349C312.634,206.635,282.955,176.93,246.294,176.93z"></path></g></svg>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Game info, clocks, player names, whos turn -->
-                    <div id="footer" class="footer">
-                        <div id="timer-container-white" class="timerwhitecontainer">
-                            <div id="timer-white" class="timerwhite">10:00</div>
+                    <div class="coords selectable" >
+                        <div id="position">
+                            <div class="x">X: <input type="number" id='x'></input></div>
+                            <div class="y">Y: <input type="number" id='y'></input></div>
                         </div>
-                        <div id="playerwhite" class="playerwhite"><%=t('play.footer.player_white')%></div>
-                        <div class="whosturn">
-                            <div id="dot" class="dotwhite"></div>
-                            <div id="whosturn"><%=t('play.footer.white_to_move')%></div>
-
-                            <!-- Draw Offer UI -->
-                            <div id="draw_offer_ui" class="draw_offer_ui hidden">
-                                <p class="offer_title"><%=t('play.drawoffer.question')%></p>
-                                <button id="acceptdraw" class="acceptdraw button icon" alt="Accept draw offer">
-                                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none">
-                                        <path d="M19 7.34189C18.6095 6.95136 17.9763 6.95136 17.5858 7.34189L10.3407 14.587C9.95016 14.9775 9.31699 14.9775 8.92647 14.587L6.38507 12.0456C5.99454 11.6551 5.36138 11.6551 4.97085 12.0456C4.58033 12.4361 4.58033 13.0693 4.97085 13.4598L7.51774 16C8.68969 17.1689 10.5869 17.1677 11.7574 15.9974L19 8.7561C19.3905 8.36558 19.3905 7.73241 19 7.34189Z" fill="#0F0F0F"/>
-                                    </svg>
-                                </button>
-                                <button id="declinedraw" class="declinedraw button icon" alt="Decline draw offer">
-                                    <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none">
-                                        <path d="M17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L13.4142 12L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L12 13.4142L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L10.5858 12L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L12 10.5858L17.2929 5.29289Z" fill="#000000"/>
-                                    </svg>
-                                </button>
+                    </div>
+                    <div class="right-nav">
+                        <div class="buttoncontainer">
+                            <div id="move-left" class="button opacity-0_5 tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.rewind_move')%>">
+                                <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path></g></svg>
                             </div>
                         </div>
-                        <div id="playerblack" class="playerblack"><%=t('play.footer.player_black')%></div>
-                        <div id="timer-container-black" class="timerblackcontainer">
-                            <div id="timer-black" class="timerblack">10:00</div>
+                        <div class="buttoncontainer">
+                            <div id="move-right" class="button opacity-0_5 tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.forward_move')%>">
+                                <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4">
+                                    <g transform="scale(-1, 1) translate(-25.16, 0)">
+                                        <path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path>
+                                    </g>
+                                    </svg>
+                            </div>
                         </div>
+                        <div class="buttoncontainer">
+                            <div id="pause" class="button tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.pause')%>">
+                                <svg viewBox="-2.5 -2.5 29 29" version="1.2" fill="#333" stroke-width="2.4"><g stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6H20M4 12H20M4 18H20"></path></g></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game info, clocks, player names, whos turn -->
+                <div id="game-info-bar" class="game-info-bar hidden">
+                    <div id="timer-container-white" class="timerwhitecontainer">
+                        <div id="timer-white" class="timerwhite">10:00</div>
+                    </div>
+                    <div id="playerwhite" class="playerwhite"></div>
+                    <div class="whosturn">
+                        <div id="dot" class="dotwhite"></div>
+                        <div id="whosturn"></div>
+
+                        <!-- Draw Offer UI -->
+                        <div id="draw_offer_ui" class="draw_offer_ui hidden">
+                            <p class="offer_title"><%=t('play.drawoffer.question')%></p>
+                            <button id="acceptdraw" class="acceptdraw button icon" alt="Accept draw offer">
+                                <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none">
+                                    <path d="M19 7.34189C18.6095 6.95136 17.9763 6.95136 17.5858 7.34189L10.3407 14.587C9.95016 14.9775 9.31699 14.9775 8.92647 14.587L6.38507 12.0456C5.99454 11.6551 5.36138 11.6551 4.97085 12.0456C4.58033 12.4361 4.58033 13.0693 4.97085 13.4598L7.51774 16C8.68969 17.1689 10.5869 17.1677 11.7574 15.9974L19 8.7561C19.3905 8.36558 19.3905 7.73241 19 7.34189Z" fill="#0F0F0F"/>
+                                </svg>
+                            </button>
+                            <button id="declinedraw" class="declinedraw button icon" alt="Decline draw offer">
+                                <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none">
+                                    <path d="M17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L13.4142 12L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L12 13.4142L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L10.5858 12L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L12 10.5858L17.2929 5.29289Z" fill="#000000"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="playerblack" class="playerblack"></div>
+                    <div id="timer-container-black" class="timerblackcontainer">
+                        <div id="timer-black" class="timerblack">10:00</div>
                     </div>
                 </div>
 
                 <!-- Promotion UI -->
                 <div id="promote" class="center hidden">
-                    <div id="promotewhite" class="promotecolor">
-                        <!--                                                                "amazonsW" MUST remain the 2nd class! -->
-                        <div id="amazonsW" class="promotepiececontainer hidden"><div class="promotepiece amazonsW button"></div></div>
-                        <div id="queensW" class="promotepiececontainer hidden"><div class="promotepiece queensW button"></div></div>
-                        <div id="knightridersW" class="promotepiececontainer hidden"><div class="promotepiece knightridersW button"></div></div>
-                        <div id="chancellorsW" class="promotepiececontainer hidden"><div class="promotepiece chancellorsW button"></div></div>
-                        <div id="archbishopsW" class="promotepiececontainer hidden"><div class="promotepiece archbishopsW button"></div></div>
-                        <div id="rooksW" class="promotepiececontainer hidden"><div class="promotepiece rooksW button"></div></div>
-                        <div id="bishopsW" class="promotepiececontainer hidden"><div class="promotepiece bishopsW button"></div></div>
-                        <div id="rosesW" class="promotepiececontainer hidden"><div class="promotepiece rosesW button"></div></div>
-                        <div id="hawksW" class="promotepiececontainer hidden"><div class="promotepiece hawksW button"></div></div>
-                        <div id="giraffesW" class="promotepiececontainer hidden"><div class="promotepiece giraffesW button"></div></div>
-                        <div id="zebrasW" class="promotepiececontainer hidden"><div class="promotepiece zebrasW button"></div></div>
-                        <div id="camelsW" class="promotepiececontainer hidden"><div class="promotepiece camelsW button"></div></div>
-                        <div id="centaursW" class="promotepiececontainer hidden"><div class="promotepiece centaursW button"></div></div>
-                        <div id="knightsW" class="promotepiececontainer hidden"><div class="promotepiece knightsW button"></div></div>
-                        <div id="guardsW" class="promotepiececontainer hidden"><div class="promotepiece guardsW button"></div></div>
+                    <div id="promotewhite" class="promotecolor hidden">
+                        <!-- <svg id="knightsW" class="promotepiececontainer"></svg> -->
                     </div>
-                    <div id="promoteblack" class="promotecolor">
-                        <div id="amazonsB" class="promotepiececontainer hidden"><div class="promotepiece amazonsB button"></div></div>
-                        <div id="queensB" class="promotepiececontainer hidden"><div class="promotepiece queensB button"></div></div>
-                        <div id="knightridersB" class="promotepiececontainer hidden"><div class="promotepiece knightridersB button"></div></div>
-                        <div id="chancellorsB" class="promotepiececontainer hidden"><div class="promotepiece chancellorsB button"></div></div>
-                        <div id="archbishopsB" class="promotepiececontainer hidden"><div class="promotepiece archbishopsB button"></div></div>
-                        <div id="rooksB" class="promotepiececontainer hidden"><div class="promotepiece rooksB button"></div></div>
-                        <div id="bishopsB" class="promotepiececontainer hidden"><div class="promotepiece bishopsB button"></div></div>
-                        <div id="rosesB" class="promotepiececontainer hidden"><div class="promotepiece rosesB button"></div></div>
-                        <div id="hawksB" class="promotepiececontainer hidden"><div class="promotepiece hawksB button"></div></div>
-                        <div id="giraffesB" class="promotepiececontainer hidden"><div class="promotepiece giraffesB button"></div></div>
-                        <div id="zebrasB" class="promotepiececontainer hidden"><div class="promotepiece zebrasB button"></div></div>
-                        <div id="camelsB" class="promotepiececontainer hidden"><div class="promotepiece camelsB button"></div></div>
-                        <div id="centaursB" class="promotepiececontainer hidden"><div class="promotepiece centaursB button"></div></div>
-                        <div id="knightsB" class="promotepiececontainer hidden"><div class="promotepiece knightsB button"></div></div>
-                        <div id="guardsB" class="promotepiececontainer hidden"><div class="promotepiece guardsB button"></div></div>
+                    <div id="promoteblack" class="promotecolor hidden">
+                        <!-- <svg id="knightsB" class="promotepiececontainer"></svg> -->
                     </div>
                 </div>
 
@@ -501,11 +482,7 @@
                 <div id="statusmessage" class="statusmessage hidden">
                     <p id="statustext" class="statustext"></p>
                 </div>
-                
             </div>
-
-            <!-- Game images -->
-            <img id="spritesheet" src="/img/game/spritesheet64_cburnett.png" width="0" onerror="htmlscript.callback_LoadingError(event)" onload="htmlscript.removeOnerror.call(this);">
         </main>
     </body>
 </html>

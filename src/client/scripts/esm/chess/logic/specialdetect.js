@@ -14,7 +14,7 @@ import fivedimensionalpromote from './fivedimensionalpromote.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
 */
 
 "use strict";
@@ -102,7 +102,7 @@ function kings(gamefile, coords, color, individualMoves) {
 
 	const oppositeColor = colorutil.getOppositeColor(color);
 	if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, 'checkmate')) {
-		if (gamefile.inCheck) return; // Not legal if in check
+		if (gamefileutility.isCurrentViewedPositionInCheck(gamefile)) return; // Not legal if in check
 
 		// Simulate the space in-between
 
@@ -310,7 +310,7 @@ function isPawnPromotion(gamefile, type, coordsClicked) {
 /**
  * Transfers any special move flags from the provided coordinates to the move.
  * @param {number[]} coords - The coordinates
- * @param {Move} move - The move
+ * @param {MoveDraft} move - The move
  */
 function transferSpecialFlags_FromCoordsToMove(coords, move) {
 	for (const special of allSpecials) {
@@ -323,7 +323,7 @@ function transferSpecialFlags_FromCoordsToMove(coords, move) {
 /**
  * Transfers any special move flags from the provided move to the coordinates.
  * @param {number[]} coords - The coordinates
- * @param {Move} move - The move
+ * @param {MoveDraft} move - The move
  */
 function transferSpecialFlags_FromMoveToCoords(move, coords) {
 	for (const special of allSpecials) {
@@ -338,7 +338,7 @@ function transferSpecialFlags_FromMoveToCoords(move, coords) {
  */
 function transferSpecialFlags_FromCoordsToCoords(srcCoords, destCoords) {
 	for (const special of allSpecials) {
-		if (srcCoords[special] != null) destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
+		if (srcCoords[special] !== undefined) destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
 	}
 }
 

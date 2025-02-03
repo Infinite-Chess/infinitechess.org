@@ -200,7 +200,7 @@ setInterval(() => {
 		}
 
 		// Use binary search to find the index to split at
-		const indexToSplitAt = jsutil.binarySearch_findValue(timestamps, currentTimeMillis - minuteInMillis);
+		const indexToSplitAt = jsutil.findIndexOfPointInOrganizedArray(timestamps, currentTimeMillis - minuteInMillis);
 
 		// Remove all timestamps to the left of the found index
 		timestamps.splice(0, indexToSplitAt);
@@ -231,7 +231,7 @@ function countRecentRequests() {
 setInterval(() => {
 	// Delete recent requests longer than 2 seconds ago
 	const twoSecondsAgo = Date.now() - requestWindowToToggleAttackModeMillis;
-	const indexToSplitAt = jsutil.binarySearch_findValue(recentRequests, twoSecondsAgo);
+	const indexToSplitAt = jsutil.findIndexOfPointInOrganizedArray(recentRequests, twoSecondsAgo);
 	recentRequests.splice(0, indexToSplitAt + 1);
 
 	if (recentRequests.length > requestCapToToggleAttackMode) {

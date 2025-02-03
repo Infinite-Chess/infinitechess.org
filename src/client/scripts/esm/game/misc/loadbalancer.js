@@ -1,12 +1,11 @@
 
 // Import Start
-import websocket from '../websocket.js';
 import invites from './invites.js';
 import stats from '../gui/stats.js';
 import input from '../input.js';
-import onlinegame from './onlinegame.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
+import tabnameflash from './onlinegame/tabnameflash.js';
 // Import End
 
 'use strict';
@@ -48,11 +47,10 @@ const timeUntilAFK = { normal: 30000, dev: 2000 }; // Seconds of inactivity to p
 let AFKTimeoutID;
 
 let isHibernating = false;
-const timeUntilHibernation = 1000 * 60 * 60; // 1 hour
-// const timeUntilHibernation = 10000 // 10s for dev testing
+const timeUntilHibernation = 1000 * 60 * 30; // 30 minutes
+// const timeUntilHibernation = 10000; // 10s for dev testing
 let hibernateTimeoutID; // ID of the timer to declare we are hibernating!
 
-let windowInFocus = true; // false = blurred. Not necessarily off-screen, just clicked on another window.
 let windowIsVisible = true;
 
 const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 60 * 30; // 30 minutes
@@ -109,13 +107,13 @@ function updateDeltaTime(runtime) {
 	lastFrameTime = runTime;
 }
 
-// Deletes frame timestamps from out list over 1 second ago
+// Deletes frame timestamps from our list over 1 second ago
 function trimFrames() {
 	// What time was it 1 second ago
 	const splitPoint = runTime - fpsWindow;
 
 	// Use binary search to find the split point.
-	const indexToSplit = jsutil.binarySearch_findValue(frames, splitPoint);
+	const indexToSplit = jsutil.findIndexOfPointInOrganizedArray(frames, splitPoint);
 
 	// This will not delete a timestamp if it falls exactly on the split point.
 	frames.splice(0, indexToSplit);
@@ -211,19 +209,13 @@ function onHibernate() {
 	//console.log("Set hibernating to true!")
 
 	// Unsub from invites list
-	websocket.unsubFromInvites();
+	invites.unsubFromInvites();
 }
 
 
-// These 2 fire the most common, when you so much as click a different window on-screen,
+// The 'focus' and 'blur' event listeners fire the MOST common, when you so much as click a different window on-screen,
 // EVEN though the game is still visible on screen, it just means it lost focus!
 
-window.addEventListener('focus', () => {
-	windowInFocus = true;
-});
-window.addEventListener('blur', function() {
-	windowInFocus = false;
-});
 
 // This fires the next most commonly, whenever
 // the page becomes NOT visible on the screen no more!
@@ -252,7 +244,7 @@ document.addEventListener("visibilitychange", function() {
 		// Cancel the timer to delete our invite after not returning to the page
 		cancelTimerToDeleteInviteAfterLeavingPage();
 
-		onlinegame.cancelMoveSound();
+		tabnameflash.cancelMoveSound();
 	}
 });
 

@@ -2,7 +2,7 @@
 // Import Start
 import guipause from './gui/guipause.js';
 import bufferdata from './rendering/bufferdata.js';
-import onlinegame from './misc/onlinegame.js';
+import onlinegame from './misc/onlinegame/onlinegame.js';
 import perspective from './rendering/perspective.js';
 import movement from './rendering/movement.js';
 import options from './rendering/options.js';
@@ -10,12 +10,12 @@ import selection from './chess/selection.js';
 import camera from './rendering/camera.js';
 import board from './rendering/board.js';
 import arrows from './rendering/arrows.js';
-import buffermodel from './rendering/buffermodel.js';
+import { createModel } from './rendering/buffermodel.js';
 import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
-import game from './chess/game.js';
+import gameslot from './chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -31,6 +31,7 @@ const leftMouseKey = 0; // Input key index for when the left mouse button is pre
 const middleMouseKey = 1; // Input key index for when the left mouse button is pressed.
 const rightMouseKey = 2; // Input key index for when the left mouse button is pressed.
 
+/** Touchscreen */
 let touchDowns = []; // List of all touch points created this frame. Position is in pixels from screen center.  { id, x, y, changeInX, changeInY }
 const touchHelds = []; // List of all currently active touch points.  { id, x, y, changeInX, changeInY }
 
@@ -40,6 +41,7 @@ let timeTouchDownSeconds; // Also used to detect quick taps. Records the time wh
 let touchClickedTile; // Used to record the board position of the tap to simulate a click.  {id, x, y}
 let touchClickedWorld; // Same as above, but records world space instead of tile
 
+/** Mouse */
 let mouseDowns = []; // Mouse buttons that were pressed this frame.  0 = Left  1 = Middle  2 = Right
 const mouseHelds = []; // Mouse buttons that are currently being held.
 let keyDowns = []; // Keyboard keys that were pressed this frame.
@@ -65,6 +67,14 @@ let mouseWorldLocation = [0,0]; // Current mouse position in world-space
 let ignoreMouseDown = false;
 
 let mouseIsSupported = true;
+
+/** Touchscreen and mouse */
+/**
+ * True if the most recent pointer input was from a touch event.
+ * Used on devices that support both touchscreen and mouse to determine which is currently in use. @type {boolean}
+*/
+let pointerIsTouch;
+let pointerWorldLocation = [0,0];
 
 // The cursor that appears on touch screen when you select a piece and zoom out
 const dampeningToMoveMouseInTouchMode = 0.5;
@@ -112,6 +122,30 @@ function getMouseMoved() {
 
 function getMouseWorldLocation() {
 	return [mouseWorldLocation[0], mouseWorldLocation[1]];
+}
+
+function getPointerDown() {
+	return pointerIsTouch ? touchDowns.length === 1 : mouseDowns.includes(leftMouseKey);
+}
+
+function getPointerHeld() {
+	return pointerIsTouch ? touchHelds.length === 1 : mouseHelds.includes(leftMouseKey);
+}
+
+function getPointerClicked() {
+	return pointerIsTouch ? touchClicked : mouseClicked;
+}
+
+function getPointerClickedTile() {
+	return pointerIsTouch ? [touchClickedTile.x, touchClickedTile.y] : mouseClickedTile;
+}
+
+function getPointerWorldLocation() {
+	return [pointerWorldLocation[0], pointerWorldLocation[1]];
+}
+
+function getPointerIsTouch() {
+	return pointerIsTouch;
 }
 
 
@@ -211,6 +245,10 @@ function initTouchSimulatedClick() {
 		touchClickedTile = { id: touchHelds[0].id, x: touchTile[0], y: touchTile[1] };
 		const oneOrNegOne = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 		touchClickedWorld = [oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
+		if (!isMouseHeld_Left()) {
+			pointerWorldLocation = touchClickedWorld;
+			pointerIsTouch = true;
+		}
 	}
 }
 
@@ -219,8 +257,8 @@ function convertCoords_CenterOrigin(object) { // object is the event, or touch o
 	// From canvas bottom left
 	const rawX = object.clientX - camera.getCanvasRect().left;
 	const rawY = -(object.clientY - camera.getCanvasRect().top);
-	const canvasPixelWidth = camera.canvas.width / camera.getPixelDensity(); // In virtual pixels, NOT physical
-	const canvasPixelHeight = camera.canvas.height / camera.getPixelDensity(); // In virtual pixels, NOT physical
+	const canvasPixelWidth = camera.canvas.width / window.devicePixelRatio; // In virtual pixels, NOT physical
+	const canvasPixelHeight = camera.canvas.height / window.devicePixelRatio; // In virtual pixels, NOT physical
 	// in pixels, relative to screen center
 	return [rawX - canvasPixelWidth / 2, rawY + canvasPixelHeight / 2];
 }
@@ -258,6 +296,10 @@ function touchHelds_UpdateTouch(id, touchCoords) {
 		thisTouch.x = touchCoords[0];
 		thisTouch.y = touchCoords[1];
 	}
+	if (touchHelds.length === 1 && pointerIsTouch) {
+		const oneOrNegOne = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+		pointerWorldLocation = [oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
+	}
 }
 
 function touchHelds_DeleteTouch(id) {
@@ -290,7 +332,9 @@ function initListeners_Mouse() {
 		// pieces to change their opacity. The exception is if we're paused.
 		const renderThisFrame = !guipause.areWePaused() && (arrows.getMode() !== 0 || movement.isScaleLess1Pixel_Virtual() || selection.isAPieceSelected() || perspective.getEnabled());
 		if (renderThisFrame) frametracker.onVisualChange();
-        
+		
+		pointerIsTouch = false;
+		
 		const mouseCoords = convertCoords_CenterOrigin(event);
 		mousePos = mouseCoords;
 		mouseMoved = true;
@@ -304,6 +348,11 @@ function initListeners_Mouse() {
 
 		// If we're in perspective, mouse movement should rotate the camera
 		perspective.update(event.movementX, event.movementY); // Pass in the change in mouse coords
+
+		// This line, whenever the mouse moves offscreen,
+		// triggers the board to be dropped, instead of continuously
+		// being held and dragged, even when your mouse is off the page.
+		// if (isMouseOffScreen(event)) mouseHelds.length = 0;
 	});
 
 	overlayElement.addEventListener('wheel', (event) => {
@@ -326,7 +375,6 @@ function initListeners_Mouse() {
 		if (ignoreMouseDown) return;
 
 		if (event.target.id === 'overlay') event.preventDefault();
-		// if (clickedOverlay) gui.makeOverlayUnselectable();
         
 		pushMouseDown(event);
 
@@ -353,7 +401,6 @@ function initListeners_Mouse() {
 
 	overlayElement.addEventListener("mouseup", (event) => {
 		event = event || window.event;
-		// gui.makeOverlaySelectable();
 		removeMouseHeld(event);
 		setTimeout(perspective.relockMouse, 1); // 1 millisecond, to give time for pause listener to fire
 
@@ -369,6 +416,27 @@ function initListeners_Mouse() {
 
 		executeMouseSimulatedClick();
 	});
+
+	// window.addEventListener('blur', function() {
+	// 	// Clear all keys being held, as when the window isn't in focus,
+	// 	// we don't hear the key-up events.
+	// 	// So if we held down the shift key, then click off, then let go,
+	// 	// the game would CONTINUOUSLY keep zooming in without you pushing anything,
+	// 	// and you'd have to push the shift again to cancel it.
+	// 	mouseHelds.length = 0;
+	// });
+}
+
+/**
+ * Detects if, by the provided 'mousemove' event,
+ * whether the mouse is now offscreen.
+ * @param {Event} mouseMoveEvent - The event fired from a 'mousemove' event listener.
+ * @returns {boolean} true if the mouse is now off the screen.
+ */
+function isMouseOffScreen(mouseMoveEvent) {
+	const mouseX = mouseMoveEvent.clientX;
+	const mouseY = mouseMoveEvent.clientY;
+	return mouseX < 0 || mouseX > window.innerWidth || mouseY < 0 || mouseY > window.innerHeight;
 }
 
 function initMouseSimulatedClick() {
@@ -386,7 +454,7 @@ function initMouseSimulatedClick() {
 function executeMouseSimulatedClick() {
 	if (!timeMouseDownSeconds || !mouseIsSupported) return;
 	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
-	if (!game.areInGame()) return;
+	if (gameslot.areWeLoadingGraphics()) return;
 
 	// See if the mouse was released fast enough to simulate a click!
 	const nowSeconds = new Date().getTime() / 1000;
@@ -424,6 +492,7 @@ function calcMouseWorldLocation_Mouse() {
 	const mouseLocationX = (n * mousePos[0] / halfCanvasWidth) * boundingBoxToUse.right;
 	const mouseLocationY = (n * mousePos[1] / halfCanvasHeight) * boundingBoxToUse.top;
 	mouseWorldLocation = [mouseLocationX, mouseLocationY];
+	if (!pointerIsTouch) pointerWorldLocation = mouseWorldLocation;
 }
 
 // We're using a touch screen, SETS THE mouse location to [0,0]!!!
@@ -451,6 +520,7 @@ function calcCrosshairWorldLocation() {
 	const y = hyp * Math.cos(rotZ);
 
 	mouseWorldLocation = [x, y];
+	if (!pointerIsTouch) pointerWorldLocation = mouseWorldLocation;
 }
 
 function addMouseWheel(event) {
@@ -483,6 +553,15 @@ function initListeners_Keyboard() {
 		event = event || window.event;
 		const index = keyHelds.indexOf(event.key.toLowerCase());
 		if (index !== -1) keyHelds.splice(index, 1); // Removes the key
+	});
+
+	window.addEventListener('blur', function() {
+		// Clear all keys being held, as when the window isn't in focus,
+		// we don't hear the key-up events.
+		// So if we held down the shift key, then click off, then let go,
+		// the game would CONTINUOUSLY keep zooming in without you pushing anything,
+		// and you'd have to push the shift again to cancel it.
+		keyHelds.length = 0;
 	});
 }
 
@@ -619,9 +698,8 @@ function renderMouse() {
 	const mouseOuterWidthWorld = space.convertPixelsToWorldSpace_Virtual(mouseOuterWidth);
 
 	const mouseData = bufferdata.getDataRingSolid(x, y, mouseInnerWidthWorld, mouseOuterWidthWorld, 32, [0,0,0,mouseOpacity]);
-	const data32 = new Float32Array(mouseData);
 
-	const model = buffermodel.createModel_Colored(data32, 2, "TRIANGLES");
+	const model = createModel(mouseData, 2, "TRIANGLES", true);
 
 	model.render();
 }
@@ -648,7 +726,7 @@ function moveMouse(touch1, touch2) { // touch2 optional. If provided, will take 
 		setTouchesChangeInXYTo0(touch2);
 	}
 
-	const oneOrNegOne = onlinegame.areInOnlineGame() && onlinegame.areWeColor('black') ? -1 : 1;
+	const oneOrNegOne = onlinegame.areWeColorInOnlineGame('black') ? -1 : 1;
 
 	mouseWorldLocation[0] -= touchMovementX * dampeningToMoveMouseInTouchMode * oneOrNegOne;
 	mouseWorldLocation[1] -= touchMovementY * dampeningToMoveMouseInTouchMode * oneOrNegOne;
@@ -704,5 +782,11 @@ export default {
 	getMouseWorldLocation,
 	atleast1InputThisFrame,
 	renderMouse,
-	moveMouse
+	moveMouse,
+	getPointerDown,
+	getPointerHeld,
+	getPointerClicked,
+	getPointerClickedTile,
+	getPointerWorldLocation,
+	getPointerIsTouch
 };

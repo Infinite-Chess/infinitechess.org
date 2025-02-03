@@ -86,9 +86,10 @@ function getLongformatInNewNotation(longformat) {
 		//       // koth: 'both'
 		//     }
 		// }
-		const newGameRules = {};
-		newGameRules.turnOrder = turnOrder;
-		if (longformat.gameRules.slideLimit && longformat.gameRules.slideLimit !== "Infinity") newGameRules.slideLimit = longformat.gameRules.slideLimit;
+		const newGameRules = {
+			turnOrder,
+			winConditions: { white: ['checkmate'], black: ['checkmate'] }
+		};
 		if (longformat.gameRules.winConditions) {
 			const newWinConditions = { white: [], black: [] };
 			for (const condition in longformat.gameRules.winConditions) {
@@ -103,6 +104,7 @@ function getLongformatInNewNotation(longformat) {
 			// The old gamefiles did not specify promotions allowed, because it's determined by the pieces the game starts with
 			newGameRules.promotionsAllowed = variant.getPromotionsAllowed(longformat.startingPosition, newGameRules.promotionRanks);
 		}
+		if (longformat.gameRules.slideLimit && longformat.gameRules.slideLimit !== "Infinity") newGameRules.slideLimit = longformat.gameRules.slideLimit;
 		converted.gameRules = newGameRules;
 	}
 

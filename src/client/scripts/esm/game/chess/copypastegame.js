@@ -5,18 +5,18 @@
  */
 
 // Import Start
-import onlinegame from '../misc/onlinegame.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
-import game from './game.js';
 import backcompatible from '../../chess/logic/backcompatible.js';
-import gamefile from '../../chess/logic/gamefile.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import guinavigation from '../gui/guinavigation.js';
+import gameslot from './gameslot.js';
+import gameloader from './gameloader.js';
 // Import End
 
 "use strict";
@@ -42,7 +42,7 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
 function callbackCopy(event) {
 	if (guinavigation.isCoordinateActive()) return;
 
-	const gamefile = game.getGamefile();
+	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
 	const primedGamefile = primeGamefileForCopying(gamefile);
@@ -101,12 +101,14 @@ function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for
  */
 async function callbackPaste(event) {
 	if (guinavigation.isCoordinateActive()) return;
+	// Can't paste a game when the current gamefile isn't finished loading all the way.
+	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
 
 	// Make sure it's legal in a private match
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && game.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard;
@@ -197,7 +199,7 @@ function verifyWinConditions(winConditions) {
  * Loads a game from the provided game in longformat.
  * @param {Object} longformat - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  */
-function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
+async function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
 	console.log(translations.copypaste.pasting_game);
 
 	/** longformat properties:
@@ -217,7 +219,7 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	// Create a new gamefile from the longformat...
 
 	// Retain most of the existing metadata on the currently loaded gamefile
-	const currentGameMetadata = game.getGamefile().metadata;
+	const currentGameMetadata = gameslot.getGamefile().metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformat.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
@@ -263,40 +265,32 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 		localstorage.saveItem(gameID, variantOptions);
 	}
 
-	const newGamefile = new gamefile(longformat.metadata, { moves: longformat.moves, variantOptions });
-
 	// What is the warning message if pasting in a private match?
-	const privateMatchWarning = onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : "";
+	const privateMatchWarning = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
+	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective();
 
-	// Change win condition of there's too many pieces!
-	let tooManyPieces = false;
-	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) { // TOO MANY pieces!
-		tooManyPieces = true;
-		statustext.showStatus(`${translations.copypaste.piece_count} ${newGamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
+	gameslot.unloadGame();
+	await gameslot.loadGamefile({
+		metadata: longformat.metadata,
+		viewWhitePerspective,
+		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
+		additional: {
+			moves: longformat.moves,
+			variantOptions,
+		}
+	});
+	const gamefile = gameslot.getGamefile();
+	gameloader.openGameinfoBarAndConcludeGameIfOver(gamefile.metadata);
 
-		// Make win condition from checkmate to royal capture
-		const whiteHasCheckmate = newGamefile.gameRules.winConditions.white.includes('checkmate');
-		const blackHasCheckmate = newGamefile.gameRules.winConditions.black.includes('checkmate');
-		if (whiteHasCheckmate) {
-			jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.white, 'checkmate', true);
-			newGamefile.gameRules.winConditions.white.push('royalcapture');
-		}
-		if (blackHasCheckmate) {
-			jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.black, 'checkmate', true);
-			newGamefile.gameRules.winConditions.black.push('royalcapture');
-		}
+	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
+	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;
+	if (tooManyPieces) { // TOO MANY pieces!
+		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
+	} else { // Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
+		statustext.showStatus(`${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`);
 	}
 
-	// Only print "Loaded game!" if we haven't already shown a different status message cause of too many pieces
-	if (!tooManyPieces) {
-		const message = `${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`;
-		statustext.showStatus(message);
-	}
-
-	game.unloadGame();
-	game.loadGamefile(newGamefile);
-
-	console.log(translations.copypaste.loaded);
+	console.log(translations.copypaste.loaded_from_clipboard);
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant) {
@@ -322,174 +316,7 @@ function verifyGamerules(gameRules) {
 	return true;
 }
 
-// Old methods for determining what win conditions are compatible with each other,
-// and for making sure you have the right royals, etc...
-// Currently, all win conditions have no piece restrictions
 
-// function verifyWinConditions(winConditions, piecesOrganizedByType) {
-//     if (!winConditions) {
-//         if (!verifyCheckmate(piecesOrganizedByType, 'white')) return false;
-//         if (!verifyCheckmate(piecesOrganizedByType, 'black')) return false;
-//         return true;
-//     }
-
-//     // {
-//     //     // The value can be 1 of 3 options:  both/white/black
-//     //     // LEFT UNDEFINED if neither!
-//     //     checkmate: 'both',
-//     //     royalcapture: undefined,
-//     //     allroyalscaptured: undefined,
-//     //     allpiecescaptured: undefined,
-//     //     threecheck: undefined,
-//     //     koth: undefined,
-//     // }
-
-//     // 1. There must be atleast 1 win condition specified for both colors
-//     if (winConditions.white.length === 0) return displayError(`WHITE must have atleast 1 win condition!`)
-//     if (winConditions.black.length === 0) return displayError(`BLACK must have atleast 1 win condition!`)
-
-//     // 2. The specified win conditions must be compatible with each other (checkmate not compatible with royalcapture)
-
-//     // There can only be one of these: checkmate, royalcapture, allroyalscaptured.
-
-//     let whiteRoyalWinconditions = 0;
-//     let blackRoyalWinconditions = 0;
-
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'checkmate')) whiteRoyalWinconditions++;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'checkmate')) blackRoyalWinconditions++;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'royalcapture')) whiteRoyalWinconditions++;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'royalcapture')) blackRoyalWinconditions++;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'allroyalscaptured')) whiteRoyalWinconditions++;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'allroyalscaptured')) blackRoyalWinconditions++;
-
-//     if (whiteRoyalWinconditions > 1) return displayError(`WHITE must have no more than 1 of the following win conditions: checkmate, royalcapture, and allroyalscaptured. Counted: ${whiteRoyalWinconditions}`)
-//     if (blackRoyalWinconditions > 1) return displayError(`BLACK must have no more than 1 of the following win conditions: checkmate, royalcapture, and allroyalscaptured. Counted: ${blackRoyalWinconditions}`)
-
-//     // allpiecescaptured requires there be no checkmate/royalcapture/allroyalscaptured.
-
-//     const whiteHasAllpiecescaptured = wincondition.doesColorHaveWinCondition(winConditions, 'white', 'allpiecescaptured');
-//     const blackHasAllpiecescaptured = wincondition.doesColorHaveWinCondition(winConditions, 'black', 'allpiecescaptured');
-//     if (whiteHasAllpiecescaptured && whiteRoyalWinconditions > 0) return displayError(`WHITE must not have win condition 'allpiecescaptured' when they also have one of checkmate/royalcapture/allroyalscaptured!`)
-//     if (blackHasAllpiecescaptured && blackRoyalWinconditions > 0) return displayError(`BLACK must not have win condition 'allpiecescaptured' when they also have one of checkmate/royalcapture/allroyalscaptured!`)
-
-//     // threecheck requires there be one of checkmate/royalcapture/allroyalscaptured
-
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'threecheck') && whiteRoyalWinconditions === 0) return displayError(`WHITE win condition of 'threecheck' must be paired with atleast 1 win condition of checkmate/royalcapture/allroyalscaptured!`)
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'threecheck') && blackRoyalWinconditions === 0) return displayError(`BLACK win condition of 'threecheck' must be paired with atleast 1 win condition of checkmate/royalcapture/allroyalscaptured!`)
-
-//     // koth, if your opponent can capture your king without winning, they don't have checkmate/royalcapture
-//     // requires there be one of:  checkmate/royalcapture/allroyalscaptured/allpiecescaptured,
-//     // because if your king is captured, you need a back-up win condition.
-
-//     const whiteHasCheckmate = wincondition.doesColorHaveWinCondition(winConditions, 'white', 'checkmate')
-//     const blackHasCheckmate = wincondition.doesColorHaveWinCondition(winConditions, 'black', 'checkmate')
-//     const whiteHasRoyalcapture = wincondition.doesColorHaveWinCondition(winConditions, 'white', 'royalcapture')
-//     const blackHasRoyalcapture = wincondition.doesColorHaveWinCondition(winConditions, 'black', 'royalcapture')
-//     const whiteHasKOTH = wincondition.doesColorHaveWinCondition(winConditions, 'white', 'koth')
-//     const blackHasKOTH = wincondition.doesColorHaveWinCondition(winConditions, 'black', 'koth')
-//     if (whiteHasKOTH && !blackHasCheckmate && !blackHasRoyalcapture && whiteRoyalWinconditions === 0 && !whiteHasAllpiecescaptured) return displayError(`WHITE with the win condition of 'koth' and black with neither checkmate/royalcapture, requires a backup win condition: checkmate/royalcapture/allroyalscaptured/allpiecescaptured!`)
-//     if (blackHasKOTH && !whiteHasCheckmate && !whiteHasRoyalcapture && blackRoyalWinconditions === 0 && !blackHasAllpiecescaptured) return displayError(`BLACK with the win condition of 'koth' and white with neither checkmate/royalcapture, requires a backup win condition: checkmate/royalcapture/allroyalscaptured/allpiecescaptured!`)
-
-//     // All win conditions specified are compatible...
-
-//     // For each active win condition, make sure the position has necessary royalty!
-//     // Also NOT too much royalty!
-
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'checkmate')) if (!verifyCheckmate(piecesOrganizedByType, 'white')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'checkmate')) if (!verifyCheckmate(piecesOrganizedByType, 'black')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'royalcapture')) if (!verifyRoyalcapture(piecesOrganizedByType, 'white')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'royalcapture')) if (!verifyRoyalcapture(piecesOrganizedByType, 'black')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'allroyalscaptured')) if (!verifyAllroyalscaptured(piecesOrganizedByType, 'white')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'allroyalscaptured')) if (!verifyAllroyalscaptured(piecesOrganizedByType, 'black')) return false;
-//     if (blackRoyalWinconditions === 0 && !whiteHasKOTH) if (!verifyNoRoyals(piecesOrganizedByType, 'white')) return false;
-//     if (whiteRoyalWinconditions === 0 && !blackHasKOTH) if (!verifyNoRoyals(piecesOrganizedByType, 'black')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'allpiecescaptured')) if (!verifyAllpiecescaptured(piecesOrganizedByType, 'white')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'allpiecescaptured')) if (!verifyAllpiecescaptured(piecesOrganizedByType, 'black')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'threecheck')) if (!verifyThreecheck(piecesOrganizedByType, 'white')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'threecheck')) if (!verifyThreecheck(piecesOrganizedByType, 'black')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'white', 'koth')) if (!verifyKoth(piecesOrganizedByType, 'white')) return false;
-//     if (wincondition.doesColorHaveWinCondition(winConditions, 'black', 'koth')) if (!verifyKoth(piecesOrganizedByType, 'black')) return false;
-
-//     return true;
-// }
-
-// // Makes sure that with no royal win condition there are no royals of specified color
-// function verifyNoRoyals(piecesOrganizedByType, color) {
-//     const oppositeColor = colorutil.getOppositeColor(color)
-
-//     // Check to make sure there is zero royals
-//     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, color)
-//     if (royalCount > 0) return displayError(`${color.toUpperCase()} does not need royalty for the win conditions ${oppositeColor} has!`);
-    
-//     return true;
-// }
-
-// // makes sure that the starting position is valid with checkmate! Exactly 1 jumping royal piece (not sliding)
-// function verifyCheckmate(piecesOrganizedByType, color) {
-//     const oppositeColor = colorutil.getOppositeColor(color)
-    
-//     // Check to make sure there is exactly 1 jumping royal! (not sliding)
-//     const jumpingRoyalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.jumpingRoyals, oppositeColor)
-//     if (jumpingRoyalCount !== 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'checkmate', ${oppositeColor.toUpperCase()} should have exactly 1 king or royal centuar! Counted: ${jumpingRoyalCount}`)
-
-//     // Also make sure there are no royal queens! We can't calculate checkmate with sliding pieces.
-//     const royalQueenCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, ['royalQueens'], oppositeColor)
-//     if (royalQueenCount > 0) return displayError(`When ${color.toUpperCase()} has a win condition of 'checkmate', ${oppositeColor.toUpperCase()} should have zero royal queens! Counted: ${royalQueenCount}`)
-
-//     return true;
-// }
-
-// function verifyRoyalcapture(piecesOrganizedByType, color) {
-//     const oppositeColor = colorutil.getOppositeColor(color)
-
-//     // Check to make sure there is atleast 1 royal!
-//     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
-//     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'royalcapture', ${oppositeColor.toUpperCase()} should have atleast 1 royal! Counted: ${royalCount}`)
-    
-//     return true;
-// }
-
-// function verifyAllroyalscaptured(piecesOrganizedByType, color) {
-//     const oppositeColor = colorutil.getOppositeColor(color)
-
-//     // Check to make sure there is atleast 1 royal!
-//     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
-//     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'allroyalscaptured', ${oppositeColor.toUpperCase()} should have exactly atleast 1 royal! Counted: ${royalCount}`)
-    
-//     return true;
-// }
-
-// function verifyAllpiecescaptured(piecesOrganizedByType, color) {
-//     const oppositeColor = colorutil.getOppositeColor(color)
-
-//     // Check to make sure there is atleast 1 piece!
-//     const pieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(piecesOrganizedByType, oppositeColor)
-//     if (pieceCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'allpiecescaptured', ${oppositeColor.toUpperCase()} should have atleast 1 piece!`)
-    
-//     return true;
-// }
-
-// function verifyThreecheck(piecesOrganizedByType, color) {
-//     const oppositeColor = colorutil.getOppositeColor(color)
-
-//     // Check to make sure there is atleast 1 royal!
-//     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
-//     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'threecheck', ${oppositeColor.toUpperCase()} should have exactly atleast 1 royal! Counted: ${royalCount}`)
-    
-//     return true;
-// }
-
-// function verifyKoth(piecesOrganizedByType, color) {
-//     // Check to make sure there is atleast 1 king! (no other royals reaching the top of the hill counts)
-//     const kingCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, ['kings'], color)
-//     if (kingCount === 0) return displayError(`${color.toUpperCase()} with a win condition of 'koth' should have atleast 1 king! Royal queens and centaurs don't count.`)
-    
-//     return true;
-// }
-
-// function displayError(message) {
-//     statustext.showStatus(message, true)
-// }
 
 export default {
 	callbackCopy,

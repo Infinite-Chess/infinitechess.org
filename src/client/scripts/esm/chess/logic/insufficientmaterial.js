@@ -133,7 +133,7 @@ function has_more_pieces(a, b) {
  * @returns {number} sum of tuple entries
  */
 function sum_tuple_coords(tuple) {
-	return tuple[0] + tuple [1];
+	return tuple[0] + tuple[1];
 }
 
 /**
@@ -153,14 +153,14 @@ function ordered_tuple_descending(tuple) {
 function detectInsufficientMaterial(gamefile) {
 	// Only make the draw check if the win condition is checkmate for both players
 	if (!gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'white', 'checkmate') || !gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'black', 'checkmate')) return false;
-	if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'white') != 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'black') != 1) return false;
+	if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'white') !== 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'black') !== 1) return false;
 
 	// Only make the draw check if the last move was a capture or if there is no last move
 	const lastMove = moveutil.getLastMove(gamefile.moves);
 	if (lastMove && !lastMove.captured) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle pieces
-	if (gamefileutility.getPieceCountOfGame(gamefile, {ignoreVoids: false, ignoreObstacles: true}) >= 11) return false;
+	if (gamefileutility.getPieceCountOfGame(gamefile, { ignoreObstacles: true }) >= 11) return false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};
@@ -181,8 +181,8 @@ function detectInsufficientMaterial(gamefile) {
 	}
 
 	// add bishop tuples to scenario, and make sure the first entry of the bishop lists is the largest one
-	if (sum_tuple_coords(bishopsW_count) != 0) scenario.bishopsW = ordered_tuple_descending(bishopsW_count);
-	if (sum_tuple_coords(bishopsB_count) != 0) scenario.bishopsB = ordered_tuple_descending(bishopsB_count);
+	if (sum_tuple_coords(bishopsW_count) !== 0) scenario.bishopsW = ordered_tuple_descending(bishopsW_count);
+	if (sum_tuple_coords(bishopsB_count) !== 0) scenario.bishopsB = ordered_tuple_descending(bishopsB_count);
 
 	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
 	// This is fully enough for the checkmate practice mode, for now
@@ -190,8 +190,8 @@ function detectInsufficientMaterial(gamefile) {
 	if (gamefile.gameRules.promotionRanks) {
 		const promotionListWhite = gamefile.gameRules.promotionsAllowed.white;
 		const promotionListBlack = gamefile.gameRules.promotionsAllowed.black;
-		if ("pawnsW" in scenario && promotionListWhite.length != 0) return false;
-		if ("pawnsB" in scenario && promotionListBlack.length != 0) return false;
+		if ("pawnsW" in scenario && promotionListWhite.length !== 0) return false;
+		if ("pawnsB" in scenario && promotionListBlack.length !== 0) return false;
 	}
 
 	// Create scenario object with inverted colors

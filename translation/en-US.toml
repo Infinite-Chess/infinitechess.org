@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "23"
+version = "29"
 maintainer = "Naviary"
 
 [header]
@@ -18,6 +18,9 @@ board = "Board" # Board color/theme
 legalmoves = "Legal Moves" # Legal moves shape
 legalmoves-squares = "Squares"
 legalmoves-dots = "Dots" # Dots and 4 corner triangles
+selection = "Selection"
+selection-drag = "Dragging pieces"
+selection-premove = "Premoves"
 perspective = "Perspective" # Perspective-mode
 perspective-mouse-sensitivity = "Mouse Sensitivity"
 perspective-fov = "Field of View"
@@ -51,6 +54,10 @@ about_paragraphs = [
 ["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
 ]
 patreon_title = "Patreon Supporters"
+github_title = "Github Contributors"
+
+[index.javascript]
+contribution_count = ["", " contributions"] # A number is inserted between these 2 strings.
 
 [credits]
 title = "Credits"
@@ -60,7 +67,7 @@ variants_credits = [
 "Core designed by Andreas Tsevas.",
 "Space designed by Andreas Tsevas.",
 "Space Classic designed by Andreas Tsevas.",
-"Coaip (Chess on an Infinite Plane) designed by Vickalan.",
+"Coaip (Chess on an Infinite Plane) designed by V. Reinhart.",
 "Pawn Horde designed by Inaccessible Cardinal.",
 "Abundance designed by Clicktuck Suskriberz.",
 "Pawndard by SexyLexi.",
@@ -71,6 +78,8 @@ variants_credits = [
 "designed by Andreas Tsevas.",
 "designed by Cory Evans and Joel Hamkins.",
 "designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
+"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
+"Trappist-1 by V. Reinhart"
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"
@@ -201,6 +210,7 @@ local = "Local"
 computer = "Computer"
 variant = "Variant"
 Classical = "Classical"
+Confined_Classical = "Confined Classical"
 Classical_Plus = "Classical+"
 CoaIP = "Chess on an Infinite Plane"
 Pawndard = "Pawndard"
@@ -220,6 +230,8 @@ CoaIP_Limit_7 = "Coaip - Limit 7"
 Chess = "Chess"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
+CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
+Trappist_1 = "Trappist-1"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
@@ -254,11 +266,6 @@ rewind_move = "Rewind move"
 forward_move = "Forward move"
 pause = "Pause"
 
-[play.footer]
-white_to_move = "White to move"
-player_white = "Player white"
-player_black = "Player black"
-
 [play.pause]
 title = "Paused"
 resume = "Resume"
@@ -275,6 +282,8 @@ question = "Accept draw offer?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
+player_name_white_generic = "White"
+player_name_black_generic = "Black"
 white_to_move = "White to move"
 black_to_move = "Black to move"
 your_move = "Your move"
@@ -290,6 +299,7 @@ accept_draw = "Accept Draw" # Offer draw button text in the pause menu
 arrows_off = "Arrows: Off"
 arrows_defense = "Arrows: Defense"
 arrows_all = "Arrows: All"
+arrows_all_hippogonals = "Arrows: All (with hippogonals)"
 toggled = "Toggled"
 menu_online = "Play - Online"
 menu_local = "Play - Local"
@@ -300,7 +310,7 @@ constructing_mesh = "Constructing mesh"
 rotating_mesh = "Rotating mesh"
 lost_connection = "Lost connection."
 please_wait = "Please wait a moment to perform this task."
-webgl_unsupported = "Your browser does not support WebGL. This game requires that to function. Please update your browser."
+webgl_unsupported = "Please upgrade your browser! It does not support WebGL2."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
@@ -320,7 +330,6 @@ piece_count = "Piece count"
 exceeded = "exceeded"
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
 loaded_from_clipboard = "Loaded game from clipboard!"
-loaded = "Loaded game!"
 slidelimit_not_number = "slideLimit gamerule must be a number. Received"
 
 [play.javascript.rendering]
@@ -337,8 +346,6 @@ regenerated_pieces = "Regenerated pieces."
 
 [play.javascript.invites]
 move_mouse = "Move the mouse to reconnect."
-unknown_action_received_1 = "Unknown action"
-unknown_action_received_2 = "received from the server in the invites subscription!"
 cannot_cancel = "Cannot cancel invite of undefined ID."
 you_indicator = "(You)"
 you_are_white = "You're: White"

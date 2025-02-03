@@ -4,9 +4,25 @@
  */
 
 import { logEvents } from '../middleware/logEvents.js';
+import { ensureJSONString } from '../utility/JSONUtils.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
+
+
+// Variables ----------------------------------------------------------
+
+
+/**
+ * A list of all valid reasons to delete an account.
+ * These reasons are stored in the deleted_members table in the database.
+ * @type {string[]}
+ */
+const validDeleteReasons = [
+	'unverified', // They failed to verify after 3 days
+	'user request', // They deleted their own account, or requested it to be deleted.
+	'security', // A choice by server admins, for security purpose.
+];
 
 
 
@@ -26,18 +42,20 @@ import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js
  */
 function addUser(username, email, hashed_password, { roles, verification, preferences } = {}) {
 	// The table looks like:
+
 	// CREATE TABLE IF NOT EXISTS members (
 	// 	user_id INTEGER PRIMARY KEY,               
-	// 	username TEXT UNIQUE NOT NULL COLLATE NOCASE, 
+	// 	username TEXT UNIQUE NOT NULL COLLATE NOCASE,
 	// 	email TEXT UNIQUE NOT NULL,                
 	// 	hashed_password TEXT NOT NULL,             
-	// 	roles TEXT,                       
-	// 	joined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	// 	refresh_tokens TEXT,                       
-	// 	preferences TEXT,                          
-	// 	verification TEXT,                         
-	// 	login_count INTEGER DEFAULT 1,             
-	// 	last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	// 	roles TEXT,        
+	// 	joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	// 	last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
+	// 	login_count INTEGER NOT NULL DEFAULT 0,                        
+	// 	preferences TEXT,
+	// 	refresh_tokens TEXT,                          
+	// 	verification TEXT, 
+	// 	username_history TEXT
 	// );
 
 	if (roles !== undefined && typeof roles !== 'string') throw new Error('Roles must be a string.');
@@ -81,9 +99,17 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
  * Deletes a user from the members table.
  * @param {number} user_id - The ID of the user to delete.
  * @param {string} reason_deleted - The reason the user is being deleted.
- * @returns {boolean} true if there was a change made (deleted successfully)
+ * @param {Object} [options] - Optional settings for the function.
+ * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
+ * @returns {object} A result object: { success (boolean), reason (string, if failed) }
  */
-function deleteUser(user_id, reason_deleted) {
+function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
+	if (!validDeleteReasons.includes(reason_deleted)) {
+		const reason = `Cannot delete user of ID "${user_id}". Reason "${reason_deleted}" is invalid.`;
+		if (!skipErrorLogging) logEvents(reason, 'errLog.txt', { print: true });
+		return { success: false, reason };
+	}
+
 	// SQL query to delete a user by their user_id
 	const query = 'DELETE FROM members WHERE user_id = ?';
 
@@ -93,30 +119,29 @@ function deleteUser(user_id, reason_deleted) {
 
 		// Check if any rows were deleted
 		if (result.changes === 0) {
-			logEvents(`Cannot delete non-existent user with ID "${user_id}"!`, 'errLog.txt', { print: true });
-			return false;
+			const reason = `Cannot delete user of ID "${user_id}", they were not found.`;
+			if (!skipErrorLogging) logEvents(reason, 'errLog.txt', { print: true });
+			return { success: false, reason };
 		}
 
 		// Add their user_id to the deleted members table
 		addDeletedMemberToDeletedMembersTable(user_id, reason_deleted);
 
-		return true; // Change made successfully
+		return { success: true }; // Change made successfully
 
 	} catch (error) {
 		// Log the error for debugging purposes
-		logEvents(`Error deleting user with ID "${user_id}": ${error.message}`, 'errLog.txt', { print: true });
-
-		// Return false indicating failure
-		return false;
+		logEvents(`Error deleting user with ID "${user_id}": ${error.stack}`, 'errLog.txt', { print: true });
+		return { succes: false, reason: `Failed to delete user of ID "${user_id}", an internal error ocurred.`};
 	}
 }
 // console.log(deleteUser(3408674));
 
 /**
  * Generates a **UNIQUE** user_id. It queries if it is taken to do so.
- * @returns {string} The ID
+ * @returns {number} The length of the desired user_id
  */
-function genUniqueUserID(length) { // object contains the key value list where the keys are the ids we want to not have duplicates of.
+function genUniqueUserID(length) {
 	let id;
 	do {
 		id = generateRandomUserId(length);
@@ -190,23 +215,29 @@ function getMemberRowByUsername(username) {
  * @returns {Object} - An object containing the requested columns, or an empty object if no match is found.
  */
 function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLogging } = {}) {
+
+	// Guard clauses... Validating the arguments...
+
 	if (!Array.isArray(columns)) {
-		logEvents("When getting member data by criteria, columns must be an array of strings!", 'errLog.txt', { print: true });
+		logEvents(`When getting member data by criteria, columns must be an array of strings! Received: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		return {};
+	}
+	if (!columns.every(column => typeof column === 'string' && allMemberColumns.includes(column))) {
+		logEvents(`Invalid columns requested from members table: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
 		return {};
 	}
 
-	// Check if the searchKey is valid
+	// Check if the searchKey and searchValue are valid
+	if (typeof searchKey !== 'string' || typeof searchValue !== 'string' && typeof searchValue !== 'number') {
+		logEvents(`When getting member data by criteria, searchKey must be a string and searchValue must be a number or string! Received: ${ensureJSONString(searchKey)}, ${ensureJSONString(searchValue)}`, 'errLog.txt', { print: true });
+		return {};
+	}
 	if (!uniqueMemberKeys.includes(searchKey)) {
 		logEvents(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt', { print: true });
 		return {};
 	}
 
-	// Validate columns
-	const invalidColumns = columns.filter(column => !allMemberColumns.includes(column));
-	if (invalidColumns.length > 0) {
-		logEvents(`Invalid columns requested from members table: ${invalidColumns.join(', ')}`, 'errLog.txt', { print: true });
-		return {};
-	}
+	// Arguments are valid, move onto the SQL query...
 
 	// Construct SQL query
 	const query = `SELECT ${columns.join(', ')} FROM members WHERE ${searchKey} = ?`;
@@ -217,7 +248,7 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 
 		// If no row is found, return an empty object
 		if (!row) {
-			if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = "${searchValue}"`, 'errLog.txt', { print: true });
+			if (!skipErrorLogging) logEvents(`No matches found for ${searchKey} = ${searchValue}`, 'errLog.txt', { print: true });
 			return {};
 		}
 

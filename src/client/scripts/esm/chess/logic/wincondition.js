@@ -8,6 +8,7 @@ import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
 import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
+import boardchanges from './boardchanges.js';
 // Import End
 
 // Type Definitions...
@@ -34,6 +35,8 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
  * @returns {string | false} The conclusion string, if the game is over. For example, "white checkmate", or "draw stalemate". If the game isn't over, this returns *false*.
  */
 function getGameConclusion(gamefile) {
+	if (!moveutil.areWeViewingLatestMove(gamefile)) throw new Error("Cannot perform game over checks when we're not on the last move.");
+	
 	return detectAllpiecescaptured(gamefile)
         || detectRoyalCapture(gamefile)
         || detectAllroyalscaptured(gamefile)
@@ -77,7 +80,7 @@ function detectAllpiecescaptured(gamefile) {
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
-	const count = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, gamefile.whosTurn);
+	const count = gamefileutility.getPieceCountOfColor(gamefile, gamefile.whosTurn);
 
 	if (count === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -131,12 +134,17 @@ function wasLastMoveARoyalCapture(gamefile) {
 	const lastMove = moveutil.getLastMove(gamefile.moves);
 	if (!lastMove) return false;
 
-	if (!lastMove.captured) return false; // Last move not a capture
+	const capturedTypes = new Set();
 
-	const trimmedTypeCaptured = colorutil.trimColorExtensionFromType(lastMove.captured);
+	boardchanges.getCapturedPieces(lastMove).forEach((piece) => {
+		capturedTypes.add(colorutil.trimColorExtensionFromType(piece.type));
+	});
+
+	if (!capturedTypes.size) return false; // Last move not a capture
 
 	// Does the piece type captured equal any royal piece?
-	return typeutil.royals.includes(trimmedTypeCaptured);
+	// Idk why vscode does not have set methods
+	return !capturedTypes.isDisjointFrom(new Set(typeutil.royals)); // disjoint if they share nothing in common
 }
 
 /**
@@ -157,21 +165,7 @@ function isCheckmateCompatibleWithGame(gamefile) {
 	return true; // Checkmate compatible!
 }
 
-/**
- * Returns the termination of the game in english language.
- * @param {GameRules} gameRules
- * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
- */
-function getTerminationInEnglish(gameRules, condition) {
-	if (condition === 'moverule') { // One exception
-		const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
-		return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
-	}
-	return translations.termination[condition];
-}
-
 export default {
 	getGameConclusion,
 	isCheckmateCompatibleWithGame,
-	getTerminationInEnglish,
 };

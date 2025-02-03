@@ -1,6 +1,6 @@
-import style from "./style.js";
+
 import moveutil from "../../chess/util/moveutil.js";
-import onlinegame from "../misc/onlinegame.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
@@ -63,13 +63,13 @@ const countdown = {
 
 function hideClocks() {
 	for (const color in element_timers) {
-		style.hideElement(element_timers[color].container);
+		element_timers[color].container.classList.add('hidden');
 	}
 }
 
 function showClocks() {
 	for (const color in element_timers) {
-		style.revealElement(element_timers[color].container);
+		element_timers[color].container.classList.remove('hidden');
 	}
 }
 
@@ -225,10 +225,9 @@ function set(gamefile) {
 // The 10s drum countdown...
 /** Reschedules the timer to play the 10-second countdown effect. */
 function rescheduleCountdown(gamefile) {
-	const now = Date.now();
-	rescheduleDrum(gamefile, now);
-	rescheduleTicking(gamefile, now);
-	rescheduleTick(gamefile, now);
+	rescheduleDrum(gamefile);
+	rescheduleTicking(gamefile);
+	rescheduleTick(gamefile);
 }
 
 /**
@@ -249,7 +248,7 @@ function push(gamefile) {
 	}
 }
 
-function rescheduleDrum(gamefile, now) {
+function rescheduleDrum(gamefile) {
 	clearTimeout(countdown.drum.timeoutID);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 	const timeUntil10SecsRemain = gamefile.clocks.currentTime[gamefile.clocks.colorTicking] - 10000;
@@ -263,7 +262,7 @@ function rescheduleDrum(gamefile, now) {
 	countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeNextDrum, gamefile, secsRemaining);
 }
 
-function rescheduleTicking(gamefile, now) {
+function rescheduleTicking(gamefile) {
 	clearTimeout(countdown.ticking.timeoutID);
 	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
@@ -277,11 +276,11 @@ function rescheduleTicking(gamefile, now) {
 }
 
 // Tick sound effect right BEFORE 10 seconds is hit
-function rescheduleTick(gamefile, now) {
+function rescheduleTick(gamefile) {
 	clearTimeout(countdown.tick.timeoutID);
 	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
-	const timeRemain = gamefile.clocks.currentTime[gamefile.clocks.colorTicking] - countdown.tick.timeToStartFromEnd;;
+	const timeRemain = gamefile.clocks.currentTime[gamefile.clocks.colorTicking] - countdown.tick.timeToStartFromEnd;
 	if (timeRemain > 0) countdown.tick.timeoutID = setTimeout(playTickEffect, timeRemain);
 	else {
 		const offset = -timeRemain;

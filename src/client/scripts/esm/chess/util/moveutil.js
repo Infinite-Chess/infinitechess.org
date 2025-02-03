@@ -1,81 +1,21 @@
 
-// This contains methods for working with the gamefile's moves list,
-// and detects if we're rewinding or fast-forwarding to view the game's history.
+/**
+ * This script contains utility methods for working with the gamefile's moves list.
+ */
 
-// Import Start
+
 import coordutil from './coordutil.js';
-// Import End
+
 
 /** 
  * Type Definitions 
  * @typedef {import('../logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../logic/movepiece.js').Move} Move
+ * @typedef {import('../variants/gamerules.js').GameRules} GameRules
 */
-
 
 "use strict";
 
-// Custom type definitions...
-
-/** The `Move` custom type. This should not be called, it is for JSDoc dropdown info. */
-function Move() {
-	console.error('This Move constructor should NEVER be called! It is purely for useful JSDoc dropdown info when working with the `Move` type.');
-
-	/** The type of piece moved (e.g. `queensW`). */
-	this.type = undefined;
-	/** The start coordinates of the piece: `[x,y]` */
-	this.startCoords = undefined;
-	/** The end coordinates of the piece: `[x,y]`  */
-	this.endCoords = undefined;
-	/** The type of piece captured (e.g. `knightsB`), if one was made. @type {string} */
-	this.captured = undefined;
-	/** Whether the move delivered check. */
-	this.check = undefined;
-	/** Whether the move delivered mate (or the killing move). */
-	this.mate = undefined;
-	/** Present if the move was special-move enpassant capture. This will be
-	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
-	this.enpassant = undefined;
-	/** Present if the move was a special-move promotion. This will be
-	 * a string of the type of piece being promoted to: "queensW" */
-	this.promotion = undefined;
-	/** Present if the move was a special-move casle. This may look like an
-	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
-	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
-	this.castle = undefined;
-	/** Contains information for undoing simulated moves.
-     * Several of these properties are impossible to recalculate without
-     * looking at previous moves, or replaying the whole game. */
-	this.rewindInfo = {
-		/** The index of the captured piece within the gamefile's piece list.
-         * Required to not screw up the mesh when simulating. */
-		capturedIndex: undefined,
-		/** The index of the promoted pawn within the gamefile's piece list.
-         * Required to not screw up the mesh when simulating. */
-		pawnIndex: undefined,
-		/** Whether the moved piece had its special right before moving. */
-		specialRightStart: undefined,
-		/** Whether the piece on the destination had its special rights before being captured. */
-		specialRightEnd: undefined,
-		/** The gamefile's `enpassant` property before this move was made. */
-		enpassant: undefined,
-		/** The gamefile's `moveRuleState` property before this move was made. */
-		moveRuleState: undefined,
-		/** The gamefile's `checksGiven` property before this move was made. */
-		checksGiven: undefined,
-		/** The gamefile's `inCheck` property before this move was made. */
-		inCheck: undefined,
-		/** The gamefile's `attackers` property before this move was made. */
-		attackers: undefined,
-		/** The gamefile's `gameConclusion` property before this move was made. */
-		gameConclusion: undefined,
-	};
-	/** The move in most compact notation: `8,7>8,8Q` */
-	this.compact = undefined;
-}
-
-/**
- * This script contains methods for working with the gamefile's moves list.
- */
 
 /**
  * Returns the move one forward from the current position we're viewing, if it exists.
@@ -184,6 +124,19 @@ function getWhosTurnAtFront(gamefile) {
 }
 
 /**
+ * Returns whos turn it is at the front of the game,
+ * provided the only information you have is the existing moves list
+ * and the turnOrder gamerule.
+ * 
+ * You may need this if the gamefile hasn't actually been contructed yet.
+ * @param {number} numberOfMoves - The number of moves played in the game so far (length of the current moves list).
+ * @param {GameRules['turnOrder']} turnOrder - The order of colors turns in the game.
+ */
+function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves, turnOrder) {
+	return turnOrder[numberOfMoves % turnOrder.length];
+}
+
+/**
  * Returns total ply count (or half-moves) of the game so far.
  * @param {Move[]} moves - The moves list
  * @returns {number} The ply count
@@ -205,15 +158,6 @@ function hasPieceMoved(gamefile, coords) {
 }
 
 /**
- * Deletes the latest move played.
- * @param {Move[]} moves - The moves list
- */
-function deleteLastMove(moves) {
-	if (moves.length === 0) return console.error("Cannot delete last move when there are none");
-	moves.pop();
-}
-
-/**
  * Returns true if the moves are in the old 2D array format.
  * @param {Move[]} longmoves - The gamefile's moves parameter
  * @returns {boolean} *true* if the moves are in the old 2D format, false if in new 1D format.
@@ -232,6 +176,27 @@ function areMovesIn2DFormat(longmoves) {
  * @returns {Move[]} Moves converted to the new 1D array format
  */
 function convertMovesTo1DFormat(moves, results) {
+
+	/*
+	// This is the format of outdated 2D moves list in game ICN notation.
+	[
+		[null, DepricatedMove],
+		[DepricatedMove, DepricatedMove],
+		...
+	]
+	// Where if the first move in the first array is null, that means it's black to move first.
+
+	interface DepricatedMove {
+		startCoords: Coords,
+		endCoords: Coords,
+		type: string,
+		captured?: string,
+		enpassant?: 1 | -1,
+		promotion?: string,
+		castle?: { coord: Coords, dir: 1 | -1 }
+	}
+	*/
+
 	results.turn = 'white';
 	const moves1D = [];
 	for (let a = 0; a < moves.length; a++) {
@@ -245,15 +210,16 @@ function convertMovesTo1DFormat(moves, results) {
 	return moves1D;
 }
 
-/**
- * Flags the gamefile's very last move as a "check".
- * @param {gamefile} gamefile - The gamefile
- */
-function flagLastMoveAsCheck(gamefile) {
-	if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
-	const lastMove = getLastMove(gamefile.moves);
-	lastMove.check = true;
-}
+// COMMENTED-OUT because it's not used anywhere in the code
+// /**
+//  * Flags the gamefile's very last move as a "check".
+//  * @param {gamefile} gamefile - The gamefile
+//  */
+// function flagLastMoveAsCheck(gamefile) {
+// 	if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
+// 	const lastMove = getLastMove(gamefile.moves);
+// 	lastMove.check = true;
+// }
 
 /**
  * Flags the gamefile's very last move as a "mate".
@@ -314,8 +280,15 @@ function doesAnyPlayerGet2TurnsInARow(gamefile) {
 	return false;
 }
 
-// Type export DO NOT USE
-export { Move };
+/**
+ * Strips the coordinates of their special move properties.
+ * For example, unstripped coords may look like: `[2,7,enpassant:true]`
+ * @param {number[]} coords - The coordinates
+ * @returns {number[]} The stripped coordinates: `[2,7]`
+ */
+function stripSpecialMoveTagsFromCoords(coords) { return [coords[0], coords[1]]; }
+
+
 
 export default {
 	isIncrementingLegal,
@@ -327,10 +300,10 @@ export default {
 	areWeViewingLatestMove,
 	isIndexTheLastMove,
 	getWhosTurnAtFront,
+	getWhosTurnAtFrom_ByMoveCountAndTurnOrder,
 	getPlyCount,
 	hasPieceMoved,
-	deleteLastMove,
-	flagLastMoveAsCheck,
+	// flagLastMoveAsCheck,
 	flagLastMoveAsMate,
 	areMovesIn2DFormat,
 	convertMovesTo1DFormat,
@@ -339,4 +312,5 @@ export default {
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
 	getMoveOneForward,
+	stripSpecialMoveTagsFromCoords,
 };

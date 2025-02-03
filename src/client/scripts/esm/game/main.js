@@ -10,7 +10,6 @@
 import webgl from './rendering/webgl.js';
 import loadbalancer from './misc/loadbalancer.js';
 import input from './input.js';
-import onlinegame from './misc/onlinegame.js';
 import localstorage from '../util/localstorage.js';
 import game from './chess/game.js';
 import shaders from './rendering/shaders.js';
@@ -35,13 +34,13 @@ function start() {
 
 	browsersupport.checkBrowserSupport();
 
-	game.init(); // Initiates textures, buffer models for rendering, and the title screen.
+	game.init();
 
 	initListeners();
 
-	onlinegame.askServerIfWeAreInGame();
-
-	localstorage.eraseExpiredItems();
+	// Immediately asks the server if we are in a game.
+	// If so, it will send the info to join it.
+	websocket.sendmessage('game', 'joingame', undefined, true);
 
 	gameLoop(); // Update & draw the scene repeatedly
 }

@@ -120,7 +120,7 @@ function playSound(soundName, { volume = 1, delay = 0, offset = 0, fadeInDuratio
 	// 2. If reverb is specified, we also need a source for that effect!
 	// We will play them both!
 	if (!reverbVolume) return fadeInAndReturn(); // No reverb effect if volume is falsey or zero :)
-	if (reverbDuration == null) return console.error("Need to specify a reverb duration.");
+	if (reverbDuration === undefined) return console.error("Need to specify a reverb duration.");
 	const sourceReverb = createBufferSource(reverbVolume, 1, reverbDuration);
 	sourceReverb.start(startAt, startTime, duration);
 	soundObject.sourceReverb = sourceReverb;
@@ -128,7 +128,7 @@ function playSound(soundName, { volume = 1, delay = 0, offset = 0, fadeInDuratio
 	return fadeInAndReturn();
 
 	function fadeInAndReturn() {
-		if (fadeInDuration == null) return soundObject; // No fade-in effect
+		if (fadeInDuration === undefined) return soundObject; // No fade-in effect
 		fadeIn(soundObject.source, volume, fadeInDuration);
 		if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume, fadeInDuration);
 		return soundObject;
@@ -157,7 +157,7 @@ function getStampDuration(stamp) { // [ startTimeSecs, endTimeSecs ]
  */
 function createBufferSource(volume, playbackRate = 1, reverbDurationSecs) {
 	const source = audioContext.createBufferSource();
-	if (audioDecodedBuffer == null) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.");
+	if (!audioDecodedBuffer) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.");
 	source.buffer = audioDecodedBuffer; // Assuming `decodedBuffer` is defined elsewhere
 
 	// What nodes do we want?
@@ -170,7 +170,7 @@ function createBufferSource(volume, playbackRate = 1, reverbDurationSecs) {
 	source.gainNode = gain; // Attach to the source object so that it can be faded out/in on demand.
 
 	// Reverb node (if specified)
-	if (reverbDurationSecs != null) {
+	if (reverbDurationSecs !== undefined) {
 		const convolver = generateConvolverNode(audioContext, reverbDurationSecs);
 		nodes.push(convolver);
 	}

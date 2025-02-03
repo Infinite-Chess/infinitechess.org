@@ -2,7 +2,7 @@
 import { getMemberDataByCriteria, updateMemberColumns } from './memberManager.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens, trimTokensToSessionCap } from '../controllers/authenticationTokens/refreshTokenObject.js';
-import { closeAllSocketsOfSession } from '../socket/socketManager.js';
+import { closeAllSocketsOfMember, closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 
 /**
@@ -48,7 +48,7 @@ function addRefreshTokenToMemberData(req, userId, token) {
 	// Remove any expired tokens
 	refreshTokens = removeExpiredTokens(refreshTokens);
 
-	// Add the new token to the list. MODIFIES the arrow
+	// Add the new token to the list. MODIFIES the original array
 	addTokenToRefreshTokens(req, refreshTokens, token);
 
 	// Make sure they don't exceed the maximum number of login sessions
@@ -65,6 +65,10 @@ function addRefreshTokenToMemberData(req, userId, token) {
  * @param {string} token - The refresh token to be deleted from the user's refresh_tokens column.
  */
 function deleteRefreshTokenFromMemberData(userId, deleteToken) {
+	// Whenever we delete/invalidate a session token from the database,
+	// we should also close any sockets that were authenticated/logged in by it.
+	closeAllSocketsOfSession(deleteToken, 1008, "Logged out");
+
 	// Fetch the current refresh tokens for the user
 	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) return logEvents(`Cannot delete refresh token from non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
@@ -83,18 +87,28 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 /**
  * Updates the refresh tokens for a given user.
  * @param {number} userId - The user ID of the member.
- * @param {RefreshTokensList} tokens - The new array of refresh tokens to save.
+ * @param {RefreshTokensList | null} tokens - The new array of refresh tokens to save, or null if we want to delete them.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token (false if access token).
  */
 function saveRefreshTokens(userId, tokens) {
 	// If the tokens array is empty, set it to null
-	if (tokens.length === 0) tokens = null;
+	if (tokens !== null && tokens.length === 0) tokens = null;
 
 	// Update the refresh_tokens or access_tokens column
 	const updateResult = updateMemberColumns(userId, { refresh_tokens: tokens });
 
 	// If no changes were made, log the event
 	if (!updateResult) logEvents(`No changes made when saving refresh_tokens of member with id "${userId}"!`, 'errLog.txt', { print: true });
+}
+
+/**
+ * Deletes all the refresh_tokens of a user by user_id.
+ * It does so by setting the cell to null.
+ * @param {number} user_id 
+ */
+function deleteRefreshTokensOfUser(user_id) {
+	saveRefreshTokens(user_id, null); // Saving `null` effectively deletes them
+	closeAllSocketsOfMember(user_id, 1008, "Logged out");
 }
 
 
@@ -104,4 +118,5 @@ export {
 	deleteRefreshTokenFromMemberData,
 	getRefreshTokensByUserID,
 	saveRefreshTokens,
+	deleteRefreshTokensOfUser,
 };

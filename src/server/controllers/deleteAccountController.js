@@ -2,7 +2,6 @@
  * This module handles account deletion.
  */
 
-import db from '../database/database.js';
 import { logEvents } from "../middleware/logEvents.js";
 import { getTranslationForReq } from "../utility/translate.js";
 import { deleteUser, getMemberDataByCriteria } from "../database/memberManager.js";
@@ -14,6 +13,7 @@ import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 
 /**
  * Route that removes a user account if they request to delete it.
+ * Checks if there password was correct first.
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  */
@@ -36,20 +36,43 @@ async function removeAccount(req, res) {
 	}
 	
 	// Close their sockets, delete their invites, delete their session cookies...
-	revokeSession(res, user_id);
-	closeAllSocketsOfMember(user_id, 1008, "Logged out");
+	revokeSession(res);
 
 	const reason_deleted = "user request";
-	if (deleteUser(user_id, reason_deleted)) { // Success!!
+	const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
+	if (result.success) { // Success!!
 		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
 		return res.send('OK'); // 200 is default code
 	} else { // Failure
-		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered, they do not exist.`, 'errLog.txt', { print: true });
+		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt', { print: true });
 		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
 	}
+}
+
+/**
+ * Deletes a user's account by user_id,
+ * terminates all their login session,
+ * and closes all their open websockets.
+ * @param {number} user_id 
+ * @param {string} reason_deleted - Must be one of memberManager.validDeleteReasons
+ * @returns {object} A result object: { success (boolean), reason (string, if failed) }
+ */
+function deleteAccount(user_id, reason_deleted) {
+	
+	const result = deleteUser(user_id, reason_deleted); // { success, result (if failed) }
+
+	// Close their sockets, delete their invites, delete their session cookies...
+	if (result.success) closeAllSocketsOfMember(user_id, 1008, "Logged out");
+
+	return result;
+
+	// Account deleting automatically invalidates all their sessions,
+	// because their refresh_tokens are deleted.
+	// However, they will have to refresh the page for their page and navigation links to update.
 }
 
 
 export {
 	removeAccount,
+	deleteAccount,
 };

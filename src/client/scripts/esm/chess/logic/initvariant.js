@@ -1,6 +1,5 @@
 
 // Import Start
-import specialundo from './specialundo.js';
 import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
 import specialdetect from './specialdetect.js';
@@ -8,6 +7,7 @@ import specialmove from './specialmove.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
+import organizedlines from './organizedlines.js';
 // Import End
 
 /** 
@@ -60,7 +60,7 @@ function initExistingTypes(gamefile) {
 		rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
 	}
 
-	gamefile.startSnapshot.existingTypes = rawtypes;
+	gamefile.startSnapshot.existingTypes = [...rawtypes];
 }
 
 /**
@@ -71,6 +71,7 @@ function initExistingTypes(gamefile) {
  */
 function initSlidingMoves(gamefile) {
 	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
+	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
 }
 
 /**
@@ -106,7 +107,6 @@ function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
 	gamefile.pieceMovesets = variant.getMovesetsOfVariant({ Variant, UTCDate, UTCTime });
 	gamefile.specialDetects = specialdetect.getSpecialMoves();
 	gamefile.specialMoves = specialmove.getFunctions();
-	gamefile.specialUndos = specialundo.getFunctions();
 	gamefile.vicinity = legalmoves.genVicinity(gamefile);
 }
 

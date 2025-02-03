@@ -22,13 +22,13 @@ let fairyIndex = 0;
 const maxFairyIndex = element_FairyImg.querySelectorAll('picture').length - 1;
 
 function open() {
-	style.revealElement(element_Guide);
+	element_Guide.classList.remove('hidden');
 	initListeners();
 	loadAllImages();
 }
 
 function close() {
-	style.hideElement(element_Guide);
+	element_Guide.classList.add('hidden');
 	closeListeners();
 }
 
@@ -57,7 +57,6 @@ function callback_Back() {
 }
 
 function callback_FairyBack(event) {
-	event = event || window.event;
 	if (fairyIndex === 0) return;
 	hideCurrentFairy();
 	fairyIndex--;
@@ -66,7 +65,6 @@ function callback_FairyBack(event) {
 }
 
 function callback_FairyForward(event) {
-	event = event || window.event;
 	if (fairyIndex === maxFairyIndex) return;
 	hideCurrentFairy();
 	fairyIndex++;
@@ -77,21 +75,21 @@ function callback_FairyForward(event) {
 function hideCurrentFairy() {
 	const allFairyImgs = element_FairyImg.querySelectorAll('picture');
 	const targetFairyImg = allFairyImgs[fairyIndex];
-	style.hideElement(targetFairyImg);
+	targetFairyImg.classList.add('hidden');
 
 	const allFairyCards = element_FairyCard.querySelectorAll('.fairy-card-desc');
 	const targetFairyCard = allFairyCards[fairyIndex];
-	style.hideElement(targetFairyCard);
+	targetFairyCard.classList.add('hidden');
 }
 
 function revealCurrentFairy() {
 	const allFairyImgs = element_FairyImg.querySelectorAll('picture');
 	const targetFairyImg = allFairyImgs[fairyIndex];
-	style.revealElement(targetFairyImg);
+	targetFairyImg.classList.remove('hidden');
 
 	const allFairyCards = element_FairyCard.querySelectorAll('.fairy-card-desc');
 	const targetFairyCard = allFairyCards[fairyIndex];
-	style.revealElement(targetFairyCard);
+	targetFairyCard.classList.remove('hidden');
 }
 
 function updateArrowTransparency() {

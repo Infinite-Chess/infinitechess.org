@@ -1,23 +1,20 @@
 
 // Import Start
 import input from '../input.js';
-import onlinegame from '../misc/onlinegame.js';
-import highlights from './highlights.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import stats from '../gui/stats.js';
 import perspective from './perspective.js';
-import guinavigation from '../gui/guinavigation.js';
 import selection from '../chess/selection.js';
 import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import board from './board.js';
-import game from '../chess/game.js';
 import statustext from '../gui/statustext.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../../chess/util/colorutil.js';
 import frametracker from './frametracker.js';
 import timeutil from '../../util/timeutil.js';
 import themes from '../../components/header/themes.js';
 import preferences from '../../components/header/preferences.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -33,31 +30,29 @@ import preferences from '../../components/header/preferences.js';
 // Useful for making sure rendering methods are as expected.
 let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
-let navigationVisible = true;
-
 let theme;
 
 let em = false; // editMode, allows moving pieces anywhere else on the board!
 
 let fps = false;
 
-function initTheme() {
-	const selectedThemeName = preferences.getTheme();
-	setTheme(selectedThemeName);
 
+
+(function() {
 	document.addEventListener('theme-change', function(event) { // Custom Event listener.   detail: themeName
 		const selectedTheme = event.detail;
 		console.log(`Theme change event detected: ${selectedTheme}`);
 		setTheme(selectedTheme);
 	});
+})();
+
+function initTheme() {
+	const selectedThemeName = preferences.getTheme();
+	setTheme(selectedThemeName);
 }
 
 function isDebugModeOn() {
 	return debugMode;
-}
-
-function getNavigationVisible() {
-	return navigationVisible;
 }
 
 function getTheme() {
@@ -69,7 +64,7 @@ function toggleDeveloperMode() {
 	debugMode = !debugMode;
 	camera.onPositionChange();
 	perspective.initCrosshairModel();
-	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
+	piecesmodel.regenModel(gameslot.getGamefile(), getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
 	statustext.showStatus(`${translations.rendering.toggled_debug} ` + (debugMode ? translations.rendering.on : translations.rendering.off));
 }
 
@@ -98,31 +93,6 @@ function toggleEM() {
 	statustext.showStatus(`${translations.rendering.toggled_edit} ` + (em ? translations.rendering.on : translations.rendering.off));
 }
 
-/** Toggles the visibility of the navigation bars. */
-function setNavigationBar(value) {
-	navigationVisible = value;
-
-	onToggleNavigationBar();
-}
-
-function toggleNavigationBar() {
-	// We should only ever do this if we are in a game!
-	if (!game.getGamefile()) return;
-	navigationVisible = !navigationVisible;
-
-	onToggleNavigationBar();
-}
-
-function onToggleNavigationBar() {
-	if (navigationVisible) {
-		guinavigation.open({ allowEditCoords: !onlinegame.areInOnlineGame() });
-		guigameinfo.open();
-	}
-	else guinavigation.close();
-
-	camera.updatePIXEL_HEIGHT_OF_NAVS();
-}
-
 /**
  * Return the color of the specified light or dark tile of our current theme.
  * @param {boolean} isWhite - True if we're wanting the light square color, otherwise dark square
@@ -147,6 +117,10 @@ function getDefaultCheckHighlightColor() {
 	return themes.getPropertyOfTheme(theme, 'checkHighlightColor'); 
 }
 
+function getDefaultOutlineColor() {
+	return themes.getPropertyOfTheme(theme, 'boxOutlineColor');
+}
+
 function setTheme(newTheme) {
 	if (!themes.isThemeValid(newTheme)) {
 		console.error(`Invalid theme "${newTheme}"! Setting to default..`);
@@ -155,8 +129,7 @@ function setTheme(newTheme) {
 	theme = newTheme;
 
 	board.updateTheme();
-	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
-	highlights.regenModel();
+	piecesmodel.regenModel(gameslot.getGamefile(), getPieceRegenColorArgs());
 }
 
 /**
@@ -294,7 +267,7 @@ function toggleFPS() {
 // 	}
 
 // 	board.updateTheme();
-// 	piecesmodel.regenModel(game.getGamefile(), getPieceRegenColorArgs());
+// 	piecesmodel.regenModel(gameslot.getGamefile(), getPieceRegenColorArgs());
 // 	highlights.regenModel();
 // }
 
@@ -302,16 +275,14 @@ function toggleFPS() {
 
 export default {
 	isDebugModeOn,
-	getNavigationVisible,
-	setNavigationBar,
 	getTheme,
 	toggleDeveloperMode,
 	toggleEM,
-	toggleNavigationBar,
 	getDefaultTiles,
 	getLegalMoveHighlightColor,
 	getDefaultLastMoveHighlightColor,
 	getDefaultCheckHighlightColor,
+	getDefaultOutlineColor,
 	getPieceRegenColorArgs,
 	getColorOfType,
 	getEM,

@@ -15,6 +15,7 @@ import validatorama from '../../util/validatorama.js';
 
 "use strict";
 
+
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
  * @property {string} name - Who owns the invite. If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
@@ -26,6 +27,9 @@ import validatorama from '../../util/validatorama.js';
  * @property {string} publicity - public/private
  * @property {string} rated - rated/casual
  */
+
+/** @typedef {import('../gui/guiplay.js').InviteOptions} InviteOptions */
+
 
 /** This script manages the invites on the Play page. */
 
@@ -47,12 +51,18 @@ function gelement_iCodeCode() {
 }
 
 function update() {
-	if (!guiplay.onPlayPage()) return; // Not on the play screen
+	if (!guiplay.isOpen()) return; // Not on the play screen
 	if (loadbalancer.gisHibernating()) statustext.showStatus(translations.invites.move_mouse, false, 0.1);
 }
 
 function unsubIfWeNotHave() {
-	if (!weHaveInvite) websocket.unsubFromInvites();
+	if (!weHaveInvite) unsubFromInvites();
+}
+
+/** Unsubscribes from the invites subscriptions list. */
+function unsubFromInvites() {
+	clear({ recentUsersInLastList: true });
+	websocket.unsubFromSub('invites');
 }
 
 
@@ -79,8 +89,20 @@ function onmessage(data) { // { sub, action, value, id }
 	}
 }
 
-function create(inviteOptions) { // { variant, clock, color, rated, publicity }
+/**
+ * Sends the create invite request message from the given InviteOptions specified on the invite creation screen.
+ * @param {InviteOptions} variantOptions
+ */
+function create(variantOptions) {
 	if (weHaveInvite) return console.error("We already have an existing invite, can't create more.");
+
+	const inviteOptions = {
+		variant: variantOptions.variant,
+		clock: variantOptions.clock,
+		color: variantOptions.color,
+		publicity: variantOptions.private, // Only the `private` property is changed to `publicity`
+		rated: variantOptions.rated,
+	};
 
 	generateTagForInvite(inviteOptions);
 
@@ -88,6 +110,9 @@ function create(inviteOptions) { // { variant, clock, color, rated, publicity }
 
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockCreateInviteButton;
+
+	// console.log("Invite options before sending create invite:");
+	// console.log(inviteOptions);
 
 	websocket.sendmessage("invites", "createinvite", inviteOptions, true, onreplyFunc);
 }
@@ -109,7 +134,7 @@ function cancel(id = ourInviteID) {
 // Generates a tag id for the invite parameters before we send off action "createinvite" to the server
 function generateTagForInvite(inviteOptions) {
 	// Create and send invite with a tag so we know which ones ours
-	const tag = uuid.generateID(8);
+	const tag = uuid.generateID_Base62(8);
 
 	// NEW browser storage method!
 	localstorage.saveItem('invite-tag', tag);
@@ -257,7 +282,7 @@ function clear({ recentUsersInLastList = false } = {}) {
 
 // Deletes all invites and resets create invite button if on play page
 function clearIfOnPlayPage() {
-	if (!guiplay.onPlayPage()) return; // Not on the play screen
+	if (!guiplay.isOpen()) return; // Not on the play screen
 	clear();
 	updateCreateInviteButton();
 }
@@ -341,17 +366,6 @@ function click(element) {
 	}
 }
 
-function getInviteFromID(id) {
-	if (!id) return console.error('Cannot find the invite with undefined id!');
-
-	for (let i = 0; i < activeInvites.length; i++) {
-		const invite = activeInvites[i];
-		if (invite.id === id) return invite;
-	}
-
-	console.error(`Could not find invite with id ${id} in the document!`);
-}
-
 function updateCreateInviteButton() {
 	if (guiplay.getModeSelected() !== 'online') return;
 	if (weHaveInvite) guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
@@ -386,7 +400,7 @@ function updatePrivateInviteCode(privateInviteID) { // If undefined, we know we 
 }
 
 function updateActiveGameCount(newCount) {
-	if (newCount == null) return;
+	if (newCount === undefined) throw Error('Need to specify active game count');
 	element_joinExisting.textContent = `${translations.invites.join_existing_active_games} ${newCount}`;
 }
 
@@ -399,11 +413,12 @@ function doWeHave() {
  * @param {ignoreAlreadySubbed} *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
  * */
 async function subscribeToInvites(ignoreAlreadySubbed) { // Set to true when we are restarting the connection and need to resub to everything we were to before.
-	if (!guiplay.onPlayPage()) return; // Don't subscribe to invites if we're not on the play page!
-	const subs = websocket.getSubs();
-	if (!ignoreAlreadySubbed && subs.invites) return;
+	if (!guiplay.isOpen()) return; // Don't subscribe to invites if we're not on the play page!
+
+	const alreadySubbed = websocket.areSubbedToSub('invites');
+	if (!ignoreAlreadySubbed && alreadySubbed) return;
 	// console.log("Subbing to invites!");
-	subs.invites = true;
+	websocket.addSub('invites');
 	websocket.sendmessage("general", "sub", "invites");
 }
 
@@ -421,5 +436,6 @@ export default {
 	clearIfOnPlayPage,
 	unsubIfWeNotHave,
 	deleteInviteTagInLocalStorage,
-	subscribeToInvites
+	subscribeToInvites,
+	unsubFromInvites,
 };

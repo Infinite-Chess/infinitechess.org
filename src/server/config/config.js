@@ -1,11 +1,16 @@
 
+import { NODE_ENV } from './env.js';
+
+
+// Variables -----------------------------------------------------------
+
+
 /**
- * Whether to run the server in development mode.
+ * Whether the server is running in development mode.
  * It will be hosted on a different port for local host,
  * and a few other minor adjustments.
- * Disable in production.
  */
-const DEV_BUILD = true;
+const DEV_BUILD = NODE_ENV === 'development';
 
 /** 
  * Whether we bundle and minify files to send to the client
@@ -25,6 +30,7 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) throw new Error("ARE_RATE_LIMITING must be
  */
 const simulatedWebsocketLatencyMillis = 0;
 // const simulatedWebsocketLatencyMillis = 1000; // 1 Second
+// const simulatedWebsocketLatencyMillis = 2000; // 2 Seconds
 if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
 
 /** The domain name of the production website. */

@@ -1,9 +1,8 @@
-
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import animation from '../../game/rendering/animation.js';
-import movepiece from './movepiece.js';
+import boardchanges from './boardchanges.js';
 import coordutil from '../util/coordutil.js';
+import state from './state.js';
 // Import End
 
 "use strict";
@@ -31,20 +30,20 @@ function getFunctions() {
 // ALL FUNCTIONS NEED TO:
 // * Make the move
 // * Append the move
-// * Animate the piece
 
 
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
+function kings(gamefile, piece, move) {
 
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	// Move the king to new square
 
-	movepiece.movePiece(gamefile, piece, move.endCoords, { updateData }); // Make normal move
+	const moveChanges = move.changes;
+	boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Make normal move
 
 	// Move the rook to new square
 
@@ -52,25 +51,21 @@ function kings(gamefile, piece, move, { updateData = true, animate = true, updat
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	// Delete the rook's special move rights
 	const key = coordutil.getKeyFromCoords(pieceToCastleWith.coords);
-	delete gamefile.specialRights[key];
-	movepiece.movePiece(gamefile, pieceToCastleWith, landSquare, { updateData }); // Make normal move
+	state.createState(move, 'specialrights', gamefile.specialRights[key], undefined, { coordsKey: key });
 
-	if (animate) {
-		animation.animatePiece(piece.type, piece.coords, move.endCoords); // King
-		const resetAnimations = false;
-		animation.animatePiece(pieceToCastleWith.type, pieceToCastleWith.coords, landSquare, undefined, resetAnimations); // Castled piece
-	}
+	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, false, landSquare); // Make normal move
 
 	// Special move was executed!
 	// There is no captured piece with castling
 	return true;
 }
 
-function pawns(gamefile, piece, move, { updateData = true, animate = true, updateProperties = true, simulated = false } = {}) {
+function pawns(gamefile, piece, move) {
+	const moveChanges = move.changes;
 
-	// If it was a double push, then add the enpassant flag to the gamefile, and remove its special right!
-	if (updateProperties && isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-		gamefile.enpassant = getEnPassantSquare(piece.coords, move.endCoords);
+	// If it was a double push, then queue adding the new enpassant square to the gamefile!
+	if (isPawnMoveADoublePush(piece.coords, move.endCoords)) {
+		state.createState(move, 'enpassant', gamefile.enpassant, getEnPassantSquare(piece.coords, move.endCoords));
 	}
 
 	const enpassantTag = move.enpassant; // -1/1
@@ -81,23 +76,22 @@ function pawns(gamefile, piece, move, { updateData = true, animate = true, updat
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
 
 	if (capturedPiece) move.captured = capturedPiece.type;
-	if (capturedPiece && simulated) move.rewindInfo.capturedIndex = capturedPiece.index;
 
 	// Delete the piece captured
-	if (capturedPiece) movepiece.deletePiece(gamefile, capturedPiece, { updateData });
+
+	if (capturedPiece) {
+		boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece);
+	} else {
+		// Move the pawn
+		boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords);
+	}
 
 	if (promotionTag) {
 		// Delete original pawn
-		movepiece.deletePiece(gamefile, piece, { updateData });
+		boardchanges.queueDeletePiece(moveChanges, { type: piece.type, coords: move.endCoords, index: piece.index }, true);
 
-		movepiece.addPiece(gamefile, promotionTag, move.endCoords, null, { updateData });
-
-	} else /* enpassantTag */ {
-		// Move the pawn
-		movepiece.movePiece(gamefile, piece, move.endCoords, { updateData });
+		boardchanges.queueAddPiece(moveChanges, { type: promotionTag, coords: move.endCoords, index: undefined });
 	}
-
-	if (animate) animation.animatePiece(piece.type, piece.coords, move.endCoords, capturedPiece);
 
 	// Special move was executed!
 	return true;

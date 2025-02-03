@@ -1,17 +1,16 @@
 
 // Import Start
-import onlinegame from '../misc/onlinegame.js';
-import style from './style.js';
-import game from '../chess/game.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows.js';
-import guinavigation from './guinavigation.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
-import drawoffers from '../misc/drawoffers.js';
+import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guititle from './guititle.js';
 import moveutil from '../../chess/util/moveutil.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
+import gameloader from '../chess/gameloader.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 "use strict";
@@ -48,7 +47,7 @@ function open() {
 	updateTextOfMainMenuButton();
 	updatePasteButtonTransparency();
 	updateDrawOfferButton();
-	style.revealElement(element_pauseUI);
+	element_pauseUI.classList.remove('hidden');
 	initListeners();
 }
 
@@ -58,8 +57,9 @@ function toggle() {
 }
 
 function updatePasteButtonTransparency() {
-	const moves = game.getGamefile().moves;
-	const legalInPrivateMatch = onlinegame.getIsPrivate() && moves.length === 0;
+	const moves = gameslot.getGamefile().moves;
+
+	const legalInPrivateMatch = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && moves.length === 0;
 
 	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
 	else                                                      element_pastegame.classList.remove('opacity-0_5');
@@ -100,9 +100,9 @@ function onReceiveOpponentsMove() {
 function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
 	if (!isPaused) return;
 
-	if (!onlinegame.areInOnlineGame() || onlinegame.hasGameConcluded()) return element_mainmenu.textContent = translations.main_menu;
+	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame()) return element_mainmenu.textContent = translations.main_menu;
 
-	if (moveutil.isGameResignable(game.getGamefile())) {
+	if (moveutil.isGameResignable(gameslot.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
 		if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations.abort_game) {
 			element_mainmenu.disabled = true;
@@ -121,7 +121,7 @@ function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = 
 
 function initListeners() {
 	element_resume.addEventListener('click', callback_Resume);
-	element_pointers.addEventListener('click', callback_TogglePointers);
+	element_pointers.addEventListener('click', callback_ToggleArrows);
 	element_copygame.addEventListener('click', copypastegame.callbackCopy);
 	element_pastegame.addEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.addEventListener('click', callback_MainMenu);
@@ -131,7 +131,7 @@ function initListeners() {
 
 function closeListeners() {
 	element_resume.removeEventListener('click', callback_Resume);
-	element_pointers.removeEventListener('click', callback_TogglePointers);
+	element_pointers.removeEventListener('click', callback_ToggleArrows);
 	element_copygame.removeEventListener('click', copypastegame.callbackCopy);
 	element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.removeEventListener('click', callback_MainMenu);
@@ -142,18 +142,16 @@ function closeListeners() {
 function callback_Resume() {
 	if (!isPaused) return;
 	isPaused = false;
-	style.hideElement(element_pauseUI);
+	element_pauseUI.classList.add('hidden');
 	closeListeners();
 	frametracker.onVisualChange();
 }
 
 function callback_MainMenu() {
 	onlinegame.onMainMenuPress();
-	onlinegame.closeOnlineGame();
 	callback_Resume();
-	game.unloadGame();
+	gameloader.unloadGame();
 
-	guinavigation.close();
 	guititle.open();
 }
 
@@ -176,15 +174,13 @@ function callback_OfferDraw() {
 	statustext.showStatus("Can't offer draw.");
 }
 
-function callback_TogglePointers() {
-	frametracker.onVisualChange();
-	let mode = arrows.getMode();
-	mode++;
-	if (mode > 2) mode = 0;
-	arrows.setMode(mode);
+function callback_ToggleArrows() {
+	arrows.toggleArrows();
+	const mode = arrows.getMode();
 	const text = mode === 0 ? translations.arrows_off
-                : mode === 1 ? translations.arrows_defense
-                            : translations.arrows_all;
+               : mode === 1 ? translations.arrows_defense
+			   : mode === 2 ? translations.arrows_all
+                            : translations.arrows_all_hippogonals;
 	element_pointers.textContent = text;
 	if (!isPaused) statustext.showStatus(translations.toggled + " " + text);
 }
@@ -202,5 +198,5 @@ export default {
 	onReceiveOpponentsMove,
 	updateTextOfMainMenuButton,
 	callback_Resume,
-	callback_TogglePointers,
+	callback_ToggleArrows,
 };

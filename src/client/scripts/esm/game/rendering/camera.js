@@ -2,22 +2,20 @@
 // Import Start
 import perspective from './perspective.js';
 import miniimage from './miniimage.js';
-import game from '../chess/game.js';
 import stats from '../gui/stats.js';
 import options from './options.js';
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
-import shaders from './shaders.js';
 import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
+import movement from './movement.js';
 // Import End
 
 /**
  * Type Definitions
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
  */
 
 "use strict";
@@ -44,16 +42,8 @@ let fieldOfView;
 // and less often things appear out of order. Should be within 5-6 magnitude orders.
 const zNear = 1;
 const zFar = 1500 * Math.SQRT2; // Default 1500. Has to atleast be  perspective.distToRenderBoard * sqrt(2)
-    
-// Header = 40
-// Footer = 59.5
-const MARGIN_OF_HEADER_AND_FOOTER = 41; // UPDATE with the html document  ---  !!! This is the sum of the heights of the page's navigation bar and footer. 40 + 1 for border
-// How many physical pixels per virtual pixel on the device screen? For retina displays this is usually 2 or 3.
-const pixelDensity = window.devicePixelRatio;
-let PIXEL_HEIGHT_OF_TOP_NAV = undefined; // In virtual pixels
-let PIXEL_HEIGHT_OF_BOTTOM_NAV = undefined; // In virtual pixels.
 
-/** The canvas document element that WebGL renders the game onto. */
+/** The canvas document element that WebGL renders the game onto. @type {HTMLCanvasElement} */
 const canvas = document.getElementById('game');
 let canvasWidthVirtualPixels;
 let canvasHeightVirtualPixels;
@@ -75,7 +65,7 @@ let screenBoundingBox_devMode;
 
 /** Contains the matrix for transforming our camera to look like it's in perspective.
  * This ONLY needs to update on the gpu whenever the screen size changes. */
-let projectionMatrix; // Same for every shader program
+let projMatrix; // Same for every shader program
 
 /** Contains the camera's position and rotation, updated once per frame on the gpu.
  * 
@@ -90,23 +80,6 @@ function getPosition(ignoreDevmode) {
 
 function getZFar() {
 	return zFar;
-}
-
-/**
- * Returns the pixel density of the screen using window.devicePixelRatio.
- * 1 is non-retina, 2+ is retina.
- * @returns {number} The pixel density
- */
-function getPixelDensity() {
-	return pixelDensity;
-}
-
-function getPIXEL_HEIGHT_OF_TOP_NAV() {
-	return PIXEL_HEIGHT_OF_TOP_NAV;
-}
-
-function getPIXEL_HEIGHT_OF_BOTTOM_NAV() {
-	return PIXEL_HEIGHT_OF_BOTTOM_NAV;
 }
 
 function getCanvasWidthVirtualPixels() {
@@ -152,6 +125,16 @@ function getViewMatrix() {
 	return jsutil.copyFloat32Array(viewMatrix);
 }
 
+/**
+ * Returns a copy of both the projMatrix and viewMatrix
+ */
+function getProjAndViewMatrixes() {
+	return {
+		projMatrix: jsutil.copyFloat32Array(projMatrix),
+		viewMatrix: jsutil.copyFloat32Array(viewMatrix)
+	};
+}
+
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
 function init() {
 	initFOV();
@@ -164,8 +147,9 @@ function init() {
 // Inits the matrix uniforms: viewMatrix (camera) & projMatrix
 function initMatrixes() {
     
-	projectionMatrix = mat4.create(); // Same for every shader program
+	projMatrix = mat4.create(); // Same for every shader program
 
+	updateCanvasDimensions();
 	initPerspective(); // Initiates perspective, including the projection matrix
 
 	initViewMatrix(); // Camera
@@ -175,53 +159,40 @@ function initMatrixes() {
 
 // Call this when window resized. Also updates the projection matrix.
 function initPerspective() {
-
-	updateCanvasDimensions(); // Also updates viewport
-
 	initProjMatrix();
 }
 
 // Also updates viewport, and updates canvas-dependant variables
 function updateCanvasDimensions() {
-
-	canvasWidthVirtualPixels = window.innerWidth;
-	canvasHeightVirtualPixels = (window.innerHeight - MARGIN_OF_HEADER_AND_FOOTER);
+	// Get the canvas element's bounding rectangle
+	const rect = canvas.getBoundingClientRect();
+	canvasWidthVirtualPixels = rect.width;
+	canvasHeightVirtualPixels = rect.height;
 
 	// Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
-	canvas.width = canvasWidthVirtualPixels * pixelDensity; 
-	canvas.height = canvasHeightVirtualPixels * pixelDensity;
+	canvas.width = canvasWidthVirtualPixels * window.devicePixelRatio; 
+	canvas.height = canvasHeightVirtualPixels * window.devicePixelRatio;
 
 	gl.viewport(0, 0, canvas.width, canvas.height);
 
-	updatePIXEL_HEIGHT_OF_NAVS();
-
 	recalcCanvasVariables(); // Recalculate canvas-dependant variables
-}
-
-function updatePIXEL_HEIGHT_OF_NAVS() {
-	PIXEL_HEIGHT_OF_TOP_NAV = !options.getNavigationVisible() ? 0
-                                    : window.innerWidth > 700 ? 84  // Update with the css stylesheet!
-                                    : window.innerWidth > 550 ? window.innerWidth * 0.12
-                                    : window.innerWidth > 368 ? 66
-                                                                : window.innerWidth * 0.179;
-	PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.getNavigationVisible() ? 0 : 84;
-	frametracker.onVisualChange();
-
-	stats.updateStatsCSS();
 }
 
 function recalcCanvasVariables() {
 	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	initScreenBoundingBox();
 
-	game.updateVariablesAfterScreenResize();
+	// Recalculate scale at which 1 tile = 1 pixel       world-space                physical pixels
+	movement.setScale_When1TileIs1Pixel_Physical((screenBoundingBox.right * 2) / canvas.width);
+	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * window.devicePixelRatio);
+	// console.log(`Screen width: ${camera.getScreenBoundingBox(false).right * 2}. Canvas width: ${camera.canvas.width}`)
+
 	miniimage.recalcWidthWorld();
 }
 
 // Set view matrix
 function setViewMatrix(newMatrix) {
 	viewMatrix = newMatrix;
-	sendViewMatrixToGPU();
 }
 
 // Initiates the camera matrix. View matrix.
@@ -238,34 +209,15 @@ function initViewMatrix(ignoreRotations) {
 
 	viewMatrix = newViewMatrix;
 
-	sendViewMatrixToGPU();
-}
-
-/** Updates the view matrix uniform on the gpu for each of our shader programs. */
-function sendViewMatrixToGPU() {
-	for (const programName in shaders.programs) { // Iterate over an object's properties
-		/** @type {ShaderProgram} */
-		const program = shaders.programs[programName];
-		const viewMatrixLocation = program.uniformLocations.viewMatrix;
-		if (viewMatrixLocation == null) continue; // This shader program doesn't have the viewMatrix uniform, skip.
-		gl.useProgram(program.program);
-		gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
-	}
+	// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
+	// because the combined transformMatrix is recalculated on every draw call.
 }
 
 /** Inits the projection matrix uniform and sends that over to the gpu for each of our shader programs. */
 function initProjMatrix() {
-	mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-	// Send the projectionMatrix to the gpu
-	for (const programName in shaders.programs) { // Iterate over an object's properties
-		/** @type {ShaderProgram} */
-		const program = shaders.programs[programName];
-		const projMatrixLocation = program.uniformLocations.projectionMatrix;
-		if (projMatrixLocation == null) continue; // This shader program doesn't have the projectionMatrix uniform, skip.
-		gl.useProgram(program.program);
-		gl.uniformMatrix4fv(projMatrixLocation, gl.FALSE, projectionMatrix);
-	}
-
+	mat4.perspective(projMatrix, fieldOfView, aspect, zNear, zFar);
+	// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
+	// because the combined transformMatrix is recalculated on every draw call.
 	frametracker.onVisualChange();
 }
 
@@ -306,6 +258,8 @@ function initScreenBoundingBox() {
 }
 
 function onScreenResize() {
+	updateCanvasDimensions(); // Also updates viewport
+	stats.updateStatsCSS();
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
 	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
@@ -332,11 +286,9 @@ function onPositionChange() {
 }
 
 
+
 export default {
 	getPosition,
-	getPixelDensity,
-	getPIXEL_HEIGHT_OF_TOP_NAV,
-	getPIXEL_HEIGHT_OF_BOTTOM_NAV,
 	canvas,
 	getCanvasWidthVirtualPixels,
 	getCanvasHeightVirtualPixels,
@@ -344,9 +296,9 @@ export default {
 	getScreenBoundingBox,
 	getScreenHeightWorld,
 	getViewMatrix,
-	init,
-	updatePIXEL_HEIGHT_OF_NAVS,
 	setViewMatrix,
+	getProjAndViewMatrixes,
+	init,
 	onPositionChange,
 	initViewMatrix,
 	getZFar,

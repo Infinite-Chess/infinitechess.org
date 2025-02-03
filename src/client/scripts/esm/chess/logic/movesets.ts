@@ -1,24 +1,21 @@
 
 /**
  * This script contains the default movesets for all pieces except specials (pawns, castling)
- * 
- * ZERO dependancies
  */
 
-'use strict';
-
 // @ts-ignore
+import isprime from '../../util/isprime.js';
 import colorutil from '../util/colorutil.js';
+import math from '../../util/math.js';
 
 // Type definitions...
 
+import type { Coords } from '../util/coordutil.js';
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
 // @ts-ignore
-import type { Piece } from './movepiece.js';
+import type { Piece } from './boardchanges.js';
 
-// TODO: move this to coordutil.js after that is converted to typescript.
-type Coords = [number, number];
 
 /**
  * A Movesets object containing the movesets for every piece type in a game
@@ -93,17 +90,21 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefi
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile) => 0 | 1 | 2;
+type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords, gamefile?: gamefile) => 0 | 1 | 2;
 
 
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
-// eslint-disable-next-line no-unused-vars
-function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece, gamefile?: gamefile): 0 | 1 | 2 {
+function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece): 0 | 1 | 2 {
 	const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
 	const isVoid = blockingPiece.type === 'voidsN';
 	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
 	else return 2; // Allow the capture if enemy, but block afterward
+}
+
+/** The default ignore function of each piece's sliding moves, if not specified. */
+function defaultIgnoreFunction() {
+	return true; // Square allowed
 }
 
 /**
@@ -260,6 +261,26 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
             ]
 		},
+		huygens: {
+			individual: [],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit]
+			},
+			blocking: (friendlyColor: string, blockingPiece: Piece, coords: Coords) => {
+				const distance = math.chebyshevDistance(coords, blockingPiece.coords);
+				const isPrime = isprime.primalityTest(distance, null);
+				if (!isPrime) return 0; // Doesn't block
+				const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
+				if (colorOfBlockingPiece === friendlyColor) return 1; // Friendly piece blocked
+				else return 2; // Enemy piece blocked
+			},
+			ignore: (startCoords: Coords, endCoords: Coords) => {
+				const distance = math.chebyshevDistance(startCoords, endCoords);
+				const isPrime = isprime.primalityTest(distance, null);
+				return isPrime;
+			}
+		},
 		roses: {
 			individual: []
 		}
@@ -271,6 +292,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 export default {
 	getPieceDefaultMovesets,
 	defaultBlockingFunction,
+	defaultIgnoreFunction,
 };
 
 export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction };

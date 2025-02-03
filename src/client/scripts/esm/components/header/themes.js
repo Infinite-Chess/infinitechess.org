@@ -1,6 +1,8 @@
 
 // This module stores our themes. Straight forward :P
 
+import jsutil from "../../util/jsutil.js";
+
 /*
  * Strings for computed property names.
  *
@@ -14,6 +16,7 @@ const legalMovesHighlightColor_Opponent = "legalMovesHighlightColor_Opponent";
 const legalMovesHighlightColor_Premove = "legalMovesHighlightColor_Premove";
 const lastMoveHighlightColor = "lastMoveHighlightColor";
 const checkHighlightColor = "checkHighlightColor";
+const boxOutlineColor = "boxOutlineColor";
 
 /**
  * Fallback properties for a themes properties
@@ -22,6 +25,7 @@ const checkHighlightColor = "checkHighlightColor";
 const defaults = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
+	[boxOutlineColor]: [1, 1, 1, 0.45],
 	// If this is false, we will render them white,
 	// utilizing the more efficient color-less shader program!
 	useColoredPieces: false,
@@ -157,6 +161,7 @@ const themeDictionary = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.72, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.26, 0.36],
 		[lastMoveHighlightColor]: [0.28, 1, 0, 0.28],
+		[boxOutlineColor]: [0, 0, 0, 0.25],
 	},
 	poison: {
 		[lightTiles]: [0.93, 0.93, 0.93, 1],
@@ -265,7 +270,8 @@ const themeDictionary = {
  * @returns {Object} - The property of the theme
  */
 function getPropertyOfTheme(themeName, property) {
-	return themeDictionary[themeName][property] !== undefined ? themeDictionary[themeName][property] : defaults[property];
+	const value = themeDictionary[themeName][property] !== undefined ? themeDictionary[themeName][property] : defaults[property];
+	return jsutil.deepCopyObject(value); // Return a deep copy so the originals have no risk of modification.
 }
 
 function isThemeValid(themeName) {

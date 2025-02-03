@@ -3,10 +3,10 @@
 import movement from './movement.js';
 import options from './options.js';
 import piecesmodel from './piecesmodel.js';
-import game from '../chess/game.js';
-import buffermodel from './buffermodel.js';
+import { createModel } from './buffermodel.js';
 import board from './board.js';
 import coordutil from '../../chess/util/coordutil.js';
+import gameslot from '../chess/gameslot.js';
 // Import End
 
 /** 
@@ -31,7 +31,8 @@ const POINTS_PER_SQUARE_WIREFRAME = 12; // Compared to  piecesmodel.POINTS_PER_S
 
 function regenModel(gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
-	const voidList = game.getGamefile().ourPieces.voidsN;
+	const voidList = gameslot.getGamefile().ourPieces.voidsN;
+	if (!voidList) return; // No voids are present in this game
 
 	// Simplify the mesh by combining adjacent voids into larger rectangles!
 	const simplifiedMesh = simplifyMesh(voidList);
@@ -74,7 +75,7 @@ function regenModel(gamefile) {
 	}
 
 	const mode = inDevMode ? "LINES" : "TRIANGLES";
-	gamefile.voidMesh.model = buffermodel.createModel_Colored(data32, 2, mode);
+	gamefile.voidMesh.model = createModel(data32, 2, mode, true);
 }
 
 // The passed in sides should be the center-coordinate value of the square in the corner
@@ -139,6 +140,8 @@ function getDataOfSquare_Wireframe(startX, startY, endX, endY, color) {
  * @param {number} diffYOffset - The y-amount to shift the voids vertex data
  */
 function shiftModel(gamefile, diffXOffset, diffYOffset) {
+	if (gamefile.voidMesh.model === undefined) return;
+	
 	const data64 = gamefile.voidMesh.data64;
 	const data32 = gamefile.voidMesh.data32;
 	for (let i = 0; i < data32.length; i += stride) {
@@ -148,7 +151,7 @@ function shiftModel(gamefile, diffXOffset, diffYOffset) {
 		data32[i + 1] = data64[i + 1];
 	}
 
-	gamefile.voidMesh.model.updateBuffer(); // Reinit the model because its data has been updated
+	gamefile.voidMesh.model.updateBufferIndices(0, data64.length); // Reinit the model because its data has been updated
 }
 
 /**

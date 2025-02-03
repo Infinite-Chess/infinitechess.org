@@ -20,10 +20,11 @@ import movesets from './movesets.js';
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
- * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
+ * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('./movesets.js').PieceMoveset} PieceMoveset
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
+ * @typedef {import('./movesets.js').IgnoreFunction} IgnoreFunction
 */
 
 
@@ -36,6 +37,7 @@ import movesets from './movesets.js';
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
  * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
+ * @property {IgnoreFunction} ignoreFunc - The ignore function of the piece, to skip over moves.
  */
 
 
@@ -102,6 +104,16 @@ function getBlockingFuncFromPieceMoveset(pieceMoveset) {
 	return pieceMoveset.blocking || movesets.defaultBlockingFunction;
 }
 
+
+/**
+ * Return the piece move ignore function if it is specified, or the default otherwise.
+ * @param {PieceMoveset} pieceMoveset 
+ * @returns {IgnoreFunction}
+ */
+function getIgnoreFuncFromPieceMoveset(pieceMoveset) {
+	return pieceMoveset.ignore || movesets.defaultIgnoreFunction;
+}
+
 /**
  * Calculates the legal moves of the provided piece in the provided gamefile.
  * @param {gamefile} gamefile - The gamefile
@@ -123,6 +135,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	let legalIndividualMoves = [];
 	const legalSliding = {};
 
+	const ignoreFunc = getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
 	if (!onlyCalcSpecials) {
 
 		// Legal jumping/individual moves
@@ -150,7 +163,8 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 
 	const moves = {
 		individual: legalIndividualMoves,
-		sliding: legalSliding
+		sliding: legalSliding,
+		ignoreFunc: ignoreFunc,
 	};
     
 	checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
@@ -223,7 +237,7 @@ function slide_CalcLegalLimit(blockingFunc, line, direction, slideMoveset, coord
 		 * 1 => Blocked (friendly piece)
 		 * 2 => Blocked 1 square after (enemy piece)
 		 */
-		const blockResult = blockingFunc(color, thisPiece); // 0 | 1 | 2
+		const blockResult = blockingFunc(color, thisPiece, coords); // 0 | 1 | 2
 		if (blockResult !== 0 && blockResult !== 1 && blockResult !== 2) throw new Error(`slide_CalcLegalLimit() not built to handle block result of "${blockResult}"!`);
 		if (blockResult === 0) continue; // Not blocked
 
@@ -285,7 +299,7 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
 		if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
 
-		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords)) continue;
+		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue;
 		return true;
 	}
 	return false;
@@ -295,57 +309,58 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
  * Tests if the provided move is legal to play in this game.
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
  * @param {gamefile} gamefile - The gamefile
- * @param {Move} move - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
- * @returns {boolean | string} *true* If the move is legal, otherwise a string containing why it is illegal.
+ * @param {MoveDraft} moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
+ * @returns {true | string} *true* If the move is legal, otherwise a string containing why it is illegal.
  */
-function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
-	if (!move) {
+function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
+	if (!moveDraft) {
 		console.log("Opponents move is illegal because it is not defined. There was likely an error in converting it to long format.");
 		return 'Move is not defined. Probably an error in converting it to long format.';
 	}
 	// Don't modify the original move. This is because while it's simulated,
 	// more properties are added such as `rewindInfo`.
-	const moveCopy = jsutil.deepCopyObject(move);
+	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 
 	const inCheckB4Forwarding = jsutil.deepCopyObject(gamefile.inCheck);
 	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
 
 	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
-	movepiece.forwardToFront(gamefile, { flipTurn: false, animateLastMove: false, updateData: false, updateProperties: false, simulated: true });
+	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)
+	movepiece.goToMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
 
 	// Make sure a piece exists on the start coords
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveCopy.startCoords); // { type, index, coords }
+	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraftCopy.startCoords); // { type, index, coords }
 	if (!piecemoved) {
-		console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveCopy)}`);
+		console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason('No piece exists at start coords.');
 	}
 
 	// Make sure it's the same color as your opponent.
 	const colorOfPieceMoved = colorutil.getPieceColorFromType(piecemoved.type);
 	if (colorOfPieceMoved !== gamefile.whosTurn) {
-		console.log(`Opponent's move is illegal because you can't move a non-friendly piece. Move: ${JSON.stringify(moveCopy)}`);
+		console.log(`Opponent's move is illegal because you can't move a non-friendly piece. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason("Can't move a non-friendly piece.");
 	}
 
 	// If there is a promotion, make sure that's legal
-	if (moveCopy.promotion) {
+	if (moveDraftCopy.promotion) {
 		if (!piecemoved.type.startsWith('pawns')) {
-			console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveCopy)}`);
+			console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote a non-pawn.");
 		}
-		const colorPromotedTo = colorutil.getPieceColorFromType(moveCopy.promotion);
+		const colorPromotedTo = colorutil.getPieceColorFromType(moveDraftCopy.promotion);
 		if (gamefile.whosTurn !== colorPromotedTo) {
-			console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveCopy)}`);
+			console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote to opposite color.");
 		}
-		const strippedPromotion = colorutil.trimColorExtensionFromType(moveCopy.promotion);
+		const strippedPromotion = colorutil.trimColorExtensionFromType(moveDraftCopy.promotion);
 		if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(strippedPromotion)) {
-			console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveCopy)}`);
+			console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason('Specified promotion is illegal.');
 		}
 	} else { // No promotion, make sure they AREN'T moving to a promotion rank! That's also illegal.
-		if (specialdetect.isPawnPromotion(gamefile, piecemoved.type, moveCopy.endCoords)) {
-			console.log(`Opponent's move is illegal because they didn't promote at the promotion line. Move: ${JSON.stringify(moveCopy)}`);
+		if (specialdetect.isPawnPromotion(gamefile, piecemoved.type, moveDraftCopy.endCoords)) {
+			console.log(`Opponent's move is illegal because they didn't promote at the promotion line. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Didn't promote when moved to promotion line.");
 		}
 	}
@@ -353,8 +368,8 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// Test if that piece's legal moves contain the destinationCoords.
 	const legalMoves = calculate(gamefile, piecemoved);
 	// This should pass on any special moves tags at the same time.
-	if (!checkIfMoveLegal(legalMoves, moveCopy.startCoords, moveCopy.endCoords)) { // Illegal move
-		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveCopy)}`);
+	if (!checkIfMoveLegal(legalMoves, moveDraftCopy.startCoords, moveDraftCopy.endCoords)) { // Illegal move
+		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}
 
@@ -362,11 +377,10 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
 	// such as time, aborted, resignation, disconnect)
 	if (claimedGameConclusion === false || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
-		const color = colorutil.getPieceColorFromType(piecemoved.type);
-		const infoAboutSimulatedMove = movepiece.simulateMove(gamefile, moveCopy, color, { doGameOverChecks: true }); // { isCheck, gameConclusion }
-		if (infoAboutSimulatedMove.gameConclusion !== claimedGameConclusion) {
-			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${infoAboutSimulatedMove.gameConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveCopy)}`);
-			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${infoAboutSimulatedMove.gameConclusion}`);
+		const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
+		if (simulatedConclusion !== claimedGameConclusion) {
+			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveDraftCopy)}`);
+			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`);
 		}
 	}
 
@@ -378,13 +392,13 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
 	// ...
 
 	// Rewind the game back to the index we were originally on before simulating
-	movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false, updateData: false });
+	movepiece.goToMove(gamefile, originalMoveIndex, (move) => movepiece.applyMove(gamefile, move, false));
 
 	return true; // By this point, nothing illegal!
 
 	function rewindGameAndReturnReason(reasonIllegal) {
 		// Rewind the game back to the index we were originally on
-		movepiece.rewindGameToIndex(gamefile, originalMoveIndex, { removeMove: false, updateData: false });
+		movepiece.goToMove(gamefile, originalMoveIndex, (move) => movepiece.applyMove(gamefile, move, false));
 		return reasonIllegal;
 	}
 }
@@ -396,19 +410,15 @@ function isOpponentsMoveLegal(gamefile, move, claimedGameConclusion) {
  * @param {number[]} direction - The direction of the line: `[dx,dy]`
  * @param {number[]} pieceCoords - The coordinates of the piece with the provided sliding net
  * @param {number[]} coords - The coordinates we want to know if they can reach.
+ * @param {IgnoreFunction} ignoreFunc - The ignore function.
  * @returns {boolean} true if the piece is able to slide to the coordinates
  */
-function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords) {
-	// const step = math.getLineSteps(direction, pieceCoords, coords)
-	// return step >= slideMoveset[0] && step <= slideMoveset[1];
-
-
+function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, coords, ignoreFunc) {
 	const axis = direction[0] === 0 ? 1 : 0;
 	const coordMag = coords[axis];
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
 	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
-
-	return coordMag >= min && coordMag <= max;
+	return coordMag >= min && coordMag <= max && ignoreFunc(pieceCoords, coords);
 }
 
 /**
@@ -419,8 +429,9 @@ function doesSlidingMovesetContainSquare(slideMoveset, direction, pieceCoords, c
 function hasAtleast1Move(moves) { // { individual, horizontal, vertical, ... }
     
 	if (moves.individual.length > 0) return true;
-	for (const line in moves.sliding)
+	for (const line in moves.sliding) {
 		if (doesSlideHaveWidth(moves.sliding[line])) return true;
+	}
 
 	function doesSlideHaveWidth(slide) { // [-Infinity, Infinity]
 		if (!slide) return false;
@@ -440,4 +451,5 @@ export default {
 	slide_CalcLegalLimit,
 	isOpponentsMoveLegal,
 	getBlockingFuncFromPieceMoveset,
+	getIgnoreFuncFromPieceMoveset,
 };

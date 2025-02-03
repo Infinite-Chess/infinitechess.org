@@ -9,15 +9,18 @@ import math from '../../util/math.js';
 import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
+import boardchanges from './boardchanges.js';
+import moveutil from '../util/moveutil.js';
 // Import End
 
 /** 
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('../util/moveutil.js').Move} Move
+ * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
- * @typedef {import('./movepiece.js').Piece} Piece
+ * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../util/coordutil.js').Coords} Coords
  */
 
 "use strict";
@@ -33,17 +36,17 @@ import coordutil from '../util/coordutil.js';
  * Appends any attackers to the `attackers` list.
  * @param {gamefile} gamefile - The gamefile
  * @param {string} color - The side to test if their king is in check. "white" or "black"
- * @param {Array} attackers - An empty array []
- * @returns {boolean} true if in check
+ * @param {[]} [attackers] - An empty array [], or undefined if we don't care about who is checking us, just whether we are in check or not, this can save compute.
+ * @returns {false | Coords[]} true if in check
  */
 function detectCheck(gamefile, color, attackers) {
 	// Input validation
 	if (!gamefile) throw new Error("Cannot detect check of an undefined game!");
 	if (color !== 'white' && color !== 'black') throw new Error(`Cannot detect check of the team of color ${color}!`);
-	if (attackers != null && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
+	if (attackers !== undefined && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
 
 	// Coordinates of ALL royals of this color!
-	const royalCoords = gamefileutility.getRoyalCoords(gamefile, color); // [ coords1, coords2 ]
+	const royalCoords = gamefileutility.getRoyalCoordsOfColor(gamefile, color); // [ coords1, coords2 ]
 	// Array of coordinates of royal pieces that are in check
 	const royalsInCheck = [];
 
@@ -140,7 +143,7 @@ function doesPawnAttackSquare(gamefile, coords, color, attackers) {
  * Calculates if any sliding piece can attack the specified square.
  * Appends attackers to the provided `attackers` array.
  * @param {gamefile} gamefile 
- * @param {number[]} coords - The square to test if it can be attacked
+ * @param {Coords} coords - The square to test if it can be attacked
  * @param {string} color - The color of friendly pieces
  * @param {Object[]} attackers - A running list of attackers on this square. Any new found attackers will be appended to this this.
  * @returns {boolean} true if this square is under attack
@@ -164,7 +167,7 @@ function doesSlideAttackSquare(gamefile, coords, color, attackers) {
  * Appends any attackeres to the provided `attackers` array.
  * @param {gamefile} gamefile 
  * @param {Piece[]} line - The line of pieces
- * @param {number[]} direction - Step of the line: [dx,dy]
+ * @param {Coords} direction - Step of the line: [dx,dy]
  * @param {number} coords - The coordinates of the square to test if any piece on the line can move to.
  * @param {string} color - The color of friendlies. We will exclude pieces of the same color, because they cannot capture friendlies.
  * @param {Object[]} [attackers] - The running list of attackers threatening these coordinates. Any attackers found will be appended to this list. LEAVE BLANK to save compute not adding them to this list!
@@ -187,12 +190,13 @@ function doesLineAttackSquare(gamefile, line, direction, coords, color, attacker
 
 		if (!thisPieceMoveset.sliding) continue; // Piece has no sliding movesets.
 		const moveset = thisPieceMoveset.sliding[directionKey];
-		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
+		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, line, direction, moveset, thisPiece.coords, thisPieceColor);
 		if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
-		if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords)) continue; // This piece can't slide so far as to reach us, NEXT piece!
+		const ignoreFunc = legalmoves.getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
+		if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords, ignoreFunc)) continue; // This piece can't slide so far as to reach us, NEXT piece!
 
 		// This piece is attacking this square!
 
@@ -253,10 +257,10 @@ function removeIndividualMovesThatPutYouInCheck(gamefile, individualMoves, piece
 
 // Simulates the move, tests for check, undos the move. Color is the color of the piece we're moving
 function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pieceSelected: { type, index, coords }
-	/** @type {Move} */
-	const move = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: movepiece.stripSpecialMoveTagsFromCoords(destCoords) };
-	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, move);
-	return movepiece.simulateMove(gamefile, move, color).isCheck;
+	/** @type {MoveDraft} */
+	const moveDraft = { type: pieceSelected.type, startCoords: jsutil.deepCopyObject(pieceSelected.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
+	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
+	return movepiece.getSimulatedCheck(gamefile, moveDraft, color);
 }
 
 
@@ -273,14 +277,15 @@ function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pie
 function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) {
 	if (!moves.sliding) return; // No sliding moves to remove
 
-	/** List of coordinates of all our royal jumping pieces @type {number[][]} */
-	const royalCoords = gamefileutility.getJumpingRoyalCoords(gamefile, color);
+	/** List of coordinates of all our royal jumping pieces @type {Coords[]} */
+	const royalCoords = gamefileutility.getJumpingRoyalCoordsOfColor(gamefile, color);
 	if (royalCoords.length === 0) return; // No king, no open discoveries, don't remove any sliding moves
 
 	// There are 2 ways a sliding move can put you in check:
 
 	// 1. By not blocking, or capturing an already-existing check.
-	if (addressExistingChecks(gamefile, moves, gamefile.inCheck, pieceSelected.coords, color)) return;
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	if (addressExistingChecks(gamefile, moves, royalsInCheck, pieceSelected.coords, color)) return;
 
 	// 2. By opening a discovered on your king.
 	royalCoords.forEach(thisRoyalCoords => { // Don't let the piece open a discovered on ANY of our royals! Not just one.
@@ -292,13 +297,13 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
  * If there's an existing check: Returns true and removes all sliding moves that don't address the check.
  * @param {gamefile} gamefile - The gamefile
  * @param {LegalMoves} legalMoves - The legal moves object of which to delete moves that don't address check.
- * @param {number[][]} royalCoords - A list of our friendly jumping royal pieces
- * @param {number[]} selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
+ * @param {Coords[]} royalCoords - A list of our friendly jumping royal pieces
+ * @param {Coords} selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
  * @param {string} color - The color of friendlies
  * @returns {boolean} true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
 function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceCoords, color) {
-	if (!gamefile.inCheck) return false; // Exit if not in check
+	if (royalCoords.length === 0) return false; // Exit if nothing in check
 	if (!isColorInCheck(gamefile, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
 	const attackerCount = gamefile.attackers.length;
@@ -344,8 +349,12 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
  * @returns {boolean} true if atleast one of our royals is included in the gamefile's list of royals in check this turn
  */
 function isColorInCheck(gamefile, color) {
-	const royals = gamefileutility.getRoyalCoords(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
-	const checkedRoyals = gamefile.inCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royals = gamefileutility.getRoyalCoordsOfColor(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	if (royalsInCheck.length === 0) return false;
+
+	const checkedRoyals = royalsInCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	// If the set is the same length as our royals + checkedRoyals, in means none of them has matching coordinates.
 	return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length);
 }
 
@@ -354,7 +363,7 @@ function isColorInCheck(gamefile, color) {
  * open up a discovered attack on the specified coordinates
  * @param {gamefile} gamefile 
  * @param {LegalMoves} moves - The running legal moves of the selected piece
- * @param {number[]} kingCoords - The coordinates to see what sliding moves open up a discovered on
+ * @param {Coords} kingCoords - The coordinates to see what sliding moves open up a discovered on
  * @param {Piece} pieceSelected - The piece with the provided running legal moves
  * @param {string} color - The color of friendlies
  */
@@ -373,8 +382,8 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	if (sameLines.length === 0) return;
 
 	// Delete the piece, and add it back when we're done!
-	const deletedPiece = jsutil.deepCopyObject(pieceSelected);
-	movepiece.deletePiece(gamefile, pieceSelected, { updateData: false });
+	const deleteChange = boardchanges.queueDeletePiece([], pieceSelected, true);
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward);
     
 	// let checklines = []; // For Idon's code below
 	// For every line direction we share with the king...
@@ -392,7 +401,6 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 			if (coordutil.areCoordsEqual(direction1, direction2NumbArray)) continue; // Same line, it's okay to keep because it wouldn't open a discovered
 			delete moves.sliding[direction2]; // Not same line, delete it because it would open a discovered.
 		}
-
 	}
 
 	// Idon us's code that handles the situation where moving off a line could expose multiple checks
@@ -450,7 +458,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	// }
 
 	// Add the piece back with the EXACT SAME index it had before!!
-	movepiece.addPiece(gamefile, deletedPiece.type, deletedPiece.coords, deletedPiece.index, { updateData: false });
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.backward);
 }
 
 // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
@@ -458,10 +466,10 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 /**
  * Appends legal blocking moves to the provided moves object if the piece
  * is able to get between squares 1 & 2.
- * @param {number[]} square1 - `[x,y]`
- * @param {number[]} square2 - `[x,y]`
+ * @param {Coords} square1 - `[x,y]`
+ * @param {Coords} square2 - `[x,y]`
  * @param {LegalMoves} moves - The moves object of the piece
- * @param {number[]} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
+ * @param {Coords} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  */
 function appendBlockingMoves(square1, square2, moves, coords) { // coords is of the selected piece
 	// What is the line between our king and the attacking piece?
@@ -481,12 +489,6 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 		const c1 = organizedlines.getCFromLine(line, coords); // Line of our selected piece
 		const c2 = organizedlines.getCFromLine(direction,square2); // Line between our 2 squares
 		const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2); // The intersection point of the 2 lines.
-
-		// Idon us's old code
-		// if (!math.isAproxEqual(blockPoint[0],Math.round(blockPoint[0])) || 
-		//     !math.isAproxEqual(blockPoint[1],Math.round(blockPoint[1]))) {console.log("A"); continue}; // Block is off grid so probably not valid
-		// blockPoint=[Math.round(blockPoint[0]), Math.round(blockPoint[1])]
-		// if (organizedlines.getKeyFromLine(line,blockPoint)!==organizedlines.getKeyFromLine(line, coords)) {console.log("C"); continue}; // stop line multiples being annoying
 
 		// Naviary's new code
 		if (blockPoint === null) continue; // None (or infinite) intersection points!

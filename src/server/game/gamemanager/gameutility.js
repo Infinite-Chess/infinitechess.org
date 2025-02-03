@@ -29,12 +29,14 @@ import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/mem
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
+import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 
 // Type Definitions...
 
 /**
  * @typedef {import('../TypeDefinitions.js').Game} Game
  * @typedef {import('../../../client/scripts/esm/chess/variants/gamerules.js').GameRules} GameRules
+ * @typedef {import('../../../client/scripts/esm/chess/logic/clock.js').ClockValues} ClockValues
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -244,7 +246,6 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	const gameOptions = {
 		metadata,
 		id: game.id,
-		clock: game.clock,
 		publicity: game.publicity,
 		youAreColor: playerColor,
 		moves: game.moves,
@@ -289,7 +290,7 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 function getMetadataOfGame(game) {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
-	const metadata = {
+	const gameMetadata = {
 		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
 		Site: "https://www.infinitechess.org/",
 		Round: "-",
@@ -307,7 +308,7 @@ function getMetadataOfGame(game) {
 			break id;
 		}
 		const base62 = uuid.base10ToBase62(user_id);
-		metadata.WhiteID = base62;
+		gameMetadata.WhiteID = base62;
 	}
 	id: if (game.black.member !== undefined) {
 		const user_id = getUserIdByUsername(game.black.member);
@@ -316,16 +317,16 @@ function getMetadataOfGame(game) {
 			break id;
 		}
 		const base62 = uuid.base10ToBase62(user_id);
-		metadata.BlackID = base62;
+		gameMetadata.BlackID = base62;
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata
 		const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
-		metadata.Result = winconutil.getResultFromVictor(victor);
-		metadata.Termination = getTerminationInEnglish(game.gameRules, condition);
+		gameMetadata.Result = metadata.getResultFromVictor(victor);
+		gameMetadata.Termination = getTerminationInEnglish(game.gameRules, condition);
 	}
 
-	return metadata;
+	return gameMetadata;
 }
 
 /**
@@ -627,9 +628,7 @@ function sendUpdatedClockToColor(game, color) {
 	if (color !== 'white' && color !== 'black') return console.error(`color must be white or black! ${color}`);
 	if (game.untimed) return; // Don't send clock values in an untimed game
 
-	const message = {
-		clockValues: getGameClockValues(game),
-	};
+	const message = getGameClockValues(game);
 	const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
 	if (!playerSocket) return; // They are not connected, can't send message
 	sendSocketMessage(playerSocket, "game", "clock", message);
@@ -637,15 +636,26 @@ function sendUpdatedClockToColor(game, color) {
 
 /**
  * Return the clock values of the game that can be sent to a client.
- * This also updates the clocks, as the players current time should not be the same as when they return first started
+ * It also includes who's clock is currently counting down, if one is.
+ * This also updates the clocks, as the players current time should not be the same as when their turn firs started.
  * @param {Game} game - The game
+ * @returns {ClockValues}
  */
 function getGameClockValues(game) {
 	updateClockValues(game);
-	return {
-		timerWhite: game.timerWhite,
-		timerBlack: game.timerBlack,
+	const clockValues = {
+		clocks: {
+			white: game.timerWhite,
+			black: game.timerBlack,
+		}
 	};
+		
+	// Let the client know which clock is ticking so that they can immediately adjust for ping.
+	// * If less than 2 moves have been played, no color is considered ticking.
+	// * If the game is over, no color is considered ticking.
+	if (isGameResignable(game) && !isGameOver(game)) clockValues.colorTicking = game.whosTurn;
+
+	return clockValues;
 }
 
 /**

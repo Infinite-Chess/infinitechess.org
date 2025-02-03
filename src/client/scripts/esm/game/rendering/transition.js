@@ -94,6 +94,8 @@ function teleport(tel1, tel2, ignoreHistory) { // tel2 can be undefined, if only
 
 	// Reset velocities to zero
 	movement.eraseMomentum();
+	// We don't want to allow dragging during a transition.
+	movement.cancelBoardDrag();
 }
 
 function update() { // Animate if we are currently teleporting
