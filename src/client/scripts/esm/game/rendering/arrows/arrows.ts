@@ -422,7 +422,7 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 	 * The only difference is each piece may have a different dot product,
 	 * which just means it's on the opposite side.
 	 */
-	const intersections = math.findLineBoxIntersections(organizedline[0].coords, slideDir, boundingBoxInt).map(c => c.coords);
+	const intersections = math.findLineBoxIntersections(organizedline[0]!.coords, slideDir, boundingBoxFloat).map(c => c.coords);
 	if (intersections.length < 2) throw Error("Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line.");
 
 	organizedline.forEach(piece => {
@@ -432,7 +432,7 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		// Piece is guaranteed off-screen...
 		
 		/** The only way this differs from {@link intersections} is this may have unique dot products, depending on what side of the screen the piece is on. */
-		const thisPieceIntersections = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxInt); // should THIS BE FLOAT???
+		const thisPieceIntersections = math.findLineBoxIntersections(piece.coords, slideDir, boundingBoxFloat); // should THIS BE FLOAT???
 		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
 
 		const entry: ArrowDraft = { piece, canSlideOntoScreen: false };
@@ -470,7 +470,7 @@ function calcArrowsLine(gamefile: gamefile, boundingBoxInt: BoundingBox, boundin
 		 */
 
 		// If the vector is in the opposite direction, then the first intersection is swapped
-		const firstIntersection = positiveDotProduct ? thisPieceIntersections[0] : thisPieceIntersections[1];
+		const firstIntersection = positiveDotProduct ? thisPieceIntersections[0]! : thisPieceIntersections[1]!;
 
 		// What is the distance to the first intersection point?
 		const firstIntersectionDist = math.chebyshevDistance(piece.coords, firstIntersection.coords);
