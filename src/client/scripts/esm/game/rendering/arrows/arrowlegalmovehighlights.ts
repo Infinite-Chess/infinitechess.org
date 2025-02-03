@@ -4,29 +4,29 @@
  * This script renders the legal moves of all hovered arrow indicators.
  */
 
-import type { Piece } from "../../../chess/logic/boardchanges";
+import type { Piece } from "../../../chess/logic/boardchanges.js";
 // @ts-ignore
-import type { LegalMoves } from "../../../chess/logic/legalmoves";
-import type { Color } from "../../../chess/util/colorutil";
-import type { BufferModelInstanced } from "../buffermodel";
+import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
+import type { Color } from "../../../chess/util/colorutil.js";
+import type { BufferModelInstanced } from "../buffermodel.js";
 
 // @ts-ignore
-import legalmoves from "../../../chess/logic/legalmoves";
-import colorutil from "../../../chess/util/colorutil";
-import coordutil from "../../../chess/util/coordutil";
-import gamefileutility from "../../../chess/util/gamefileutility";
+import legalmoves from "../../../chess/logic/legalmoves.js";
+import colorutil from "../../../chess/util/colorutil.js";
+import coordutil from "../../../chess/util/coordutil.js";
+import gamefileutility from "../../../chess/util/gamefileutility.js";
 // @ts-ignore
-import moveutil from "../../../chess/util/moveutil";
-import gameslot from "../../chess/gameslot";
+import moveutil from "../../../chess/util/moveutil.js";
+import gameslot from "../../chess/gameslot.js";
 // @ts-ignore
-import selection from "../../chess/selection";
-import onlinegame from "../../misc/onlinegame/onlinegame";
-import legalmovehighlights from "../highlights/legalmovehighlights";
+import selection from "../../chess/selection.js";
+import onlinegame from "../../misc/onlinegame/onlinegame.js";
+import legalmovehighlights from "../highlights/legalmovehighlights.js";
 // @ts-ignore
-import movement from "../movement";
+import movement from "../movement.js";
 // @ts-ignore
-import options from "../options";
-import arrows from "./arrows";
+import options from "../options.js";
+import arrows from "./arrows.js";
 
 
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */

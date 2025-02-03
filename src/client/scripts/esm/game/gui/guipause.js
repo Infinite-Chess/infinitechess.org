@@ -1,7 +1,7 @@
 
 // Import Start
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import arrows from '../rendering/arrows.js';
+import arrows from '../rendering/arrows/arrows.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';

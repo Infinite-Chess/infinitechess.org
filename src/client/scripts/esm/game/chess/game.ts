@@ -19,7 +19,7 @@ import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
-import arrows from '../rendering/arrows.js';
+import arrows from '../rendering/arrows/arrows.js';
 // @ts-ignore
 import pieces from '../rendering/pieces.js';
 // @ts-ignore

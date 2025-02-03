@@ -8,7 +8,7 @@
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
-import arrows from '../arrows.js';
+import arrows from '../arrows/arrows.js';
 // @ts-ignore
 import organizedlines from '../../../chess/logic/organizedlines.js';
 // @ts-ignore

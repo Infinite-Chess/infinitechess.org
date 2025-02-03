@@ -51,7 +51,7 @@ import area from "../rendering/area.js";
 // @ts-ignore
 import movement from "../rendering/movement.js";
 // @ts-ignore
-import arrows from "../rendering/arrows.js";
+import arrows from "../rendering/arrows/arrows.js";
 // @ts-ignore
 import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore

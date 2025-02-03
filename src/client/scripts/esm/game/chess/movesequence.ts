@@ -21,7 +21,7 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
-import arrows from "../rendering/arrows.js";
+import arrows from "../rendering/arrows/arrows.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 // @ts-ignore
