@@ -590,7 +590,8 @@ function calculateInstanceData_AndArrowsHovered(slideArrowsDraft: SlideArrowsDra
 	// }
 
 	// Take the arrows draft, construct the actual
-	for (const [vec2Key, linesOfDirectionDraft] of Object.entries(slideArrowsDraft)) {
+	for (const [key, linesOfDirectionDraft] of Object.entries(slideArrowsDraft)) {
+		const vec2Key = key as Vec2Key;
 		const slideDir = math.getVec2FromKey(vec2Key as Vec2Key);
 		const linesOfDirection: { [lineKey: string]: ArrowsLine } = {};
 

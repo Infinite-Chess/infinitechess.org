@@ -5,21 +5,28 @@
  */
 
 import type { Piece } from "../../../chess/logic/boardchanges";
+// @ts-ignore
 import type { LegalMoves } from "../../../chess/logic/legalmoves";
-import legalmoves from "../../../chess/logic/legalmoves";
 import type { Color } from "../../../chess/util/colorutil";
+import type { BufferModelInstanced } from "../buffermodel";
+
+// @ts-ignore
+import legalmoves from "../../../chess/logic/legalmoves";
 import colorutil from "../../../chess/util/colorutil";
 import coordutil from "../../../chess/util/coordutil";
 import gamefileutility from "../../../chess/util/gamefileutility";
+// @ts-ignore
 import moveutil from "../../../chess/util/moveutil";
 import gameslot from "../../chess/gameslot";
+// @ts-ignore
 import selection from "../../chess/selection";
 import onlinegame from "../../misc/onlinegame/onlinegame";
-import arrows from "../arrows";
-import type { BufferModelInstanced } from "../buffermodel";
 import legalmovehighlights from "../highlights/legalmovehighlights";
+// @ts-ignore
 import movement from "../movement";
+// @ts-ignore
 import options from "../options";
+import arrows from "./arrows";
 
 
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
