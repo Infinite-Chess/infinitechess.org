@@ -292,7 +292,7 @@ nav.compact-3 #svg-logout {
     cursor: pointer;
 }
 
-span.text {
+p.text {
     padding: 0 6px;
     margin-right: auto;
 }
@@ -442,12 +442,13 @@ span.arrow-head-left {
     height: 35px;
 }
 
-.selection-options span.text {
-    padding: 0 6px 0 3px;
+.selection-options p.text {
+    padding: 10px 6px 10px 3px;
+    max-width: 150px;
 }
 
 .selection-option {
-    height: 43px;
+    min-height: 43px;
     padding: 0 8px 0 8px;
 }
 
