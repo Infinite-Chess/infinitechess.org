@@ -8,6 +8,7 @@ import perspective from "./perspective.js";
 
 /**
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ * @typedef {import("../../chess/util/coordutil.js").Coords} Coords
  */
 
 /**
@@ -295,6 +296,31 @@ function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 	return bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
 }
 
+/**
+ * Applies a rotational & translational transformation to an array of points.
+ * @param {Coords[]} points 
+ * @param {number} rotation 
+ * @param {Coords} translation 
+ * @returns {Coords[]}
+ */
+function applyTransformToPoints(points, rotation, translation) {
+	// convert rotation angle to radians
+	const cos = Math.cos(rotation);
+	const sin = Math.sin(rotation);
+    
+	// apply rotation matrix and translation vector to each point
+	const transformedPoints = points.map(point => {
+		const xRot = point[0] * cos - point[1] * sin;
+		const yRot = point[0] * sin + point[1] * cos;
+		const xTrans = xRot + translation[0];
+		const yTrans = yRot + translation[1];
+		return [xTrans, yTrans];
+	});
+    
+	// return transformed points as an array of length-2 arrays
+	return transformedPoints;
+}
+
 
 
 export default {
@@ -312,4 +338,5 @@ export default {
 	getDataQuad_ColorTexture_FromCoordAndType,
 	getDataQuad_ColorTexture3D_FromCoordAndType,
 	getTransformedBoundingBoxOfSquare,
+	applyTransformToPoints,
 };

@@ -8,10 +8,6 @@
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
-import arrows from '../arrows/arrows.js';
-// @ts-ignore
-import organizedlines from '../../../chess/logic/organizedlines.js';
-// @ts-ignore
 import movement from '../movement.js';
 // @ts-ignore
 import options from '../options.js';

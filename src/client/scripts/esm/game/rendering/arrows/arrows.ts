@@ -11,6 +11,7 @@ import type { Coords } from '../../../chess/util/coordutil.js';
 import type { Change, Piece } from '../../../chess/logic/boardchanges.js';
 import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math.js';
 import type { LineKey } from '../../../chess/logic/organizedlines.js';
+import type { AttributeInfoInstanced } from '../buffermodel.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
 
@@ -18,7 +19,7 @@ import spritesheet from '../spritesheet.js';
 import gameslot from '../../chess/gameslot.js';
 import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
-import { createModel } from '../buffermodel.js';
+import { createModel, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import math from '../../../util/math.js';
@@ -39,13 +40,7 @@ import movement from '../movement.js';
 // @ts-ignore
 import options from '../options.js';
 // @ts-ignore
-import selection from '../../chess/selection.js';
-// @ts-ignore
-import camera from '../camera.js';
-// @ts-ignore
 import board from '../board.js';
-// @ts-ignore
-import moveutil from '../../../chess/util/moveutil.js';
 // @ts-ignore
 import space from '../../misc/space.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
@@ -706,7 +701,6 @@ function shiftArrow(piece: Piece, newCoords: Coords, capturedPiece?: Piece) {
 	// Sometimes the animations coordinates match exactly the captured piece's coordinates
 	// on the last frame of the animation, so skip adding the captured piece in that scenario, or there will be a crash
 	if (capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(newCoords, capturedPiece.coords)) boardchanges.queueAddPiece(changes, capturedPiece);
-	console.log(jsutil.deepCopyObject(changes));
 	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
 
 	// Recalculate every single line it is on.
@@ -816,14 +810,18 @@ function render() {
 function regenerateModelAndRender() {
 	if (Object.keys(slideArrows).length === 0) return; // No visible arrows, don't generate the model
 
-	const data: number[] = [];
-	const dataArrows: number[] = [];
+
+
+	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+	const halfWorldWidth = worldWidth / 2;
 
 	// ADD THE DATA
 	// ...
 
-	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
-	const halfWorldWidth = worldWidth / 2;
+	const data: number[] = [];
+
+	const vertexData_Arrows: number[] = getVertexDataOfArrow(halfWorldWidth);
+	const instanceData_Arrows: number[] = [];
 
 	for (const [key, value] of Object.entries(slideArrows)) {
 		const vec2Key = key as Vec2Key;
@@ -838,18 +836,26 @@ function regenerateModelAndRender() {
 		for (const value of Object.values(slideLinesOfDirection)) {
 			const slideLine = value as ArrowsLine;
 
-			slideLine.posDotProd.forEach((arrow, index) => concatData(data, dataArrows, arrow, vector, index, worldWidth, halfWorldWidth));
-			slideLine.negDotProd.forEach((arrow, index) => concatData(data, dataArrows, arrow, negVector, index, worldWidth, halfWorldWidth));
+			slideLine.posDotProd.forEach((arrow, index) => concatData(data, instanceData_Arrows, arrow, vector, index, worldWidth, halfWorldWidth));
+			slideLine.negDotProd.forEach((arrow, index) => concatData(data, instanceData_Arrows, arrow, negVector, index, worldWidth, halfWorldWidth));
 		}
 	}
 
-
-	/** The buffer model of the piece mini images on
-	 * the edge of the screen. **Doesn't include** the little arrows. */
+	/*
+	 * The buffer model of the piece mini images on
+	 * the edge of the screen. **Doesn't include** the little arrows.
+	 */
 	const modelPictures = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
-	/** The buffer model of the little arrows on
-	 * the edge of the screen next to the mini piece images. */
-	const modelArrows = createModel(dataArrows, 2, "TRIANGLES", true);
+
+	/*
+	 * The buffer model of the little arrows on
+	 * the edge of the screen next to the mini piece images.
+	 */
+	const attribInfoInstanced: AttributeInfoInstanced = {
+		vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }],
+		instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancecolor', numComponents: 4 }, { name: 'instancerotation', numComponents: 1 }]
+	};
+	const modelArrows = createModel_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstanced, "TRIANGLES");
 
 	modelPictures.render();
 	modelArrows.render();
@@ -865,8 +871,8 @@ function reset() {
 /**
  * Takes an arrow, generates the vertex data of both the PICTURE and ARROW,
  * and appends them to their respective vertex data arrays.
- * */
-function concatData(data: number[], dataArrows: number[], arrow: Arrow, vector: Vec2, index: number, worldWidth: number, halfWorldWidth: number) {
+ */
+function concatData(data: number[], instanceData_Arrows: number[], arrow: Arrow, vector: Vec2, index: number, worldWidth: number, halfWorldWidth: number) {
 
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(arrow.piece.type, rotation);
@@ -893,53 +899,32 @@ function concatData(data: number[], dataArrows: number[], arrow: Arrow, vector: 
 
 	if (index > 0) return; // We can skip, since it is an adjacent picture!
 
-	const dist = halfWorldWidth * 1;
-	const size = 0.3 * halfWorldWidth;
-	const points: Coords[] = [
-        [dist, -size],
-        [dist, +size],
-        [dist + size, 0]
-    ];
+	/**
+	 * Our arrow's instance data needs to contain:
+	 * 
+	 * position offset (2 numbers)
+	 * unique color (4 numbers)
+	 * rotation offset (1 number)
+	 */
 
 	const angle = Math.atan2(vector[1], vector[0]);
-	const ad = applyTransform(points, angle, arrow.worldLocation);
-
-	for (let i = 0; i < ad.length; i++) {
-		const thisPoint = ad[i]!;
-		//                   x             y          color
-		dataArrows.push(thisPoint[0], thisPoint[1], 0,0,0,a );
-	}
+	//								position		  color	 rotation
+	instanceData_Arrows.push(...arrow.worldLocation, 0,0,0,a, angle);
 }
 
 /**
- * Applies a rotational & translational transformation to an array of points.
- * 
- * TODO: Move to maybe bufferdata?
+ * Returns the vertex data of a single arrow instance,
+ * for this frame, only containing positional information.
+ * @param halfWorldWidth - Half of the width of the arrow indicators for the current frame (dependant on scale).
  */
-function applyTransform(points: Coords[], rotation: number, translation: Coords): Coords[] {
-	// convert rotation angle to radians
-	const cos = Math.cos(rotation);
-	const sin = Math.sin(rotation);
-    
-	// apply rotation matrix and translation vector to each point
-	const transformedPoints: Coords[] = points.map(point => {
-		const xRot = point[0] * cos - point[1] * sin;
-		const yRot = point[0] * sin + point[1] * cos;
-		const xTrans = xRot + translation[0];
-		const yTrans = yRot + translation[1];
-		return [xTrans, yTrans];
-	});
-    
-	// return transformed points as an array of length-2 arrays
-	return transformedPoints;
+function getVertexDataOfArrow(halfWorldWidth: number): number[] {
+	const size = halfWorldWidth * 0.3; // Default size of the little arrows
+	return [
+		halfWorldWidth, -size,
+		halfWorldWidth, size,
+		halfWorldWidth + size, 0
+	];
 }
-
-
-
-
-
-
-
 
 
 
