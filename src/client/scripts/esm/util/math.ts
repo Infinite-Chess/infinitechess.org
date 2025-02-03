@@ -305,6 +305,9 @@ function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBo
 /**
  * Finds the intersection points of a vector starting at a point with a bounding box.
  * SORTS THEM IN ORDER OF FIRST INTERSECTED.
+ * 
+ * THIS RARELY WILL MISS AN INTERSECTION. I think this is due to floating point imprecision
+ * when an intersection lies exactly on the corners, but idk, because it is built to count that point.
  * @param coords - A point the line intersects.
  * @param direction - The direction of travel of the line (vector).
  * @param box - The bounding box defined by {left, right, bottom, top}.
