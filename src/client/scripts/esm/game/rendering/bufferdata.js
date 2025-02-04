@@ -39,6 +39,32 @@ function getTexDataOfType(type, rotation = 1) {
 	};
 }
 
+/**
+ * Returns the texture data of a a single instance with texcoords [0,0].
+ * THE INSTANCE-SPECIFIC data needs to further contain texcoord offsets!
+ */
+function getTexDataGeneric(rotation = 1) {
+	const texLocation = [0,0];
+	const texWidth = spritesheet.getSpritesheetDataPieceWidth();
+
+	const texleft = texLocation[0];
+	const texbottom = texLocation[1];
+
+	if (rotation === 1) return { // Regular rotation
+		texleft,
+		texbottom,
+		texright: texleft + texWidth,
+		textop: texbottom + texWidth
+	};
+
+	return { // Inverted rotation
+		texleft: texleft + texWidth,
+		texbottom: texbottom + texWidth,
+		texright: texleft,
+		textop: texbottom
+	};
+}
+
 // Quads...
 
 function getDataQuad_Color({left,right,bottom,top}, [r,g,b,a]) {
@@ -70,14 +96,14 @@ function getDataQuad_Color3D({left,right,bottom,top}, z, [r,g,b,a]) {
 // Returns an array of the data that can be entered into the buffer model!
 function getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop) {
 	return [
-    //     Position            Texture Coord
+    //     Position          Texture Coord
         left, bottom,     texleft, texbottom,
-        left, top,       texleft, textop,
-        right, bottom,       texright, texbottom,
+        left, top,        texleft, textop,
+        right, bottom,    texright, texbottom,
         
-        right, bottom,       texright, texbottom,
-        left, top,       texleft, textop,
-        right, top,         texright, textop
+        right, bottom,    texright, texbottom,
+        left, top,        texleft, textop,
+        right, top,       texright, textop
     ];
 }
 
@@ -402,6 +428,7 @@ function rotateDataColorTexture(data, rotation = 1) {
 
 export default {
 	getTexDataOfType,
+	getTexDataGeneric,
 	getDataQuad_Color,
 	getDataQuad_Color3D,
 	getDataQuad_Texture,

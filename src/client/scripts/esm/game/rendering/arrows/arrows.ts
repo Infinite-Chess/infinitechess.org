@@ -19,7 +19,7 @@ import spritesheet from '../spritesheet.js';
 import gameslot from '../../chess/gameslot.js';
 import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
-import { createModel, createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
+import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import math from '../../../util/math.js';
@@ -628,7 +628,7 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
 		renderCoords[1] += vector[1] * paddingBetwAdjacentPictures * index;
 	}
 
-	const worldLocation: Coords = space.convertCoordToWorldSpace(renderCoords) as Coords;
+	const worldLocation: Coords = space.convertCoordToWorldSpace_IgnoreSquareCenter(renderCoords) as Coords;
 
 	// Does the mouse hover over the piece?
 	let hovered = false;
@@ -810,15 +810,21 @@ function render() {
 function regenerateModelAndRender() {
 	if (Object.keys(slideArrows).length === 0) return; // No visible arrows, don't generate the model
 
-
-
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const halfWorldWidth = worldWidth / 2;
+
+	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+	const { texleft, texright, texbottom, textop } = bufferdata.getTexDataGeneric(rotation);
+	const left = -halfWorldWidth;
+	const right = halfWorldWidth;
+	const bottom = -halfWorldWidth;
+	const top = halfWorldWidth;
 
 	// ADD THE DATA
 	// ...
 
-	const data: number[] = [];
+	const vertexData_Pictures: number[] = bufferdata.getDataQuad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
+	const instanceData_Pictures: number[] = [];
 
 	const vertexData_Arrows: number[] = getVertexDataOfArrow(halfWorldWidth);
 	const instanceData_Arrows: number[] = [];
@@ -836,8 +842,8 @@ function regenerateModelAndRender() {
 		for (const value of Object.values(slideLinesOfDirection)) {
 			const slideLine = value as ArrowsLine;
 
-			slideLine.posDotProd.forEach((arrow, index) => concatData(data, instanceData_Arrows, arrow, vector, index, worldWidth, halfWorldWidth));
-			slideLine.negDotProd.forEach((arrow, index) => concatData(data, instanceData_Arrows, arrow, negVector, index, worldWidth, halfWorldWidth));
+			slideLine.posDotProd.forEach((arrow, index) => concatData(instanceData_Pictures, instanceData_Arrows, arrow, vector, index, worldWidth, halfWorldWidth));
+			slideLine.negDotProd.forEach((arrow, index) => concatData(instanceData_Pictures, instanceData_Arrows, arrow, negVector, index, worldWidth, halfWorldWidth));
 		}
 	}
 
@@ -845,17 +851,22 @@ function regenerateModelAndRender() {
 	 * The buffer model of the piece mini images on
 	 * the edge of the screen. **Doesn't include** the little arrows.
 	 */
-	const modelPictures = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+
+	const attribInfoInstancedPictures: AttributeInfoInstanced = {
+		vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'texcoord', numComponents: 2 }],
+		instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancetexcoord', numComponents: 2 }, { name: 'instancecolor', numComponents: 4 }]
+	};
+	const modelPictures = createModel_Instanced_GivenAttribInfo(vertexData_Pictures, instanceData_Pictures, attribInfoInstancedPictures, "TRIANGLES", spritesheet.getSpritesheet());
 
 	/*
 	 * The buffer model of the little arrows on
 	 * the edge of the screen next to the mini piece images.
 	 */
-	const attribInfoInstanced: AttributeInfoInstanced = {
+	const attribInfoInstancedArrows: AttributeInfoInstanced = {
 		vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }],
 		instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }, { name: 'instancecolor', numComponents: 4 }, { name: 'instancerotation', numComponents: 1 }]
 	};
-	const modelArrows = createModel_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstanced, "TRIANGLES");
+	const modelArrows = createModel_Instanced_GivenAttribInfo(vertexData_Arrows, instanceData_Arrows, attribInfoInstancedArrows, "TRIANGLES");
 
 	modelPictures.render();
 	modelArrows.render();
@@ -872,15 +883,17 @@ function reset() {
  * Takes an arrow, generates the vertex data of both the PICTURE and ARROW,
  * and appends them to their respective vertex data arrays.
  */
-function concatData(data: number[], instanceData_Arrows: number[], arrow: Arrow, vector: Vec2, index: number, worldWidth: number, halfWorldWidth: number) {
+function concatData(instanceData_Pictures: number[], instanceData_Arrows: number[], arrow: Arrow, vector: Vec2, index: number, worldWidth: number, halfWorldWidth: number) {
 
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(arrow.piece.type, rotation);
+	/**
+	 * Our pictures' instance data needs to contain:
+	 * 
+	 * position offset (2 numbers)
+	 * unique texcoord (2 numbers)
+	 * unique color (4 numbers)
+	 */
 
-	const startX = arrow.worldLocation[0] - halfWorldWidth;   
-	const startY = arrow.worldLocation[1] - halfWorldWidth;
-	const endX = startX + worldWidth;
-	const endY = startY + worldWidth;
+	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
 	const { r, g, b } = options.getColorOfType(arrow.piece.type);
@@ -891,9 +904,8 @@ function concatData(data: number[], instanceData_Arrows: number[], arrow: Arrow,
 	// let maxAxisDist = math.chebyshevDistance(movement.getBoardPos(), pieceCoords) - 8;
 	// opacity = Math.sin(maxAxisDist / 40) * 0.5
 
-	const thisData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, a);
-
-	data.push(...thisData);
+	//								instaceposition	   instancetexcoord  instancecolor
+	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, r,g,b,a);
 
 	// Next append the data of the little arrow!
 
