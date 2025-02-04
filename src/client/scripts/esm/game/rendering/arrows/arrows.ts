@@ -695,7 +695,7 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
  * It has to be added to the game so that the arrow lines are calculated correctly,
  * as it changes how far other pieces can slide along the line its on.
  */
-function shiftArrow(piece: Piece, newCoords: Coords, capturedPiece?: Piece) {
+function shiftArrow(piece: Piece, animatedPiece?: Piece, capturedPiece?: Piece) {
 	if (mode === 0) return; // Anything added won't be visible
 	const gamefile = gameslot.getGamefile()!;
 	const animatedPiece = { type: piece.type, index: piece.index, coords: newCoords };
@@ -704,15 +704,15 @@ function shiftArrow(piece: Piece, newCoords: Coords, capturedPiece?: Piece) {
 
 	const changes: Change[] = [];
 	boardchanges.queueDeletePiece(changes, piece, true);
-	boardchanges.queueAddPiece(changes, animatedPiece);
+	if (animatedPiece !== undefined) boardchanges.queueAddPiece(changes, animatedPiece);
 	// Sometimes the animations coordinates match exactly the captured piece's coordinates
 	// on the last frame of the animation, so skip adding the captured piece in that scenario, or there will be a crash
-	if (capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(newCoords, capturedPiece.coords)) boardchanges.queueAddPiece(changes, capturedPiece);
+	if (animatedPiece !== undefined && capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(animatedPiece.coords, capturedPiece.coords)) boardchanges.queueAddPiece(changes, capturedPiece);
 	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
 
 	// Recalculate every single line it is on.
-	recalculateLineOfPiece(gamefile, piece); // Source coords
-	recalculateLineOfPiece(gamefile, animatedPiece); // Destination coords
+	recalculateLineOfPiece(gamefile, piece, false); // Source coords
+	if (animatedPiece !== undefined && animatedPiece.coords !== undefined) recalculateLineOfPiece(gamefile, animatedPiece, false); // Destination coords
 	// We only need to recalculate the line of the captured piece
 	// if the captured piece was on a different coordinate then the destination coords!
 	// This can happen iwith en passant

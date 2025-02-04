@@ -133,7 +133,8 @@ function update() {
 function shiftArrowIndicatorOfAnimatedPiece(animation) { // { duration, startTime, type, startCoords, endCoords, captured, distIsGreater }
 	const animationCurrentCoords = getCurrentCoordsOfAnimation(animation);
 	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile(), animation.endCoords);
-	arrows.shiftArrow(piece, animationCurrentCoords, animation.captured);
+	const animatedPiece = { type: animation.type, coords: animationCurrentCoords, index: undefined };
+	arrows.shiftArrow(piece, animatedPiece, animation.captured);
 }
 
 // Set dampen to true if we're skipping quickly through moves
