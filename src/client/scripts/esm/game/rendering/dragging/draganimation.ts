@@ -6,39 +6,39 @@
  */
 
 
-import type { BufferModel } from "./buffermodel.js";
-import type { Color } from "../../chess/util/colorutil.js";
-import type { Coords } from "../../chess/util/coordutil.js";
-import type { BoundingBox } from "../../util/math.js";
+import type { BufferModel } from "../buffermodel.js";
+import type { Color } from "../../../chess/util/colorutil.js";
+import type { Coords } from "../../../chess/util/coordutil.js";
+import type { BoundingBox } from "../../../util/math.js";
 
-import spritesheet from "./spritesheet.js";
-import coordutil from "../../chess/util/coordutil.js";
-import frametracker from "./frametracker.js";
-import { createModel } from "./buffermodel.js";
+import spritesheet from "../spritesheet.js";
+import coordutil from "../../../chess/util/coordutil.js";
+import frametracker from "../frametracker.js";
+import { createModel } from "../buffermodel.js";
 // @ts-ignore
-import shapes from "./shapes.js";
+import shapes from "../shapes.js";
 // @ts-ignore
-import bufferdata from "./bufferdata.js";
+import bufferdata from "../bufferdata.js";
 // @ts-ignore
-import options from "./options.js";
+import options from "../options.js";
 // @ts-ignore
-import perspective from "./perspective.js";
+import perspective from "../perspective.js";
 // @ts-ignore
-import sound from "../misc/sound.js";
+import sound from "../../misc/sound.js";
 // @ts-ignore
-import movement from "./movement.js";
+import movement from "../movement.js";
 // @ts-ignore
-import input from "../input.js";
+import input from "../../input.js";
 // @ts-ignore
-import camera from "./camera.js";
+import camera from "../camera.js";
 // @ts-ignore
-import themes from "../../components/header/themes.js";
+import themes from "../../../components/header/themes.js";
 // @ts-ignore
-import preferences from "../../components/header/preferences.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
-import board from "./board.js";
+import board from "../board.js";
 // @ts-ignore
-import space from "../misc/space.js";
+import space from "../../misc/space.js";
 
 
 // Variables --------------------------------------------------------------------------------------
