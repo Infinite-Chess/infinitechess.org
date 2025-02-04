@@ -56,7 +56,7 @@ import options from '../rendering/options.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
-import dragAnimation from '../rendering/dragging/draganimation.js';
+import draganimation from '../rendering/dragging/draganimation.js';
 // @ts-ignore
 import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
@@ -137,10 +137,11 @@ function updateBoard(gamefile: gamefile) {
 	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	guinavigation.update();
-	selection.update();
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
+	// AND BEFORE selection.update(), because droparrows.ts modifies the arrows.
 	arrows.update();
+	selection.update();
 	animation.update(); // NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	movement.checkIfBoardDragged(); // ALSO depends on whether or not a piece is selected/being dragged!
 	miniimage.genModel();
@@ -175,7 +176,7 @@ function render() {
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		highlights.render(gamefile);
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
-		dragAnimation.renderTransparentSquare(); // Required to hide the piece currently being animated
+		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	});
     
 	// The rendering of the pieces needs to use the normal depth function, because the
@@ -187,7 +188,7 @@ function render() {
 		animation.renderPieces();
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
-		dragAnimation.renderPiece();
+		draganimation.renderPiece();
 		arrows.render();
 		perspective.renderCrosshair();
 	});

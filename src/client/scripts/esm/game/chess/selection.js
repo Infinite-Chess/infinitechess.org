@@ -25,6 +25,7 @@ import space from '../misc/space.js';
 import preferences from '../../components/header/preferences.js';
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
+import droparrows from '../rendering/dragging/droparrows.js';
 // Import End
 
 /**
@@ -169,8 +170,17 @@ function handleDragging(pieceHoveredType, allowDrop = true) {
 	if (input.getPointerHeld()) { // still dragging.
 		// Render the piece at the pointer.
 		draganimation.dragPiece(input.getPointerWorldLocation(), allowDrop ? hoverSquare : undefined);
+		droparrows.update_ReturnCaptureCoords();
 	} else {
 		if (!allowDrop) cancelDragging();
+
+		const droparrowsCaptureCoords = droparrows.update_ReturnCaptureCoords();
+		if (droparrowsCaptureCoords !== undefined) {
+			moveGamefilePiece(droparrowsCaptureCoords);
+			draganimation.dropPiece(true, true);
+			return;
+		}
+
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
 		if (pawnIsPromoting) return; // The sound will be played after the user selects the piece to promote to.
 		const wasCapture = pieceHoveredType || hoverSquare.hasOwnProperty('enpassant');

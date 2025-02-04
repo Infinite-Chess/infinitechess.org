@@ -39,6 +39,7 @@ import preferences from "../../../components/header/preferences.js";
 import board from "../board.js";
 // @ts-ignore
 import space from "../../misc/space.js";
+import droparrows from "./droparrows.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -316,11 +317,11 @@ function pickUpPiece(type: string, pieceCoords: Coords) {
 
 /**
  * Update the location of the piece being dragged.
- * @param  coords - the world coordinates the piece has been dragged to
+ * @param worldLoc - the world coordinates the piece has been dragged to
  * @param [hoverSquare] - The square the piece would be moved to if dropped now.
  */
-function dragPiece(coords: Coords, hoverSquare?: Coords) {
-	worldLocation = coords;
+function dragPiece(worldLoc: Coords, hoverSquare?: Coords) {
+	worldLocation = worldLoc;
 	hoveredCoords = hoverSquare;
 	frametracker.onVisualChange();
 }

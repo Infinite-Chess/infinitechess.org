@@ -196,7 +196,7 @@ let boundingBoxInt: BoundingBox | undefined;
  * with a reference to the piece they are pointing to.
  * Other scripts may access this so they can add interaction with them.
  */
-const hoveredArrows: HoveredArrow[] = [];
+let hoveredArrows: HoveredArrow[] = [];
 
 /**
  * A list of all arrows present for the current frame.
@@ -698,7 +698,6 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 function shiftArrow(piece: Piece, animatedPiece?: Piece, capturedPiece?: Piece) {
 	if (mode === 0) return; // Anything added won't be visible
 	const gamefile = gameslot.getGamefile()!;
-	const animatedPiece = { type: piece.type, index: piece.index, coords: newCoords };
 
 	// Delete the piece from its true location, and add it at its animated location
 
@@ -716,7 +715,29 @@ function shiftArrow(piece: Piece, animatedPiece?: Piece, capturedPiece?: Piece) 
 	// We only need to recalculate the line of the captured piece
 	// if the captured piece was on a different coordinate then the destination coords!
 	// This can happen iwith en passant
-	if (capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(piece.coords, capturedPiece.coords)) recalculateLineOfPiece(gamefile, capturedPiece);
+	if (capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(piece.coords, capturedPiece.coords)) recalculateLineOfPiece(gamefile, capturedPiece, false);
+
+	// Restore the piece
+
+	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.backward, false);
+}
+
+function shiftArrow2(piece: Piece, endCoords?: Coords, capturedPiece?: Piece) {
+	if (mode === 0) return; // Anything added won't be visible
+	const gamefile = gameslot.getGamefile()!;
+	const pieceWhenAtEndCoords = endCoords !== undefined ? { type: piece.type, index: piece.index, coords: endCoords } : undefined;
+
+	// Delete the piece from its true location, and add it at its animated location
+
+	const changes: Change[] = [];
+	boardchanges.queueDeletePiece(changes, piece, true);
+	if (capturedPiece !== undefined) boardchanges.queueDeletePiece(changes, capturedPiece, true);
+	if (endCoords !== undefined) boardchanges.queueAddPiece(changes, pieceWhenAtEndCoords!);
+	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
+
+	// Recalculate every single line it is on.
+	recalculateLineOfPiece(gamefile, piece, false); // Source coords
+	if (endCoords !== undefined) recalculateLineOfPiece(gamefile, pieceWhenAtEndCoords!, true); // Destination coords
 
 	// Restore the piece
 
@@ -727,12 +748,12 @@ function shiftArrow(piece: Piece, animatedPiece?: Piece, capturedPiece?: Piece) 
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLineOfPiece(gamefile: gamefile, piece: Piece) {
+function recalculateLineOfPiece(gamefile: gamefile, piece: Piece, resetHovered: boolean) {
 	// Recalculate every single line it is on.
 
-	// ENABLING THIS LINE prevents legal move highlights from rendering for
+	// Prevents legal move highlights from rendering for
 	// the currently animated arrow indicator when hovering over its destination
-	// hoveredArrows = hoveredArrows.filter(hoveredArrow => hoveredArrow.piece.coords !== piece.coords);
+	if (resetHovered) hoveredArrows = hoveredArrows.filter(hoveredArrow => hoveredArrow.piece.coords !== piece.coords);
 
 	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
@@ -941,6 +962,7 @@ export default {
 	toggleArrows,
 	getHoveredArrows,
 	shiftArrow,
+	shiftArrow2,
 	update,
 	render,
 };
