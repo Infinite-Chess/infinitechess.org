@@ -56,7 +56,7 @@ import options from '../rendering/options.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
-import dragAnimation from '../rendering/draganimation.js';
+import dragAnimation from '../rendering/dragging/draganimation.js';
 // @ts-ignore
 import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
