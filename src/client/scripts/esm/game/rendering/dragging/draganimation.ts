@@ -84,6 +84,9 @@ const perspectiveConfigs: { z: number, shadowColor: Color } = {
 };
 
 
+/** If true, `pieceSelected` is currently being held. */
+let areDragging = false;
+
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
 /** The world location the piece has been dragged to. */
@@ -95,6 +98,49 @@ let pieceType: string | undefined;
 
 
 // Functions --------------------------------------------------------------------------------------
+
+
+function areDraggingPiece(): boolean {
+	return areDragging;
+}
+
+/**
+ * Start dragging a piece.
+ * @param type - The type of piece being dragged
+ * @param pieceCoords - the square the piece was on
+ */
+function pickUpPiece(type: string, pieceCoords: Coords) {
+	areDragging = true;
+	startCoords = pieceCoords;
+	pieceType = type;
+}
+
+/**
+ * Update the location of the piece being dragged.
+ * @param worldLoc - the world coordinates the piece has been dragged to
+ * @param [hoverSquare] - The square the piece would be moved to if dropped now.
+ */
+function dragPiece(worldLoc: Coords, hoverSquare?: Coords) {
+	worldLocation = worldLoc;
+	hoveredCoords = hoverSquare;
+	frametracker.onVisualChange();
+}
+
+/**
+ * Stop dragging the piece and optionally play a sound.
+ * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
+ * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
+ */
+function dropPiece() {
+	areDragging = false;
+	pieceType = undefined;
+	startCoords = undefined;
+	worldLocation = undefined;
+	frametracker.onVisualChange();
+}
+
+
+// Rendering --------------------------------------------------------------------------------------------
 
 
 // Hides the original piece
@@ -305,46 +351,10 @@ function genIntersectingLines(): BufferModel {
 	return createModel(data, 2, "LINES", true);
 }
 
-/**
- * Start dragging a piece.
- * @param type - The type of piece being dragged
- * @param pieceCoords - the square the piece was on
- */
-function pickUpPiece(type: string, pieceCoords: Coords) {
-	startCoords = pieceCoords;
-	pieceType = type;
-}
-
-/**
- * Update the location of the piece being dragged.
- * @param worldLoc - the world coordinates the piece has been dragged to
- * @param [hoverSquare] - The square the piece would be moved to if dropped now.
- */
-function dragPiece(worldLoc: Coords, hoverSquare?: Coords) {
-	worldLocation = worldLoc;
-	hoveredCoords = hoverSquare;
-	frametracker.onVisualChange();
-}
-
-/**
- * Stop dragging the piece and optionally play a sound.
- * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
- * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
- */
-function dropPiece(playSound: boolean = false, wasCapture: boolean = false) {
-	if (playSound) {
-		if (wasCapture) sound.playSound_capture(0, false);
-		else sound.playSound_move(0, false);
-	}
-	pieceType = undefined;
-	startCoords = undefined;
-	worldLocation = undefined;
-	frametracker.onVisualChange();
-}
-
 
 
 export default {
+	areDraggingPiece,
 	pickUpPiece,
 	dragPiece,
 	dropPiece,

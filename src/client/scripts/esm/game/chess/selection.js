@@ -44,8 +44,6 @@ import droparrows from '../rendering/dragging/droparrows.js';
 
 /** The currently selected piece, if there is one: `{ type, index, coords }` @type {Piece} */
 let pieceSelected;
-/** If true `pieceSelected` is currently being held. */
-let draggingPiece = false;
 /**
  * When dropped in the same square, pieces are unselected every second time.
  * This alows players to move pieces by clicking.
@@ -79,8 +77,6 @@ let promoteTo;
  * @returns {Piece | undefined} The selected piece, if there is one: `{ type, index, coords }`, otherwise undefined.
  */
 function getPieceSelected() { return pieceSelected; }
-
-function areDraggingPiece() { return draggingPiece; }
 
 /**
  * Returns *true* if a piece is currently selected.
@@ -129,6 +125,7 @@ function update() {
 		if (promoteTo) makePromotionMove();
 		return;
 	}
+	const draggingPiece = draganimation.areDraggingPiece();
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting()) {
 		if (draggingPiece) handleDragging(undefined, false);
 		return;
@@ -177,28 +174,28 @@ function handleDragging(pieceHoveredType, allowDrop = true) {
 		const droparrowsCaptureCoords = droparrows.update_ReturnCaptureCoords();
 		if (droparrowsCaptureCoords !== undefined) {
 			moveGamefilePiece(droparrowsCaptureCoords);
-			draganimation.dropPiece(true, true);
+			draganimation.dropPiece();
 			return;
 		}
 
 		handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
 		if (pawnIsPromoting) return; // The sound will be played after the user selects the piece to promote to.
-		const wasCapture = pieceHoveredType || hoverSquare.hasOwnProperty('enpassant');
-		draganimation.dropPiece(hoverSquareLegal, wasCapture);
-		draggingPiece = false;
+		draganimation.dropPiece();
 	}
 }
 
-/** Picks up the currently selected piece if we are allowed to. */
+/**
+ * Picks up the currently selected piece if we are allowed to.
+ * Returns true if it was successful
+ */
 function startDragging() {
-	if (!preferences.getDragEnabled() || !canMovePieceType(pieceSelected.type) || movement.boardHasMomentum()) return false;
+	if (!preferences.getDragEnabled() || !canMovePieceType(pieceSelected.type) || movement.boardHasMomentum()) return false; // Not allowed to
 	draganimation.pickUpPiece(pieceSelected.type, pieceSelected.coords, hoverSquare);
-	return draggingPiece = true;
+	return true; // Dragging was just enabled.
 }
 
 /** Puts the dragged piece back. Doesn't make a move. */
 function cancelDragging() {
-	draggingPiece = false;
 	didLastClickSelectPiece = false;
 	draganimation.dropPiece();
 }
@@ -222,6 +219,7 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 
 		if (hoverSquareLegal) break tag; // This piece is capturable, don't select it instead
 
+		const draggingPiece = draganimation.areDraggingPiece();
 		// If it clicked iteself, deselect or pick it up again.
 		if (coordutil.areCoordsEqual(pieceSelected.coords, coordsClicked)) {
 			if (draggingPiece) { // The piece was dropped in its original square.
@@ -257,7 +255,7 @@ function handleMovingSelectedPiece(coordsClicked, pieceClickedType) {
 		return;
 	}
 
-	moveGamefilePiece(coordsClicked);
+	moveGamefilePiece(coordsClicked, pieceClickedType !== undefined);
 }
 
 /**
@@ -350,7 +348,7 @@ function unselectPiece() {
 	pawnIsPromoting = false;
 	promoteTo = undefined;
 	guipromotion.close(); // Close the promotion UI
-	if (draggingPiece) cancelDragging();
+	if (draganimation.areDraggingPiece()) cancelDragging();
 	frametracker.onVisualChange();
 	legalmovehighlights.onPieceUnselected();
 }
@@ -360,11 +358,18 @@ function unselectPiece() {
  * The destination coordinates MUST contain any special move flags.
  * @param {number[]} coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(coords) {
+function moveGamefilePiece(coords, isCapture) {
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords);
 	/** @type {MoveDraft} */
 	const moveDraft = { startCoords: pieceSelected.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
+
+	// Play the sound of dropped dragged pieces now
+	const draggingPiece = draganimation.areDraggingPiece();
+	if (draggingPiece) {
+		if (isCapture || hoverSquare.hasOwnProperty('enpassant')) sound.playSound_capture(0, false);
+		else sound.playSound_move(0, false);
+	}
 
 	const animateMain = !draggingPiece; // This needs to be above makeMove(), since that will terminate the drag if the move ends the game.
 	const move = movesequence.makeMove(gameslot.getGamefile(), moveDraft);
@@ -379,7 +384,6 @@ function moveGamefilePiece(coords) {
 function makePromotionMove() {
 	const coords = pawnIsPromoting;
 	coords.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
-	if (draggingPiece) draganimation.dropPiece(true, gamefileutility.isPieceOnCoords(gameslot.getGamefile(), coords));
 	moveGamefilePiece(coords);
 	perspective.relockMouse();
 }
@@ -421,7 +425,7 @@ function canMovePieceType(pieceType) {
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
-	if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || draggingPiece || !input.isMouseSupported() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
+	if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || !input.isMouseSupported() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
 	pieces.renderGhostPiece(pieceSelected.type, hoverSquare);
 }
 
@@ -437,5 +441,4 @@ export default {
 	renderGhostPiece,
 	isOpponentPieceSelected,
 	arePremoving,
-	areDraggingPiece
 };
