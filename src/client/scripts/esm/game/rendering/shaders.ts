@@ -1,9 +1,5 @@
 // @ts-ignore
 import { gl } from './webgl.js';
-// @ts-ignore
-import camera from './camera.js';
-
-"use strict";
 
 
 // Type definitions -------------------------------------------------------------------------------------------------------
@@ -54,6 +50,7 @@ function initPrograms() {
 		createColorProgram_Instanced_Plus(),
 		createTextureProgram(),
 		createColoredTextureProgram(),
+		createColoredTextureProgram_Instanced(),
 		createTintedTextureProgram()
 	);
 }
@@ -326,6 +323,74 @@ function createColoredTextureProgram(): ShaderProgram  {
 			position: gl.getAttribLocation(program, 'aVertexPosition'),
 			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
 			color: gl.getAttribLocation(program, 'aVertexColor')
+		},
+		uniformLocations: {
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
+			uSampler: gl.getUniformLocation(program, 'uSampler')!
+		},
+	};
+}
+
+/**
+ * Creates and returns a shader program that uses INSTANCED RENDERING
+ * to render instances with positional data, texture coordinates, and instance-specific
+ * position offsets, texture coordinate offsets, and color tinting.
+ */
+function createColoredTextureProgram_Instanced(): ShaderProgram {
+	const vsSource = `#version 300 es
+        in vec4 aVertexPosition;        // Per-vertex position (vec4 for homogeneous coordinates)
+        in vec2 aTextureCoord;          // Per-vertex texture coordinates
+        in vec3 aInstancePosition;      // Per-instance position offset (vec3: xyz)
+        in vec2 aInstanceTexCoord;      // Per-instance texture coordinate offset (vec2)
+        in vec4 aInstanceColor;         // Per-instance color (RGBA)
+
+        uniform mat4 uTransformMatrix;  // Transformation matrix
+
+        out vec2 vTextureCoord;         // To fragment shader
+        out vec4 vInstanceColor;        // To fragment shader
+
+        void main() {
+            // Apply instance position offset
+            vec4 offsetPosition = aVertexPosition + vec4(aInstancePosition, 0.0);
+            
+            // Transform position and pass through texture coords
+            gl_Position = uTransformMatrix * offsetPosition;
+            
+            // Apply texture coordinate offset and pass to fragment shader
+            vTextureCoord = aTextureCoord + aInstanceTexCoord;
+            
+            // Pass instance color to fragment shader
+            vInstanceColor = aInstanceColor;
+        }
+    `;
+
+	const fsSource = `#version 300 es
+        precision lowp float;
+
+        in vec2 vTextureCoord;          // From vertex shader
+        in vec4 vInstanceColor;         // From vertex shader
+
+        uniform sampler2D uSampler;     // Texture sampler
+
+        out vec4 fragColor;             // Output color
+
+        void main() {
+            // Sample texture with LOD bias for sharpness and apply color tint
+            vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
+            fragColor = texColor * vInstanceColor;
+        }
+    `;
+
+	const program = createShaderProgram(vsSource, fsSource);
+
+	return {
+		program,
+		attribLocations: {
+			position: gl.getAttribLocation(program, 'aVertexPosition'),
+			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
+			instanceposition: gl.getAttribLocation(program, 'aInstancePosition'),
+			instancetexcoord: gl.getAttribLocation(program, 'aInstanceTexCoord'),
+			instancecolor: gl.getAttribLocation(program, 'aInstanceColor')
 		},
 		uniformLocations: {
 			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
