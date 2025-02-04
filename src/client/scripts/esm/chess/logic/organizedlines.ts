@@ -74,7 +74,7 @@ interface PieceLinesByKey {
 	[line: LineKey]: Array<Piece>
 }
 
-/** A unique identifier for a single line of pieces. */
+/** A unique identifier for a single line of pieces. `C|X` */
 type LineKey = `${number}|${number}`
 
 // (Deleted "use strict" as I don't think it has an effect if we're using typescript)
@@ -295,26 +295,14 @@ function getEmptyTypeState(gamefile: gamefile) {
  * 
  * If the line is perfectly vertical, the axis will be flipped, so `X` in this
  * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
- * @param {Number[]} step - Line step `[dx,dy]`
- * @param {Number[]} coords `[x,y]` - A point the line intersects
+ * @param {Vec2} step - Line step `[dx,dy]`
+ * @param {Coords} coords `[x,y]` - A point the line intersects
  * @returns {String} the key `C|X`
  */
-function getKeyFromLine(step: Coords, coords: Coords): LineKey {
-	const C = getCFromLine(step, coords);
+function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
+	const C = math.getLineCFromCoordsAndVec(coords, step);
 	const X = getXFromLine(step, coords);
 	return `${C}|${X}`;
-}
-
-/**
- * Calculates the `C` value in the linear standard form of the line: "ax + by = c".
- * Step size here is unimportant, but the slope **is**.
- * This value will be unique for every line that *has the same slope*, but different positions.
- * @param {number[]} step - The x-step and y-step of the line: `[deltax, deltay]`
- * @param {number[]} coords - A point the line intersects: `[x,y]`
- * @returns {number} The C in the line's key: `C|X`
- */
-function getCFromLine(step: Coords, coords: Coords): number {
-	return step[0] * coords[1] - step[1] * coords[0];
 }
 
 /**
@@ -326,8 +314,8 @@ function getCFromLine(step: Coords, coords: Coords): number {
  * 
  * If the line is perfectly vertical, the axis will be flipped, so `X` in this
  * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
- * @param {number[]} step - [dx,dy]
- * @param {number[]} coords - Coordinates that are on the line
+ * @param {Vec2} step - [dx,dy]
+ * @param {Coords} coords - Coordinates that are on the line
  * @returns {number} The X in the line's key: `C|X`
  */
 function getXFromLine(step: Coords, coords: Coords): number {
@@ -407,7 +395,6 @@ export default {
 	addMoreUndefineds,
 	buildStateFromKeyList,
 	getKeyFromLine,
-	getCFromLine,
 	getCFromKey,
 	areColinearSlidesPresentInGame,
 	areHippogonalsPresentInGame,

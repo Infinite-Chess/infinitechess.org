@@ -42,6 +42,14 @@ function convertCoordToWorldSpace(coords, position = movement.getBoardPos(), sca
 	return [worldX, worldY];
 }
 
+function convertCoordToWorldSpace_IgnoreSquareCenter(coords, position = movement.getBoardPos(), scale = movement.getBoardScale()) {
+	
+	const worldX = (coords[0] - position[0]) * scale;
+	const worldY = (coords[1] - position[1]) * scale;
+
+	return [worldX, worldY];
+}
+
 function convertPixelsToWorldSpace_Virtual(value) {
 	const screenHeight = camera.getScreenHeightWorld(false);
 	return (value / camera.getCanvasHeightVirtualPixels()) * screenHeight;
@@ -60,6 +68,7 @@ export default {
 	convertWorldSpaceToCoords,
 	convertWorldSpaceToCoords_Rounded,
 	convertCoordToWorldSpace,
+	convertCoordToWorldSpace_IgnoreSquareCenter,
 	convertPixelsToWorldSpace_Virtual,
 	convertWorldSpaceToPixels_Virtual,
 	convertWorldSpaceToGrid,

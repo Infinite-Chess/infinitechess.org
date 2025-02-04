@@ -122,15 +122,14 @@ function isFloat32Array(param: any) {
 
 /**
  * Copies the properties from one object to another,
- * without overwriting the existing properties on the destination object.
+ * without overwriting the existing properties on the destination object,
+ * UNLESS the destination object has a matching property name.
  * @param objSrc - The source object
  * @param objDest - The destination object
  */
 function copyPropertiesToObject(objSrc: Record<string, any>, objDest: Record<string, any>) {
-	const objSrcKeys = Object.keys(objSrc);
-	for (let i = 0; i < objSrcKeys.length; i++) {
-		const key = objSrcKeys[i]!;
-		objDest[key] = objSrc[key];
+	for (const [key, value] of Object.entries(objSrc)) {
+		objDest[key] = value;
 	}
 }
 

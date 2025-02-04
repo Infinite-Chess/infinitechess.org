@@ -49,11 +49,15 @@ interface PieceMoveset {
 	/**
 	 * The initial function that determines how far a piece is legally able to slide
 	 * according to what pieces block it.
+	 * 
+	 * This should be provided if we're not using the default.
 	 */
 	blocking?: BlockingFunction,
 	/**
 	 * The secondary function that *actually* determines whether each individual
 	 * square in a slide is legal to move to.
+	 * 
+	 * This should be provided if we're not using the default.
 	 */
 	ignore?: IgnoreFunction
 }
@@ -72,10 +76,7 @@ interface PieceMoveset {
  * as it can test if the squares are check for positive.
  */
 // eslint-disable-next-line no-unused-vars
-type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefile, detectCheck?: (gamefile: gamefile, color: string, attackers: {
-	coords: Coords,
-	slidingCheck: boolean
-}) => boolean) => boolean;
+type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
 
 /**
  * This runs once for every piece on the same line of the selected piece.
@@ -90,7 +91,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords, gamefile?: gamefi
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords, gamefile?: gamefile) => 0 | 1 | 2;
+type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
 
 
 

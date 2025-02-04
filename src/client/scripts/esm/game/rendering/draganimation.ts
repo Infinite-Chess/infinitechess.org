@@ -52,7 +52,7 @@ const z: number = 0.01;
  */
 const dragMinSizeVirtualPixels = {
 	/** 2D desktop mode */
-	mouse: 56, // Only applicable in 2D mode, not perspective
+	mouse: 50, // Only applicable in 2D mode, not perspective
 	/** Mobile/touchscreen mode */
 	touch: 50
 };

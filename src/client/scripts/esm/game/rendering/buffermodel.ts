@@ -29,13 +29,16 @@ type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' 
 /** An object describing a single attribute inside our vertex data, and how many components it has per stride/vertex. */
 interface Attribute {
 	/** The name of the attribute. */
-	name: 'position' | 'texcoord' | 'color' | 'instanceposition' | 'instancetexcoord';
+	name: 'position' | 'texcoord' | 'color' | 'instanceposition' | 'instancecolor' | 'instancerotation' | 'instancetexcoord';
 	/** How many values the attribute has in a single stride/vertex of our data array. */
 	numComponents: number
 };
 
 /** An object containing all attributes that some vertex data contains. */
 type AttributeInfo = Attribute[];
+
+/** An object containing the attribute info of both our vertex data and instance data. */
+type AttributeInfoInstanced = { vertexDataAttribInfo: AttributeInfo, instanceDataAttribInfo: AttributeInfo };
 
 /**
  * **Call this** when you update specific vertex data within the source Float32Array!
@@ -136,8 +139,8 @@ function createModel_Instanced(
 	texture?: WebGLTexture
 ): BufferModelInstanced {
 	const usingTexture = texture !== undefined;
-	const { vertexDataAttribInfo, instanceDataAttribInfo } = getAttribInfo_Instanced(usingColor, usingTexture);
-	return createModel_Instanced_GivenAttribInfo(vertexData, instanceData, vertexDataAttribInfo, instanceDataAttribInfo, mode, texture);
+	const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
+	return createModel_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, texture);
 }
 
 /**
@@ -160,7 +163,7 @@ function getAttribInfo(numPositionComponents: 2 | 3, usingColor: boolean, usingT
  * provided whether the vertex data contains color information,
  * and whether the instance data contains texture coordinates.
  */
-function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): { vertexDataAttribInfo: AttributeInfo, instanceDataAttribInfo: AttributeInfo } {
+function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): AttributeInfoInstanced {
 	if (usingColor && usingTexture) {
 		return {
 			vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
@@ -219,13 +222,12 @@ function createModel_GivenAttribInfo(
 function createModel_Instanced_GivenAttribInfo(
 	vertexData: number[] | Float32Array,
 	instanceData: number[] | Float32Array,
-	vertexDataAttribInfo: AttributeInfo,
-	instanceDataAttribInfo: AttributeInfo,
+	attribInfoInstanced: AttributeInfoInstanced,
 	mode: PrimitiveType,
 	texture?: WebGLTexture
 ): BufferModelInstanced {
-	const vertexDataStride = getStrideFromAttributeInfo(vertexDataAttribInfo);
-	const instanceDataStride = getStrideFromAttributeInfo(instanceDataAttribInfo);
+	const vertexDataStride = getStrideFromAttributeInfo(attribInfoInstanced.vertexDataAttribInfo);
+	const instanceDataStride = getStrideFromAttributeInfo(attribInfoInstanced.instanceDataAttribInfo);
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
 	if (instanceData.length % instanceDataStride !== 0) throw new Error("Instance data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
 
@@ -254,7 +256,7 @@ function createModel_Instanced_GivenAttribInfo(
 			position: [number, number, number] = [0, 0, 0],
 			scale: [number, number, number] = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
-		) => render_Instanced(vertexBuffer, instanceBuffer, vertexDataAttribInfo, instanceDataAttribInfo, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture),		
+		) => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};
 }
 
@@ -350,8 +352,7 @@ function render(
 function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo, instanceDataAttribInfo, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture
 	vertexBuffer: WebGLBuffer,
 	instanceBuffer: WebGLBuffer,
-	vertexDataAttribInfo: AttributeInfo,
-	instanceDataAttribInfo: AttributeInfo,
+	attribInfoInstanced: AttributeInfoInstanced,
 	position: Vec3,
 	scale: Vec3,
 	vertexDataStride: number,
@@ -364,8 +365,8 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	texture?: WebGLTexture
 ) {
 	// Use the optimal shader to get the job done! Whichever shader uses the attributes and uniforms we need!
-	const attributesUsed_VertexData = Object.values(vertexDataAttribInfo).map((attrib) => attrib.name);
-	const attributesUsed_InstanceData = Object.values(instanceDataAttribInfo).map((attrib) => attrib.name);
+	const attributesUsed_VertexData = Object.values(attribInfoInstanced.vertexDataAttribInfo).map((attrib) => attrib.name);
+	const attributesUsed_InstanceData = Object.values(attribInfoInstanced.instanceDataAttribInfo).map((attrib) => attrib.name);
 	const attributesUsed = [...attributesUsed_VertexData, ...attributesUsed_InstanceData];
 	const uniformsUsed = Object.keys(uniforms);
 	const shader = shaders.shaderPicker(attributesUsed, uniformsUsed);
@@ -374,8 +375,8 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	gl.useProgram(shader.program);
 
 	// Prepare the attributes...
-	enableAttributes(shader, vertexBuffer, vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT, false); // The attributes of a single instance are NOT instance-specific
-	enableAttributes(shader, instanceBuffer, instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT, true); // Instance-specific
+	enableAttributes(shader, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT, false); // The attributes of a single instance are NOT instance-specific
+	enableAttributes(shader, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT, true); // Instance-specific
 
 	// Prepare the uniforms...
 	setUniforms(shader, position, scale, uniforms, texture);
@@ -500,6 +501,11 @@ function genWorldMatrix(position: Vec3, scale: Vec3) {
 export {
 	createModel,
 	createModel_Instanced,
+	createModel_Instanced_GivenAttribInfo,
 	BufferModel, // The type definition
 	BufferModelInstanced, // The type definition
+};
+
+export type {
+	AttributeInfoInstanced
 };
