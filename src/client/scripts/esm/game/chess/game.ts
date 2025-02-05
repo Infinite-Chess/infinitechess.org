@@ -37,7 +37,6 @@ import clock from '../../chess/logic/clock.js';
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
-// @ts-ignore
 import selection from './selection.js';
 // @ts-ignore
 import board from '../rendering/board.js';

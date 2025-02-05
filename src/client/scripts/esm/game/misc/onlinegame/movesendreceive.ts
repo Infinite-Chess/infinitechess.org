@@ -14,6 +14,7 @@ import onlinegame from "./onlinegame.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import clock from "../../../chess/logic/clock.js";
 import jsutil from "../../../util/jsutil.js";
+import selection from "../../chess/selection.js";
 import gameslot from "../../chess/gameslot.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
@@ -23,8 +24,6 @@ import specialdetect from "../../../chess/logic/specialdetect.js";
 import formatconverter from "../../../chess/logic/formatconverter.js";
 // @ts-ignore
 import moveutil from "../../../chess/util/moveutil.js";
-// @ts-ignore
-import selection from "../../chess/selection.js";
 // @ts-ignore
 import guiclock from "../../gui/guiclock.js";
 // @ts-ignore

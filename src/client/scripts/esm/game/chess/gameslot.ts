@@ -18,6 +18,7 @@ import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
+import selection from "./selection.js";
 import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
@@ -36,8 +37,6 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
 import options from "../rendering/options.js";
-// @ts-ignore
-import selection from "./selection.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore

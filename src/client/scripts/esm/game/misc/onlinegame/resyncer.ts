@@ -21,14 +21,13 @@ import type gamefile from "../../../chess/logic/gamefile.js";
 import movesendreceive from "./movesendreceive.js";
 import onlinegame from "./onlinegame.js";
 import clock from "../../../chess/logic/clock.js";
+import selection from "../../chess/selection.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import moveutil from "../../../chess/util/moveutil.js";
-// @ts-ignore
-import selection from "../../chess/selection.js";
 // @ts-ignore
 import formatconverter from "../../../chess/logic/formatconverter.js";
 import movesequence from "../../chess/movesequence.js";

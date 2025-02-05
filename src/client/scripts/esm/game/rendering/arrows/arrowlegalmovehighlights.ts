@@ -18,6 +18,7 @@ import coordutil from "../../../chess/util/coordutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
+import selection from "../../chess/selection.js";
 import legalmovehighlights from "../highlights/legalmovehighlights.js";
 // @ts-ignore
 import movement from "../movement.js";
@@ -27,8 +28,6 @@ import options from "../options.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import moveutil from "../../../chess/util/moveutil.js";
-// @ts-ignore
-import selection from "../../chess/selection.js";
 
 
 // Type Definitions -------------------------------------------------------------------------------------------

@@ -40,6 +40,7 @@ import board from "../board.js";
 // @ts-ignore
 import space from "../../misc/space.js";
 import droparrows from "./droparrows.js";
+import { Piece } from "../../../chess/logic/boardchanges.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -86,6 +87,12 @@ const perspectiveConfigs: { z: number, shadowColor: Color } = {
 
 /** If true, `pieceSelected` is currently being held. */
 let areDragging = false;
+/**
+ * When dropped in the same square, pieces are unselected every second time.
+ * This alows players to move pieces by clicking.
+ * @type{boolean} 
+ * */
+let didLastClickSelectPiece;
 
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
@@ -104,15 +111,23 @@ function areDraggingPiece(): boolean {
 	return areDragging;
 }
 
+function getDragParity(): boolean {
+	return didLastClickSelectPiece;
+}
+
+function setDragParity(value: boolean) {
+	return didLastClickSelectPiece = value;
+}
+
 /**
  * Start dragging a piece.
  * @param type - The type of piece being dragged
  * @param pieceCoords - the square the piece was on
  */
-function pickUpPiece(type: string, pieceCoords: Coords) {
+function pickUpPiece(piece: Piece) {
 	areDragging = true;
-	startCoords = pieceCoords;
-	pieceType = type;
+	startCoords = piece.coords;
+	pieceType = piece.type;
 }
 
 /**
@@ -137,6 +152,12 @@ function dropPiece() {
 	startCoords = undefined;
 	worldLocation = undefined;
 	frametracker.onVisualChange();
+}
+
+/** Puts the dragged piece back. Doesn't make a move. */
+function cancelDragging() {
+	didLastClickSelectPiece = false;
+	dropPiece();
 }
 
 
@@ -355,9 +376,12 @@ function genIntersectingLines(): BufferModel {
 
 export default {
 	areDraggingPiece,
+	getDragParity,
+	setDragParity,
 	pickUpPiece,
 	dragPiece,
 	dropPiece,
+	cancelDragging,
 	renderTransparentSquare,
 	renderPiece
 };

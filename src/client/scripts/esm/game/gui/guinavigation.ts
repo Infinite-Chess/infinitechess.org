@@ -22,7 +22,6 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
-// @ts-ignore
 import selection from '../chess/selection.js';
 
 
