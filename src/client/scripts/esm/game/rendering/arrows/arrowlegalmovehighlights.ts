@@ -20,14 +20,13 @@ import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
 import legalmovehighlights from "../highlights/legalmovehighlights.js";
+import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import movement from "../movement.js";
 // @ts-ignore
 import options from "../options.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import moveutil from "../../../chess/util/moveutil.js";
 
 
 // Type Definitions -------------------------------------------------------------------------------------------

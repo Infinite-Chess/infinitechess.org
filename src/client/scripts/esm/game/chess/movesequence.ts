@@ -16,6 +16,7 @@ import gameslot from "./gameslot.js";
 import guinavigation from "../gui/guinavigation.js";
 import boardchanges from "../../chess/logic/boardchanges.js";
 import { animatableChanges, meshChanges } from "./graphicalchanges.js";
+import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
@@ -34,8 +35,6 @@ import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import frametracker from "../rendering/frametracker.js";
-// @ts-ignore
-import moveutil from "../../chess/util/moveutil.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
 
 

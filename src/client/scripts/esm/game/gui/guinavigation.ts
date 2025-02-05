@@ -4,10 +4,9 @@ import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
+import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import board from '../rendering/board.js';
-// @ts-ignore
-import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
 // @ts-ignore

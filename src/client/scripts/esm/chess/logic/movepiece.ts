@@ -16,6 +16,7 @@ import type { Change } from './boardchanges.js';
 
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
+import moveutil from '../util/moveutil.js';
 import state from './state.js';
 import boardchanges from './boardchanges.js';
 // @ts-ignore
@@ -26,8 +27,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import math from '../../util/math.js';
-// @ts-ignore
-import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import checkdetection from './checkdetection.js';
 // @ts-ignore
@@ -55,7 +54,7 @@ interface MoveDraft {
 	castle?: { coord: Coords, dir: 1 | -1 },
 }
 
-/** A special move tag for enpassant capture. This will be 1 for the captured piece is 1 square above, or -1 for 1 square below. */
+/** A special move tag for enpassant capture. This will be 1 if the captured piece is 1 square above, or -1 for 1 square below. */
 type enpassant = -1 | 1;
 /** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
 type promotion = string;

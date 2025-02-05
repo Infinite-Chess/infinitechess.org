@@ -24,6 +24,7 @@ import frametracker from '../rendering/frametracker.js';
 import pieces from '../rendering/pieces.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
+import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -38,8 +39,6 @@ import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
-// @ts-ignore
-import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import options from '../rendering/options.js';
 // @ts-ignore
@@ -444,3 +443,7 @@ export default {
 	isOpponentPieceSelected,
 	arePremoving,
 };
+
+export type {
+	CoordsSpecial
+}

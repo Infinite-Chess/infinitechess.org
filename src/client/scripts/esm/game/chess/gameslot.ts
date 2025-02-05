@@ -21,6 +21,7 @@ import spritesheet from "../rendering/spritesheet.js";
 import selection from "./selection.js";
 import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
+import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -51,8 +52,6 @@ import area from "../rendering/area.js";
 import movement from "../rendering/movement.js";
 // @ts-ignore
 import arrows from "../rendering/arrows/arrows.js";
-// @ts-ignore
-import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore

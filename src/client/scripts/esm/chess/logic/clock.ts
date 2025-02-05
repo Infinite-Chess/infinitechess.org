@@ -6,7 +6,6 @@
  * if somebody loses on time.
  */
 
-// @ts-ignore
 import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';

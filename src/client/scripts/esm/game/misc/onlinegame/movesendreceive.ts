@@ -16,14 +16,13 @@ import clock from "../../../chess/logic/clock.js";
 import jsutil from "../../../util/jsutil.js";
 import selection from "../../chess/selection.js";
 import gameslot from "../../chess/gameslot.js";
+import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import specialdetect from "../../../chess/logic/specialdetect.js";
 // @ts-ignore
 import formatconverter from "../../../chess/logic/formatconverter.js";
-// @ts-ignore
-import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import guiclock from "../../gui/guiclock.js";
 // @ts-ignore

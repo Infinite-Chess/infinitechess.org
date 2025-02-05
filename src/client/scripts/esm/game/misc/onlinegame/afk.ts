@@ -15,7 +15,6 @@ import onlinegame from "./onlinegame.js";
 import clock from "../../../chess/logic/clock.js";
 import gameslot from "../../chess/gameslot.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
-// @ts-ignore
 import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import input from "../../input.js";
