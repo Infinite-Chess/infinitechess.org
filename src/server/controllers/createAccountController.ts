@@ -9,15 +9,24 @@
  */
 
 
+// @ts-ignore
 import bcrypt from 'bcrypt';
+// @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
-
+// @ts-ignore
 import { isEmailBanned } from '../middleware/banned.js';
+// @ts-ignore
 import { logEvents } from '../middleware/logEvents.js';
+// @ts-ignore
 import { sendEmailConfirmation } from './sendMail.js';
+// @ts-ignore
 import { handleLogin } from './loginController.js';
+// @ts-ignore
 import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManager.js';
+// @ts-ignore
 import uuid from '../../client/scripts/esm/util/uuid.js';
+// @ts-ignore
+import { Request, Response } from 'express';
 
 
 // Variables -------------------------------------------------------------------------
@@ -84,14 +93,14 @@ const profainWords = [
 
 
 // Called when create account form submitted
-async function createNewMember(req, res) {
+async function createNewMember(req: Request, res: Response) {
 	if (!req.body) {
 		console.log(`User sent a bad create account request missing the whole body!`);
 		return res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
 	}
 	// First make sure we have all 3 variables.
 	// eslint-disable-next-line prefer-const
-	let { username, email, password } = req.body;
+	let { username, email, password }: { username: string, email: string, password: string } = req.body;
 	if (!username || !email || !password) {
 		console.error('We received request to create new member without all supplied username, email, and password!');
 		return res.status(400).redirect('/400'); // Bad request
@@ -123,7 +132,7 @@ async function createNewMember(req, res) {
  * @param {boolean} [param0.autoVerify] - Whether to auto-verify this account.
  * @returns {number|undefined} If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
  */
-async function generateAccount({ username, email, password, autoVerify }) {
+async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }) {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, 10); // Passes 10 salt rounds. (standard)
 	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID_Base62(8) });
@@ -146,8 +155,8 @@ async function generateAccount({ username, email, password, autoVerify }) {
 // Route
 // Returns whether the email parameter is associated with an account.
 // True = open. false = in-use
-function checkEmailAssociated(req, res) {
-	const lowercaseEmail = req.params.email.toLowerCase();
+function checkEmailAssociated(req: Request, res: Response) {
+	const lowercaseEmail = req.params['email']!.toLowerCase();
 	if (isEmailTaken(lowercaseEmail)) res.json([false]);
 	else res.json([true]);
 };
@@ -161,8 +170,8 @@ function checkEmailAssociated(req, res) {
  * @param {Object} res - The response object.
  * @returns {Object} An object containing the properties `allowed` and `reason`.
  */
-function checkUsernameAvailable(req, res) {
-	const username = req.params.username;
+function checkUsernameAvailable(req: Request, res: Response) {
+	const username = req.params['username']!;
 	const usernameLowercase = username.toLowerCase();
 
 	let allowed = true;
@@ -178,7 +187,7 @@ function checkUsernameAvailable(req, res) {
 	});
 }
 
-function doUsernameFormatChecks(username, req, res) {
+function doUsernameFormatChecks(username: string, req: Request, res: Response): true | Response<any, Record<string, any>> {
 	// First we check the username's length
 	if (username.length < 3 || username.length > 20) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_length", req) });
 	// Then the format
@@ -197,20 +206,20 @@ function doUsernameFormatChecks(username, req, res) {
 	return true; // Everything's good, no conflicts!
 };
 
-function onlyLettersAndNumbers(string) {
+function onlyLettersAndNumbers(string: string) {
 	if (!string) return true;
 	return /^[a-zA-Z0-9]+$/.test(string);
 };
 
 // Returns true if bad word is found
-function checkProfanity(string) {
+function checkProfanity(string: string) {
 	for (const profanity of profainWords) {
 		if (string.includes(profanity)) return true;
 	}
 	return false;
 };
 
-function doEmailFormatChecks(string, req, res) {
+function doEmailFormatChecks(string: string, req: Request, res: Response) {
 	if (string.length > 320) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_too_long", req) }); // Max email length
 	if (!isValidEmail(string)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_invalid", req) });
 	if (isEmailTaken(string)) return res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-email_in_use", req) });
@@ -222,14 +231,14 @@ function doEmailFormatChecks(string, req, res) {
 	return true;
 };
 
-function isValidEmail(string) {
+function isValidEmail(string: string) {
 	// Credit for the regex: https://stackoverflow.com/a/201378
 	// eslint-disable-next-line no-control-regex
 	const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 	return regex.test(string);
 };
 
-function doPasswordFormatChecks(password, req, res) {
+function doPasswordFormatChecks(password: string, req: Request, res: Response) {
 	// First we check password length
 	if (password.length < 6 || password.length > 72) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_length", req) });
 	if (!isValidPassword(password)) return res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-password_format", req) });
@@ -237,7 +246,7 @@ function doPasswordFormatChecks(password, req, res) {
 	return true;
 };
 
-function isValidPassword(string) {
+function isValidPassword(string: string) {
 	// eslint-disable-next-line no-useless-escape
 	const regex = /^[a-zA-Z0-9!@#$%^&*\?]+$/;
 	if (regex.test(string) === true) return true;
