@@ -114,7 +114,7 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 
 	updateSubmitButton();
 });
-element_emailInput.addEventListener('focusout', () => { // Check email availability...
+element_emailInput.addEventListener('focusout', () => { // Check email availability and functionality...
 	// If it's blank, all the server would send back is the createaccount.html again..
 	if (element_emailInput.value.length > 1 && !emailHasError) { 
 		fetch(`/createaccount/email/${element_emailInput.value}`, fetchOptions)

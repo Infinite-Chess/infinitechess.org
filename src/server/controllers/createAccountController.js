@@ -12,6 +12,7 @@
 import bcrypt from 'bcrypt';
 import { getTranslationForReq } from '../utility/translate.js';
 
+import { canEmailRecieveMail } from './emailValidator.js'
 import { isEmailBanned } from '../middleware/banned.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { sendEmailConfirmation } from './sendMail.js';
@@ -144,9 +145,9 @@ async function generateAccount({ username, email, password, autoVerify }) {
 }
 
 // Route
-// Returns whether the email parameter is associated with an account.
+// Returns whether the email parameter is associated with an account and if it can recieve merrages.
 // True = open. false = in-use
-function checkEmailAssociated(req, res) {
+function checkEmailValidity(req, res) {
 	const lowercaseEmail = req.params.email.toLowerCase();
 	if (isEmailTaken(lowercaseEmail)) res.json([false]);
 	else res.json([true]);
