@@ -21,6 +21,7 @@ import movesequence from './movesequence.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
+import pieces from '../rendering/pieces.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
 // @ts-ignore
@@ -35,8 +36,6 @@ import specialdetect from '../../chess/logic/specialdetect.js';
 import perspective from '../rendering/perspective.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
-// @ts-ignore
-import pieces from '../rendering/pieces.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
 // @ts-ignore
