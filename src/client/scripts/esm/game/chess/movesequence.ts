@@ -21,7 +21,7 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
-import arrows from "../rendering/arrows.js";
+import arrows from "../rendering/arrows/arrows.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 // @ts-ignore
@@ -36,6 +36,7 @@ import clock from "../../chess/logic/clock.js";
 import frametracker from "../rendering/frametracker.js";
 // @ts-ignore
 import moveutil from "../../chess/util/moveutil.js";
+import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -66,7 +67,10 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
-	arrows.clearListOfHoveredPieces();
+	// Whenever a move is made in the game, the color of the legal move highlights
+	// of the hovered arrows often changes.
+	// Erase the list so they can be regenerated next frame with the correct color.
+	arrowlegalmovehighlights.reset();
 
 	return move;
 }

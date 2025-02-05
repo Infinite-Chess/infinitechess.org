@@ -40,7 +40,8 @@ let tilesTexture_256mips;
 
 const squareCenter = 0.5; // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
 
-let tileWidth_Pixels; // Width of tiles in physical, not virtual screen pixels (greater for retina displays). Dependent on board scale.
+let tileWidthPixels_Physical; // Width of tiles in physical, not virtual screen pixels (greater for retina displays).      Dependent on board scale.
+let tileWidthPixels_Virtual; //  Width of tiles in               virtual screen pixels (the same even on retina displays). Dependent on board scale.
 
 let tile_MouseOver_Float; // [x, y]  The board location of the mouse, in floats.
 let tile_MouseOver_Int; // [x, y]  The board location of the mouse, rounded to nearest tile.
@@ -94,8 +95,8 @@ function gsquareCenter() {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels() {
-	return tileWidth_Pixels;
+function gtileWidth_Pixels(virtual) {
+	return virtual ? tileWidthPixels_Virtual : tileWidthPixels_Physical;
 }
 
 function gtile_MouseOver_Float() {
@@ -143,9 +144,8 @@ function recalcTile_MouseCrosshairOver() {
 function recalcTileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = options.isDebugModeOn() ? camera.getScreenBoundingBox(true) : camera.getScreenBoundingBox(false);
-	// In physical pixels, not virtual. Physical pixels is greater for retina displays.
-	const pixelsPerTile = (camera.canvas.height * 0.5 / screenBoundingBox.top) / window.devicePixelRatio; // When scale is 1
-	tileWidth_Pixels = pixelsPerTile * movement.getBoardScale();
+	tileWidthPixels_Virtual = (camera.canvas.height * 0.5 / screenBoundingBox.top) * movement.getBoardScale(); // Greater for retina displays
+	tileWidthPixels_Physical = tileWidthPixels_Virtual / window.devicePixelRatio;
 }
 
 function recalcTile_MouseOver() {
@@ -189,8 +189,8 @@ function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
 	const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
 	const boardPos = movement.getBoardPos();
-	const tileXFloat = n * x / tileWidth_Pixels + boardPos[0];
-	const tileYFloat = n * y / tileWidth_Pixels + boardPos[1];
+	const tileXFloat = n * x / tileWidthPixels_Physical + boardPos[0];
+	const tileYFloat = n * y / tileWidthPixels_Physical + boardPos[1];
 
 	const tile_Float = [tileXFloat, tileYFloat];
 	const tile_Int = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
@@ -204,7 +204,7 @@ function getTileMouseOver() {
 	const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
 	const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
 
-	if (options.isDebugModeOn()) console.log("Getting tile mouse over: " + JSON.stringify(mouseWorld) + "   " + JSON.stringify(tile_Float) + "   " + JSON.stringify(tile_Int));
+	// if (options.isDebugModeOn()) console.log("Getting tile mouse over: " + JSON.stringify(mouseWorld) + "   " + JSON.stringify(tile_Float) + "   " + JSON.stringify(tile_Int));
     
 	return { tile_Float, tile_Int };
 }

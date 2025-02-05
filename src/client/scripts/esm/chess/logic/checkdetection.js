@@ -383,7 +383,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 
 	// Delete the piece, and add it back when we're done!
 	const deleteChange = boardchanges.queueDeletePiece([], pieceSelected, true);
-	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward);
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward, true);
     
 	// let checklines = []; // For Idon's code below
 	// For every line direction we share with the king...
@@ -458,7 +458,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	// }
 
 	// Add the piece back with the EXACT SAME index it had before!!
-	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.backward);
+	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.backward, false);
 }
 
 // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2
@@ -486,12 +486,12 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 
 	for (const lineKey in moves.sliding) { // 'dx,dy'
 		const line = coordutil.getCoordsFromKey(lineKey); // [dx,dy]
-		const c1 = organizedlines.getCFromLine(line, coords); // Line of our selected piece
-		const c2 = organizedlines.getCFromLine(direction,square2); // Line between our 2 squares
-		const blockPoint = math.getLineIntersection(line[0], line[1], c1, direction[0], direction[1], c2); // The intersection point of the 2 lines.
+		const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(coords, line);
+		const line2GeneralForm = math.getLineGeneralFormFrom2Coords(square1, square2);
+		const blockPoint = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
 
 		// Naviary's new code
-		if (blockPoint === null) continue; // None (or infinite) intersection points!
+		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
 		if (!math.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.
 		if (!coordutil.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
 		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..

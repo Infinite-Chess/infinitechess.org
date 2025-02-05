@@ -9,8 +9,10 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
+import movesets from './movesets.js';
 // Type Definitions...
 
+/** @typedef {import('../../util/math.js').Vec2} Vec2 */
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
 /** @typedef {import('./movepiece.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
@@ -23,7 +25,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
 /** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
 
-'use strict';
+'use strict'; 
 
 /**
  * Constructs a gamefile from provided arguments. Use the *new* keyword.
@@ -61,10 +63,13 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
 		box: undefined,
-		/** A set of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
+		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
 		existingTypes: undefined,
-		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Coords[]}*/
-		slidingPossible: undefined
+		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Vec2[]}*/
+		slidingPossible: undefined,
+		/** Whether hippogonal lines, or greater, are present in the gamefile.
+		 * True if there are knightriders, or greater, riders. @type {boolean} */
+		hippogonalsPresent: undefined,
 	};
     
 	/** @type {GameRules} */
@@ -151,9 +156,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** The object that contains the buffer model to render the voids */
 	this.voidMesh = {
-		/** High precision Float64Array for performing arithmetic. */
+		/** High precision Float64Array for performing arithmetic. @type {Float64Array} */
 		data64: undefined,
-		/** Low precision Float32Array for passing into gpu. */
+		/** Low precision Float32Array for passing into gpu. @type {Float32Array} */
 		data32: undefined,
 		/** The buffer model of the void squares. These are rendered separately
          * from the pieces because we can simplify the mesh greatly.
@@ -243,6 +248,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
+	gamefileutility.deleteUnusedMovesets(this);
 
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?

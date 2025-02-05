@@ -232,7 +232,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions,'huygens']) }
 	},
 	Trappist_1: { // Also has the huygen featured in it!
-		positionString: 'p-6,16+|ha-4,16|p-2,16+|p11,16+|ha13,16|p15,16+|p-5,15+|p-3,15+|p12,15+|p14,15+|p-4,14+|p13,14+|p-3,9+|hu-2,9|hu11,9|p12,9+|p-2,8+|r-1,8+|ch0,8|gu1,8|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|gu8,8|ch9,8|r10,8+|p11,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P-2,1+|R-1,1+|CH0,1|GU1,1|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|GU8,1|CH9,1|R10,1+|P11,1+|P-3,0+|HU-2,0|N3,0|B4,0|B5,0|N6,0|HU11,0|P12,0+|P-4,-5+|P13,-5+|P-5,-6+|P-3,-6+|P12,-6+|P14,-6+|P-6,-7+|HA-4,-7|P-2,-7+|P11,-7+|HA13,-7|P15,-7+',
+		positionString: 'p-6,16+|ha-4,16|p-2,16+|p11,16+|ha13,16|p15,16+|p-5,15+|p-3,15+|p12,15+|p14,15+|p-4,14+|p13,14+|p-3,9+|hu-2,9|n3,9|b4,9|b5,9|n6,9|hu11,9|p12,9+|p-2,8+|r-1,8+|ch0,8|gu1,8|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|gu8,8|ch9,8|r10,8+|p11,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P-2,1+|R-1,1+|CH0,1|GU1,1|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|GU8,1|CH9,1|R10,1+|P11,1+|P-3,0+|HU-2,0|N3,0|B4,0|B5,0|N6,0|HU11,0|P12,0+|P-4,-5+|P13,-5+|P-5,-6+|P-3,-6+|P12,-6+|P14,-6+|P-6,-7+|HA-4,-7|P-2,-7+|P11,-7+|HA13,-7|P15,-7+',
 		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions,'huygens']) }
 	},
 	'5D_Chess': {

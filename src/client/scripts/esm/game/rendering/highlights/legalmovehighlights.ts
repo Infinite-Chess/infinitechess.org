@@ -8,10 +8,6 @@
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
-import arrows from '../arrows.js';
-// @ts-ignore
-import organizedlines from '../../../chess/logic/organizedlines.js';
-// @ts-ignore
 import movement from '../movement.js';
 // @ts-ignore
 import options from '../options.js';
@@ -47,6 +43,7 @@ import type { BoundingBox } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../chess/util/colorutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
+import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 
 
 
@@ -170,7 +167,7 @@ function render() {
 	updateOffsetAndBoundingBoxOfRenderRange();
 
 	renderSelectedPiecesLegalMoves();
-	arrows.renderEachHoveredPieceLegalMoves();
+	arrowlegalmovehighlights.renderEachHoveredPieceLegalMoves();
 	renderOutlineofRenderBox();
 }
 
@@ -310,7 +307,7 @@ function getDimensionsOfPerspectiveViewRange(): Coords {
  */
 function regenerateAll() {
 	regenSelectedPieceLegalMovesHighlightsModel();
-	arrows.regenModelsOfHoveredPieces();
+	arrowlegalmovehighlights.regenModelsOfHoveredPieces();
 
 	frametracker.onVisualChange();
 }
@@ -427,15 +424,10 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
 
 	for (const lineKey of slideLines) { // '1,0'
 		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
-		const C = organizedlines.getCFromLine(line, coords);
+		const intersections = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
+		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
 
-		const corner1 = math.getAABBCornerOfLine(line, true); // "right"
-		const corner2 = math.getAABBCornerOfLine(line, false); // "bottomleft"
-		const intsect1Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner1);
-		const intsect2Tile = math.getLineIntersectionEntryPoint(line[0], line[1], C, boundingBoxOfRenderRange, corner2);
-
-		if (!intsect1Tile && !intsect2Tile) continue; // If there's no intersection point, it's off the screen, don't bother rendering.
-		if (!intsect1Tile || !intsect2Tile) throw Error(`Line only has one intersect with square.`);
+		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
         
 		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[lineKey], legalMoves.ignoreFunc, gamefile);
 	}
@@ -479,8 +471,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
 
 	const lineIsVertical = step[0] === 0;
 	const index: 0 | 1 = lineIsVertical ? 1 : 0;
-	// @ts-ignore
-	const inverseIndex: 0 | 1 = 1 - index;
+	const inverseIndex: 0 | 1 = 1 - index as 0 | 1;
 
 	const stepIsPositive = step[index] > 0;
 	const entryIntsectTile = stepIsPositive ? intsect1Tile : intsect2Tile;

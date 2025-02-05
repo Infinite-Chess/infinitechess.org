@@ -158,8 +158,7 @@ function queueMovePiece(changes: Array<Change>, piece: Piece, main: boolean, end
  */
 function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
-	const changes = forward ? move.changes : [...move.changes].reverse();
-	applyChanges(gamefile, changes, funcs);
+	applyChanges(gamefile, move.changes, funcs, forward);
 }
 
 /**
@@ -167,11 +166,22 @@ function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication<
  * @param gamefile the gamefile
  * @param changes the changes to apply
  * @param funcs the object contain change funcs
+ * @param forward whether to apply changes in forward order (true) or reverse order (false)
  */
-function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionList<genericChangeFunc>) {
-	for (const change of changes) {
-		if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-		funcs[change.action]!(gamefile, change);
+function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionList<genericChangeFunc>, forward: boolean) {
+	if (forward) {
+		// Iterate forwards through the changes array
+		for (const change of changes) {
+			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
+            funcs[change.action]!(gamefile, change);
+		}
+	} else {
+		// Iterate backwards through the changes array so the move's changes are reverted in the correct order
+		for (let i = changes.length - 1; i >= 0; i--) {
+			const change = changes[i]!;
+			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
+            funcs[change.action]!(gamefile, change);
+		}
 	}
 }
 
@@ -188,6 +198,9 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	if (piece.index === undefined) change['piece'].index = list.undefineds[0];
 
 	if (piece.index === undefined) {
+		// Piece index still undefined, this must mean there are zero undefined placeholders.
+		// The only scenario this is okay is when the gamefile is initiating, and
+		// the undefined arrays haven't been generated yet.
 		piece.index = list.length;
 		list.push(piece.coords);
 	} else { // desiredIndex specified

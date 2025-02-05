@@ -9,7 +9,7 @@ import options from './rendering/options.js';
 import selection from './chess/selection.js';
 import camera from './rendering/camera.js';
 import board from './rendering/board.js';
-import arrows from './rendering/arrows.js';
+import arrows from './rendering/arrows/arrows.js';
 import { createModel } from './rendering/buffermodel.js';
 import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';

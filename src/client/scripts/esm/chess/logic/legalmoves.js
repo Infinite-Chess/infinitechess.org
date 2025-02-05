@@ -15,6 +15,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
+import math from '../../util/math.js';
 // Import End
 
 /** 
@@ -25,6 +26,7 @@ import movesets from './movesets.js';
  * @typedef {import('./movesets.js').PieceMoveset} PieceMoveset
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
  * @typedef {import('./movesets.js').IgnoreFunction} IgnoreFunction
+ * @typedef {import('./movesets.js').Coords} Coords
 */
 
 
@@ -135,7 +137,6 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	let legalIndividualMoves = [];
 	const legalSliding = {};
 
-	const ignoreFunc = getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
 	if (!onlyCalcSpecials) {
 
 		// Legal jumping/individual moves
@@ -149,7 +150,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 			const lines = gamefile.startSnapshot.slidingPossible;
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i]; // [x,y]
-				const lineKey = coordutil.getKeyFromCoords(line); // 'x,y'
+				const lineKey = math.getKeyFromVec2(line); // 'x,y'
 				if (!thisPieceMoveset.sliding[lineKey]) continue;
 				const key = organizedlines.getKeyFromLine(line, coords);
 				legalSliding[line] = slide_CalcLegalLimit(blockingFunc, gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[lineKey], coords, color);
@@ -164,7 +165,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	const moves = {
 		individual: legalIndividualMoves,
 		sliding: legalSliding,
-		ignoreFunc: ignoreFunc,
+		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
 	checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
@@ -173,9 +174,30 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 }
 
 /**
+ * Calculates how far a given piece can legally slide (ignoring ignore functions, and ignoring check respection)
+ * on the given line of a specific slope.
+ * @param {gamefile} gamefile
+ * @param {Piece} piece
+ * @param {Vec2} slide
+ * @param {Vec2Key} lineKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
+ * @param {Piece[]} organizedLine - The organized line of the above key that our piece is on
+ * @returns {undefined | Coords}
+ */
+function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, slideKey, lineKey, organizedLine) {
+	const thisPieceMoveset = getPieceMoveset(gamefile, piece.type); // Default piece moveset
+	if (!('sliding' in thisPieceMoveset)) return; // This piece can't slide at all
+	if (!(slideKey in thisPieceMoveset.sliding)) return; // This piece can't slide ALONG the provided line
+	// This piece CAN slide along the provided line.
+	// Calculate how far it can slide...
+	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
+	const friendlyColor = colorutil.getPieceColorFromType(piece.type);
+	return slide_CalcLegalLimit(blockingFunc, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
+}
+
+/**
  * Shifts/translates the individual/jumping portion
  * of a moveset by the coordinates of a piece.
- * @param {number[][]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
+ * @param {Coords[]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
  */
 function shiftIndividualMovesetByCoords(indivMoveset, coords) {
 	if (!indivMoveset) return;
@@ -452,4 +474,5 @@ export default {
 	isOpponentsMoveLegal,
 	getBlockingFuncFromPieceMoveset,
 	getIgnoreFuncFromPieceMoveset,
+	calcPiecesLegalSlideLimitOnSpecificLine,
 };

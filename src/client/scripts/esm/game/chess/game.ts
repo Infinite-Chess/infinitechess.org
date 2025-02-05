@@ -19,7 +19,7 @@ import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
-import arrows from '../rendering/arrows.js';
+import arrows from '../rendering/arrows/arrows.js';
 // @ts-ignore
 import pieces from '../rendering/pieces.js';
 // @ts-ignore
@@ -56,7 +56,7 @@ import options from '../rendering/options.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
-import dragAnimation from '../rendering/draganimation.js';
+import dragAnimation from '../rendering/dragging/draganimation.js';
 // @ts-ignore
 import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
@@ -115,7 +115,7 @@ function updateBoard(gamefile: gamefile) {
 	if (!guinavigation.isCoordinateActive()) {
 		if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
 		if (input.isKeyDown('escape')) guipause.toggle();
-		if (input.isKeyDown('tab')) guipause.callback_TogglePointers();
+		if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
 		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
 		if (input.isKeyDown('n')) {
 			guinavigation.toggle();
@@ -130,7 +130,6 @@ function updateBoard(gamefile: gamefile) {
 	}
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
-	animation.update();
 
 	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
@@ -139,7 +138,10 @@ function updateBoard(gamefile: gamefile) {
 
 	guinavigation.update();
 	selection.update();
-	arrows.update(); // NEEDS TO BE AFTER selection.update(), because the arrows model regeneration DEPENDS on the piece selected!
+	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
+	// over a piece from before forwarding/rewinding a move, causing a crash.
+	arrows.update();
+	animation.update(); // NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	movement.checkIfBoardDragged(); // ALSO depends on whether or not a piece is selected/being dragged!
 	miniimage.genModel();
 	highlightline.genModel();
@@ -186,7 +188,7 @@ function render() {
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		dragAnimation.renderPiece();
-		arrows.renderThem();
+		arrows.render();
 		perspective.renderCrosshair();
 	});
 }

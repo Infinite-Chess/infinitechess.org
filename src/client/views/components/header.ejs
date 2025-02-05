@@ -99,27 +99,27 @@
         <div class="settings-dropdown dropdown visibility-hidden">
             <div id="language-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-language"><use href="#svg-language"></use></svg>
-                <span class="text"><%=t('header.settings.language')%></span>
+                <p class="text"><%=t('header.settings.language')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="board-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <span class="text"><%=t('header.settings.board')%></span>
+                <p class="text"><%=t('header.settings.board')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="legalmove-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                <span class="text"><%=t('header.settings.legalmoves')%></span>
+                <p class="text"><%=t('header.settings.legalmoves')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="selection-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-selection"><use href="#svg-selection"></use></svg>
-                <span class="text"><%=t('header.settings.selection')%></span>
+                <p class="text"><%=t('header.settings.selection')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
-                <span class="text"><%=t('header.settings.perspective')%></span>
+                <p class="text"><%=t('header.settings.perspective')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div class="ping-meter hidden">
@@ -138,11 +138,12 @@
                 <svg class="svg-pawn spinny-pawn hidden"><use href="#svg-pawn"></use></svg>
             </div>
         </div>
+        <!-- Language -->
         <div class="language-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-language"><use href="#svg-language"></use></svg>
-                <span class="text"><%=t('header.settings.language')%></span>
+                <p class="text"><%=t('header.settings.language')%></p>
             </div>
             <% for(let i = 0; i < languages.length; i++) { %>
                 <div class="language-dropdown-item <%= languages[i].code === language ? 'selected' : '' %>" value="<%= languages[i].code %>">
@@ -154,49 +155,52 @@
                 </div>
             <% } %>
         </div>
+        <!-- Board Theme -->
         <div class="board-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
-                <span class="text"><%=t('header.settings.board')%></span>
+                <p class="text"><%=t('header.settings.board')%></p>
             </div>
             <div class="theme-list"></div>
         </div>
+        <!-- Legal Move Shape -->
         <div class="legalmove-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                <span class="text"><%=t('header.settings.legalmoves')%></span>
+                <p class="text"><%=t('header.settings.legalmoves')%></p>
             </div>
             <div class="legalmove-options">
                 <div class="legalmove-option squares">
                     <svg class="svg-squares" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 3780 3780"><path d="M1890 950v940H0v1890h1890V1890h1890v940a34850 34850 0 00 10-950L3780 0H1890v950M0 2840" fill="#777" fill-rule="evenodd"/></svg>
-                    <span class="text"><%=t('header.settings.legalmoves-squares')%></span>
+                    <p class="text"><%=t('header.settings.legalmoves-squares')%></p>
                     <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
                 </div>
                 <div class="legalmove-option dots">
                     <svg class="svg-legalmove"><use href="#svg-legalmove"></use></svg>
-                    <span class="text"><%=t('header.settings.legalmoves-dots')%></span>
+                    <p class="text"><%=t('header.settings.legalmoves-dots')%></p>
                     <svg class="checkmark visibility-hidden"><use href="#checkmark"></use></svg>
                 </div>
             </div>
         </div>
+        <!-- Selection Presets -->
         <div class="selection-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-selection"><use href="#svg-selection"></use></svg>
-                <span class="text"><%=t('header.settings.selection')%></span>
+                <p class="text"><%=t('header.settings.selection')%></p>
             </div>
             <div class="selection-options">
                 <label class="selection-option drag">
-                    <span class="text"><%=t('header.settings.selection-drag')%></span>
+                    <p class="text"><%=t('header.settings.selection-drag')%></p>
                     <div class="switch">
                         <input type="checkbox">
                         <span></span>
                     </div>
                 </label>
                 <label class="selection-option premove">
-                    <span class="text"><%=t('header.settings.selection-premove')%></span>
+                    <p class="text"><%=t('header.settings.selection-premove')%></p>
                     <div class="switch">
                         <input type="checkbox" disabled>
                         <span></span>
@@ -204,11 +208,12 @@
                 </label>
             </div>
         </div>
+        <!-- Perspective -->
         <div class="perspective-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-perspective"><use href="#svg-perspective"></use></svg>
-                <span class="text"><%=t('header.settings.perspective')%></span>
+                <p class="text"><%=t('header.settings.perspective')%></p>
             </div>
             <div class="perspective-options">
                 <div class="perspective-option mouse-sensitivity">   

@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "23"
+version = "29"
 maintainer = "xa31"
 
 [header]
@@ -18,6 +18,9 @@ board = "Tablero" # Board color/theme
 legalmoves = "Jugadas Legales" # Legal moves shape
 legalmoves-squares = "Casillas"
 legalmoves-dots = "Puntos" # Dots and 4 corner triangles
+selection = "Selección"
+selection-drag = "Arrastrar piezas"
+selection-premove = "Premovimientos (Premoves)"
 perspective = "Perspectiva" # Perspective-mode
 perspective-mouse-sensitivity = "Sensibilidad del ratón"
 perspective-fov = "Campo de visión (FOV)"
@@ -39,18 +42,22 @@ title = "Infinite Chess | Página principal – La web oficial" # The tab title
 secondary_title = "¡La página web oficial para jugar!"
 what_is_it_title = "¿Qué es?"
 what_is_it_pargaraphs = [
-"Infinite Chess es una variante de ajedrez en la cual no hay bordes, y es mucho mas grande que el típico tablero de 8x8. La dama, torres y alfiles <em>no tienen ningún límite</em> a como de lejos pueden moverse cada turno. ¡Escoge cualquier numero natural hasta el infinito!",
-"Sin límite a como de lejos puedes moverte, hay posiciones en las que el reloj de mate, o mate en <em>x</em>, adquiere el primer ordinal infinito, <strong>omega ω</strong>. De hecho, estudios han demostrado que <strong>cualquier</strong> numero ordinal contable, ¡Es valido para el reloj de mate!",
+"Infinite Chess es una variante de ajedrez en la cual no hay bordes, y es mucho mas grande que el típico tablero de 8x8. La dama, torres y alfiles <em>no tienen ningún límite</em> a como de lejos pueden moverse cada turno. ¡Escoge cualquier número natural hasta el infinito!",
+"Sin límite a como de lejos puedes moverte, hay posiciones en las que el reloj de mate, o mate en <em>x</em>, adquiere el primer ordinal infinito, <strong>omega ω</strong>. De hecho, estudios han demostrado que <strong>cualquier</strong> número ordinal contable, ¡Es valido para el reloj de mate!",
 "Como puedes imaginar, hay infinitas posibilidades para la posición de inicio, ¡Muchas de las cuales puedes jugar competitivamente! Tu objetivo final sigue siendo el jaque mate, que requiere nuevas estrategias, dado que ya no hay muros para atrapar al rey rival. Las partidas no suelen durar mas que las de ajedrez normal. ¡Los Peones siguen coronando en las filas 1 y 8!",
 ]
 how_to_title = "¿Como Puedo Jugar?"
-how_to_paragraph = ["¡La actual versión es la 1.5, y esta disponible en la pagina ","Jugar","!"]
+how_to_paragraph = ["¡La actual versión es la 1.5, y está disponible en la pagina ","Jugar","!"]
 about_title = "Sobre el proyecto"
 about_paragraphs = [
 "Soy Naviary. Desde que descubrí Infinte Chess (el concepto existe desde hace mucho antes que esta web), ¡Me han intrigado sus posibilidades! Hasta hace muy poco, jugar ha sido bastante complicado, usuarios de chess.com tenían que crear imágenes del tablero actual y enviarlas entre ellos cada jugada. Debido a esto, no mucha gente conoce o ha sido capaz de jugar a esto.",
 ["Es mi objetivo crear una manera de hacerlo fácilmente jugable por todo el mundo, y crear una comunidad rodeándolo. He invertido incontables horas de mi tiempo en esta web, manteniendo y desarrollando el juego. Aún tengo muchas más ideas que me mantendrán ocupado durante un tiempo. Aunque deseo mantener este proyecto gratis, la vida tiene requerimientos, y para ayudarme financieramente por favor considera unirte a mi ", "Patreon"]
 ]
 patreon_title = "Contribuidores en Patreon"
+github_title = "Contribuidores en Github"
+
+[index.javascript]
+contribution_count = ["", " contribuciones"] # A number is inserted between these 2 strings.
 
 [credits]
 title = "Créditos"
@@ -71,6 +78,8 @@ variants_credits = [
 "diseñado por Andreas Tsevas.",
 "diseñado por Cory Evans y Joel Hamkins.",
 "diseñado por Cory Evans, Joel Hamkins, y Norman Lewis Perlmutter.",
+"Ajedrez en un plano infinito - Opciones Huygens por V. Reinhart.",
+"Trappist-1 por V. Reinhart"
 ]
 textures_heading = "Texturas"
 textures_licensed_under = "texturas bajo la licencia"
@@ -201,6 +210,7 @@ local = "Local"
 computer = "Ordenador"
 variant = "Variante"
 Classical = "Clásica"
+Confined_Classical = "Clásica confinada"
 Classical_Plus = "Clásica+"
 CoaIP = "Ajedrez en un plano infinito"
 Pawndard = "Pawndard"
@@ -220,11 +230,13 @@ CoaIP_Limit_7 = "Aeupi - Límite 7"
 Chess = "Ajedrez"
 Classical_KOTH = "Experimental: Clásica - KOTH"
 CoaIP_KOTH = "Experimental: Aeupi - KOTH"
+CoaIP_HO = "Ajedrez en un plano infinito - Opciones Huygens"
+Trappist_1 = "Trappist-1"
 Omega = "Demostración: Omega"
 Omega_Squared = "Demostración: Omega^2"
 Omega_Cubed = "Demostración: Omega^3"
 Omega_Fourth = "Demostración: Omega^4"
-5D_Chess = "5D Chess"
+5D_Chess = "Ajedrez 5D"
 no_clock = "Sin Reloj"
 clock = "Reloj"
 minutes = "m"
@@ -252,12 +264,7 @@ expand_fit_all = "Expandir para ver todo"
 recenter = "Recentrar"
 rewind_move = "Deshacer movimiento"
 forward_move = "Rehacer movimiento"
-pause = "Pausar"
-
-[play.footer]
-white_to_move = "Juegan blancas"
-player_white = "Jugador de blancas"
-player_black = "Jugador de negras"
+pause = "Pausa"
 
 [play.pause]
 title = "Pausa"
@@ -275,6 +282,8 @@ question = "Aceptar tablas?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Invitado)"
 you_indicator = "(Tú)"
+player_name_white_generic = "Blancas"
+player_name_black_generic = "Negras"
 white_to_move = "Juegan blancas"
 black_to_move = "Juegan negras"
 your_move = "Tu turno"
@@ -290,6 +299,7 @@ accept_draw = "Aceptar tablas" # Offer draw button text in the pause menu
 arrows_off = "Flechas: Apagadas"
 arrows_defense = "Flechas: Defensa"
 arrows_all = "Flechas: Todas"
+arrows_all_hippogonals = "Flechas: Todas (Con hippogonales)"
 toggled = "Activado / Desactivado"
 menu_online = "Jugar - Online"
 menu_local = "Jugar -Local"
@@ -300,7 +310,7 @@ constructing_mesh = "Construyendo malla"
 rotating_mesh = "Rotando malla"
 lost_connection = "Conexión perdida."
 please_wait = "Por favor espera un momento para realizar esta acción."
-webgl_unsupported = "Tu navegador no tiene soporte para WebGL. Este juego lo requiere para funcionar. Por favor actualiza tu navegador."
+webgl_unsupported = "¡Por favor, actualiza tu navegador! No es compatible con WebGL2."
 bigints_unsupported = "Las BigInts no tienen soporte. Por favor actualiza tu navegador.\nLas BigInts son necesarias para hacer que el tablero sea infinito."
 shaders_failed = "No ha sido posible inicializar el programa de sombreado"
 failed_compiling_shaders = "Ha ocurrido un error compilando los shaders:"
@@ -320,7 +330,6 @@ piece_count = "Numero de piezas"
 exceeded = "excedido"
 changed_wincon = "Cambiada la condición de victoria por jaque mate a captura real, y desactivado el renderizado de iconos. Pulsa 'P' para re-activarlo (no recomendado)."
 loaded_from_clipboard = "Partida cargada desde el portapapeles"
-loaded = "¡Partida cargada!"
 slidelimit_not_number = "La gamerule slideLimit debe ser un número."
 
 [play.javascript.rendering]
@@ -337,8 +346,6 @@ regenerated_pieces = "Piezas regeneradas."
 
 [play.javascript.invites]
 move_mouse = "Mueve el ratón para reconectarte"
-unknown_action_received_1 = "!Acción desconocida"
-unknown_action_received_2 = "recibida desde el servidor en la suscripción de invitaciones!"
 cannot_cancel = "No se puede cancelar una invitación de ID indefinido."
 you_indicator = "(Tú)"
 you_are_white = "Eres: Blancas"

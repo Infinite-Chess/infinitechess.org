@@ -20,7 +20,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import config from '../config.js';
 import movesequence from './movesequence.js';
-import draganimation from '../rendering/draganimation.js';
+import draganimation from '../rendering/dragging/draganimation.js';
 import space from '../misc/space.js';
 import preferences from '../../components/header/preferences.js';
 import gameslot from './gameslot.js';

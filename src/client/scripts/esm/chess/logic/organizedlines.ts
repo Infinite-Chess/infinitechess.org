@@ -18,6 +18,7 @@ import typeutil from '../util/typeutil.js';
 import type gamefile from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Piece } from './boardchanges.js';
+import type { Vec2 } from '../../util/math.js';
 
 
 
@@ -73,7 +74,7 @@ interface PieceLinesByKey {
 	[line: LineKey]: Array<Piece>
 }
 
-/** A unique identifier for a single line of pieces. */
+/** A unique identifier for a single line of pieces. `C|X` */
 type LineKey = `${number}|${number}`
 
 // (Deleted "use strict" as I don't think it has an effect if we're using typescript)
@@ -294,26 +295,14 @@ function getEmptyTypeState(gamefile: gamefile) {
  * 
  * If the line is perfectly vertical, the axis will be flipped, so `X` in this
  * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
- * @param {Number[]} step - Line step `[dx,dy]`
- * @param {Number[]} coords `[x,y]` - A point the line intersects
+ * @param {Vec2} step - Line step `[dx,dy]`
+ * @param {Coords} coords `[x,y]` - A point the line intersects
  * @returns {String} the key `C|X`
  */
-function getKeyFromLine(step: Coords, coords: Coords): LineKey {
-	const C = getCFromLine(step, coords);
+function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
+	const C = math.getLineCFromCoordsAndVec(coords, step);
 	const X = getXFromLine(step, coords);
 	return `${C}|${X}`;
-}
-
-/**
- * Calculates the `C` value in the linear standard form of the line: "ax + by = c".
- * Step size here is unimportant, but the slope **is**.
- * This value will be unique for every line that *has the same slope*, but different positions.
- * @param {number[]} step - The x-step and y-step of the line: `[deltax, deltay]`
- * @param {number[]} coords - A point the line intersects: `[x,y]`
- * @returns {number} The C in the line's key: `C|X`
- */
-function getCFromLine(step: Coords, coords: Coords): number {
-	return step[0] * coords[1] - step[1] * coords[0];
 }
 
 /**
@@ -325,8 +314,8 @@ function getCFromLine(step: Coords, coords: Coords): number {
  * 
  * If the line is perfectly vertical, the axis will be flipped, so `X` in this
  * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
- * @param {number[]} step - [dx,dy]
- * @param {number[]} coords - Coordinates that are on the line
+ * @param {Vec2} step - [dx,dy]
+ * @param {Coords} coords - Coordinates that are on the line
  * @returns {number} The X in the line's key: `C|X`
  */
 function getXFromLine(step: Coords, coords: Coords): number {
@@ -340,6 +329,11 @@ function getXFromLine(step: Coords, coords: Coords): number {
 	return math.posMod(coordAxis, deltaAxis);
 }
 
+/** Splits the `C` value out of the line key */
+function getCFromKey(lineKey: LineKey): number {
+	return Number(lineKey.split('|')[0]);
+}
+
 /**
  * Tests if the provided gamefile has colinear organized lines present in the game.
  * This can occur if there are sliders that can move in the same exact direction as others.
@@ -347,7 +341,7 @@ function getXFromLine(step: Coords, coords: Coords): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(gamefile: gamefile) {
+function areColinearSlidesPresentInGame(gamefile: gamefile): boolean {
 	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
 
 	// How to know if 2 lines are colinear?
@@ -371,12 +365,26 @@ function areColinearSlidesPresentInGame(gamefile: gamefile) {
 	return false;
 }
 
+/**
+ * Tests if the provided gamefile has hippogonal lines present in the game.
+ * True if there are knightriders or higher riders.
+ */
+function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
+	for (let i = 0; i < slidingPossible.length; i++) {
+		const thisSlideDir: Vec2 = slidingPossible[i]!;
+		if (Math.abs(thisSlideDir[0]) > 1) return true;
+		if (Math.abs(thisSlideDir[1]) > 1) return true;
+	}
+	return false;
+}
+
 export type {
 	PooledArray,
 	PiecesByKey,
 	PiecesByType,
 	PieceLinesByKey,
-	LinesByStep
+	LinesByStep,
+	LineKey,
 };
 
 export default {
@@ -387,6 +395,7 @@ export default {
 	addMoreUndefineds,
 	buildStateFromKeyList,
 	getKeyFromLine,
-	getCFromLine,
+	getCFromKey,
 	areColinearSlidesPresentInGame,
+	areHippogonalsPresentInGame,
 };

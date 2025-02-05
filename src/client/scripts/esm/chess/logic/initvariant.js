@@ -7,6 +7,8 @@ import specialmove from './specialmove.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
+import organizedlines from './organizedlines.js';
+import movesets from './movesets.js';
 // Import End
 
 /** 
@@ -70,6 +72,7 @@ function initExistingTypes(gamefile) {
  */
 function initSlidingMoves(gamefile) {
 	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
+	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
 }
 
 /**
@@ -86,10 +89,10 @@ function getPossibleSlides(gamefile) {
 		if (!moveset) continue;
 		moveset = moveset();
 		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach( slide => { slides.add(slide); });
+		Object.keys(moveset.sliding).forEach(slide => slides.add(slide));
 	}
 	const temp = [];
-	slides.forEach(slideline => { temp.push(coordutil.getCoordsFromKey(slideline)); });
+	slides.forEach(slideline => temp.push(coordutil.getCoordsFromKey(slideline)));
 	return temp;
 }
 
