@@ -5,7 +5,7 @@
  */
 
 
-import type { MoveDraft } from '../../chess/logic/movepiece.js';
+import type { castle, enpassant, MoveDraft, promotion } from '../../chess/logic/movepiece.js';
 import type { Piece } from '../../chess/logic/boardchanges.js';
 // @ts-ignore
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
@@ -62,17 +62,9 @@ import preferences from '../../components/header/preferences.js';
  * activate said special move.
  */
 type CoordsSpecial = Coords & { 
-	/** 1 => Pawn captured was one above   -1 => Pawn captured was one below */
-	enpassant?: 1 | -1,
-	/** The type of piece promoted to */
-	promotion?: string,
-	/** Castling */
-	castle?: {
-		/** 1 => King castled right   2 => King castled left */
-		dir: 1 | -1,
-		/** The coordinate of the piece the king castled with, usually a rook. */
-		coord: Coords
-	}
+	enpassant?: enpassant,
+	promotion?: promotion,
+	castle?: castle,
 }
 
 

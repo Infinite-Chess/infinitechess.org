@@ -55,6 +55,18 @@ interface MoveDraft {
 	castle?: { coord: Coords, dir: 1 | -1 },
 }
 
+/** A special move tag for enpassant capture. This will be 1 for the captured piece is 1 square above, or -1 for 1 square below. */
+type enpassant = -1 | 1;
+/** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
+type promotion = string;
+/** A special move tag for castling. */
+type castle = {
+	/** 1 => King castled right   2 => King castled left */
+	dir: 1 | -1,
+	/** The coordinate of the piece the king castled with, usually a rook. */
+	coord: Coords
+}
+
 /**
  * Contains all properties a {@link MoveDraft} has, and more.
  * Including the changes it made to the board, the gamefile
@@ -423,6 +435,11 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 export type {
 	Move,
 	MoveDraft,
+
+	// Special move tags
+	enpassant,
+	promotion,
+	castle
 };
 
 export default {
