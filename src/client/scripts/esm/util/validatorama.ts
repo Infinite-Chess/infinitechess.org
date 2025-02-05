@@ -3,27 +3,37 @@
 // in the Node environment or somewhere and so jsdoc wasn't auto suggesting the right one
 
 /*
- * Fetches an access token and our usernameif we are logged in.
-
- * If we are not logged in the server will give us a browser-id
+ * Fetches an access token and our username if we are logged in.
+ *
+ * If we are not logged in, the server will give us a browser-id
  * cookie to validate our identity in future requests.
  */
 
 import docutil from "./docutil.js";
 
 
-const minTimeToRenewSession = 1000 * 60 * 60 * 24; // 1 day
-// const minTimeToRenewSession = 1000 * 30; // 30 seconds
+// Variables ----------------------------------------------------------------------------
 
-/** Expiration time for the access tokens. @type {number} */
-const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 60 * 15; // 15 minutes
-// const TOKEN_EXPIRE_TIME_MILLIS = 1000 * 30; // 30 seconds - CUSHION_MILLIS
-/** Cushion time in milliseconds before considering the token expired. @type {number} */
-const CUSHION_MILLIS = 10_000;
 
-let reqIsOut = false;
+const minTimeToRenewSession: number = 1000 * 60 * 60 * 24; // 1 day
+// const minTimeToRenewSession: number = 1000 * 30; // 30 seconds
 
-let memberInfo = {
+/** Expiration time for the access tokens. */
+const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 60 * 15; // 15 minutes
+// const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 30; // 30 seconds - CUSHION_MILLIS
+/** Cushion time in milliseconds before considering the token expired. */
+const CUSHION_MILLIS: number = 10_000;
+
+let reqIsOut: boolean = false;
+let resolvers: (() => void)[] = [];
+
+let memberInfo: {
+	signedIn: boolean;
+	user_id?: string;
+	username?: string;
+	issued?: number;
+	expires?: number;
+} = {
 	signedIn: false,
 	user_id: undefined,
 	username: undefined,
@@ -31,12 +41,19 @@ let memberInfo = {
 	expires: undefined,
 };
 
-let tokenInfo = {
-	/** Access token for authentication, if we are logged in AND have requested one! @type {string | undefined} */
+let tokenInfo: {
+	/** Access token for authentication, if we are logged in AND have requested one! */
+	accessToken?: string;
+	/** Last refresh time of the access token, in milliseconds. */
+	lastRefreshTime?: number;
+} = {
 	accessToken: undefined,
-	/** Last refresh time of the access token, in milliseconds. @type {number | undefined} */
 	lastRefreshTime: undefined,
 };
+
+
+// Functions ----------------------------------------------------------------------------
+
 
 (function init() {
 	initListeners();
@@ -63,7 +80,7 @@ function renewSession() {
 	if (!memberInfo.signedIn) return;
 
 	// Convert the ISO 8601 issued time to a timestamp
-	const timeSinceSessionIssued = Date.now() - memberInfo.issued;
+	const timeSinceSessionIssued = Date.now() - (memberInfo.issued || 0);
 	
 	// Check if the session is older than 1 day (minTimeToRenewSession)
 	if (timeSinceSessionIssued < minTimeToRenewSession) return; // Still a freshly issued session!
@@ -72,15 +89,14 @@ function renewSession() {
 	refreshToken(); // Refresh token if the session is too old
 }
 
-
 /**
  * Checks if the access token is expired or near-expiring.
  * If expired, it calls `refreshToken()` to get a new one.
  * 
  * If we're not signed in, the server will give/renew us a browser-id cookie for validating our identity.
- * @returns {Promise<string | undefined>} Resolves with the access token, or undefined if not logged in.
+ * @returns Resolves with the access token, or undefined if not logged in.
  */
-async function getAccessToken() {
+async function getAccessToken(): Promise<string | undefined> {
 	if (reqIsOut) await waitUntilInitialRequestBack();
 
 	if (!memberInfo.signedIn) return;
@@ -101,9 +117,10 @@ async function getAccessToken() {
  * Reads the `memberInfo` cookie to get the member details (username).
  * If not signed in, the server will renew the browser-id cookie.
  * 
- * @returns {Promise<void>} Resolves when the token refresh process is complete.
+ * @returns Resolves when the token refresh process is complete.
  */
-async function refreshToken() {
+
+async function refreshToken(): Promise<void> {
 	reqIsOut = true;
 	try {
 		const response = await fetch('/api/get-access-token', {
@@ -142,6 +159,10 @@ async function refreshToken() {
 		readMemberInfoCookie();
 	} finally {
 		reqIsOut = false;
+		// Resolve all pending promises
+		while (resolvers.length > 0) {
+			resolvers.shift()!(); // Get the first resolver and resolve it
+		}
 	}
 }
 
@@ -150,7 +171,7 @@ async function refreshToken() {
  * if we have a refreshed token cookie, to grab our
  * username and user_id properties if we are signed in.
  */
-function readMemberInfoCookie() {
+function readMemberInfoCookie(): void {
 	resetMemberInfo();
 
 	// Read the member info from the cookie
@@ -165,16 +186,16 @@ function readMemberInfoCookie() {
 }
 
 /** Resets our member info variables as if we were logged out. */
-function resetMemberInfo() {
+function resetMemberInfo(): void {
 	memberInfo = { signedIn: false };
 }
 
-function deleteMemberInfoCookie() {
+function deleteMemberInfoCookie(): void {
 	docutil.deleteCookie('memberInfo');
 	resetMemberInfo();
 }
 
-function onLogout() {
+function onLogout(): void {
 	deleteMemberInfoCookie();
 	tokenInfo = {};
 }
@@ -182,32 +203,35 @@ function onLogout() {
 /**
  * Waits until the initial request for an access token is completed.
  */
-async function waitUntilInitialRequestBack() {
-	while (reqIsOut) {
-		// console.log("Waiting for request back..");
-		await new Promise(resolve => setTimeout(resolve, 100));
-	}
+async function waitUntilInitialRequestBack(): Promise<void> {
+	if (!reqIsOut) return; // If no request is out, resolve immediately
+	console.log("Waiting until initial request for an access token is completed... (Delete later)");
+
+	// Create a promise that resolves when the request is completed
+	return new Promise<void>(resolve => {
+		resolvers.push(resolve); // Add this resolver to the list
+	});
 }
 
 /**
- * Checks if we are logged in based on whether the username is defined.
- * @returns {boolean} True if logged in, false otherwise.
+ * Whether we are logged in based on whether the username is defined.
  */
-function areWeLoggedIn() {
+function areWeLoggedIn(): boolean {
 	return memberInfo.signedIn;
 }
 
 /**
  * Retrieves our username if we are logged in.
- * @returns {string | undefined} The username, or undefined if not logged in.
+ * @returns The username, or undefined if not logged in.
  */
-function getOurUsername() {
+function getOurUsername(): string | undefined {
 	return memberInfo.signedIn ? memberInfo.username : undefined;
 }
 
 
+// --------------------------------------------------------------------------------
 
-// Export these methods to be used by other scripts
+
 export default {
 	waitUntilInitialRequestBack,
 	areWeLoggedIn,
