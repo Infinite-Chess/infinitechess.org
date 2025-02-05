@@ -1,8 +1,4 @@
 
-import board from "../rendering/board.js";
-import camera from "../rendering/camera.js";
-import movement from "../rendering/movement.js";
-
 /**
  * This script converts world-space coordinates to square coordinates, and vice verca.
  * 
@@ -12,7 +8,20 @@ import movement from "../rendering/movement.js";
  * There is also pixel space, which is the [x,y] coordinate of virtual pixels on the screen.
  */
 
-function convertWorldSpaceToCoords(worldCoords) {
+
+import type { Coords } from '../../chess/util/coordutil.js'
+
+
+// @ts-ignore
+import board from "../rendering/board.js";
+// @ts-ignore
+import camera from "../rendering/camera.js";
+// @ts-ignore
+import movement from "../rendering/movement.js";
+
+
+
+function convertWorldSpaceToCoords(worldCoords: Coords): Coords {
 
 	const boardPos = movement.getBoardPos();
 	const boardScale = movement.getBoardScale();
@@ -22,7 +31,7 @@ function convertWorldSpaceToCoords(worldCoords) {
 	return [xCoord, yCoord];
 }
 
-function convertWorldSpaceToCoords_Rounded(worldCoords) {
+function convertWorldSpaceToCoords_Rounded(worldCoords: Coords): Coords {
 
 	const boardPos = movement.getBoardPos();
 	const boardScale = movement.getBoardScale();
@@ -34,7 +43,7 @@ function convertWorldSpaceToCoords_Rounded(worldCoords) {
 }
 
 // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.gsquareCenter().
-function convertCoordToWorldSpace(coords, position = movement.getBoardPos(), scale = movement.getBoardScale()) {
+function convertCoordToWorldSpace(coords: Coords, position: Coords = movement.getBoardPos(), scale: number = movement.getBoardScale()): Coords {
 
 	const worldX = (coords[0] - position[0] + 0.5 - board.gsquareCenter()) * scale;
 	const worldY = (coords[1] - position[1] + 0.5 - board.gsquareCenter()) * scale;
@@ -42,7 +51,7 @@ function convertCoordToWorldSpace(coords, position = movement.getBoardPos(), sca
 	return [worldX, worldY];
 }
 
-function convertCoordToWorldSpace_IgnoreSquareCenter(coords, position = movement.getBoardPos(), scale = movement.getBoardScale()) {
+function convertCoordToWorldSpace_IgnoreSquareCenter(coords: Coords, position = movement.getBoardPos(), scale = movement.getBoardScale()): Coords {
 	
 	const worldX = (coords[0] - position[0]) * scale;
 	const worldY = (coords[1] - position[1]) * scale;
@@ -50,17 +59,17 @@ function convertCoordToWorldSpace_IgnoreSquareCenter(coords, position = movement
 	return [worldX, worldY];
 }
 
-function convertPixelsToWorldSpace_Virtual(value) {
+function convertPixelsToWorldSpace_Virtual(value: number): number {
 	const screenHeight = camera.getScreenHeightWorld(false);
 	return (value / camera.getCanvasHeightVirtualPixels()) * screenHeight;
 }
 
-function convertWorldSpaceToPixels_Virtual(value) {
+function convertWorldSpaceToPixels_Virtual(value: number): number {
 	const screenHeight = camera.getScreenHeightWorld(false);
 	return (value / screenHeight) * camera.getCanvasHeightVirtualPixels();
 }
 
-function convertWorldSpaceToGrid(value) {
+function convertWorldSpaceToGrid(value: number): number {
 	return value / movement.getBoardScale();
 }
 
