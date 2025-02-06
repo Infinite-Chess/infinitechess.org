@@ -140,7 +140,7 @@ element_emailInput.addEventListener('focusout', () => { // Check email availabil
 					emailError.textContent = result.reason;
 
 					updateSubmitButton();
-				} else if (result.success === true) {
+				} else {
 					emailHasError = false;
 					updateSubmitButton();
 				}

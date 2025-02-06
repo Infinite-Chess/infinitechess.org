@@ -1,8 +1,6 @@
 {
 	"30": {
-		"note": [
-			"Added email_domain_invalid, line 539."
-		],
+		"note": "Added email_domain_invalid, line 539.",
 		"changes": []
 	},
 	"29": {
