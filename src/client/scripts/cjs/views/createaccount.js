@@ -246,7 +246,6 @@ function createErrorElement(id, insertAfter) {
 // Greys-out submit button if there's any errors.
 // The click-prevention is taken care of in the submit event listener.
 function updateSubmitButton() {
-	console.log("updating button");
 	if (usernameHasError || emailHasError || passwordHasError
         || !element_usernameInput.value
         || !element_emailInput.value
