@@ -2,6 +2,7 @@
 
 // Import Start
 import colorutil from "../util/colorutil.js";
+import { BOARDS_X, BOARDS_Y } from '../variants/fivedimensionalgenerator.js';
 // Import End
 
 
