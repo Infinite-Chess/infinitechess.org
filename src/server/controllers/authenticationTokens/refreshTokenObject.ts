@@ -17,7 +17,7 @@ import { getClientIP } from "../../utility/IP.js";
 // Type Definitions -------------------------------------------------
 
 
-import { Request } from "express"; // Assuming Express is used
+import type { Request } from "express"; // Assuming Express is used
 
 // Type for an array of refresh tokens
 type RefreshTokensList = RefreshTokenObject[];
