@@ -1,4 +1,8 @@
 {
+	"31": {
+		"note": "Added variant credits for 'Chess on an Infinite Plane - Huygens Options by V. Reinhart.' and 'Trappist-1 by V. Reinhart' on lines 81-82.",
+		"changes": []
+	},
 	"30": {
 		"note": "Added email_domain_invalid, line 539.",
 		"changes": []
