@@ -250,7 +250,7 @@ function isValidPassword(string) {
 
 export {
 	createNewMember,
-	checkEmailAssociated,
+	checkEmailValidity,
 	checkUsernameAvailable,
 	generateAccount
 };
