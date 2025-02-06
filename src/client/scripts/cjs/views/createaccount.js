@@ -122,7 +122,7 @@ element_emailInput.addEventListener('focusout', () => { // Check email availabil
 			.then((result) => {
 				// We've got the result back from the server,
 				// Is anything wrong?
-				if (result["success"] === false) { // Email in use
+				if (result.success === false) { // Email in use
 					emailHasError = true;
 					createErrorElement('emailerror', 'emailinputline');
 					// Change input box to red outline
@@ -130,9 +130,9 @@ element_emailInput.addEventListener('focusout', () => { // Check email availabil
 					// Reset variable because it now exists.
 					const emailError = document.getElementById("emailerror");
 					
-					if (result["error"] === "email-taken"){
+					if (result.error === "email-taken") {
 						emailError.textContent = translations["js-email_inuse"];
-					} else if (result["error"] === "email-cannot-recieve") {
+					} else if (result.error === "email-cannot-recieve") {
 						emailError.textContent = translations["js-email_cannot_recieve"];
 					}
 					updateSubmitButton();

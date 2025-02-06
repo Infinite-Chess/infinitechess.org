@@ -12,7 +12,7 @@
 import bcrypt from 'bcrypt';
 import { getTranslationForReq } from '../utility/translate.js';
 
-import { canEmailRecieveMail } from './emailValidator.js'
+import { canEmailRecieveMail } from './emailValidator.js';
 import { isEmailBanned } from '../middleware/banned.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { sendEmailConfirmation } from './sendMail.js';
@@ -150,7 +150,7 @@ async function generateAccount({ username, email, password, autoVerify }) {
 function checkEmailValidity(req, res) {
 	const lowercaseEmail = req.params.email.toLowerCase();
 	if (isEmailTaken(lowercaseEmail)) res.json({"succes":false, "error":"email-taken"});
-	if (canEmailRecieveMail(lowercaseEmail)) res.json({"succes":false, "error":"email-cannot-recieve"})
+	if (canEmailRecieveMail(lowercaseEmail)) res.json({"succes":false, "error":"email-cannot-recieve"});
 	else res.json({"success":true});
 };
 
