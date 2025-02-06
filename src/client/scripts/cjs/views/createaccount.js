@@ -122,7 +122,7 @@ element_emailInput.addEventListener('focusout', () => { // Check email availabil
 			.then((result) => {
 				// We've got the result back from the server,
 				// Is anything wrong?
-				if (result.success === false) { 
+				if (result.valid === false) { 
 
 					// There has been an error
 					emailHasError = true;
@@ -135,14 +135,9 @@ element_emailInput.addEventListener('focusout', () => { // Check email availabil
 
 					// Reset variable because it now exists.
 					const emailError = document.getElementById("emailerror");
-					
-					if (result.error === "email-taken") { 
-						// Email exists on another account
-						emailError.textContent = translations["js-email_inuse"];
-					} else if (result.error === "email-cannot-recieve") { 
-						// Email can't recieve mail
-						emailError.textContent = translations["js-email_cannot_recieve"];
-					}
+
+					// The error message from the server is already language-localized
+					emailError.textContent = result.reason;
 
 					updateSubmitButton();
 				} else if (result.success === true) {

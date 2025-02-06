@@ -1,13 +1,9 @@
 {
 	"30": {
 		"note": [
-			"Added Email can't recieve warnings, lines 136 and 539."
-
+			"Added email_domain_invalid, line 539."
 		],
-		"changes": [
-			"createaccount.javascript.js-email_cannot_recieve",
-			"server.javascript.ws-email_cannot_recieve"
-	]
+		"changes": []
 	},
 	"29": {
 		"note": [
