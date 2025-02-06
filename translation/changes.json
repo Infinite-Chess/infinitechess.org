@@ -1,9 +1,13 @@
 {
 	"30": {
 		"note": [
-			"Added Email can't recieve warnings, line 136."
+			"Added Email can't recieve warnings, lines 136 and 539."
+
 		],
-		"changes": ["createaccount.javascript.js-email_cannot_recieve"]
+		"changes": [
+			"createaccount.javascript.js-email_cannot_recieve",
+			"server.javascript.ws-email_cannot_recieve"
+	]
 	},
 	"29": {
 		"note": [

@@ -270,6 +270,10 @@ function doEmailFormatChecks(string: string, req: Request, res: Response): boole
 		res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
 		return false;
 	}
+	if (canEmailRecieveMail(string)) {
+		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_cannot_recieve", req) });
+		return false;
+	}
 	return true;
 };
 
