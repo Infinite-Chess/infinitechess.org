@@ -116,35 +116,36 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 });
 element_emailInput.addEventListener('focusout', () => { // Check email availability and functionality...
 	// If it's blank, all the server would send back is the createaccount.html again..
-	console.log("Checking email because unfocus");
 	if (element_emailInput.value.length > 1 && !emailHasError) { 
-		console.log("waiting for response from server...");
 		fetch(`/createaccount/email/${element_emailInput.value}`, fetchOptions)
 			.then((response) => response.json())
 			.then((result) => {
-				console.log("server spoke to us");
 				// We've got the result back from the server,
 				// Is anything wrong?
-				// We assume something is wrong from the start
-				emailHasError = true;
 				if (result.success === false) { 
-					console.log("Error");
+
+					// There has been an error
+					emailHasError = true;
+
+					// We create the error text
 					createErrorElement('emailerror', 'emailinputline');
+
 					// Change input box to red outline
 					element_emailInput.style.outline = 'solid 1px red';
+
 					// Reset variable because it now exists.
 					const emailError = document.getElementById("emailerror");
 					
-					if (result.error === "email-taken") { // Email exists on another account
-						console.log("Error is: taken");
+					if (result.error === "email-taken") { 
+						// Email exists on another account
 						emailError.textContent = translations["js-email_inuse"];
-					} else if (result.error === "email-cannot-recieve") { // Email can't recieve mail
-						console.log("Error is: can't recieve");
+					} else if (result.error === "email-cannot-recieve") { 
+						// Email can't recieve mail
 						emailError.textContent = translations["js-email_cannot_recieve"];
 					}
+
 					updateSubmitButton();
 				} else if (result.success === true) {
-					console.log("Everything is correct with the email address.");
 					emailHasError = false;
 					updateSubmitButton();
 				}
