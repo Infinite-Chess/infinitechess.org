@@ -147,11 +147,27 @@ async function generateAccount({ username, email, password, autoVerify }) {
 // Route
 // Returns whether the email parameter is associated with an account and if it can recieve merrages.
 // Return an object containing {"succes":true} or {"succes":false, error:"email-taken" | "email-cannot-recieve"}
-function checkEmailValidity(req, res) {
+async function checkEmailValidity(req, res) {
+	console.log("Checking email validity");
 	const lowercaseEmail = req.params.email.toLowerCase();
-	if (isEmailTaken(lowercaseEmail)) res.json({"succes":false, "error":"email-taken"});
-	if (canEmailRecieveMail(lowercaseEmail)) res.json({"succes":false, "error":"email-cannot-recieve"});
-	else res.json({"success":true});
+	const emailIsTaken = await isEmailTaken(lowercaseEmail);
+	const emailCanRecieve = await canEmailRecieveMail(lowercaseEmail);
+
+	console.log(emailCanRecieve);
+
+	if (emailIsTaken) {
+		// Is there another account with the same email?
+		res.json({"success": false, "error": "email-taken"});
+		console.log("Email is already taken");
+	} else if (!emailCanRecieve) {
+		// Can the email receive mail?
+		res.json({"success": false, "error": "email-cannot-receive"});
+		console.log("Email cannot receive mail");
+	} else {
+		// Everything works
+		res.json({"success": true});
+		console.log("Server says ok.");
+	}
 };
 
 
