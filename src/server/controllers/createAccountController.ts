@@ -290,7 +290,7 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 		return await emailValidator(email, { checkMx: true });
 	} catch (error) {
 		const err = error as Error; // Type assertion
-		logEvents(`Error when validating domain for email ${email}: ${err.stack}`, 'errLog.txt', { print: true });
+		logEvents(`Error when validating domain for email "${email}": ${err.stack}`, 'errLog.txt', { print: true });
 		return true; // Default to true to avoid blocking users.
 	}
 }
