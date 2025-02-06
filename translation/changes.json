@@ -1,4 +1,8 @@
 {
+	"30": {
+		"note": "Added email_domain_invalid, line 539.",
+		"changes": []
+	},
 	"29": {
 		"note": [
 			"Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",
