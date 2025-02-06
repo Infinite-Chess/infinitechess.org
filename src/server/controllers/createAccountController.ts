@@ -14,7 +14,7 @@ import bcrypt from 'bcrypt';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 // @ts-ignore
-import { canEmailRecieveMail } from './emailValidator.ts';
+import { canEmailRecieveMail } from './emailValidator.js';
 // @ts-ignore
 import { isEmailBanned } from '../middleware/banned.js';
 // @ts-ignore
