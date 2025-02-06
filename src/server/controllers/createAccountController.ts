@@ -14,7 +14,7 @@ import bcrypt from 'bcrypt';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 // @ts-ignore
-import { canEmailRecieveMail } from './emailValidator.js';
+import { canEmailRecieveMail } from './emailValidator.ts';
 // @ts-ignore
 import { isEmailBanned } from '../middleware/banned.js';
 // @ts-ignore
@@ -251,7 +251,7 @@ function checkProfanity(string: string): boolean {
 };
 
 /** Returns true if the email passes all the checks required for account generation. */
-function doEmailFormatChecks(string: string, req: Request, res: Response): boolean {
+async function doEmailFormatChecks(string: string, req: Request, res: Response): Promise<boolean> {
 	if (string.length > 320) {
 		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_too_long", req) }); // Max email length
 		return false;
@@ -270,7 +270,7 @@ function doEmailFormatChecks(string: string, req: Request, res: Response): boole
 		res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
 		return false;
 	}
-	if (canEmailRecieveMail(string)) {
+	if (await canEmailRecieveMail(string)) {
 		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_cannot_recieve", req) });
 		return false;
 	}
