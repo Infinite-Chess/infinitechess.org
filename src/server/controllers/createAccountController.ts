@@ -161,7 +161,6 @@ async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	const lowercaseEmail = req.params['email']!.toLowerCase();
 	
 	if (isEmailTaken(lowercaseEmail)) {
-		// Is there another account with the same email?
 		res.json({"valid": false, "reason": getTranslationForReq('server.javascript.ws-email_in_use', req) });
 		return;
 	}
