@@ -11,8 +11,8 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 
 
 
-const BOARDS_X = 8;
-const BOARDS_Y = 8;
+export const BOARDS_X = 9;
+export const BOARDS_Y = 9;
 
 // Currently board spacings other than 10 are not supported by the position generator, but are supported
 // by the moveset generator.
@@ -50,6 +50,14 @@ function genPositionOfFiveDimensional() {
 						resultPos[key] = standardPos[square as CoordsKey]!;
 					}
 				}
+			}
+		}
+	}
+
+	for (let i = MIN_X - 19; i <= MAX_X + 19; i++) {
+		for (let j = MIN_Y - 19; j <= MAX_Y + 19; j++) {
+			if (i < MIN_X || i > MAX_X || j < MIN_Y || j > MAX_Y) {
+				resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 			}
 		}
 	}

@@ -30,8 +30,8 @@ import uuid from '../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
 import { Request, Response } from 'express';
 
-// Variables -------------------------------------------------------------------------
 
+// Variables -------------------------------------------------------------------------
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
@@ -156,6 +156,7 @@ async function generateAccount({ username, email, password, autoVerify = false }
  * Route that's called whenever the client unfocuses the email input field.
  * This tells them whether the email is available or not. (If not, it's invalid)
  */
+
 async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	const lowercaseEmail = req.params['email']!.toLowerCase();
 	
@@ -171,8 +172,8 @@ async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	} else {
 		// Both checks pass
 		res.json({"success": true});
-	};
 };
+
 
 
 
