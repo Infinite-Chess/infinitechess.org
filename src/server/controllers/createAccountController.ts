@@ -172,7 +172,8 @@ async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	} else {
 		// Both checks pass
 		res.json({"success": true});
-};
+    };
+}
 
 
 
