@@ -146,11 +146,12 @@ async function generateAccount({ username, email, password, autoVerify }) {
 
 // Route
 // Returns whether the email parameter is associated with an account and if it can recieve merrages.
-// True = open. false = in-use
+// Return an object containing {"succes":true} or {"succes":false, error:"email-taken" | "email-cannot-recieve"}
 function checkEmailValidity(req, res) {
 	const lowercaseEmail = req.params.email.toLowerCase();
-	if (isEmailTaken(lowercaseEmail)) res.json([false]);
-	else res.json([true]);
+	if (isEmailTaken(lowercaseEmail)) res.json({"succes":false, "error":"email-taken"});
+	if (canEmailRecieveMail(lowercaseEmail)) res.json({"succes":false, "error":"email-cannot-recieve"})
+	else res.json({"success":true});
 };
 
 

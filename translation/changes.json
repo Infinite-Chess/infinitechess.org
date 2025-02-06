@@ -1,4 +1,10 @@
 {
+	"30": {
+		"note": [
+			"Added Email can't recieve warnings, line 136."
+		],
+		"changes": ["createaccount.javascript.js-email_cannot_recieve"]
+	},
 	"29": {
 		"note": [
 			"Added CoaIP_HO and Trappist_1, lines 230-231. These contain the names of the new variants.",

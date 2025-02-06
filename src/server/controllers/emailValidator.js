@@ -12,4 +12,8 @@ async function canEmailRecieveMail(email) {
     } catch (error) {
         console.error('Error validating email with MX checking:', error);
     }
-}
+};
+
+export {
+    canEmailRecieveMail
+};

@@ -121,16 +121,20 @@ element_emailInput.addEventListener('focusout', () => { // Check email availabil
 			.then((response) => response.json())
 			.then((result) => {
 				// We've got the result back from the server,
-				// Is this email available to use?
-				if (result[0] === false) { // Email in use
+				// Is anything wrong?
+				if (result["success"] === false) { // Email in use
 					emailHasError = true;
 					createErrorElement('emailerror', 'emailinputline');
 					// Change input box to red outline
 					element_emailInput.style.outline = 'solid 1px red';
 					// Reset variable because it now exists.
 					const emailError = document.getElementById("emailerror");
-
-					emailError.textContent = translations["js-email_inuse"];
+					
+					if (result["error"] === "email-taken"){
+						emailError.textContent = translations["js-email_inuse"];
+					} else if (result["error"] === "email-cannot-recieve") {
+						emailError.textContent = translations["js-email_cannot_recieve"];
+					}
 					updateSubmitButton();
 				}
 			});
