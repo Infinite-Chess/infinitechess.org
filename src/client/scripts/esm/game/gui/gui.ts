@@ -6,7 +6,6 @@
  * We also prepare the board here whenever ANY gui page (non-game) is opened.
  */
 
-// @ts-ignore
 import selection from '../chess/selection.js';
 // @ts-ignore
 import guipromotion from './guipromotion.js';

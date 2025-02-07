@@ -18,6 +18,7 @@ import gameloader from "../../chess/gameloader.js";
 import gameslot from "../../chess/gameslot.js";
 import guititle from "../../gui/guititle.js";
 import clock from "../../../chess/logic/clock.js";
+import selection from "../../chess/selection.js";
 import onlinegame from "./onlinegame.js";
 // @ts-ignore
 import guiplay from "../../gui/guiplay.js";
@@ -25,8 +26,6 @@ import guiplay from "../../gui/guiplay.js";
 import websocket from "../../websocket.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
-// @ts-ignore
-import selection from "../../chess/selection.js";
 // @ts-ignore
 import guiclock from "../../gui/guiclock.js";
 // @ts-ignore

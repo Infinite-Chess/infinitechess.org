@@ -48,11 +48,9 @@ function getLongformatInNewNotation(longformat) {
 	}
 	let turnOrder = ['white','black'];
 	if (longformat.moves?.length > 0) {
-		// If it's a black-moves-first game, then the `turn` property of the results will be set to black.
-		const results = {};
-		const moveslong = moveutil.convertMovesTo1DFormat(longformat.moves, results); // Long format still, needs to be compressed
+		const { moves: moveslong, turn } = moveutil.convertMovesTo1DFormat(longformat.moves, results); // Long format still, needs to be compressed
 		let turnOrderArray = ['w','b'];
-		if (results.turn === 'black') {
+		if (turn === 'black') {
 			turnOrderArray = ['b','w'];
 			turnOrder = ['black','white'];
 		}

@@ -14,14 +14,13 @@ import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
 import jsutil from '../../util/jsutil.js';
 import highlights from '../rendering/highlights/highlights.js';
+import pieces from '../rendering/pieces.js';
 import gameslot from './gameslot.js';
 import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import arrows from '../rendering/arrows/arrows.js';
-// @ts-ignore
-import pieces from '../rendering/pieces.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 import guititle from '../gui/guititle.js';
@@ -37,7 +36,6 @@ import clock from '../../chess/logic/clock.js';
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
-// @ts-ignore
 import selection from './selection.js';
 // @ts-ignore
 import board from '../rendering/board.js';

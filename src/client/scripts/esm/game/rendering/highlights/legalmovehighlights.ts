@@ -36,9 +36,9 @@ import gameslot from '../../chess/gameslot.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
 // @ts-ignore
-import type { LegalMoves } from '../../chess/selection.js';
-// @ts-ignore
 import type { Piece } from '../../../chess/logic/movepiece.js';
+// @ts-ignore
+import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
 import type { BoundingBox } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../chess/util/colorutil.js';

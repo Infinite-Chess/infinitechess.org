@@ -18,8 +18,8 @@ import type { Additional, VariantOptions } from "./gameslot.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import clock from "../../chess/logic/clock.js";
-// @ts-ignore
 import timeutil from "../../util/timeutil.js";
+import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
@@ -30,7 +30,6 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-import gamefileutility from "../../chess/util/gamefileutility.js";
 
 
 // Type Definitions --------------------------------------------------------------------

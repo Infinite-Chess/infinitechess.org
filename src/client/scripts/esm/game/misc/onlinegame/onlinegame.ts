@@ -15,7 +15,6 @@ import tabnameflash from './tabnameflash.js';
 import disconnect from './disconnect.js';
 import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
-// @ts-ignore
 import moveutil from '../../../chess/util/moveutil.js';
 // @ts-ignore
 import websocket from '../../websocket.js';

@@ -29,6 +29,7 @@ import organizedlines from '../../../chess/logic/organizedlines.js';
 import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
+import space from '../../misc/space.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -45,8 +46,6 @@ import movement from '../movement.js';
 import options from '../options.js';
 // @ts-ignore
 import board from '../board.js';
-// @ts-ignore
-import space from '../../misc/space.js';
 // @ts-ignore
 import shapes from '../shapes.js';
 

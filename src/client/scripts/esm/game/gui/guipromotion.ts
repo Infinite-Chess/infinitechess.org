@@ -5,7 +5,6 @@
  */
 
 import spritesheet from '../rendering/spritesheet.js';
-// @ts-ignore
 import selection from '../chess/selection.js';
 // @ts-ignore
 import style from './style.js';

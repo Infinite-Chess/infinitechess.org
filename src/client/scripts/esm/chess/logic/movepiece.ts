@@ -16,6 +16,7 @@ import type { Change } from './boardchanges.js';
 
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
+import moveutil from '../util/moveutil.js';
 import state from './state.js';
 import boardchanges from './boardchanges.js';
 // @ts-ignore
@@ -26,8 +27,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import math from '../../util/math.js';
-// @ts-ignore
-import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import checkdetection from './checkdetection.js';
 // @ts-ignore
@@ -53,6 +52,18 @@ interface MoveDraft {
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
 	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
 	castle?: { coord: Coords, dir: 1 | -1 },
+}
+
+/** A special move tag for enpassant capture. This will be 1 if the captured piece is 1 square above, or -1 for 1 square below. */
+type enpassant = -1 | 1;
+/** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
+type promotion = string;
+/** A special move tag for castling. */
+type castle = {
+	/** 1 => King castled right   2 => King castled left */
+	dir: 1 | -1,
+	/** The coordinate of the piece the king castled with, usually a rook. */
+	coord: Coords
 }
 
 /**
@@ -423,6 +434,11 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 export type {
 	Move,
 	MoveDraft,
+
+	// Special move tags
+	enpassant,
+	promotion,
+	castle
 };
 
 export default {

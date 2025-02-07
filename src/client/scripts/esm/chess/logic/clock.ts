@@ -6,18 +6,15 @@
  * if somebody loses on time.
  */
 
-// @ts-ignore
 import moveutil from '../util/moveutil.js';
-// @ts-ignore
-import clockutil from '../util/clockutil.js';
-// @ts-ignore
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
-// @ts-ignore
 import pingManager from '../../util/pingManager.js';
+import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import options from '../../game/rendering/options.js';
-import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
+// @ts-ignore
+import clockutil from '../util/clockutil.js';
 
 
 // Type Definitions ---------------------------------------------------------------
