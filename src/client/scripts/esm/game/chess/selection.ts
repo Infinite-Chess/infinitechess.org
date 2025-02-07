@@ -49,6 +49,7 @@ import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import sound from '../misc/sound.js';
 import draganimation from '../rendering/dragging/draganimation.js';
+import boardchanges from '../../chess/logic/boardchanges.js';
 
 
 
@@ -361,17 +362,20 @@ function moveGamefilePiece(coords: CoordsSpecial, isCapture = false) {
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
 
-	// Play the sound of dropped dragged pieces now
-	const draggingPiece = draganimation.areDraggingPiece();
-	if (draggingPiece) {
-		if (isCapture || hoverSquare.hasOwnProperty('enpassant')) sound.playSound_capture(0, false);
+	const wasBeingDragged = draganimation.areDraggingPiece();
+
+	const animateMain = !wasBeingDragged; // This needs to be above makeMove(), since that will terminate the drag if the move ends the game.
+	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
+
+	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
+	movesequence.animateMove(move, true, animateMain);
+	// Normally the animation is in charge of playing the move sound when it's finished,
+	// but if it's a drop from dragging, then we have to play the sound NOW!
+	if (wasBeingDragged) {
+		if (boardchanges.wasACapture(move)) sound.playSound_capture(0, false);
 		else sound.playSound_move(0, false);
 	}
 
-	const animateMain = !draggingPiece; // This needs to be above makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
-	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
-	movesequence.animateMove(move, true, animateMain);
 	movesendreceive.sendMove();
 
 	unselectPiece();
