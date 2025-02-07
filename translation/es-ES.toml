@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "29"
+version = "31"
 maintainer = "xa31"
 
 [header]
@@ -535,6 +535,7 @@ ws-username_reserved = "Ese nombre de usuario está reservado"
 ws-email_too_long = "Tu email es muuuuuuuuuuuuy largo"
 ws-email_invalid = "Eso no es un email válido"
 ws-email_in_use = "Ese email ya ha sido registrado"
+ws-email_domain_invalid = "Dominio no válido"
 ws-you_are_banned = "Estás baneado."
 ws-password_length = "La contraseña debe tener entre 6 y 72 caracteres"
 ws-password_format = "La contraseña está en un formato incorrecto"

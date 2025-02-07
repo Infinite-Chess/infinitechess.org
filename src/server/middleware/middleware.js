@@ -34,7 +34,7 @@ import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { handleLogin } from '../controllers/loginController.js';
-import { checkEmailAssociated, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
+import { checkEmailValidity, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from "../api/AdminPanel.js";
@@ -113,7 +113,7 @@ function configureMiddleware(app) {
 	// Account router
 	app.post('/createaccount', createNewMember); // "/createaccount" POST request
 	app.get('/createaccount/username/:username', checkUsernameAvailable);
-	app.get('/createaccount/email/:email', checkEmailAssociated);
+	app.get('/createaccount/email/:email', checkEmailValidity);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);

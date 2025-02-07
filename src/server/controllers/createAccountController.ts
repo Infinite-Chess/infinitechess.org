@@ -26,11 +26,12 @@ import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManage
 // @ts-ignore
 import uuid from '../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
+import emailValidator from 'node-email-verifier';
+// @ts-ignore
 import { Request, Response } from 'express';
 
 
 // Variables -------------------------------------------------------------------------
-
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
@@ -153,13 +154,25 @@ async function generateAccount({ username, email, password, autoVerify = false }
 
 /**
  * Route that's called whenever the client unfocuses the email input field.
- * This tells them whether the email is available or not. (If not, it's invalid)
+ * This tells them whether the email is valid or not.
  */
-function checkEmailAssociated(req: Request, res: Response): void {
+
+async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	const lowercaseEmail = req.params['email']!.toLowerCase();
-	if (isEmailTaken(lowercaseEmail)) res.json([false]);
-	else res.json([true]);
-};
+	
+	if (isEmailTaken(lowercaseEmail)) {
+		res.json({"valid": false, "reason": getTranslationForReq('server.javascript.ws-email_in_use', req) });
+		return;
+	}
+	if (!await isEmailDNSValid(lowercaseEmail)) { 
+		res.json({"valid": false, "reason": getTranslationForReq('server.javascript.ws-email_domain_invalid', req) });
+		return;
+	}
+
+	// Both checks pass
+	res.json({"valid": true});
+}
+
 
 
 
@@ -255,6 +268,10 @@ function doEmailFormatChecks(string: string, req: Request, res: Response): boole
 		res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
 		return false;
 	}
+	if (!isEmailDNSValid(string)) {
+		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_domain_invalid", req) });
+		return false;
+	}
 	return true;
 };
 
@@ -264,6 +281,19 @@ function isValidEmail(string: string): boolean {
 	const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 	return regex.test(string);
 };
+
+/**
+ * Checks an email address's MX records to see if it is valid
+ */
+async function isEmailDNSValid(email: string): Promise<boolean> {
+	try {
+		return await emailValidator(email, { checkMx: true });
+	} catch (error) {
+		const err = error as Error; // Type assertion
+		logEvents(`Error when validating domain for email "${email}": ${err.stack}`, 'errLog.txt', { print: true });
+		return true; // Default to true to avoid blocking users.
+	}
+}
 
 function doPasswordFormatChecks(password: string, req: Request, res: Response): boolean {
 	// First we check password length
@@ -293,7 +323,7 @@ function isValidPassword(string: string): boolean {
 
 export {
 	createNewMember,
-	checkEmailAssociated,
+	checkEmailValidity,
 	checkUsernameAvailable,
 	generateAccount
 };

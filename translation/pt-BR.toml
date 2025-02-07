@@ -1,6 +1,6 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "23"
+version = "29"
 maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
@@ -18,6 +18,9 @@ board = "Tabuleiro" # Cor/Tema do Tabuleiro
 legalmoves = "Lances Legais" # Legal moves shape
 legalmoves-squares = "Casas"
 legalmoves-dots = "Pontos" # Pontos e triângulos de 4 cantos
+selection = "Selection"
+selection-drag = "Arrastar peças"
+selection-premove = "Premoves"
 perspective = "Perspectiva" # Modo da perspectiva
 perspective-mouse-sensitivity = "Sensibilidade do Mouse"
 perspective-fov = "Campo de Visão"
@@ -51,6 +54,10 @@ about_paragraphs = [
 ["Meu objetivo é criar uma maneira de tornar esse jogo fácil de jogar para todos e desenvolver uma comunidade em torno dele. Gastei inúmeras horas do meu tempo livre neste site, mantendo e desenvolvendo o jogo. Tenho muitas outras ideias que me manterão ocupado por algum tempo. Embora eu queira manter o jogo gratuito, a vida tem suas exigências. Para me ajudar financeiramente, considere a possibilidade de se juntar ao meu", "Patreon"]
 ]
 patreon_title = "Apoiadores do Patreon"
+github_title = "Contribuidores do Github"
+
+[index.javascript]
+contribution_count = ["", " contribuições"] # Um número é inserido entre essas duas strings.
 
 [credits]
 title = "Créditos"
@@ -71,6 +78,8 @@ variants_credits = [
 "projetado por Andreas Tsevas.",
 "projetado por Cory Evans e Joel Hamkins.",
 "projetado por Cory Evans, Joel Hamkins, e Norman Lewis Perlmutter.",
+"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
+"Trappist-1 by V. Reinhart"
 ]
 textures_heading = "Texturas"
 textures_licensed_under = "texturas licenciadas sob a licença"
@@ -201,6 +210,7 @@ local = "Local"
 computer = "Computador"
 variant = "Variante"
 Classical = "Classical"
+Confined_Classical = "Confined Classical"
 Classical_Plus = "Classical+"
 CoaIP = "Chess on an Infinite Plane"
 Pawndard = "Pawndard"
@@ -220,6 +230,8 @@ CoaIP_Limit_7 = "Coaip - Limit 7"
 Chess = "Xadrez"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
+CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
+Trappist_1 = "Trappist-1"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
@@ -236,7 +248,7 @@ private = "Privado"
 no = "Não"
 yes = "Sim"
 rated = "Com rating"
-unrated = "Sem rating"
+casual = "Sem rating"
 join_games = "Participe dos jogos existentes - Jogos Ativos:"
 private_invite = "Convite Privado:"
 your_invite = "Seu código de convite:"
@@ -254,11 +266,6 @@ rewind_move = "Lance anterior"
 forward_move = "Próximo lance"
 pause = "Pausar"
 
-[play.footer]
-white_to_move = "Brancas jogam"
-player_white = "Jogador de Brancas"
-player_black = "Jogador de Pretas"
-
 [play.pause]
 title = "Pausado"
 resume = "Fechar"
@@ -275,6 +282,8 @@ question = "Aceitar oferta de empate?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Convidado)"
 you_indicator = "(Você)"
+player_name_white_generic = "Brancas"
+player_name_black_generic = "Pretas"
 white_to_move = "Brancas jogam"
 black_to_move = "Pretas jogam"
 your_move = "Seu lance"
@@ -290,6 +299,7 @@ accept_draw = "Aceitar Empate" # Offer draw button text in the pause menu
 arrows_off = "Setas: Off"
 arrows_defense = "Setas: Defesa"
 arrows_all = "Setas: Todas"
+arrows_all_hippogonals = "Setas: Todas (com hipogonais)"
 toggled = "Alternado"
 menu_online = "Jogar - Online"
 menu_local = "Jogar - Local"
@@ -300,7 +310,7 @@ constructing_mesh = "Constructing mesh"
 rotating_mesh = "Rotating mesh"
 lost_connection = "Perca de conexão."
 please_wait = "Aguarde um momento para executar essa tarefa."
-webgl_unsupported = "Seu navegador não é compatível com WebGL. Este jogo requer isso para funcionar. Atualize seu navegador."
+webgl_unsupported = "Por favor atualize seu navegador! Atualmente não suporta WebGL2..."
 bigints_unsupported = "Não há suporte para BigInts. Atualize seu navegador.\nBigInts são necessários para tornar o tabuleiro infinito."
 shaders_failed = "Não foi possível inicializar o programa de shaders:"
 failed_compiling_shaders = "Ocorreu um erro na compilação dos shaders:"
@@ -320,7 +330,6 @@ piece_count = "Contagem de peças"
 exceeded = "excedido"
 changed_wincon = "Alterado as condições de vitória do xeque-mate para royalcapture e desativado a renderização de ícones. Pressione 'P' para reativar (não recomendado)."
 loaded_from_clipboard = "Jogo carregado da área de transferência!"
-loaded = "Jogo carregado!"
 slidelimit_not_number = "slideLimit gamerule deve ser um número. Recebido"
 
 [play.javascript.rendering]
@@ -337,8 +346,6 @@ regenerated_pieces = "Peças regeneradas."
 
 [play.javascript.invites]
 move_mouse = "Mova o mouse para reconectar."
-unknown_action_received_1 = "Ação desconhecida"
-unknown_action_received_2 = "recebido do servidor na assinatura de convites!"
 cannot_cancel = "Não é possível cancelar um convite de ID indefinido."
 you_indicator = "(Você)"
 you_are_white = "Você: Brancas"

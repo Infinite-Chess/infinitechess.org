@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "29"
+version = "31"
 maintainer = "Naviary"
 
 [header]
@@ -535,6 +535,7 @@ ws-username_reserved = "That username is reserved"
 ws-email_too_long = "Your email is too looooooong."
 ws-email_invalid = "This is not a valid email"
 ws-email_in_use = "This email is already in use"
+ws-email_domain_invalid = "Invalid domain."
 ws-you_are_banned = "You are banned."
 ws-password_length = "Password must be 6-72 characters long"
 ws-password_format = "Password is in an incorrect format"

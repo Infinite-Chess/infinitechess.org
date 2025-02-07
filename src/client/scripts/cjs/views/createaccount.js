@@ -114,23 +114,34 @@ element_emailInput.addEventListener('input', () => { // When email field changes
 
 	updateSubmitButton();
 });
-element_emailInput.addEventListener('focusout', () => { // Check email availability...
+element_emailInput.addEventListener('focusout', () => { // Check email availability and functionality...
 	// If it's blank, all the server would send back is the createaccount.html again..
 	if (element_emailInput.value.length > 1 && !emailHasError) { 
 		fetch(`/createaccount/email/${element_emailInput.value}`, fetchOptions)
 			.then((response) => response.json())
 			.then((result) => {
 				// We've got the result back from the server,
-				// Is this email available to use?
-				if (result[0] === false) { // Email in use
+				// Is anything wrong?
+				if (result.valid === false) { 
+
+					// There has been an error
 					emailHasError = true;
+
+					// We create the error text
 					createErrorElement('emailerror', 'emailinputline');
+
 					// Change input box to red outline
 					element_emailInput.style.outline = 'solid 1px red';
+
 					// Reset variable because it now exists.
 					const emailError = document.getElementById("emailerror");
 
-					emailError.textContent = translations["js-email_inuse"];
+					// The error message from the server is already language-localized
+					emailError.textContent = result.reason;
+
+					updateSubmitButton();
+				} else {
+					emailHasError = false;
 					updateSubmitButton();
 				}
 			});
