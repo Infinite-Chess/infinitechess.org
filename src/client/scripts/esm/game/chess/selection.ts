@@ -50,6 +50,7 @@ import preferences from '../../components/header/preferences.js';
 import sound from '../misc/sound.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
+import math from '../../util/math.js';
 
 
 
@@ -372,8 +373,9 @@ function moveGamefilePiece(coords: CoordsSpecial, isCapture = false) {
 	// Normally the animation is in charge of playing the move sound when it's finished,
 	// but if it's a drop from dragging, then we have to play the sound NOW!
 	if (wasBeingDragged) {
-		if (boardchanges.wasACapture(move)) sound.playSound_capture(0, false);
-		else sound.playSound_move(0, false);
+		const dist = math.chebyshevDistance(move.startCoords, move.endCoords);
+		if (boardchanges.wasACapture(move)) sound.playSound_capture(dist);
+		else sound.playSound_move(dist);
 	}
 
 	movesendreceive.sendMove();
