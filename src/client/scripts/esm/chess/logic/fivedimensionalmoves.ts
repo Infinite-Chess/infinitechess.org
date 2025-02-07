@@ -3,6 +3,8 @@
 // Import Start
 import colorutil from "../util/colorutil.js";
 import { BOARDS_X, BOARDS_Y } from '../variants/fivedimensionalgenerator.js';
+import gamefile from "./gamefile.js";
+import { Coords } from "./movesets.js";
 // Import End
 
 
@@ -13,10 +15,16 @@ import { BOARDS_X, BOARDS_Y } from '../variants/fivedimensionalgenerator.js';
  * @param {number[]} coordsClicked
  * @returns {boolean}
  */
-function fivedimensionalpromote(gamefile, type, coordsClicked) {
+function fivedimensionalpromote(gamefile: gamefile, type: string, coordsClicked: Coords): boolean {
 	const color = colorutil.getPieceColorFromType(type);
 	if (color === undefined) throw new Error("Pawn must have a valid color.");
-	const promotionRanks = color === 'white' ? [8, 18, 28, -2, -12] : [1, 11, 21, -9, -19];
+	const promotionRanks: number[] = [];
+	for (let i = -Math.floor(BOARDS_X / 2); i <= Math.floor(BOARDS_X / 2); i++) {
+		promotionRanks.push(1 - 10 * i);
+	}
+	if (color === "white") {
+		promotionRanks.map(value => value + 7);
+	}
 
 	return (promotionRanks.includes(coordsClicked[1]));
 }

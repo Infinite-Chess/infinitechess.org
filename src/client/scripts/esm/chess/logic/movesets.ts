@@ -59,7 +59,11 @@ interface PieceMoveset {
 	 * 
 	 * This should be provided if we're not using the default.
 	 */
-	ignore?: IgnoreFunction
+	ignore?: IgnoreFunction,
+	/**
+	 * If present, the function to call for special move detection.
+	 */
+	special?: SpecialFunction
 }
 
 /**
@@ -92,6 +96,8 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  */
 // eslint-disable-next-line no-unused-vars
 type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
+// eslint-disable-next-line no-unused-vars
+type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Coords[]
 
 
 
@@ -296,4 +302,4 @@ export default {
 	defaultIgnoreFunction,
 };
 
-export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction };
+export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction, SpecialFunction };

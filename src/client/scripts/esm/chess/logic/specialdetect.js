@@ -8,7 +8,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
-import fivedimensionalpromote from './fivedimensionalpromote.js';
+import fivedimensionalpromote from './fivedimensionalmoves.js';
 // Import End
 
 /** 

@@ -27,6 +27,9 @@ import movesets from '../logic/movesets.js';
 import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 // @ts-ignore
 import type { GameRules } from './gamerules.js';
+import { Move } from '../logic/movepiece.js';
+import gamefile from '../logic/gamefile.js';
+import { Piece } from '../logic/boardchanges.js';
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
 interface GameRuleModifications {
@@ -65,8 +68,13 @@ interface Variant {
 	 */
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
-
+	specialMoves?: TimeVariantProperty<{
+		[piece: string]: SpecialMoveFunction
+	}>
 }
+
+// eslint-disable-next-line no-unused-vars
+type SpecialMoveFunction = (gamefile: gamefile, piece: Piece, move: Move) => boolean;
 
 /** A position in keys format. Entries look like: `"5,2": "pawnsW"` */
 interface Position {
@@ -545,5 +553,6 @@ export default {
 };
 
 export type {
-	Position
+	Position,
+	SpecialMoveFunction
 };
