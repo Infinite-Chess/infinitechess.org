@@ -18,7 +18,6 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import colorutil from '../../chess/util/colorutil.js';
 import movesequence from './movesequence.js';
-import draganimation from '../rendering/dragging/draganimation.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
 import pieces from '../rendering/pieces.js';
@@ -49,6 +48,7 @@ import statustext from '../gui/statustext.js';
 import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import sound from '../misc/sound.js';
+import draganimation from '../rendering/dragging/draganimation.js';
 
 
 
@@ -382,7 +382,7 @@ function makePromotionMove() {
 	const coords = pawnIsPromoting!;
 	const coordsSpecial: CoordsSpecial = coordutil.copyCoords(coords);
 	coordsSpecial.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
-	moveGamefilePiece(coords);
+	moveGamefilePiece(coordsSpecial);
 	perspective.relockMouse();
 }
 

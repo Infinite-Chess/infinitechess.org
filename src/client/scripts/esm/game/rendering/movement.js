@@ -14,6 +14,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
 import gameslot from '../chess/gameslot.js';
+import draganimation from './dragging/draganimation.js';
 // Import End
 
 "use strict";
