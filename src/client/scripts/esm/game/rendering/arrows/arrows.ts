@@ -577,7 +577,7 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const worldHalfWidth = worldWidth / 2;
 
-	const mouseWorldLocation = input.getTouchClickedWorld() ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
+	const mouseWorldLocation = input.getPointerWorldLocation() as Coords;
 
 	// Take the arrows draft, construct the actual
 	for (const [key, value] of Object.entries(slideArrowsDraft)) {
