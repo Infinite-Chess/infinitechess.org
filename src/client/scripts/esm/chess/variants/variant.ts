@@ -15,7 +15,6 @@ import colorutil from '../util/colorutil.js';
 // @ts-ignore
 import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
-// @ts-ignore
 import timeutil from '../../util/timeutil.js';
 import fivedimensionalgenerator from './fivedimensionalgenerator.js';
 // @ts-ignore

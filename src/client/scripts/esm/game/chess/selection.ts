@@ -25,6 +25,8 @@ import pieces from '../rendering/pieces.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
 import moveutil from '../../chess/util/moveutil.js';
+import config from '../config.js';
+import space from '../misc/space.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -43,10 +45,6 @@ import movement from '../rendering/movement.js';
 import options from '../rendering/options.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-// @ts-ignore
-import config from '../config.js';
-// @ts-ignore
-import space from '../misc/space.js';
 // @ts-ignore
 import preferences from '../../components/header/preferences.js';
 

@@ -11,7 +11,6 @@
 import afk from "./afk.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
-// @ts-ignore
 import pingManager from "../../../util/pingManager.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";

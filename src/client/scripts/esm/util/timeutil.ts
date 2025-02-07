@@ -8,38 +8,38 @@
  * Converts minutes to milliseconds.
  */
 function minutesToMillis(minutes: number): number {
-    return minutes * 60 * 1000;
+	return minutes * 60 * 1000;
 }
 
 /**
  * Converts seconds to milliseconds.
  */
 function secondsToMillis(seconds: number): number {
-    return seconds * 1000;
+	return seconds * 1000;
 }
 
 /**
  * Returns the current UTC date in the "YYYY.MM.DD" format.
  */
 function getCurrentUTCDate(): string {
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(now.getUTCDate()).padStart(2, '0');
+	const now = new Date();
+	const year = now.getUTCFullYear();
+	const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+	const day = String(now.getUTCDate()).padStart(2, '0');
     
-    return `${year}.${month}.${day}`;
+	return `${year}.${month}.${day}`;
 }
 
 /**
  * Returns the current UTC time in the "HH:MM:SS" format.
  */
 function getCurrentUTCTime(): string {
-    const now = new Date();
-    const hours = String(now.getUTCHours()).padStart(2, '0');
-    const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+	const now = new Date();
+	const hours = String(now.getUTCHours()).padStart(2, '0');
+	const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+	const seconds = String(now.getUTCSeconds()).padStart(2, '0');
     
-    return `${hours}:${minutes}:${seconds}`;
+	return `${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -49,20 +49,20 @@ function getCurrentUTCTime(): string {
  * @returns An object with the properties `UTCDate` and `UTCTime`.
  */
 function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string, UTCTime: string } {
-    const date = new Date(timestamp);
+	const date = new Date(timestamp);
     
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+	const year = date.getUTCFullYear();
+	const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+	const day = String(date.getUTCDate()).padStart(2, '0');
     
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+	const hours = String(date.getUTCHours()).padStart(2, '0');
+	const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+	const seconds = String(date.getUTCSeconds()).padStart(2, '0');
     
-    const UTCDate = `${year}.${month}.${day}`;
-    const UTCTime = `${hours}:${minutes}:${seconds}`;
+	const UTCDate = `${year}.${month}.${day}`;
+	const UTCTime = `${hours}:${minutes}:${seconds}`;
     
-    return { UTCDate, UTCTime };
+	return { UTCDate, UTCTime };
 }
 
 /**
@@ -72,11 +72,11 @@ function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string,
  * @returns The UTC timestamp in milliseconds since the Unix Epoch.
  */
 function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = "00:00:00"): number {
-    const [year, month, day] = UTCDate.split('.').map(Number);
-    const [hours, minutes, seconds] = UTCTime.split(':').map(Number);
+	const [year, month, day] = UTCDate.split('.').map(Number);
+	const [hours, minutes, seconds] = UTCTime.split(':').map(Number);
 
-    const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
-    return date.getTime();
+	const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+	return date.getTime();
 }
 
 /**
@@ -94,47 +94,47 @@ function getTotalMilliseconds(options: {
     months?: number;
     years?: number;
 }): number {
-    const millisecondsIn = {
-        milliseconds: 1,
-        seconds: 1000,
-        minutes: 1000 * 60,
-        hours: 1000 * 60 * 60,
-        days: 1000 * 60 * 60 * 24,
-        weeks: 1000 * 60 * 60 * 24 * 7,
-        months: 1000 * 60 * 60 * 24 * 30, // Approximation, not precise
-        years: 1000 * 60 * 60 * 24 * 365, // Approximation, not precise
-    };
+	const millisecondsIn = {
+		milliseconds: 1,
+		seconds: 1000,
+		minutes: 1000 * 60,
+		hours: 1000 * 60 * 60,
+		days: 1000 * 60 * 60 * 24,
+		weeks: 1000 * 60 * 60 * 24 * 7,
+		months: 1000 * 60 * 60 * 24 * 30, // Approximation, not precise
+		years: 1000 * 60 * 60 * 24 * 365, // Approximation, not precise
+	};
 
-    let totalMilliseconds = 0;
+	let totalMilliseconds = 0;
 
-    for (const option in options) {
-        if (millisecondsIn[option as keyof typeof millisecondsIn]) {
-            totalMilliseconds += (options[option as keyof typeof options] || 0) * millisecondsIn[option as keyof typeof millisecondsIn];
-        }
-    }
+	for (const option in options) {
+		if (millisecondsIn[option as keyof typeof millisecondsIn]) {
+			totalMilliseconds += (options[option as keyof typeof options] || 0) * millisecondsIn[option as keyof typeof millisecondsIn];
+		}
+	}
 
-    return totalMilliseconds;
+	return totalMilliseconds;
 }
 
 /**
  * Gets the current month in 'yyyy-mm' format.
  */
 function getCurrentMonth(): string {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add 1 because getMonth() returns 0-11
-    return `${year}-${month}`;
+	const date = new Date();
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add 1 because getMonth() returns 0-11
+	return `${year}-${month}`;
 }
 
 /**
  * Gets the current day in 'yyyy-mm-dd' format.
  */
 function getCurrentDay(): string {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+	const date = new Date();
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, '0');
+	const day = date.getDate().toString().padStart(2, '0');
+	return `${year}-${month}-${day}`;
 }
 
 /**
@@ -146,25 +146,25 @@ function getCurrentDay(): string {
  * @returns True if the current date is within the specified range; otherwise, false.
  */
 function isCurrentDateWithinRange(startMonth: number, startDay: number, endMonth: number, endDay: number): boolean {
-    const currentDate = new Date();
-    const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()); // Normalized current date
-    const startDate = new Date(currentDate.getFullYear(), startMonth - 1, startDay);
-    const endDate = new Date(currentDate.getFullYear(), endMonth - 1, endDay);
-    return today >= startDate && today <= endDate;
+	const currentDate = new Date();
+	const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()); // Normalized current date
+	const startDate = new Date(currentDate.getFullYear(), startMonth - 1, startDay);
+	const endDate = new Date(currentDate.getFullYear(), endMonth - 1, endDay);
+	return today >= startDate && today <= endDate;
 }
 
 /**
  * Converts a timestamp (milliseconds since the UNIX epoch) to an ISO 8601 string.
  */
 function timestampToISO(timestamp: number): string {
-    return new Date(timestamp).toISOString();
+	return new Date(timestamp).toISOString();
 }
 
 /**
  * Converts an ISO 8601 string to a timestamp in milliseconds since the UNIX epoch.
  */
 function isoToTimestamp(isoString: string): number {
-    return new Date(isoString).getTime();
+	return new Date(isoString).getTime();
 }
 
 /**
@@ -174,8 +174,8 @@ function isoToTimestamp(isoString: string): number {
  * @returns The corresponding UTC timestamp in milliseconds since the UNIX epoch.
  */
 function sqliteToTimestamp(sqliteString: string): number {
-    const isoString = sqliteToISO(sqliteString);
-    return Date.parse(isoString);
+	const isoString = sqliteToISO(sqliteString);
+	return Date.parse(isoString);
 }
 
 /**
@@ -185,7 +185,7 @@ function sqliteToTimestamp(sqliteString: string): number {
  * @returns The corresponding ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
  */
 function sqliteToISO(sqliteString: string): string {
-    return sqliteString.replace(' ', 'T') + 'Z';
+	return sqliteString.replace(' ', 'T') + 'Z';
 }
 
 /**
@@ -194,28 +194,28 @@ function sqliteToISO(sqliteString: string): string {
  * @returns The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
  */
 function isoToSQLite(isoString: string): string {
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) {
-        throw new Error("Invalid ISO 8601 string provided.");
-    }
+	const date = new Date(isoString);
+	if (isNaN(date.getTime())) {
+		throw new Error("Invalid ISO 8601 string provided.");
+	}
     
-    return date.toISOString().replace('T', ' ').split('.')[0];
+	return date.toISOString().replace('T', ' ').split('.')[0];
 }
 
 export default {
-    minutesToMillis,
-    secondsToMillis,
-    getCurrentUTCDate,
-    getCurrentUTCTime,
-    convertTimestampToUTCDateUTCTime,
-    convertUTCDateUTCTimeToTimeStamp,
-    getTotalMilliseconds,
-    getCurrentMonth,
-    getCurrentDay,
-    isCurrentDateWithinRange,
-    timestampToISO,
-    isoToTimestamp,
-    sqliteToTimestamp,
-    sqliteToISO,
-    isoToSQLite,
+	minutesToMillis,
+	secondsToMillis,
+	getCurrentUTCDate,
+	getCurrentUTCTime,
+	convertTimestampToUTCDateUTCTime,
+	convertUTCDateUTCTimeToTimeStamp,
+	getTotalMilliseconds,
+	getCurrentMonth,
+	getCurrentDay,
+	isCurrentDateWithinRange,
+	timestampToISO,
+	isoToTimestamp,
+	sqliteToTimestamp,
+	sqliteToISO,
+	isoToSQLite,
 };

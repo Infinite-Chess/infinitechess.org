@@ -16,6 +16,7 @@ import clock from "../../../chess/logic/clock.js";
 import gameslot from "../../chess/gameslot.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import moveutil from "../../../chess/util/moveutil.js";
+import pingManager from "../../../util/pingManager.js";
 // @ts-ignore
 import input from "../../input.js";
 // @ts-ignore
@@ -24,8 +25,6 @@ import websocket from "../../websocket.js";
 import sound from "../sound.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
-// @ts-ignore
-import pingManager from "../../../util/pingManager.js";
 
 
 

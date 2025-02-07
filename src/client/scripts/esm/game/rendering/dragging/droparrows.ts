@@ -13,10 +13,9 @@ import type { Coords } from "../../../chess/util/coordutil.js";
 import arrows from "../arrows/arrows.js";
 import selection from "../../chess/selection.js";
 import draganimation from "./draganimation.js";
+import space from "../../misc/space.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import space from "../../misc/space.js";
 
 
 
