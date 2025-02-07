@@ -72,8 +72,8 @@ function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string,
  * @returns The UTC timestamp in milliseconds since the Unix Epoch.
  */
 function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = "00:00:00"): number {
-	const [year, month, day] = UTCDate.split('.').map(Number);
-	const [hours, minutes, seconds] = UTCTime.split(':').map(Number);
+	const [year, month, day] = UTCDate.split('.').map(Number) as [number, number, number];
+	const [hours, minutes, seconds] = UTCTime.split(':').map(Number) as [number, number, number];
 
 	const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
 	return date.getTime();
@@ -199,7 +199,7 @@ function isoToSQLite(isoString: string): string {
 		throw new Error("Invalid ISO 8601 string provided.");
 	}
     
-	return date.toISOString().replace('T', ' ').split('.')[0];
+	return date.toISOString().replace('T', ' ').split('.')[0]!;
 }
 
 export default {

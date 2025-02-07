@@ -93,7 +93,7 @@ function base62ToBase10(base62Str: string): number {
 
 	let result = 0;
 	for (let i = 0; i < base62Str.length; i++) {
-		const char = base62Str[i];
+		const char = base62Str[i]!;
 		const value = characters.indexOf(char);
 
 		if (value === -1) {

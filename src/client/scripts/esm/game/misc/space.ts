@@ -11,7 +11,7 @@
  */
 
 
-import type { Coords } from '../../chess/util/coordutil.js'
+import type { Coords } from '../../chess/util/coordutil.js';
 
 
 // @ts-ignore
@@ -32,7 +32,7 @@ function convertWorldSpaceToCoords(worldCoords: Coords): Coords {
 	return [
 		worldCoords[0] / boardScale + boardPos[0],
 		worldCoords[1] / boardScale + boardPos[1]
-	]
+	];
 }
 
 function convertWorldSpaceToCoords_Rounded(worldCoords: Coords): Coords {

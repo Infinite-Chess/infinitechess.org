@@ -5,8 +5,9 @@
  */
 
 import type { BufferModel } from './buffermodel.js';
-import type { gamefile } from '../../chess/logic/gamefile.js';
 import type { Coords } from '../../chess/util/coordutil.js';
+// @ts-ignore
+import type { gamefile } from '../../chess/logic/gamefile.js';
 
 
 import spritesheet from './spritesheet.js';

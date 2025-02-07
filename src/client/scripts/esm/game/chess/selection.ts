@@ -47,6 +47,8 @@ import options from '../rendering/options.js';
 import statustext from '../gui/statustext.js';
 // @ts-ignore
 import preferences from '../../components/header/preferences.js';
+// @ts-ignore
+import sound from '../misc/sound.js';
 
 
 
@@ -143,7 +145,7 @@ function update() {
 	
 	// What coordinates are we hovering over?
 	hoverSquare = (input.getPointerClicked() && !draggingPiece) ? input.getPointerClickedTile()
-            : space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation());
+            : space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
 	
 	updateHoverSquareLegal();
 	
@@ -444,4 +446,4 @@ export default {
 
 export type {
 	CoordsSpecial
-}
+};

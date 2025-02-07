@@ -149,7 +149,7 @@ function getPlyCount(moves: Move[]): number { return moves.length; }
  * @param coords - The current coordinates of the piece.
  */
 function hasPieceMoved(gamefile: gamefile, coords: Coords): boolean {
-	return gamefile.moves.some(move => coordutil.areCoordsEqual(move.endCoords, coords));
+	return gamefile.moves.some((move: Move) => coordutil.areCoordsEqual(move.endCoords, coords));
 }
 
 // COMMENTED-OUT because it's not used anywhere in the code
@@ -192,11 +192,11 @@ function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], t
 	let turn = 'white';
 	const moves1D: MoveDraft[] = [];
 	for (let a = 0; a < moves.length; a++) {
-		const thisPair = moves[a];
+		const thisPair = moves[a]!;
 		for (let b = 0; b < thisPair.length; b++) {
-			const thisMove = thisPair[b];
+			const thisMove = thisPair[b]!;
 			if (thisMove === null) turn = 'black';
-			else moves1D.push(thisMove);
+			else moves1D.push(thisMove as MoveDraft);
 		}
 	}
 	return { moves: moves1D, turn };

@@ -25,7 +25,7 @@ const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 60 * 15; // 15 minutes
 const CUSHION_MILLIS: number = 10_000;
 
 let reqIsOut: boolean = false;
-let resolvers: (() => void)[] = [];
+const resolvers: (() => void)[] = [];
 
 let memberInfo: {
 	signedIn: boolean;

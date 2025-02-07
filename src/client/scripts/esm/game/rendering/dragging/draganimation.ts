@@ -89,9 +89,8 @@ let areDragging = false;
 /**
  * When dropped in the same square, pieces are unselected every second time.
  * This alows players to move pieces by clicking.
- * @type{boolean} 
- * */
-let didLastClickSelectPiece;
+ */
+let didLastClickSelectPiece: boolean = false;
 
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
