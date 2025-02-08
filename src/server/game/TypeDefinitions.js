@@ -55,7 +55,7 @@ function Game() {
          * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
          * If one side can't promote, their rank is `null`.
          * If neither side can promote, this should be left as undefined.
-         * @type {number[]}
+         * @type {{ white: number[], black: number[]} | undefined}
          */
 		promotionRanks: undefined,
 		/**
