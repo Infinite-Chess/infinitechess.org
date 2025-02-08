@@ -48,7 +48,7 @@ function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: stri
 	return legalMoves.map(value => FiveDToTwoDCoords(value));
 }
 
-function doesPieceHaveSpecialRight(gamefile, coords) {
+function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
 	const key = coordutil.getKeyFromCoords(coords);
 	return gamefile.specialRights[key];
 }
@@ -80,7 +80,7 @@ function timelikepawns(gamefile: gamefile, coords: Coords, color: string): Coord
 		[coords[0] + 10, coords[1] + yOneorNegOne]
 	];
 	for (let i = 0; i < 2; i++) {
-		const thisCoordsToCapture = coordsToCapture[i];
+		const thisCoordsToCapture = coordsToCapture[i]!;
 
 		// Is there an enemy piece at this coords?
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, thisCoordsToCapture);
@@ -125,6 +125,8 @@ function addPossibleTimelikeEnPassant(gamefile: gamefile, individualMoves: Coord
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
+	// TODO: Create the CoordsSpecial type
+	// @ts-ignore
 	captureSquare["enpassant"] = -oneOrNegOne / 10;
 	individualMoves.push(captureSquare);
 }
