@@ -561,8 +561,13 @@ function getSpecialMovesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDat
 	if (Variant === undefined) return specialmove.defaultSpecialMoves;
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
-	if (!variantEntry.specialMoves) return specialmove.defaultSpecialMoves;
-	else return getApplicableTimestampEntry(variantEntry.specialMoves, {UTCDate, UTCTime});
+
+	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
+	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
+	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, { UTCDate, UTCTime });
+
+	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
+	return defaultSpecialMoves;
 }
 
 
