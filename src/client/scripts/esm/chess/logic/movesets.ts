@@ -63,7 +63,7 @@ interface PieceMoveset {
 	 */
 	ignore?: IgnoreFunction,
 	/**
-	 * If present, the function to call for special move detection.
+	 * If present, the function to call for calculating legal special moves.
 	 */
 	special?: SpecialFunction
 }

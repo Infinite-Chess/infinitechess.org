@@ -69,23 +69,30 @@ interface Variant {
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
 	/** Special Move overrides */
-	specialMoves?: TimeVariantProperty<{
-		[piece: string]: SpecialMoveFunction
-	}>
+	specialMoves?: TimeVariantProperty<SpecialVicinity>
 	/**
 	 * Used for check calculation.
 	 * If we have any overrides for specialMoves, we should have overrides for
 	 * this, because it means the piece could make captures on different locations.
 	 */
-	specialVicinityByPiece?: TimeVariantProperty<{
-		/** A list of coordinates that it may be possible for that piece type to make a special capture from that distance. */
-		[piece: string]: Coords[]
-	}>
+	specialVicinity?: TimeVariantProperty<SpecialVicinity>
 }
 
 /** Function that queues all of the changes a special move makes when executed. */
 // eslint-disable-next-line no-unused-vars
 type SpecialMoveFunction = (gamefile: gamefile, piece: Piece, move: Move) => boolean;
+
+/**
+ * An object storing the squares in the immediate vicinity
+ * a piece has a CHANCE of making a special-move capture from.
+ */
+interface SpecialVicinity {
+	/**
+	 * `piece` is the type without color information.
+	 * The value is a list of coordinates that it may be possible for that piece type to make a special capture from that distance.
+	 */
+	[piece: string]: Coords[]
+}
 
 /** A position in keys format. Entries look like: `"5,2": "pawnsW"` */
 interface Position {
@@ -553,55 +560,33 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	return pieceMovesets;
 }
 
-function getSpecialMovesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}) {
-	if (Variant === undefined) return specialmove.defaultSpecialMoves;
-	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
+function getSpecialMovesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: { Variant: string, UTCDate: string, UTCTime: string }) {
+	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
+	// Pasted games with no variant specified use the default
+	if (Variant === undefined) return defaultSpecialMoves;
+	if (!isVariantValid(Variant)) throw new Error(`Cannot get specialMoves of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
-	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
-	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, { UTCDate, UTCTime });
 
+	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, { UTCDate, UTCTime });
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
 	return defaultSpecialMoves;
 }
 
 
-
-// TODO: Move these to a better location??? ===============================================================================
-
-function getDefaultSpecialVicinitiesByPiece() {
-	return {
-		// "kings": [], // Impossible for kings to make a capture while castling
-		// "royalCentaurs": [], // Same for royal centaurs
-		"pawns": [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
-		// All squares a rose piece could potentially capture on.
-		"roses": [[-2,-1],[-3,-3],[-2,-5],[0,-6],[2,-5],[3,-3],[2,-1],[-4,0],[-5,2],[-4,4],[-2,5],[0,4],[1,2],[-1,-2],[0,-4],[4,-4],[5,-2],[4,0],[2,1],[-5,-2],[-6,0],[-3,3],[-1,2],[1,-2],[6,0],[5,2],[3,3],[-4,-4],[-2,1],[4,4],[2,5],[0,6]],
-	};
-}
-
-function getSpecialVicinityByPiece(overrides = {}) {
-	const defaultSpecialVicinityByPiece = getDefaultSpecialVicinitiesByPiece();
-	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
-	return defaultSpecialVicinityByPiece;
-}
-
-// ========================================================================================================================
-
-function getSpecialVicinityByPieceOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: { Variant: string, UTCDate: string, UTCTime: string }) {
+function getSpecialVicinityOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: { Variant: string, UTCDate: string, UTCTime: string }) {
+	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
-	if (Variant === undefined) return getSpecialVicinityByPiece();
-	if (!isVariantValid(Variant)) throw new Error(`Cannot get specialVicinityByPiece of invalid variant "${Variant}"!`);
+	if (Variant === undefined) return defaultSpecialVicinityByPiece;
+	if (!isVariantValid(Variant)) throw new Error(`Cannot get specialVicinity of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
-	if (variantEntry.specialVicinityByPiece === undefined) return getSpecialVicinityByPiece();
+	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
 
-	const specialVicinityByPieceModifications = getApplicableTimestampEntry(variantEntry.specialVicinityByPiece, { UTCDate, UTCTime });
-	return getSpecialVicinityByPiece(specialVicinityByPieceModifications);
+	const overrides = getApplicableTimestampEntry(variantEntry.specialVicinity, { UTCDate, UTCTime });
+	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
+	return defaultSpecialVicinityByPiece;
 }
 
 
@@ -613,7 +598,7 @@ export default {
 	getPromotionsAllowed,
 	getMovesetsOfVariant,
 	getSpecialMovesOfVariant,
-	getSpecialVicinityByPieceOfVariant,
+	getSpecialVicinityOfVariant,
 };
 
 export type {

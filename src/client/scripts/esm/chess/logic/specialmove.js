@@ -1,13 +1,13 @@
-// Import Start
+
+/** This script stores the default methods for EXECUTING special moves */
+
 import gamefileutility from '../util/gamefileutility.js';
 import boardchanges from './boardchanges.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
-// Import End
 
 "use strict";
 
-/** This script returns the functions for EXECUTING special moves */
 
 // This returns the functions for executing special moves,
 // it does NOT calculate if they're legal.
@@ -114,37 +114,22 @@ function getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[
 
 
 /**
- * Reflection of legalmoves.genVicinity()
- * 
- * Calculates the area around you in which special pieces HAVE A CHANCE to capture you from that distance.
- * This is used for efficient calculating if a move would put you in check by a special piece.
- * If a special piece is found at any of these distances, their legal moves are calculated
- * to see if they would check you or not.
- * This saves us from having to iterate through every single
- * special piece in the game to see if they would check you.
- * 
- * @returns {Object} The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
+ * Returns the coordinate distances certain piece types have a chance
+ * of special-move capturing on, according to the default specialMove functions.
  */
-function genSpecialVicinity(specialVicinityByPiece) {
-	const vicinity = {};
-
-	for (const [type, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
-		pieceVicinity.forEach(coords => {
-			const coordsKey = coordutil.getKeyFromCoords(coords);
-			vicinity[coordsKey] = vicinity[coordsKey] ?? []; // Make sure its initialized
-			vicinity[coordsKey].push(type);
-		});
-	}
-
-	// console.log("Calculated special vicinity:");
-	// console.log(vicinity);
-
-	return vicinity;
+function getDefaultSpecialVicinitiesByPiece() {
+	return {
+		// "kings": [], // Impossible for kings to make a capture while castling
+		// "royalCentaurs": [], // Same for royal centaurs
+		"pawns": [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
+		// All squares a rose piece could potentially capture on.
+		"roses": [[-2,-1],[-3,-3],[-2,-5],[0,-6],[2,-5],[3,-3],[2,-1],[-4,0],[-5,2],[-4,4],[-2,5],[0,4],[1,2],[-1,-2],[0,-4],[4,-4],[5,-2],[4,0],[2,1],[-5,-2],[-6,0],[-3,3],[-1,2],[1,-2],[6,0],[5,2],[3,3],[-4,-4],[-2,1],[4,4],[2,5],[0,6]],
+	};
 }
 
 
 
 export default {
 	defaultSpecialMoves,
-	genSpecialVicinity
-};
+	getDefaultSpecialVicinitiesByPiece,
+};	
