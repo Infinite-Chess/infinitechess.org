@@ -123,7 +123,7 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset) {
  * @param {Object} options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
  * @returns {LegalMoves} The legalmoves object.
  */
-function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piece: { type, coords }
+function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = false } = {}) { // piece: { type, coords }
 	if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
 	const coords = piece.coords;
 	const type = piece.type;
@@ -168,7 +168,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
-	checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
+	if (!ignoreCheck) checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
 
 	return moves;
 }

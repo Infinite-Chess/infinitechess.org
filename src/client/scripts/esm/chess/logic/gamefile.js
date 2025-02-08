@@ -185,8 +185,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.specialDetects = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
-	/** Contains the methods for undo'ing special moves for this game. */
-	this.specialUndos = undefined;
 
 	/** The clocks of the game, if the game is timed. */
 	this.clocks = {
