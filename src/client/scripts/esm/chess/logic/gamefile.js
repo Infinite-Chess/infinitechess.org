@@ -177,6 +177,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
      * DOES NOT include pawn moves. */
 	this.vicinity = undefined;
+	/** A variant of `vicinity`, except this only contains squares that
+	 * a special piece MIGHT be able to capture using a special move.
+	 * To find out for sure we'll have to calculate its legal moves. */
+	this.specialVicinity = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
 
