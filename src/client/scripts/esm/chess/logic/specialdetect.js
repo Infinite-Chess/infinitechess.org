@@ -15,6 +15,7 @@ import fivedimensionalpromote from './fivedimensionalmoves.js';
  * Type Definitions 
  * @typedef {import('./gamefile.js').gamefile} gamefile
  * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
+ * @typedef {import('../util/coordutil.js').Coords} Coords
 */
 
 "use strict";
@@ -38,10 +39,12 @@ function getAllSpecialMoves() { return allSpecials; }
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the king selected
  * @param {string} color - The color of the king selected
- * @param {array[]} individualMoves - The legal individual moves calculated so far
+ * @returns {Coords[]}
  */
-function kings(gamefile, coords, color, individualMoves) {
-	if (!doesPieceHaveSpecialRight(gamefile, coords)) return; // King doesn't have castling rights
+function kings(gamefile, coords, color, ) {
+	const individualMoves = [];
+
+	if (!doesPieceHaveSpecialRight(gamefile, coords)) return individualMoves; // King doesn't have castling rights
 
 	const x = coords[0];
 	const y = coords[1];
@@ -78,7 +81,7 @@ function kings(gamefile, coords, color, individualMoves) {
 
 	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns')) leftLegal = false;
 	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns')) rightLegal = false;
-	if (!leftLegal && !rightLegal) return;
+	if (!leftLegal && !rightLegal) return individualMoves;
 
 	// 2. IF USING CHECKMATE: The king must not currently be in check,
 	// AND The square the king passes through must not be a check.
@@ -86,7 +89,7 @@ function kings(gamefile, coords, color, individualMoves) {
 
 	const oppositeColor = colorutil.getOppositeColor(color);
 	if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, 'checkmate')) {
-		if (gamefileutility.isCurrentViewedPositionInCheck(gamefile)) return; // Not legal if in check
+		if (gamefileutility.isCurrentViewedPositionInCheck(gamefile)) return individualMoves; // Not legal if in check
 
 		// Simulate the space in-between
 
@@ -113,6 +116,8 @@ function kings(gamefile, coords, color, individualMoves) {
 		specialMove.castle = { dir: 1, coord: rightCoord};
 		individualMoves.push(specialMove);
 	}
+
+	return individualMoves;
 }
 
 /**
@@ -122,13 +127,13 @@ function kings(gamefile, coords, color, individualMoves) {
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the pawn selected
  * @param {string} color - The color of the pawn selected
- * @param {array[]} individualMoves - The legal individual moves calculated so far
+ * @returns {Coords[]}
  */
-function pawns(gamefile, coords, color, individualMoves) {
+function pawns(gamefile, coords, color) {
 
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === 'white' ? 1 : -1; 
-
+	const individualMoves = [];
 	// How do we go about calculating a pawn's legal moves?
 
 	// 1. It can move forward if there is no piece there
@@ -169,6 +174,7 @@ function pawns(gamefile, coords, color, individualMoves) {
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
 	addPossibleEnPassant(gamefile, individualMoves, coords, color);
+	return individualMoves;
 }
 
 /**
@@ -212,11 +218,13 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the rose selected
  * @param {string} color - The color of the rose selected
- * @param {array[]} individualMoves - The legal individual moves calculated so far
+ * @returns {Coords[]}
  */
-function roses(gamefile, coords, color, individualMoves) {
+function roses(gamefile, coords, color) {
 	const movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1]; // Counter-clockwise and clockwise directions
+
+	const individualMoves = [];
 
 	for (let i = 0; i < movements.length; i++) {
 		for (const direction of directions) {
@@ -238,6 +246,8 @@ function roses(gamefile, coords, color, individualMoves) {
 			}
 		}
 	}
+
+	return individualMoves;
 }
 
 /**

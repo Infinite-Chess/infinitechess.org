@@ -99,7 +99,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
 // eslint-disable-next-line no-unused-vars
 type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string, individualMoves: Coords[]) => void
+type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Coords[]
 
 
 
