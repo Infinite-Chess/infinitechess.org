@@ -4,6 +4,7 @@ import board from './board.js';
 import movement from './movement.js';
 import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
+import jsutil from '../../util/jsutil.js';
 // Import End
 
 /**
@@ -15,7 +16,8 @@ import gameslot from '../chess/gameslot.js';
 
 /** This script handles the rendering of our promotion lines. */
 
-const startEnd = [-3, 12];
+/** How many tiles on both ends the promotion lines should extend past the farthest piece */
+const extraLength = 2; // Default: 4
 const thickness = 0.010;
 
 function render() {
@@ -48,20 +50,20 @@ function initModel() {
 	const squareCenter = board.gsquareCenter();
 
 	const gamefile = gameslot.getGamefile();
-	const startPositionBox = gamefile.startSnapshot.box;
+	const startPositionBox = jsutil.deepCopyObject(gamefile.startSnapshot.box);
 
-	const startX = startPositionBox.left;
-	const endX = startPositionBox.right;
+	const startX = startPositionBox.left - squareCenter - extraLength;
+	const endX = startPositionBox.right + 1 - squareCenter + extraLength;
 
-	const color = [0,0,0,1]
+	const color = [0,0,0,1];
 
 	const vertexData = [];
 
-	addDataForSide(0);
-	addDataForSide(1);
+	addDataForSide(gamefile.gameRules.promotionRanks.white, 1);
+	addDataForSide(gamefile.gameRules.promotionRanks.black, 0);
 
-	function addDataForColor(zeroOrOne) {
-		gamefile.gameRules.promotionRanks.white.forEach(rank => {
+	function addDataForSide(ranks, zeroOrOne) {
+		ranks.forEach(rank => {
 			const yLow = rank + zeroOrOne - squareCenter - thickness;
 			const yHigh = rank + zeroOrOne - squareCenter + thickness;
 			vertexData.push(
@@ -71,11 +73,11 @@ function initModel() {
 				endX, yLow,     ...color,
 				startX, yHigh,  ...color,
 				endX, yHigh,    ...color,
-			)
-		})
+			);
+		});
 	}
 
-	return createModel(data, 2, "TRIANGLES", true);
+	return createModel(vertexData, 2, "TRIANGLES", true);
 }
 
 export default {
