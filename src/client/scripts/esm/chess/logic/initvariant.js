@@ -106,8 +106,7 @@ function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
 	// are attached to the gamefile. This is because different variants
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
 	gamefile.pieceMovesets = variant.getMovesetsOfVariant({ Variant, UTCDate, UTCTime });
-	gamefile.specialDetects = specialdetect.getSpecialMoves();
-	gamefile.specialMoves = specialmove.getFunctions();
+	gamefile.specialMoves = variant.getSpecialMovesOfVariant({ Variant, UTCDate, UTCTime });
 	gamefile.vicinity = legalmoves.genVicinity(gamefile);
 
 	const specialVicinityByPiece = variant.getSpecialVicinityByPieceOfVariant({ Variant, UTCDate, UTCTime });

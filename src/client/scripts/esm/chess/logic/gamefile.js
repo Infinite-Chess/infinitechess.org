@@ -181,8 +181,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	 * a special piece MIGHT be able to capture using a special move.
 	 * To find out for sure we'll have to calculate its legal moves. */
 	this.specialVicinity = undefined;
-	/** Contains the methods for detecting legal special moves for this game. */
-	this.specialDetects = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
 

@@ -13,13 +13,11 @@ import state from './state.js';
 // it does NOT calculate if they're legal.
 // In the future, parameters can be added if variants have
 // different special moves for pieces.
-function getFunctions() {
-	return {
-		"kings": kings,
-		"royalCentaurs": kings,
-		"pawns": pawns
-	};
-}
+const defaultSpecialMoves = {
+	"kings": kings,
+	"royalCentaurs": kings,
+	"pawns": pawns
+};
 
 // A custom special move needs to be able to:
 // * Delete a custom piece
@@ -147,6 +145,6 @@ function genSpecialVicinity(specialVicinityByPiece) {
 
 
 export default {
-	getFunctions,
+	defaultSpecialMoves,
 	genSpecialVicinity
 };

@@ -10,7 +10,6 @@ import formatconverter from '../logic/formatconverter.js';
 import omega3generator from './omega3generator.js';
 // @ts-ignore
 import omega4generator from './omega4generator.js';
-// @ts-ignore
 import colorutil from '../util/colorutil.js';
 // @ts-ignore
 import typeutil from '../util/typeutil.js';
@@ -18,12 +17,12 @@ import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import timeutil from '../../util/timeutil.js';
 import fivedimensionalgenerator from './fivedimensionalgenerator.js';
-// @ts-ignore
 import movesets from '../logic/movesets.js';
+// @ts-ignore
+import specialmove from '../logic/specialmove.js';
 
 // Type Definitions...
 
-// @ts-ignore
 import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 // @ts-ignore
 import type { GameRules } from './gamerules.js';
@@ -554,6 +553,17 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	return pieceMovesets;
 }
 
+function getSpecialMovesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
+	Variant: string,
+	UTCDate: string,
+	UTCTime: string
+}) {
+	if (Variant === undefined) return specialmove.defaultSpecialMoves;
+	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
+	const variantEntry: Variant = variantDictionary[Variant]!;
+	if (!variantEntry.specialMoves) return specialmove.defaultSpecialMoves;
+	else return getApplicableTimestampEntry(variantEntry.specialMoves, {UTCDate, UTCTime});
+}
 
 
 
@@ -597,6 +607,7 @@ export default {
 	// getVariantTurnOrder,
 	getPromotionsAllowed,
 	getMovesetsOfVariant,
+	getSpecialMovesOfVariant,
 	getSpecialVicinityByPieceOfVariant,
 };
 
