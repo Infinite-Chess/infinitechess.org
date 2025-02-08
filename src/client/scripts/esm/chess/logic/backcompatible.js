@@ -68,8 +68,9 @@ function getLongformatInNewNotation(longformat) {
 		converted.moves = shortmovessplit;
 	}
 	if (longformat.promotionRanks) {
-		if (!longformat.gameRules) longformat.gameRules = { promotionRanks: longformat.promotionRanks };
-		else longformat.gameRules.promotionRanks = longformat.promotionRanks;
+		const newRanks = { white: longformat.promotionRanks[1], black: longformat.promotionRanks[0] }
+		if (!longformat.gameRules) longformat.gameRules = { promotionRanks: newRanks };
+		else longformat.gameRules.promotionRanks = newRanks;
 	}
 	if (longformat.gameRules) {
 		// Example of old gameRules format:
@@ -100,7 +101,8 @@ function getLongformatInNewNotation(longformat) {
 			newGameRules.winConditions = newWinConditions;
 		}
 		if (longformat.promotionRanks) {
-			newGameRules.promotionRanks = [longformat.promotionRanks[1], longformat.promotionRanks[0]];
+			const newRanks = { white: longformat.promotionRanks[1], black: longformat.promotionRanks[0] }
+			newGameRules.promotionRanks = newRanks;
 			// The old gamefiles did not specify promotions allowed, because it's determined by the pieces the game starts with
 			newGameRules.promotionsAllowed = variant.getPromotionsAllowed(longformat.startingPosition, newGameRules.promotionRanks);
 		}

@@ -8,7 +8,6 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
-import fivedimensionalpromote from './fivedimensionalpromote.js';
 // Import End
 
 /** 
@@ -290,21 +289,12 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
 	if (!type.startsWith('pawns')) return false;
-	if (gamefile.metadata.Variant === "5D_Chess") return fivedimensionalpromote.fivedimensionalpromote(gamefile, type, coordsClicked); /* Five dimensional promotion is
-																														   hardcoded for now, this should be
-																														   replaced with multiple promotion
-																														   lines when they are finished.
-																														 */
 	if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = colorutil.getPieceColorFromType(type);
-	const promotionRank = color === 'white' ? gamefile.gameRules.promotionRanks[0]
-        : color === 'black' ? gamefile.gameRules.promotionRanks[1]
-            : undefined; // Can neutral pawns promote???
+	const promotionRanks = gamefile.gameRules.promotionRanks[color];
 
-	if (coordsClicked[1] === promotionRank) return true;
-
-	return false;
+	return promotionRanks.includes(coordsClicked[1]);
 }
 
 /**

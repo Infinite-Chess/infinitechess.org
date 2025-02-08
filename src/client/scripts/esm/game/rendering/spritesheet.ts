@@ -35,7 +35,7 @@ import type { Coords } from '../../chess/logic/movesets.js';
  * Using a spritesheet instead of 1 texture for each piece allows us to
  * render all the pieces with a single mesh, and a single texture.
  */
-let spritesheet: WebGLTexture | undefined; // Texture. 8x8 containing every texture of every piece, black and white.
+let spritesheet: WebGLTexture | undefined; // Texture. Grid containing every texture of every piece, black and white.
 /**
  * Contains where each piece is located in the spritesheet (texture coord).
  * Texture coords of a piece range from 0-1, where (0,0) is the bottom-left corner.

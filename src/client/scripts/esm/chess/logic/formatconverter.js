@@ -143,7 +143,8 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	if (longformat.gameRules) {
 		if (longformat.gameRules.promotionRanks) {
 			shortformat += "(";
-			if (longformat.gameRules.promotionRanks[0] != null) {
+			if (longformat.gameRules.promotionRanks.white.length > 0) {
+				shortformat += longformat.gameRules.promotionRanks.white.join(',');
 				const promotionListWhite = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed.white : null);
 				shortformat += longformat.gameRules.promotionRanks[0];
 				if (promotionListWhite) {
@@ -157,9 +158,9 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				}
 			}
 			shortformat += "|";
-			if (longformat.gameRules.promotionRanks[1] != null) {
+			if (longformat.gameRules.promotionRanks.black.length > 0) {
+				shortformat += longformat.gameRules.promotionRanks.black.join(',');
 				const promotionListBlack = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed.black : null);
-				shortformat += longformat.gameRules.promotionRanks[1];
 				if (promotionListBlack) {
 					if (!(promotionListBlack.length == 4 && promotionListBlack.includes("rooks") && promotionListBlack.includes("queens") && promotionListBlack.includes("bishops") && promotionListBlack.includes("knights"))) {
 						shortformat += ";";
@@ -383,32 +384,41 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 		// promotion lines
 		if (/^\(((()|([^\(\)\|]*\|)-?[0-9]+)|(\|\)$))/.test(string)) {
-			if (!longformat.gameRules.promotionRanks) {
-				string = string.replace(/[\(\)]+/g,"").split("|"); // ["8","1"]
-				if (string.length !== 2) throw new Error('Promotion ranks needs exactly 2 values');
-				longformat.gameRules.promotionRanks = [];
-				longformat.gameRules.promotionsAllowed = { white: [], black: [] };
-				for (let i = 0; i < 2; i++) {
-					const color = (i == 0 ? "white" : "black");
-					if (string[i] != "" && string[i] != null) {
-						const promotionLine = (string[i].indexOf(";") == -1 ? parseInt(string[i]) : parseInt(string[i].split(";")[0]));
-						if (isNaN(promotionLine)) throw new Error('Promotion rank is NaN');
-						longformat.gameRules.promotionRanks.push(promotionLine);
-						string[i] = string[i].split(";");
-						if (string[i].length == 1) {
-							longformat.gameRules.promotionsAllowed[color] = ["queens","rooks","bishops","knights"];
-						} else {
-							longformat.gameRules.promotionsAllowed[color] = [];
-							for (const promotionpiece of string[i][1].split(",")) {
-								longformat.gameRules.promotionsAllowed[color].push(ShortToLong_Piece(promotionpiece).slice(0,-1));
-							}
-						}
-					} else {
-						longformat.gameRules.promotionRanks.push(undefined);
-					}
-				}
-				continue;
+			/**
+			 * Possible cases the string could look like:
+			 * 
+			 * (8|0)
+			 * (-8|)
+			 * (|)
+			 * (5,-6,-7|-8,9,10)
+			 * (1;N,R,AM|8)
+			 * (-3,4;|10,20;q,ca)
+			 */
+
+			console.log("Parsed promotionRanks and promotionsAllowed from string: " + string);
+
+			string = string.splice(1, -1); // Chop off the parenthesis
+
+			const [ whiteInfo, blackInfo ] = string.split('|'); // ["-3,4;N,R", ...]
+			const [ whiteRanks, whitePromotions ] = whiteInfo.split(';'); // ["-3,4", "N,R"]
+			const [ blackRanks, blackPromotions ] = blackInfo.split(';');
+
+			longformat.gameRules.promotionRanks = {
+				white: whiteRanks.split(',').map(parseInt);
+				black: blackRanks.split(',').map(parseInt);
 			}
+
+			const defaultPromotions =  ["queens","rooks","bishops","knights"];
+			longformat.gameRules.promotionsAllowed = {
+				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
+				white: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions.split(',').map(ShortToLong_Piece);
+				black: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions.split(',').map(ShortToLong_Piece);
+			}
+
+			console.log(longformat.gameRules.promotionRanks);
+			console.log(longformat.gameRules.promotionsAllowed);
+
+			continue;
 		}
 
 		// win condition (has to start with a letter and not include numbers)
