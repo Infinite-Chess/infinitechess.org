@@ -1,11 +1,17 @@
 'use strict';
 
+import colorutil from "../util/colorutil.js";
+import coordutil from "../util/coordutil.js";
+import gamefileutility from "../util/gamefileutility.js";
+import boardchanges, { Piece } from "./boardchanges.js";
 // Import Start
 // @ts-ignore
 import gamefile from "./gamefile.js";
+import { Move } from "./movepiece.js";
 import { Coords } from "./movesets.js";
 // @ts-ignore
-import getSpecialMoves from "./specialdetect.js";
+import pawns from "./specialdetect.js";
+import state from "./state.js";
 // Import End
 
 // Coordinates in the form [x, y, boardX, boardY]
@@ -16,7 +22,7 @@ function TwoDToFiveDCoords(coords: Coords): FiveDimensionalCoords {
 }
 
 function FiveDToTwoDCoords(coords: FiveDimensionalCoords): Coords {
-	return [coords[0] + coords[2] * 10, coords[1] + coords[2] * 10];
+	return [coords[0] + coords[2] * 10, coords[1] + coords[3] * 10];
 }
 
 function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
@@ -30,16 +36,123 @@ function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: stri
 	const spacelikeCoords = [fiveDCoords[0], fiveDCoords[1]] as Coords;
 	const timelikeCoords = [fiveDCoords[2], fiveDCoords[3]] as Coords;
 	// eslint-disable-next-line no-unused-vars
-	const checkPawnMove = getSpecialMoves.getSpecialMoves().pawns as (gamefile: gamefile, coords: Coords, color: string, moves: Coords[]) => void;
-	checkPawnMove(gamefile, spacelikeCoords, color, legalSpacelike);
-	checkPawnMove(gamefile, timelikeCoords, color, legalTimelike);
+	legalSpacelike = pawns.pawns(gamefile, spacelikeCoords, color);
+	legalTimelike = timelikepawns(gamefile, coords, color);
 	for (const coord of legalSpacelike) {
 		legalMoves.push([coord[0], coord[1], fiveDCoords[2], fiveDCoords[3]]);
 	}
 	for (const coord of legalTimelike) {
 		legalMoves.push([fiveDCoords[0], fiveDCoords[1], coord[0], coord[1]]);
 	}
+	console.log(legalMoves);
 	return legalMoves.map(value => FiveDToTwoDCoords(value));
+}
+
+function doesPieceHaveSpecialRight(gamefile, coords) {
+	const key = coordutil.getKeyFromCoords(coords);
+	return gamefile.specialRights[key];
+}
+
+function timelikepawns(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+
+	// White and black pawns move and capture in opposite directions.
+	const yOneorNegOne = color === 'white' ? 10 : -10;
+	const individualMoves: Coords[] = [];
+	// How do we go about calculating a pawn's legal moves?
+
+	// 1. It can move forward if there is no piece there
+
+	// Is there a piece in front of it?
+	const coordsInFront = [coords[0], coords[1] + yOneorNegOne] as Coords;
+	if (!gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront)) {
+		individualMoves.push(coordsInFront); // No piece, add the move
+
+		// Is the double push legal?
+		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne] as Coords;
+		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
+		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) individualMoves.push(doublePushCoord); // Add the double push!
+	}
+
+	// 2. It can capture diagonally if there are opponent pieces there
+
+	const coordsToCapture: Coords[] = [
+		[coords[0] - 10, coords[1] + yOneorNegOne],
+		[coords[0] + 10, coords[1] + yOneorNegOne]
+	];
+	for (let i = 0; i < 2; i++) {
+		const thisCoordsToCapture = coordsToCapture[i];
+
+		// Is there an enemy piece at this coords?
+		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, thisCoordsToCapture);
+		if (!pieceAtCoords) continue; // No piece, skip
+
+		// There is a piece. Make sure it's a different color
+		const colorOfPiece = colorutil.getPieceColorFromType(pieceAtCoords);
+		if (color === colorOfPiece) continue; // Same color, don't add the capture
+
+		// Make sure it isn't a void
+		if (pieceAtCoords === 'voidsN') continue;
+
+		individualMoves.push(thisCoordsToCapture); // Good to add the capture!
+	}
+
+	// 3. It can capture en passant if a pawn next to it just pushed twice.
+	addPossibleTimelikeEnPassant(gamefile, individualMoves, coords, color);
+	return individualMoves;
+}
+
+function addPossibleTimelikeEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string) {
+	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
+
+	const xLandDiff = gamefile.enpassant[0] - coords[0];
+	const oneOrNegOne = color === 'white' ? 10 : -10;
+	if (Math.abs(xLandDiff) !== 1) return; // Not immediately left or right of us
+	if (coords[1] + oneOrNegOne !== gamefile.enpassant[1]) return; // Not one in front of us
+
+	const captureSquare: Coords = [coords[0] + xLandDiff, coords[1] + oneOrNegOne];
+
+	const capturedPieceSquare = [coords[0] + xLandDiff, coords[1]] as Coords;
+	const capturedPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, capturedPieceSquare);
+	// cannot capture nothing en passant
+	if (!capturedPieceType) return;
+	// cannot capture own piece en passant
+	if (color === colorutil.getPieceColorFromType(capturedPieceType)) return;
+
+	// It is capturable en passant!
+
+	// Extra check to make sure there's no piece (bug if so)
+	if (gamefileutility.getPieceTypeAtCoords(gamefile, captureSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare);
+
+	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
+	// on the individual move to detect en passant captures and to know what piece to delete
+	captureSquare["enpassant"] = -oneOrNegOne / 10;
+	individualMoves.push(captureSquare);
+}
+
+function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
+	const moveChanges = move.changes;
+	const enpassantTag: number | undefined = move.enpassant;
+	let captureOffset: number;
+	if (!enpassantTag) {
+		captureOffset = 0;
+	} else {
+		captureOffset = enpassantTag * 10;
+	}
+
+	if (Math.abs(move.endCoords[1] - piece.coords[1]) === 20) {
+		state.createState(move, 'enpassant', gamefile.enpassant, [piece.coords[1], (piece.coords[1] + move.endCoords[1]) / 2]);
+	}
+
+	if (!enpassantTag) {
+		return false;
+	}
+
+	const pieceToCapture = gamefileutility.getPieceAtCoords(gamefile, [move.endCoords[0], move.endCoords[1] + captureOffset]);
+	if (pieceToCapture) {
+		boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, pieceToCapture);
+		return true;
+	}
+	return false;
 }
 
 function equals(a: Object, b: Object): boolean {
@@ -47,5 +160,6 @@ function equals(a: Object, b: Object): boolean {
 }
 
 export default {
-	fivedimensionalpawnmove
+	fivedimensionalpawnmove,
+	doFiveDimensionalPawnMove
 };

@@ -30,6 +30,7 @@ import { Move } from '../logic/movepiece.js';
 // @ts-ignore
 import gamefile from '../logic/gamefile.js';
 import { Piece } from '../logic/boardchanges.js';
+import fivedimensionalmoves from '../logic/fivedimensionalmoves.js';
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
 interface GameRuleModifications {
@@ -261,6 +262,9 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		},
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional,
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } },
+		specialMoves: {
+			pawns: fivedimensionalmoves.doFiveDimensionalPawnMove
+		}
 	}
 };
 
