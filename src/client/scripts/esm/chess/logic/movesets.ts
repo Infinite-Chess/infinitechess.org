@@ -96,8 +96,14 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  */
 // eslint-disable-next-line no-unused-vars
 type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
+/**
+ * A function that returns an array of any legal special individual moves for the piece,
+ * each of the coords will have a special property attached to it. castle/promote/enpassant
+ * 
+ * TODO: Replace return type with CoordsSpecial!
+ */
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Coords[]
+type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Coords[] // TODO: Replace return type with CoordsSpecial!
 
 
 

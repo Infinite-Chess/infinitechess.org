@@ -113,6 +113,40 @@ function getEnPassantSquare(moveStartCoords, moveEndCoords) {
 // MUST require there be an enpassant tag!
 function getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; }
 
+
+
+/**
+ * Reflection of legalmoves.genVicinity()
+ * 
+ * Calculates the area around you in which special pieces HAVE A CHANCE to capture you from that distance.
+ * This is used for efficient calculating if a move would put you in check by a special piece.
+ * If a special piece is found at any of these distances, their legal moves are calculated
+ * to see if they would check you or not.
+ * This saves us from having to iterate through every single
+ * special piece in the game to see if they would check you.
+ * 
+ * @returns {Object} The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
+ */
+function genSpecialVicinity(specialVicinityByPiece) {
+	const vicinity = {};
+
+	for (const [type, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
+		pieceVicinity.forEach(coords => {
+			const coordsKey = coordutil.getKeyFromCoords(coords);
+			vicinity[coordsKey] = vicinity[coordsKey] ?? []; // Make sure its initialized
+			vicinity[coordsKey].push(type);
+		});
+	}
+
+	// console.log("Calculated special vicinity:");
+	// console.log(vicinity);
+
+	return vicinity;
+}
+
+
+
 export default {
-	getFunctions
+	getFunctions,
+	genSpecialVicinity
 };

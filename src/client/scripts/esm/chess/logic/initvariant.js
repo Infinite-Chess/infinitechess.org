@@ -109,6 +109,11 @@ function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
 	gamefile.specialDetects = specialdetect.getSpecialMoves();
 	gamefile.specialMoves = specialmove.getFunctions();
 	gamefile.vicinity = legalmoves.genVicinity(gamefile);
+
+	const specialVicinityByPiece = variant.getSpecialVicinityByPieceOfVariant({ Variant, UTCDate, UTCTime });
+	// console.log("Calculated specialVicinityByPiece:");
+	// console.log(specialVicinityByPiece);
+	gamefile.specialVicinity = specialmove.genSpecialVicinity(specialVicinityByPiece);
 }
 
 /**
