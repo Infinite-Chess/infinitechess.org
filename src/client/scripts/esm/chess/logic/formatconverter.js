@@ -385,6 +385,18 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 		// promotion lines
 		if (/^\(((()|([^\(\)\|]*\|)-?[0-9]+)|(\|\)$))/.test(string)) {
+			
+			/**
+			 * Possible cases the string could look like:
+			 * 
+			 * (8|0)
+			 * (-8|)
+			 * (|)
+			 * (5,-6,-7|-8,9,10)
+			 * (1;N,R,AM|8)
+			 * (-3,4;|10,20;q,ca)
+			 */
+
 			string = string.slice(1, -1); // Chop off the parenthesis
 
 			const [ whiteInfo, blackInfo ] = string.split('|'); // ["-3,4;N,R", ...]
@@ -402,8 +414,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const defaultPromotions =  ["queens","rooks","bishops","knights"];
 			longformat.gameRules.promotionsAllowed = {
 				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
-				white: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined ? whitePromotions.split(',').map(abv => ShortToLong_Piece(abv).slice(0,-1)) : [],
-				black: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions !== undefined ? blackPromotions.split(',').map(abv => ShortToLong_Piece(abv).slice(0,-1)) : []
+				white: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => ShortToLong_Piece(abv).slice(0,-1)) : [],
+				black: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => ShortToLong_Piece(abv).slice(0,-1)) : []
 			};
 
 			continue;
