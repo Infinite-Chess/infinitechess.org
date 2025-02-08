@@ -7,6 +7,8 @@
 import isprime from '../../util/isprime.js';
 import colorutil from '../util/colorutil.js';
 import math from '../../util/math.js';
+// @ts-ignore
+import specialdetect from './specialdetect.js';
 
 // Type definitions...
 
@@ -59,7 +61,11 @@ interface PieceMoveset {
 	 * 
 	 * This should be provided if we're not using the default.
 	 */
-	ignore?: IgnoreFunction
+	ignore?: IgnoreFunction,
+	/**
+	 * If present, the function to call for special move detection.
+	 */
+	special?: SpecialFunction
 }
 
 /**
@@ -92,6 +98,14 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  */
 // eslint-disable-next-line no-unused-vars
 type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
+/**
+ * A function that returns an array of any legal special individual moves for the piece,
+ * each of the coords will have a special property attached to it. castle/promote/enpassant
+ * 
+ * TODO: Replace return type with CoordsSpecial!
+ */
+// eslint-disable-next-line no-unused-vars
+type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Coords[] // TODO: Replace return type with CoordsSpecial!
 
 
 
@@ -123,6 +137,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		// Finitely moving
 		pawns: {
 			individual: [],
+			special: specialdetect.pawns
 		},
 		knights: {
 			individual: [
@@ -142,7 +157,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			individual: [
                 [-1,0],[-1,1],[0,1],[1,1],
                 [1,0],[1,-1],[0,-1],[-1,-1]
-            ]
+            ],
+			special: specialdetect.kings
 		},
 		guards: {
 			individual: [
@@ -260,7 +276,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
                 // + Knight moveset!
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ]
+            ],
+			special: specialdetect.kings
 		},
 		huygens: {
 			individual: [],
@@ -283,7 +300,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			}
 		},
 		roses: {
-			individual: []
+			individual: [],
+			special: specialdetect.roses
 		}
 	};
 }
@@ -296,4 +314,4 @@ export default {
 	defaultIgnoreFunction,
 };
 
-export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction };
+export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction, SpecialFunction };

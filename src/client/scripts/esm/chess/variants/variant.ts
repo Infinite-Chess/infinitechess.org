@@ -10,7 +10,6 @@ import formatconverter from '../logic/formatconverter.js';
 import omega3generator from './omega3generator.js';
 // @ts-ignore
 import omega4generator from './omega4generator.js';
-// @ts-ignore
 import colorutil from '../util/colorutil.js';
 // @ts-ignore
 import typeutil from '../util/typeutil.js';
@@ -18,15 +17,19 @@ import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import timeutil from '../../util/timeutil.js';
 import fivedimensionalgenerator from './fivedimensionalgenerator.js';
-// @ts-ignore
 import movesets from '../logic/movesets.js';
+// @ts-ignore
+import specialmove from '../logic/specialmove.js';
 
 // Type Definitions...
 
-// @ts-ignore
-import type { Movesets, PieceMoveset } from '../logic/movesets.js';
+import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 // @ts-ignore
 import type { GameRules } from './gamerules.js';
+import { Move } from '../logic/movepiece.js';
+// @ts-ignore
+import gamefile from '../logic/gamefile.js';
+import { Piece } from '../logic/boardchanges.js';
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
 interface GameRuleModifications {
@@ -65,8 +68,24 @@ interface Variant {
 	 */
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
-
+	/** Special Move overrides */
+	specialMoves?: TimeVariantProperty<{
+		[piece: string]: SpecialMoveFunction
+	}>
+	/**
+	 * Used for check calculation.
+	 * If we have any overrides for specialMoves, we should have overrides for
+	 * this, because it means the piece could make captures on different locations.
+	 */
+	specialVicinityByPiece?: TimeVariantProperty<{
+		/** A list of coordinates that it may be possible for that piece type to make a special capture from that distance. */
+		[piece: string]: Coords[]
+	}>
 }
+
+/** Function that queues all of the changes a special move makes when executed. */
+// eslint-disable-next-line no-unused-vars
+type SpecialMoveFunction = (gamefile: gamefile, piece: Piece, move: Move) => boolean;
 
 /** A position in keys format. Entries look like: `"5,2": "pawnsW"` */
 interface Position {
@@ -132,7 +151,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	},
 	CoaIP: {
 		positionString: positionStringOfCoaIP,
-		gameruleModifications: { promotionsAllowed: coaIPPromotionsAllowed }
+		gameruleModifications: { promotionsAllowed: coaIPPromotionsAllowed },
 	},
 	Pawn_Horde: {
 		positionString: 'k5,2+|q4,2|r1,2+|n7,2|n2,2|r8,2+|b3,2|b6,2|P2,-1+|P3,-1+|P6,-1+|P7,-1+|P1,-2+|P2,-2+|P4,-2+|P5,-2+|P6,-2+|P7,-2+|P8,-2+|P1,-3+|P2,-3+|P4,-3+|P5,-3+|P6,-3+|P7,-3+|P8,-3+|P1,-4+|P2,-4+|P4,-4+|P5,-4+|P6,-4+|P7,-4+|P8,-4+|P1,-5+|P2,-5+|P4,-5+|P5,-5+|P6,-5+|P7,-5+|P8,-5+|P1,-6+|P2,-6+|P4,-6+|P5,-6+|P6,-6+|P7,-6+|P8,-6+|P3,-2+|P3,-3+|P3,-4+|P3,-5+|P3,-6+|P1,-7+|P2,-7+|P3,-7+|P4,-7+|P5,-7+|P6,-7+|P7,-7+|P8,-7+|P0,-6+|P0,-7+|P9,-6+|P9,-7+|p9,2+|p1,1+|p2,1+|p3,1+|p4,1+|p5,1+|p6,1+|p7,1+|p8,1+|p0,2+',
@@ -534,6 +553,57 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	return pieceMovesets;
 }
 
+function getSpecialMovesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
+	Variant: string,
+	UTCDate: string,
+	UTCTime: string
+}) {
+	if (Variant === undefined) return specialmove.defaultSpecialMoves;
+	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
+	const variantEntry: Variant = variantDictionary[Variant]!;
+
+	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
+	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
+	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, { UTCDate, UTCTime });
+
+	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
+	return defaultSpecialMoves;
+}
+
+
+
+// TODO: Move these to a better location??? ===============================================================================
+
+function getDefaultSpecialVicinitiesByPiece() {
+	return {
+		// "kings": [], // Impossible for kings to make a capture while castling
+		// "royalCentaurs": [], // Same for royal centaurs
+		"pawns": [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
+		// All squares a rose piece could potentially capture on.
+		"roses": [[-2,-1],[-3,-3],[-2,-5],[0,-6],[2,-5],[3,-3],[2,-1],[-4,0],[-5,2],[-4,4],[-2,5],[0,4],[1,2],[-1,-2],[0,-4],[4,-4],[5,-2],[4,0],[2,1],[-5,-2],[-6,0],[-3,3],[-1,2],[1,-2],[6,0],[5,2],[3,3],[-4,-4],[-2,1],[4,4],[2,5],[0,6]],
+	};
+}
+
+function getSpecialVicinityByPiece(overrides = {}) {
+	const defaultSpecialVicinityByPiece = getDefaultSpecialVicinitiesByPiece();
+	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
+	return defaultSpecialVicinityByPiece;
+}
+
+// ========================================================================================================================
+
+function getSpecialVicinityByPieceOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: { Variant: string, UTCDate: string, UTCTime: string }) {
+	// Pasted games with no variant specified use the default
+	if (Variant === undefined) return getSpecialVicinityByPiece();
+	if (!isVariantValid(Variant)) throw new Error(`Cannot get specialVicinityByPiece of invalid variant "${Variant}"!`);
+	const variantEntry: Variant = variantDictionary[Variant]!;
+
+	if (variantEntry.specialVicinityByPiece === undefined) return getSpecialVicinityByPiece();
+
+	const specialVicinityByPieceModifications = getApplicableTimestampEntry(variantEntry.specialVicinityByPiece, { UTCDate, UTCTime });
+	return getSpecialVicinityByPiece(specialVicinityByPieceModifications);
+}
+
 
 export default {
 	isVariantValid,
@@ -542,8 +612,11 @@ export default {
 	// getVariantTurnOrder,
 	getPromotionsAllowed,
 	getMovesetsOfVariant,
+	getSpecialMovesOfVariant,
+	getSpecialVicinityByPieceOfVariant,
 };
 
 export type {
-	Position
+	Position,
+	SpecialMoveFunction
 };

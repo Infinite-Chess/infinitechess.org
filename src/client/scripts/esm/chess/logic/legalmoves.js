@@ -51,36 +51,24 @@ import math from '../../util/math.js';
  * Must be called after the piece movesets are initialized. 
  * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
  * DOES NOT include pawn moves.
- * @returns {gamefile} gamefile - The gamefile
+ * @param {gamefile} gamefile - The gamefile
  * @returns {Object} The vicinity object
  */
 function genVicinity(gamefile) {
 	const vicinity = {};
 	if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
 
-	// For every piece moveset...
-	for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
-		const thisPieceType = typeutil.colorsTypes.white[i];
-		let thisPieceIndividualMoveset;
-		if (getPieceMoveset(gamefile, thisPieceType).individual) thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
-		else thisPieceIndividualMoveset = [];
-
-		// For each individual move...
-		for (let a = 0; a < thisPieceIndividualMoveset.length; a++) {
-			const thisIndividualMove = thisPieceIndividualMoveset[a];
-            
-			// Convert the move into a key
-			const key = coordutil.getKeyFromCoords(thisIndividualMove);
-
-			// Make sure the key's already initialized
-			if (!vicinity[key]) vicinity[key] = [];
-
-			const pieceTypeConcat = colorutil.trimColorExtensionFromType(thisPieceType); // Remove the 'W'/'B' from end of type
-
-			// Make sure the key contains the piece type that can capture from that distance
-			if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat);
-		}
-	}
+	// For every type in the game...
+	gamefile.startSnapshot.existingTypes.forEach(type => {
+		const movesetFunc = gamefile.pieceMovesets[type];
+		if (movesetFunc === undefined) return; // This piece type can't move, it can't check us from anywhere in the vicinity
+		const individualMoves = movesetFunc().individual ?? [];
+		individualMoves.forEach(coords => {
+			const key = coordutil.getKeyFromCoords(coords);
+			if (!vicinity[key]) vicinity[key] = []; // Make sure the key's already initialized
+			if (!vicinity[key].includes(type)) vicinity[key].push(type); // Make sure the key contains the piece type that can capture from that distance
+		});
+	});
 	return vicinity;
 }
 
@@ -123,7 +111,7 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset) {
  * @param {Object} options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
  * @returns {LegalMoves} The legalmoves object.
  */
-function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piece: { type, coords }
+function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = false } = {}) { // piece: { type, coords }
 	if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
 	const coords = piece.coords;
 	const type = piece.type;
@@ -160,7 +148,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	}
     
 	// Add any special moves!
-	if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves);
+	if (thisPieceMoveset.special) legalIndividualMoves.push(...thisPieceMoveset.special(gamefile, coords, color));
 
 	const moves = {
 		individual: legalIndividualMoves,
@@ -168,7 +156,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
-	checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
+	if (!ignoreCheck) checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
 
 	return moves;
 }

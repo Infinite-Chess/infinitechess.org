@@ -77,7 +77,7 @@ function isSquareBeingAttacked(gamefile, coord, colorOfFriendly, attackers) {
 
 	if (doesVicinityAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
 	// What about pawns? Could they capture us?
-	if (doesPawnAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
+	if (doesSpecialAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
 
 	// 2. We check every orthogonal and diagonal to see if there's any attacking pieces.
 	if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
@@ -116,27 +116,50 @@ function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
 	return false;
 }
 
-function doesPawnAttackSquare(gamefile, coords, color, attackers) {
+/**
+ * TODO: Clean up.
+ * @param {gamefile} gamefile 
+ * @param {*} coords 
+ * @param {*} color 
+ * @param {*} attackers 
+ * @returns 
+ */
+function doesSpecialAttackSquare(gamefile, coords, color, attackers) {
+	const specialVicinity = gamefile.specialVicinity;
+	for (const [coordsKey, thisVicinity] of Object.entries(specialVicinity)) {
 
-	const oneOrNegOne = color === 'white' ? 1 : -1;
-	for (let a = -1; a <= 1; a += 2) {
-		const thisSquare = [coords[0] - a, coords[1] + oneOrNegOne];
+		const thisSquare = coordutil.getCoordsFromKey(coordsKey);
+		const actualSquare = [coords[0] - thisSquare[0], coords[1] - thisSquare[1]];
 
-		const key = coordutil.getKeyFromCoords(thisSquare);
-		const pieceOnSquare = gamefile.piecesOrganizedByKey[key];
-		if (!pieceOnSquare) continue;
+		// Fetch the square from our pieces organized by key
+		const actualSquareKey = coordutil.getKeyFromCoords(actualSquare);
+		const typeOnSquare = gamefile.piecesOrganizedByKey[actualSquareKey];
+		if (!typeOnSquare) continue; // Nothing there to capture us
+		// Is it the same color?
+		const typeOnSquareColor = colorutil.getPieceColorFromType(typeOnSquare);
+		if (color === typeOnSquareColor) continue; // A friendly can't capture us
 
-		const pieceIsFriendly = color === colorutil.getPieceColorFromType(pieceOnSquare);
-		if (pieceIsFriendly) continue; // Can't capture us
+		const trimmedTypeOnSquare = colorutil.trimColorExtensionFromType(typeOnSquare);
 
-		const pieceIsPawn = pieceOnSquare.startsWith('pawns');
-		if (pieceIsPawn) {
-			if (attackers) appendAttackerToList(attackers, { coords: thisSquare, slidingCheck: false });
-			return true; // A pawn can capture on this square. There'll never be more than 1 short-range checks.
-		}
+		// Is that a match with any piece type on this vicinity square?
+		if (thisVicinity.includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured...
+			// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
+			const pieceOnSquare = gamefileutility.getPieceFromTypeAndCoords(gamefile, typeOnSquare, actualSquare);
+			const specialPiecesLegalMoves = legalmoves.calculate(gamefile, pieceOnSquare, { onlyCalcSpecials: true, ignoreCheck: true });
+			// console.log("Calculated special pieces legal moves:");
+			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
+
+			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) return false; // This special piece can't make the capture THIS time... oof
+
+			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
+
+			if (attackers) appendAttackerToList(attackers, { coords: actualSquare, slidingCheck: false });
+			return true; // There'll never be more than 1 short-range/jumping checks!
+		}; 
 	}
 
 	return false;
+
 }
 
 /**
