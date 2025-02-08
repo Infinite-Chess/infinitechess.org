@@ -160,7 +160,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	}
     
 	// Add any special moves!
-	if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves);
+	if (thisPieceMoveset.special) thisPieceMoveset.special(gamefile, coords, color, legalIndividualMoves);
 
 	const moves = {
 		individual: legalIndividualMoves,

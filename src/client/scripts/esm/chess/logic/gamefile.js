@@ -177,12 +177,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
      * DOES NOT include pawn moves. */
 	this.vicinity = undefined;
-	/** Contains the methods for detecting legal special moves for this game. */
-	this.specialDetects = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
-	/** Contains the methods for undo'ing special moves for this game. */
-	this.specialUndos = undefined;
 
 	/** The clocks of the game, if the game is timed. */
 	this.clocks = {

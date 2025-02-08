@@ -30,22 +30,6 @@ const allSpecials = ['enpassant','promotion','castle'];
 /** Returns the list of all special moves that exist, for iterating. */
 function getAllSpecialMoves() { return allSpecials; }
 
-
-/**
- * Returns a copy of the methods needed to calculate a piece's legal special moves.
- * These are attached to the gamefile, as each gamefile could have unique rules
- * for determining legal moves (parameters can be added to this function).
- * @returns {Object} An object containing the methods for calculating legal special moves.
- */
-function getSpecialMoves() {
-	return {
-		"kings": kings,
-		"royalCentaurs": kings,
-		"pawns": pawns,
-		"roses": roses,
-	};
-}
-
 // EVERY one of these functions needs to include enough information in the special move tag
 // to be able to undo any of them!
 
@@ -343,8 +327,11 @@ function transferSpecialFlags_FromCoordsToCoords(srcCoords, destCoords) {
 }
 
 export default {
+	kings,
+	pawns,
+	roses,
+
 	getAllSpecialMoves,
-	getSpecialMoves,
 	isPawnPromotion,
 	transferSpecialFlags_FromCoordsToMove,
 	transferSpecialFlags_FromMoveToCoords,

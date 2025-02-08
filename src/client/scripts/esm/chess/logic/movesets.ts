@@ -7,6 +7,8 @@
 import isprime from '../../util/isprime.js';
 import colorutil from '../util/colorutil.js';
 import math from '../../util/math.js';
+// @ts-ignore
+import specialdetect from './specialdetect.js';
 
 // Type definitions...
 
@@ -97,7 +99,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
 // eslint-disable-next-line no-unused-vars
 type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Coords[]
+type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string, individualMoves: Coords[]) => void
 
 
 
@@ -129,6 +131,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		// Finitely moving
 		pawns: {
 			individual: [],
+			special: specialdetect.pawns
 		},
 		knights: {
 			individual: [
@@ -148,7 +151,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			individual: [
                 [-1,0],[-1,1],[0,1],[1,1],
                 [1,0],[1,-1],[0,-1],[-1,-1]
-            ]
+            ],
+			special: specialdetect.kings
 		},
 		guards: {
 			individual: [
@@ -266,7 +270,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
                 // + Knight moveset!
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
-            ]
+            ],
+			special: specialdetect.kings
 		},
 		huygens: {
 			individual: [],
@@ -289,7 +294,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			}
 		},
 		roses: {
-			individual: []
+			individual: [],
+			special: specialdetect.roses
 		}
 	};
 }
