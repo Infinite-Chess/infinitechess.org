@@ -47,7 +47,7 @@ function setupVariant(gamefile, metadata, options) {
 /**
  * Sets the `existingTypes` property of the `startSnapshot` of the gamefile,
  * which contains all types of pieces in the game, without their color extension.
- * @param {gamefile} gamefile 
+ * @param {gamefile} gamefile
  */
 function initExistingTypes(gamefile) {
 	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
@@ -101,15 +101,18 @@ function getPossibleSlides(gamefile) {
  * @param {gamefile} gamefile - The gamefile
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  */
-function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
+function initPieceMovesets(gamefile, metadata) {
 	// The movesets and methods for detecting and executing special moves
 	// are attached to the gamefile. This is because different variants
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
-	gamefile.pieceMovesets = variant.getMovesetsOfVariant({ Variant, UTCDate, UTCTime });
-	gamefile.specialMoves = variant.getSpecialMovesOfVariant({ Variant, UTCDate, UTCTime });
+	gamefile.pieceMovesets = variant.getMovesetsOfVariant(metadata);
+	gamefile.specialMoves = variant.getSpecialMovesOfVariant(metadata);
+	
+
+
 	gamefile.vicinity = legalmoves.genVicinity(gamefile);
 
-	const specialVicinityByPiece = variant.getSpecialVicinityByPieceOfVariant({ Variant, UTCDate, UTCTime });
+	const specialVicinityByPiece = variant.getSpecialVicinityByPieceOfVariant(metadata);
 	// console.log("Calculated specialVicinityByPiece:");
 	// console.log(specialVicinityByPiece);
 	gamefile.specialVicinity = specialmove.genSpecialVicinity(specialVicinityByPiece);
@@ -126,13 +129,13 @@ function initPieceMovesets(gamefile, { Variant, UTCDate, UTCTime }) {
  * - `UTCTime`: Optional. Controls the version of the variant to initialize its starting position. If not specified, returns latest version.
  * @param {Object} options - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If metadata doesn't contain "Variant", then "startingPosition" is required.
  */
-function initStartSnapshotAndGamerulesFromOptions(gamefile, { Variant, UTCDate, UTCTime }, options) {
+function initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options) {
 
 	let positionString = options.positionString;
 	let position = options.startingPosition;
 	let specialRights = options.specialRights;
 	if (!options.startingPosition) {
-		const result = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime });
+		const result = variant.getStartingPositionOfVariant(metadata);
 		positionString = result.positionString;
 		position = result.position;
 		specialRights = result.specialRights;
@@ -161,15 +164,15 @@ function initStartSnapshotAndGamerulesFromOptions(gamefile, { Variant, UTCDate, 
  * @param {string} metadata.Variant - Required. The name of the variant.
  * @param {number} [metadata.Date] - Optional. The version of the variant to initialize its starting position. If not specified, returns latest version.
  */
-function initStartSnapshotAndGamerules(gamefile, { Variant, UTCDate, UTCTime }) {
+function initStartSnapshotAndGamerules(gamefile, metadata) {
 
-	const { position, positionString, specialRights } = variant.getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }); 
+	const { position, positionString, specialRights } = variant.getStartingPositionOfVariant(metadata); 
 	gamefile.startSnapshot = {
 		position,
 		positionString,
 		specialRights
 	};
-	gamefile.gameRules = variant.getGameRulesOfVariant({ Variant, UTCDate, UTCTime }, position);
+	gamefile.gameRules = variant.getGameRulesOfVariant(metadata, position);
 
 	// console.log(jsutil.deepCopyObject(position));
 	// console.log(jsutil.deepCopyObject(positionString));

@@ -51,36 +51,24 @@ import math from '../../util/math.js';
  * Must be called after the piece movesets are initialized. 
  * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
  * DOES NOT include pawn moves.
- * @returns {gamefile} gamefile - The gamefile
+ * @param {gamefile} gamefile - The gamefile
  * @returns {Object} The vicinity object
  */
 function genVicinity(gamefile) {
 	const vicinity = {};
 	if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
 
-	// For every piece moveset...
-	for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
-		const thisPieceType = typeutil.colorsTypes.white[i];
-		let thisPieceIndividualMoveset;
-		if (getPieceMoveset(gamefile, thisPieceType).individual) thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
-		else thisPieceIndividualMoveset = [];
-
-		// For each individual move...
-		for (let a = 0; a < thisPieceIndividualMoveset.length; a++) {
-			const thisIndividualMove = thisPieceIndividualMoveset[a];
-            
-			// Convert the move into a key
-			const key = coordutil.getKeyFromCoords(thisIndividualMove);
-
-			// Make sure the key's already initialized
-			if (!vicinity[key]) vicinity[key] = [];
-
-			const pieceTypeConcat = colorutil.trimColorExtensionFromType(thisPieceType); // Remove the 'W'/'B' from end of type
-
-			// Make sure the key contains the piece type that can capture from that distance
-			if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat);
-		}
-	}
+	// For every type in the game...
+	gamefile.startSnapshot.existingTypes.forEach(type => {
+		const movesetFunc = gamefile.pieceMovesets[type];
+		if (movesetFunc === undefined) return; // This piece type can't move, it can't check us from anywhere in the vicinity
+		const individualMoves = movesetFunc().individual ?? [];
+		individualMoves.forEach(coords => {
+			const key = coordutil.getKeyFromCoords(coords);
+			if (!vicinity[key]) vicinity[key] = []; // Make sure the key's already initialized
+			if (!vicinity[key].includes(type)) vicinity[key].push(type); // Make sure the key contains the piece type that can capture from that distance
+		});
+	});
 	return vicinity;
 }
 
