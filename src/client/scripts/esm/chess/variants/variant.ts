@@ -28,6 +28,7 @@ import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 // @ts-ignore
 import type { GameRules } from './gamerules.js';
 import { Move } from '../logic/movepiece.js';
+// @ts-ignore
 import gamefile from '../logic/gamefile.js';
 import { Piece } from '../logic/boardchanges.js';
 

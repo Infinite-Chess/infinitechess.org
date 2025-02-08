@@ -1,10 +1,13 @@
 'use strict';
 
 // Import Start
+// @ts-ignore
 import colorutil from "../util/colorutil.js";
 import { BOARDS_X, BOARDS_Y } from '../variants/fivedimensionalgenerator.js';
+// @ts-ignore
 import gamefile from "./gamefile.js";
 import { Coords } from "./movesets.js";
+// @ts-ignore
 import getSpecialMoves from "./specialdetect.js";
 // Import End
 
