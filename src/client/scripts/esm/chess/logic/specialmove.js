@@ -16,7 +16,8 @@ import state from './state.js';
 const defaultSpecialMoves = {
 	"kings": kings,
 	"royalCentaurs": kings,
-	"pawns": pawns
+	"pawns": pawns,
+	"roses": roses,
 };
 
 // A custom special move needs to be able to:
@@ -73,8 +74,6 @@ function pawns(gamefile, piece, move) {
 	const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
 
-	if (capturedPiece) move.captured = capturedPiece.type;
-
 	// Delete the piece captured
 
 	if (capturedPiece) {
@@ -110,6 +109,20 @@ function getEnPassantSquare(moveStartCoords, moveEndCoords) {
 
 // MUST require there be an enpassant tag!
 function getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; }
+
+// The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
+function roses(gamefile, piece, move) {
+	if (move.path === undefined) throw Error('Roses move object must have the path special flag to execute the move!');
+
+	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
+
+	// Delete the piece captured
+	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece, move.path);
+	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords, move.path);
+
+	// Special move was executed!
+	return true;
+}
 
 
 

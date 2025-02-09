@@ -84,6 +84,8 @@ interface MoveDraft {
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
 	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
 	castle?: castle,
+	/** Present if the move is for a Rose. */
+	path?: path,
 }
 
 /**
@@ -167,12 +169,8 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
-	if (capturedPiece) {
-		boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
-		return;
-	};
-
-	boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
+	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
 }
 
 /**

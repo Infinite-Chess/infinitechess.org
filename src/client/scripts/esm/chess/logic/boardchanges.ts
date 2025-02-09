@@ -108,8 +108,10 @@ const changeFuncs: ChangeApplication<genericChangeFunc> = {
  * @param endCoords 
  * @param capturedPiece The piece captured
  */
-function queueCapture(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, capturedPiece: Piece) {
-	changes.push({ action: 'capture', main, piece: piece, endCoords: endCoords, capturedPiece: capturedPiece });
+function queueCapture(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, capturedPiece: Piece, path?: Coords[]) {
+	const change: Change = { action: 'capture', main, piece: piece, endCoords: endCoords, capturedPiece: capturedPiece };
+	if (path !== undefined) change['path'] = path;
+	changes.push(change);
 	return changes;
 }
 
@@ -142,8 +144,10 @@ function queueDeletePiece(changes: Array<Change>, piece: Piece, main: boolean) {
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  * @param endCoords 
  */
-function queueMovePiece(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords) {
-	changes.push({ action: 'move', main, piece: piece, endCoords });
+function queueMovePiece(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, path?: Coords[]) {
+	const change: Change = { action: 'move', main, piece: piece, endCoords };
+	if (path !== undefined) change['path'] = path;
+	changes.push(change);
 	return changes;
 }
 
