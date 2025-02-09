@@ -17,6 +17,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { gamefile } from './gamefile.js';
 // @ts-ignore
 import type { Piece } from './boardchanges.js';
+import { CoordsSpecial } from './movepiece.js';
 
 
 /**
@@ -101,11 +102,9 @@ type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Co
 /**
  * A function that returns an array of any legal special individual moves for the piece,
  * each of the coords will have a special property attached to it. castle/promote/enpassant
- * 
- * TODO: Replace return type with CoordsSpecial!
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Coords[] // TODO: Replace return type with CoordsSpecial!
+type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => CoordsSpecial[]
 
 
 
