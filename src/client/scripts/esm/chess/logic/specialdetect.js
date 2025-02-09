@@ -15,7 +15,8 @@ import math from '../../util/math.js';
  * @typedef {import('./gamefile.js').gamefile} gamefile
  * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('../util/coordutil.js').Coords} Coords
-*/
+ * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
+ */
 
 "use strict";
 
@@ -25,7 +26,7 @@ import math from '../../util/math.js';
  */
 
 /** All types of special moves that exist, for iterating through. */
-const allSpecials = ['enpassant','promotion','castle'];
+const allSpecials = ['enpassant','promotion','castle','path'];
 
 /** Returns the list of all special moves that exist, for iterating. */
 function getAllSpecialMoves() { return allSpecials; }
@@ -38,7 +39,7 @@ function getAllSpecialMoves() { return allSpecials; }
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the king selected
  * @param {string} color - The color of the king selected
- * @returns {Coords[]}
+ * @returns {CoordsSpecial[]}
  */
 function kings(gamefile, coords, color, ) {
 	const individualMoves = [];
@@ -126,7 +127,7 @@ function kings(gamefile, coords, color, ) {
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the pawn selected
  * @param {string} color - The color of the pawn selected
- * @returns {Coords[]}
+ * @returns {CoordsSpecial[]}
  */
 function pawns(gamefile, coords, color) {
 
@@ -217,49 +218,97 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the rose selected
  * @param {string} color - The color of the rose selected
- * @returns {Coords[]}
+ * @returns {CoordsSpecial[]}
  */
 function roses(gamefile, coords, color) {
 	const movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1]; // Counter-clockwise and clockwise directions
 
+	/** @type {CoordsSpecial[]} */
 	const individualMoves = [];
 
 	for (let i = 0; i < movements.length; i++) {
 		for (const direction of directions) {
+			/** @type {CoordsSpecial} */
 			let currentCoord = coordutil.copyCoords(coords);
 			let b = i;
+			const path = [coords]; // The running path of travel for the current spiral. Used for animating.
 			for (let c = 0; c < movements.length - 1; c++) { // Iterate 7 times, since we can't land on the square we started
 				const movement = movements[math.posMod(b, movements.length)];
 				currentCoord = coordutil.addCoordinates(currentCoord, movement);
+				path.push(coordutil.copyCoords(currentCoord));
 				const pieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, currentCoord); // { type, index, coords }
 				if (pieceOnSquare) {
 					const colorOfPiece = colorutil.getPieceColorFromType(pieceOnSquare.type);
 					// eslint-disable-next-line max-depth
-					if (color !== colorOfPiece) appendCoordToIndividuals(individualMoves, currentCoord); // Capture is legal
-					break;
+					if (color !== colorOfPiece) appendCoordToIndividuals(currentCoord, path); // Capture is legal
+					break; // Break the spiral
 				}
 				// There is not a piece
-				appendCoordToIndividuals(individualMoves, currentCoord);
+				appendCoordToIndividuals(currentCoord, path);
 				b += direction; // Update 'b' for the next iteration
 			}
 		}
 	}
 
-	return individualMoves;
-}
+	// console.error("Calculated rose individual moves:");
+	// console.log(jsutil.deepCopyObject(individualMoves));
 
-/**
- * Appends a coordinate to the individual moves list if it's not already present.
- * @param {array[]} individualMoves - The list of individual moves.
- * @param {number[]} newCoord - The coordinate to append [x, y].
- */
-function appendCoordToIndividuals(individualMoves, newCoord) {
-	for (let i = 0; i < individualMoves.length; i++) {
-		const coord = individualMoves[i];
-		if (coordutil.areCoordsEqual(coord, newCoord)) return;
+	return individualMoves;
+
+	/**
+	 * Appends a coordinate to the individual moves list if it's not already present.
+	 * @param {Coords} newCoord - The coordinate to append [x, y].
+	 */
+	function appendCoordToIndividuals(newCoord, path) {
+		newCoord.path = jsutil.deepCopyObject(path);
+		for (let i = 0; i < individualMoves.length; i++) {
+			const coord = individualMoves[i];
+			if (!coordutil.areCoordsEqual(coord, newCoord)) continue;
+
+			// This coord has already been added to our individual moves!!!
+			// That means this square has 2 different paths to land on it. Keep the one that's shorter
+
+			const sign = Math.sign(coord.path.length - newCoord.path.length);
+
+			if (sign === -1) individualMoves[i] = coord; // First path shorter
+			else if (sign === 1) individualMoves[i] = newCoord; // Second path shorter
+			else if (sign === 0) { // Path are equal length
+				// console.log("Paths are equal length!");
+				// Pick the one that curves towards the center of play,
+				// as that's more likely to stay within the window during animation.
+				const startBox = gamefile.startSnapshot.box; // { left, right, bottom, top }
+				const centerOfPlay = [
+					(startBox.left + startBox.right) / 2,
+					(startBox.bottom + startBox.top) / 2
+				];
+				const vector1 = math.calculateVectorFromPoints(coords, coord.path[1]);
+				const vector2 = math.calculateVectorFromPoints(coords, newCoord.path[1]);
+				const dotProd1 = math.dotProdOfVectorToTarget(coords, vector1, centerOfPlay);
+				const dotProd2 = math.dotProdOfVectorToTarget(coords, vector2, centerOfPlay);
+				const sign2 = Math.sign(dotProd1 - dotProd2);
+				if (sign2 === 1) {
+					// console.log("Picked path:");
+					// console.log(coord);
+					individualMoves[i] = coord;
+				} else if (sign2 === -1) {
+					// console.log("Picked path:");
+					// console.log(newCoord);
+					individualMoves[i] = newCoord;
+				} else if (sign2 === 0) { // Even the vectors both equally point towards the origin.
+					// JUST pick a random one!
+					// console.log("Picking random vector!!");
+					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
+				} else throw Error('Invalid sign: ' + sign2);
+			}
+			else throw Error('Invalid sign: ' + sign);
+
+			return;
+		}
+
+		// This coordinate has not been added yet. Let's do it now.
+		individualMoves.push(newCoord);
 	}
-	individualMoves.push(newCoord);
 }
 
 /**

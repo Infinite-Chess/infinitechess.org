@@ -48,6 +48,7 @@ type CoordsSpecial = Coords & {
 	enpassant?: enpassant,
 	promotion?: promotion,
 	castle?: castle,
+	path?: path,
 }
 
 /** A special move tag for enpassant capture. This will be 1 if the captured piece is 1 square above, or -1 for 1 square below. */
@@ -61,6 +62,13 @@ type castle = {
 	/** The coordinate of the piece the king castled with, usually a rook. */
 	coord: Coords
 }
+/**
+ * A special move tag that stores a list of all the waypoints along
+ * the travel path of a piece. Inclusive to start and end.
+ * 
+ * Used for Rose piece.
+ */
+type path = Coords[]
 
 /** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
 interface MoveDraft {
