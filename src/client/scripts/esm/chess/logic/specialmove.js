@@ -112,8 +112,6 @@ function getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
 function roses(gamefile, piece, move) {
-	if (move.path === undefined) throw Error('Roses move object must have the path special flag to execute the move!');
-
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
 	// Delete the piece captured

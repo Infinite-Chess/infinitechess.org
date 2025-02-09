@@ -251,13 +251,11 @@ function roses(gamefile, coords, color) {
 		}
 	}
 
-	// console.error("Calculated rose individual moves:");
-	// console.log(jsutil.deepCopyObject(individualMoves));
-
 	return individualMoves;
 
 	/**
 	 * Appends a coordinate to the individual moves list if it's not already present.
+	 * If it is present, it keeps the one with the shorter path.
 	 * @param {Coords} newCoord - The coordinate to append [x, y].
 	 */
 	function appendCoordToIndividuals(newCoord, path) {
@@ -274,7 +272,6 @@ function roses(gamefile, coords, color) {
 			if (sign === -1) individualMoves[i] = coord; // First path shorter
 			else if (sign === 1) individualMoves[i] = newCoord; // Second path shorter
 			else if (sign === 0) { // Path are equal length
-				// console.log("Paths are equal length!");
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
 				const startBox = gamefile.startSnapshot.box; // { left, right, bottom, top }
@@ -288,16 +285,12 @@ function roses(gamefile, coords, color) {
 				const dotProd2 = math.dotProdOfVectorToTarget(coords, vector2, centerOfPlay);
 				const sign2 = Math.sign(dotProd1 - dotProd2);
 				if (sign2 === 1) {
-					// console.log("Picked path:");
-					// console.log(coord);
 					individualMoves[i] = coord;
 				} else if (sign2 === -1) {
-					// console.log("Picked path:");
-					// console.log(newCoord);
 					individualMoves[i] = newCoord;
 				} else if (sign2 === 0) { // Even the vectors both equally point towards the origin.
+					console.log(dotProd1, dotProd2);
 					// JUST pick a random one!
-					// console.log("Picking random vector!!");
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
 				} else throw Error('Invalid sign: ' + sign2);
 			}
