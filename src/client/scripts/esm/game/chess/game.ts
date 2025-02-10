@@ -184,7 +184,7 @@ function render() {
 	
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		animation.renderPieces();
+		animation.renderAnimations();
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		dragAnimation.renderPiece();

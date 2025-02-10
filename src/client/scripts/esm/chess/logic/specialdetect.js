@@ -289,7 +289,6 @@ function roses(gamefile, coords, color) {
 				} else if (sign2 === -1) {
 					individualMoves[i] = newCoord;
 				} else if (sign2 === 0) { // Even the vectors both equally point towards the origin.
-					console.log(dotProd1, dotProd2);
 					// JUST pick a random one!
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
 				} else throw Error('Invalid sign: ' + sign2);
