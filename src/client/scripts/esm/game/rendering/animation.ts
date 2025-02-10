@@ -47,6 +47,8 @@ interface Animation {
 	type: string;
 	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
 	waypoints: Coords[];
+	/** The segments between each waypoint */
+	segments: AnimationSegment[];
 	/** The piece captured, if one was captured. This will be rendered in place for the during of the animation. */
 	captured?: Piece;
 	/** The time the animation started. */
@@ -61,14 +63,6 @@ interface Animation {
 	soundTimeoutId?: ReturnType<typeof setTimeout>;
 	/** The id of the timeout that will remove the animation from the list once it's over. */
 	scheduledRemovalId?: ReturnType<typeof setTimeout>;	
-
-	/** Whether the animation distance is large enough to merit teleporting half way through the animation so as to not move too quickly. */
-	usesTeleport?: boolean;
-	/** This is what the distance needs to be multiplied so it doesn't exceed {@link maxDistB4Teleport} */
-	teleportThreshold?: number;
-
-	/** The segments between each waypoint, if there are more then 2. */
-	segments?: AnimationSegment[];
 }
 
 
@@ -114,32 +108,26 @@ const animations: Animation[] = [];
 function animatePiece(type: string, waypoints: Coords[], captured?: Piece, resetAnimations: boolean = true): void {
 	if (resetAnimations) clearAnimations(true);
 
+	const segments: AnimationSegment[] = [];
+	for (let i = 0; i < waypoints.length - 1; i++) { 
+		const start = waypoints[i]!;
+		const end = waypoints[i + 1]!;
+		const segDist = math.euclideanDistance(start, end);
+		segments.push({ start, end, distance: segDist });
+	}
 	const totalDistance = getTotalLengthOfPathTraveled(waypoints);
+
 	const newAnimation: Animation = {
 		type,
 		waypoints,
+		segments,
 		captured,
 		startTimeMillis: performance.now(),
 		durationMillis: getDurationMillisOfMoveAnimation(totalDistance, waypoints.length),
 		totalDistance: totalDistance,
-		soundPlayed: false,
-		usesTeleport: waypoints.length === 2 && totalDistance > maxDistB4Teleport
+		soundPlayed: false
 	};
 
-	if (newAnimation.usesTeleport) newAnimation.teleportThreshold = maxDistB4Teleport / totalDistance;
-
-	if (waypoints.length > 2) {
-		// Assign properties of animation used for multi-segment animations
-		// Properties needed:   segments, cumulativeDistances, usesTeleport, teleportThreshold
-		const segments: AnimationSegment[] = [];
-		for (let i = 0; i < waypoints.length - 1; i++) { 
-			const start = waypoints[i]!;
-			const end = waypoints[i + 1]!;
-			const segDist = math.euclideanDistance(start, end);
-			segments.push({ start, end, distance: segDist });
-		}
-		newAnimation.segments = segments;
-	}
 
 
 	const timeUntilSoundIsPlayed = newAnimation.durationMillis + soundOffset;
@@ -261,16 +249,63 @@ function renderAnimations() {
 
 /** Returns the coordinate the animation's piece should be rendered this frame. */
 function getCurrentCoordsOfAnimation(animation: Animation): Coords {
-	
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** Range 0 to 1, representing the progress of the animation. */
 	const progress = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
 	const eased = easeInOut(progress);
 
-	if (animation.segments !== undefined) return getMultiSegmentInterpolation(animation, eased);
-	if (animation.usesTeleport) return getTeleportInterpolation(animation, eased);
-	return interpolateCoords(animation.waypoints[0]!, animation.waypoints[1]!, eased);
+	return getCurrentCoords(animation, eased);
+}
+
+/** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
+function getCurrentCoords(animation: Animation, easedProgress: number): Coords {
+	let targetDistance: number;
+    
+	if (animation.totalDistance <= maxDistB4Teleport) {
+		// Normal animation
+		targetDistance = easedProgress * animation.totalDistance;
+	} else {
+		// Teleporting animation
+		const totalDist = animation.totalDistance;
+        
+		if (easedProgress < 0.5) {
+			// First half: animate first portion of path
+			targetDistance = easedProgress * 2 * (maxDistB4Teleport / 2);
+		} else {
+			// Second half: animate final portion of path
+			const portionFromEnd = (easedProgress - 0.5) * 2 * (maxDistB4Teleport / 2);
+			targetDistance = (totalDist - maxDistB4Teleport / 2) + portionFromEnd;
+		}
+	}
+
+	// Now find which segment contains this distance
+	let accumulated = 0;
+	for (const segment of animation.segments!) {
+		if (targetDistance <= accumulated + segment.distance) {
+			const segmentProgress = (targetDistance - accumulated) / segment.distance;
+			return interpolateCoords(segment.start, segment.end, segmentProgress);
+		}
+		accumulated += segment.distance;
+	}
+    
+	return animation.waypoints[animation.waypoints.length - 1]!;
+}
+
+/**
+ * Applies an ease-in-out function to the progress value.
+ * @param progress - The linear progress value (between 0 and 1).
+ */
+function easeInOut(progress: number): number {
+	return -0.5 * Math.cos(Math.PI * progress) + 0.5;
+}
+
+/** Interpolates between two coordinates. */
+function interpolateCoords(start: Coords, end: Coords, progress: number): Coords {
+	return [
+      start[0] + (end[0] - start[0]) * progress,
+      start[1] + (end[1] - start[1]) * progress,
+    ];
 }
 
 /**
@@ -296,57 +331,6 @@ function appendDataOfPiece(data: number[], type: string, coords: Coords): void {
 	const bufferData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, a);
 
 	data.push(...bufferData);
-}
-
-/**
- * Applies an ease-in-out function to the progress value.
- * @param progress - The linear progress value (between 0 and 1).
- */
-function easeInOut(progress: number): number {
-	return -0.5 * Math.cos(Math.PI * progress) + 0.5;
-}
-
-
-// Interpolating between different types of animations -----------------------------------------------
-
-
-/** Interpolates between two coordinates. */
-function interpolateCoords(start: Coords, end: Coords, progress: number): Coords {
-	return [
-      start[0] + (end[0] - start[0]) * progress,
-      start[1] + (end[1] - start[1]) * progress,
-    ];
-}
-
-/** Returns the interpolated coordinates between two waypoints, with a teleportation effect in the middle once the distance is too large. */
-function getTeleportInterpolation(animation: Animation, progress: number): Coords {
-	const start = animation.waypoints[0]!;
-	const end = animation.waypoints[1]!;
-	if (progress < 0.5) {
-		// First half: animate from start to first threshold point
-		return interpolateCoords(start, end, progress * animation.teleportThreshold!);
-	} else {
-		// Second half: animate from second threshold point to end
-		const invertedProgress = 1 - progress;
-		return interpolateCoords(start, end, 1 - (invertedProgress * animation.teleportThreshold!));
-	}
-}
-
-/** Returns the interpolated coordinates between multiple waypoints. */
-function getMultiSegmentInterpolation(animation: Animation, progress: number): Coords {
-	const targetDistance = progress * animation.totalDistance;
-    
-	let accumulated = 0;
-	for (const segment of animation.segments!) {
-		if (targetDistance <= accumulated + segment.distance) {
-			const segmentProgress = (targetDistance - accumulated) / segment.distance;
-			return interpolateCoords(segment.start, segment.end, segmentProgress);
-		}
-		accumulated += segment.distance;
-	}
-    
-	// Fallback to last segment end
-	return animation.waypoints[animation.waypoints.length - 1]!;
 }
 
 
