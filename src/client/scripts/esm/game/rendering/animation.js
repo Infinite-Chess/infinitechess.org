@@ -62,7 +62,7 @@ const moveAnimationDuration = {
  * @param {boolean} [resetAnimations] If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
 function animatePiece(type, waypoints, captured, resetAnimations = true) { // captured: { type, coords }
-	if (resetAnimations) clearAnimations();
+	if (resetAnimations) clearAnimations(true);
 
 	const dist = getTotalLengthOfPathTraveled(waypoints); // Distance between start and end points of animation.
 
@@ -131,12 +131,17 @@ function getDurationMillisOfMoveAnimation(dist, waypointCount) {
 	return moveAnimationDuration.baseMillis + additionMillis;
 }
 
-// All animations cleared (skipping through moves quickly),
-// make the sounds from the skipped ones quieter as well.
-function clearAnimations() {
+/**
+ * Terminates all animations.
+ * 
+ * Should be called when we're skipping through moves quickly
+ * (in that scenario we immediately play the sound),
+ * or when the game is unloaded.
+ */
+function clearAnimations(playSounds = false) {
 	for (const animation of animations) {
 		clearTimeout(animation.soundTimeoutID); // Don't play it twice..
-		if (!animation.soundPlayed) playAnimationsSound(animation, true); // .. play it NOW.
+		if (playSounds && !animation.soundPlayed) playAnimationsSound(animation, true); // .. play it NOW.
 	}
 	animations.length = 0; // Empties existing animations
 }
@@ -323,5 +328,6 @@ export default {
 	update,
 	renderTransparentSquares,
 	renderPieces,
-	getDurationMillisOfMoveAnimation
+	getDurationMillisOfMoveAnimation,
+	clearAnimations,
 };
