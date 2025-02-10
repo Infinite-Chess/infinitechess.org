@@ -1,15 +1,14 @@
 
-// Import Start
+/**
+ * This script prepares our variant when a game is constructed
+ */
+
 import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
-import specialdetect from './specialdetect.js';
-import specialmove from './specialmove.js';
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
 import organizedlines from './organizedlines.js';
-import movesets from './movesets.js';
-// Import End
 
 /** 
  * Type Definitions 
@@ -18,10 +17,6 @@ import movesets from './movesets.js';
 
 "use strict";
 
-/**
- * This script stores our variants,
- * and prepares them when a game is generated
- */
 
 /**
  * Initializes the startSnapshot and gameRules properties of the provided gamefile.
@@ -107,15 +102,10 @@ function initPieceMovesets(gamefile, metadata) {
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
 	gamefile.pieceMovesets = variant.getMovesetsOfVariant(metadata);
 	gamefile.specialMoves = variant.getSpecialMovesOfVariant(metadata);
-	
 
-
+	// Construct the vicinity objects (helps with check detection)
 	gamefile.vicinity = legalmoves.genVicinity(gamefile);
-
-	const specialVicinityByPiece = variant.getSpecialVicinityByPieceOfVariant(metadata);
-	// console.log("Calculated specialVicinityByPiece:");
-	// console.log(specialVicinityByPiece);
-	gamefile.specialVicinity = specialmove.genSpecialVicinity(specialVicinityByPiece);
+	gamefile.specialVicinity = legalmoves.genSpecialVicinity(gamefile);
 }
 
 /**

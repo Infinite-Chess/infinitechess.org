@@ -98,6 +98,13 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): [numbe
 }
 
 /**
+ * Calculates the vector between 2 points.
+ */
+function calculateVectorFromPoints(start: Coords, end: Coords): Vec2 {
+	return [end[0] - start[0], end[1] - start[1]];
+}
+
+/**
  * Calculates the C coefficient of a line in general form (Ax + By + C = 0) 
  * given a point (coords) and a direction vector (vector).
  * 
@@ -298,9 +305,19 @@ function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBo
  * Computes the dot product of two 2D vectors.
  * WILL BE POSITIVE if they roughly point in the same direction.
  */
-// function dotProduct(v1: Vec2, v2: Vec2): number {
-// 	return v1[0] * v2[0] + v1[1] * v2[1];
-// }
+function dotProduct(v1: Vec2, v2: Vec2): number {
+	return v1[0] * v2[0] + v1[1] * v2[1];
+}
+
+/**
+ * Computes how well a vector points toward a target point using the dot product.
+ * @returns The dot product indicating alignment (higher means more aligned). Positive means it pointing roughly the same direction. When it's pointing exactly, the value will be the product of their magnitudes.
+ */
+function dotProdOfVectorToTarget(start: Coords, vector: Vec2, target: Coords): number {
+	const toTarget: Vec2 = calculateVectorFromPoints(start, target); // Vector pointing to target
+	return dotProduct(vector, toTarget);
+}
+
 
 /**
  * Finds the intersection points of a vector starting at a point with a bounding box.
@@ -630,6 +647,7 @@ export default {
 	calcIntersectionPointOfLines,
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFrom2Coords,
+	calculateVectorFromPoints,
 	getLineCFromCoordsAndVec,
 	getXYComponents_FromAngle,
 	roundPointToNearestGridpoint,
@@ -640,6 +658,7 @@ export default {
 	mergeBoundingBoxes,
 	closestPointOnLine,
 	findFarthestPointsALineSweepsABox,
+	dotProdOfVectorToTarget,
 	findLineBoxIntersections,
 	areLinesCollinear,
 	getKeyFromVec2,

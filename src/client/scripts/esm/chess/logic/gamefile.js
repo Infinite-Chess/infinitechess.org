@@ -61,6 +61,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** The count of pieces the game started with. @type {number} */
 		pieceCount: undefined,
 		/** The bounding box surrounding the starting position, without padding.
+		 * For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }`
          * @type {BoundingBox} */
 		box: undefined,
 		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */

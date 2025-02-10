@@ -39,20 +39,53 @@ import wincondition from './wincondition.js';
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
 
+/**
+ * A pair of coordinates, WITH attached special move information.
+ * This usually denotes a legal square you can move to that will
+ * activate said special move.
+ */
+type CoordsSpecial = Coords & { 
+	enpassant?: enpassant,
+	promotion?: promotion,
+	castle?: castle,
+	path?: path,
+}
+
+/** A special move tag for enpassant capture. This will be 1 if the captured piece is 1 square above, or -1 for 1 square below. */
+type enpassant = -1 | 1;
+/** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
+type promotion = string;
+/** A special move tag for castling. */
+type castle = {
+	/** 1 => King castled right   2 => King castled left */
+	dir: 1 | -1,
+	/** The coordinate of the piece the king castled with, usually a rook. */
+	coord: Coords
+}
+/**
+ * A special move tag that stores a list of all the waypoints along
+ * the travel path of a piece. Inclusive to start and end.
+ * 
+ * Used for Rose piece.
+ */
+type path = Coords[]
+
 /** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
 interface MoveDraft {
 	startCoords: Coords,
 	endCoords: Coords,
 	/** Present if the move was special-move enpassant capture. This will be
 	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
-	enpassant?: -1 | 1,
+	enpassant?: enpassant,
 	/** Present if the move was a special-move promotion. This will be
 	 * a string of the type of piece being promoted to: "queensW" */
-	promotion?: string,
+	promotion?: promotion,
 	/** Present if the move was a special-move casle. This may look like an
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
 	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
-	castle?: { coord: Coords, dir: 1 | -1 },
+	castle?: castle,
+	/** Present if the move is for a Rose. */
+	path?: path,
 }
 
 /**
@@ -136,12 +169,8 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
-	if (capturedPiece) {
-		boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
-		return;
-	};
-
-	boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
+	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
 }
 
 /**
@@ -423,6 +452,7 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 export type {
 	Move,
 	MoveDraft,
+	CoordsSpecial,
 };
 
 export default {
