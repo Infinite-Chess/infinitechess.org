@@ -268,10 +268,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
 		},
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional,
-		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } },
-		specialMoves: {
-			pawns: fivedimensionalmoves.doFiveDimensionalPawnMove
-		}
+		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } }
 	}
 };
 
