@@ -276,14 +276,12 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
-	if (mode === 0) return; // Arrow indicators are off, nothing is visible.
-	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) { // Too zoomed out, the arrows would be really tiny.
-		reset();
-		arrowlegalmovehighlights.reset();
+	reset(); // Initiate the arrows empty
+
+	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
+		arrowlegalmovehighlights.reset(); // Also reset this
 		return;
 	}
-
-	reset(); // Initiate the arrows empty
 
 	/**
 	 * To be able to test if a piece is offscreen or not,
@@ -316,6 +314,12 @@ function update() {
 	calculateSlideArrows_AndHovered(slideArrowsDraft);
 }
 
+/** Whether the arrows should be calculated and rendered this frame */
+function areArrowsActiveThisFrame() {
+	// false if the arrows are off, or if the board is too zoomed out
+	return mode !== 0 && board.gtileWidth_Pixels(true) >= renderZoomLimitVirtualPixels;
+}
+
 /**
  * Calculates the visible bounding box of the screen for this frame,
  * both the integer-rounded, and the exact floating point one.
@@ -343,7 +347,7 @@ function updateBoundingBoxesOfVisibleScreen() {
 	// Expand the bounding box so that it contains the whole of the squares.
 	boundingBoxInt = shapes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxInt);
 
-	/**
+	/*
 	 * Adds a little bit of padding to the bounding box, so that the arrows of the
 	 * arrows indicators aren't touching the edge of the screen.
 	 */
@@ -696,7 +700,8 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
  * as it changes how far other pieces can slide along the line its on.
  */
 function shiftArrow(piece: Piece, newCoords: Coords, capturedPiece?: Piece) {
-	if (mode === 0) return; // Anything added won't be visible
+	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
+
 	const gamefile = gameslot.getGamefile()!;
 	const animatedPiece = { type: piece.type, index: piece.index, coords: newCoords };
 
