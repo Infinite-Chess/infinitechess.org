@@ -9,8 +9,6 @@ import boardchanges, { Piece } from "./boardchanges.js";
 import gamefile from "./gamefile.js";
 import { Move } from "./movepiece.js";
 import { Coords } from "./movesets.js";
-// @ts-ignore
-import pawns from "./specialdetect.js";
 import state from "./state.js";
 import math from "../../util/math.js";
 // Import End
@@ -31,8 +29,8 @@ function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: stri
 	const legalMoves: FiveDimensionalCoords[] = [];
 	let legalSpacelike: Coords[] = [];
 	let legalTimelike: Coords[] = [];
-	legalSpacelike = pawns.pawns(gamefile, coords, color);
-	legalTimelike = timelikepawns(gamefile, coords, color);
+	legalSpacelike = pawnLegalMoves(gamefile, coords, color, 1);
+	legalTimelike = pawnLegalMoves(gamefile, coords, color, 10);
 	for (const coord of legalSpacelike) {
 		legalMoves.push(TwoDToFiveDCoords(coord));
 	}
@@ -48,10 +46,10 @@ function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
 	return gamefile.specialRights[key];
 }
 
-function timelikepawns(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, distance: number): Coords[] {
 
 	// White and black pawns move and capture in opposite directions.
-	const yOneorNegOne = color === 'white' ? 10 : -10;
+	const yOneorNegOne = color === 'white' ? distance : -distance;
 	const individualMoves: Coords[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -71,8 +69,8 @@ function timelikepawns(gamefile: gamefile, coords: Coords, color: string): Coord
 	// 2. It can capture diagonally if there are opponent pieces there
 
 	const coordsToCapture: Coords[] = [
-		[coords[0] - 10, coords[1] + yOneorNegOne],
-		[coords[0] + 10, coords[1] + yOneorNegOne]
+		[coords[0] - distance, coords[1] + yOneorNegOne],
+		[coords[0] + distance, coords[1] + yOneorNegOne]
 	];
 	for (let i = 0; i < 2; i++) {
 		const thisCoordsToCapture = coordsToCapture[i]!;
