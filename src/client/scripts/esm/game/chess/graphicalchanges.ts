@@ -106,15 +106,18 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 
 
 function animateMove(change: Change, clearanimations: boolean) {
-	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], undefined, clearanimations);
+	const waypoints = change['path'] ?? [change['piece'].coords, change['endCoords']];
+	animation.animatePiece(change['piece'].type, waypoints, undefined, clearanimations);
 }
 
 function animateReturn(change: Change, clearanimations: boolean) {
-	animation.animatePiece(change['piece'].type, change['endCoords'], change['piece'].coords, undefined, clearanimations);
+	const waypoints = change['path']?.slice().reverse() ?? [change['endCoords'], change['piece'].coords]; // slice() required because reverse() is mutating
+	animation.animatePiece(change['piece'].type, waypoints, undefined, clearanimations);
 }
 
 function animateCapture(change: Change, clearanimations: boolean) {
-	animation.animatePiece(change['piece'].type, change['piece'].coords, change['endCoords'], change['capturedPiece'], clearanimations);
+	const waypoints = change['path'] ?? [change['piece'].coords, change['endCoords']];
+	animation.animatePiece(change['piece'].type, waypoints, change['capturedPiece'], clearanimations);
 }
 
 

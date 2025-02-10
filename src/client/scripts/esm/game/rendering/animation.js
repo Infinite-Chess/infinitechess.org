@@ -42,7 +42,7 @@ const timeToPlaySoundEarly = 100;
 
 const maxDistB4Teleport = 80; // 80
 
-const animations = []; // { duration, startTime, type, startCoords, endCoords, captured, distIsGreater }
+const animations = []; // { duration, startTime, type, waypoints, captured, distIsGreater }
 
 /** Used for calculating the duration move animations. */
 const moveAnimationDuration = {
@@ -50,37 +50,58 @@ const moveAnimationDuration = {
 	baseMillis: 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
 	multiplierMillis: 6,
+	/** The multiplierMillis when there's atleast 3+ waypoints */
+	multiplierMillis_waypoints: 12,
 };
 
 /**
  * Animates a piece after moving it.   
  * @param {string} type - The type of piece to animate
- * @param {number[]} startCoords - [x,y]
- * @param {number[]} endCoords - [x,y]
+ * @param {number[][]} waypoints - Coords[]
  * @param {Piece} [captured] The piece captured, if one was captured.
  * @param {boolean} [resetAnimations] If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type, startCoords, endCoords, captured, resetAnimations = true) { // captured: { type, coords }
+function animatePiece(type, waypoints, captured, resetAnimations = true) { // captured: { type, coords }
 	if (resetAnimations) clearAnimations();
 
-	// let dist = math.euclideanDistance(startCoords, endCoords); // Distance between start and end points of animation.
-	const dist = math.chebyshevDistance(startCoords, endCoords); // Distance between start and end points of animation.
-	const distIsGreater = dist > maxDistB4Teleport; // True if distance requires a teleport because it's so big
+	const dist = getTotalLengthOfPathTraveled(waypoints); // Distance between start and end points of animation.
 
 	const newAnimation = {
 		startTime: performance.now(),
 		soundPlayed: false,
-
+	
 		type,
-		startCoords,
-		endCoords,
+		waypoints,
 		captured,
+	
+		duration: getDurationMillisOfMoveAnimation(dist, waypoints.length),
+		// IF the totalDistance from waypoint1 to the last waypoint is too big, the piece teleports mid-animation.
+		distIsGreater: waypoints.length === 2 && dist > maxDistB4Teleport, // Teleport only for single-segment
 
-		dist,
-		distIsGreater,
-
-		duration: getDurationMillisOfMoveAnimation({ startCoords, endCoords })
+		// Additional properties for multi-segment animations
+		segments: [],
+		segmentDistances: [],
+		cumulativeDistances: [],
+		totalDistance: dist,
 	};
+
+	// Precompute segment data if there are multiple waypoints
+	if (waypoints.length > 2) {
+		const segments = [];
+		const segmentDistances = [];
+		let cumulative = 0;
+		for (let i = 0; i < waypoints.length - 1; i++) {
+			const start = waypoints[i];
+			const end = waypoints[i + 1];
+			const segDist = math.euclideanDistance(start, end);
+			segments.push({ start, end });
+			segmentDistances.push(segDist);
+			cumulative += segDist;
+			newAnimation.cumulativeDistances.push(cumulative);
+		}
+		newAnimation.segments = segments;
+		newAnimation.segmentDistances = segmentDistances;
+	}
 
 	// Set a timer when to play the sound
 	const timeToPlaySound = newAnimation.duration - timeToPlaySoundEarly;
@@ -89,17 +110,24 @@ function animatePiece(type, startCoords, endCoords, captured, resetAnimations = 
 	animations.push(newAnimation);
 }
 
+function getTotalLengthOfPathTraveled(waypoints) {
+	let totalLength = 0;
+	for (let i = 0; i < waypoints.length - 1; i++) {
+		const start = waypoints[i];
+		const end = waypoints[i + 1];
+		totalLength += math.euclideanDistance(start, end);
+	}
+	return totalLength;
+}
+
 /**
  * Calculates the duration in milliseconds a particular move would take to animate.
  * @param {Move} move 
  */
-function getDurationMillisOfMoveAnimation(move) {
-	// let dist = math.euclideanDistance(startCoords, endCoords); // Distance between start and end points of animation.
-	const dist = math.chebyshevDistance(move.startCoords, move.endCoords); // Distance between start and end points of animation.
+function getDurationMillisOfMoveAnimation(dist, waypointCount) {
 	const cappedDist = Math.min(dist, maxDistB4Teleport);
-
-	const additionMillis = moveAnimationDuration.multiplierMillis * cappedDist;
-
+	const multiplierToUse = waypointCount > 2 ? moveAnimationDuration.multiplierMillis_waypoints : moveAnimationDuration.multiplierMillis;
+	const additionMillis = cappedDist * multiplierToUse;
 	return moveAnimationDuration.baseMillis + additionMillis;
 }
 
@@ -130,17 +158,17 @@ function update() {
 }
 
 /** Animates the arrow indicator */
-function shiftArrowIndicatorOfAnimatedPiece(animation) { // { duration, startTime, type, startCoords, endCoords, captured, distIsGreater }
+function shiftArrowIndicatorOfAnimatedPiece(animation) { // { duration, startTime, type, waypoints, captured, distIsGreater }
 	const animationCurrentCoords = getCurrentCoordsOfAnimation(animation);
-	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile(), animation.endCoords);
+	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile(), animation.waypoints[animation.waypoints.length - 1]);
 	arrows.shiftArrow(piece, animationCurrentCoords, animation.captured);
 }
 
 // Set dampen to true if we're skipping quickly through moves
 // and we don't want this sound to be so loud
 function playAnimationsSound(animation, dampen) {
-	if (animation.captured) sound.playSound_capture(animation.dist, dampen);
-	else sound.playSound_move(animation.dist, dampen);
+	if (animation.captured) sound.playSound_capture(animation.totalDistance, dampen);
+	else sound.playSound_move(animation.totalDistance, dampen);
 
 	animation.soundPlayed = true;
 }
@@ -165,7 +193,7 @@ function genTransparentModel() {
 
 	const color = [0, 0, 0, 0];
 	for (const thisAnimation of animations) {
-		data.push(...shapes.getTransformedDataQuad_Color_FromCoord(thisAnimation.endCoords, color));
+		data.push(...shapes.getTransformedDataQuad_Color_FromCoord(thisAnimation.waypoints[thisAnimation.waypoints.length - 1], color));
 	}
 
 	return createModel(data, 2, "TRIANGLES", true);
@@ -204,49 +232,71 @@ function genPieceModel() {
  * @param {Object} animation 
  * @returns {number[]}
  */
+// Update getCurrentCoordsOfAnimation function:
 function getCurrentCoordsOfAnimation(animation) {
-
 	const passedTime = performance.now() - animation.startTime;
-	const equaX = passedTime / animation.duration;
-	const equaY = -0.5 * Math.cos(equaX * Math.PI) + 0.5;
+	const tLinear = passedTime / animation.duration;
+	const equaY = -0.5 * Math.cos(tLinear * Math.PI) + 0.5; // Ease-in-out
 
-	let diffX = animation.endCoords[0] - animation.startCoords[0];
-	let diffY = animation.endCoords[1] - animation.startCoords[1];
+	if (animation.waypoints.length > 2) {
+		// Handle multi-segment waypoints
+		const distanceCovered = equaY * animation.totalDistance;
+		let segmentIndex = 0;
+		let prevCumulative = 0;
 
-	// const dist = Math.hypot(diffX, diffY)
-	const dist = animation.dist;
+		// Find the current segment
+		while (segmentIndex < animation.cumulativeDistances.length && animation.cumulativeDistances[segmentIndex] < distanceCovered) {
+			prevCumulative = animation.cumulativeDistances[segmentIndex];
+			segmentIndex++;
+		}
 
-	let newX;
-	let newY;
+		// Clamp segmentIndex to valid range
+		segmentIndex = Math.min(segmentIndex, animation.segments.length - 1);
+		const segment = animation.segments[segmentIndex];
+		const segDist = animation.segmentDistances[segmentIndex];
+		const segStart = segment.start;
+		const segEnd = segment.end;
 
-	if (!animation.distIsGreater) {
-		const addX = diffX * equaY;
-		const addY = diffY * equaY;
+		// Local t within the segment
+		const tSegment = segDist === 0 ? 0 : (distanceCovered - prevCumulative) / segDist;
+		const newX = segStart[0] + (segEnd[0] - segStart[0]) * tSegment;
+		const newY = segStart[1] + (segEnd[1] - segStart[1]) * tSegment;
 
-		newX = animation.startCoords[0] + addX;
-		newY = animation.startCoords[1] + addY;
-
+		return [newX, newY];
 	} else {
-		// 1st half or 2nd half?
-		const firstHalf = equaX < 0.5;
-		const neg = firstHalf ? 1 : -1;
-		const actualEquaY = firstHalf ? equaY : 1 - equaY;
+		// Existing single-segment logic with teleport check
+		const start = animation.waypoints[0];
+		const end = animation.waypoints[1];
+		let diffX = end[0] - start[0];
+		let diffY = end[1] - start[1];
 
-		const ratio = maxDistB4Teleport / dist;
+		if (!animation.distIsGreater) {
+			return [
+				start[0] + diffX * equaY,
+				start[1] + diffY * equaY
+			];
+		} else {
+			// 1st half or 2nd half?
+			const firstHalf = tLinear < 0.5;
+			const neg = firstHalf ? 1 : -1;
+			const actualEquaY = firstHalf ? equaY : 1 - equaY;
+	
+			const ratio = maxDistB4Teleport / animation.totalDistance;
+	
+			diffX *= ratio;
+			diffY *= ratio;
+	
+			const target = firstHalf ? start : end;
+	
+			const addX = diffX * actualEquaY * neg;
+			const addY = diffY * actualEquaY * neg;
 
-		diffX *= ratio;
-		diffY *= ratio;
-
-		const target = firstHalf ? animation.startCoords : animation.endCoords;
-
-		const addX = diffX * actualEquaY * neg;
-		const addY = diffY * actualEquaY * neg;
-
-		newX = target[0] + addX;
-		newY = target[1] + addY;
+			return [
+				target[0] + addX,
+				target[1] + addY
+			];
+		}
 	}
-
-	return [newX, newY];
 }
 
 function appendDataOfPiece(data, type, coords) {

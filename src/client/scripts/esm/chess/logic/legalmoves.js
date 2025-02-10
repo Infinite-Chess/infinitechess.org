@@ -3,20 +3,18 @@
  * This script calculates legal moves
  */
 
-// Import Start
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../util/colorutil.js';
-import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
 import math from '../../util/math.js';
-// Import End
+import variant from '../variants/variant.js';
 
 /** 
  * Type Definitions 
@@ -69,6 +67,31 @@ function genVicinity(gamefile) {
 			if (!vicinity[key].includes(type)) vicinity[key].push(type); // Make sure the key contains the piece type that can capture from that distance
 		});
 	});
+	return vicinity;
+}
+
+/**
+ * Calculates the area around you in which special pieces HAVE A CHANCE to capture you from that distance.
+ * This is used for efficient calculating if a move would put you in check by a special piece.
+ * If a special piece is found at any of these distances, their legal moves are calculated
+ * to see if they would check you or not.
+ * This saves us from having to iterate through every single
+ * special piece in the game to see if they would check you.
+ * @param {gamefile} gamefile
+ * @returns {Object} The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
+ */
+function genSpecialVicinity(gamefile) {
+	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(gamefile.metadata);
+	const vicinity = {};
+	const existingTypes = gamefile.startSnapshot.existingTypes;
+	for (const [type, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
+		if (!existingTypes.includes(type)) continue; // This piece isn't present in our game
+		pieceVicinity.forEach(coords => {
+			const coordsKey = coordutil.getKeyFromCoords(coords);
+			vicinity[coordsKey] = vicinity[coordsKey] ?? []; // Make sure its initialized
+			vicinity[coordsKey].push(type);
+		});
+	}
 	return vicinity;
 }
 
@@ -453,6 +476,7 @@ function hasAtleast1Move(moves) { // { individual, horizontal, vertical, ... }
 
 export default {
 	genVicinity,
+	genSpecialVicinity,
 	getPieceMoveset,
 	calculate,
 	checkIfMoveLegal,
