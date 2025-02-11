@@ -29,6 +29,7 @@ import board from './board.js';
 import perspective from './perspective.js';
 // @ts-ignore
 import shapes from './shapes.js';
+import splines from '../../util/splines.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
@@ -69,6 +70,22 @@ interface Animation {
 // Constants -------------------------------------------------------------------
 
 
+/** If this is enabled, the spline of the animation will be rendered, and the animations duration increased. */
+const DEBUG = true;
+/** Config for the splines. */
+const SPLINES: {
+	/** The number of points per segment of the spline. */
+	RESOLUTION: number;
+	/** The thickness of the spline. Used when debug rendering. */
+	WIDTH: number;
+	/** The color of the spline. Used when debug rendering. */
+	COLOR: [number, number, number, number];
+} = {
+	RESOLUTION: 10, // Default: 10
+	WIDTH: 0.15, // Default: 0.15
+	COLOR: [1, 0, 0, 1] // Default: [1, 0, 0, 1]
+};
+
 /**
  * The z offset of the transparent square meant to block out the default
  * rendering of the pieces while the animation is visible.
@@ -84,11 +101,11 @@ const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
 /** Used for calculating the duration of move animations. */
 const MOVE_ANIMATION_DURATION = {
 	/** The base amount of duration, in millis. */
-	baseMillis: 150, // Default: 150
+	baseMillis: DEBUG ? 1000 : 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMillis: 6,
+	multiplierMillis: DEBUG ? 60 : 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
-	multiplierMillis_waypoints: 14, // Default: 12
+	multiplierMillis_Curved: DEBUG ? 120 : 12, // Default: 12
 };
 
 
@@ -113,17 +130,19 @@ function animatePiece(type: string, waypoints: Coords[], captured?: Piece, reset
 	if (waypoints.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
-	const segments = createAnimationSegments(waypoints);
+	// Generate smooth spline waypoints
+	const denseWaypoints = splines.generateSplineWaypoints(waypoints, SPLINES.RESOLUTION);
+	const segments = createAnimationSegments(denseWaypoints);
 	const totalDistance = calculateTotalAnimationDistance(segments);
 
 	const newAnimation: Animation = {
 		type,
-		waypoints,
+		waypoints: denseWaypoints,
 		segments,
 		captured,
 		startTimeMillis: performance.now(),
-		durationMillis: calculateAnimationDuration(totalDistance, waypoints.length),
-		totalDistance: totalDistance,
+		durationMillis: calculateAnimationDuration(totalDistance, denseWaypoints.length),
+		totalDistance,
 		soundPlayed: false
 	};
 
@@ -172,7 +191,7 @@ function calculateTotalAnimationDistance(segments: AnimationSegment[]): number {
 /** Calculates the duration in milliseconds a particular move would take to animate. */
 function calculateAnimationDuration(totalDistance: number, waypointCount: number): number {
 	const cappedDist = Math.min(totalDistance, MAX_DISTANCE_BEFORE_TELEPORT);
-	const multiplierToUse = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_waypoints : MOVE_ANIMATION_DURATION.multiplierMillis;
+	const multiplierToUse = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved : MOVE_ANIMATION_DURATION.multiplierMillis;
 	const additionMillis = cappedDist * multiplierToUse;
 	return MOVE_ANIMATION_DURATION.baseMillis + additionMillis;
 }
@@ -250,6 +269,8 @@ function renderTransparentSquares(): void {
 /** Renders the animations of the pieces. */
 function renderAnimations() {
 	if (animations.length === 0) return;
+
+	if (DEBUG) animations.forEach(animation => splines.debugRenderSpline(animation.waypoints, SPLINES.WIDTH, SPLINES.COLOR));
 
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => {
