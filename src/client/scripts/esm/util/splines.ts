@@ -1,6 +1,8 @@
 
 /**
  * This script contains utility methods for working with splines.
+ * 
+ * Methods written by DeepSeek R1 and ChatGPT Reason.
  */
 
 import type { Coords } from "../chess/util/coordutil.js";
