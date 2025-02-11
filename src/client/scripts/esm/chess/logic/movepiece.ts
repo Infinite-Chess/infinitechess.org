@@ -18,6 +18,7 @@ import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
 import boardchanges from './boardchanges.js';
+import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -26,8 +27,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import math from '../../util/math.js';
-// @ts-ignore
-import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import checkdetection from './checkdetection.js';
 // @ts-ignore

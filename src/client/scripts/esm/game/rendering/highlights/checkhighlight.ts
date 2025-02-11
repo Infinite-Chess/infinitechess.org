@@ -4,15 +4,15 @@
  * royal pieces currently in check.
  */
 
+import space from '../../misc/space.js';
+import gamefileutility from '../../../chess/util/gamefileutility.js';
+import { BufferModel, createModel } from '../buffermodel.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
 import movement from '../movement.js';
 // @ts-ignore
 import options from '../options.js';
-import space from '../../misc/space.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
-import { BufferModel, createModel } from '../buffermodel.js';
 
 
 // Type Definitions ----------------------------------------------------------------
