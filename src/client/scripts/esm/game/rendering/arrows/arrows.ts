@@ -29,7 +29,6 @@ import organizedlines from '../../../chess/logic/organizedlines.js';
 import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
-// @ts-ignore
 import space from '../../misc/space.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';

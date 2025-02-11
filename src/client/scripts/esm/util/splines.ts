@@ -9,10 +9,7 @@ import type { Coords } from "../chess/util/coordutil.js";
 import type { Color } from "../chess/util/colorutil";
 
 import { createModel } from "../game/rendering/buffermodel.js";
-// @ts-ignore
 import space from "../game/misc/space.js";
-// @ts-ignore
-import movement from "../game/rendering/movement.js";
 
 /**
  * Computes a natural cubic spline for a given set of points.

@@ -19,7 +19,6 @@ import typeutil from './typeutil.js';
 import winconutil from './winconutil.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
-// @ts-ignore
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
 import math from '../../util/math.js';
