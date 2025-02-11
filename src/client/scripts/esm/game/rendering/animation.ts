@@ -242,8 +242,9 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
-	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile()!, animation.path[animation.path.length - 1]!)!;
-	arrows.shiftArrow(piece, animationCurrentCoords, animation.captured);
+	arrows.shiftArrow(animation.type, animation.path[0]!, animationCurrentCoords);
+	// Add the captured piece only after we've shifted the piece that captured it
+	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.waypoints.length - 1]);
 }
 
 
