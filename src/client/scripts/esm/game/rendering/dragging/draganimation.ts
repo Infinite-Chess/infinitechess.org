@@ -15,6 +15,7 @@ import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import { createModel } from "../buffermodel.js";
+// @ts-ignore
 import space from "../../misc/space.js";
 // @ts-ignore
 import shapes from "../shapes.js";
