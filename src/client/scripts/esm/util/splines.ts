@@ -4,6 +4,7 @@
  */
 
 import type { Coords } from "../chess/util/coordutil.js";
+import type { Color } from "../chess/util/colorutil";
 
 import { createModel } from "../game/rendering/buffermodel.js";
 // @ts-ignore
@@ -11,10 +12,11 @@ import space from "../game/misc/space.js";
 // @ts-ignore
 import movement from "../game/rendering/movement.js";
 
-
-// Functions ---------------------------------------------------------------------------------------------------
-
-
+/**
+ * Computes a natural cubic spline for a given set of points.
+ * @param points - Array of y-values representing the points to interpolate.
+ * @returns Array of spline coefficients (a, b, c, d) for each segment.
+ */
 function computeNaturalCubicSpline(points: number[]): { a: number, b: number, c: number, d: number }[] {
 	const n = points.length;
 	if (n < 2) return [];
@@ -42,7 +44,7 @@ function computeNaturalCubicSpline(points: number[]): { a: number, b: number, c:
 
 	for (let i = 1; i <= n - 2; i++) c[i] = cSolution[i - 1];
 
-	// Compute d and b
+	// Compute d and b coefficients
 	for (let i = 0; i < n - 1; i++) {
 		d[i] = (c[i + 1] - c[i]) / 3;
 		b[i] = (points[i + 1]! - points[i]!) - (2 * c[i]! + c[i + 1]!) / 3;
@@ -51,6 +53,14 @@ function computeNaturalCubicSpline(points: number[]): { a: number, b: number, c:
 	return a.map((aVal, i) => ({ a: aVal, b: b[i], c: c[i], d: d[i] }));
 }
 
+/**
+ * Solves a tridiagonal system using the Thomas algorithm.
+ * @param a - Sub-diagonal coefficients.
+ * @param b - Main diagonal coefficients.
+ * @param c - Super-diagonal coefficients.
+ * @param d - Right-hand side values.
+ * @returns Solution array.
+ */
 function thomasAlgorithm(a: number[], b: number[], c: number[], d: number[]): number[] {
 	const n = d.length;
 	if (n === 0) return [];
@@ -72,6 +82,12 @@ function thomasAlgorithm(a: number[], b: number[], c: number[], d: number[]): nu
 	return dp;
 }
 
+/**
+ * Evaluates the cubic spline at a given parameter t.
+ * @param t - Parameter value.
+ * @param spline - Array of spline coefficients.
+ * @returns Interpolated value.
+ */
 function evaluateCubicSpline(t: number, spline: { a: number, b: number, c: number, d: number }[]): number {
 	const i = Math.max(0, Math.min(spline.length - 1, Math.floor(t)));
 	const { a, b, c, d } = spline[i]!;
@@ -79,6 +95,12 @@ function evaluateCubicSpline(t: number, spline: { a: number, b: number, c: numbe
 	return a + b * dt + c * dt * dt + d * dt * dt * dt;
 }
 
+/**
+ * Generates a smooth path using cubic splines from a set of waypoints.
+ * @param waypoints - Array of coordinate points.
+ * @param numStepsPerSegment - Number of interpolated points per segment.
+ * @returns Interpolated waypoints.
+ */
 function generateSplineWaypoints(waypoints: Coords[], numStepsPerSegment: number): Coords[] {
 	if (waypoints.length < 2) return waypoints;
 
@@ -99,7 +121,12 @@ function generateSplineWaypoints(waypoints: Coords[], numStepsPerSegment: number
 			let x = evaluateCubicSpline(t, xSpline) ?? xPoints[xPoints.length - 1];
 			let y = evaluateCubicSpline(t, ySpline) ?? yPoints[yPoints.length - 1];
 
-			// Ensure the last waypoint exactly matches the input
+			/**
+			 * Ensure the last waypoint exactly matches the input.
+			 * Otherwise, a bug is created when the animation manager
+			 * expects there to be a piece at the last waypoint, but the last
+			 * waypoint isn't an integer because of floating point imprecision.
+			 */
 			if (isLast && k === numStepsPerSegment) [x, y] = waypoints[waypoints.length - 1]!;
 
 			dense.push([x, y]);
@@ -112,13 +139,13 @@ function generateSplineWaypoints(waypoints: Coords[], numStepsPerSegment: number
 /**
  * Renders a debug visualization of the entire spline as a continuous ribbon.
  * @param waypoints - The original spline waypoints. Each point is the coordinate on the grid, NOT grid space.
- * @param [lineWidth=5] - The debug line width in world units.
- * @param [color=[1, 0, 0, 1]] - RGBA color for the debug line.
+ * @param lineWidth - The debug line width in world units.
+ * @param color - RGBA color for the debug line.
  */
 function debugRenderSpline(
 	waypoints: Coords[],
 	lineWidth: number,
-	color: [number, number, number, number]
+	color: Color
 ): void {
 	if (waypoints.length < 2) throw Error("Spline requires at least 2 waypoints to render.");
 
