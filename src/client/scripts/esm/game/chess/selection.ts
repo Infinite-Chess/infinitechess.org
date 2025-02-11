@@ -33,7 +33,7 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import input from '../input.js';
 // @ts-ignore
-import specialdetect from '../../chess/logic/specialdetect.js';
+import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
 // @ts-ignore
@@ -48,6 +48,11 @@ import statustext from '../gui/statustext.js';
 import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import sound from '../misc/sound.js';
+import draganimation from '../rendering/dragging/draganimation.js';
+import { MoveDraft } from '../../chess/logic/movepiece.js';
+import math from '../../util/math.js';
+import boardchanges from '../../chess/logic/boardchanges.js';
+import animation from '../rendering/animation.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -242,7 +247,7 @@ function handleMovingSelectedPiece(coordsClicked: Coords, pieceClickedType?: str
 		return;
 	}
 
-	moveGamefilePiece(coordsClicked, pieceClickedType !== undefined);
+	moveGamefilePiece(coordsClicked);
 }
 
 /**
@@ -339,7 +344,7 @@ function unselectPiece() {
  * The destination coordinates MUST contain any special move flags.
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(coords: CoordsSpecial, isCapture = false) {
+function moveGamefilePiece(coords: CoordsSpecial) {
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
