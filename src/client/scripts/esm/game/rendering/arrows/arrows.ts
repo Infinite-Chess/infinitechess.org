@@ -226,6 +226,7 @@ function reset() {
 	hoveredArrows.length = 0;
 	boundingBoxFloat = undefined;
 	boundingBoxInt = undefined;
+	shifts.length = 0;
 }
 
 /**
@@ -702,7 +703,7 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
  * ==> Deletes any previous shift with a start or end on the deletion
  */
 
-type Shift = { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
+type Shift = { type: string } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 
 /**
  * A list of arrow modifications made by other scripts
@@ -720,6 +721,9 @@ let shifts: Shift[] = [];
 function shiftArrow(type: string, start?: Coords, end?: Coords) {
 	if (start === undefined && end === undefined) throw Error('Must provide one of either start or end coords of modified arrow.');
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
+
+	console.log("Shifting arrow:");
+	console.error(jsutil.deepCopyObject({ type, start, end }));
 
 	if (start !== undefined) { // Guaranteed a deletion
 
@@ -742,18 +746,20 @@ function shiftArrow(type: string, start?: Coords, end?: Coords) {
 
 
 function executeArrowShifts() {
-	const gamefile = gameslot.getGamefile()!;
+	console.log("Executing arrow shifts");
+	console.log(jsutil.deepCopyObject(shifts));
 
+	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 
-	shifts.forEach(shift => {
+	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 
 		// Delete the piece from the start location, and add it at the end location
 
 		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start)! : undefined;
-		if (originalPiece !== undefined) shift.index === originalPiece.index;
-		// This matches the original piece, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
-		const addedPiece: Piece | undefined = shift.start !== undefined && shift.end !== undefined ? { type: shift.type, coords: shift.end, index: originalPiece!.index } : shift.end !== undefined ? { type: shift.type, coords: shift.end, /* index: undefined */ } as Piece : undefined;
+
+		// This matches the original piece's index, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
+		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end, index: originalPiece?.index } as Piece : undefined;
 
 		// Do the delete action first, so that organized piece lists have an undefined placeholder for the proceeding addition
 		if (shift.start !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
@@ -762,18 +768,19 @@ function executeArrowShifts() {
 	});
 
 	// Apply the board changes
+	// console.log("Applying changes:");
+	// console.log(changes);
 	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
 
 	shifts.forEach(shift => {
 
-		const originalPiece: Piece = { type: shift.type, coords: shift.start!, index: shift.index! };
-		// This matches the original piece, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
-		const addedPiece: Piece = { type: shift.type, coords: shift.end!, index: shift.index! };
+		const originalPiece: Piece | undefined = shift.start !== undefined ? { type: shift.type, coords: shift.start! } as Piece : undefined;
+
+		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end } as Piece : undefined;
 
 		// Recalculate every single line on the start and end coordinates.
-		if (shift.start !== undefined) recalculateLineOfPiece(gamefile, originalPiece!, false); 
-		const piece = { type: shift.type, coords: shift.end, index: addedPiece?.index } as Piece;
-		if (shift.end !== undefined) recalculateLineOfPiece(gamefile, piece, false);
+		if (originalPiece !== undefined) recalculateLineOfPiece(gamefile, originalPiece!, false); 
+		if (addedPiece !== undefined) recalculateLineOfPiece(gamefile, addedPiece, false);
 
 	});
 
@@ -930,6 +937,8 @@ function render() {
 	executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js
 	arrowlegalmovehighlights.update();
 	regenerateModelAndRender();
+
+	console.log("End frame ================");
 }
 
 function regenerateModelAndRender() {
@@ -1074,4 +1083,8 @@ export default {
 
 	update,
 	render,
+};
+
+export type {
+	HoveredArrow
 };

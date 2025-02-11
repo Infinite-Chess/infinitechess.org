@@ -117,8 +117,8 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): Coords
 			const t = i + (k / resolution);
 			if (!isLast && k === resolution) continue;
 
-			let x = evaluateSplineAt(t, xSpline) ?? xPoints[xPoints.length - 1];
-			let y = evaluateSplineAt(t, ySpline) ?? yPoints[yPoints.length - 1];
+			let x = evaluateSplineAt(t, xSpline);
+			let y = evaluateSplineAt(t, ySpline);
 
 			/**
 			 * Ensure the last waypoint exactly matches the input.

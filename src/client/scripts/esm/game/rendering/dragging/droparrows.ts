@@ -10,7 +10,7 @@ import type { Piece } from "../../../chess/logic/boardchanges.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 
 
-import arrows from "../arrows/arrows.js";
+import arrows, { HoveredArrow } from "../arrows/arrows.js";
 import selection from "../../chess/selection.js";
 import draganimation from "./draganimation.js";
 import space from "../../misc/space.js";
@@ -31,12 +31,20 @@ function update_ReturnCaptureCoords(): Coords | undefined {
 		draganimation.dragPiece(worldCoords, capturePiece.coords); // Reflect the dragged piece's new location
 	}
 
+	// Delete the captured piece arrow
+	if (capturePiece !== undefined) arrows.shiftArrow(capturePiece.type, capturePiece.coords, undefined);
+
+	// New location of the selected piece
 	const newLocation = capturePiece !== undefined ? capturePiece.coords : undefined;
-	// arrows.shiftArrow2(selectedPiece, newLocation, capturePiece);
+	arrows.shiftArrow(selectedPiece.type, selectedPiece.coords, newLocation);
 
 	return capturePiece?.coords;
 }
 
+/**
+ * Returns the piece that would be captured if we were to let
+ * go of the dragged piece right now, if there is a piece to capture.
+ */
 function getCapturePiece(): Piece | undefined {
 	const selectedPiece = selection.getPieceSelected()!;
 	const selectedPieceLegalMoves = selection.getLegalMovesOfSelectedPiece()!;
@@ -57,7 +65,7 @@ function getCapturePiece(): Piece | undefined {
 
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));
 
-	const captureLegal = legalCaptureHoveredArrows.length === 1 ? legalCaptureHoveredArrows[0]! : undefined;
+	const captureLegal: HoveredArrow | undefined = legalCaptureHoveredArrows[0];
 
 	// console.log(captureLegal);
 
@@ -71,12 +79,12 @@ function getCapturePiece(): Piece | undefined {
  * This won't always be underneath the mouse, because we could be
  * dropping it on an arrow indicator.
  */
-// function getCaptureCoords(): Coords | undefined {
-// 	return getCapturePiece()?.coords;
-// }
+function getCaptureCoords(): Coords | undefined {
+	return getCapturePiece()?.coords;
+}
 
 
 export default {
 	update_ReturnCaptureCoords,
-	// getCaptureCoords,
+	getCaptureCoords,
 };
