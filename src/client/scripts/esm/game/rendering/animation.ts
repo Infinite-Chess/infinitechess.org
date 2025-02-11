@@ -30,6 +30,7 @@ import perspective from './perspective.js';
 // @ts-ignore
 import shapes from './shapes.js';
 import splines from '../../util/splines.js';
+import coordutil from '../../chess/util/coordutil.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
@@ -173,14 +174,17 @@ function clearAnimations(playSounds = false): void {
 
 /** Creates the segments between each waypoint. */
 function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
-	return waypoints.slice(0, -1).map((start, i) => {
+	const segments: AnimationSegment[] = [];
+	for (let i = 0; i < waypoints.length - 1; i++) {
+		const start = waypoints[i]!;
 		const end = waypoints[i + 1]!;
-		return {
+		segments.push({
 			start,
 			end,
 			distance: math.euclideanDistance(start, end)
-		};
-	});
+		});
+	}
+	return segments;
 }
 
 /** Calculates the total length of the path traveled by the piece in the animation. */
@@ -355,7 +359,7 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 	for (const segment of segments) {
 		if (targetDistance <= accumulated + segment.distance) {
 			const segmentProgress = (targetDistance - accumulated) / segment.distance;
-			return interpolateCoords(segment.start, segment.end, segmentProgress);
+			return coordutil.lerpCoords(segment.start, segment.end, segmentProgress);
 		}
 		accumulated += segment.distance;
 	}
@@ -372,14 +376,6 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
  */
 function easeInOut(progress: number): number {
 	return -0.5 * Math.cos(Math.PI * progress) + 0.5;
-}
-
-/** Interpolates between two coordinates. */
-function interpolateCoords(start: Coords, end: Coords, progress: number): Coords {
-	return [
-      start[0] + (end[0] - start[0]) * progress,
-      start[1] + (end[1] - start[1]) * progress,
-    ];
 }
 
 

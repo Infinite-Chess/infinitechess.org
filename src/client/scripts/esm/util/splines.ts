@@ -104,7 +104,7 @@ function evaluateSplineAt(t: number, coefficients: { a: number, b: number, c: nu
  * @returns An array of interpolated points along the spline.
  */
 function generateSplinePath(controlPoints: Coords[], resolution: number): Coords[] { // Better name for waypoints? Whats the math term for the points of a spline
-	if (controlPoints.length < 3) return controlPoints;
+	if (controlPoints.length < 3) return controlPoints; // A straight line already has infinite precision
 
 	const xPoints = controlPoints.map(point => point[0]);
 	const yPoints = controlPoints.map(point => point[1]);
@@ -151,29 +151,26 @@ function renderSplineDebug(
 ): void {
 	if (controlPoints.length < 2) throw Error("Spline requires at least 2 waypoints to render.");
 
-	width *= movement.getBoardScale(); // Scale proportionally to the board scale
-
 	const vertexData: number[] = [];
 	const halfWidth = width / 2;
 
-	const leftPoints: [number, number][] = [];
-	const rightPoints: [number, number][] = [];
+	let leftPoints: Coords[] = [];
+	let rightPoints: Coords[] = [];
 
 	// Compute left/right offsets per vertex using averaged tangents.
 	for (let i = 0; i < controlPoints.length; i++) {
-		// Convert current point to world space.
-		const point = space.convertCoordToWorldSpace(controlPoints[i]);
-		let tangent: [number, number];
+		const point = controlPoints[i]!;
+		let tangent: Coords;
 
 		if (i === 0) {
-			const next = space.convertCoordToWorldSpace(controlPoints[i + 1]);
+			const next = controlPoints[i + 1]!;
 			tangent = [next[0] - point[0], next[1] - point[1]];
 		} else if (i === controlPoints.length - 1) {
-			const prev = space.convertCoordToWorldSpace(controlPoints[i - 1]);
+			const prev = controlPoints[i - 1]!;
 			tangent = [point[0] - prev[0], point[1] - prev[1]];
 		} else {
-			const prev = space.convertCoordToWorldSpace(controlPoints[i - 1]);
-			const next = space.convertCoordToWorldSpace(controlPoints[i + 1]);
+			const prev = controlPoints[i - 1]!;
+			const next = controlPoints[i + 1]!;
 			tangent = [next[0] - prev[0], next[1] - prev[1]];
 		}
 
@@ -191,6 +188,9 @@ function renderSplineDebug(
 		leftPoints.push([point[0] + normal[0] * halfWidth, point[1] + normal[1] * halfWidth]);
 		rightPoints.push([point[0] - normal[0] * halfWidth, point[1] - normal[1] * halfWidth]);
 	}
+
+	leftPoints = leftPoints.map(point => space.convertCoordToWorldSpace(point) as Coords);
+	rightPoints = rightPoints.map(point => space.convertCoordToWorldSpace(point) as Coords);
 
 	// Build triangles for each segment.
 	for (let i = 0; i < controlPoints.length - 1; i++) {
