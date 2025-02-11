@@ -29,6 +29,8 @@ import board from './board.js';
 import perspective from './perspective.js';
 // @ts-ignore
 import shapes from './shapes.js';
+import splines from '../../util/splines.js';
+import coordutil from '../../chess/util/coordutil.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
@@ -46,7 +48,7 @@ interface Animation {
 	/** The type of piece to animate. */
 	type: string;
 	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
-	waypoints: Coords[];
+	path: Coords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
 	/** The piece captured, if one was captured. This will be rendered in place for the during of the animation. */
@@ -69,6 +71,22 @@ interface Animation {
 // Constants -------------------------------------------------------------------
 
 
+/** If this is enabled, the spline of the animation will be rendered, and the animations duration increased. */
+const DEBUG = false;
+/** Config for the splines. */
+const SPLINES: {
+	/** The number of points per segment of the spline. */
+	RESOLUTION: number;
+	/** The thickness of the spline. Used when debug rendering. */
+	WIDTH: number;
+	/** The color of the spline. Used when debug rendering. */
+	COLOR: [number, number, number, number];
+} = {
+	RESOLUTION: 10, // Default: 10
+	WIDTH: 0.15, // Default: 0.15
+	COLOR: [1, 0, 0, 1] // Default: [1, 0, 0, 1]
+};
+
 /**
  * The z offset of the transparent square meant to block out the default
  * rendering of the pieces while the animation is visible.
@@ -84,11 +102,11 @@ const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
 /** Used for calculating the duration of move animations. */
 const MOVE_ANIMATION_DURATION = {
 	/** The base amount of duration, in millis. */
-	baseMillis: 150, // Default: 150
+	baseMillis: DEBUG ? 1000 : 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMillis: 6,
+	multiplierMillis: DEBUG ? 30 : 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
-	multiplierMillis_waypoints: 14, // Default: 12
+	multiplierMillis_Curved: DEBUG ? 60 : 12, // Default: 12
 };
 
 
@@ -105,25 +123,27 @@ const animations: Animation[] = [];
 /**
  * Animates a piece after moving it.
  * @param type - The type of piece to animate
- * @param waypoints - The waypoints the piece will pass throughout the animation. Minimum: 2
+ * @param path - The waypoints the piece will pass throughout the animation. Minimum: 2
  * @param captured - The piece captured, if one was captured. This will be rendered in place for the during of the animation.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type: string, waypoints: Coords[], captured?: Piece, resetAnimations: boolean = true): void {
-	if (waypoints.length < 2) throw new Error("Animation requires at least 2 waypoints");
+function animatePiece(type: string, path: Coords[], captured?: Piece, resetAnimations: boolean = true): void {
+	if (path.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
-	const segments = createAnimationSegments(waypoints);
+	// Generate smooth spline waypoints
+	const path_HighResolution = splines.generateSplinePath(path, SPLINES.RESOLUTION);
+	const segments = createAnimationSegments(path_HighResolution);
 	const totalDistance = calculateTotalAnimationDistance(segments);
 
 	const newAnimation: Animation = {
 		type,
-		waypoints,
+		path: path_HighResolution,
 		segments,
 		captured,
 		startTimeMillis: performance.now(),
-		durationMillis: calculateAnimationDuration(totalDistance, waypoints.length),
-		totalDistance: totalDistance,
+		durationMillis: calculateAnimationDuration(totalDistance, path_HighResolution.length),
+		totalDistance,
 		soundPlayed: false
 	};
 
@@ -154,14 +174,17 @@ function clearAnimations(playSounds = false): void {
 
 /** Creates the segments between each waypoint. */
 function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
-	return waypoints.slice(0, -1).map((start, i) => {
+	const segments: AnimationSegment[] = [];
+	for (let i = 0; i < waypoints.length - 1; i++) {
+		const start = waypoints[i]!;
 		const end = waypoints[i + 1]!;
-		return {
+		segments.push({
 			start,
 			end,
 			distance: math.euclideanDistance(start, end)
-		};
-	});
+		});
+	}
+	return segments;
 }
 
 /** Calculates the total length of the path traveled by the piece in the animation. */
@@ -172,7 +195,7 @@ function calculateTotalAnimationDistance(segments: AnimationSegment[]): number {
 /** Calculates the duration in milliseconds a particular move would take to animate. */
 function calculateAnimationDuration(totalDistance: number, waypointCount: number): number {
 	const cappedDist = Math.min(totalDistance, MAX_DISTANCE_BEFORE_TELEPORT);
-	const multiplierToUse = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_waypoints : MOVE_ANIMATION_DURATION.multiplierMillis;
+	const multiplierToUse = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved : MOVE_ANIMATION_DURATION.multiplierMillis;
 	const additionMillis = cappedDist * multiplierToUse;
 	return MOVE_ANIMATION_DURATION.baseMillis + additionMillis;
 }
@@ -219,9 +242,9 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
-	arrows.shiftArrow(animation.type, animation.waypoints[0]!, animationCurrentCoords);
+	arrows.shiftArrow(animation.type, animation.path[0]!, animationCurrentCoords);
 	// Add the captured piece only after we've shifted the piece that captured it
-	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.waypoints[animation.waypoints.length - 1]);
+	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.waypoints.length - 1]);
 }
 
 
@@ -239,7 +262,7 @@ function renderTransparentSquares(): void {
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => 
 		shapes.getTransformedDataQuad_Color_FromCoord(
-			animation.waypoints[animation.waypoints.length - 1], 
+			animation.path[animation.path.length - 1], 
 			color
 		)
 	);
@@ -251,6 +274,8 @@ function renderTransparentSquares(): void {
 /** Renders the animations of the pieces. */
 function renderAnimations() {
 	if (animations.length === 0) return;
+
+	if (DEBUG) animations.forEach(animation => splines.renderSplineDebug(animation.path, SPLINES.WIDTH, SPLINES.COLOR));
 
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => {
@@ -306,12 +331,12 @@ function calculateBoardPosition(coords: Coords) {
 /** Returns the coordinate the animation's piece should be rendered this frame. */
 function getCurrentAnimationPosition(animation: Animation): Coords {
 	const elapsed = performance.now() - animation.startTimeMillis;
-	/** Range 0 to 1, representing the progress of the animation. */
-	const progress = Math.min(elapsed / animation.durationMillis, 1);
+	/** The interpolated progress of the animation. */
+	const t = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
-	const eased = easeInOut(progress);
+	const easedT = math.easeInOut(t);
 
-	return calculateInterpolatedPosition(animation, eased);
+	return calculateInterpolatedPosition(animation, easedT);
 }
 
 /** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
@@ -335,31 +360,11 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 	for (const segment of segments) {
 		if (targetDistance <= accumulated + segment.distance) {
 			const segmentProgress = (targetDistance - accumulated) / segment.distance;
-			return interpolateCoords(segment.start, segment.end, segmentProgress);
+			return coordutil.lerpCoords(segment.start, segment.end, segmentProgress);
 		}
 		accumulated += segment.distance;
 	}
 	return segments[segments.length - 1]!.end;
-}
-
-
-// Utility Functions ----------------------------------------------------------
-
-
-/**
- * Applies an ease-in-out function to the progress value.
- * @param progress - The linear progress value (between 0 and 1).
- */
-function easeInOut(progress: number): number {
-	return -0.5 * Math.cos(Math.PI * progress) + 0.5;
-}
-
-/** Interpolates between two coordinates. */
-function interpolateCoords(start: Coords, end: Coords, progress: number): Coords {
-	return [
-      start[0] + (end[0] - start[0]) * progress,
-      start[1] + (end[1] - start[1]) * progress,
-    ];
 }
 
 

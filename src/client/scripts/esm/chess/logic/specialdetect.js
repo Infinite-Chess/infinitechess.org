@@ -297,7 +297,7 @@ function roses(gamefile, coords, color) {
 
 			return;
 		}
-
+		
 		// This coordinate has not been added yet. Let's do it now.
 		individualMoves.push(newCoord);
 	}

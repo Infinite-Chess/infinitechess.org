@@ -108,6 +108,19 @@ function copyCoords(coords: Coords): Coords {
 	return [...coords] as Coords;
 }
 
+/**
+ * Interpolates between two coordinates.
+ * @param start - The starting coordinate.
+ * @param end - The ending coordinate.
+ * @param t - The interpolation value (between 0 and 1).
+ */
+function lerpCoords(start: Coords, end: Coords, t: number): Coords {
+	return [
+      start[0] + (end[0] - start[0]) * t,
+      start[1] + (end[1] - start[1]) * t,
+    ];
+}
+
 
 
 export default {
@@ -118,7 +131,8 @@ export default {
 	areCoordsEqual_noValidate,
 	addCoordinates,
 	subtractCoordinates,
-	copyCoords
+	copyCoords,
+	lerpCoords,
 };
 
 export type {
