@@ -6,7 +6,6 @@
 
 
 import type { Piece } from '../../chess/logic/boardchanges.js';
-import type { CoordsSpecial, MoveDraft } from '../../chess/logic/movepiece.js';
 // @ts-ignore
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 
@@ -20,15 +19,9 @@ import colorutil from '../../chess/util/colorutil.js';
 import movesequence from './movesequence.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
+import pieces from '../rendering/pieces.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
-import draganimation from '../rendering/dragging/draganimation.js';
-import boardchanges from '../../chess/logic/boardchanges.js';
-import math from '../../util/math.js';
-import animation from '../rendering/animation.js';
-// @ts-ignore
-import pieces from '../rendering/pieces.js';
-// @ts-ignore
 import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
 import config from '../config.js';

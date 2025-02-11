@@ -461,7 +461,12 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 export type {
 	Move,
 	MoveDraft,
-	CoordsSpecial,
+
+	// Special move tags
+	enpassant,
+	promotion,
+	castle,
+	path
 };
 
 export default {

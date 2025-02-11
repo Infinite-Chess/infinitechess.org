@@ -5,6 +5,11 @@ declare global {
     const translations: {
         [key: string]: any; // Allows other dynamic keys if needed
     };
+    // Our Custom Events
+	interface DocumentEventMap {
+		ping: CustomEvent<number>;
+		'socket-closed': CustomEvent<void>;
+	}
 }
 
 export {}; // Ensures this file is treated as a module
