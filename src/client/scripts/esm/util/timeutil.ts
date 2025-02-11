@@ -1,29 +1,27 @@
-
 /**
  * This script contains utility methods for working with dates and timestamps.
  * 
- * ZERO dependancies.
+ * ZERO dependencies.
  */
 
 /**
- * Converts minutes to milliseconds
- * @param {number} minutes 
- * @returns {number} Milliseconds
+ * Converts minutes to milliseconds.
  */
-function minutesToMillis(minutes) { return minutes * 60 * 1000; }
+function minutesToMillis(minutes: number): number {
+	return minutes * 60 * 1000;
+}
 
 /**
- * Converts seconds to milliseconds
- * @param {number} seconds 
- * @returns {number} Milliseconds
+ * Converts seconds to milliseconds.
  */
-function secondsToMillis(seconds) { return seconds * 1000; }
+function secondsToMillis(seconds: number): number {
+	return seconds * 1000;
+}
 
 /**
  * Returns the current UTC date in the "YYYY.MM.DD" format.
- * @returns {string} The current UTC date.
  */
-function getCurrentUTCDate() {
+function getCurrentUTCDate(): string {
 	const now = new Date();
 	const year = now.getUTCFullYear();
 	const month = String(now.getUTCMonth() + 1).padStart(2, '0');
@@ -34,9 +32,8 @@ function getCurrentUTCDate() {
 
 /**
  * Returns the current UTC time in the "HH:MM:SS" format.
- * @returns {string} The current UTC time.
  */
-function getCurrentUTCTime() {
+function getCurrentUTCTime(): string {
 	const now = new Date();
 	const hours = String(now.getUTCHours()).padStart(2, '0');
 	const minutes = String(now.getUTCMinutes()).padStart(2, '0');
@@ -48,10 +45,10 @@ function getCurrentUTCTime() {
 /**
  * Converts a timestamp to an object with UTCDate and UTCTime.
  * This time format is used for ICN metadata notation.
- * @param {number} timestamp - The timestamp in milliseconds since the Unix Epoch.
- * @returns {Object} An object with the properties { UTCDate: "YYYY.MM.DD", UTCTime: "HH:MM:SS" }.
+ * @param timestamp - The timestamp in milliseconds since the Unix Epoch.
+ * @returns An object with the properties `UTCDate` and `UTCTime`.
  */
-function convertTimestampToUTCDateUTCTime(timestamp) {
+function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string, UTCTime: string } {
 	const date = new Date(timestamp);
     
 	const year = date.getUTCFullYear();
@@ -70,13 +67,13 @@ function convertTimestampToUTCDateUTCTime(timestamp) {
 
 /**
  * Converts a UTCDate and optional UTCTime to a UTC timestamp in milliseconds since the Unix Epoch.
- * @param {string} UTCDate - The date in the format "YYYY.MM.DD".
- * @param {string} UTCTime - The time in the format "HH:MM:SS". Defaults to "00:00:00".
- * @returns {number} The UTC timestamp in milliseconds since the Unix Epoch.
+ * @param UTCDate - The date in the format "YYYY.MM.DD".
+ * @param [UTCTime] The time in the format "HH:MM:SS". Defaults to "00:00:00".
+ * @returns The UTC timestamp in milliseconds since the Unix Epoch.
  */
-function convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime = "00:00:00") {
-	const [year, month, day] = UTCDate.split('.').map(Number);
-	const [hours, minutes, seconds] = UTCTime.split(':').map(Number);
+function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = "00:00:00"): number {
+	const [year, month, day] = UTCDate.split('.').map(Number) as [number, number, number];
+	const [hours, minutes, seconds] = UTCTime.split(':').map(Number) as [number, number, number];
 
 	const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
 	return date.getTime();
@@ -84,18 +81,19 @@ function convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime = "00:00:00") {
 
 /**
  * Calculates the total milliseconds based on the provided options.
- * @param {Object} options - An object containing time units and their values.
- * @param {number} [options.milliseconds=0] - The number of milliseconds.
- * @param {number} [options.seconds=0] - The number of seconds.
- * @param {number} [options.minutes=0] - The number of minutes.
- * @param {number} [options.hours=0] - The number of hours.
- * @param {number} [options.days=0] - The number of days.
- * @param {number} [options.weeks=0] - The number of weeks.
- * @param {number} [options.months=0] - The number of months.
- * @param {number} [options.years=0] - The number of years.
- * @returns {number} The total milliseconds calculated from the provided options.
+ * @param options - An object containing time units and their values.
+ * @returns The total milliseconds calculated from the provided options.
  */
-function getTotalMilliseconds(options) {
+function getTotalMilliseconds(options: {
+    milliseconds?: number;
+    seconds?: number;
+    minutes?: number;
+    hours?: number;
+    days?: number;
+    weeks?: number;
+    months?: number;
+    years?: number;
+}): number {
 	const millisecondsIn = {
 		milliseconds: 1,
 		seconds: 1000,
@@ -110,7 +108,9 @@ function getTotalMilliseconds(options) {
 	let totalMilliseconds = 0;
 
 	for (const option in options) {
-		if (millisecondsIn[option]) totalMilliseconds += options[option] * millisecondsIn[option];
+		if (millisecondsIn[option as keyof typeof millisecondsIn]) {
+			totalMilliseconds += (options[option as keyof typeof options] || 0) * millisecondsIn[option as keyof typeof millisecondsIn];
+		}
 	}
 
 	return totalMilliseconds;
@@ -118,9 +118,8 @@ function getTotalMilliseconds(options) {
 
 /**
  * Gets the current month in 'yyyy-mm' format.
- * @returns {string} The current month in 'yyyy-mm' format.
  */
-function getCurrentMonth() {
+function getCurrentMonth(): string {
 	const date = new Date();
 	const year = date.getFullYear();
 	const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add 1 because getMonth() returns 0-11
@@ -129,9 +128,8 @@ function getCurrentMonth() {
 
 /**
  * Gets the current day in 'yyyy-mm-dd' format.
- * @returns {string} The current day in 'yyyy-mm-dd' format.
  */
-function getCurrentDay() {
+function getCurrentDay(): string {
 	const date = new Date();
 	const year = date.getFullYear();
 	const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -141,13 +139,13 @@ function getCurrentDay() {
 
 /**
  * Checks if the current date is within a specified date range.
- * @param {number} startMonth - The starting month of the range (1-12).
- * @param {number} startDay - The starting day of the range (1-31).
- * @param {number} endMonth - The ending month of the range (1-12).
- * @param {number} endDay - The ending day of the range (1-31).
- * @returns {boolean} True if the current date is within the specified range; otherwise, false.
+ * @param startMonth - The starting month of the range (1-12).
+ * @param startDay - The starting day of the range (1-31).
+ * @param endMonth - The ending month of the range (1-12).
+ * @param endDay - The ending day of the range (1-31).
+ * @returns True if the current date is within the specified range; otherwise, false.
  */
-function isCurrentDateWithinRange(startMonth, startDay, endMonth, endDay) {
+function isCurrentDateWithinRange(startMonth: number, startDay: number, endMonth: number, endDay: number): boolean {
 	const currentDate = new Date();
 	const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()); // Normalized current date
 	const startDate = new Date(currentDate.getFullYear(), startMonth - 1, startDay);
@@ -157,29 +155,25 @@ function isCurrentDateWithinRange(startMonth, startDay, endMonth, endDay) {
 
 /**
  * Converts a timestamp (milliseconds since the UNIX epoch) to an ISO 8601 string.
- * @param {number} timestamp - The timestamp in milliseconds since the UNIX epoch.
- * @returns {string} The ISO 8601 formatted string.
  */
-function timestampToISO(timestamp) {
+function timestampToISO(timestamp: number): string {
 	return new Date(timestamp).toISOString();
 }
 
 /**
  * Converts an ISO 8601 string to a timestamp in milliseconds since the UNIX epoch.
- * @param {string} isoString - The ISO 8601 formatted string.
- * @returns {number} The timestamp in milliseconds since the UNIX epoch.
  */
-function isoToTimestamp(isoString) {
+function isoToTimestamp(isoString: string): number {
 	return new Date(isoString).getTime();
 }
 
 /**
  * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to a UTC timestamp in milliseconds.
  * Assumes the SQLite timestamp is in UTC.
- * @param {string} sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
- * @returns {number} - The corresponding UTC timestamp in milliseconds since the UNIX epoch.
+ * @param sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
+ * @returns The corresponding UTC timestamp in milliseconds since the UNIX epoch.
  */
-function sqliteToTimestamp(sqliteString) {
+function sqliteToTimestamp(sqliteString: string): number {
 	const isoString = sqliteToISO(sqliteString);
 	return Date.parse(isoString);
 }
@@ -187,28 +181,26 @@ function sqliteToTimestamp(sqliteString) {
 /**
  * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to an ISO 8601 string.
  * Assumes the SQLite timestamp is in UTC.
- * @param {string} sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
- * @returns {string} - The corresponding ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ * @param sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
+ * @returns The corresponding ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
  */
-function sqliteToISO(sqliteString) {
+function sqliteToISO(sqliteString: string): string {
 	return sqliteString.replace(' ', 'T') + 'Z';
 }
 
 /**
  * Converts an ISO 8601 string to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
- * @param {string} isoString - The ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
- * @returns {string} - The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
+ * @param isoString - The ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ * @returns The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
  */
-function isoToSQLite(isoString) {
+function isoToSQLite(isoString: string): string {
 	const date = new Date(isoString);
 	if (isNaN(date.getTime())) {
 		throw new Error("Invalid ISO 8601 string provided.");
 	}
-	
-	return date.toISOString().replace('T', ' ').split('.')[0];
+    
+	return date.toISOString().replace('T', ' ').split('.')[0]!;
 }
-
-
 
 export default {
 	minutesToMillis,

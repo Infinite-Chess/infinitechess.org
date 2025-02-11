@@ -9,7 +9,6 @@
 
 import socketUtility from "./socketUtility.js";
 import { sendSocketMessage } from "./sendSocketMessage.js";
-// @ts-ignore
 import uuid from "../../client/scripts/esm/util/uuid.js";
 // @ts-ignore
 import { printIncomingAndClosingSockets } from "../config/config.js";
