@@ -19,7 +19,7 @@ import movement from "../game/rendering/movement.js";
  * @param points - Array of y-values representing the points to interpolate.
  * @returns Array of spline coefficients (a, b, c, d) for each segment.
  */
-function computeNaturalCubicSpline(points: number[]): { a: number, b: number, c: number, d: number }[] {
+function generateCubicSplineCoefficients(points: number[]): { a: number, b: number, c: number, d: number }[] {
 	const n = points.length;
 	if (n < 2) return [];
     
@@ -87,41 +87,41 @@ function thomasAlgorithm(a: number[], b: number[], c: number[], d: number[]): nu
 /**
  * Evaluates the cubic spline at a given parameter t.
  * @param t - Parameter value.
- * @param spline - Array of spline coefficients.
+ * @param coefficients - Array of spline coefficients.
  * @returns Interpolated value.
  */
-function evaluateCubicSpline(t: number, spline: { a: number, b: number, c: number, d: number }[]): number {
-	const i = Math.max(0, Math.min(spline.length - 1, Math.floor(t)));
-	const { a, b, c, d } = spline[i]!;
+function evaluateSplineAt(t: number, coefficients: { a: number, b: number, c: number, d: number }[]): number {
+	const i = Math.max(0, Math.min(coefficients.length - 1, Math.floor(t)));
+	const { a, b, c, d } = coefficients[i]!;
 	const dt = t - i;
 	return a + b * dt + c * dt * dt + d * dt * dt * dt;
 }
 
 /**
- * Generates a smooth path using cubic splines from a set of waypoints.
- * @param waypoints - Array of coordinate points.
- * @param numStepsPerSegment - Number of interpolated points per segment.
- * @returns Interpolated waypoints.
+ * Computes an interpolated trajectory along a cubic spline, generating a smooth path through given control points.
+ * @param controlPoints - Array of 2D coordinate points defining the spline.
+ * @param resolution - Number of interpolated points between each pair of control points.
+ * @returns An array of interpolated points along the spline.
  */
-function generateSplineWaypoints(waypoints: Coords[], numStepsPerSegment: number): Coords[] {
-	if (waypoints.length < 2) return waypoints;
+function generateSplinePath(controlPoints: Coords[], resolution: number): Coords[] { // Better name for waypoints? Whats the math term for the points of a spline
+	if (controlPoints.length < 3) return controlPoints;
 
-	const xPoints = waypoints.map(wp => wp[0]);
-	const yPoints = waypoints.map(wp => wp[1]);
-	const xSpline = computeNaturalCubicSpline(xPoints);
-	const ySpline = computeNaturalCubicSpline(yPoints);
+	const xPoints = controlPoints.map(point => point[0]);
+	const yPoints = controlPoints.map(point => point[1]);
+	const xSpline = generateCubicSplineCoefficients(xPoints);
+	const ySpline = generateCubicSplineCoefficients(yPoints);
 
-	const dense: Coords[] = [];
-	const totalSegments = waypoints.length - 1;
+	const path: Coords[] = [];
+	const totalSegments = controlPoints.length - 1;
 
 	for (let i = 0; i < totalSegments; i++) {
 		const isLast = i === totalSegments - 1;
-		for (let k = 0; k <= numStepsPerSegment; k++) {
-			const t = i + (k / numStepsPerSegment);
-			if (!isLast && k === numStepsPerSegment) continue;
+		for (let k = 0; k <= resolution; k++) {
+			const t = i + (k / resolution);
+			if (!isLast && k === resolution) continue;
 
-			let x = evaluateCubicSpline(t, xSpline) ?? xPoints[xPoints.length - 1];
-			let y = evaluateCubicSpline(t, ySpline) ?? yPoints[yPoints.length - 1];
+			let x = evaluateSplineAt(t, xSpline) ?? xPoints[xPoints.length - 1];
+			let y = evaluateSplineAt(t, ySpline) ?? yPoints[yPoints.length - 1];
 
 			/**
 			 * Ensure the last waypoint exactly matches the input.
@@ -129,51 +129,51 @@ function generateSplineWaypoints(waypoints: Coords[], numStepsPerSegment: number
 			 * expects there to be a piece at the last waypoint, but the last
 			 * waypoint isn't an integer because of floating point imprecision.
 			 */
-			if (isLast && k === numStepsPerSegment) [x, y] = waypoints[waypoints.length - 1]!;
+			if (isLast && k === resolution) [x, y] = controlPoints[controlPoints.length - 1]!;
 
-			dense.push([x, y]);
+			path.push([x, y]);
 		}
 	}
 
-	return dense;
+	return path;
 }
 
 /**
  * Renders a debug visualization of the entire spline as a continuous ribbon.
- * @param waypoints - The original spline waypoints. Each point is the coordinate on the grid, NOT grid space.
- * @param lineWidth - The debug line width in world units.
- * @param color - RGBA color for the debug line.
+ * @param controlPoints - The original spline waypoints. Each point is the coordinate on the grid, NOT grid space.
+ * @param width - The ribbon's width in square units.
+ * @param color - RGBA color for the ribbon.
  */
-function debugRenderSpline(
-	waypoints: Coords[],
-	lineWidth: number,
+function renderSplineDebug(
+	controlPoints: Coords[],
+	width: number,
 	color: Color
 ): void {
-	if (waypoints.length < 2) throw Error("Spline requires at least 2 waypoints to render.");
+	if (controlPoints.length < 2) throw Error("Spline requires at least 2 waypoints to render.");
 
-	lineWidth *= movement.getBoardScale(); // Scale proportionally to the board scale
+	width *= movement.getBoardScale(); // Scale proportionally to the board scale
 
 	const vertexData: number[] = [];
-	const halfWidth = lineWidth / 2;
+	const halfWidth = width / 2;
 
 	const leftPoints: [number, number][] = [];
 	const rightPoints: [number, number][] = [];
 
 	// Compute left/right offsets per vertex using averaged tangents.
-	for (let i = 0; i < waypoints.length; i++) {
+	for (let i = 0; i < controlPoints.length; i++) {
 		// Convert current point to world space.
-		const wp = space.convertCoordToWorldSpace(waypoints[i]);
+		const point = space.convertCoordToWorldSpace(controlPoints[i]);
 		let tangent: [number, number];
 
 		if (i === 0) {
-			const next = space.convertCoordToWorldSpace(waypoints[i + 1]);
-			tangent = [next[0] - wp[0], next[1] - wp[1]];
-		} else if (i === waypoints.length - 1) {
-			const prev = space.convertCoordToWorldSpace(waypoints[i - 1]);
-			tangent = [wp[0] - prev[0], wp[1] - prev[1]];
+			const next = space.convertCoordToWorldSpace(controlPoints[i + 1]);
+			tangent = [next[0] - point[0], next[1] - point[1]];
+		} else if (i === controlPoints.length - 1) {
+			const prev = space.convertCoordToWorldSpace(controlPoints[i - 1]);
+			tangent = [point[0] - prev[0], point[1] - prev[1]];
 		} else {
-			const prev = space.convertCoordToWorldSpace(waypoints[i - 1]);
-			const next = space.convertCoordToWorldSpace(waypoints[i + 1]);
+			const prev = space.convertCoordToWorldSpace(controlPoints[i - 1]);
+			const next = space.convertCoordToWorldSpace(controlPoints[i + 1]);
 			tangent = [next[0] - prev[0], next[1] - prev[1]];
 		}
 
@@ -188,12 +188,12 @@ function debugRenderSpline(
 		const normal: [number, number] = [-tangent[1], tangent[0]];
 
 		// Offset positions.
-		leftPoints.push([wp[0] + normal[0] * halfWidth, wp[1] + normal[1] * halfWidth]);
-		rightPoints.push([wp[0] - normal[0] * halfWidth, wp[1] - normal[1] * halfWidth]);
+		leftPoints.push([point[0] + normal[0] * halfWidth, point[1] + normal[1] * halfWidth]);
+		rightPoints.push([point[0] - normal[0] * halfWidth, point[1] - normal[1] * halfWidth]);
 	}
 
 	// Build triangles for each segment.
-	for (let i = 0; i < waypoints.length - 1; i++) {
+	for (let i = 0; i < controlPoints.length - 1; i++) {
 		const left0 = leftPoints[i]!;
 		const right0 = rightPoints[i]!;
 		const left1 = leftPoints[i + 1]!;
@@ -219,8 +219,8 @@ function debugRenderSpline(
 
 
 export default {
-	computeNaturalCubicSpline,
-	evaluateCubicSpline,
-	generateSplineWaypoints,
-	debugRenderSpline
+	generateCubicSplineCoefficients,
+	evaluateSplineAt,
+	generateSplinePath,
+	renderSplineDebug
 };

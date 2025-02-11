@@ -47,7 +47,7 @@ interface Animation {
 	/** The type of piece to animate. */
 	type: string;
 	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
-	waypoints: Coords[];
+	path: Coords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
 	/** The piece captured, if one was captured. This will be rendered in place for the during of the animation. */
@@ -103,9 +103,9 @@ const MOVE_ANIMATION_DURATION = {
 	/** The base amount of duration, in millis. */
 	baseMillis: DEBUG ? 1000 : 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMillis: DEBUG ? 60 : 6,
+	multiplierMillis: DEBUG ? 30 : 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
-	multiplierMillis_Curved: DEBUG ? 120 : 12, // Default: 12
+	multiplierMillis_Curved: DEBUG ? 60 : 12, // Default: 12
 };
 
 
@@ -122,26 +122,26 @@ const animations: Animation[] = [];
 /**
  * Animates a piece after moving it.
  * @param type - The type of piece to animate
- * @param waypoints - The waypoints the piece will pass throughout the animation. Minimum: 2
+ * @param path - The waypoints the piece will pass throughout the animation. Minimum: 2
  * @param captured - The piece captured, if one was captured. This will be rendered in place for the during of the animation.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type: string, waypoints: Coords[], captured?: Piece, resetAnimations: boolean = true): void {
-	if (waypoints.length < 2) throw new Error("Animation requires at least 2 waypoints");
+function animatePiece(type: string, path: Coords[], captured?: Piece, resetAnimations: boolean = true): void {
+	if (path.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
 	// Generate smooth spline waypoints
-	const denseWaypoints = splines.generateSplineWaypoints(waypoints, SPLINES.RESOLUTION);
-	const segments = createAnimationSegments(denseWaypoints);
+	const path_HighResolution = splines.generateSplinePath(path, SPLINES.RESOLUTION);
+	const segments = createAnimationSegments(path_HighResolution);
 	const totalDistance = calculateTotalAnimationDistance(segments);
 
 	const newAnimation: Animation = {
 		type,
-		waypoints: denseWaypoints,
+		path: path_HighResolution,
 		segments,
 		captured,
 		startTimeMillis: performance.now(),
-		durationMillis: calculateAnimationDuration(totalDistance, denseWaypoints.length),
+		durationMillis: calculateAnimationDuration(totalDistance, path_HighResolution.length),
 		totalDistance,
 		soundPlayed: false
 	};
@@ -238,7 +238,7 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
-	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile()!, animation.waypoints[animation.waypoints.length - 1]!)!;
+	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile()!, animation.path[animation.path.length - 1]!)!;
 	arrows.shiftArrow(piece, animationCurrentCoords, animation.captured);
 }
 
@@ -257,7 +257,7 @@ function renderTransparentSquares(): void {
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => 
 		shapes.getTransformedDataQuad_Color_FromCoord(
-			animation.waypoints[animation.waypoints.length - 1], 
+			animation.path[animation.path.length - 1], 
 			color
 		)
 	);
@@ -270,7 +270,7 @@ function renderTransparentSquares(): void {
 function renderAnimations() {
 	if (animations.length === 0) return;
 
-	if (DEBUG) animations.forEach(animation => splines.debugRenderSpline(animation.waypoints, SPLINES.WIDTH, SPLINES.COLOR));
+	if (DEBUG) animations.forEach(animation => splines.renderSplineDebug(animation.path, SPLINES.WIDTH, SPLINES.COLOR));
 
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => {
