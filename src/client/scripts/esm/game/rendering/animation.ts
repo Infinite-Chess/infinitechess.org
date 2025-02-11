@@ -72,7 +72,7 @@ interface Animation {
 
 
 /** If this is enabled, the spline of the animation will be rendered, and the animations duration increased. */
-const DEBUG = false;
+const DEBUG = true;
 /** Config for the splines. */
 const SPLINES: {
 	/** The number of points per segment of the spline. */
@@ -244,7 +244,7 @@ function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
 	arrows.shiftArrow(animation.type, animation.path[0]!, animationCurrentCoords);
 	// Add the captured piece only after we've shifted the piece that captured it
-	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.waypoints.length - 1]);
+	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.path.length - 1]);
 }
 
 
