@@ -66,7 +66,7 @@ interface Animation {
 }
 
 
-// Constants -------------------------------------------------------------------
+// Variables -------------------------------------------------------------------------------
 
 
 /**
@@ -75,31 +75,27 @@ interface Animation {
  * 
  * THIS MUST BE GREATER THAN THE Z AT WHICH PIECES ARE RENDERED.
  */
-const TRANSPARENT_SQUARE_Z: number = 0.01;
+const transparentSquareZ: number = 0.01;
 /** By adding a negative offset, the sound doesn't appear delayed. */
-const SOUND_OFFSET: number = -100;
+const soundOffset: number = -100;
 /** The maximum distance an animation can be without teleporting mid-animation. */
-const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
+const maxDistB4Teleport: number = 80; // 80
 
 /** Used for calculating the duration of move animations. */
-const MOVE_ANIMATION_DURATION = {
+const moveAnimationDuration = {
 	/** The base amount of duration, in millis. */
 	baseMillis: 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
 	multiplierMillis: 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
-	multiplierMillis_waypoints: 14, // Default: 12
+	multiplierMillis_waypoints: 15, // Default: 12
 };
-
-
-// Variables -------------------------------------------------------------------------------
-
 
 /** The list of all current animations */
 const animations: Animation[] = [];
 
 
-// Adding / Clearing Animations -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------
 
 
 /**
@@ -110,11 +106,16 @@ const animations: Animation[] = [];
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
 function animatePiece(type: string, waypoints: Coords[], captured?: Piece, resetAnimations: boolean = true): void {
-	if (waypoints.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
-	const segments = createAnimationSegments(waypoints);
-	const totalDistance = calculateTotalAnimationDistance(segments);
+	const segments: AnimationSegment[] = [];
+	for (let i = 0; i < waypoints.length - 1; i++) { 
+		const start = waypoints[i]!;
+		const end = waypoints[i + 1]!;
+		const segDist = math.euclideanDistance(start, end);
+		segments.push({ start, end, distance: segDist });
+	}
+	const totalDistance = getTotalLengthOfPathTraveled(waypoints);
 
 	const newAnimation: Animation = {
 		type,
@@ -122,14 +123,37 @@ function animatePiece(type: string, waypoints: Coords[], captured?: Piece, reset
 		segments,
 		captured,
 		startTimeMillis: performance.now(),
-		durationMillis: calculateAnimationDuration(totalDistance, waypoints.length),
+		durationMillis: getDurationMillisOfMoveAnimation(totalDistance, waypoints.length),
 		totalDistance: totalDistance,
 		soundPlayed: false
 	};
 
-	scheduleSoundPlayback(newAnimation);
-	scheduleAnimationRemoval(newAnimation);
+
+
+	const timeUntilSoundIsPlayed = newAnimation.durationMillis + soundOffset;
+	newAnimation.soundTimeoutId = setTimeout(() => playAnimationsSound(newAnimation, false), timeUntilSoundIsPlayed);
+
 	animations.push(newAnimation);
+	scheduleRemoval(newAnimation);
+}
+
+/** Calculates the total length of the path traveled by the piece in the animation. */
+function getTotalLengthOfPathTraveled(waypoints: Coords[]): number {
+	let totalLength = 0;
+	for (let i = 0; i < waypoints.length - 1; i++) {
+		const start = waypoints[i]!;
+		const end = waypoints[i + 1]!;
+		totalLength += math.euclideanDistance(start, end);
+	}
+	return totalLength;
+}
+
+/** Calculates the duration in milliseconds a particular move would take to animate. */
+function getDurationMillisOfMoveAnimation(totalDistance: number, waypointCount: number): number {
+	const cappedDist = Math.min(totalDistance, maxDistB4Teleport);
+	const multiplierToUse = waypointCount > 2 ? moveAnimationDuration.multiplierMillis_waypoints : moveAnimationDuration.multiplierMillis;
+	const additionMillis = cappedDist * multiplierToUse;
+	return moveAnimationDuration.baseMillis + additionMillis;
 }
 
 /**
@@ -139,52 +163,17 @@ function animatePiece(type: string, waypoints: Coords[], captured?: Piece, reset
  * (in that scenario we immediately play the sound),
  * or when the game is unloaded.
  */
-function clearAnimations(playSounds = false): void {
-	animations.forEach(animation => {
+function clearAnimations(playSounds = false) {
+	for (const animation of animations) {
 		clearTimeout(animation.soundTimeoutId); // Don't play it twice..
 		clearTimeout(animation.scheduledRemovalId); // Don't remove it twice..
-		if (playSounds && !animation.soundPlayed) playAnimationSound(animation, true); // .. play it NOW.
-	});
+		if (playSounds && !animation.soundPlayed) playAnimationsSound(animation, true); // .. play it NOW.
+	}
 	animations.length = 0; // Empties existing animations
 }
 
-
-// Helper Functions -----------------------------------------------------------
-
-
-/** Creates the segments between each waypoint. */
-function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
-	return waypoints.slice(0, -1).map((start, i) => {
-		const end = waypoints[i + 1]!;
-		return {
-			start,
-			end,
-			distance: math.euclideanDistance(start, end)
-		};
-	});
-}
-
-/** Calculates the total length of the path traveled by the piece in the animation. */
-function calculateTotalAnimationDistance(segments: AnimationSegment[]): number {
-	return segments.reduce((sum, seg) => sum + seg.distance, 0);
-}
-
-/** Calculates the duration in milliseconds a particular move would take to animate. */
-function calculateAnimationDuration(totalDistance: number, waypointCount: number): number {
-	const cappedDist = Math.min(totalDistance, MAX_DISTANCE_BEFORE_TELEPORT);
-	const multiplierToUse = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_waypoints : MOVE_ANIMATION_DURATION.multiplierMillis;
-	const additionMillis = cappedDist * multiplierToUse;
-	return MOVE_ANIMATION_DURATION.baseMillis + additionMillis;
-}
-
-/** Schedules the playback of the sound of the animation. */
-function scheduleSoundPlayback(animation: Animation): void {
-	const playbackTime = Math.max(0, animation.durationMillis + SOUND_OFFSET);
-	animation.soundTimeoutId = setTimeout(() => playAnimationSound(animation, false), playbackTime);
-}
-
 /** Schedules the removal of an animation after it's over. */
-function scheduleAnimationRemoval(animation: Animation) {
+function scheduleRemoval(animation: Animation) {
 	animation.scheduledRemovalId = setTimeout(() => {
 		const index = animations.indexOf(animation);
 		if (index === -1) return; // Already removed
@@ -192,21 +181,6 @@ function scheduleAnimationRemoval(animation: Animation) {
 		frametracker.onVisualChange();
 	}, animation.durationMillis);
 }
-
-/**
- * Plays the sound of the animation.
- * @param animation - The animation to play the sound for.
- * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
- */
-function playAnimationSound(animation: Animation, dampen: boolean) {
-	if (animation.captured !== undefined) sound.playSound_capture(animation.totalDistance, dampen);
-	else sound.playSound_move(animation.totalDistance, dampen);
-	animation.soundPlayed = true;
-}
-
-
-// Updating -------------------------------------------------------------------------------
-
 
 /** Flags the frame to be rendered if there are any animations, and adds an arrow indicator animation for each */
 function update() {
@@ -218,9 +192,19 @@ function update() {
 
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
-	const animationCurrentCoords = getCurrentAnimationPosition(animation);
+	const animationCurrentCoords = getCurrentCoordsOfAnimation(animation);
 	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile()!, animation.waypoints[animation.waypoints.length - 1]!)!;
 	arrows.shiftArrow(piece, animationCurrentCoords, animation.captured);
+}
+
+/** Plays the sound of the animation.
+ * @param animation - The animation to play the sound for.
+ * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
+ */
+function playAnimationsSound(animation: Animation, dampen: boolean) {
+	if (animation.captured !== undefined) sound.playSound_capture(animation.totalDistance, dampen);
+	else sound.playSound_move(animation.totalDistance, dampen);
+	animation.soundPlayed = true;
 }
 
 
@@ -231,119 +215,82 @@ function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
  * Renders the transparent squares that block out the default rendering of the pieces while the animation is visible.
  * This works because they are higher in the depth buffer than the pieces.
  */
-function renderTransparentSquares(): void {
-	if (!animations.length) return;
+function renderTransparentSquares() {
+	if (animations.length === 0) return;
 
+	// Generate the model...
+	const data: number[] = [];
 	const color: Color = [0, 0, 0, 0];
-	// Calls map() on each animation, and then flats() the results into a single array.
-	const data = animations.flatMap(animation => 
-		shapes.getTransformedDataQuad_Color_FromCoord(
-			animation.waypoints[animation.waypoints.length - 1], 
-			color
-		)
-	);
+	animations.forEach(animation => {
+		const lastWaypoint = animation.waypoints[animation.waypoints.length - 1];
+		data.push(...shapes.getTransformedDataQuad_Color_FromCoord(lastWaypoint, color));
+	});
 
-	createModel(data, 2, "TRIANGLES", true)
-		.render([0, 0, TRANSPARENT_SQUARE_Z]);
+	const transparentModel = createModel(data, 2, "TRIANGLES", true);
+	const position: [number, number, number] = [0,0,transparentSquareZ];
+	transparentModel.render(position);
 }
 
 /** Renders the animations of the pieces. */
 function renderAnimations() {
 	if (animations.length === 0) return;
 
-	// Calls map() on each animation, and then flats() the results into a single array.
-	const data = animations.flatMap(animation => {
-		const currentPos = getCurrentAnimationPosition(animation);
-		const piecesData: number[] = [];
-		if (animation.captured !== undefined) piecesData.push(...generatePieceData(animation.captured.type, animation.captured.coords)); // Render the captured piece
-		piecesData.push(...generatePieceData(animation.type, currentPos)); // Render the moving piece
-		return piecesData;
+	// Generate the model of the pieces currently being animated...
+	const data: number[] = [];
+	animations.forEach(animation => {
+		const currentAnimationCoords = getCurrentCoordsOfAnimation(animation);
+		if (animation.captured !== undefined) appendDataOfPiece(data, animation.captured.type, animation.captured.coords);
+		appendDataOfPiece(data, animation.type, currentAnimationCoords);
 	});
 
-	createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
-		.render();
+	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+	model.render();
 }
-
-/**
- * Adds the vertex data of the piece of an animation to the data array. 
- * @param data - The running list of data to append to.
- * @param type - The type of piece the data and animation is for.
- * @param coords - The coordinates of the piece of the animation.
-*/
-function generatePieceData(type: string, coords: Coords): number[] {
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
-	const { startX, startY, endX, endY } = calculateBoardPosition(coords);
-	const { r, g, b, a } = options.getColorOfType(type);
-    
-	return bufferdata.getDataQuad_ColorTexture(
-		startX, startY, endX, endY,
-		texleft, texbottom, texright, textop,
-		r, g, b, a
-	);
-}
-
-/** Calculates the position of a piece on the board from its coordinates. */
-function calculateBoardPosition(coords: Coords) {
-	const boardPos = movement.getBoardPos();
-	const boardScale = movement.getBoardScale();
-	const squareCenter = board.gsquareCenter();
-	const startX = (coords[0] - boardPos[0] - squareCenter) * boardScale;
-	const startY = (coords[1] - boardPos[1] - squareCenter) * boardScale;
-	return {
-		startX,
-		startY,
-		endX: startX + 1 * boardScale,
-		endY: startY + 1 * boardScale
-	};
-}
-
-
-// Animation Calculations -----------------------------------------------------
-
 
 /** Returns the coordinate the animation's piece should be rendered this frame. */
-function getCurrentAnimationPosition(animation: Animation): Coords {
+function getCurrentCoordsOfAnimation(animation: Animation): Coords {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** Range 0 to 1, representing the progress of the animation. */
 	const progress = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
 	const eased = easeInOut(progress);
 
-	return calculateInterpolatedPosition(animation, eased);
+	return getCurrentCoords(animation, eased);
 }
 
 /** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
-function calculateInterpolatedPosition(animation: Animation, easedProgress: number): Coords {
-	const targetDistance = animation.totalDistance <= MAX_DISTANCE_BEFORE_TELEPORT ? easedProgress * animation.totalDistance : calculateTeleportDistance(animation.totalDistance, easedProgress);
-	return findPositionInSegments(animation.segments, targetDistance);
-}
+function getCurrentCoords(animation: Animation, easedProgress: number): Coords {
+	let targetDistance: number;
+    
+	if (animation.totalDistance <= maxDistB4Teleport) {
+		// Normal animation
+		targetDistance = easedProgress * animation.totalDistance;
+	} else {
+		// Teleporting animation
+		const totalDist = animation.totalDistance;
+        
+		if (easedProgress < 0.5) {
+			// First half: animate first portion of path
+			targetDistance = easedProgress * 2 * (maxDistB4Teleport / 2);
+		} else {
+			// Second half: animate final portion of path
+			const portionFromEnd = (easedProgress - 0.5) * 2 * (maxDistB4Teleport / 2);
+			targetDistance = (totalDist - maxDistB4Teleport / 2) + portionFromEnd;
+		}
+	}
 
-/** Calculates the distance the piece animation should be rendered along the path, when the total distance is great enough to merit teleporting. */
-function calculateTeleportDistance(totalDistance: number, easedProgress: number): number {
-	// First half
-	if (easedProgress < 0.5) return easedProgress * 2 * (MAX_DISTANCE_BEFORE_TELEPORT / 2);
-	// Second half: animate final portion of path
-	const portionFromEnd = (easedProgress - 0.5) * 2 * (MAX_DISTANCE_BEFORE_TELEPORT / 2);
-	return (totalDistance - MAX_DISTANCE_BEFORE_TELEPORT / 2) + portionFromEnd;
-}
-
-/** Finds the position of the piece at a certain distance along the path. */
-function findPositionInSegments(segments: AnimationSegment[], targetDistance: number): Coords {
+	// Now find which segment contains this distance
 	let accumulated = 0;
-	for (const segment of segments) {
+	for (const segment of animation.segments!) {
 		if (targetDistance <= accumulated + segment.distance) {
 			const segmentProgress = (targetDistance - accumulated) / segment.distance;
 			return interpolateCoords(segment.start, segment.end, segmentProgress);
 		}
 		accumulated += segment.distance;
 	}
-	return segments[segments.length - 1]!.end;
+    
+	return animation.waypoints[animation.waypoints.length - 1]!;
 }
-
-
-// Utility Functions ----------------------------------------------------------
-
 
 /**
  * Applies an ease-in-out function to the progress value.
@@ -361,14 +308,40 @@ function interpolateCoords(start: Coords, end: Coords, progress: number): Coords
     ];
 }
 
+/**
+ * Adds the vertex data of the piece of an animation to the data array. 
+ * @param data - The running list of data to append to.
+ * @param type - The type of piece the data and animation is for.
+ * @param coords - The coordinates of the piece of the animation.
+*/
+function appendDataOfPiece(data: number[], type: string, coords: Coords): void {
+	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+
+	const boardPos = movement.getBoardPos();
+	const boardScale = movement.getBoardScale();
+	const squareCenter = board.gsquareCenter();
+	const startX = (coords[0] - boardPos[0] - squareCenter) * boardScale;
+	const startY = (coords[1] - boardPos[1] - squareCenter) * boardScale;
+	const endX = startX + 1 * boardScale;
+	const endY = startY + 1 * boardScale;
+
+	const { r, g, b, a } = options.getColorOfType(type);
+
+	const bufferData = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, a);
+
+	data.push(...bufferData);
+}
+
 
 // -----------------------------------------------------------------------------------------
 
 
 export default {
 	animatePiece,
-	clearAnimations,
 	update,
 	renderTransparentSquares,
 	renderAnimations,
+	getDurationMillisOfMoveAnimation,
+	clearAnimations,
 };
