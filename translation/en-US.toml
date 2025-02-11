@@ -43,15 +43,15 @@ secondary_title = "The official website for playing live!"
 what_is_it_title = "What is it?"
 what_is_it_pargaraphs = [
 "Infinite Chess is a variant of chess in which there are no borders, much larger than your familiar 8x8 board. The queen, rooks, and bishops have <em>no limit</em> to how far they can move per turn. Pick any natural number up to infinity!",
-"With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
-"As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
+"With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researchers have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
+"As you can imagine, there are infinite possibilities for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
 how_to_paragraph = ["The current version release is 1.5 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
-"I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
-["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
+"I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring players to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
+["It is my goal to build a way to make this easily playable for everyone and grow a community surrounding it. I have spent countless hours of my own time on this website, upkeeping it, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free to play, life has requirements. To help support me financially please consider joining my", "Patreon"]
 ]
 patreon_title = "Patreon Supporters"
 github_title = "Github Contributors"
@@ -154,9 +154,9 @@ title = "Guide"
 rules = "Rules"
 rules_paragraphs = [
 "The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
-"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions!",
-["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines, they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
-"Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
+"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions of squares!",
+["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines—they are faint—see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
+"Square notation is no longer described by the letter and rank number (i.e., a1); rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
 "All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
 ]
 careful_heading = "Be Careful!"
@@ -170,23 +170,23 @@ keybinds = [
 " to move around.",
 ["Space", " and ", "Shift", " to zoom in and out."],
 ["Escape", " to pause the game."],
-["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "tab", " can switch this to mode \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, Whether they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
+["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "Tab", " can switch this mode to \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, whether or not they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
 " will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
 ]
 controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
 keybinds_extra = [
 " will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).",
 " will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!",
-" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed, to save compute.",
-" will toggle icon-rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throddler, but they can be toggled back on with ",
-[" (backtick, or the same key as ", ") will toggle Debug mode."],
+" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed to save compute.",
+" will toggle icon rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throttler, but they can be toggled back on with ",
+[" (backtick, on the same key as ", ") will toggle Debug mode."],
 ]
 fairy_heading = "Fairy Pieces"
 fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!"
 editing_heading = "Board Editing"
 editing_paragraphs = [
-["There is an external ", "board editor", " currently available on a public google sheet! It includes instructions for how to use it. This requires some basic google sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
-"To play a custom position with a friend, have them join a private invite, then both of you paste the game code before you start playing!",
+["There is an external ", "board editor", " currently available on a public Google Sheet! It includes instructions on how to use it. This requires some basic Google Sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
+"To play a custom position with a friend, have them join a private invite, then both of you can paste the game code to start playing!",
 "An in-game board editor is still planned.",
 ]
 back = "Back"
@@ -478,7 +478,7 @@ cleanliness_rules = [
 ]
 privacy_header = "Privacy"
 privacy_rules = [
-"Currently, the only personal information we collect is email. This is with intent to verify users' accounts, and provide a means of proving who they are when they request a password reset. We do not send any promotional emails or offers. We do not share any user's email address with anyone else.",
+"Currently, the only personal information we collect is your email. This is with intent to verify users' accounts, and provide a means of proving who they are when they request a password reset. We do not send any promotional emails or offers. We do not share any user's email address with anyone else.",
 "InfiniteChess.org may collect data about your usage on the site, including your ip address. This is intended to help prevent attacks from bots and other unwanted entities, and to keep accurate statistics in the database. This is NOT your home address.",
 "All games you play on this website become public information. If you wish to remain anonymous, do not share your username with friends or family. If this is your desire, it is your responsibility to make sure no one finds out your username is associated with your human identity.",
 "Your account online status, and the approximate last time you were active on the website, is also public information.",
