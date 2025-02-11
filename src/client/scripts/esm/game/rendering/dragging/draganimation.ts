@@ -15,6 +15,7 @@ import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import { createModel } from "../buffermodel.js";
+import space from "../../misc/space.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
@@ -37,8 +38,8 @@ import themes from "../../../components/header/themes.js";
 import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import board from "../board.js";
-// @ts-ignore
-import space from "../../misc/space.js";
+import droparrows from "./droparrows.js";
+import { Piece } from "../../../chess/logic/boardchanges.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -83,6 +84,14 @@ const perspectiveConfigs: { z: number, shadowColor: Color } = {
 };
 
 
+/** If true, `pieceSelected` is currently being held. */
+let areDragging = false;
+/**
+ * When dropped in the same square, pieces are unselected every second time.
+ * This alows players to move pieces by clicking.
+ */
+let didLastClickSelectPiece: boolean = false;
+
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
 /** The world location the piece has been dragged to. */
@@ -94,6 +103,63 @@ let pieceType: string | undefined;
 
 
 // Functions --------------------------------------------------------------------------------------
+
+
+function areDraggingPiece(): boolean {
+	return areDragging;
+}
+
+function getDragParity(): boolean {
+	return didLastClickSelectPiece;
+}
+
+function setDragParity(value: boolean) {
+	return didLastClickSelectPiece = value;
+}
+
+/**
+ * Start dragging a piece.
+ * @param type - The type of piece being dragged
+ * @param pieceCoords - the square the piece was on
+ */
+function pickUpPiece(piece: Piece) {
+	areDragging = true;
+	startCoords = piece.coords;
+	pieceType = piece.type;
+}
+
+/**
+ * Update the location of the piece being dragged.
+ * @param worldLoc - the world coordinates the piece has been dragged to
+ * @param [hoverSquare] - The square the piece would be moved to if dropped now.
+ */
+function dragPiece(worldLoc: Coords, hoverSquare?: Coords) {
+	worldLocation = worldLoc;
+	hoveredCoords = hoverSquare;
+	frametracker.onVisualChange();
+}
+
+/**
+ * Stop dragging the piece and optionally play a sound.
+ * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
+ * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
+ */
+function dropPiece() {
+	areDragging = false;
+	pieceType = undefined;
+	startCoords = undefined;
+	worldLocation = undefined;
+	frametracker.onVisualChange();
+}
+
+/** Puts the dragged piece back. Doesn't make a move. */
+function cancelDragging() {
+	didLastClickSelectPiece = false;
+	dropPiece();
+}
+
+
+// Rendering --------------------------------------------------------------------------------------------
 
 
 // Hides the original piece
@@ -304,49 +370,16 @@ function genIntersectingLines(): BufferModel {
 	return createModel(data, 2, "LINES", true);
 }
 
-/**
- * Start dragging a piece.
- * @param type - The type of piece being dragged
- * @param pieceCoords - the square the piece was on
- */
-function pickUpPiece(type: string, pieceCoords: Coords) {
-	startCoords = pieceCoords;
-	pieceType = type;
-}
-
-/**
- * Update the location of the piece being dragged.
- * @param  coords - the world coordinates the piece has been dragged to
- * @param [hoverSquare] - The square the piece would be moved to if dropped now.
- */
-function dragPiece(coords: Coords, hoverSquare?: Coords) {
-	worldLocation = coords;
-	hoveredCoords = hoverSquare;
-	frametracker.onVisualChange();
-}
-
-/**
- * Stop dragging the piece and optionally play a sound.
- * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
- * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
- */
-function dropPiece(playSound: boolean = false, wasCapture: boolean = false) {
-	if (playSound) {
-		if (wasCapture) sound.playSound_capture(0, false);
-		else sound.playSound_move(0, false);
-	}
-	pieceType = undefined;
-	startCoords = undefined;
-	worldLocation = undefined;
-	frametracker.onVisualChange();
-}
-
 
 
 export default {
+	areDraggingPiece,
+	getDragParity,
+	setDragParity,
 	pickUpPiece,
 	dragPiece,
 	dropPiece,
+	cancelDragging,
 	renderTransparentSquare,
 	renderPiece
 };
