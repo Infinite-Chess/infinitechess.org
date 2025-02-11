@@ -29,6 +29,7 @@ import organizedlines from '../../../chess/logic/organizedlines.js';
 import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
+import space from '../../misc/space.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -46,10 +47,7 @@ import options from '../options.js';
 // @ts-ignore
 import board from '../board.js';
 // @ts-ignore
-import space from '../../misc/space.js';
-// @ts-ignore
 import shapes from '../shapes.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -197,7 +195,7 @@ let boundingBoxInt: BoundingBox | undefined;
  * with a reference to the piece they are pointing to.
  * Other scripts may access this so they can add interaction with them.
  */
-const hoveredArrows: HoveredArrow[] = [];
+let hoveredArrows: HoveredArrow[] = [];
 
 /**
  * A list of all arrows present for the current frame.
@@ -227,7 +225,6 @@ function reset() {
 	hoveredArrows.length = 0;
 	boundingBoxFloat = undefined;
 	boundingBoxInt = undefined;
-	shifts.length = 0;
 }
 
 /**
@@ -278,12 +275,14 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
-	reset(); // Initiate the arrows empty
-
-	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
-		arrowlegalmovehighlights.reset(); // Also reset this
+	if (mode === 0) return; // Arrow indicators are off, nothing is visible.
+	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) { // Too zoomed out, the arrows would be really tiny.
+		reset();
+		arrowlegalmovehighlights.reset();
 		return;
 	}
+
+	reset(); // Initiate the arrows empty
 
 	/**
 	 * To be able to test if a piece is offscreen or not,
@@ -316,12 +315,6 @@ function update() {
 	calculateSlideArrows_AndHovered(slideArrowsDraft);
 }
 
-/** Whether the arrows should be calculated and rendered this frame */
-function areArrowsActiveThisFrame() {
-	// false if the arrows are off, or if the board is too zoomed out
-	return mode !== 0 && board.gtileWidth_Pixels(true) >= renderZoomLimitVirtualPixels;
-}
-
 /**
  * Calculates the visible bounding box of the screen for this frame,
  * both the integer-rounded, and the exact floating point one.
@@ -349,7 +342,7 @@ function updateBoundingBoxesOfVisibleScreen() {
 	// Expand the bounding box so that it contains the whole of the squares.
 	boundingBoxInt = shapes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxInt);
 
-	/*
+	/**
 	 * Adds a little bit of padding to the bounding box, so that the arrows of the
 	 * arrows indicators aren't touching the edge of the screen.
 	 */
@@ -580,12 +573,11 @@ function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft) 
  */
 function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 	if (Object.keys(slideArrows).length > 0) throw Error('SHOULD have erased all slide arrows before recalcing');
-	if (shifts.length > 0) throw Error('SHOULD have erased all arrow modifications before recalcing');
 
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const worldHalfWidth = worldWidth / 2;
 
-	const mouseWorldLocation = input.getTouchClickedWorld() ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
+	const mouseWorldLocation = input.getPointerWorldLocation() as Coords;
 
 	// Take the arrows draft, construct the actual
 	for (const [key, value] of Object.entries(slideArrowsDraft)) {
@@ -857,14 +849,12 @@ function executeArrowShifts() {
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLineOfPiece(gamefile: gamefile, piece: Piece) {
+function recalculateLineOfPiece(gamefile: gamefile, piece: Piece, resetHovered: boolean) {
 	// Recalculate every single line it is on.
 
-	// ENABLING THIS LINE prevents legal move highlights from rendering for
+	// Prevents legal move highlights from rendering for
 	// the currently animated arrow indicator when hovering over its destination
-	// hoveredArrows = hoveredArrows.filter(hoveredArrow => hoveredArrow.piece.coords !== piece.coords);
-
-	console.log("Recalc", jsutil.deepCopyObject(piece));
+	if (resetHovered) hoveredArrows = hoveredArrows.filter(hoveredArrow => hoveredArrow.piece.coords !== piece.coords);
 
 	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
