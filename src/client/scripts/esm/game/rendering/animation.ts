@@ -72,7 +72,7 @@ interface Animation {
 
 
 /** If this is enabled, the spline of the animation will be rendered, and the animations duration increased. */
-const DEBUG = false;
+const DEBUG = true;
 /** Config for the splines. */
 const SPLINES: {
 	/** The number of points per segment of the spline. */
