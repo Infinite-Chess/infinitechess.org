@@ -137,12 +137,16 @@ function updateBoard(gamefile: gamefile) {
 	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	guinavigation.update();
-	selection.update();
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();
-	animation.update(); // NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
-	movement.checkIfBoardDragged(); // ALSO depends on whether or not a piece is selected/being dragged!
+	selection.update();
+	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
+	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
+	animation.update();
+	// ALSO depends on whether or not a piece is selected/being dragged!
+	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.
+	movement.checkIfBoardDragged(); 
 	miniimage.genModel();
 	highlightline.genModel();
 
