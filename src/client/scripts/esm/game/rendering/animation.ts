@@ -102,7 +102,7 @@ const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
 /** Used for calculating the duration of move animations. */
 const MOVE_ANIMATION_DURATION = {
 	/** The base amount of duration, in millis. */
-	baseMillis: DEBUG ? 1000 : 150, // Default: 150
+	baseMillis: DEBUG ? 3000 : 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
 	multiplierMillis: DEBUG ? 30 : 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
@@ -242,7 +242,7 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
-	arrows.shiftArrow(animation.type, animation.path[0]!, animationCurrentCoords);
+	arrows.shiftArrow(animation.type, animation.path[animation.path.length - 1]!, animationCurrentCoords);
 	// Add the captured piece only after we've shifted the piece that captured it
 	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.path.length - 1]);
 }

@@ -168,7 +168,7 @@ function handleDragging(pieceHoveredType: string | undefined, allowDrop = true) 
 	} else {
 		if (!allowDrop) draganimation.cancelDragging();
 
-		const droparrowsCaptureCoords = droparrows.update_ReturnCaptureCoords();
+		const droparrowsCaptureCoords = droparrows.getCaptureCoords();
 		if (droparrowsCaptureCoords !== undefined) {
 			moveGamefilePiece(droparrowsCaptureCoords);
 			draganimation.dropPiece();
@@ -367,6 +367,8 @@ function moveGamefilePiece(coords: CoordsSpecial) {
 	}
 
 	movesendreceive.sendMove();
+
+	console.log('Moved piece:');
 
 	unselectPiece();
 }
