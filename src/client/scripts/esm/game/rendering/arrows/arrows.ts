@@ -29,6 +29,7 @@ import organizedlines from '../../../chess/logic/organizedlines.js';
 import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
+// @ts-ignore
 import space from '../../misc/space.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
@@ -48,6 +49,7 @@ import options from '../options.js';
 import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
+import gamefileutility from '../../../chess/util/gamefileutility.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -275,14 +277,11 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
-	if (mode === 0) return; // Arrow indicators are off, nothing is visible.
-	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) { // Too zoomed out, the arrows would be really tiny.
-		reset();
-		arrowlegalmovehighlights.reset();
+	reset(); // Initiate the arrows empty
+	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
+		arrowlegalmovehighlights.reset(); // Also reset this
 		return;
 	}
-
-	reset(); // Initiate the arrows empty
 
 	/**
 	 * To be able to test if a piece is offscreen or not,
@@ -313,6 +312,12 @@ function update() {
 	// since we've now removed all the ones not visible.
 
 	calculateSlideArrows_AndHovered(slideArrowsDraft);
+}
+
+/** Whether the arrows should be calculated and rendered this frame */
+function areArrowsActiveThisFrame() {
+	// false if the arrows are off, or if the board is too zoomed out
+	return mode !== 0 && board.gtileWidth_Pixels(true) >= renderZoomLimitVirtualPixels;
 }
 
 /**
@@ -797,7 +802,7 @@ function executeArrowShifts() {
  * as it changes how far other pieces can slide along the line its on.
  */
 // function shiftArrow(piece: Piece, animatedPiece?: Piece, capturedPiece?: Piece) {
-	// if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
+//	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 // 	const gamefile = gameslot.getGamefile()!;
 
 // 	// Delete the piece from its true location, and add it at its animated location
