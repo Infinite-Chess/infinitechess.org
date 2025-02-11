@@ -330,12 +330,12 @@ function calculateBoardPosition(coords: Coords) {
 /** Returns the coordinate the animation's piece should be rendered this frame. */
 function getCurrentAnimationPosition(animation: Animation): Coords {
 	const elapsed = performance.now() - animation.startTimeMillis;
-	/** Range 0 to 1, representing the progress of the animation. */
-	const progress = Math.min(elapsed / animation.durationMillis, 1);
+	/** The interpolated progress of the animation. */
+	const t = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
-	const eased = easeInOut(progress);
+	const easedT = math.easeInOut(t);
 
-	return calculateInterpolatedPosition(animation, eased);
+	return calculateInterpolatedPosition(animation, easedT);
 }
 
 /** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
@@ -364,18 +364,6 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 		accumulated += segment.distance;
 	}
 	return segments[segments.length - 1]!.end;
-}
-
-
-// Utility Functions ----------------------------------------------------------
-
-
-/**
- * Applies an ease-in-out function to the progress value.
- * @param progress - The linear progress value (between 0 and 1).
- */
-function easeInOut(progress: number): number {
-	return -0.5 * Math.cos(Math.PI * progress) + 0.5;
 }
 
 

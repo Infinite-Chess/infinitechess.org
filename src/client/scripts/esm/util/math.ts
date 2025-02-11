@@ -642,6 +642,20 @@ class PseudoRandomGenerator {
 }
 
 
+// Easing Functions --------------------------------------------------------------------------------
+
+
+/**
+ * Applies an ease-in-out interpolation.
+ * @param t - The interpolation factor (0 to 1).
+ */
+function easeInOut(t: number): number {
+	return -0.5 * Math.cos(Math.PI * t) + 0.5;
+}
+
+
+// Exports --------------------------------------------------------------------------------------------
+
 
 export default {
 	calcIntersectionPointOfLines,
@@ -680,6 +694,7 @@ export default {
 	posMod,
 	moveTowards,
 	PseudoRandomGenerator,
+	easeInOut,
 };
 
 export type {
