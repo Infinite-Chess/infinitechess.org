@@ -373,33 +373,6 @@ function goToMove(gamefile: gamefile, index: number, callback: CallableFunction)
 	}
 }
 
-// COMMENTED-OUT because it's 99% identical to goToMove(), and no other part of the code implements it.
-/**
- * Iterates from moveIndex to the target index
- * Callbacks should not update the board
- */
-// function forEachMove(gamefile: gamefile, targetIndex: number, callback: CallableFunction) {
-// 	if (targetIndex === gamefile.moveIndex) return;
-
-// 	const forwards = targetIndex >= gamefile.moveIndex;
-// 	const offset = forwards ? 0 : 1;
-// 	let i = gamefile.moveIndex;
-	
-// 	if (gamefile.moves.length <= targetIndex + offset || targetIndex + offset < 0) throw new Error("Target index is outside of the movelist!");
-
-// 	while (i !== targetIndex) {
-// 		i = math.moveTowards(i, targetIndex, 1);
-// 		const move = gamefile.moves[i + offset];
-
-// 		if (move === undefined) {
-// 			console.log(`Undefined! ${i}, ${targetIndex}`);
-// 			continue;
-// 		}
-
-// 		callback(move);
-// 	}
-// }
-
 
 // Move Wrappers ----------------------------------------------------------------------------------------------------
 
@@ -451,8 +424,7 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 export type {
 	Move,
 	MoveDraft,
-
-	// Special move tags
+	CoordsSpecial,
 	enpassant,
 	promotion,
 	castle,
@@ -463,7 +435,6 @@ export default {
 	generateMove,
 	makeMove,
 	updateTurn,
-	// forEachMove,
 	goToMove,
 	makeAllMovesInGame,
 	applyMove,
