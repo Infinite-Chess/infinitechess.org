@@ -20,7 +20,7 @@ There are 3 automatically generated accounts for you to test with. The password 
 
 ## Debugging Keyboard Shortcuts ##
 
-There are a few keys that will activate useful debugging modes-
+While in the game on the Play page, there are a few keys that will activate useful debugging modes-
 * `` ` ``: The backtick key, typically right below your escape button, will toggle "Debug Mode". In this mode, the camera position is placed further back, and a purple rectange will be rendered showing the region where all legal moves of the selected piece are rendered inside.
 * `1`: If you are in a local game, this will toggle "Edit Mode", which allows you to move any piece anywhere else on the board, ignoring legal moves!
 * `2`: Prints the gamefile, with all its properties, to the console. Useful for checking if it has the expected properties.
