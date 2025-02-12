@@ -159,7 +159,7 @@ function doesSpecialAttackSquare(gamefile, coords, color, attackers) {
 			/**
 			 * If the `path` special flag is present (which it would be for Roses),
 			 * attach that to the attacker, so that checkdetection can test if any
-			 * legal moves can block the path to stop check.
+			 * legal moves can block the path to stop a check.
 			 */
 			if (coords.path !== undefined) attacker.path = coords.path;
 			if (attackers) appendAttackerToList(attackers, attacker);
@@ -343,8 +343,6 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
 	const attackerCount = gamefile.attackers.length;
 	if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!");
 
-	delete legalMoves.sliding; // Erase all sliding moves
-
 	// To know how to address the check, we have to know where the check is coming from.
 	// For now, add legal blocks for the first attacker, not the others. Since legal blocks
 	// are added as extra individual moves, they will be simulated afterward. And if
@@ -377,6 +375,7 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
 	if (!attacker.slidingCheck && (attacker.path?.length ?? 2) < 3
 		|| attacker.slidingCheck && dist === 1) {
 		// Impossible to block
+		delete legalMoves.sliding; // Erase all sliding moves
 		return true;
 	}
 
@@ -388,6 +387,8 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
     
 	if (attacker.slidingCheck) appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
 	else appendPathBlockingMoves(attacker.path, legalMoves, selectedPieceCoords);
+
+	delete legalMoves.sliding; // Erase all sliding moves
 	
 	return true;
 }
