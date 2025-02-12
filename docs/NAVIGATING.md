@@ -15,7 +15,7 @@ The entire source code of the project is located in [src](../src/). BUT, ONLY CO
 There are 3 automatically generated accounts for you to test with. The password for every one of these accounts is `1`-
 - `Member`: Regular permissions.
 - `Patron`: At the moment this holds no difference to member accounts.
-- `Owner`: Is able to send commands on the admin panel page found at url `https://localhost:3443/admin`. Sending `help` will list the available commands. Some commands allow you to see member info from the database without having to open `database.db` with the SQLite extension. Members with the `Admin` role are also allowed to send commands here, but there is no currently default account with this role. The Owner is also able to create invites, even when invite creation is disabled inside `database/allowinvites.json`.
+- `Owner`: Is able to send commands on the admin panel page found at url `https://localhost:3443/admin`. Sending `help` will list the available commands. Some commands allow you to see member info from the database without having to open `database.db` with the SQLite extension. Members with the `admin` role are also allowed to send commands here, but there is no current default account with this role. The Owner is also able to create invites, even when invite creation is disabled inside `database/allowinvites.json`.
 
 
 ## Debugging Keyboard Shortcuts ##
