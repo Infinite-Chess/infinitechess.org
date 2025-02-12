@@ -523,9 +523,6 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
  * @param {Coords} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  */
 function appendBlockingMoves(square1, square2, moves, coords) { // coords is of the selected piece
-	// What is the line between our king and the attacking piece?
-	const direction = [square1[0] - square2[0], square1[1] - square2[1]]; // [dx,dy]
-
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. @type {BoundingBox} */
 	const box = {
 		left: Math.min(square1[0],square2[0]),
@@ -572,7 +569,6 @@ function appendPathBlockingMoves(path, legalMoves, selectedPieceCoords) {
 
 	for (let i = 1; i < path.length - 1; i++) {
 		const blockPoint = path[i];
-
 		// Can our selected piece move to this square?
 		if (legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, blockPoint, { ignoreIndividualMoves: true })) legalMoves.individual.push(coordutil.copyCoords(blockPoint)); // Can block!
 	}
