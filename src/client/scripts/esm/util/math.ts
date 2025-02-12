@@ -36,14 +36,6 @@ type Vec2Key = `${number},${number}`
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
 
-/**
- * The directions a line may come from when it intersects a {@link BoundingBox}
- * 
- * If a line's slope is even SLIGHTLY off perfectly horizontal or vertical,
- * it is considered to be coming from a diagonal/hippogonal direction.
- */
-type Corner = 'top' | 'topright' | 'right' | 'bottomright' | 'bottom' | 'bottomleft' | 'left';
-
 
 // Geometry -------------------------------------------------------------------------------------------
 
@@ -704,5 +696,4 @@ export type {
 	Vec2,
 	Vec2Key,
 	Vec3,
-	Corner,
 };
