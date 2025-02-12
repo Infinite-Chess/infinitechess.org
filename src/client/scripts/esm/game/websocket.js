@@ -13,6 +13,7 @@ import validatorama from '../util/validatorama.js';
 import wsutil from '../util/wsutil.js';
 import options from './rendering/options.js';
 import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
+import docutil from '../util/docutil.js';
 // Import End
 
 "use strict";
@@ -74,12 +75,11 @@ const timerIDsToCancelOnNewSocket = [];
 const alsoPrintSentEchos = false;
 const alsoPrintIncomingEchos = false;
 
-/**
- * The amount of milliseconds of delay to add to our scent socket messages.
- * THIS SHOULD ALWAYS BE 0 IN PRODUCTION!!!!!!
- */
-const simulatedWebsocketLatencyMillis = 0;
+/** Enables simulated websocket latency, and prints all sent and received messages. */
+let DEBUG = false;
+/** The amount of milliseconds of delay to add to our sent socket messages in DEBUG mode. */
 // const simulatedWebsocketLatencyMillis = 1000; // 1 Second
+const simulatedWebsocketLatencyMillis_Debug = 2000; // 2 Seconds
 
 /**
  * The last time the server closed our socket connection request because
@@ -95,6 +95,12 @@ let lastTimeWeGotAuthorizationNeededMessage;
 
 function initListeners() {
 	document.addEventListener('connection-lost', alertUserLostConnection); // A custom event that is dispatched when we lose websocket connection or its very bad.
+}
+
+function toggleDebug() {
+	if (!docutil.isLocalEnvironment()) statustext.showStatus("Can't enable websocket latency in production.");
+	DEBUG = !DEBUG;
+	statustext.showStatus(`Toggled websocket latency: ${DEBUG}`);
 }
 
 function alertUserLostConnection() {
@@ -259,7 +265,7 @@ function onmessage(serverMessage) { // data: { sub, action, value, id, replyto }
 
 	const isEcho = message.action === "echo";
 
-	if (options.isDebugModeOn()) {
+	if (DEBUG) {
 		if (isEcho) { if (alsoPrintIncomingEchos) console.log(`Incoming message: ${JSON.stringify(message)}`); }
 		else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}
@@ -522,7 +528,7 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 	const isEcho = action === "echo";
 	if (!isEcho) payload.id = uuid.generateNumbID(10);
 
-	if (options.isDebugModeOn()) {
+	if (DEBUG) {
 		if (isEcho) { if (alsoPrintSentEchos) console.log(`Sending: ${JSON.stringify(payload)}`); }
 		else console.log(`Sending: ${JSON.stringify(payload)}`);
 	}
@@ -541,8 +547,8 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 
 	const stringifiedMessage = JSON.stringify(payload);
 
-	if (simulatedWebsocketLatencyMillis > 0) { // Add a simulated delay to the message
-		setTimeout(() => { socket.send(stringifiedMessage); }, simulatedWebsocketLatencyMillis);
+	if (DEBUG) { // Add a simulated delay to the message
+		setTimeout(() => { socket.send(stringifiedMessage); }, simulatedWebsocketLatencyMillis_Debug);
 	} else socket.send(stringifiedMessage);
 	
 	return true;
@@ -754,6 +760,7 @@ function unsubFromSub(sub) {
 }
 
 export default {
+	toggleDebug,
 	closeSocket,
 	sendmessage,
 	areSubbedToSub,
