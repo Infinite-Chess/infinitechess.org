@@ -1,6 +1,6 @@
-# Navigating the workspace #
+# Navigating Guide #
 
-This guide gives you several pointers on how to navigate the project.
+This guide gives you several pointers on how to navigate the project, to help you get started with collaborating!
 
 It is assumed you have already gone through the [Setup](./SETUP.md) process.
 
