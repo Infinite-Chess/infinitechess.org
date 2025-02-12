@@ -223,7 +223,6 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 function roses(gamefile, coords, color) {
 	const movements = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1]; // Counter-clockwise and clockwise directions
-
 	/** @type {CoordsSpecial[]} */
 	const individualMoves = [];
 
@@ -255,7 +254,10 @@ function roses(gamefile, coords, color) {
 
 	/**
 	 * Appends a coordinate to the individual moves list if it's not already present.
-	 * If it is present, it keeps the one with the shorter path.
+	 * If it is present, it chooses the one according to this priority:
+	 * 1. Shortest path
+	 * 2. Path that curves towards the center of play
+	 * 3. Randomly pick one
 	 * @param {Coords} newCoord - The coordinate to append [x, y].
 	 */
 	function appendCoordToIndividuals(newCoord, path) {
@@ -263,37 +265,29 @@ function roses(gamefile, coords, color) {
 		for (let i = 0; i < individualMoves.length; i++) {
 			const coord = individualMoves[i];
 			if (!coordutil.areCoordsEqual(coord, newCoord)) continue;
-
-			// This coord has already been added to our individual moves!!!
-			// That means this square has 2 different paths to land on it. Keep the one that's shorter
-
-			const sign = Math.sign(coord.path.length - newCoord.path.length);
-
-			if (sign === -1) individualMoves[i] = coord; // First path shorter
-			else if (sign === 1) individualMoves[i] = newCoord; // Second path shorter
-			else if (sign === 0) { // Path are equal length
+			/*
+			 * This coord has already been added to our individual moves!!!
+			 * Pick the one with the shortest path.
+			 */
+			if (coord.path.length < newCoord.path.length) individualMoves[i] = coord; // First path shorter
+			else if (coord.path.length > newCoord.path.length) individualMoves[i] = newCoord; // Second path shorter
+			else if (coord.path.length === newCoord.path.length) { // Path are equal length
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
-				const startBox = gamefile.startSnapshot.box; // { left, right, bottom, top }
-				const centerOfPlay = [
-					(startBox.left + startBox.right) / 2,
-					(startBox.bottom + startBox.top) / 2
-				];
-				const vector1 = math.calculateVectorFromPoints(coords, coord.path[1]);
-				const vector2 = math.calculateVectorFromPoints(coords, newCoord.path[1]);
-				const dotProd1 = math.dotProdOfVectorToTarget(coords, vector1, centerOfPlay);
-				const dotProd2 = math.dotProdOfVectorToTarget(coords, vector2, centerOfPlay);
-				const sign2 = Math.sign(dotProd1 - dotProd2);
-				if (sign2 === 1) {
-					individualMoves[i] = coord;
-				} else if (sign2 === -1) {
-					individualMoves[i] = newCoord;
-				} else if (sign2 === 0) { // Even the vectors both equally point towards the origin.
+				const centerOfPlay = math.calcCenterOfBoundingBox(gamefile.startSnapshot.box);
+				const vectorToCenter = math.calculateVectorFromPoints(coords, centerOfPlay);
+				const existingCoordVector = math.calculateVectorFromPoints(coords, coord.path[1]);
+				const newCoordVector = math.calculateVectorFromPoints(coords, newCoord.path[1]);
+				// Whichever's dot product scores higher is the one that curves more towards the center
+				const existingCoordDotProd = math.dotProduct(existingCoordVector, vectorToCenter);
+				const newCoordDotProd = math.dotProduct(newCoordVector, vectorToCenter);
+				if (existingCoordDotProd > newCoordDotProd) individualMoves[i] = coord; // Existing move's path curves more towards the center
+				else if (existingCoordDotProd < newCoordDotProd) individualMoves[i] = newCoord; // New move's path curves more towards the center
+				else if (existingCoordDotProd === newCoordDotProd) { // BOTH point equally point towards the origin.
 					// JUST pick a random one!
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
-				} else throw Error('Invalid sign: ' + sign2);
+				}
 			}
-			else throw Error('Invalid sign: ' + sign);
 
 			return;
 		}

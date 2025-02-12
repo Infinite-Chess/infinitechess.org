@@ -205,6 +205,16 @@ function mergeBoundingBoxes(box1: BoundingBox, box2: BoundingBox): BoundingBox {
 }
 
 /**
+ * Calculates the center of a bounding box.
+ */
+function calcCenterOfBoundingBox(box: BoundingBox): Coords {
+	return [
+		(box.left + box.right) / 2,
+		(box.bottom + box.top) / 2
+	];
+}
+
+/**
  * Returns the point on the line SEGMENT that is nearest/perpendicular to the given point.
  * @param lineStart - The starting point of the line segment.
  * @param lineEnd - The ending point of the line segment.
@@ -307,15 +317,6 @@ function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBo
  */
 function dotProduct(v1: Vec2, v2: Vec2): number {
 	return v1[0] * v2[0] + v1[1] * v2[1];
-}
-
-/**
- * Computes how well a vector points toward a target point using the dot product.
- * @returns The dot product indicating alignment (higher means more aligned). Positive means it pointing roughly the same direction. When it's pointing exactly, the value will be the product of their magnitudes.
- */
-function dotProdOfVectorToTarget(start: Coords, vector: Vec2, target: Coords): number {
-	const toTarget: Vec2 = calculateVectorFromPoints(start, target); // Vector pointing to target
-	return dotProduct(vector, toTarget);
 }
 
 
@@ -670,9 +671,10 @@ export default {
 	getBoxFromCoordsList,
 	expandBoxToContainSquare,
 	mergeBoundingBoxes,
+	calcCenterOfBoundingBox,
 	closestPointOnLine,
 	findFarthestPointsALineSweepsABox,
-	dotProdOfVectorToTarget,
+	dotProduct,
 	findLineBoxIntersections,
 	areLinesCollinear,
 	getKeyFromVec2,
