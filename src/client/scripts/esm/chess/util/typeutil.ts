@@ -38,7 +38,16 @@ const slidingroyals = [rawTypes.ROYALQUEEN];
 
 const royals = [...jumpingroyals, ...slidingroyals];
 
+const colors = {
+	NEUTRAL: 0,
+	WHITE: 1,
+	BLACK: 2,
+} as const;
+
+const strcolors = ["neutral", "white", "black"];
+
 type RawType = typeof rawTypes[keyof typeof rawTypes]
+type TeamColor = typeof colors[keyof typeof colors]
 
 const numTypes = Object.keys(rawTypes).length;
 
@@ -46,10 +55,40 @@ function getRawType(type: number): RawType {
 	return type % numTypes as RawType;
 }
 
-function getColorFromType(type: number): number {
-	return Math.floor(type / numTypes);
+function getColorFromType(type: number): TeamColor {
+	return Math.floor(type / numTypes) as TeamColor;
+}
+
+function getColorStringFromType(type: number): string {
+	return strcolors[getColorFromType(type)];
 }
 
 function buildType(type: RawType, color: number): number {
 	return color * numTypes + type;
 }
+
+function forEachPieceType(callback: (pieceType: number) => void, colors: TeamColor[], includePieces: RawType[]) {
+	for (let i = colors.length - 1; i >= 0; i--) {
+		for (const r of includePieces) {
+			callback(buildType(r, colors[i]));
+		}
+	}
+}
+
+export type {
+	RawType,
+	TeamColor
+};
+
+export default {
+	rawTypes,
+	colors,
+	jumpingroyals,
+	royals,
+
+	getRawType,
+	getColorFromType,
+	getColorStringFromType,
+	buildType,
+	forEachPieceType,
+};

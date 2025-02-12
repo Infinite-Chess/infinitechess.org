@@ -63,7 +63,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** The bounding box surrounding the starting position, without padding.
          * @type {BoundingBox} */
 		box: undefined,
-		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
+		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {number[]} */
 		existingTypes: undefined,
 		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Vec2[]}*/
 		slidingPossible: undefined,

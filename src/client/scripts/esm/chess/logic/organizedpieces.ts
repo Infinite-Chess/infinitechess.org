@@ -1,3 +1,11 @@
+import type gamefile from "./gamefile";
+import typeutil from "../util/typeutil";
+import coordutil from "../util/coordutil";
+import math from "../../util/math";
+
+import type { RawType } from "../util/typeutil";
+import type { Coords, CoordsKey } from "../util/coordutil";
+
 const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
 type PositionArray = Int8Array | Int16Array | Int32Array | BigInt64Array;
 type SizedArray = PositionArray | Uint8Array
@@ -12,18 +20,30 @@ const MaxTypedArrayValues: Record<string, bigint> = {
 
 const listExtras = 20;
 
+/** A length-2 number array. Commonly used for storing directions. */
+type Vec2 = [number,number]
+
+/** The string-key of a line's step value, or a 2-dimensional vector. */
+// Separated from CoordsKey so that it's clear this is meant for directions, not coordinates
+type Vec2Key = `${number},${number}`;
+
+/** A unique identifier for a single line of pieces. `C|X` */
+type LineKey = `${number}|${number}`
+
+interface TypeRanges {
+	[type: number]: {
+		start: number,
+		end: number,
+		/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
+		undefineds: Array<number>
+	},
+}
+
 interface OrganizedPieces {
 	XPositions: PositionArray
 	YPositions: PositionArray
 	types: Uint8Array // Range 0-255. There are 22 total types currently, potentially 4 unique colors/players in a game ==> 88 posible types.
-	typeRanges: {
-		[type: number]: {
-			start: number,
-			end: number,
-			/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
-			undefineds: Array<number>
-		},
-	}
+	typeRanges: TypeRanges
 	// Maybe not needed? Since typeRanges above contains undefineds arrays. Correct me if wrong
 	// undefineds: Array<number>
 	/**
@@ -31,7 +51,7 @@ interface OrganizedPieces {
 	 * 
 	 * 'x,y' => idx
 	 */
-	coords: Map<string, number>
+	coords: Map<CoordsKey, number>
 	/**
 	 * I actually do think we should stick to the maps being the keys of the slide/line
 	 * instead of integers of the dx/dy. There's half as many lookups to do (but maybe a little
@@ -39,7 +59,7 @@ interface OrganizedPieces {
 	 * 
 	 * Map{ 'dx,dy' => Map { 'yint|xafter0' => [idx, idx, idx...] }}
 	 */
-	lines: Map<string, Map<string,number[]>>
+	lines: Map<Vec2Key, Map<LineKey,number[]>>
 }
 
 
@@ -128,24 +148,54 @@ function areWeShortOnUndefineds(o: OrganizedPieces): boolean {
  * @param {string} type - The type of piece (e.g. "pawnsW")
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
-function isTypeATypeWereAppendingUndefineds(gamefile: gamefile, type: string): boolean {
+function isTypeATypeWereAppendingUndefineds(gamefile: gamefile, type: number): boolean {
 	if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
-	const color = colorutil.getPieceColorFromType(type);
+	const color = typeutil.getColorStringFromType(type);
 
 	if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
     
-	const trimmedType = colorutil.trimColorExtensionFromType(type);
+	const trimmedType = typeutil.getRawType(type);
 	return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
+}
+
+/**
+ * 
+ * @param {gamefile} gamefile
+ */
+function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
+	const state: TypeRanges = {};
+
+	typeutil.forEachPieceType(t => {
+		state[t] = {
+			start: 0,
+			end: -1,
+			undefineds: []
+		};
+	}, [typeutil.colors.NEUTRAL, typeutil.colors.WHITE, typeutil.colors.BLACK],
+	gamefile.startSnapshot.existingTypes as RawType[]);
+
+	return state;
+}
+
+function toSizedArray<T extends SizedArray>(arr: number[], sizedArray: T): T {
+	for (let i = 0; i < sizedArray.length; i++) {
+		sizedArray[i] = arr[i];
+	}
+	return sizedArray;
 }
 
 /**
  * Converts a piece list organized by key to organized by type.
  * @returns Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
  */
-function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArrayConstructor): PiecesByType {
+function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArrayConstructor): OrganizedPieces {
 	const keyList = gamefile.startSnapshot.position;
-	const state = getEmptyTypeState(gamefile);
+	const ranges = getEmptyTypeRanges(gamefile);
+	const piecesByType: {[type: number]: Coords[]} = {};
+	const organizedPieces: Partial<OrganizedPieces> = {
+		typeRanges: ranges,
+	};
 
 	// For some reason, does not iterate through inherited properties?
 	for (const key in keyList) {
@@ -153,10 +203,152 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
 		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
 		// Does the type parameter exist?
 		// if (!state[type]) state[type] = []
-		if (!state[type]) throw Error(`Error when building state from key list. Type ${type} is undefined!`);
+		if (!ranges[type]) throw Error(`Error when building state from key list. Type ${type} is undefined!`);
 		// Push the coords
-		state[type].push(coords);
+		piecesByType[type].push(coords);
 	}
 
-	return state;
+	const typeOrder: number[] = Object.keys(piecesByType).map(Number).sort();
+	let currentOffset = 0;
+	const x: number[] = [];
+	const y: number[] = [];
+	const t: number[] = [];
+	for (const rt of typeOrder) {
+		ranges[rt].start = currentOffset;
+		currentOffset += piecesByType[rt].length;
+		ranges[rt].end = currentOffset; 
+		for (const c of piecesByType[rt]) {
+			x.push(c[0]);
+			y.push(c[1]);
+			t.push(rt);
+		}
+	}
+	organizedPieces.XPositions = toSizedArray(x, new coordConstructor(currentOffset));
+	organizedPieces.YPositions = toSizedArray(y, new coordConstructor(currentOffset));
+	organizedPieces.types = toSizedArray(t, new Uint8Array(currentOffset));
+
+	placePieces(gamefile.startSnapshot.slidingPossible, organizedPieces);
+	return organizedPieces as OrganizedPieces;
+}
+
+function placePieces(possibleLines: Vec2[], organizedPieces: Partial<OrganizedPieces>) {
+	organizedPieces.lines = new Map();
+	organizedPieces.coords = new Map();
+	for (const line of possibleLines) {
+		const strline = coordutil.getKeyFromCoords(line);
+		organizedPieces.lines.set(strline, new Map());
+	}
+	for (let i = 0; i < organizedPieces.types!.length; i++) {
+		registerPieceInSpace(possibleLines, i, organizedPieces);
+	}
+}
+
+function registerPieceInSpace(possibleLines: Vec2[], idx: number, organizedPieces: Partial<OrganizedPieces>) {
+	const x = organizedPieces.XPositions![idx];
+	const y = organizedPieces.YPositions![idx];
+	const coords = [x,y] as Coords;
+	const key = coordutil.getKeyFromCoords(coords);
+	if (organizedPieces.coords![key] !== undefined) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
+	organizedPieces.coords!.set(key, idx);
+	const lines = organizedPieces.lines!;
+	for (const line of possibleLines) {
+		const lkey = getKeyFromLine(line, coords);
+		const strline = coordutil.getKeyFromCoords(line);
+		// Is line initialized
+		if (lines[strline][lkey] === undefined) lines[strline].set(lkey, []);
+		lines[strline][lkey].push(idx);
+	}
+}
+
+/**
+ * Returns a string that is a unique identifier of a given organized line: `"C|X"`.
+ * Where `C` is the c in the linear standard form of the line: "ax + by = c",
+ * and `X` is the nearest x-value the line intersects on or after the y-axis.
+ * For example, the line with step-size [2,0] that starts on point (0,0) will have an X value of '0',
+ * whereas the line with step-size [2,0] that starts on point (1,0) will have an X value of '1',
+ * because it's step size means it never intersects the y-axis at x = 0, but x = 1 is the nearest it gets to it, after 0.
+ * 
+ * If the line is perfectly vertical, the axis will be flipped, so `X` in this
+ * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
+ * @param {Vec2} step - Line step `[dx,dy]`
+ * @param {Coords} coords `[x,y]` - A point the line intersects
+ * @returns {String} the key `C|X`
+ */
+function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
+	const C = math.getLineCFromCoordsAndVec(coords, step);
+	const X = getXFromLine(step, coords);
+	return `${C}|${X}`;
+}
+
+/**
+ * Calculates the `X` value of the line's key from the provided step direction and coordinates,
+ * which is the nearest x-value the line intersects on or after the y-axis.
+ * For example, the line with step-size [2,0] that starts on point (0,0) will have an X value of '0',
+ * whereas the line with step-size [2,0] that starts on point (1,0) will have an X value of '1',
+ * because it's step size means it never intersects the y-axis at x = 0, but x = 1 is the nearest it gets to it, after 0.
+ * 
+ * If the line is perfectly vertical, the axis will be flipped, so `X` in this
+ * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
+ * @param {Vec2} step - [dx,dy]
+ * @param {Coords} coords - Coordinates that are on the line
+ * @returns {number} The X in the line's key: `C|X`
+ */
+function getXFromLine(step: Coords, coords: Coords): number {
+	// See these desmos graphs for inspiration for finding what line the coords are on:
+	// https://www.desmos.com/calculator/d0uf1sqipn
+	// https://www.desmos.com/calculator/t9wkt3kbfo
+
+	const lineIsVertical = step[0] === 0;
+	const deltaAxis = lineIsVertical ? step[1] : step[0];
+	const coordAxis = lineIsVertical ? coords[1] : coords[0];
+	return math.posMod(coordAxis, deltaAxis);
+}
+
+/** Splits the `C` value out of the line key */
+function getCFromKey(lineKey: LineKey): number {
+	return Number(lineKey.split('|')[0]);
+}
+
+/**
+ * Tests if the provided gamefile has colinear organized lines present in the game.
+ * This can occur if there are sliders that can move in the same exact direction as others.
+ * For example, [2,0] and [3,0]. We typically like to know this information because
+ * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
+ * by using royalcapture instead of checkmate.
+ */
+function areColinearSlidesPresentInGame(gamefile: gamefile): boolean {
+	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
+
+	// How to know if 2 lines are colinear?
+	// They will have the exact same slope!
+
+	// Iterate through each line, comparing its slope with every other line
+	for (let a = 0; a < slidingPossible.length - 1; a++) {
+		const line1 = slidingPossible[a]; // [dx,dy]
+		const slope1 = line1[1] / line1[0]; // Rise/Run
+		const line1IsVertical = isNaN(slope1);
+        
+		for (let b = a + 1; b < slidingPossible.length; b++) {
+			const line2 = slidingPossible[b]; // [dx,dy]
+			const slope2 = line2[1] / line2[0]; // Rise/Run
+			const line2IsVertical = isNaN(slope2);
+
+			if (line1IsVertical && line2IsVertical) return true; // Colinear!
+			if (slope1 === slope2) return true; // Colinear!
+		}
+	}
+	return false;
+}
+
+/**
+ * Tests if the provided gamefile has hippogonal lines present in the game.
+ * True if there are knightriders or higher riders.
+ */
+function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
+	for (let i = 0; i < slidingPossible.length; i++) {
+		const thisSlideDir: Vec2 = slidingPossible[i]!;
+		if (Math.abs(thisSlideDir[0]) > 1) return true;
+		if (Math.abs(thisSlideDir[1]) > 1) return true;
+	}
+	return false;
 }
