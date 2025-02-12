@@ -722,8 +722,8 @@ function shiftArrow(type: string, start?: Coords, end?: Coords) {
 	if (start === undefined && end === undefined) throw Error('Must provide one of either start or end coords of modified arrow.');
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 
-	console.log("Shifting arrow:");
-	console.error(jsutil.deepCopyObject({ type, start, end }));
+	// console.log("Shifting arrow:");
+	// console.error(jsutil.deepCopyObject({ type, start, end }));
 
 	if (start !== undefined) { // Guaranteed a deletion
 
@@ -746,8 +746,8 @@ function shiftArrow(type: string, start?: Coords, end?: Coords) {
 
 
 function executeArrowShifts() {
-	console.log("Executing arrow shifts");
-	console.log(jsutil.deepCopyObject(shifts));
+	// console.log("Executing arrow shifts");
+	// console.log(jsutil.deepCopyObject(shifts));
 
 	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
@@ -938,7 +938,7 @@ function render() {
 	arrowlegalmovehighlights.update();
 	regenerateModelAndRender();
 
-	console.log("End frame ================");
+	// console.log("End frame ================");
 }
 
 function regenerateModelAndRender() {
