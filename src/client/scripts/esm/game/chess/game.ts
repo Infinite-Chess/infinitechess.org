@@ -69,58 +69,58 @@ import guigameinfo from '../gui/guigameinfo.js';
 // Functions -------------------------------------------------------------------------------
 
 
-    /**
-     * Checks if we are currently in a game that is not a local game
-     * @returns {boolean}
-     */
-    function areInNonLocalGame() {
-        return onlinegame.areInOnlineGame() || enginegame.areInEngineGame();
-    }
+//     /**
+//      * Checks if we are currently in a game that is not a local game
+//      * @returns {boolean}
+//      */
+//     function areInNonLocalGame() {
+//         return onlinegame.areInOnlineGame() || enginegame.areInEngineGame();
+//     }
 
-    /**
-     * Checks if we control a specific color in a game that is not a local game
-     * @param {String} color - "white" or "black"
-     * @returns {boolean}
-     */
-    function areWeColorInNonLocalGame(color) {
-        return onlinegame.areWeColor(color) || enginegame.areWeColor(color);
-    }
+//     /**
+//      * Checks if we control a specific color in a game that is not a local game
+//      * @param {String} color - "white" or "black"
+//      * @returns {boolean}
+//      */
+//     function areWeColorInNonLocalGame(color) {
+//         return onlinegame.areWeColor(color) || enginegame.areWeColor(color);
+//     }
 
-    /**
-     * Checks if we control a specific color in a game that is not a local game
-     * @param {String} color - "white" or "black"
-     * @returns {String}
-     */
-    function getOurColorInNonLocalGame() {
-        if (onlinegame.areInOnlineGame()) return onlinegame.getOurColor();
-        else if (enginegame.areInEngineGame()) return enginegame.getOurColor();
-        else return undefined;
-    }
+//     /**
+//      * Checks if we control a specific color in a game that is not a local game
+//      * @param {String} color - "white" or "black"
+//      * @returns {String}
+//      */
+//     function getOurColorInNonLocalGame() {
+//         if (onlinegame.areInOnlineGame()) return onlinegame.getOurColor();
+//         else if (enginegame.areInEngineGame()) return enginegame.getOurColor();
+//         else return undefined;
+//     }
 
-    /**
-     * Checks if it is currently our turn to move in a game that is not a local game
-     * @returns {boolean}
-     */
-    function isItOurTurnInNonLocalGame() {
-        return onlinegame.isItOurTurn() || enginegame.isItOurTurn();
-    }
+//     /**
+//      * Checks if it is currently our turn to move in a game that is not a local game
+//      * @returns {boolean}
+//      */
+//     function isItOurTurnInNonLocalGame() {
+//         return onlinegame.isItOurTurn() || enginegame.isItOurTurn();
+//     }
 
-    /**
-     * Gets called when a game that is a not local game needs to be closed. Closes onlinegames and enginegames.
-     */
-    function closeNonLocalGame() {
-        onlinegame.closeOnlineGame();
-        enginegame.closeEngineGame();
-    }
-function init() {
-	options.initTheme();
+//     /**
+//      * Gets called when a game that is a not local game needs to be closed. Closes onlinegames and enginegames.
+//      */
+//     function closeNonLocalGame() {
+//         onlinegame.closeOnlineGame();
+//         enginegame.closeEngineGame();
+//     }
+// function init() {
+// 	options.initTheme();
 
-	gui.prepareForOpen();
+// 	gui.prepareForOpen();
 
-	guititle.open();
+// 	guititle.open();
 
-	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
-}
+// 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
+// }
 
 // Update the game every single frame
 function update() {
@@ -240,7 +240,6 @@ function render() {
 
 
 export default {
-	init,
 	update,
 	render,
 };
