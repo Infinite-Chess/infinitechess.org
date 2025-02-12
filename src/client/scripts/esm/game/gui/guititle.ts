@@ -9,6 +9,8 @@ import gui from './gui.js';
 import guiguide from './guiguide.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
+// @ts-ignore
+import guipractice from './guipractice.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -19,6 +21,7 @@ const boardVel = 0.6; // Speed at which board slowly moves while on title screen
 
 const titleElement = document.getElementById('title')!; // Visible when on the title screen
 const element_play = document.getElementById('play')!;
+const element_practice = document.getElementById('practice')!;
 const element_guide = document.getElementById('rules')!;
 const element_boardEditor = document.getElementById('board-editor')!;
 const element_menuExternalLinks = document.getElementById('menu-external-links')!;
@@ -42,12 +45,14 @@ function close() {
 
 function initListeners() {
 	element_play.addEventListener('click', callback_Play);
+	element_practice.addEventListener('click', callback_Practice);
 	element_guide.addEventListener('click', callback_Guide);
 	element_boardEditor.addEventListener('click', gui.displayStatus_FeaturePlanned);
 }
 
 function closeListeners() {
 	element_play.removeEventListener('click', callback_Play);
+	element_practice.removeEventListener('click', callback_Practice);
 	element_guide.removeEventListener('click', callback_Guide);
 	element_boardEditor.removeEventListener('click', gui.displayStatus_FeaturePlanned);
 }
@@ -57,7 +62,12 @@ function callback_Play(event: Event) {
 	guiplay.open();
 }
 
-function callback_Guide(event: Event) {
+
+function callback_Practice(event) {
+	event = event || window.event;
+	close();
+	guipractice.open();
+}function callback_Guide(event: Event) {
 	close();
 	guiguide.open();
 }

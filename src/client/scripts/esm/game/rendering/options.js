@@ -1,14 +1,18 @@
 
 // Import Start
 import input from '../input.js';
+import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+import highlights from './highlights.js';
 import stats from '../gui/stats.js';
 import perspective from './perspective.js';
+import guinavigation from '../gui/guinavigation.js';
 import selection from '../chess/selection.js';
 import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import board from './board.js';
 import statustext from '../gui/statustext.js';
+import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../../chess/util/colorutil.js';
 import frametracker from './frametracker.js';
 import timeutil from '../../util/timeutil.js';
@@ -87,6 +91,7 @@ function toggleEM() {
 	// Make sure it's legal
 	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
+	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
 
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	em = !em;
