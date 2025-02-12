@@ -32,7 +32,7 @@ While in the game on the Play page, there are a few keys that will activate usef
 
 [src/client/views](../src/client/views) contains all our EJS documents, which are converted to HTMLs on startup. The routers that actually send these as HTMLs to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
-[src/client/scripts/game](../src/client/scripts/esm/game/) contains all our javascipt code for running the game on the play page of the website. The main script that contains the gameloop is [main.js](../src/client/scripts/esm/game/main.js). Every game script includes a basic description at the top. Feel free to ask for greater details on what a specific script does, or for help finding a script that does a specific task!
+[src/client/scripts/esm/game](../src/client/scripts/esm/game/) contains all our javascipt code for running the game on the play page of the website. The main script that contains the gameloop is [main.js](../src/client/scripts/esm/game/main.js). Every game script includes a basic description at the top. Feel free to ask for greater details on what a specific script does, or for help finding a script that does a specific task!
 
 
 
