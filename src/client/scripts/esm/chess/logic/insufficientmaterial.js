@@ -157,7 +157,7 @@ function detectInsufficientMaterial(gamefile) {
 
 	// Only make the draw check if the last move was a capture or if there is no last move
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (lastMove && !lastMove.captured) return false;
+	if (lastMove && !lastMove.flags.capture) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle pieces
 	if (gamefileutility.getPieceCountOfGame(gamefile, { ignoreObstacles: true }) >= 11) return false;

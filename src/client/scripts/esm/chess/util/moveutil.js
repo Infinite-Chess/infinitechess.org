@@ -228,7 +228,7 @@ function convertMovesTo1DFormat(moves, results) {
 function flagLastMoveAsMate(gamefile) {
 	if (gamefile.moves.length === 0) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
 	const lastMove = getLastMove(gamefile.moves);
-	lastMove.mate = true;
+	lastMove.flags.mate = true;
 }
 
 /**
