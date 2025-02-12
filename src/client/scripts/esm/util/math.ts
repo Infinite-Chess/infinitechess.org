@@ -596,45 +596,6 @@ function moveTowards(s: number, e: number, progress: number): number {
 }
 
 
-// Random Number Generation ----------------------------------------------------------------------
-
-
-class PseudoRandomGenerator {
-	private a: number = 16807;
-	private c: number = 2491057;
-	private b: number = 2147483647;
-
-	private current: number;
-
-	constructor(seed: number) {
-		this.current = seed;
-	}
-
-	private iterate() {
-		const next = (this.current * this.a + this.c) % this.b;
-		this.current = next;
-	}
-
-	/**
-     * Generates the next random integer in the sequence.
-     * @returns A pseudo-random integer between 0 and 2147483647.
-     */
-	nextInt(): number {
-		this.iterate();
-		return this.current;
-	}
-
-	/**
-     * Generates the next random floating point number in the sequence.
-     * @returns A pseudo-random float between 0 and 1.
-     */
-	nextFloat(): number {
-		this.iterate();
-		return this.current / this.b;
-	}
-}
-
-
 // Easing Functions --------------------------------------------------------------------------------
 
 
@@ -687,7 +648,6 @@ export default {
 	roundUpToNextPowerOf2,
 	posMod,
 	moveTowards,
-	PseudoRandomGenerator,
 	easeInOut,
 };
 
