@@ -14,7 +14,9 @@ import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
 
+// @ts-ignore
 import enginegame from '../misc/enginegame.js';
+
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";

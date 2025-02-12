@@ -8,11 +8,13 @@
 
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
+// @ts-ignore
+import enginegame from '../misc/enginegame.js';
+// @ts-ignore
+import gui from '../gui/gui.js';
 
 
 import gameloader from './gameloader.js';
-import enginegame from '../misc/enginegame.js';
-import gui from '../gui/gui.js';
 import jsutil from '../../util/jsutil.js';
 import highlights from '../rendering/highlights/highlights.js';
 import gameslot from './gameslot.js';

@@ -63,11 +63,12 @@ function callback_Play(event: Event) {
 }
 
 
-function callback_Practice(event) {
+function callback_Practice(event: Event) {
 	event = event || window.event;
 	close();
 	guipractice.open();
-}function callback_Guide(event: Event) {
+}
+function callback_Guide(event: Event) {
 	close();
 	guiguide.open();
 }
