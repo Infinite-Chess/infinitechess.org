@@ -371,4 +371,6 @@ export default {
 	transferSpecialFlags_FromCoordsToMove,
 	transferSpecialFlags_FromMoveToCoords,
 	transferSpecialFlags_FromCoordsToCoords
+
+
 };

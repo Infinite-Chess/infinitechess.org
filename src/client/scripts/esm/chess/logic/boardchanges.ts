@@ -21,7 +21,9 @@ import jsutil from "../../util/jsutil.js";
 
 
 /** All Change actions that capture a piece. */
-const captureActions = ['capture'];
+const captureActions: string[] = ['capture'];
+/** All Change actions that cannot be undone to return to the same board position later in the game, unless in the future it's possible to add pieces mid-game. */
+const oneWayActions: string[] = [...captureActions, 'delete'];
 
 
 // Type Definitions-------------------------------------------------------------------------
@@ -42,14 +44,24 @@ interface Piece {
 /**
  * Generic type to describe any changes to the board
  */
-interface Change {
-	// The action is used to differentiated the type of change made and the data it has
-	action: 'add' | 'delete' | 'move' | 'capture',
+type Change = {
 	/** Whether this change affects the main piece moved.
 	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
 	main: boolean,
-	[changeData: string]: any
-}
+	/** The main piece affected by the move. If this is a move/capture action, it's the piece moved. If it's an add/delete action, it's the piece added/deleted. */
+	piece: Piece
+} & ({
+	/** The type of action this change performs. */
+	action: 'add' | 'delete',
+	// No additional properties needed
+} | {
+	action: 'capture',
+	endCoords: Coords,
+	capturedPiece: Piece
+} | {
+	action: 'move',
+	endCoords: Coords,
+})
 
 /**
  * A generic function that takes the changes list of a move, and modifies either
@@ -317,10 +329,7 @@ function wasACapture(move: Move): boolean {
 	// Safety net if we ever accidentally call this method too soon.
 	// There will never be a valid move with zero changes, that's just absurd.
 	if (move.changes.length === 0) throw Error("Move doesn't have it's changes calculated yet, do that before this.");
-	for (const change of move.changes) {
-		if (captureActions.includes(change.action)) return true; // This was a capture action
-	}
-	return false;
+	return move.changes.some(change => captureActions.includes(change.action));
 }
 
 export type {
@@ -337,6 +346,7 @@ export default {
 	queueMovePiece,
 	queueCapture,
 	getCapturedPieces,
+	oneWayActions,
 	wasACapture,
 	runMove,
 	applyChanges,

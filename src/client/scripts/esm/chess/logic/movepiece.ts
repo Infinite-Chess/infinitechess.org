@@ -11,7 +11,7 @@
 import type gamefile from './gamefile.js';
 import type { Piece } from './boardchanges.js';
 import type { Coords } from '../util/coordutil.js';
-import type { MoveState } from './state.js';
+import type { attackers, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
 
 import colorutil from '../util/colorutil.js';
@@ -137,10 +137,12 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		mate: false, // This will be set later
 	};
 
-	// This needs to be before calculating the moves changes,
-	// as special moves functions may add MORE enpassant or specialRights,
-	// and if this comes afterward, then those values will be overwritten with undefined.
-	queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile, move);
+	/**
+	 * Delete the current enpassant state.
+	 * If any specialMove function adds a new EnPassant state,
+	 * this one's future value will be overwritten
+	 */
+	state.createEnPassantState(move, gamefile.enpassant, undefined);
 
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
 	let specialMoveMade: boolean = false;
@@ -150,6 +152,8 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
+	// Delete all special rights that should be revoked from the move.
+	queueSpecialRightDeletionStateChanges(gamefile, move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
@@ -173,15 +177,28 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 }
 
 /**
- * Queues a gamefile StateChange to delete the gamefile's current `enpassant`,
- * and the specialRights of the piece moved and its destination.
+ * Queues gamefile state changes to delete all 
+ * special rights that should have been revoked from the move.
+ * This includes the startCoords and endCoords of all move actions.
  */
-function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, move: Move) {
-	state.createState(move, 'enpassant', gamefile.enpassant, undefined);
-	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key });
-	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key }); // We also delete the captured pieces specialRights for ANY move.
+function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
+	move.changes.forEach(change => {
+		if (change.action === 'move') {
+			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
+			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+		} else if (change.action === 'capture') {
+			// Delete the special rights off the start coords AND the capture coords, if there are ones.
+			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords);
+			state.createSpecialRightsState(move, captureCoordsKey, gamefile.specialRights[captureCoordsKey], undefined);
+		} else if (change.action === 'delete') {
+			// Delete the special rights of the coords, if there is one.
+			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, coordsKey, gamefile.specialRights[coordsKey], undefined)
+		}
+	});
 }
 
 /**
@@ -193,7 +210,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
-	state.createState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule);
+	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
 
@@ -248,7 +265,7 @@ function updateTurn(gamefile: gamefile) {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(gamefile: gamefile, move: Move) {
-	let attackers: [] | undefined = undefined;
+	let attackers: [] | undefined;
 	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
@@ -256,8 +273,8 @@ function createCheckState(gamefile: gamefile, move: Move) {
 
 	const futureInCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
-	state.createState(move, "check", gamefile.inCheck, futureInCheck, {}, gamefile); // Passes in the gamefile as an argument
-	state.createState(move, "attackers", gamefile.attackers, attackers || [], {}, gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.createCheckState(move, gamefile.inCheck, futureInCheck, gamefile); // Passes in the gamefile as an argument
+	state.createAttackersState(move, gamefile.attackers, attackers ?? [], gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 /**
