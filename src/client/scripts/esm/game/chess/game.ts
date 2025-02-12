@@ -62,6 +62,8 @@ import piecesmodel from '../rendering/piecesmodel.js';
 import loadbalancer from '../misc/loadbalancer.js';
 // @ts-ignore
 import guigameinfo from '../gui/guigameinfo.js';
+import websocket from '../websocket.js';
+import voids from '../rendering/voids.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -93,7 +95,9 @@ function update() {
 			console.log(jsutil.deepCopyObject(gamefile));
 			console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 		}
-		if (input.isKeyDown('m')) options.toggleFPS();
+		if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
+		if (input.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+		if (input.isKeyDown('5')) voids.toggleDebug(); // Renders the wireframe of voids
 		if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 	}
 

@@ -71,8 +71,6 @@ interface Animation {
 // Constants -------------------------------------------------------------------
 
 
-/** If this is enabled, the spline of the animation will be rendered, and the animations duration increased. */
-const DEBUG = true;
 /** Config for the splines. */
 const SPLINES: {
 	/** The number of points per segment of the spline. */
@@ -102,11 +100,17 @@ const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
 /** Used for calculating the duration of move animations. */
 const MOVE_ANIMATION_DURATION = {
 	/** The base amount of duration, in millis. */
-	baseMillis: DEBUG ? 3000 : 150, // Default: 150
+	baseMillis: 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMillis: DEBUG ? 30 : 6,
+	multiplierMillis: 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
-	multiplierMillis_Curved: DEBUG ? 60 : 12, // Default: 12
+	multiplierMillis_Curved: 12, // Default: 12
+
+	baseMillis_Debug: 2000,
+
+	multiplierMillis_Debug: 30,
+
+	multiplierMillis_Curved_Debug: 60,
 };
 
 
@@ -115,6 +119,9 @@ const MOVE_ANIMATION_DURATION = {
 
 /** The list of all current animations */
 const animations: Animation[] = [];
+
+/** If this is enabled, the spline of the animations will be rendered, and the animations' duration increased. */
+const DEBUG = false;
 
 
 // Adding / Clearing Animations -----------------------------------------------------------------------
@@ -168,6 +175,11 @@ function clearAnimations(playSounds = false): void {
 	animations.length = 0; // Empties existing animations
 }
 
+function toggleDebug() {
+	DEBUG = !DEBUG;
+	statustext.showStatus(`Toggled animation splines: ${DEBUG}`, false, 0.5);
+}
+
 
 // Helper Functions -----------------------------------------------------------
 
@@ -194,10 +206,14 @@ function calculateTotalAnimationDistance(segments: AnimationSegment[]): number {
 
 /** Calculates the duration in milliseconds a particular move would take to animate. */
 function calculateAnimationDuration(totalDistance: number, waypointCount: number): number {
+	const baseMillis = DEBUG ? MOVE_ANIMATION_DURATION.baseMillis_Debug : MOVE_ANIMATION_DURATION.baseMillis;
 	const cappedDist = Math.min(totalDistance, MAX_DISTANCE_BEFORE_TELEPORT);
-	const multiplierToUse = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved : MOVE_ANIMATION_DURATION.multiplierMillis;
+	let multiplier;
+	if (DEBUG) multiplier = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved_Debug : MOVE_ANIMATION_DURATION.multiplierMillis_Debug;
+	else	   multiplier = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved	  	  : MOVE_ANIMATION_DURATION.multiplierMillis;
 	const additionMillis = cappedDist * multiplierToUse;
-	return MOVE_ANIMATION_DURATION.baseMillis + additionMillis;
+
+	return baseMillis + additionMillis;
 }
 
 /** Schedules the playback of the sound of the animation. */
@@ -374,6 +390,7 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 export default {
 	animatePiece,
 	clearAnimations,
+	toggleDebug,
 	update,
 	renderTransparentSquares,
 	renderAnimations,
