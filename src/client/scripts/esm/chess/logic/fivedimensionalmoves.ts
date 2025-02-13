@@ -16,29 +16,20 @@ import math from "../../util/math.js";
 // Coordinates in the form [x, y, boardX, boardY]
 type FiveDimensionalCoords = [number, number, number, number];
 
-function TwoDToFiveDCoords(coords: Coords): FiveDimensionalCoords {
-	return [math.posMod(coords[0], 10), math.posMod(coords[1], 10), Math.floor(coords[0] / 10), Math.floor(coords[1] / 10)];
-}
-
-function FiveDToTwoDCoords(coords: FiveDimensionalCoords): Coords {
-	return [coords[0] + coords[2] * 10, coords[1] + coords[3] * 10];
-}
-
 function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
-	const fiveDCoords = TwoDToFiveDCoords(coords);
-	const legalMoves: FiveDimensionalCoords[] = [];
+	const legalMoves: Coords[] = [];
 	let legalSpacelike: Coords[] = [];
 	let legalTimelike: Coords[] = [];
 	legalSpacelike = pawnLegalMoves(gamefile, coords, color, 1);
 	legalTimelike = pawnLegalMoves(gamefile, coords, color, 10);
 	for (const coord of legalSpacelike) {
-		legalMoves.push(TwoDToFiveDCoords(coord));
+		legalMoves.push(coord);
 	}
 	for (const coord of legalTimelike) {
-		legalMoves.push(TwoDToFiveDCoords(coord));
+		legalMoves.push(coord);
 	}
 	console.log(legalMoves);
-	return legalMoves.map(value => FiveDToTwoDCoords(value));
+	return legalMoves;
 }
 
 function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
