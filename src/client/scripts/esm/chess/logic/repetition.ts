@@ -48,8 +48,8 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 		// Iterate through all move changes, adding the fluxes.
 		for (let i = 0; i < move.changes.length; i++) {
 			const change = move.changes[i];
-			// Did this move change a one-way action? If so, no further equal positions, terminate the loop.
-			if (boardchanges.oneWayActions.includes(change.action)) break outer; // One-way action (capture/deletion), can't be undone, no further equal positions.
+			// Did this move change include a one-way action? (capture/deletion) If so, no further equal positions, terminate the loop.
+			if (boardchanges.oneWayActions.includes(change.action)) break outer; // One-way action, can't be undone, no further equal positions.
 			// The remaining actions are two-way, so we need to create fluxes for them..
 			if (change.action === 'move') {
 				// If this change was undo'd, there would be a DEFICIT on its endCoords
