@@ -106,10 +106,14 @@ interface Move extends MoveDraft {
 	generateIndex: number,
 	/** The move in most compact notation: `8,7>8,8Q` */
 	compact: string,
-	/** Whether the move delivered check. */
-	check: boolean,
-	/** Whether the move delivered mate (or the killing move). */
-	mate: boolean,
+	flags: {
+		/** Whether the move delivered check. */
+		check: boolean,
+		/** Whether the move delivered mate (or the killing move). */
+		mate: boolean,
+		/** Whether the move caused a capture */
+		capture: boolean,
+	}
 }
 
 
@@ -134,8 +138,12 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		generateIndex: gamefile.moveIndex + 1,
 		state: { local: [], global: [] },
 		compact: formatconverter.LongToShort_CompactMove(moveDraft),
-		check: false, // This will be set later
-		mate: false, // This will be set later
+		flags: {
+			// These will be set later, but we need a default value
+			check: false,
+			mate: false,
+			capture: false,
+		}
 	};
 
 	// This needs to be before calculating the moves changes,
@@ -151,6 +159,8 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
+	// Must be set before calling queueIncrementMoveRuleStateChange()
+	move.flags.capture = boardchanges.wasACapture(move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
@@ -190,10 +200,9 @@ function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, 
  */
 function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
-	const wasACapture = boardchanges.wasACapture(move);
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = (move.flags.capture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
 	state.createState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule);
 }
 
@@ -214,7 +223,7 @@ function makeMove(gamefile: gamefile, move: Move) {
 
 	// Now we can test for check, and modify the state of the gamefile if it is.
 	createCheckState(gamefile, move);
-	if (gamefile.inCheck) move.check = true;
+	if (gamefile.inCheck) move.flags.check = true;
 	// The "mate" property of the move will be added after our game conclusion checks...
 }
 
