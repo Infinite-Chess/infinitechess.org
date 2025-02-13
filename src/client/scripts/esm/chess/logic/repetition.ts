@@ -85,10 +85,6 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 			else deficit.add(flux);
 		}
 
-		console.log(`Fluxes after rewinding move of index ${index}:`);
-		console.log(surplus);
-		console.log(deficit);
-
 		checkEqualPosition: {
 			// Has a full turn cycle ocurred since the last increment of equalPositionsFound?
 			// If so, we can't count this as an equal position, because it will break it in multiplayer games,
