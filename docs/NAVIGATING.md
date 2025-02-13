@@ -1,6 +1,6 @@
-# Navigating the workspace #
+# Navigating Guide #
 
-This guide gives you several pointers on how to navigate the project.
+This guide gives you several pointers on how to navigate the project, to help you get started with collaborating!
 
 It is assumed you have already gone through the [Setup](./SETUP.md) process.
 
@@ -15,7 +15,7 @@ The entire source code of the project is located in [src](../src/). BUT, ONLY CO
 There are 3 automatically generated accounts for you to test with. The password for every one of these accounts is `1`-
 - `Member`: Regular permissions.
 - `Patron`: At the moment this holds no difference to member accounts.
-- `Owner`: Is able to send commands on the admin panel page found at url `https://localhost:3443/admin`. Sending `help` will list the available commands. Some commands allow you to see member info from the database without having to open `database.db` with the SQLite extension. Members with the `Admin` role are also allowed to send commands here, but there is no currently default account with this role. The Owner is also able to create invites, even when invite creation is disabled inside `database/allowinvites.json`.
+- `Owner`: Is able to send commands on the admin panel page found at url `https://localhost:3443/admin`. Sending `help` will list the available commands. Some commands allow you to see member info from the database without having to open `database.db` with the SQLite extension. Members with the `admin` role are also allowed to send commands here, but there is no current default account with this role. The Owner is also able to create invites, even when invite creation is disabled inside `database/allowinvites.json`.
 
 
 ## Debugging Keyboard Shortcuts ##
@@ -35,7 +35,7 @@ While in the game on the Play page, there are a few keys that will activate usef
 
 [src/client/views](../src/client/views) contains all our EJS documents, which are converted to HTMLs on startup. The routers that actually send these as HTMLs to the client are located in [src/server/routes/root.js](../src/server/routes/root.js).
 
-[src/client/scripts/game](../src/client/scripts/esm/game/) contains all our javascipt code for running the game on the play page of the website. The main script that contains the gameloop is [main.js](../src/client/scripts/esm/game/main.js). Every game script includes a basic description at the top. Feel free to ask for greater details on what a specific script does, or for help finding a script that does a specific task!
+[src/client/scripts/esm/game](../src/client/scripts/esm/game/) contains all our javascript code for running the game on the play page of the website. The main script that contains the gameloop is [main.js](../src/client/scripts/esm/game/main.js). Every game script includes a basic description at the top. Feel free to ask for greater details on what a specific script does, or for help finding a script that does a specific task!
 
 
 
@@ -90,11 +90,16 @@ and under the "Preferences" tab, checking the box next to "Disable cache (while 
 Now, as long as you have developer tools open whenever you refresh, the game will always hard refresh and load your new code.
 
 
-# FAQ #
 
-### How do I connect to the web server with other devices in my home network? ###
+## Mobile Testing ##
 
-Connecting more devices to the web server, other than the machine that is hosting, is beneficial for dev testing (especially for mobile). The machine you’re using to run the server is the only device that connects through `https://localhost:3443`. To connect from other devices in your home network, first they need to be connected to the same wifi, then you need to replace `localhost` with the IP address of your computer running the server. You can find your computers IP address within the network settings on your computer. An example of what your IP may look like is `192.168.1.2`. If this was your computer's IP address, then to connect to the web server on other devices you would go to `https://192.168.1.2:3443`.
+Mobile devices differ from pc behavior because the user interacts with touch events instead of mouse events. There are 2 ways you can test your code to make sure it works on mobile:
+
+* Chrome dev tools has a "Toggle device toolbar" button which allows you to interact with the page as if the mouse was your finger. It also easily lets you grow and shrink the size of the window to see how the content fits on each device width. However, it does not let you use multiple fingers. For that:
+
+* Connect to the web server with another device in your home network (like your phone). The machine you’re using to run the server is the only device that connects through `https://localhost:3443`. To connect from other devices in your home network, first they need to be connected to the same wifi, then you need to replace `localhost` with the IP address of your computer running the server. You can find your computers IP address within the network settings on your computer. An example of what your IP may look like is `192.168.1.2`. If this was your computer's IP address, then to connect to the web server on other devices you would go to `https://192.168.1.2:3443`.
+
+
 
 ## Conclusion ##
 
