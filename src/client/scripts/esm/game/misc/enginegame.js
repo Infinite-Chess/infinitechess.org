@@ -3,14 +3,16 @@
 
 // Import Start
 import game from '../chess/game.js';
-import gamefileutility from '../chess/gamefileutility.js';
-import legalmoves from '../chess/legalmoves.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import legalmoves from '../../chess/logic/legalmoves.js';
 import selection from '../chess/selection.js';
-import movepiece from '../chess/movepiece.js';
+import movepiece from '../../chess/logic/movepiece.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 import perspective from '../rendering/perspective.js';
-import jsutil from './jsutil.js';
-import thread from './thread.js';
+import jsutil from '../../util/jsutil.js';
+import thread from '../../util/thread.js';
+import gameslot from '../chess/gameslot.js';
+import movesequence from '../chess/movesequence.js';
 // Import End
 
 "use strict";
@@ -72,7 +74,7 @@ const enginegame = (function() {
      * Tests if it's our turn to move
      * @returns {boolean} *true* if it's currently our turn to move
      */
-	function isItOurTurn() { return game.getGamefile().whosTurn === ourColor; }
+	function isItOurTurn() { return gameslot.getGamefile().whosTurn === ourColor; }
 
 	/**
      * Tests if we are this color in the engine game.
@@ -88,12 +90,12 @@ const enginegame = (function() {
      */
 	async function submitMove() {
 		if (!inEngineGame) return; // Don't do anything if it's not an engine game
-		const gamefile = game.getGamefile();
+		const gamefile = gameslot.getGamefile();
 		if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
 		// Initialize the engine as a webworker
 		if (!window.Worker) return console.error('Your browser doesn\'t support web workers.');
-		const engineWorker = new Worker(`../scripts/game/chess/${currentEngine}.js`);
+		const engineWorker = new Worker(`../scripts/esm/game/chess/${currentEngine}.js`);
 		currentEngineMove = undefined;
 		engineWorker.onmessage = function(e) { 
 			currentEngineMove = e.data;
@@ -120,18 +122,21 @@ const enginegame = (function() {
 		if (!inEngineGame) return;
 		if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
-		const gamefile = game.getGamefile();
+		const gamefile = gameslot.getGamefile();
 		const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
 		const legalMoves = legalmoves.calculate(gamefile, piecemoved);
 		const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
 		legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
 		move.type = piecemoved.type;
-		movepiece.makeMove(gamefile, move);
+		const actualmove = movepiece.generateMove(gamefile,move);
+		movesequence.makeMove(gamefile,move);
+		movesequence.animateMove(actualmove,true);
+		// movepiece.makeMove(gamefile, movepiece.generateMove(gamefile,move));
 
 		selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
-		if (gamefile.gameConclusion) gamefileutility.concludeGame(gamefile);
+		if (gamefile.gameConclusion) gameslot.concludeGame(gamefile);
 	}
 
 	function onGameConclude() {

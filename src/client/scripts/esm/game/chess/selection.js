@@ -5,16 +5,12 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 import input from '../input.js';
 import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import movepiece from './movepiece.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-import game from './game.js';
 import specialdetect from '../../chess/logic/specialdetect.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
-import formatconverter from './formatconverter.js';
 import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
-import board from '../rendering/board.js';
 import pieces from '../rendering/pieces.js';
 import movement from '../rendering/movement.js';
 import moveutil from '../../chess/util/moveutil.js';
@@ -366,6 +362,7 @@ function moveGamefilePiece(coords) {
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	movesequence.animateMove(move, true, animateMain);
 	movesendreceive.sendMove();
+	enginegame.submitMove();
 
 	unselectPiece();
 }

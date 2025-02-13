@@ -114,15 +114,16 @@ import guigameinfo from '../gui/guigameinfo.js';
 //         onlinegame.closeOnlineGame();
 //         enginegame.closeEngineGame();
 //     }
-// function init() {
-// 	options.initTheme();
 
-// 	gui.prepareForOpen();
+function init() {
+	options.initTheme();
 
-// 	guititle.open();
+	gui.prepareForOpen();
 
-// 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
-// }
+	guititle.open();
+
+	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
+}
 
 // Update the game every single frame
 function update() {
@@ -242,6 +243,7 @@ function render() {
 
 
 export default {
+	init,
 	update,
 	render,
 };
