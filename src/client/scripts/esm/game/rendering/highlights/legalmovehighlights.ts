@@ -541,7 +541,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
  * Renders an outline of the box containing all legal move highlights.
  */
 function renderOutlineofRenderBox() {
-	if (!options.isDebugModeOn()) return; // Skip if debug mode off
+	if (!camera.getDebug()) return; // Skip if camera debug mode off
 
 	const color = [1,0,1, 1];
 	const data = shapes.getDataRect_FromTileBoundingBox(boundingBoxOfRenderRange, color);

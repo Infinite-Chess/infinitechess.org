@@ -11,7 +11,6 @@ import config from './config.js';
 import thread from '../util/thread.js';
 import validatorama from '../util/validatorama.js';
 import wsutil from '../util/wsutil.js';
-import options from './rendering/options.js';
 import onlinegamerouter from './misc/onlinegame/onlinegamerouter.js';
 import docutil from '../util/docutil.js';
 // Import End

@@ -26,10 +26,6 @@ import gameslot from '../chess/gameslot.js';
  * etc
  */
 
-// When enabled, your view is expanded to show what you normally can't see beyond the edge of the screen.
-// Useful for making sure rendering methods are as expected.
-let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
-
 let theme;
 
 let em = false; // editMode, allows moving pieces anywhere else on the board!
@@ -51,21 +47,8 @@ function initTheme() {
 	setTheme(selectedThemeName);
 }
 
-function isDebugModeOn() {
-	return debugMode;
-}
-
 function getTheme() {
 	return theme;
-}
-
-function toggleDeveloperMode() {
-	frametracker.onVisualChange(); // Visual change, render the screen this frame
-	debugMode = !debugMode;
-	camera.onPositionChange();
-	perspective.initCrosshairModel();
-	piecesmodel.regenModel(gameslot.getGamefile(), getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
-	statustext.showStatus(`${translations.rendering.toggled_debug} ` + (debugMode ? translations.rendering.on : translations.rendering.off));
 }
 
 function disableEM() {
@@ -274,9 +257,7 @@ function toggleFPS() {
 
 
 export default {
-	isDebugModeOn,
 	getTheme,
-	toggleDeveloperMode,
 	toggleEM,
 	getDefaultTiles,
 	getLegalMoveHighlightColor,

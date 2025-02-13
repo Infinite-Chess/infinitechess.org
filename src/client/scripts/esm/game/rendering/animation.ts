@@ -9,12 +9,12 @@ import type { Piece } from '../../chess/logic/boardchanges.js';
 import type { Color } from '../../chess/util/colorutil.js';
 
 import arrows from './arrows/arrows.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
-import gameslot from '../chess/gameslot.js';
 import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';
 import math from '../../util/math.js';
+import splines from '../../util/splines.js';
+import coordutil from '../../chess/util/coordutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -29,8 +29,8 @@ import board from './board.js';
 import perspective from './perspective.js';
 // @ts-ignore
 import shapes from './shapes.js';
-import splines from '../../util/splines.js';
-import coordutil from '../../chess/util/coordutil.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
@@ -121,7 +121,7 @@ const MOVE_ANIMATION_DURATION = {
 const animations: Animation[] = [];
 
 /** If this is enabled, the spline of the animations will be rendered, and the animations' duration increased. */
-const DEBUG = false;
+let DEBUG = false;
 
 
 // Adding / Clearing Animations -----------------------------------------------------------------------
@@ -208,10 +208,10 @@ function calculateTotalAnimationDistance(segments: AnimationSegment[]): number {
 function calculateAnimationDuration(totalDistance: number, waypointCount: number): number {
 	const baseMillis = DEBUG ? MOVE_ANIMATION_DURATION.baseMillis_Debug : MOVE_ANIMATION_DURATION.baseMillis;
 	const cappedDist = Math.min(totalDistance, MAX_DISTANCE_BEFORE_TELEPORT);
-	let multiplier;
+	let multiplier: number;
 	if (DEBUG) multiplier = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved_Debug : MOVE_ANIMATION_DURATION.multiplierMillis_Debug;
 	else	   multiplier = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved	  	  : MOVE_ANIMATION_DURATION.multiplierMillis;
-	const additionMillis = cappedDist * multiplierToUse;
+	const additionMillis = cappedDist * multiplier;
 
 	return baseMillis + additionMillis;
 }

@@ -6,6 +6,8 @@ import { createModel } from './buffermodel.js';
 import board from './board.js';
 import coordutil from '../../chess/util/coordutil.js';
 import gameslot from '../chess/gameslot.js';
+import statustext from '../gui/statustext.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /** 
@@ -34,6 +36,7 @@ let DEBUG = false;
 function toggleDebug() {
 	DEBUG = !DEBUG;
 	statustext.showStatus(`Toggled wireframe voids: ${DEBUG}`, false, 0.5);
+	regenModel(gameslot.getGamefile());
 }
 
 function regenModel(gamefile) {
@@ -82,6 +85,7 @@ function regenModel(gamefile) {
 
 	const mode = DEBUG ? "LINES" : "TRIANGLES";
 	gamefile.voidMesh.model = createModel(data32, 2, mode, true);
+	frametracker.onVisualChange();
 }
 
 // The passed in sides should be the center-coordinate value of the square in the corner
