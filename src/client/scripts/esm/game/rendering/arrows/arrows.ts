@@ -765,9 +765,17 @@ function executeArrowShifts() {
 		if (shift.start !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
 		// Add a safety net to prevent adding a piece that is already on the board.
 		// This can happen when the current animation position of a piece is EXACTLY over an existing piece.
-		if (shift.end !== undefined && gamefileutility.isPieceOnCoords(gamefile, addedPiece!.coords)) boardchanges.queueAddPiece(changes, addedPiece!);
+		if (shift.end !== undefined && !gamefileutility.isPieceOnCoords(gamefile, addedPiece!.coords)) queueAddPieceIfNoneAddedOnCoords(addedPiece!);
 
 	});
+	
+	function queueAddPieceIfNoneAddedOnCoords(piece: Piece) {
+		// If the game already has a piece on the coordinates, don't add it.
+		if (gamefileutility.isPieceOnCoords(gamefile, piece.coords)) return;
+		// If another arrow is adding a piece on these exact coords, leave it be.
+		if (changes.some(change => change.action === 'add' && coordutil.areCoordsEqual(change.piece.coords, piece.coords))) return;
+		boardchanges.queueAddPiece(changes, piece);
+	}
 
 	// Apply the board changes
 	// console.log("Applying changes:");
