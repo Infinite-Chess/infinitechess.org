@@ -52,7 +52,7 @@ type CoordsSpecial = Coords & {
 }
 
 /** A special move tag for enpassant capture. This will be 1 if the captured piece is 1 square above, or -1 for 1 square below. */
-type enpassant = -1 | 1;
+type enpassant = number;
 /** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
 type promotion = string;
 /** A special move tag for castling. */

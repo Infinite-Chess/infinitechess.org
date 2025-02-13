@@ -7,7 +7,7 @@ import boardchanges, { Piece } from "./boardchanges.js";
 // Import Start
 // @ts-ignore
 import gamefile from "./gamefile.js";
-import { Move } from "./movepiece.js";
+import { CoordsSpecial, Move } from "./movepiece.js";
 import { Coords } from "./movesets.js";
 import state from "./state.js";
 import math from "../../util/math.js";
@@ -90,19 +90,19 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
-	// addPossibleTimelikeEnPassant(gamefile, individualMoves, coords, color);
+	addPossibleEnPassant(gamefile, individualMoves, coords, color, distance);
 	return individualMoves;
 }
 
-function addPossibleTimelikeEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string) {
+function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string, distance: number) {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
 
 	const xLandDiff = gamefile.enpassant[0] - coords[0];
-	const oneOrNegOne = color === 'white' ? 10 : -10;
-	if (Math.abs(xLandDiff) !== 1) return; // Not immediately left or right of us
+	const oneOrNegOne = color === 'white' ? distance : -distance;
+	if (Math.abs(xLandDiff) !== distance) return; // Not immediately left or right of us
 	if (coords[1] + oneOrNegOne !== gamefile.enpassant[1]) return; // Not one in front of us
 
-	const captureSquare: Coords = [coords[0] + xLandDiff, coords[1] + oneOrNegOne];
+	const captureSquare: CoordsSpecial = [coords[0] + xLandDiff, coords[1] + oneOrNegOne];
 
 	const capturedPieceSquare = [coords[0] + xLandDiff, coords[1]] as Coords;
 	const capturedPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, capturedPieceSquare);
@@ -118,22 +118,32 @@ function addPossibleTimelikeEnPassant(gamefile: gamefile, individualMoves: Coord
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
-	// captureSquare["enpassant"] = -oneOrNegOne / 10;
+	console.log(distance);
+	captureSquare.enpassant = -oneOrNegOne;
 	individualMoves.push(captureSquare);
 }
 
 function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
 	const moveChanges = move.changes;
 	const enpassantTag: number | undefined = move.enpassant;
+	let distance: number;
+	{
+		if (move.endCoords[0] === piece.coords[0]) {
+			// Piece moved forwards
+			distance = Math.abs(move.endCoords[1] - piece.coords[1]) === 1 || Math.abs(move.endCoords[1] - piece.coords[1]) === 2 ? 1 : 10;
+		} else {
+			distance = Math.abs(move.endCoords[0] - piece.coords[0]);
+		}
+	}
 	let captureOffset: number;
 	if (!enpassantTag) {
 		captureOffset = 0;
 	} else {
-		captureOffset = enpassantTag * 10;
+		captureOffset = enpassantTag;
 	}
 
-	if (Math.abs(move.endCoords[1] - piece.coords[1]) === 20) {
-		state.createState(move, 'enpassant', gamefile.enpassant, [piece.coords[1], (piece.coords[1] + move.endCoords[1]) / 2]);
+	if (Math.abs(move.endCoords[1] - piece.coords[1]) === 2 * distance) {
+		state.createState(move, 'enpassant', gamefile.enpassant, [piece.coords[0], (piece.coords[1] + move.endCoords[1]) / 2]);
 	}
 
 	if (!enpassantTag) {

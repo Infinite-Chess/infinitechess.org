@@ -70,7 +70,9 @@ interface Variant {
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
 	/** Special Move overrides */
-	specialMoves?: TimeVariantProperty<SpecialVicinity>
+	specialMoves?: TimeVariantProperty<{
+		[piece: string]: SpecialMoveFunction
+	}>
 	/**
 	 * Used for check calculation.
 	 * If we have any overrides for specialMoves, we should have overrides for
@@ -78,6 +80,8 @@ interface Variant {
 	 */
 	specialVicinity?: TimeVariantProperty<SpecialVicinity>
 }
+
+// TODO Move these to specialmove.ts when it's created
 
 /** Function that queues all of the changes a special move makes when executed. */
 // eslint-disable-next-line no-unused-vars
@@ -268,7 +272,10 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
 		},
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional,
-		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } }
+		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } },
+		specialMoves: {
+			pawns: fivedimensionalmoves.doFiveDimensionalPawnMove
+		}
 	}
 };
 
