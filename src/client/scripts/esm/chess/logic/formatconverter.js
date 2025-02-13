@@ -261,7 +261,7 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 		shortmoves += (longmove.type && (compact_moves == 0 || compact_moves == 1) ? LongToShort_Piece(longmove.type) : "");
 		shortmoves += longmove.startCoords.toString();
 		shortmoves += (compact_moves == 0 ? " " : "");
-		shortmoves += (longmove.captured && (compact_moves == 0 || compact_moves == 1) ? "x" : ">");
+		shortmoves += (longmove.flags.capture && (compact_moves == 0 || compact_moves == 1) ? "x" : ">");
 		shortmoves += (compact_moves == 0 ? " " : "");
 		shortmoves += longmove.endCoords.toString();
 		shortmoves += (compact_moves == 0 ? " " : "");
@@ -269,9 +269,9 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 			shortmoves += (compact_moves == 0 || compact_moves == 1 ? "=" : "");
 			shortmoves += LongToShort_Piece(longmove.promotion);
 		}
-		if (longmove.mate && (compact_moves == 0 || compact_moves == 1)) {
+		if (longmove.flags.mate && (compact_moves == 0 || compact_moves == 1)) {
 			shortmoves += "#";
-		} else if (longmove.check && (compact_moves == 0 || compact_moves == 1)) {
+		} else if (longmove.flags.check && (compact_moves == 0 || compact_moves == 1)) {
 			shortmoves += "+";
 		}
 		shortmoves = shortmoves.trimEnd();
@@ -703,7 +703,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update move rule
 		if (ret.moveRule) {
 			const slashindex = ret.moveRule.indexOf("/");
-			if (move.captured || move.type.slice(0, -1) == "pawns") {
+			if (move.flags.capture || move.type.slice(0, -1) == "pawns") {
 				ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
 			} else {
 				ret.moveRule = `${(parseInt(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;

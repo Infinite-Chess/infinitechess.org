@@ -9,10 +9,7 @@ import type { Coords } from "../chess/util/coordutil.js";
 import type { Color } from "../chess/util/colorutil";
 
 import { createModel } from "../game/rendering/buffermodel.js";
-// @ts-ignore
 import space from "../game/misc/space.js";
-// @ts-ignore
-import movement from "../game/rendering/movement.js";
 
 /**
  * Computes a natural cubic spline for a given set of points.
@@ -120,8 +117,8 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): Coords
 			const t = i + (k / resolution);
 			if (!isLast && k === resolution) continue;
 
-			let x = evaluateSplineAt(t, xSpline) ?? xPoints[xPoints.length - 1];
-			let y = evaluateSplineAt(t, ySpline) ?? yPoints[yPoints.length - 1];
+			let x = evaluateSplineAt(t, xSpline);
+			let y = evaluateSplineAt(t, ySpline);
 
 			/**
 			 * Ensure the last waypoint exactly matches the input.
@@ -140,7 +137,7 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): Coords
 
 /**
  * Renders a debug visualization of the entire spline as a continuous ribbon.
- * @param controlPoints - The original spline waypoints. Each point is the coordinate on the grid, NOT grid space.
+ * @param controlPoints - The original spline waypoints. Each point is the square-coordinate, NOT in grid space.
  * @param width - The ribbon's width in square units.
  * @param color - RGBA color for the ribbon.
  */
@@ -189,8 +186,9 @@ function renderSplineDebug(
 		rightPoints.push([point[0] - normal[0] * halfWidth, point[1] - normal[1] * halfWidth]);
 	}
 
-	leftPoints = leftPoints.map(point => space.convertCoordToWorldSpace(point) as Coords);
-	rightPoints = rightPoints.map(point => space.convertCoordToWorldSpace(point) as Coords);
+	// Convert coordinates to world space.
+	leftPoints = leftPoints.map(point => space.convertCoordToWorldSpace(point));
+	rightPoints = rightPoints.map(point => space.convertCoordToWorldSpace(point));
 
 	// Build triangles for each segment.
 	for (let i = 0; i < controlPoints.length - 1; i++) {

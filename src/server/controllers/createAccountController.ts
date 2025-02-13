@@ -9,6 +9,7 @@
  */
 
 
+import uuid from '../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
 import bcrypt from 'bcrypt';
 // @ts-ignore
@@ -23,8 +24,6 @@ import { sendEmailConfirmation } from './sendMail.js';
 import { handleLogin } from './loginController.js';
 // @ts-ignore
 import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManager.js';
-// @ts-ignore
-import uuid from '../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
 import emailValidator from 'node-email-verifier';
 // @ts-ignore

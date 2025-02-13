@@ -6,7 +6,6 @@
 
 import gameslot from "../../chess/gameslot.js";
 import afk from "./afk.js";
-// @ts-ignore
 import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import loadbalancer from "../loadbalancer.js";

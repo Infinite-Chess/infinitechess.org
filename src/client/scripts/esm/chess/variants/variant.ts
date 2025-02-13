@@ -4,20 +4,19 @@
  * retrieving the game rules, or move sets of any given variant.
  */
 
+import jsutil from '../../util/jsutil.js';
+import timeutil from '../../util/timeutil.js';
+import colorutil from '../util/colorutil.js';
+import fivedimensionalgenerator from './fivedimensionalgenerator.js';
+import movesets from '../logic/movesets.js';
 // @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
 // @ts-ignore
 import omega3generator from './omega3generator.js';
 // @ts-ignore
 import omega4generator from './omega4generator.js';
-import colorutil from '../util/colorutil.js';
 // @ts-ignore
 import typeutil from '../util/typeutil.js';
-import jsutil from '../../util/jsutil.js';
-// @ts-ignore
-import timeutil from '../../util/timeutil.js';
-import fivedimensionalgenerator from './fivedimensionalgenerator.js';
-import movesets from '../logic/movesets.js';
 // @ts-ignore
 import specialmove from '../logic/specialmove.js';
 

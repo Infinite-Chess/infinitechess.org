@@ -19,21 +19,7 @@ import { getMemberDataByCriteria, updateMemberColumns } from "../database/member
 
 // import type { CustomRequest } from '../types.js';
 import type { Response } from 'express';
-
-// DELETE WHEN MERGED JACE'S ADMIN-PANEL PR --------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-type MemberInfo = {
-	signedIn: true,
-	user_id: number,
-	username: string,
-	roles: string[]
-} | {
-	signedIn: false
-}
-import type { Request } from 'express';
-interface CustomRequest extends Request {
-	memberInfo: MemberInfo
-}
-// -------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+import type { CustomRequest } from "../../types.js";
 
 /**
  * The verification object that gets stored in

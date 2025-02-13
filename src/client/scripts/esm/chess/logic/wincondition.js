@@ -3,12 +3,13 @@
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
-import checkmate from './checkmate.js';
 import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
 import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
+import { detectRepetitionDraw } from './repetition.js';
+import { detectCheckmateOrStalemate } from './checkmate.js';
 // Import End
 
 // Type Definitions...
@@ -41,7 +42,8 @@ function getGameConclusion(gamefile) {
         || detectRoyalCapture(gamefile)
         || detectAllroyalscaptured(gamefile)
         || detectKoth(gamefile)
-        || checkmate.detectCheckmateOrDraw(gamefile) // Also checks for repetition draw!
+        || detectRepetitionDraw(gamefile)
+        || detectCheckmateOrStalemate(gamefile)
         // This needs to be last so that a draw isn't enforced in a true win
         || detectMoveRule(gamefile) // 50-move-rule
         || insufficientmaterial.detectInsufficientMaterial(gamefile) // checks for insufficient material

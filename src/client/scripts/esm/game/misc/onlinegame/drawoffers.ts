@@ -14,6 +14,7 @@ import type { DrawOfferInfo } from './onlinegamerouter.js';
 
 import gameslot from '../../chess/gameslot.js';
 import onlinegame from './onlinegame.js';
+import moveutil from '../../../chess/util/moveutil.js';
 // @ts-ignore
 import guidrawoffer from '../../gui/guidrawoffer.js';
 // @ts-ignore
@@ -24,8 +25,6 @@ import websocket from '../../websocket.js';
 import guipause from '../../gui/guipause.js';
 // @ts-ignore
 import sound from '../sound.js';
-// @ts-ignore
-import moveutil from '../../../chess/util/moveutil.js';
 
 
 // Variables ---------------------------------------------------

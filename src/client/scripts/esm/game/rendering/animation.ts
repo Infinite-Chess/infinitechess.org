@@ -9,12 +9,12 @@ import type { Piece } from '../../chess/logic/boardchanges.js';
 import type { Color } from '../../chess/util/colorutil.js';
 
 import arrows from './arrows/arrows.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
-import gameslot from '../chess/gameslot.js';
 import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';
 import math from '../../util/math.js';
+import splines from '../../util/splines.js';
+import coordutil from '../../chess/util/coordutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -29,8 +29,8 @@ import board from './board.js';
 import perspective from './perspective.js';
 // @ts-ignore
 import shapes from './shapes.js';
-import splines from '../../util/splines.js';
-import coordutil from '../../chess/util/coordutil.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
@@ -71,8 +71,6 @@ interface Animation {
 // Constants -------------------------------------------------------------------
 
 
-/** If this is enabled, the spline of the animation will be rendered, and the animations duration increased. */
-const DEBUG = false;
 /** Config for the splines. */
 const SPLINES: {
 	/** The number of points per segment of the spline. */
@@ -102,11 +100,17 @@ const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
 /** Used for calculating the duration of move animations. */
 const MOVE_ANIMATION_DURATION = {
 	/** The base amount of duration, in millis. */
-	baseMillis: DEBUG ? 1000 : 150, // Default: 150
+	baseMillis: 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMillis: DEBUG ? 30 : 6,
+	multiplierMillis: 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
-	multiplierMillis_Curved: DEBUG ? 60 : 12, // Default: 12
+	multiplierMillis_Curved: 12, // Default: 12
+
+	baseMillis_Debug: 2000,
+
+	multiplierMillis_Debug: 30,
+
+	multiplierMillis_Curved_Debug: 60,
 };
 
 
@@ -115,6 +119,9 @@ const MOVE_ANIMATION_DURATION = {
 
 /** The list of all current animations */
 const animations: Animation[] = [];
+
+/** If this is enabled, the spline of the animations will be rendered, and the animations' duration increased. */
+let DEBUG = false;
 
 
 // Adding / Clearing Animations -----------------------------------------------------------------------
@@ -168,6 +175,11 @@ function clearAnimations(playSounds = false): void {
 	animations.length = 0; // Empties existing animations
 }
 
+function toggleDebug() {
+	DEBUG = !DEBUG;
+	statustext.showStatus(`Toggled animation splines: ${DEBUG}`, false, 0.5);
+}
+
 
 // Helper Functions -----------------------------------------------------------
 
@@ -194,10 +206,14 @@ function calculateTotalAnimationDistance(segments: AnimationSegment[]): number {
 
 /** Calculates the duration in milliseconds a particular move would take to animate. */
 function calculateAnimationDuration(totalDistance: number, waypointCount: number): number {
+	const baseMillis = DEBUG ? MOVE_ANIMATION_DURATION.baseMillis_Debug : MOVE_ANIMATION_DURATION.baseMillis;
 	const cappedDist = Math.min(totalDistance, MAX_DISTANCE_BEFORE_TELEPORT);
-	const multiplierToUse = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved : MOVE_ANIMATION_DURATION.multiplierMillis;
-	const additionMillis = cappedDist * multiplierToUse;
-	return MOVE_ANIMATION_DURATION.baseMillis + additionMillis;
+	let multiplier: number;
+	if (DEBUG) multiplier = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved_Debug : MOVE_ANIMATION_DURATION.multiplierMillis_Debug;
+	else	   multiplier = waypointCount > 2 ? MOVE_ANIMATION_DURATION.multiplierMillis_Curved	  	  : MOVE_ANIMATION_DURATION.multiplierMillis;
+	const additionMillis = cappedDist * multiplier;
+
+	return baseMillis + additionMillis;
 }
 
 /** Schedules the playback of the sound of the animation. */
@@ -242,8 +258,9 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
-	const piece = gamefileutility.getPieceAtCoords(gameslot.getGamefile()!, animation.path[animation.path.length - 1]!)!;
-	arrows.shiftArrow(piece, animationCurrentCoords, animation.captured);
+	arrows.shiftArrow(animation.type, animation.path[animation.path.length - 1]!, animationCurrentCoords);
+	// Add the captured piece only after we've shifted the piece that captured it
+	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.path.length - 1]);
 }
 
 
@@ -373,6 +390,7 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 export default {
 	animatePiece,
 	clearAnimations,
+	toggleDebug,
 	update,
 	renderTransparentSquares,
 	renderAnimations,
