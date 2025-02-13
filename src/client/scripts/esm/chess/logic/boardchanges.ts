@@ -20,8 +20,8 @@ import jsutil from "../../util/jsutil.js";
 // Variables -------------------------------------------------------------------------
 
 
-/** All Change actions that capture a piece. */
-const captureActions = ['capture'];
+/** All Change actions that cannot be undone to return to the same board position later in the game, unless in the future it's possible to add pieces mid-game. */
+const oneWayActions: string[] = ['capture', 'delete'];
 
 
 // Type Definitions-------------------------------------------------------------------------
@@ -42,14 +42,26 @@ interface Piece {
 /**
  * Generic type to describe any changes to the board
  */
-interface Change {
-	// The action is used to differentiated the type of change made and the data it has
-	action: 'add' | 'delete' | 'move' | 'capture',
+type Change = {
 	/** Whether this change affects the main piece moved.
 	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
 	main: boolean,
-	[changeData: string]: any
-}
+	/** The main piece affected by the move. If this is a move/capture action, it's the piece moved. If it's an add/delete action, it's the piece added/deleted. */
+	piece: Piece
+} & ({
+	/** The type of action this change performs. */
+	action: 'add' | 'delete',
+	// No additional properties needed
+} | {
+	action: 'capture',
+	endCoords: Coords,
+	capturedPiece: Piece,
+	path?: Coords[],
+} | {
+	action: 'move',
+	endCoords: Coords,
+	path?: Coords[],
+})
 
 /**
  * A generic function that takes the changes list of a move, and modifies either
@@ -69,7 +81,7 @@ interface ActionList<F extends CallableFunction> {
 	[actionName: string]: F
 }
 
-/**
+/** 
  * A change application is used for applying the changelist of a move in both directions.
  */
 interface ChangeApplication<F extends CallableFunction> {
@@ -110,7 +122,7 @@ const changeFuncs: ChangeApplication<genericChangeFunc> = {
  */
 function queueCapture(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, capturedPiece: Piece, path?: Coords[]) {
 	const change: Change = { action: 'capture', main, piece: piece, endCoords: endCoords, capturedPiece: capturedPiece };
-	if (path !== undefined) change['path'] = path;
+	if (path !== undefined) change.path = path;
 	changes.push(change);
 	return changes;
 }
@@ -146,7 +158,7 @@ function queueDeletePiece(changes: Array<Change>, piece: Piece, main: boolean) {
  */
 function queueMovePiece(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, path?: Coords[]) {
 	const change: Change = { action: 'move', main, piece: piece, endCoords };
-	if (path !== undefined) change['path'] = path;
+	if (path !== undefined) change.path = path;
 	changes.push(change);
 	return changes;
 }
@@ -251,8 +263,10 @@ function deletePiece(gamefile: gamefile, change: Change) {
  * @param change - the move data
  */
 function movePiece(gamefile: gamefile, change: Change) {
-	const piece = change['piece'];
-	const endCoords = change['endCoords'];
+	if (change.action !== 'move') throw new Error("movePiece called with a non-move change!");
+
+	const piece = change.piece;
+	const endCoords = change.endCoords;
 
 	// Move the piece, change the coordinates
 	gamefile.ourPieces[piece.type][piece.index] = endCoords;
@@ -268,8 +282,10 @@ function movePiece(gamefile: gamefile, change: Change) {
  * Reverses `movePiece`
  */
 function returnPiece(gamefile: gamefile, change: Change) {
-	const piece = change['piece'];
-	const endCoords = change['endCoords'];
+	if (change.action !== 'move') throw new Error("returnPiece called with a non-move change!");
+
+	const piece = change.piece;
+	const endCoords = change.endCoords;
 
 	// Move the piece, change the coordinates
 	gamefile.ourPieces[piece.type][piece.index] = piece.coords;
@@ -287,7 +303,9 @@ function returnPiece(gamefile: gamefile, change: Change) {
  * This is differentiated from move changes so it can be animated.
  */
 function capturePiece(gamefile: gamefile, change: Change) {
-	deletePiece(gamefile, { piece: change['capturedPiece'], main: change.main, action: "add" });
+	if (change.action !== 'capture') throw new Error("capturePiece called with a non-capture change!");
+
+	deletePiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
 	movePiece(gamefile, change);
 }
 
@@ -295,8 +313,10 @@ function capturePiece(gamefile: gamefile, change: Change) {
  * Undos a capture
  */
 function uncapturePiece(gamefile: gamefile, change: Change) {
+	if (change.action !== 'capture') throw new Error("uncapturePiece called with a non-capture change!");
+
 	returnPiece(gamefile, change);
-	addPiece(gamefile, { piece: change['capturedPiece'], main: change.main, action: "add" });
+	addPiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
 }
 
 /**
@@ -304,9 +324,9 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
  */
 function getCapturedPieces(move: Move): Piece[] {
 	const pieces: Piece[] = [];
-	for (const change of move.changes) {
-		if (captureActions.includes(change.action)) pieces.push(change['capturedPiece']); // This was a capture action
-	}
+	move.changes.forEach(change => {
+		if (change.action === 'capture') pieces.push(change.capturedPiece);
+	});
 	return pieces;
 }
 
@@ -317,10 +337,7 @@ function wasACapture(move: Move): boolean {
 	// Safety net if we ever accidentally call this method too soon.
 	// There will never be a valid move with zero changes, that's just absurd.
 	if (move.changes.length === 0) throw Error("Move doesn't have it's changes calculated yet, do that before this.");
-	for (const change of move.changes) {
-		if (captureActions.includes(change.action)) return true; // This was a capture action
-	}
-	return false;
+	return move.changes.some(change => change.action === 'capture');
 }
 
 export type {
@@ -337,6 +354,7 @@ export default {
 	queueMovePiece,
 	queueCapture,
 	getCapturedPieces,
+	oneWayActions,
 	wasACapture,
 	runMove,
 	applyChanges,
