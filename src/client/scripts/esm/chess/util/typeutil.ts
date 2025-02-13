@@ -67,6 +67,7 @@ function buildType(type: RawType, color: number): number {
 	return color * numTypes + type;
 }
 
+// eslint-disable-next-line no-unused-vars
 function forEachPieceType(callback: (pieceType: number) => void, colors: TeamColor[], includePieces: RawType[]) {
 	for (let i = colors.length - 1; i >= 0; i--) {
 		for (const r of includePieces) {

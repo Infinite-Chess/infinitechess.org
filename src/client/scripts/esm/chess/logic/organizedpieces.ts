@@ -85,7 +85,8 @@ function regenerateLists(o: OrganizedPieces) {
 	const extraUndefinedsByType = {};
 	for (const t in typeOrder) {
 		offsetByType[t] = currentOffset;
-		const undefinedsNeeded = Math.min(listExtras - o.typeRanges[t].undefineds.length, 0);
+		let undefinedsNeeded = 0
+		if (isTypeATypeWereAppendingUndefineds(t)) undefinedsNeeded = Math.min(listExtras - o.typeRanges[t].undefineds.length, 0);
 		extraUndefinedsByType[t] = undefinedsNeeded;
 		totalUndefinedsNeeded += undefinedsNeeded;
 		currentOffset += undefinedsNeeded;
@@ -129,11 +130,13 @@ function regenerateLists(o: OrganizedPieces) {
 			}
 		}
 	}
+
+	for (const dir )
 }
 
 function areWeShortOnUndefineds(o: OrganizedPieces): boolean {
 	for (const t in o.typeRanges) {
-		if (!isTypeATypeWereAppendingUndefineds()) return false;
+		if (!isTypeATypeWereAppendingUndefineds(, t)) return false;
 		if (o.typeRanges[t].undefineds.length === 0) return true;
 	}
 	return false;
@@ -148,15 +151,15 @@ function areWeShortOnUndefineds(o: OrganizedPieces): boolean {
  * @param {string} type - The type of piece (e.g. "pawnsW")
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
-function isTypeATypeWereAppendingUndefineds(gamefile: gamefile, type: number): boolean {
-	if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
+function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color: string]: number[]}, type: number): boolean {
+	if (!promotionGameRule) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
 	const color = typeutil.getColorStringFromType(type);
 
-	if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
+	if (!promotionGameRule[color]) return false; // Eliminates neutral pieces.
     
 	const trimmedType = typeutil.getRawType(type);
-	return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
+	return promotionGameRule[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
 }
 
 /**
