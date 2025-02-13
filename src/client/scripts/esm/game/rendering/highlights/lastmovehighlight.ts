@@ -4,13 +4,12 @@
  * of the last move played.
  */
 
-// @ts-ignore
+import { createModel } from "../buffermodel.js";
 import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import options from "../options.js";
 // @ts-ignore
 import shapes from "../shapes.js";
-import { createModel } from "../buffermodel.js";
 
 
 // Type Definitions -----------------------------------------------------------------------------

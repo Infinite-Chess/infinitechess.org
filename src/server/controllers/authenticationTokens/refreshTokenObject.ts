@@ -6,7 +6,6 @@
  * Very few dependancies.
  */
 
-// @ts-ignore
 import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 // @ts-ignore
 import { refreshTokenExpiryMillis, sessionCap } from "../../config/config.js";

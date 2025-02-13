@@ -6,19 +6,41 @@
 
 
 // @ts-ignore
-import type { Move } from "./movepiece.js";
+import type { Move, path } from "./movepiece.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
+import { Coords } from "./movesets.js";
+import { CoordsKey } from "../util/coordutil.js";
 
 
 // Type Definitions ------------------------------------------------------------------------------------
 
 
+// TODO: Move to gamefile type definition (right now it's not in typescript)
+type inCheck = false | Coords[];
+// TODO: Move to gamefile type definition (right now it's not in typescript)
+type attacker = { coords: Coords } & ({ slidingCheck: true } | { slidingCheck: false, path?: path });
+// TODO: Move to gamefile type definition (right now it's not in typescript)
+type attackers = attacker[];
+
+/**
+ * 
+ * Local statechanges are unique to the move you're viewing, and are always applied. Those include:
+ * 
+ * check, attackers
+ * 
+ * Global statechanges are a property of the game as a whole, not unique to the move,
+ * and are not applied when VIEWING a move.
+ * However, they are applied only when we make a new move, or rewind a simulated one. Those include:
+ * 
+ * enpassant, specialrights, moverulestate
+ */
+
 /**
  * Contains the statechanges for the turn before and after a move is made
  * 
  * Local state change examples: (check, attackers)
- * Global state change examples: (enpassant, specialrights, overule state, running check counter)
+ * Global state change examples: (enpassant, specialrights, moverule state, running check counter)
  */
 interface MoveState {
 	local: Array<StateChange>,
@@ -31,35 +53,83 @@ interface MoveState {
  */
 type StateChange = {
 	/** The type of state this {@link StateChange} is */
-	type: StateType,
+	type: 'check',
 	/* The gamefile's property of this type BEFORE this move was made, used to restore them when the move is rewinded. */
-	current: any,
+	current: inCheck,
 	/* The gamefile's property of this type AFTER this move was made, used to restore them when the move is replayed. */
-	future: any,
-	/**
-	 * Additional state change properties, shared across both 'current' and 'future'.
-	 * For example, the coordinates of a specialrights state change.
-	 */
-	[changeProperty: string]: any
+	future: inCheck
+} | {
+	type: 'attackers',
+	current: attackers,
+	future: attackers
+} | {
+	type: 'enpassant',
+	current?: Coords,
+	future?: Coords
+} | {
+	type: 'specialrights'
+	current?: true,
+	future?: true
+	/** The coordsKey of what square was affected by this specialrights state change. */
+	coordsKey: CoordsKey
+} | {
+	type: 'moverulestate'
+	current: number,
+	future: number
 }
 
-/** A list of all state types there are. */
-const stateTypes = {
-	/** Local statechanges are unique to the move you're viewing, and are always applied. */
-	local: ['check', 'attackers'],
-	/**
-	 * Global statechanges are a property of the game as a whole, not unique to the move,
-	 * and are not applied when VIEWING a move.
-	 * However, they are applied only when we make a new move, or rewind a simulated one.
-	 */
-	global: ['enpassant', 'specialrights', 'moverulestate']
-};
 
-/** A type of a {@link StateChange} */
-type StateType = 'specialrights' | 'check' | 'attackers' | 'enpassant' | 'moverulestate';
+// Creating Local State Changes --------------------------------------------------------------------
 
 
-// Functions ---------------------------------------------------------------------------------------------
+
+/** Creates a check local StateChange, adding it to the Move and immediately applying it to the gamefile. */
+function createCheckState(move: Move, current: inCheck, future: inCheck, gamefile: gamefile) {
+	const newStateChange: StateChange = { type: 'check', current, future };
+	move.state.local.push(newStateChange); // Check is a local state
+	// Check states are immediately applied to the gamefile
+	applyState(gamefile, newStateChange, true);
+}
+
+/** Creates an attackers local StateChange, adding it to the Move and immediately applying it to the gamefile. */
+function createAttackersState(move: Move, current: attackers, future: attackers, gamefile: gamefile) {
+	const newStateChange: StateChange = { type: 'attackers', current, future };
+	move.state.local.push(newStateChange); // Attackers is a local state
+	// Attackers states are immediately applied to the gamefile
+	applyState(gamefile, newStateChange, true);
+}
+
+
+// Creating Global State Changes --------------------------------------------------------------------
+
+
+/** Creates an enpassant global StateChange, queueing it by adding it to the Move. */
+function createEnPassantState(move: Move, current?: Coords, future?: Coords) {
+	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
+	const newStateChange: StateChange = { type: 'enpassant', current, future };
+	// Check to make sure there isn't already an enpassant state change,
+	// If so, we need to overwrite that one's future value, instead of queueing a new one.
+	const preExistingEnPassantState = move.state.global.find(state => state.type === 'enpassant');
+	if (preExistingEnPassantState !== undefined) preExistingEnPassantState.future = future;
+	else move.state.global.push(newStateChange); // EnPassant is a global state
+}
+
+/** Creates a specialrights global StateChange, queueing it by adding it to the Move. */
+function createSpecialRightsState(move: Move, coordsKey: CoordsKey, current?: true, future?: true) {
+	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
+	const newStateChange: StateChange = { type: 'specialrights', current, future, coordsKey };
+	move.state.global.push(newStateChange); // Special Rights is a global state
+}
+
+/** Creates a moverule global StateChange, queueing it by adding it to the Move. */
+function createMoveRuleState(move: Move, current: number, future: number) {
+	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
+	const newStateChange: StateChange = { type: 'moverulestate', current, future };
+	move.state.global.push(newStateChange); // Special Rights is a global state
+}
+
+
+// Applying State Changes ----------------------------------------------------------------------------
 
 
 /**
@@ -92,84 +162,45 @@ function applyMove(
  * Applies the state of a move to the gamefile, whether forward or backward.
  */
 function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
-	const newValue = forward ? state.future : state.current;
+	const noNewValue = (forward ? state.future : state.current) === undefined;
 	switch (state.type) {
 		case 'specialrights':
-			if (newValue === undefined) delete gamefile.specialRights[state['coordsKey']];
-			else gamefile.specialRights[state['coordsKey']] = newValue;	
+			if (noNewValue) delete gamefile.specialRights[state.coordsKey];
+			else gamefile.specialRights[state.coordsKey] = forward ? state.future : state.current;	
 			break;
 		case 'check':
-			gamefile.inCheck = newValue;
+			gamefile.inCheck = forward ? state.future : state.current;
 			break;
 		case 'attackers':
-			if (newValue === undefined) delete gamefile.attackers;
-			else gamefile.attackers = newValue;
+			if (noNewValue) delete gamefile.attackers;
+			else gamefile.attackers = forward ? state.future : state.current;
 			break;
 		case 'enpassant': 
-			if (newValue === undefined) delete gamefile.enpassant;
-			else gamefile.enpassant = newValue;
+			if (noNewValue) delete gamefile.enpassant;
+			else gamefile.enpassant = forward ? state.future : state.current;
 			break;
 		case 'moverulestate':
-			gamefile.moveRuleState = newValue;
+			gamefile.moveRuleState = forward ? state.future : state.current;
 			break;
 	}
 }
 
-/**
- * Creates a StateChange, queueing it by adding it to the Move,
- * and optionally applying the change immediately to the gamefile.
- */
-function createState(
-	move: Move,
-	/** The type of state this StateChange is for. */
-	stateType: StateType,
-	/** The current value of this gamefile's property, BEFORE making the move. */
-	current: any,
-	/** The value of this gamefile's property, AFTER making the move. */
-	future: any,
-	/** An object containing additional state change properties, shared across both 'current' and 'future'. For example, the coordinates of a specialrights state change. */
-	changeProperties: { [changeProperty: string]: any } = {},
-	/**
-	 * ONLY PROVIDE IF YOU want to immediately apply the state!!!
-	 * Do this for the `check` and `attackers` states, as they can only be calculated
-	 * AFTER making the move, so they need to be applied immediately.
-	 * 
-	 * If not supplied, we will only queue the StateChange in the move.
-	 */
-	gamefileToSet?: gamefile
-) {
-	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 
-	const newStateChange = { type: stateType, current, future, ...changeProperties };
-	const targetStateChangeList = stateTypes.global.includes(stateType) ? move.state.global
-								: stateTypes.local .includes(stateType) ? move.state.local
-								: (() => { throw Error(`Cannot create State for invalid state type "${stateType}".`); })();
+// Exports --------------------------------------------------------------------------
 
-	let modifiedExistingEnpassantState = false;
-	if (stateType === 'enpassant') {
-		// Check to make sure there isn't already an enpassant state change,
-		// If so, we need to overwrite that one's future value, instead of queueing a new one.
-		const preExistingEnpassantState = targetStateChangeList.find(state => state.type === 'enpassant');
-		if (preExistingEnpassantState !== undefined) {
-			preExistingEnpassantState.future = future;
-			modifiedExistingEnpassantState = true;
-		}
-	}
-
-	// Only queue it if we didn't modify an existing state of this type
-	if (!modifiedExistingEnpassantState) targetStateChangeList.push(newStateChange);
-	// Only apply it immediately if the gamefile is specified
-	if (gamefileToSet !== undefined) applyState(gamefileToSet, newStateChange, true);
-}
-
-
-
-export type {
-	MoveState
-};
 
 export default {
 	applyState,
 	applyMove,
-	createState,
+	createCheckState,
+	createAttackersState,
+	createEnPassantState,
+	createSpecialRightsState,
+	createMoveRuleState,
+};
+
+export type {
+	MoveState,
+	StateChange,
+	attackers,
 };

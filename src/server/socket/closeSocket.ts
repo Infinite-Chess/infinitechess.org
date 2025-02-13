@@ -6,7 +6,6 @@
 
 import socketUtility from "./socketUtility.js";
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from "./socketManager.js";
-// @ts-ignore
 import wsutil from "../../client/scripts/esm/util/wsutil.js";
 
 
