@@ -21,9 +21,12 @@ There are 3 automatically generated accounts for you to test with. The password 
 ## Debugging Keyboard Shortcuts ##
 
 While in the game on the Play page, there are a few keys that will activate useful debugging modes-
-* `` ` ``: The backtick key, typically right below your escape button, will toggle "Debug Mode". In this mode, the camera position is placed further back, and a purple rectange will be rendered showing the region where all legal moves of the selected piece are rendered inside.
+* `` ` ``: The backtick key, typically right below your escape button, will toggle the camera's debug mode. This places the camera position further back in space, allowing you to see a little beyond what you would normally see. In addition, a purple rectange will be rendered indicating the region where all legal moves of the selected piece are rendered inside. To see it though, you have to zoom out extremely slowly, as as soon as the normal screen area touches the box, it dynamically increases its size.
 * `1`: If you are in a local game, this will toggle "Edit Mode", which allows you to move any piece anywhere else on the board, ignoring legal moves!
 * `2`: Prints the gamefile, with all its properties, to the console. Useful for checking if it has the expected properties.
+* `3`: Greatly slows the animation of pieces, and renders the spline path the piece will travel. Especially beautiful when observing the Rose's movement. Also useful when working with animated arrow indicators.
+* `4`: Simulates 2 seconds of websocket sent-message latency. This helps you to discover bugs caused by low ping, something you have zero of when developing. There is an additional variable [config.simulatedWebsocketLatencyMillis](src/server/config/config.js) which you can adjust to add latency to the **server's** sent messages, if you want both ends to be balanced.
+* `5`: Toggles wireframe voids. The void mesh is simplified greatly, as adjacent voids can be merged into one quad to decrease the total vertices in the vertex data. This is also a mesmerizing effect when observing positions with thousands of void squares.
 
 
 ## Client ##
