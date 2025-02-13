@@ -62,7 +62,7 @@ let boundingBoxFloat;
  */
 let boundingBox;
 /**
- * The bounding box of the board currently visible on the canvas IN DEBUG MODE,
+ * The bounding box of the board currently visible on the canvas when the CAMERA IS IN DEBUG MODE,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  * @type {BoundingBox}
@@ -120,7 +120,7 @@ function gboundingBoxFloat() {
  * of the canvas to encapsulate the whole of any partially visible squares.
  * @returns {BoundingBox} The board bounding box
  */
-function gboundingBox(debugMode = options.isDebugModeOn()) {
+function gboundingBox(debugMode = camera.getDebug()) {
 	return debugMode ? jsutil.deepCopyObject(boundingBox_debugMode) : jsutil.deepCopyObject(boundingBox);
 }
 
@@ -143,7 +143,7 @@ function recalcTile_MouseCrosshairOver() {
 
 function recalcTileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
-	const screenBoundingBox = options.isDebugModeOn() ? camera.getScreenBoundingBox(true) : camera.getScreenBoundingBox(false);
+	const screenBoundingBox = camera.getScreenBoundingBox();
 	tileWidthPixels_Virtual = (camera.canvas.height * 0.5 / screenBoundingBox.top) * movement.getBoardScale(); // Greater for retina displays
 	tileWidthPixels_Physical = tileWidthPixels_Virtual / window.devicePixelRatio;
 }
@@ -203,8 +203,6 @@ function getTileMouseOver() {
 	const mouseWorld = input.getMouseWorldLocation(); // [x, y]
 	const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
 	const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
-
-	// if (options.isDebugModeOn()) console.log("Getting tile mouse over: " + JSON.stringify(mouseWorld) + "   " + JSON.stringify(tile_Float) + "   " + JSON.stringify(tile_Int));
     
 	return { tile_Float, tile_Int };
 }
