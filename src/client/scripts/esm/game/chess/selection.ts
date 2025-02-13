@@ -368,8 +368,6 @@ function moveGamefilePiece(coords: CoordsSpecial) {
 
 	movesendreceive.sendMove();
 
-	console.log('Moved piece:');
-
 	unselectPiece();
 }
 

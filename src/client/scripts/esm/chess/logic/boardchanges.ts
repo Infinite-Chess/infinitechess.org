@@ -239,12 +239,12 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
  * from the organized lists.
  */
 function deletePiece(gamefile: gamefile, change: Change) {
-	if (change['piece'].index === undefined) {
+	if (change.piece.index === undefined) {
 		console.warn("Deleted piece does not have index supplied! Attemping to get idx from other info");
 		console.log(change);
-		change['piece'] = gamefileutility.getPieceFromTypeAndCoords(gamefile, change['piece'].type, change['piece'].coords);
+		change.piece = gamefileutility.getPieceFromTypeAndCoords(gamefile, change.piece.type, change.piece.coords);
 	}
-	const piece = change['piece'];
+	const piece = change.piece;
 
 	const list = gamefile.ourPieces[piece.type];
 	gamefileutility.deleteIndexFromPieceList(list, piece.index);
@@ -263,7 +263,7 @@ function deletePiece(gamefile: gamefile, change: Change) {
  * @param change - the move data
  */
 function movePiece(gamefile: gamefile, change: Change) {
-	if (change.action !== 'move') throw new Error("movePiece called with a non-move change!");
+	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
 	const piece = change.piece;
 	const endCoords = change.endCoords;
@@ -282,7 +282,7 @@ function movePiece(gamefile: gamefile, change: Change) {
  * Reverses `movePiece`
  */
 function returnPiece(gamefile: gamefile, change: Change) {
-	if (change.action !== 'move') throw new Error("returnPiece called with a non-move change!");
+	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
 	const piece = change.piece;
 	const endCoords = change.endCoords;
@@ -303,7 +303,7 @@ function returnPiece(gamefile: gamefile, change: Change) {
  * This is differentiated from move changes so it can be animated.
  */
 function capturePiece(gamefile: gamefile, change: Change) {
-	if (change.action !== 'capture') throw new Error("capturePiece called with a non-capture change!");
+	if (change.action !== 'capture') throw new Error(`capturePiece called with a non-capture change: ${change.action}`);
 
 	deletePiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
 	movePiece(gamefile, change);
@@ -313,7 +313,7 @@ function capturePiece(gamefile: gamefile, change: Change) {
  * Undos a capture
  */
 function uncapturePiece(gamefile: gamefile, change: Change) {
-	if (change.action !== 'capture') throw new Error("uncapturePiece called with a non-capture change!");
+	if (change.action !== 'capture') throw new Error(`uncapturePiece called with a non-capture change: ${change.action}`);
 
 	returnPiece(gamefile, change);
 	addPiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });

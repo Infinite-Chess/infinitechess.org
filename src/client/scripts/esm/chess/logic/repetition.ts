@@ -98,7 +98,6 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 
 			// If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
 			if (surplus.size === 0 && deficit.size === 0) {
-				console.log(`Found equal position at move index ${index}`)
 				equalPositionsFound++;
 				indexOfLastEqualPositionFound = index;
 				if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!

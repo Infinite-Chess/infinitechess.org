@@ -84,7 +84,7 @@ function deleteMeshPiece(gamefile: gamefile, change: Change) {
 }
 
 function moveMeshPiece(gamefile: gamefile, change: Change) {
-	if (change.action !== 'move') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
+	if (change.action !== 'move' && change.action !== 'capture') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
 	piecesmodel.movebufferdata(gamefile, change['piece'], change.endCoords);
 }
 
@@ -115,7 +115,7 @@ function animateMove(change: Change, clearanimations: boolean) {
 }
 
 function animateReturn(change: Change, clearanimations: boolean) {
-	if (change.action !== 'move') throw Error(`animateReturn called with non-move action: ${change.action}`);
+	if (change.action !== 'move' && change.action !== 'capture') throw Error(`animateReturn called with non-move action: ${change.action}`);
 	const waypoints = change.path?.slice().reverse() ?? [change['endCoords'], change['piece'].coords]; // slice() required because reverse() is mutating
 	animation.animatePiece(change['piece'].type, waypoints, undefined, clearanimations);
 }
