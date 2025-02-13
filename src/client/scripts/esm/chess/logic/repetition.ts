@@ -60,7 +60,7 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 			}
 		}
 
-		// Next, iterate through all enpassant state changes and add fluxes for them'
+		// Next, iterate through all enpassant state changes and add fluxes for them
 		move.state.global.forEach((state: StateChange) => {
 			if (state.type !== 'enpassant') return false; // Filter out non-enpassant states
 			/**
