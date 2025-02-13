@@ -139,9 +139,10 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		state: { local: [], global: [] },
 		compact: formatconverter.LongToShort_CompactMove(moveDraft),
 		flags: {
-			check: false, // This will be set later
-			mate: false, // This will be set later
-			capture: false, // This will be set later
+			// These will be set later, but we need a default value
+			check: false,
+			mate: false,
+			capture: false,
 		}
 	};
 
@@ -158,8 +159,8 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
+	// Must be set before calling queueIncrementMoveRuleStateChange()
 	move.flags.capture = boardchanges.wasACapture(move);
-
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
