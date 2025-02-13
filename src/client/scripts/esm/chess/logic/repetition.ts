@@ -4,6 +4,8 @@
  * 
  * It is compatible with the enpassant state, as if 2 positions differ only
  * by the enpassant state, they are considered different.
+ * 
+ * It also takes into account special rights.
  */
 
 // @ts-ignore
