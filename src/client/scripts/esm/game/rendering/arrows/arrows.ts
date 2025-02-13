@@ -763,7 +763,9 @@ function executeArrowShifts() {
 
 		// Do the delete action first, so that organized piece lists have an undefined placeholder for the proceeding addition
 		if (shift.start !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
-		if (shift.end !== undefined) boardchanges.queueAddPiece(changes, addedPiece!);
+		// Add a safety net to prevent adding a piece that is already on the board.
+		// This can happen when the current animation position of a piece is EXACTLY over an existing piece.
+		if (shift.end !== undefined && gamefileutility.isPieceOnCoords(gamefile, addedPiece!.coords)) boardchanges.queueAddPiece(changes, addedPiece!);
 
 	});
 
