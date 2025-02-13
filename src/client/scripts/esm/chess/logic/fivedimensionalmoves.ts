@@ -143,7 +143,7 @@ function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	}
 
 	if (Math.abs(move.endCoords[1] - piece.coords[1]) === 2 * distance) {
-		state.createState(move, 'enpassant', gamefile.enpassant, [piece.coords[0], (piece.coords[1] + move.endCoords[1]) / 2]);
+		state.createEnPassantState(move, gamefile.enpassant, [piece.coords[0], (piece.coords[1] + move.endCoords[1]) / 2]);
 	}
 
 	if (!enpassantTag) {
