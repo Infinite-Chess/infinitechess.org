@@ -5,7 +5,6 @@ import bufferdata from './rendering/bufferdata.js';
 import onlinegame from './misc/onlinegame/onlinegame.js';
 import perspective from './rendering/perspective.js';
 import movement from './rendering/movement.js';
-import options from './rendering/options.js';
 import selection from './chess/selection.js';
 import camera from './rendering/camera.js';
 import board from './rendering/board.js';
@@ -488,7 +487,7 @@ function calcMouseWorldLocation_Mouse() {
         
 	const halfCanvasWidth = camera.getCanvasWidthVirtualPixels() / 2;
 	const halfCanvasHeight = camera.getCanvasHeightVirtualPixels() / 2;
-	const boundingBoxToUse = options.isDebugModeOn() ? camera.getScreenBoundingBox(true) : camera.getScreenBoundingBox(false);
+	const boundingBoxToUse = camera.getScreenBoundingBox();
 	const mouseLocationX = (n * mousePos[0] / halfCanvasWidth) * boundingBoxToUse.right;
 	const mouseLocationY = (n * mousePos[1] / halfCanvasHeight) * boundingBoxToUse.top;
 	mouseWorldLocation = [mouseLocationX, mouseLocationY];

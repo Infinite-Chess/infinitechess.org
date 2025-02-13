@@ -1,11 +1,8 @@
 
-
-
 /*
  * This script should contain utility methods regarding
  * sockets that both the CLIENT and server can use.
  */
-
 
 
 // Variables ---------------------------------------------------------------------------------
@@ -73,8 +70,8 @@
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
-const closureCodesNotByChoice = [1006];
-const closureReasonsNotByChoice = ["Connection expired", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
+const closureCodesNotByChoice: number[] = [1006];
+const closureReasonsNotByChoice: string[] = ["Connection expired", "Message Too Big", "Too Many Sockets", "No echo heard", "Connection closed by client. Renew."];
 
 
 
@@ -85,14 +82,16 @@ const closureReasonsNotByChoice = ["Connection expired", "Message Too Big", "Too
 /**
  * Determines if the WebSocket closure was not initiated by the client (i.e., they had no control over the closure).
  * If this returns `true`, the client is allowed 5 seconds to reconnect before notifying their opponent of the disconnection.
- * @param {number} code - The WebSocket closure code.
- * @param {string} reason - The reason provided for the WebSocket closure.
- * @returns {boolean} - Returns `true` if the closure was not initiated by the client, otherwise `false`.
+ * @param code - The WebSocket closure code.
+ * @param reason - The reason provided for the WebSocket closure.
+ * @returns `true` if the closure was not initiated by the client, otherwise `false`.
  */
-function wasSocketClosureNotByTheirChoice(code, reason) {
+function wasSocketClosureNotByTheirChoice(code: number, reason: string): boolean {
 	return closureCodesNotByChoice.includes(code) || closureReasonsNotByChoice.includes(reason.trim());
 }
 
+
+// -----------------------------------------------------------------------------------------
 
 
 export default {

@@ -18,6 +18,7 @@ import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
 import boardchanges from './boardchanges.js';
+import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -26,8 +27,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import math from '../../util/math.js';
-// @ts-ignore
-import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import checkdetection from './checkdetection.js';
 // @ts-ignore
@@ -106,10 +105,14 @@ interface Move extends MoveDraft {
 	generateIndex: number,
 	/** The move in most compact notation: `8,7>8,8Q` */
 	compact: string,
-	/** Whether the move delivered check. */
-	check: boolean,
-	/** Whether the move delivered mate (or the killing move). */
-	mate: boolean,
+	flags: {
+		/** Whether the move delivered check. */
+		check: boolean,
+		/** Whether the move delivered mate (or the killing move). */
+		mate: boolean,
+		/** Whether the move caused a capture */
+		capture: boolean,
+	}
 }
 
 
@@ -134,14 +137,20 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		generateIndex: gamefile.moveIndex + 1,
 		state: { local: [], global: [] },
 		compact: formatconverter.LongToShort_CompactMove(moveDraft),
-		check: false, // This will be set later
-		mate: false, // This will be set later
+		flags: {
+			// These will be set later, but we need a default value
+			check: false,
+			mate: false,
+			capture: false,
+		}
 	};
 
-	// This needs to be before calculating the moves changes,
-	// as special moves functions may add MORE enpassant or specialRights,
-	// and if this comes afterward, then those values will be overwritten with undefined.
-	queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile, move);
+	/**
+	 * Delete the current enpassant state.
+	 * If any specialMove function adds a new EnPassant state,
+	 * this one's future value will be overwritten
+	 */
+	state.createEnPassantState(move, gamefile.enpassant, undefined);
 
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
 	let specialMoveMade: boolean = false;
@@ -151,6 +160,11 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
+	// Must be set before calling queueIncrementMoveRuleStateChange()
+	move.flags.capture = boardchanges.wasACapture(move);
+	
+	// Delete all special rights that should be revoked from the move.
+	queueSpecialRightDeletionStateChanges(gamefile, move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
@@ -174,15 +188,28 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 }
 
 /**
- * Queues a gamefile StateChange to delete the gamefile's current `enpassant`,
- * and the specialRights of the piece moved and its destination.
+ * Queues gamefile state changes to delete all 
+ * special rights that should have been revoked from the move.
+ * This includes the startCoords and endCoords of all move actions.
  */
-function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, move: Move) {
-	state.createState(move, 'enpassant', gamefile.enpassant, undefined);
-	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key });
-	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key }); // We also delete the captured pieces specialRights for ANY move.
+function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
+	move.changes.forEach(change => {
+		if (change.action === 'move') {
+			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
+			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+		} else if (change.action === 'capture') {
+			// Delete the special rights off the start coords AND the capture coords, if there are ones.
+			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords);
+			state.createSpecialRightsState(move, captureCoordsKey, gamefile.specialRights[captureCoordsKey], undefined);
+		} else if (change.action === 'delete') {
+			// Delete the special rights of the coords, if there is one.
+			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, coordsKey, gamefile.specialRights[coordsKey], undefined);
+		}
+	});
 }
 
 /**
@@ -194,7 +221,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
-	state.createState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule);
+	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
 
@@ -214,7 +241,7 @@ function makeMove(gamefile: gamefile, move: Move) {
 
 	// Now we can test for check, and modify the state of the gamefile if it is.
 	createCheckState(gamefile, move);
-	if (gamefile.inCheck) move.check = true;
+	if (gamefile.inCheck) move.flags.check = true;
 	// The "mate" property of the move will be added after our game conclusion checks...
 }
 
@@ -249,7 +276,7 @@ function updateTurn(gamefile: gamefile) {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(gamefile: gamefile, move: Move) {
-	let attackers: [] | undefined = undefined;
+	let attackers: [] | undefined;
 	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
@@ -257,8 +284,8 @@ function createCheckState(gamefile: gamefile, move: Move) {
 
 	const futureInCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
-	state.createState(move, "check", gamefile.inCheck, futureInCheck, {}, gamefile); // Passes in the gamefile as an argument
-	state.createState(move, "attackers", gamefile.attackers, attackers || [], {}, gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.createCheckState(move, gamefile.inCheck, futureInCheck, gamefile); // Passes in the gamefile as an argument
+	state.createAttackersState(move, gamefile.attackers, attackers ?? [], gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 /**
@@ -374,33 +401,6 @@ function goToMove(gamefile: gamefile, index: number, callback: CallableFunction)
 	}
 }
 
-// COMMENTED-OUT because it's 99% identical to goToMove(), and no other part of the code implements it.
-/**
- * Iterates from moveIndex to the target index
- * Callbacks should not update the board
- */
-// function forEachMove(gamefile: gamefile, targetIndex: number, callback: CallableFunction) {
-// 	if (targetIndex === gamefile.moveIndex) return;
-
-// 	const forwards = targetIndex >= gamefile.moveIndex;
-// 	const offset = forwards ? 0 : 1;
-// 	let i = gamefile.moveIndex;
-	
-// 	if (gamefile.moves.length <= targetIndex + offset || targetIndex + offset < 0) throw new Error("Target index is outside of the movelist!");
-
-// 	while (i !== targetIndex) {
-// 		i = math.moveTowards(i, targetIndex, 1);
-// 		const move = gamefile.moves[i + offset];
-
-// 		if (move === undefined) {
-// 			console.log(`Undefined! ${i}, ${targetIndex}`);
-// 			continue;
-// 		}
-
-// 		callback(move);
-// 	}
-// }
-
 
 // Move Wrappers ----------------------------------------------------------------------------------------------------
 
@@ -453,13 +453,16 @@ export type {
 	Move,
 	MoveDraft,
 	CoordsSpecial,
+	enpassant,
+	promotion,
+	castle,
+	path
 };
 
 export default {
 	generateMove,
 	makeMove,
 	updateTurn,
-	// forEachMove,
 	goToMove,
 	makeAllMovesInGame,
 	applyMove,

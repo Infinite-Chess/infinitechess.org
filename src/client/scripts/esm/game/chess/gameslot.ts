@@ -20,6 +20,7 @@ import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
+import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -53,8 +54,6 @@ import movement from "../rendering/movement.js";
 // @ts-ignore
 import arrows from "../rendering/arrows/arrows.js";
 // @ts-ignore
-import moveutil from "../../chess/util/moveutil.js";
-// @ts-ignore
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
@@ -62,6 +61,8 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
+// @ts-ignore
+import animation from "../rendering/animation.js";
 
 
 // Type Definitions ----------------------------------------------------------
@@ -318,6 +319,9 @@ function unloadGame() {
 	// Stop the timer that animates the latest-played move when rejoining a game, after a short delay
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
+
+	// Clear all animations from the last game
+	animation.clearAnimations();
 	
 	options.disableEM();
 }

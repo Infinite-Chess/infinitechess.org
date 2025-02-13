@@ -36,14 +36,6 @@ type Vec2Key = `${number},${number}`
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
 
-/**
- * The directions a line may come from when it intersects a {@link BoundingBox}
- * 
- * If a line's slope is even SLIGHTLY off perfectly horizontal or vertical,
- * it is considered to be coming from a diagonal/hippogonal direction.
- */
-type Corner = 'top' | 'topright' | 'right' | 'bottomright' | 'bottom' | 'bottomleft' | 'left';
-
 
 // Geometry -------------------------------------------------------------------------------------------
 
@@ -205,6 +197,16 @@ function mergeBoundingBoxes(box1: BoundingBox, box2: BoundingBox): BoundingBox {
 }
 
 /**
+ * Calculates the center of a bounding box.
+ */
+function calcCenterOfBoundingBox(box: BoundingBox): Coords {
+	return [
+		(box.left + box.right) / 2,
+		(box.bottom + box.top) / 2
+	];
+}
+
+/**
  * Returns the point on the line SEGMENT that is nearest/perpendicular to the given point.
  * @param lineStart - The starting point of the line segment.
  * @param lineEnd - The ending point of the line segment.
@@ -307,15 +309,6 @@ function findFarthestPointsALineSweepsABox(vector: Vec2, boundingBox: BoundingBo
  */
 function dotProduct(v1: Vec2, v2: Vec2): number {
 	return v1[0] * v2[0] + v1[1] * v2[1];
-}
-
-/**
- * Computes how well a vector points toward a target point using the dot product.
- * @returns The dot product indicating alignment (higher means more aligned). Positive means it pointing roughly the same direction. When it's pointing exactly, the value will be the product of their magnitudes.
- */
-function dotProdOfVectorToTarget(start: Coords, vector: Vec2, target: Coords): number {
-	const toTarget: Vec2 = calculateVectorFromPoints(start, target); // Vector pointing to target
-	return dotProduct(vector, toTarget);
 }
 
 
@@ -603,44 +596,19 @@ function moveTowards(s: number, e: number, progress: number): number {
 }
 
 
-// Random Number Generation ----------------------------------------------------------------------
+// Easing Functions --------------------------------------------------------------------------------
 
 
-class PseudoRandomGenerator {
-	private a: number = 16807;
-	private c: number = 2491057;
-	private b: number = 2147483647;
-
-	private current: number;
-
-	constructor(seed: number) {
-		this.current = seed;
-	}
-
-	private iterate() {
-		const next = (this.current * this.a + this.c) % this.b;
-		this.current = next;
-	}
-
-	/**
-     * Generates the next random integer in the sequence.
-     * @returns A pseudo-random integer between 0 and 2147483647.
-     */
-	nextInt(): number {
-		this.iterate();
-		return this.current;
-	}
-
-	/**
-     * Generates the next random floating point number in the sequence.
-     * @returns A pseudo-random float between 0 and 1.
-     */
-	nextFloat(): number {
-		this.iterate();
-		return this.current / this.b;
-	}
+/**
+ * Applies an ease-in-out interpolation.
+ * @param t - The interpolation factor (0 to 1).
+ */
+function easeInOut(t: number): number {
+	return -0.5 * Math.cos(Math.PI * t) + 0.5;
 }
 
+
+// Exports --------------------------------------------------------------------------------------------
 
 
 export default {
@@ -656,9 +624,10 @@ export default {
 	getBoxFromCoordsList,
 	expandBoxToContainSquare,
 	mergeBoundingBoxes,
+	calcCenterOfBoundingBox,
 	closestPointOnLine,
 	findFarthestPointsALineSweepsABox,
-	dotProdOfVectorToTarget,
+	dotProduct,
 	findLineBoxIntersections,
 	areLinesCollinear,
 	getKeyFromVec2,
@@ -679,7 +648,7 @@ export default {
 	roundUpToNextPowerOf2,
 	posMod,
 	moveTowards,
-	PseudoRandomGenerator,
+	easeInOut,
 };
 
 export type {
@@ -687,5 +656,4 @@ export type {
 	Vec2,
 	Vec2Key,
 	Vec3,
-	Corner,
 };
