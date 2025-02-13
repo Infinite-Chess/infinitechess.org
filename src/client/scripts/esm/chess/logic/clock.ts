@@ -121,7 +121,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	// time that has elapsed since the server sent us the correct clock values
 	const halfPing = pingManager.getHalfPing();
 	if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
-	if (options.isDebugModeOn()) console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${clockValues.colorTicking}'s clock.`);
+	// console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${clockValues.colorTicking}'s clock.`);
 
 	if (clockValues.clocks[clockValues.colorTicking] === undefined) throw Error(`Invalid color "${clockValues.colorTicking}" to modify clock value to account for ping.`);
 	clockValues.clocks[clockValues.colorTicking]! -= halfPing;

@@ -62,6 +62,12 @@ import piecesmodel from '../rendering/piecesmodel.js';
 import loadbalancer from '../misc/loadbalancer.js';
 // @ts-ignore
 import guigameinfo from '../gui/guigameinfo.js';
+// @ts-ignore
+import websocket from '../websocket.js';
+// @ts-ignore
+import voids from '../rendering/voids.js';
+// @ts-ignore
+import camera from '../rendering/camera.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -79,6 +85,7 @@ function init() {
 
 // Update the game every single frame
 function update() {
+	testOutGameDebugToggles();
 	invites.update();
 	if (gameslot.areWeLoadingGraphics()) return; // If the graphics aren't finished loading, nothing is visible, only the loading animation.
 
@@ -87,21 +94,33 @@ function update() {
 
 	// There is a gamefile, update everything board-related...
 
-	if (!guinavigation.isCoordinateActive()) {
-		if (input.isKeyDown('`')) options.toggleDeveloperMode();
-		if (input.isKeyDown('2')) {
-			console.log(jsutil.deepCopyObject(gamefile));
-			console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
-		}
-		if (input.isKeyDown('m')) options.toggleFPS();
-		if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
-	}
+	testInGameDebugToggles(gamefile);
 
 	updateBoard(gamefile); // Other screen, board is visible, update everything board related
 
 	gameloader.update(); // Updates whatever game is currently loaded.
 
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
+}
+
+/** Debug toggles that are not only for in a game, but outside. */
+function testOutGameDebugToggles() {
+	if (guinavigation.isCoordinateActive()) return; // Don't listen for keyboard presses when the coordinate input is active
+
+	if (input.isKeyDown('`')) camera.toggleDebug();
+	if (input.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+}
+
+function testInGameDebugToggles(gamefile: gamefile) {
+	if (guinavigation.isCoordinateActive()) return; // Don't listen for keyboard presses when the coordinate input is active
+
+	if (input.isKeyDown('2')) {
+		console.log(jsutil.deepCopyObject(gamefile));
+		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
+	}
+	if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
+	if (input.isKeyDown('5')) voids.toggleDebug(); // Renders the wireframe of voids
+	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 }
 
 function updateSelectionScreen() {
