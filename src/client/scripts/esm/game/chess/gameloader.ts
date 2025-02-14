@@ -168,7 +168,7 @@ function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData) {
 
 function unloadGame() {
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
-	checkmatepractice.onGameUnload();
+	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
 	
 	guinavigation.close();
 	guigameinfo.close();

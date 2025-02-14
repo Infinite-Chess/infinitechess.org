@@ -4,21 +4,16 @@
 
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { CoordsSpecial, MoveDraft } from '../../chess/logic/movepiece.js';
+import type { MoveDraft } from '../../chess/logic/movepiece.js';
 
 
-import gamefileutility from '../../chess/util/gamefileutility.js';
 import selection from '../chess/selection.js';
-import movepiece from '../../chess/logic/movepiece.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import jsutil from '../../util/jsutil.js';
 import thread from '../../util/thread.js';
 import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
-// @ts-ignore
-import legalmoves from '../../chess/logic/legalmoves.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -57,19 +52,6 @@ function getCurrentEngine() {
 }
 
 /**
- * REPLACE WITH initEngineGame() which is modeled after initOnlineGame(). And initOnlineGame() should be called inside gameloader.ts ---- !!!!!!!!!!!!!!
- * 
- * This has to be called before and separate from {@link initEngineGame}
- * because loading the gamefile and the mesh generation requires this script to know our color.
- * @param {string} color - The color we are in this engine game
- */
-function setColorAndGameID(gameOptions: any) {
-	inEngineGame = true;
-	ourColor = gameOptions.youAreColor;
-        
-}
-
-/**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
  * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
  */
@@ -94,6 +76,8 @@ function closeEngineGame() {
 	currentEngineMove = undefined;
 	engineConfig = undefined;
 	perspective.resetRotations(); // Without this, leaving an engine game of which we were black, won't reset our rotation.
+
+	checkmatepractice.onGameUnload();
 }
 
 /**
@@ -174,7 +158,6 @@ export default {
 	areInEngineGame,
 	getOurColor,
 	getCurrentEngine,
-	setColorAndGameID,
 	initEngineGame,
 	closeEngineGame,
 	areWeColor,
