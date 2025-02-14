@@ -274,7 +274,8 @@ async function loadGame(gameOptions) {
 	const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box);
 	movement.setPositionToArea(centerArea);
 	
-	options.setNavigationBar(true);
+	// SHOULD BE HANDLED by gameloader.ts
+	// options.setNavigationBar(true);
 	sound.playSound_gamestart();
 }
 

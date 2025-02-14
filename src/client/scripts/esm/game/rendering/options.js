@@ -4,14 +4,10 @@ import input from '../input.js';
 import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import stats from '../gui/stats.js';
-import perspective from './perspective.js';
-import guinavigation from '../gui/guinavigation.js';
 import selection from '../chess/selection.js';
 import piecesmodel from './piecesmodel.js';
-import camera from './camera.js';
 import board from './board.js';
 import statustext from '../gui/statustext.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import colorutil from '../../chess/util/colorutil.js';
 import frametracker from './frametracker.js';
 import timeutil from '../../util/timeutil.js';
@@ -34,8 +30,6 @@ let theme;
 let em = false; // editMode, allows moving pieces anywhere else on the board!
 
 let fps = false;
-
-let navigationVisible = true;
 
 
 
@@ -80,22 +74,6 @@ function toggleEM() {
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	em = !em;
 	statustext.showStatus(`${translations.rendering.toggled_edit} ` + (em ? translations.rendering.on : translations.rendering.off));
-}
-
-function onToggleNavigationBar() {
-	if (navigationVisible) {
-		guinavigation.open({true:Boolean});
-		guigameinfo.open();
-	}
-	else guinavigation.close();
-
-	//camera.updateCanvasDimensions();
-}
-/** Toggles the visibility of the navigation bars. */
-function setNavigationBar(value) {
-	navigationVisible = value;
-
-	onToggleNavigationBar();
 }
 
 /**
@@ -293,6 +271,5 @@ export default {
 	disableEM,
 	isFPSOn,
 	initTheme,
-	setNavigationBar
 	// update,
 };
