@@ -8,19 +8,18 @@
 import sound from '../misc/sound.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 import movement from '../rendering/movement.js';
-import gamefile from '../../chess/logic/gamefile.js';
 import gui from '../gui/gui.js';
 import guititle from '../gui/guititle.js';
 import style from '../gui/style.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import area from '../rendering/area.js';
 import enginegame from '../misc/enginegame.js';
-import clock from '../../chess/logic/clock.js';
 import options from '../rendering/options.js';
 import timeutil from '../../util/timeutil.js';
 import frametracker from '../rendering/frametracker.js';
 import variant from '../../chess/variants/variant.js';
 import gameslot from '../chess/gameslot.js';
+import spritesheet from '../rendering/spritesheet.js';
 // Import End
 
 "use strict";
@@ -44,6 +43,7 @@ const guipractice = (function() {
 	let checkmateSelectedID = '2Q-1k'; // id of selected checkmate
 	let indexSelected = 0; // index of selected checkmate among its brothers and sisters
 	let currentScreen = '';
+	let generatedIcons=false;
 
 	// Functions
 
@@ -66,7 +66,19 @@ const guipractice = (function() {
 		changePracticeMode('checkmate-practice');
 		changeCheckmateSelected(checkmateSelectedID);
 		updateCheckmatesBeaten(); // Adds 'beaten' class to them
+		if (!generatedIcons) addPieceIcons();
 		initListeners();
+	}
+
+	async function addPieceIcons() {
+		// let sprites = await spritesheet.getSVGElementsByIds();
+		for (const checkmate of document.getElementById('checkmates').getElementsByClassName('checkmate')) {
+			for (const piece of checkmate.getElementsByClassName('piecelistW')[0].getElementsByClassName('checkmatepiececontainer')) {
+				piece.getElementsByClassName('checkmatepiece')[0].appendChild((await spritesheet.getSVGElementsByIds([piece.getElementsByClassName('checkmatepiece')[0].className.split(' ')[1]]))[0].cloneNode(true));
+			}
+			checkmate.getElementsByClassName('piecelistB')[0].getElementsByClassName('checkmatepiececontainer')[0].getElementsByClassName('checkmatepiece')[0].appendChild((await spritesheet.getSVGElementsByIds(['kingsB']))[0].cloneNode(true));
+		}
+		generatedIcons = true;
 	}
 
 	function close() {
