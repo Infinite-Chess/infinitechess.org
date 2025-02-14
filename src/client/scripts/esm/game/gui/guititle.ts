@@ -62,7 +62,6 @@ function callback_Play(event: Event) {
 
 
 function callback_Practice(event: Event) {
-	event = event || window.event;
 	close();
 	guipractice.open();
 }
