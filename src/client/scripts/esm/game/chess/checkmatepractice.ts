@@ -8,7 +8,6 @@ import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Position } from '../../chess/variants/variant.js';
 
 
-import formatconverter from '../../chess/logic/formatconverter.js';
 import localstorage from '../../util/localstorage.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
@@ -18,6 +17,8 @@ import guipractice from '../gui/guipractice.js';
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
+// @ts-ignore
+import formatconverter from '../../chess/logic/formatconverter.js';
 
 
 // Variables ----------------------------------------------------------------------------

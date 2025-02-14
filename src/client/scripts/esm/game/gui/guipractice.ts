@@ -85,22 +85,22 @@ async function addPieceIcons() {
 	const spritenames = ["kingsB"];
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of elements_checkmates) {
-		for (const piece of checkmate.getElementsByClassName('piecelistW')[0].getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0];
-			spritenames.push(actualpiece.className.split(' ')[1]);
+		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
+			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
+			spritenames.push(actualpiece.className.split(' ')[1]!);
 		}
 	}
 	const spriteSVGs = await spritesheet.getSVGElementsByIds(spritenames);
 	for (let i = 0; i < spritenames.length; i++) {
-		sprites[spritenames[i]] = spriteSVGs[i];
+		sprites[spritenames[i]!] = spriteSVGs[i]!;
 	}
 	for (const checkmate of elements_checkmates) {
-		for (const piece of checkmate.getElementsByClassName('piecelistW')[0].getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0];
-			actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]].cloneNode(true));
+		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
+			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
+			actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]!]!.cloneNode(true));
 		}
-		const container = checkmate.getElementsByClassName('piecelistB')[0].getElementsByClassName('checkmatepiececontainer')[0];
-		container.getElementsByClassName('checkmatepiece')[0].appendChild(sprites.kingsB.cloneNode(true));
+		const container = checkmate.getElementsByClassName('piecelistB')[0]!.getElementsByClassName('checkmatepiececontainer')[0]!;
+		container.getElementsByClassName('checkmatepiece')[0]!.appendChild(sprites['kingsB']!.cloneNode(true));
 	}
 	generatedIcons = true;
 }
@@ -129,10 +129,10 @@ function closeListeners() {
 	}
 }
 
-function changePracticeMode(mode) { // checkmate-practice / tactics-practice
+function changePracticeMode(mode: 'checkmate-practice' | 'tactics-practice') {
 	modeSelected = mode;
 	if (mode === 'checkmate-practice') {
-		element_practiceName.textContent = translations.menu_checkmate;
+		element_practiceName.textContent = translations['menu_checkmate'];
 		element_checkmatePractice.classList.add('selected');
 		element_tacticsPractice.classList.remove('selected');
 		// callback_updateOptions()
@@ -141,7 +141,7 @@ function changePracticeMode(mode) { // checkmate-practice / tactics-practice
 	}
 }
 
-function changeCheckmateSelected(checkmateid) {
+function changeCheckmateSelected(checkmateid: string) {
 	for (const element of elements_checkmates) {
 		if (checkmateid === element.id) {
 			element.classList.add('selected');
@@ -201,7 +201,7 @@ function moveDownSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected >= elements_checkmates.length - 1) return;
 	indexSelected++;
-	const newSelectionElement = elements_checkmates[indexSelected];
+	const newSelectionElement = elements_checkmates[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);
 }
 
@@ -209,7 +209,7 @@ function moveUpSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected <= 0) return;
 	indexSelected--;
-	const newSelectionElement = elements_checkmates[indexSelected];
+	const newSelectionElement = elements_checkmates[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);
 }
 
@@ -229,7 +229,7 @@ function startCheckmatePractice() {
 			Black: "Engine",
 			// Variant: "Classical"
 		},
-		youAreColor: 'white',
+		youAreColor: 'white' as 'white' | 'black',
 		clock: "-",
 		currentEngine: "engineCheckmatePractice",
 		viewWhitePerspective: true,
@@ -245,17 +245,17 @@ function startCheckmatePractice() {
 				gameRules: variant.getBareMinimumGameRules()}
 		}
 	};
-	enginegame.setColorAndGameID(gameOptions);
 	loadGame(gameOptions);
 	enginegame.initEngineGame(gameOptions);
-	// clock.set(gameOptions.clock);
 }
 
 /**
+ * MOVE TO INSIDE gameloader.ts and adapt!!!
+ * 
  * Loads a game according to the options provided.
  * @param {Object} gameOptions - An object that contains the properties `metadata`, `youAreColor`, `clock` and `variantOptions`
  */
-async function loadGame(gameOptions) {
+async function loadGame(gameOptions: any) { 
 	console.log("Loading practice checkmate with game options:");
 	console.log(gameOptions);
 	frametracker.onVisualChange();

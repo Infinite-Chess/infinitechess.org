@@ -51,11 +51,13 @@ function getCurrentEngine() {
 }
 
 /**
+ * REPLACE WITH initEngineGame() which is modeled after initOnlineGame(). And initOnlineGame() should be called inside gameloader.ts ---- !!!!!!!!!!!!!!
+ * 
  * This has to be called before and separate from {@link initEngineGame}
  * because loading the gamefile and the mesh generation requires this script to know our color.
  * @param {string} color - The color we are in this engine game
  */
-function setColorAndGameID(gameOptions) {
+function setColorAndGameID(gameOptions: any) {
 	inEngineGame = true;
 	ourColor = gameOptions.youAreColor;
         
@@ -63,17 +65,19 @@ function setColorAndGameID(gameOptions) {
 
 /**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
- * @param {Object} gameOptions - An object that contains the properties `currentEngine` and `engineConfig`
+ * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
  */
-function initEngineGame(gameOptions) {
-	// This make sure it will place us in black's perspective if applicable
-	perspective.resetRotations();
-
-	currentEngine = gameOptions.currentEngine;
+function initEngineGame(options: {
+	youAreColor: 'white' | 'black',
+	currentEngine: string,
+	engineConfig: { checkmateSelectedID: string }
+}) {
+	inEngineGame = true;
+	ourColor = options.youAreColor;
+	currentEngine = options.currentEngine;
 	currentEngineMove = undefined;
-	engineConfig = gameOptions.engineConfig;
-	if (!currentEngine) return console.error(`Attempting to start game with unknown engine: ${currentEngine}`);
-	console.log(`Started engine game with engine ${currentEngine}`);
+	engineConfig = options.engineConfig;
+	console.log(`Started engine game with engine "${currentEngine}".`);
 }
 
 // Call when we leave an engine game
@@ -91,7 +95,7 @@ function closeEngineGame() {
  * @param color - "white" / "black"
  * @returns *true* if we are that color.
  */
-function areWeColor(color: 'white' | 'black'): boolean {
+function areWeColor(color: string): boolean {
 	return color === ourColor;
 }
 

@@ -63,7 +63,7 @@ let start_piecelist: number[]; // list of white pieces in starting position, lik
 let start_coordlist: Coords[]; // list of tuples, like [[2,3], [5,6], [6,7], ...], pieces are corresponding to ordering in start_piecelist
 
 // only used for parsing in the position
-const pieceNameDictionary = {
+const pieceNameDictionary: { [pieceType: string]: number } = {
 	// 0 corresponds to a captured piece
 	"queensW": 1,
 	"rooksW": 2,
@@ -79,7 +79,7 @@ const pieceNameDictionary = {
 };
 
 // legal move storage for pieces in piecelist
-const pieceTypeDictionary = {
+const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is_royal?: boolean, is_pawn?: boolean } } = {
 	// 0 corresponds to a captured piece
 	1: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]}, // queen
 	2: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]]}, // rook
@@ -99,7 +99,7 @@ const pieceTypeDictionary = {
 };
 
 // define what "short range" means for each piece. Jump moves to at least as near as the values in this table are considered shortrange
-const shortRangeJumpDictionary = {
+const shortRangeJumpDictionary: { [key: number]: number } = {
 	4: 5, // knight
 	5: 4, // king - cannot be captured
 	6: 4, // pawn
@@ -336,7 +336,7 @@ function rider_threatens(direction: Vec2, piece_square: Coords, target_square: C
 	// loop over all potential blockers
 	for (let i = 0; i < coordlist.length; i++) {
 		if (piecelist[i] === 0) continue;
-		const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i][0] - piece_square[0], coordlist[i][1] - piece_square[1]], direction);
+		const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i]![0]! - piece_square[0]!, coordlist[i]![1]! - piece_square[1]!], direction);
 		if (!collinear) continue;
 		if (exclude_white_piece_squares && thispiecedistance <= distance) return false;
 		else if (thispiecedistance < distance) return false;
@@ -376,13 +376,13 @@ function square_is_occupied(square: Coords, piecelist: number[], coordlist: Coor
 
 // checks if a white piece at index piece_index in the piecelist&coordlist threatens a given square
 function piece_threatens_square(piece_index: number, target_square: Coords, piecelist: number[], coordlist: Coords[]): boolean {
-	const piece_type = piecelist[piece_index];
+	const piece_type = piecelist[piece_index]!;
 
 	// piece no longer exists
 	if (piece_type === 0) return false;
 
-	const piece_properties = pieceTypeDictionary[piece_type];
-	const piece_square = coordlist[piece_index];
+	const piece_properties = pieceTypeDictionary[piece_type]!;
+	const piece_square = coordlist[piece_index]!;
 
 	// piece is already on square
 	if (squares_are_equal(piece_square, target_square)) return false;
@@ -455,25 +455,25 @@ function is_stalemate(piecelist, coordlist) {
 function get_white_piece_candidate_squares(piece_index: number, piecelist: number[], coordlist: Coords[]): Coords[] {
 	const candidate_squares: Coords[] = [];
 
-	const piece_type = piecelist[piece_index];
+	const piece_type = piecelist[piece_index]!;
 
 	// piece no longer exists
 	if (piece_type === 0) return candidate_squares;
 
-	const piece_properties = pieceTypeDictionary[piece_type];
-	const piece_square = coordlist[piece_index];
+	const piece_properties = pieceTypeDictionary[piece_type]!;
+	const piece_square = coordlist[piece_index]!;
 
 	if (ignorepawnmoves && piece_properties.is_pawn) return candidate_squares;
 
 	// jump moves
 	if (piece_properties.jumps) {
 		const num_jumps = piece_properties.jumps.length;
-		const shortrangeLimit = shortRangeJumpDictionary[piece_type];
+		const shortrangeLimit = shortRangeJumpDictionary[piece_type]!;
 		let best_target_square: Coords;
 		let bestmove_distance = Infinity;
 		let bestmove_diagSquaredNorm = Infinity;
 		for (let move_index = 0; move_index < num_jumps; move_index++) {
-			const target_square = add_move(piece_square, piece_properties.jumps[move_index]);
+			const target_square = add_move(piece_square, piece_properties.jumps[move_index]!);
 			// do not jump onto an occupied square
 			if (square_is_occupied(target_square, piecelist, coordlist)) continue;
 			// do not move a royal piece onto a square controlled by black
@@ -518,9 +518,9 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 		// only works if movement directions are not collinear
 		// See https://math.stackexchange.com/a/1307635/998803
 		for (let i1 = 0; i1 < num_directions; i1++) {
-			const v1 = piece_properties.rides[i1];
+			const v1 = piece_properties.rides[i1]!;
 			for (let i2 = i1 + 1; i2 < num_directions; i2++) {
-				const v2 = piece_properties.rides[i2];
+				const v2 = piece_properties.rides[i2]!;
 				const denominator = crossProduct(v1, v2);
 				if (denominator === 0) continue;
 				const c1 = crossProduct(v2, piece_square) / denominator;
@@ -588,14 +588,14 @@ function add_suitable_squares_to_candidate_list(
 			redundancy_loop:
 			for (let i = 0; i < candidate_squares.length; i++) {
 				// skip over accepted candidate square if it is a royal move
-				if (tuplelist_contains_tuple(royal_moves, candidate_squares[i])) continue redundancy_loop;
+				if (tuplelist_contains_tuple(royal_moves, candidate_squares[i]!)) continue redundancy_loop;
 				// skip over accepted candidate square if its coords have a different sign from the current candidate square
-				else if (Math.sign(target_square[0]) !== Math.sign(candidate_squares[i][0])) continue redundancy_loop;
-				else if (Math.sign(target_square[1]) !== Math.sign(candidate_squares[i][1])) continue redundancy_loop;
+				else if (Math.sign(target_square[0]!) !== Math.sign(candidate_squares[i]![0]!)) continue redundancy_loop;
+				else if (Math.sign(target_square[1]!) !== Math.sign(candidate_squares[i]![1]!)) continue redundancy_loop;
 				// eliminate current candidate square if it lies on the same line as accepted candidate square, but further away
-				else if (rider_threatens(v2, target_square, candidate_squares[i], piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
+				else if (rider_threatens(v2, target_square, candidate_squares[i]!, piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
 				// replace accepted candidate square with current candidate square if they lie on the same line as, but new square is nearer
-				else if (rider_threatens(v2, candidate_squares[i], target_square, piecelist, coordlist, {ignore_blockers: true})) {
+				else if (rider_threatens(v2, candidate_squares[i]!, target_square, piecelist, coordlist, {ignore_blockers: true})) {
 					candidate_squares[i] = target_square;
 					continue candidates_loop;
 				}
@@ -632,15 +632,15 @@ function make_black_move(move: Coords, piecelist: number[], coordlist: Coords[])
 	const new_piecelist: number[] = [];
 	const new_coordlist: Coords[] = [];
 	for (let i = 0; i < piecelist.length; i++) {
-		if (move[0] === coordlist[i][0] && move[1] === coordlist[i][1]) {
+		if (move[0]! === coordlist[i]![0]! && move[1]! === coordlist[i]![1]!) {
 			// white piece is captured
 			new_piecelist.push(0);
 		} else {
 			// white piece is not captured
-			new_piecelist.push(piecelist[i]);
+			new_piecelist.push(piecelist[i]!);
 		}
 		// shift coordinates
-		new_coordlist.push(add_move(coordlist[i], [-move[0], -move[1]]));
+		new_coordlist.push(add_move(coordlist[i]!, [-move[0]!, -move[1]!]));
 	}
 
 	return [new_piecelist, new_coordlist];
@@ -659,17 +659,17 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 
 	// add penalty based on number of legal moves of black royal
 	const incheck = is_check(piecelist, coordlist);
-	score += legalMoveEvalDictionary[incheck ? 0 : 1][get_black_legal_move_amount(piecelist, coordlist)];
+	score += legalMoveEvalDictionary[incheck ? 0 : 1]![get_black_legal_move_amount(piecelist, coordlist)]!;
 
 	const black_to_move_num = black_to_move ? 0 : 1;
 	for (let i = 0; i < piecelist.length; i++) {
 		// add penalty based on existence of white pieces
-		score += pieceExistenceEvalDictionary[piecelist[i]];
+		score += pieceExistenceEvalDictionary[piecelist[i]!]!;
 
 		// add score based on distance of black royal to white shortrange pieces
-		if (piecelist[i] in distancesEvalDictionary) {
-			const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]][black_to_move_num];
-			score += weight * distancefunction(coordlist[i]);
+		if (piecelist[i]! in distancesEvalDictionary) {
+			const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]!]![black_to_move_num]!;
+			score += weight * distancefunction(coordlist[i]!);
 		}
 	}
 	
@@ -731,9 +731,9 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
 		// go through pieces for in increasing order of what piece has how many candidate moves
 		const indices = [...Array(piecelist.length).keys()];
-		indices.sort((a, b) => { return candidate_moves[a].length - candidate_moves[b].length; });
+		indices.sort((a, b) => { return candidate_moves[a]!.length - candidate_moves[b]!.length; });
 		for (const piece_index of indices) {
-			for (const target_square of candidate_moves[piece_index]) {
+			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
 				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaDepth, betaDepth);
 				const new_score = evaluation.score;
@@ -761,7 +761,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
 	// immediately initialize and submit globallyBestMove, in case the engine gets immediately interrupted
 	const black_moves = get_black_legal_moves(piecelist, coordlist);
-	globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)];
+	globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)]!;
 	const [new_piecelist, new_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
 	globallyBestScore = get_position_evaluation(new_piecelist, new_coordlist, false);
 	self.postMessage(move_to_gamefile_move(globallyBestMove));
@@ -807,12 +807,12 @@ function runEngine(gamefile: gamefile): void {
 		start_piecelist = [];
 		start_coordlist = [];
 		for (const key in gamefile.piecesOrganizedByKey) {
-			const pieceType = gamefile.piecesOrganizedByKey[key];
+			const pieceType = gamefile.piecesOrganizedByKey[key]!;
 			if (pieceType.slice(-1) !== "W") continue; // ignore nonwhite pieces
 			const coords = key.split(',').map(Number);
-			start_piecelist.push(pieceNameDictionary[pieceType]);
+			start_piecelist.push(pieceNameDictionary[pieceType]!);
 			// shift all white pieces, so that the black royal is at [0,0]
-			start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
+			start_coordlist.push([coords[0]! - gamefile_royal_coords[0]!, coords[1]! - gamefile_royal_coords[1]!]);
 		}
 
 		// initialize the eval function weights and global search properties
