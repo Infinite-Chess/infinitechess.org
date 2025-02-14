@@ -29,6 +29,7 @@ import { Move } from '../logic/movepiece.js';
 // @ts-ignore
 import gamefile from '../logic/gamefile.js';
 import { Piece } from '../logic/boardchanges.js';
+import fivedimensionalmoves from '../logic/fivedimensionalmoves.js';
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
 interface GameRuleModifications {
@@ -68,7 +69,9 @@ interface Variant {
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
 	/** Special Move overrides */
-	specialMoves?: TimeVariantProperty<SpecialVicinity>
+	specialMoves?: TimeVariantProperty<{
+		[piece: string]: SpecialMoveFunction
+	}>
 	/**
 	 * Used for check calculation.
 	 * If we have any overrides for specialMoves, we should have overrides for
@@ -76,6 +79,8 @@ interface Variant {
 	 */
 	specialVicinity?: TimeVariantProperty<SpecialVicinity>
 }
+
+// TODO Move these to specialmove.ts when it's created
 
 /** Function that queues all of the changes a special move makes when executed. */
 // eslint-disable-next-line no-unused-vars
@@ -267,6 +272,9 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		},
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional,
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } },
+		specialMoves: {
+			pawns: fivedimensionalmoves.doFiveDimensionalPawnMove
+		}
 	}
 };
 

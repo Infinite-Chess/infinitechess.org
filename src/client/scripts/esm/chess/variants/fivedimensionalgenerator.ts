@@ -8,6 +8,7 @@ import coordutil from "../util/coordutil.js";
 import type { Movesets } from "../logic/movesets.js";
 import type { Position } from "./variant.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
+import fivedimensionalmoves from "../logic/fivedimensionalmoves.js";
 
 
 
@@ -84,6 +85,10 @@ function genMovesetOfFiveDimensional() {
 		},
 		knights: {
 			individual: []
+		},
+		pawns: {
+			individual: [],
+			special: fivedimensionalmoves.fivedimensionalpawnmove
 		}
 	};
 	let kingIndex = 0;
