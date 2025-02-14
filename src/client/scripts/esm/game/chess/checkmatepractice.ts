@@ -11,8 +11,10 @@ import type { Position } from '../../chess/variants/variant.js';
 import localstorage from '../../util/localstorage.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
-import gameslot from './gameslot.js';
+import gameslot, { VariantOptions } from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
+import variant from '../../chess/variants/variant.js';
+import gameloader from './gameloader.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -81,9 +83,33 @@ let inCheckmatePractice: boolean = false;
 // Functions ----------------------------------------------------------------------------
 
 
-/** Sets a flag that we are in a checkmate practice game */
-function initCheckmatePractice() {
+/**
+ * Starts a checkmate practice game
+ */
+function startCheckmatePractice(checkmateSelectedID: string): void {
+	console.log("Loading practice checkmate game.");
 	inCheckmatePractice = true;
+
+	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
+	const specialRights = {};
+	const positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
+	const variantOptions: VariantOptions = {
+		fullMove: 1,
+		startingPosition,
+		positionString,
+		specialRights,
+		gameRules: variant.getBareMinimumGameRules()
+	};
+
+	const options = {
+		Event: 'Infinite chess checkmate practice',
+		youAreColor: 'white' as 'white',
+		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
+		engineConfig: { checkmateSelectedID: checkmateSelectedID },
+		variantOptions
+	};
+
+	gameloader.startEngineGame(options);
 }
 
 function onGameUnload(): void {
@@ -227,11 +253,10 @@ function onEngineGameConclude(): void {
 
 
 export default {
-	initCheckmatePractice,
+	startCheckmatePractice,
 	onGameUnload,
 	areInCheckmatePracticeGame,
 	getCompletedCheckmates,
-	generateCheckmateStartingPosition,
 	onEngineGameConclude,
 	eraseCheckmatePracticeProgress
 };

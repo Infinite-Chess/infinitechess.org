@@ -5,19 +5,12 @@
  */
 
 
-import type { VariantOptions } from '../chess/gameslot.js';
-
-
 import checkmatepractice from '../chess/checkmatepractice.js';
 import gui from './gui.js';
 import guititle from './guititle.js';
-import variant from '../../chess/variants/variant.js';
 import spritesheet from '../rendering/spritesheet.js';
-import gameloader from '../chess/gameloader.js';
 // @ts-ignore
 import style from './style.js';
-// @ts-ignore
-import formatconverter from '../../chess/logic/formatconverter.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -39,7 +32,9 @@ let checkmateSelectedID: string = '2Q-1k'; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedIcons: boolean = false;
 
-// Functions
+
+// Functions ------------------------------------------------------------------------
+
 
 function getModeSelected() {
 	return modeSelected;
@@ -173,7 +168,7 @@ function callback_checkmateList(event: Event) {
 function callback_practicePlay() {
 	if (modeSelected === 'checkmate-practice') {
 		close();
-		startCheckmatePractice();
+		checkmatepractice.startCheckmatePractice(checkmateSelectedID);
 	} else if (modeSelected === 'tactics-practice') {
 		throw Error("Can't play tactics practice yet.");
 	}
@@ -202,35 +197,8 @@ function moveUpSelection(event: Event) {
 	changeCheckmateSelected(newSelectionElement.id);
 }
 
-/**
- * Starts a checkmate practice game
- */
-function startCheckmatePractice() {
-	console.log("Loading practice checkmate game.");
-	checkmatepractice.initCheckmatePractice();
 
-	const startingPosition = checkmatepractice.generateCheckmateStartingPosition(checkmateSelectedID);
-	const specialRights = {};
-	const positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
-	const variantOptions: VariantOptions = {
-		fullMove: 1,
-		startingPosition,
-		positionString,
-		specialRights,
-		gameRules: variant.getBareMinimumGameRules()
-	};
-
-	const options = {
-		Event: 'Infinite chess checkmate practice',
-		youAreColor: 'white' as 'white',
-		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
-		engineConfig: { checkmateSelectedID: checkmateSelectedID },
-		variantOptions
-	};
-
-	gameloader.startEngineGame(options);
-}
-
+// Exports ------------------------------------------------------------------------
 
 
 export default {
