@@ -274,6 +274,18 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } },
 		specialMoves: {
 			pawns: fivedimensionalmoves.doFiveDimensionalPawnMove
+		},
+		specialVicinity: {
+			pawns: [
+				[1, 1],
+				[-1, 1],
+				[-1, -1],
+				[1, -1],
+				[10, 10],
+				[10, -10],
+				[-10, -10],
+				[-10, 10]
+			]
 		}
 	}
 };
