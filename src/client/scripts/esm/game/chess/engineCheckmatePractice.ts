@@ -16,6 +16,11 @@ import type gamefile from "../../chess/logic/gamefile";
 import type { MoveDraft } from "../../chess/logic/movepiece";
 import type { Coords } from "../../chess/util/coordutil";
 import type { Vec2 } from "../../util/math";
+// If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
+// type gamefile = import("../../chess/logic/gamefile").default;
+// type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
+// type Coords = import("../../chess/util/coordutil").Coords;
+// type Vec2 = import("../../util/math").Vec2;
 
 
 
