@@ -9,8 +9,6 @@
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 // @ts-ignore
-import enginegame from '../misc/enginegame.js';
-// @ts-ignore
 import gui from '../gui/gui.js';
 
 
@@ -75,50 +73,6 @@ import camera from '../rendering/camera.js';
 
 // Functions -------------------------------------------------------------------------------
 
-
-//     /**
-//      * Checks if we are currently in a game that is not a local game
-//      * @returns {boolean}
-//      */
-//     function areInNonLocalGame() {
-//         return onlinegame.areInOnlineGame() || enginegame.areInEngineGame();
-//     }
-
-//     /**
-//      * Checks if we control a specific color in a game that is not a local game
-//      * @param {String} color - "white" or "black"
-//      * @returns {boolean}
-//      */
-//     function areWeColorInNonLocalGame(color) {
-//         return onlinegame.areWeColor(color) || enginegame.areWeColor(color);
-//     }
-
-//     /**
-//      * Checks if we control a specific color in a game that is not a local game
-//      * @param {String} color - "white" or "black"
-//      * @returns {String}
-//      */
-//     function getOurColorInNonLocalGame() {
-//         if (onlinegame.areInOnlineGame()) return onlinegame.getOurColor();
-//         else if (enginegame.areInEngineGame()) return enginegame.getOurColor();
-//         else return undefined;
-//     }
-
-//     /**
-//      * Checks if it is currently our turn to move in a game that is not a local game
-//      * @returns {boolean}
-//      */
-//     function isItOurTurnInNonLocalGame() {
-//         return onlinegame.isItOurTurn() || enginegame.isItOurTurn();
-//     }
-
-//     /**
-//      * Gets called when a game that is a not local game needs to be closed. Closes onlinegames and enginegames.
-//      */
-//     function closeNonLocalGame() {
-//         onlinegame.closeOnlineGame();
-//         enginegame.closeEngineGame();
-//     }
 
 function init() {
 	options.initTheme();

@@ -403,7 +403,7 @@ function concludeGame() {
 	board.darkenColor();
 	guigameinfo.gameEnd(loadedGamefile.gameConclusion);
 	onlinegame.onGameConclude();
-	enginegame.onGameConclude();
+	if (enginegame.areInEngineGame()) enginegame.onGameConclude();
 
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {

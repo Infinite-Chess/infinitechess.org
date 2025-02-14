@@ -369,7 +369,7 @@ function moveGamefilePiece(coords: CoordsSpecial) {
 	}
 
 	movesendreceive.sendMove();
-	enginegame.submitMove();
+	if (enginegame.areInEngineGame()) enginegame.submitMove();
 
 	unselectPiece();
 }
