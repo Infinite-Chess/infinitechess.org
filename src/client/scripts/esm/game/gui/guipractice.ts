@@ -84,8 +84,7 @@ async function addPieceIcons() {
 	// let sprites = await spritesheet.getSVGElementsByIds();
 	const spritenames = ["kingsB"];
 	const sprites: { [pieceType: string]: SVGElement } = {};
-	const checkmates = document.getElementById('checkmates')!.getElementsByClassName('checkmate');
-	for (const checkmate of checkmates) {
+	for (const checkmate of elements_checkmates) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0].getElementsByClassName('checkmatepiececontainer')) {
 			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0];
 			spritenames.push(actualpiece.className.split(' ')[1]);
@@ -95,7 +94,7 @@ async function addPieceIcons() {
 	for (let i = 0; i < spritenames.length; i++) {
 		sprites[spritenames[i]] = spriteSVGs[i];
 	}
-	for (const checkmate of checkmates) {
+	for (const checkmate of elements_checkmates) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0].getElementsByClassName('checkmatepiececontainer')) {
 			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0];
 			actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]].cloneNode(true));
