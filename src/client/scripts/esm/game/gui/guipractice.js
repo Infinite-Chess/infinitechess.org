@@ -72,11 +72,26 @@ const guipractice = (function() {
 
 	async function addPieceIcons() {
 		// let sprites = await spritesheet.getSVGElementsByIds();
-		for (const checkmate of document.getElementById('checkmates').getElementsByClassName('checkmate')) {
+		const spritenames = ["kingsB"];
+		const sprites = {};
+		const checkmates = document.getElementById('checkmates').getElementsByClassName('checkmate');
+		for (const checkmate of checkmates) {
 			for (const piece of checkmate.getElementsByClassName('piecelistW')[0].getElementsByClassName('checkmatepiececontainer')) {
-				piece.getElementsByClassName('checkmatepiece')[0].appendChild((await spritesheet.getSVGElementsByIds([piece.getElementsByClassName('checkmatepiece')[0].className.split(' ')[1]]))[0].cloneNode(true));
+				const actualpiece = piece.getElementsByClassName('checkmatepiece')[0];
+				spritenames.push(actualpiece.className.split(' ')[1]);
 			}
-			checkmate.getElementsByClassName('piecelistB')[0].getElementsByClassName('checkmatepiececontainer')[0].getElementsByClassName('checkmatepiece')[0].appendChild((await spritesheet.getSVGElementsByIds(['kingsB']))[0].cloneNode(true));
+		}
+		const spriteSVGs = await spritesheet.getSVGElementsByIds(spritenames);
+		for (let i = 0; i < spritenames.length; i++) {
+			sprites[spritenames[i]] = spriteSVGs[i];
+		}
+		for (const checkmate of checkmates) {
+			for (const piece of checkmate.getElementsByClassName('piecelistW')[0].getElementsByClassName('checkmatepiececontainer')) {
+				const actualpiece = piece.getElementsByClassName('checkmatepiece')[0];
+				actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]].cloneNode(true));
+			}
+			const container = checkmate.getElementsByClassName('piecelistB')[0].getElementsByClassName('checkmatepiececontainer')[0];
+			container.getElementsByClassName('checkmatepiece')[0].appendChild(sprites.kingsB.cloneNode(true));
 		}
 		generatedIcons = true;
 	}
