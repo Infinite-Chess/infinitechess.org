@@ -13,6 +13,7 @@
  */
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile";
+import type { MoveDraft } from "../../chess/logic/movepiece";
 import type { Coords } from "../../chess/util/coordutil";
 import type { Vec2 } from "../../util/math";
 
@@ -779,7 +780,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 /**
  * Converts a target square for the black king to move to into a Move Object, taking into account gamefile_royal_coords
  */
-function move_to_gamefile_move(target_square: Coords): { startCoords: Coords, endCoords: Coords } {
+function move_to_gamefile_move(target_square: Coords): MoveDraft {
 	const endCoords: Coords = [gamefile_royal_coords[0] + target_square[0], gamefile_royal_coords[1] + target_square[1]];
 	return { startCoords: gamefile_royal_coords, endCoords: endCoords };
 }
