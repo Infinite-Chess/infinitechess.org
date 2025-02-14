@@ -186,12 +186,12 @@ function pawns(gamefile, coords, color) {
  */
 // If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
-	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
+	if (gamefile.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 
-	const xLandDiff = gamefile.enpassant[0] - coords[0];
+	const xLandDiff = gamefile.enpassant.square[0] - coords[0];
 	const oneOrNegOne = color === 'white' ? 1 : -1;
 	if (Math.abs(xLandDiff) !== 1) return; // Not immediately left or right of us
-	if (coords[1] + oneOrNegOne !== gamefile.enpassant[1]) return; // Not one in front of us
+	if (coords[1] + oneOrNegOne !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
 	const captureSquare = [coords[0] + xLandDiff, coords[1] + oneOrNegOne];
 
@@ -208,8 +208,8 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	if (gamefileutility.getPieceTypeAtCoords(gamefile, captureSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
-	// on the individual move to detect en passant captures and to know what piece to delete
-	captureSquare.enpassant = -oneOrNegOne;
+	// on the individual move to detect en passant captures and know when to perform them.
+	captureSquare.enpassant = true;
 	individualMoves.push(captureSquare);
 }
 

@@ -24,6 +24,7 @@ import movesets from './movesets.js';
 /** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
 /** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
 /** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
+/** @typedef {import('./state.js').EnPassant} EnPassant */
 
 'use strict'; 
 
@@ -50,7 +51,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		position: undefined,
 		positionString: undefined,
 		specialRights: undefined,
-		/** What square coords, if legal, enpassant capture is possible in the starting position of the game. */
+		/** What square coords, if legal, enpassant capture is possible in the starting position of the game. @type {EnPassant | undefined }*/
 		enpassant: undefined,
 		/** The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push) */
 		moveRuleState: undefined,
@@ -227,7 +228,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
 	this.moveIndex = -1;
-	/** If enpassant is allowed at the front of the game, this defines the coordinates. */
+	/** If enpassant is allowed at the front of the game, this defines the coordinates. @type {EnPassant | undefined} */
 	this.enpassant = jsutil.deepCopyObject(this.startSnapshot.enpassant);
 	/** An object containing the information if each individual piece has its special move rights. */
 	this.specialRights = jsutil.deepCopyObject(this.startSnapshot.specialRights);

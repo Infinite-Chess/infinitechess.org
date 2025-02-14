@@ -63,6 +63,7 @@ import guipause from "../gui/guipause.js";
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
+import { EnPassant } from "../../chess/logic/state.js";
 
 
 // Type Definitions ----------------------------------------------------------
@@ -103,7 +104,7 @@ interface VariantOptions {
 	 */
 	fullMove: number,
 	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-	enpassant?: Coords,
+	enpassant?: EnPassant,
 	gameRules: GameRules,
 	/** If the move moveRule gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
 	moveRule?: `${number}/${number}`,
@@ -339,14 +340,18 @@ function startStartingTransition() {
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
 function initCopyPastGameListeners() {
-	document.addEventListener('copy', copypastegame.callbackCopy);
+	document.addEventListener('copy', callbackCopy);
 	document.addEventListener('paste', copypastegame.callbackPaste);
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
 function closeCopyPasteGameListeners() {
-	document.removeEventListener('copy', copypastegame.callbackCopy);
+	document.removeEventListener('copy', callbackCopy);
 	document.removeEventListener('paste', copypastegame.callbackPaste);
+}
+
+function callbackCopy(event: Event) {
+	copypastegame.copyGame(false);
 }
 
 /**

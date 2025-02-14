@@ -122,7 +122,7 @@ function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = 
 function initListeners() {
 	element_resume.addEventListener('click', callback_Resume);
 	element_pointers.addEventListener('click', callback_ToggleArrows);
-	element_copygame.addEventListener('click', copypastegame.callbackCopy);
+	element_copygame.addEventListener('click', callback_CopyGame);
 	element_pastegame.addEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.addEventListener('click', callback_MainMenu);
 	element_offerDraw.addEventListener('click', callback_OfferDraw);
@@ -132,11 +132,15 @@ function initListeners() {
 function closeListeners() {
 	element_resume.removeEventListener('click', callback_Resume);
 	element_pointers.removeEventListener('click', callback_ToggleArrows);
-	element_copygame.removeEventListener('click', copypastegame.callbackCopy);
+	element_copygame.removeEventListener('click', callback_CopyGame);
 	element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.removeEventListener('click', callback_MainMenu);
 	element_offerDraw.removeEventListener('click', callback_OfferDraw);
 	element_perspective.removeEventListener('click', callback_Perspective);
+}
+
+function callback_CopyGame(event) {
+	copypastegame.copyGame(false);
 }
 
 function callback_Resume() {

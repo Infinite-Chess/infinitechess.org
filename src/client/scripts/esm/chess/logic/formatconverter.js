@@ -703,7 +703,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update move rule
 		if (ret.moveRule) {
 			const slashindex = ret.moveRule.indexOf("/");
-			if (move.flags.capture || move.type.slice(0, -1) == "pawns") {
+			if (move.flags.capture || move.type.slice(0, -1) === "pawns") {
 				ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
 			} else {
 				ret.moveRule = `${(parseInt(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
@@ -733,6 +733,9 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// save move coords for potential en passant
 		enpassantcoordinates = endString;
+
+		// Rotate the turn order, moving the first player to the back
+		ret.gameRules.turnOrder.push(ret.gameRules.turnOrder.shift());
 	}
 	delete ret.moves;
 	ret.moves = [];
