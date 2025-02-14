@@ -25,6 +25,7 @@ import variant from '../variants/variant.js';
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
  * @typedef {import('./movesets.js').IgnoreFunction} IgnoreFunction
  * @typedef {import('./movesets.js').Coords} Coords
+ * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
 */
 
 
@@ -208,7 +209,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, slideKe
 /**
  * Shifts/translates the individual/jumping portion
  * of a moveset by the coordinates of a piece.
- * @param {Coords[]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
+ * @param {CoordsSpecial[]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
  */
 function shiftIndividualMovesetByCoords(indivMoveset, coords) {
 	if (!indivMoveset) return;
