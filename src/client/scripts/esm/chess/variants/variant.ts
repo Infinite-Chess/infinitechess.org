@@ -431,6 +431,7 @@ function getBareMinimumGameRules() {
 		turnOrder: defaultTurnOrder
 	});
 }
+
 // /**
 //  * Returns the turnOrder of the provided variant at the date (if specified).
 //  */
@@ -608,7 +609,7 @@ export default {
 	getMovesetsOfVariant,
 	getSpecialMovesOfVariant,
 	getSpecialVicinityOfVariant,
-	getBareMinimumGameRules
+	getBareMinimumGameRules,
 };
 
 export type {

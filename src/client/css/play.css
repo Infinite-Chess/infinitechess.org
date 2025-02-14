@@ -705,6 +705,7 @@ canvas {
     background-size: 800%; 
 }
 
+
 /* Play Page: Invite creation screen */
 
 .play-selection {
@@ -1403,11 +1404,6 @@ a {
 
 .hidden {
     display: none;
-}
-
-/** Not visible, but takes up same space on the doc */
-.invisible {
-    visibility: hidden;
 }
 
 .opacity-0_5 {
