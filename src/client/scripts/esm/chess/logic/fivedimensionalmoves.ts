@@ -111,7 +111,6 @@ function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coo
 
 function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
 	const moveChanges = move.changes;
-	const enpassantTag: true | undefined = move.enpassant;
 	let distance: number;
 	{
 		if (move.endCoords[0] === piece.coords[0]) {
@@ -126,16 +125,31 @@ function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 		state.createEnPassantState(move, gamefile.enpassant, { pawn: move.endCoords, square: [piece.coords[0], (piece.coords[1] + move.endCoords[1]) / 2] });
 	}
 
-	if (!enpassantTag) {
-		return false;
+	const enpassantTag = move.enpassant; // true | undefined
+	const promotionTag = move.promotion; // promote type
+	if (!enpassantTag && !promotionTag) return false; // No special move to execute, return false to signify we didn't move the piece.
+
+	const captureCoords = enpassantTag ? gamefile.enpassant!.pawn : move.endCoords;
+	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+
+	// Delete the piece captured
+
+	if (capturedPiece) {
+		boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece);
+	} else {
+		// Move the pawn
+		boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords);
 	}
 
-	const pieceToCapture = gamefileutility.getPieceAtCoords(gamefile, gamefile.enpassant?.pawn!);
-	if (pieceToCapture) {
-		boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, pieceToCapture);
-		return true;
+	if (promotionTag) {
+		// Delete original pawn
+		boardchanges.queueDeletePiece(moveChanges, { type: piece.type, coords: move.endCoords, index: piece.index }, true);
+
+		boardchanges.queueAddPiece(moveChanges, { type: promotionTag, coords: move.endCoords } as Piece);
 	}
-	return false;
+
+	// Special move was executed!
+	return true;
 }
 
 function equals(a: Object, b: Object): boolean {
