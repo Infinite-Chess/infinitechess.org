@@ -9,6 +9,8 @@ import type { Movesets } from "../logic/movesets.js";
 import type { Position } from "./variant.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import fivedimensionalmoves from "../logic/fivedimensionalmoves.js";
+// @ts-ignore
+import specialdetect from "../logic/specialdetect.js";
 
 
 
@@ -83,7 +85,8 @@ function genMovesetOfFiveDimensional() {
 			sliding: {}
 		},
 		kings: {
-			individual: []
+			individual: [],
+			special: specialdetect.kings
 		},
 		knights: {
 			individual: []

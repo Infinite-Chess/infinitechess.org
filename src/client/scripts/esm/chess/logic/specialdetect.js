@@ -79,11 +79,6 @@ function kings(gamefile, coords, color, ) {
 	const leftColor = leftPieceType ? colorutil.getPieceColorFromType(leftPieceType) : undefined;
 	const rightColor = rightPieceType ? colorutil.getPieceColorFromType(rightPieceType) : undefined;
 
-	console.log(leftDist);
-	console.log(rightDist);
-	console.log(rightCoord);
-	console.log(rightPieceType);
-
 	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns')) leftLegal = false;
 	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns')) rightLegal = false;
 	if (!leftLegal && !rightLegal) return individualMoves;
