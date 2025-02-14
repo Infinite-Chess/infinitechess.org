@@ -13,7 +13,6 @@ import localstorage from '../../util/localstorage.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import gameslot from './gameslot.js';
-// @ts-ignore
 import guipractice from '../gui/guipractice.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
@@ -187,7 +186,7 @@ function eraseCheckmatePracticeProgress(): void {
 /** Called when an engine game ends */
 function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
-	if (guipractice.getScreen() !== 'checkmate practice') return; // No
+	if (!guipractice.areInCheckmatePractice()) return; // Not in checkmate practice
 
 	const gameConclusion: string | false = gameslot.getGamefile()!.gameConclusion;
 	if (gameConclusion === false) throw Error('Game conclusion is false, should not have called onEngineGameConclude()');

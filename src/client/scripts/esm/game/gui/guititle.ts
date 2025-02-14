@@ -3,14 +3,12 @@
  * This script handles our Title Screen
  */
 
-// @ts-ignore
+import guipractice from './guipractice.js';
 import gui from './gui.js';
 // @ts-ignore
 import guiguide from './guiguide.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
-// @ts-ignore
-import guipractice from './guipractice.js';
 
 
 // Variables ----------------------------------------------------------------------------
