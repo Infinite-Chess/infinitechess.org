@@ -3,8 +3,9 @@
 
 import gamefileutility from '../util/gamefileutility.js';
 import boardchanges from './boardchanges.js';
-import coordutil from '../util/coordutil.js';
 import state from './state.js';
+
+/** @typedef {import('./state.js').EnPassant} EnPassant */
 
 "use strict";
 
@@ -60,14 +61,15 @@ function pawns(gamefile, piece, move) {
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
 	if (isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-		state.createEnPassantState(move, gamefile.enpassant, getEnPassantSquare(piece.coords, move.endCoords));
+		state.createEnPassantState(move, gamefile.enpassant, getEnPassantGamefileProperty(piece.coords, move.endCoords));
 	}
 
-	const enpassantTag = move.enpassant; // -1/1
+	const enpassantTag = move.enpassant; // true | undefined
 	const promotionTag = move.promotion; // promote type
 	if (!enpassantTag && !promotionTag) return false; ; // No special move to execute, return false to signify we didn't move the piece.
 
-	const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
+	const captureCoords = enpassantTag ? gamefile.enpassant.pawn : move.endCoords;
+	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
 
 	// Delete the piece captured
@@ -93,18 +95,16 @@ function pawns(gamefile, piece, move) {
 function isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2; }
 
 /**
- * Returns the en passant square of a pawn double push move
+ * Returns what the gamefile's enpassant property should be after this double pawn push move
  * @param {number[]} moveStartCoords - The start coordinates of the move
  * @param {number[]} moveEndCoords - The end coordinates of the move
- * @returns {number[]} The coordinates en passant is allowed
+ * @returns {EnPassant} The coordinates en passant is allowed
  */
-function getEnPassantSquare(moveStartCoords, moveEndCoords) {
+function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
 	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
-	return [moveStartCoords[0], y];
+	const enpassantSquare = [moveStartCoords[0], y];
+	return { square: enpassantSquare, pawn: moveEndCoords };
 }
-
-// MUST require there be an enpassant tag!
-function getEnpassantCaptureCoords(endCoords, enpassantTag) { return [endCoords[0], endCoords[1] + enpassantTag]; }
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
 function roses(gamefile, piece, move) {

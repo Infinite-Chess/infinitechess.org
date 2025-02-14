@@ -50,8 +50,15 @@ type CoordsSpecial = Coords & {
 	path?: path,
 }
 
-/** A special move tag for enpassant capture. This will be 1 if the captured piece is 1 square above, or -1 for 1 square below. */
-type enpassant = -1 | 1;
+/**
+ * A special move tag for enpassant capture.
+ * 
+ * If true, the specialMove function for pawns will read the gamefile's
+ * enpassant property to figure out where the pawn to capture is.
+ * After that, the captured piece is appended to the move's changes list,
+ * So we don't actually need to store more information in here.
+ */
+type enpassant = true;
 /** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
 type promotion = string;
 /** A special move tag for castling. */
@@ -73,8 +80,7 @@ type path = Coords[]
 interface MoveDraft {
 	startCoords: Coords,
 	endCoords: Coords,
-	/** Present if the move was special-move enpassant capture. This will be
-	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
+	/** Present if the move was special-move enpassant capture. This will be `true` */
 	enpassant?: enpassant,
 	/** Present if the move was a special-move promotion. This will be
 	 * a string of the type of piece being promoted to: "queensW" */

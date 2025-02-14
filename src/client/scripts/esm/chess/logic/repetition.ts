@@ -13,6 +13,7 @@ import type gamefile from "./gamefile.js";
 
 import boardchanges from "./boardchanges.js";
 import { StateChange } from "./state.js";
+import jsutil from "../../util/jsutil.js";
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${string}`; // `x,y,type` | `x,y,enpassant`
@@ -69,9 +70,13 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 			 * If we reverse applied this enpassant state,
 			 * there would be a DEFICIT on the future value,
 			 * and a SURPLUS on the current value.
+			 * 
+			 * The reason we should also specify in the flux the pawn's coords that double-pushed is because
+			 * in the 5D variant, you can't tell where the pawn is that double pushed. It could be 1 square away, or 10.
+			 * Which means the enpassant square is fundamentally different if the pawn to be captured is a different distance.
 			 */
-			if (state.future !== undefined) addDeficit(`${state.future[0]},${state.future[1]},enpassant`);
-			if (state.current !== undefined) addSurplus(`${state.current[0]},${state.current[1]},enpassant`);
+			if (state.future !== undefined) addDeficit(`${state.future.square[0]},${state.future.square[1]},${state.future.pawn[0]},${state.future.pawn[1]},enpassant`);
+			if (state.current !== undefined) addSurplus(`${state.current.square[0]},${state.current.square[1]},${state.current.pawn[0]},${state.current.pawn[1]},enpassant`);
 			return; // typescript needs this to not complain
 		});
 
@@ -101,6 +106,9 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 				if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
 			}
 		}
+
+		// console.log('Surplus:', surplus);
+		// console.log('Deficit:', deficit);
 
 		// Prep for next iteration, decrement index.
 		// WILL BE -1 if we've reached the beginning of the game!

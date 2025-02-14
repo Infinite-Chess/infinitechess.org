@@ -63,7 +63,7 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
      * 
      * metadata
      * turn
-     * enpassant
+     * enpassant: Coords
      * moveRule
      * fullMove
      * startingPosition (can pass in shortformat string instead)
@@ -76,7 +76,12 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
 
 	primedGamefile.metadata = gamefile.metadata;
 	primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant] || primedGamefile.metadata.Variant; // Convert the variant metadata code to spoken language if translation is available
-	primedGamefile.enpassant = gamefile.startSnapshot.enpassant;
+	if (gamefile.startSnapshot.enpassant !== undefined) {
+		// gamefile.startSnapshot.enpassant is in the form: { square: Coords, pawn: Coords }
+		// need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!!
+		const yDistance = Math.abs(gamefile.startSnapshot.enpassant.square[1] - gamefile.startSnapshot.enpassant.pawn[1]);
+		if (yDistance === 1) primedGamefile.enpassant = gamefile.startSnapshot.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
+	}
 	if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
 	primedGamefile.fullMove = gamefile.startSnapshot.fullMove;
 	primedGamefile.startingPosition = gamefile.startSnapshot.positionString;
@@ -202,7 +207,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 
 	/** longformat properties:
      * metadata
-     * enpassant
+     * enpassant: Coords
      * moveRule
      * fullMove
      * shortposition
@@ -248,13 +253,21 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	// `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
 	const variantOptions = {
 		fullMove: longformat.fullMove,
-		enpassant: longformat.enpassant,
 		moveRule: longformat.moveRule,
 		positionString: longformat.shortposition,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
 		gameRules: longformat.gameRules
 	};
+
+	if (longformat.enpassant !== undefined) {
+		// longformat.enpassant is in the form: Coords
+		// need to convert it to: { square: Coords, pawn: Coords }
+		const firstTurn = longformat.gameRules.turnOrder[0];
+		const oneOrNegOne = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error("Invalid turn order when pasting a game! Can't parse enpassant option."); })();
+		const newEnPassant = { square: longformat.enpassant, pawn: [longformat.enpassant[0], longformat.enpassant[1] - oneOrNegOne] };
+		variantOptions.enpassant = newEnPassant;
+	}
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
 		// Playing a custom private game! Save the pasted position in browser

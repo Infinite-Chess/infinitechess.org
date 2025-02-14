@@ -64,8 +64,8 @@ type StateChange = {
 	future: attackers
 } | {
 	type: 'enpassant',
-	current?: Coords,
-	future?: Coords
+	current?: EnPassant,
+	future?: EnPassant
 } | {
 	type: 'specialrights'
 	current?: true,
@@ -76,6 +76,20 @@ type StateChange = {
 	type: 'moverulestate'
 	current: number,
 	future: number
+}
+
+// TODO: Move to gamefile type definition (right now it's not in typescript)
+interface EnPassant {
+	/** The enpassant square. */
+	square: Coords,
+	/**
+	 * The square the pawn that doubled pushed is on. 
+	 * 
+	 * We need this info, because otherwise in the 5D variant, 
+	 * you can't tell where the pawn is that double pushed.
+	 * It could be 1 square away, or 10.
+	 */
+	pawn: Coords
 }
 
 
@@ -104,7 +118,7 @@ function createAttackersState(move: Move, current: attackers, future: attackers,
 
 
 /** Creates an enpassant global StateChange, queueing it by adding it to the Move. */
-function createEnPassantState(move: Move, current?: Coords, future?: Coords) {
+function createEnPassantState(move: Move, current?: EnPassant, future?: EnPassant) {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'enpassant', current, future };
 	// Check to make sure there isn't already an enpassant state change,
@@ -203,4 +217,5 @@ export type {
 	MoveState,
 	StateChange,
 	attackers,
+	EnPassant,
 };
