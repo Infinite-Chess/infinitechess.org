@@ -12,18 +12,18 @@ import fivedimensionalmoves from "../logic/fivedimensionalmoves.js";
 
 
 
-export const BOARDS_X = 9;
+export const BOARDS_X = 8;
 export const BOARDS_Y = 9;
 
 // Currently board spacings other than 10 are not supported by the position generator, but are supported
 // by the moveset generator.
 const BOARD_SPACING = 10;
 
-const MAX_X = BOARD_SPACING * (Math.floor(BOARDS_X / 2) + 1);
-const MIN_X = -(BOARD_SPACING * Math.floor(BOARDS_X / 2) + 1);
+const MAX_X = BOARD_SPACING * ((BOARDS_X - 1) / 2 + 1);
+const MIN_X = -(BOARD_SPACING * ((BOARDS_X - 1) / 2) + 1);
 
-const MAX_Y = BOARD_SPACING * (Math.floor(BOARDS_Y / 2) + 1);
-const MIN_Y = -(BOARD_SPACING * Math.floor(BOARDS_Y / 2) + 1);
+const MAX_Y = BOARD_SPACING * ((BOARDS_Y - 1) / 2 + 1);
+const MIN_Y = -(BOARD_SPACING * ((BOARDS_Y - 1) / 2) + 1);
 
 function genPositionOfFiveDimensional() {
 	// Start with standard
@@ -34,19 +34,21 @@ function genPositionOfFiveDimensional() {
 	const resultPos: Position = {};
 
 	// Loop through from the leftmost column that should be voids to the right most, and also vertically
-	for (let i = MIN_X; i <= MAX_X; i++) {
-		for (let j = MIN_Y; j <= MAX_Y; j++) {
+	for (let i = MIN_X; i <= MAX_X + (BOARDS_X % 2 === 0 ? 5 : 0); i++) {
+		for (let j = MIN_Y; j <= MAX_Y + (BOARDS_Y % 2 === 0 ? 5 : 0); j++) {
+			const x = BOARDS_X % 2 === 0 ? i - 5 : i;
+			const y = BOARDS_Y % 2 === 0 ? j - 5 : j;
 			// Only the edges of boards should be voids
 			if ((i % BOARD_SPACING === -1 || i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9)
 				|| (j % BOARD_SPACING === -1 || j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
-				resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
+				resultPos[coordutil.getKeyFromCoords([x, y])] = 'voidsN';
 				// Only add the standard position in a board
 				if ((i % BOARD_SPACING === 0) && (j % BOARD_SPACING) === 0
 					&& i !== MAX_X && j !== MAX_Y) {
 					for (const square in standardPos) {
 						const coords = coordutil.getCoordsFromKey(square as CoordsKey);
 						const key = coordutil.getKeyFromCoords(coords.map((value: number, index: number) => {
-							return value + [i, j][index]!;
+							return value + [x, y][index]!;
 						}) as Coords);
 						resultPos[key] = standardPos[square as CoordsKey]!;
 					}
