@@ -25,9 +25,6 @@ import gameloader from './gameloader.js';
  * This script handles copying and pasting games
  */
 
-/** Enable to only copy a single position without all the moves prior */
-const copySinglePosition = false; 
-
 /**
  * A list of metadata properties that are retained from the current game when pasting an external game.
  * These will overwrite the pasted game's metadata with the current game's metadata.
@@ -37,15 +34,15 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
 /**
  * Copies the current game to the clipboard in ICN notation.
  * This callback is called when the "Copy Game" button is pressed.
- * @param {event} event - The event fired from the event listener
+ * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
-function callbackCopy(event) {
+function copyGame(copySinglePosition) {
 	if (guinavigation.isCoordinateActive()) return;
 
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
-	const primedGamefile = primeGamefileForCopying(gamefile);
+	const primedGamefile = primeGamefileForCopying(gamefile, copySinglePosition);
 	const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_Fourth';
 	const specifyPosition = !largeGame;
 	const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
@@ -57,9 +54,10 @@ function callbackCopy(event) {
 /**
  * Primes the provided gamefile to for the formatconverter to turn it into an ICN
  * @param {gamefile} gamefile - The gamefile
+ * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  * @returns {Object} The primed gamefile for converting into ICN format
  */
-function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for copying
+function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the entire gamefile for copying
 	let primedGamefile = {};
 	/** What values do we need?
      * 
@@ -319,6 +317,6 @@ function verifyGamerules(gameRules) {
 
 
 export default {
-	callbackCopy,
+	copyGame,
 	callbackPaste
 };

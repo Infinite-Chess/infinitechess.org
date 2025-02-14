@@ -339,7 +339,7 @@ function startStartingTransition() {
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
 function initCopyPastGameListeners() {
-	document.addEventListener('copy', copypastegame.callbackCopy);
+	document.addEventListener('copy', callbackCopy);
 	document.addEventListener('paste', copypastegame.callbackPaste);
 }
 
@@ -347,6 +347,10 @@ function initCopyPastGameListeners() {
 function closeCopyPasteGameListeners() {
 	document.removeEventListener('copy', copypastegame.callbackCopy);
 	document.removeEventListener('paste', copypastegame.callbackPaste);
+}
+
+function callbackCopy(event: Event) {
+	copypastegame.copyGame(false);
 }
 
 /**
