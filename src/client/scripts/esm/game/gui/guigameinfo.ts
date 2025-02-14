@@ -14,6 +14,8 @@ import gameslot from '../chess/gameslot.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
+import gameloader from '../chess/gameloader.js';
+import enginegame from '../misc/enginegame.js';
 
 
 
@@ -39,6 +41,8 @@ let isOpen = false;
  */
 function open(metadata: MetaData) {
 	const { white, black } = getPlayerNamesForGame(metadata);
+
+	console.log(white, black);	
 
 	element_playerWhite.textContent = white;
 	element_playerBlack.textContent = black;
@@ -84,22 +88,24 @@ function toggle() {
 }
 
 function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string } {
-	if (onlinegame.areInOnlineGame()) {			
-		if (!metadata.White || !metadata.Black) throw Error('White or Black metadata not defined when getting player names for online game.');
-	
+	if (gameloader.getTypeOfGameWeIn() === 'local') {
+		return {
+			white: translations['player_name_white_generic'],
+			black: translations['player_name_black_generic']
+		};
+	} else if (onlinegame.areInOnlineGame()) {	
+		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
 		return {
 			white: onlinegame.areWeColorInOnlineGame('white') && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'],
 			black: onlinegame.areWeColorInOnlineGame('black') && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black']
 		};
-	}
-
-	// Local game
-
-	return { 
-		white: translations['player_name_white_generic'],
-		black: translations['player_name_black_generic']
-	};
+	} else if (enginegame.areInEngineGame()) {
+		return {
+			white: metadata.White!,
+			black: metadata.Black!
+		};
+	} else throw Error('Cannot get player names for game when not in a local, online, or engine game.');
 }
 
 /**
@@ -146,9 +152,9 @@ function gameEnd(conclusion: string | false) {
 
 	const gamefile = gameslot.getGamefile()!;
 
-	if (onlinegame.areInOnlineGame()) {
+	if (onlinegame.areInOnlineGame()) {	
 
-		if (onlinegame.areWeColorInOnlineGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
+		if (victor !== undefined && onlinegame.areWeColorInOnlineGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                             : condition === 'time' ? resultTranslations.you_time
                                                                             : condition === 'resignation' ? resultTranslations.you_resignation
                                                                             : condition === 'disconnect' ? resultTranslations.you_disconnect

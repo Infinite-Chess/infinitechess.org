@@ -425,11 +425,8 @@ function getGameRules(modifications: GameRuleModifications = {}, position?: { [c
  * Returns the bare-minimum gamerules a game needs to function.
  * @returns {GameRules} The gameRules object
  */
-function getBareMinimumGameRules() {
-	return jsutil.deepCopyObject({
-		winConditions: defaultWinConditions,
-		turnOrder: defaultTurnOrder
-	});
+function getBareMinimumGameRules(): GameRules {
+	return getGameRules({ promotionRanks: null, moveRule: null }); // Erase the defaults to end up with only the required's
 }
 
 // /**

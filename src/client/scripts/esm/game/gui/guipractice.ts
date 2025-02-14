@@ -5,26 +5,19 @@
  */
 
 
+import type { VariantOptions } from '../chess/gameslot.js';
+
+
 import checkmatepractice from '../chess/checkmatepractice.js';
 import gui from './gui.js';
 import guititle from './guititle.js';
-import timeutil from '../../util/timeutil.js';
-import frametracker from '../rendering/frametracker.js';
 import variant from '../../chess/variants/variant.js';
-import gameslot from '../chess/gameslot.js';
 import spritesheet from '../rendering/spritesheet.js';
-// @ts-ignore
-import area from '../rendering/area.js';
-// @ts-ignore
-import enginegame from '../misc/enginegame.js';
-// @ts-ignore
-import options from '../rendering/options.js';
+import gameloader from '../chess/gameloader.js';
 // @ts-ignore
 import style from './style.js';
 // @ts-ignore
-import movement from '../rendering/movement.js';
-// @ts-ignore
-import sound from '../misc/sound.js';
+import formatconverter from '../../chess/logic/formatconverter.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -186,7 +179,7 @@ function callback_practicePlay() {
 		close();
 		startCheckmatePractice();
 	} else if (modeSelected === 'tactics-practice') {
-		// nothing yet
+		throw Error("Can't play tactics practice yet.");
 	}
 }
 
@@ -217,65 +210,29 @@ function moveUpSelection(event: Event) {
  * Starts a checkmate practice game
  */
 function startCheckmatePractice() {
+	console.log("Loading practice checkmate game.");
 	inCheckmatePractice = true;
+
 	const startingPosition = checkmatepractice.generateCheckmateStartingPosition(checkmateSelectedID);
-	const gameOptions = {
-		metadata: {
-			Event: `Infinite chess checkmate practice`,
-			Site: "https://www.infinitechess.org/",
-			Round: "-",
-			TimeControl: "-",
-			White: "(You)",
-			Black: "Engine",
-			// Variant: "Classical"
-		},
-		youAreColor: 'white' as 'white' | 'black',
-		clock: "-",
-		currentEngine: "engineCheckmatePractice",
-		viewWhitePerspective: true,
-		// allow edit?x
-
-		engineConfig: {checkmateSelectedID: checkmateSelectedID},
-		additional:{
-			variantOptions: {
-				turn: "white",
-				fullMove: "1",
-				startingPosition: startingPosition,
-				specialRights: {},
-				gameRules: variant.getBareMinimumGameRules()}
-		}
+	const specialRights = {};
+	const positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
+	const variantOptions: VariantOptions = {
+		fullMove: 1,
+		startingPosition,
+		positionString,
+		specialRights,
+		gameRules: variant.getBareMinimumGameRules()
 	};
-	loadGame(gameOptions);
-	enginegame.initEngineGame(gameOptions);
-}
 
-/**
- * MOVE TO INSIDE gameloader.ts and adapt!!!
- * 
- * Loads a game according to the options provided.
- * @param {Object} gameOptions - An object that contains the properties `metadata`, `youAreColor`, `clock` and `variantOptions`
- */
-async function loadGame(gameOptions: any) { 
-	console.log("Loading practice checkmate with game options:");
-	console.log(gameOptions);
-	frametracker.onVisualChange();
-	movement.eraseMomentum();
-	options.disableEM();
-
-	gameOptions.metadata.UTCDate = gameOptions.metadata.UTCDate || timeutil.getCurrentUTCDate();
-	gameOptions.metadata.UTCTime = gameOptions.metadata.UTCTime || timeutil.getCurrentUTCTime();
-
-	const variantOptions = gameOptions.variantOptions;
-	// const newGamefile = new gamefile(gameOptions.metadata, { variantOptions });
-	await gameslot.loadGamefile(gameOptions);
-	const newGamefile = gameslot.getGamefile()!;
-
-	const centerArea = area.calculateFromUnpaddedBox(newGamefile.startSnapshot.box);
-	movement.setPositionToArea(centerArea);
+	const options = {
+		Event: 'Infinite chess checkmate practice',
+		youAreColor: 'white' as 'white',
+		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
+		engineConfig: { checkmateSelectedID: checkmateSelectedID },
+		variantOptions
+	};
 	
-	// SHOULD BE HANDLED by gameloader.ts
-	// options.setNavigationBar(true);
-	sound.playSound_gamestart();
+	gameloader.startEngineGame(options);
 }
 
 function areInCheckmatePractice() {
@@ -290,6 +247,5 @@ export default {
 	open,
 	close,
 	updateCheckmatesBeaten,
-	startCheckmatePractice,
 	areInCheckmatePractice,
 };

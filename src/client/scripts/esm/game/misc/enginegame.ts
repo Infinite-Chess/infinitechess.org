@@ -21,6 +21,12 @@ import perspective from '../rendering/perspective.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 
 
+// Type Definitions -------------------------------------------------------------
+
+
+interface EngineConfig { checkmateSelectedID: string }
+
+
 // Variables --------------------------------------------------------------------
 
 
@@ -29,7 +35,7 @@ let inEngineGame: boolean = false;
 let ourColor: 'white' | 'black' | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let currentEngineMove: Coords | undefined; // currently best move recommended by the engine
-let engineConfig: { checkmateSelectedID: string } | undefined; // json that is sent to the engine, giving it extra config information
+let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 
 const engineTimeLimitPerMoveMillis: number = 500; // hard time limit for the engine to think in milliseconds
 
@@ -70,7 +76,7 @@ function setColorAndGameID(gameOptions: any) {
 function initEngineGame(options: {
 	youAreColor: 'white' | 'black',
 	currentEngine: string,
-	engineConfig: { checkmateSelectedID: string }
+	engineConfig: EngineConfig
 }) {
 	inEngineGame = true;
 	ourColor = options.youAreColor;
@@ -153,9 +159,6 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	movesequence.animateMove(move, true, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
-
-	// I believe movesequence.makeMove() already does this?
-	// if (gamefile.gameConclusion) gameslot.concludeGame();
 }
 
 function onGameConclude() {
@@ -178,4 +181,8 @@ export default {
 	submitMove,
 	makeEngineMove,
 	onGameConclude
+};
+
+export type {
+	EngineConfig
 };
