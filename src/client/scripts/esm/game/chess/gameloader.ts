@@ -22,6 +22,7 @@ import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
+import checkmatepractice from "./checkmatepractice.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
@@ -167,6 +168,8 @@ function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData) {
 
 function unloadGame() {
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
+	checkmatepractice.onGameUnload();
+	
 	guinavigation.close();
 	guigameinfo.close();
 	gameslot.unloadGame();

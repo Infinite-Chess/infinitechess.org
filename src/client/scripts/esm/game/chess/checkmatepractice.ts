@@ -73,8 +73,26 @@ let completedCheckmates: string[];
 const expiryOfCompletedCheckmatesMillis: number = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 
+
+/** Whether we are in a checkmate practice engine game. */
+let inCheckmatePractice: boolean = false;
+
+
 // Functions ----------------------------------------------------------------------------
 
+
+/** Sets a flag that we are in a checkmate practice game */
+function initCheckmatePractice() {
+	inCheckmatePractice = true;
+}
+
+function onGameUnload(): void {
+	inCheckmatePractice = false;
+}
+
+function areInCheckmatePracticeGame(): boolean {
+	return inCheckmatePractice;
+}
 
 function getCompletedCheckmates(): string[] {
 	if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
@@ -187,7 +205,7 @@ function eraseCheckmatePracticeProgress(): void {
 /** Called when an engine game ends */
 function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
-	if (!guipractice.areInCheckmatePractice()) return; // Not in checkmate practice
+	if (!inCheckmatePractice) return; // Not in checkmate practice
 
 	const gameConclusion: string | false = gameslot.getGamefile()!.gameConclusion;
 	if (gameConclusion === false) throw Error('Game conclusion is false, should not have called onEngineGameConclude()');
@@ -209,6 +227,9 @@ function onEngineGameConclude(): void {
 
 
 export default {
+	initCheckmatePractice,
+	onGameUnload,
+	areInCheckmatePracticeGame,
 	getCompletedCheckmates,
 	generateCheckmateStartingPosition,
 	onEngineGameConclude,

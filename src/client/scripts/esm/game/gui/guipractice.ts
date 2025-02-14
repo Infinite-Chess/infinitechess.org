@@ -39,9 +39,6 @@ let checkmateSelectedID: string = '2Q-1k'; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedIcons: boolean = false;
 
-/** Whether we are in a checkmate practice engine game. */
-let inCheckmatePractice: boolean = false;
-
 // Functions
 
 function getModeSelected() {
@@ -57,7 +54,6 @@ function getCheckmateSelectedID() {
 }
 
 function open() {
-	inCheckmatePractice = false;
 	style.revealElement(element_practiceSelection);
 	style.revealElement(element_menuExternalLinks);
 	changePracticeMode('checkmate-practice');
@@ -211,7 +207,7 @@ function moveUpSelection(event: Event) {
  */
 function startCheckmatePractice() {
 	console.log("Loading practice checkmate game.");
-	inCheckmatePractice = true;
+	checkmatepractice.initCheckmatePractice();
 
 	const startingPosition = checkmatepractice.generateCheckmateStartingPosition(checkmateSelectedID);
 	const specialRights = {};
@@ -231,12 +227,8 @@ function startCheckmatePractice() {
 		engineConfig: { checkmateSelectedID: checkmateSelectedID },
 		variantOptions
 	};
-	
-	gameloader.startEngineGame(options);
-}
 
-function areInCheckmatePractice() {
-	return inCheckmatePractice;
+	gameloader.startEngineGame(options);
 }
 
 
@@ -247,5 +239,4 @@ export default {
 	open,
 	close,
 	updateCheckmatesBeaten,
-	areInCheckmatePractice,
 };

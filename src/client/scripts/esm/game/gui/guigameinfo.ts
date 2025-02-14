@@ -42,8 +42,6 @@ let isOpen = false;
 function open(metadata: MetaData) {
 	const { white, black } = getPlayerNamesForGame(metadata);
 
-	console.log(white, black);	
-
 	element_playerWhite.textContent = white;
 	element_playerBlack.textContent = black;
 	updateWhosTurn();
