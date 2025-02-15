@@ -1,66 +1,75 @@
 /* eslint-disable max-depth */
-// @ts-ignore
-import formatconverter from "../logic/formatconverter.js";
-import coordutil from "../util/coordutil.js";
 
-// Type definitions...
+/**
+ * This script generates the position and piece movesets for the 5D Chess variant.
+ */
 
 import type { Movesets } from "../logic/movesets.js";
 import type { Position } from "./variant.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
+
+
+import coordutil from "../util/coordutil.js";
 import fivedimensionalmoves from "../logic/fivedimensionalmoves.js";
+// @ts-ignore
+import formatconverter from "../logic/formatconverter.js";
 // @ts-ignore
 import specialdetect from "../logic/specialdetect.js";
 
 
 
-export const BOARDS_X = 8;
-export const BOARDS_Y = 9;
+const BOARDS_X = 8;
+const BOARDS_Y = 8;
 
-// Currently board spacings other than 10 are not supported by the position generator, but are supported
-// by the moveset generator.
+/**
+ * The spacing of the timelike boards.
+ * Currently board spacings other than 10 are not supported by the position generator, but are supported by the moveset generator.
+ */
 const BOARD_SPACING = 10;
 
-const MAX_X = BOARD_SPACING * ((BOARDS_X - 1) / 2 + 1);
-const MIN_X = -(BOARD_SPACING * ((BOARDS_X - 1) / 2) + 1);
+const MIN_X = 0;
+const MAX_X = MIN_X + BOARDS_X * BOARD_SPACING - 1;
+const MIN_Y = 0;
+const MAX_Y = MIN_Y + BOARDS_Y * BOARD_SPACING - 1;
 
-const MAX_Y = BOARD_SPACING * ((BOARDS_Y - 1) / 2 + 1);
-const MIN_Y = -(BOARD_SPACING * ((BOARDS_Y - 1) / 2) + 1);
+/**
+ * The width of the giant void wall.
+ * Large enough to contain all knights.
+ */
+const VOID_WIDTH = 20;
+
+
 
 function genPositionOfFiveDimensional() {
 	// Start with standard
 	const standardPosStr = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 
 	// Store the standard position so we can reference it later
-	const standardPos: { [coordsKey: CoordsKey]: string } = formatconverter.ShortToLong_Format(standardPosStr).startingPosition;
+	const standardPos: Position = formatconverter.ShortToLong_Format(standardPosStr).startingPosition;
 	const resultPos: Position = {};
 
 	// Loop through from the leftmost column that should be voids to the right most, and also vertically
-	for (let i = MIN_X; i <= MAX_X + (BOARDS_X % 2 === 0 ? 5 : 0); i++) {
-		for (let j = MIN_Y; j <= MAX_Y + (BOARDS_Y % 2 === 0 ? 5 : 0); j++) {
-			const x = BOARDS_X % 2 === 0 ? i - 5 : i;
-			const y = BOARDS_Y % 2 === 0 ? j - 5 : j;
+	for (let i = MIN_X; i <= MAX_X; i++) {
+		for (let j = MIN_Y; j <= MAX_Y; j++) {
 			// Only the edges of boards should be voids
-			if ((i % BOARD_SPACING === -1 || i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9)
-				|| (j % BOARD_SPACING === -1 || j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
-				resultPos[coordutil.getKeyFromCoords([x, y])] = 'voidsN';
+			if ((i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9)
+				|| (j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
+				resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 				// Only add the standard position in a board
-				if ((i % BOARD_SPACING === 0) && (j % BOARD_SPACING) === 0
-					&& i !== MAX_X && j !== MAX_Y) {
-					for (const square in standardPos) {
-						const coords = coordutil.getCoordsFromKey(square as CoordsKey);
-						const key = coordutil.getKeyFromCoords(coords.map((value: number, index: number) => {
-							return value + [x, y][index]!;
-						}) as Coords);
-						resultPos[key] = standardPos[square as CoordsKey]!;
+				if ((i % BOARD_SPACING === 0) && (j % BOARD_SPACING === 0)) {
+					for (const key in standardPos) {
+						const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+						const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
+						resultPos[newKey] = standardPos[key as CoordsKey]!;
 					}
 				}
 			}
 		}
 	}
 
-	for (let i = MIN_X - 19; i <= MAX_X + 19; i++) {
-		for (let j = MIN_Y - 19; j <= MAX_Y + 19; j++) {
+	// Surround the whole game with a giant void wall
+	for (let i = MIN_X - VOID_WIDTH; i <= MAX_X + VOID_WIDTH; i++) {
+		for (let j = MIN_Y - VOID_WIDTH; j <= MAX_Y + VOID_WIDTH; j++) {
 			if (i < MIN_X || i > MAX_X || j < MIN_Y || j > MAX_Y) {
 				resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 			}
@@ -86,7 +95,7 @@ function genMovesetOfFiveDimensional() {
 		},
 		kings: {
 			individual: [],
-			special: specialdetect.kings
+			special: specialdetect.kings // Makes sure legal castling is still calculated
 		},
 		knights: {
 			individual: []
@@ -137,8 +146,11 @@ function genMovesetOfFiveDimensional() {
 			}
 		}
 	}
+
 	return movesets;
 }
+
+
 
 export default {
 	genPositionOfFiveDimensional,
