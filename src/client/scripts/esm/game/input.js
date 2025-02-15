@@ -92,20 +92,12 @@ function getTouchClicked() {
 	return touchClicked;
 }
 
-function getTouchClickedTile() {
-	return touchClickedTile;
-}
-
 function getTouchClickedWorld() {
 	return touchClickedWorld;
 }
 
 function getMouseWheel() {
 	return mouseWheel;
-}
-
-function getMouseClickedTile() {
-	return mouseClickedTile;
 }
 
 function getMouseClicked() {
@@ -132,12 +124,9 @@ function getPointerHeld() {
 	return pointerIsTouch ? touchHelds.length === 1 : mouseHelds.includes(leftMouseKey);
 }
 
+/** Returns whether there was a simulated click by a finger or mouse */
 function getPointerClicked() {
 	return pointerIsTouch ? touchClicked : mouseClicked;
-}
-
-function getPointerClickedTile() {
-	return pointerIsTouch ? [touchClickedTile.x, touchClickedTile.y] : mouseClickedTile;
 }
 
 function getPointerWorldLocation() {
@@ -761,14 +750,12 @@ export default {
 	isMouseDown_Left,
 	isMouseDown_Right,
 	removeMouseDown_Left,
-	getTouchClickedTile,
 	getTouchClickedWorld,
 	isMouseHeld_Left,
 	isKeyDown,
 	atleast1KeyHeld,
 	isKeyHeld,
 	getMouseWheel,
-	getMouseClickedTile,
 	getMouseClicked,
 	getMousePos,
 	getMouseMoved,
@@ -786,7 +773,6 @@ export default {
 	getPointerDown,
 	getPointerHeld,
 	getPointerClicked,
-	getPointerClickedTile,
 	getPointerWorldLocation,
 	getPointerIsTouch
 };

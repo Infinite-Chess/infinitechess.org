@@ -153,9 +153,6 @@ function genModel() {
 
 	let tileMouseFingerOver;
 	if (input.getTouchClicked()) { // Set to what the finger tapped above
-		// let touchClickedTile = input.getTouchClickedTile() // { id, x, y }
-		// tileMouseFingerOver = [touchClickedTile.x, touchClickedTile.y]
-
 		const tileMouseOver = board.getTileMouseOver(); // { tile_Float, tile_Int }
 		tileMouseFingerOver = tileMouseOver.tile_Int;
 	} else tileMouseFingerOver = board.gtile_MouseOver_Int();
