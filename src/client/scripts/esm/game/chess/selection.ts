@@ -154,7 +154,7 @@ function testIfPieceMoved(gamefile: gamefile): void {
 	if (!input.getPointerClicked()) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
-	else moveGamefilePiece(hoverSquare);
+	else moveGamefilePiece(gamefile, hoverSquare);
 }
 
 function testIfPieceDropped(gamefile: gamefile): void {
@@ -169,7 +169,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 
 	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
 	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
-	else if (hoverSquareLegal) moveGamefilePiece(hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+	else if (hoverSquareLegal) moveGamefilePiece(gamefile, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
 	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
@@ -320,7 +320,10 @@ function isOpponentType(gamefile: gamefile, type: string) {
  * The destination coordinates MUST contain any special move flags.
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(coords: CoordsSpecial) {
+function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
+	// Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
+	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
+
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
@@ -369,6 +372,28 @@ function renderGhostPiece() {
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }
 
+/**
+ * Reselects the currently selected piece by recalculating its legal moves again,
+ * and changing the color if needed.
+ * Typically called after our opponent makes a move while we have a piece selected.
+ */
+function reselectPiece() {
+	if (!pieceSelected) return; // No piece to reselect.
+	const gamefile = gameslot.getGamefile()!;
+	// Test if the piece is no longer there
+	// This will work for us long as it is impossible to capture friendly's
+	const pieceTypeOnCoords = gamefileutility.getPieceTypeAtCoords(gamefile, pieceSelected.coords);
+	if (pieceTypeOnCoords !== pieceSelected.type) { // It either moved, or was captured
+		unselectPiece(); // Can't be reselected, unselect it instead.
+		return;
+	}
+
+	if (gamefile.gameConclusion) return; // Don't reselect, game is over
+
+	// Reselect! Recalc its legal moves, and recolor.
+	const pieceToReselect = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
+	selectPiece(gamefile, pieceToReselect, false);
+}
 
 
 
@@ -435,9 +460,6 @@ function handleMovingSelectedPiece(coordsClicked: Coords, pieceClickedType?: str
 	// we are actually starting to implement premoving.
 	if (isPremove) throw new Error("Don't know how to premove yet! Will not submit move normally.");
 
-	// Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
-	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask(); 
-
 	// Check if the move is a pawn promotion
 	if (specialdetect.isPawnPromotion(gamefile, pieceSelected!.type, coordsClicked)) {
 		const color = colorutil.getPieceColorFromType(pieceSelected!.type);
@@ -447,38 +469,15 @@ function handleMovingSelectedPiece(coordsClicked: Coords, pieceClickedType?: str
 		return;
 	}
 
-	moveGamefilePiece(coordsClicked);
 }
 
-/**
- * Reselects the currently selected piece by recalculating its legal moves again,
- * and changing the color if needed.
- * Typically called after our opponent makes a move while we have a piece selected.
- */
-function reselectPiece() {
-	if (!pieceSelected) return; // No piece to reselect.
-	const gamefile = gameslot.getGamefile()!;
-	// Test if the piece is no longer there
-	// This will work for us long as it is impossible to capture friendly's
-	const pieceTypeOnCoords = gamefileutility.getPieceTypeAtCoords(gamefile, pieceSelected.coords);
-	if (pieceTypeOnCoords !== pieceSelected.type) { // It either moved, or was captured
-		unselectPiece(); // Can't be reselected, unselect it instead.
-		return;
-	}
-
-	if (gamefile.gameConclusion) return; // Don't reselect, game is over
-
-	// Reselect! Recalc its legal moves, and recolor.
-	const pieceToReselect = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
-	// selectPiece(gamefile, pieceToReselect);
-}
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
 function makePromotionMove() {
 	const coords = pawnIsPromotingOn!;
 	const coordsSpecial: CoordsSpecial = coordutil.copyCoords(coords);
 	coordsSpecial.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
-	moveGamefilePiece(coordsSpecial);
+	// moveGamefilePiece(coordsSpecial);
 	perspective.relockMouse();
 }
 

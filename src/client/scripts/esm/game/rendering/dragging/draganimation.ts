@@ -221,9 +221,9 @@ function genPieceModel(): BufferModel | undefined {
 		
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
-	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset : 0);
+	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
 	const right = worldLocation![0] + halfSize;
-	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset : 0);
+	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
 	
 	const data: number[] = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
