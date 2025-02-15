@@ -161,6 +161,10 @@ function testIfPieceDropped(gamefile: gamefile): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	// if (pawnIsPromotingOn) return; // Can't drop a piece while promoting
+	if (input.getTouchHelds().length > 1) { // Prevent accidental dragging when trying to zoom.
+		if (draganimation.getDragParity()) return unselectPiece();
+		return draganimation.dropPiece();
+	}
 	if (input.getPointerHeld()) return; // Not dropped yet
 
 	// The pointer has released, drop the piece.
