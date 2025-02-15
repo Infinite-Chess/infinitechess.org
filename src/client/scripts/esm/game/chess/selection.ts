@@ -297,6 +297,10 @@ function selectPiece(gamefile: gamefile, piece: Piece, drag: boolean) {
 		if (alreadySelected) return unselectPiece();
 	}
 
+	recalcSelectedPieceStuff(gamefile, piece);
+}
+
+function recalcSelectedPieceStuff(gamefile: gamefile, piece: Piece) {
 	// Initiate
 	pieceSelected = piece;
 	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
@@ -388,11 +392,11 @@ function reselectPiece() {
 		return;
 	}
 
-	if (gamefile.gameConclusion) return; // Don't reselect, game is over
+	if (gamefileutility.isGameOver(gamefile)) return; // Don't reselect, game is over
 
 	// Reselect! Recalc its legal moves, and recolor.
 	const pieceToReselect = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
-	selectPiece(gamefile, pieceToReselect, false);
+	recalcSelectedPieceStuff(gamefile, pieceToReselect);
 }
 
 
