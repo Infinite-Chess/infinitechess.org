@@ -15,6 +15,7 @@ import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
 import gameslot from './chess/gameslot.js';
+import draganimation from './rendering/dragging/draganimation.js';
 // Import End
 
 "use strict";
@@ -143,6 +144,7 @@ function getPointerWorldLocation() {
 	return [pointerWorldLocation[0], pointerWorldLocation[1]];
 }
 
+/** Returns true whether the most recent pointer input was from a touch event. */
 function getPointerIsTouch() {
 	return pointerIsTouch;
 }
@@ -205,6 +207,8 @@ function initListeners_Touch() {
 
 	overlayElement.addEventListener('touchmove', (event) => {
 		if (perspective.getEnabled()) return;
+		frametracker.onVisualChange();
+
 		event = event || window.event;
 		const touches = event.changedTouches;
 		for (let i = 0; i < touches.length; i++) {
@@ -327,10 +331,7 @@ function initListeners_Mouse() {
 	// AND SAFARI calls this 600 TIMES! This increases the sensitivity of the mouse in perspective
 	window.addEventListener('mousemove', (event) => {
 		event = event || window.event;
-		// We need to re-render if the mouse ever moves because rendering methods test if the mouse is hovering over
-		// pieces to change their opacity. The exception is if we're paused.
-		const renderThisFrame = !guipause.areWePaused() && (arrows.getMode() !== 0 || movement.isScaleLess1Pixel_Virtual() || selection.isAPieceSelected() || perspective.getEnabled());
-		if (renderThisFrame) frametracker.onVisualChange();
+		frametracker.onVisualChange();
 		
 		pointerIsTouch = false;
 		

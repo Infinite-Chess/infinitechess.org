@@ -126,7 +126,7 @@ function update() {
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) return;
 
 	// Update the hover square
-	hoverSquare = input.getPointerClicked() ? input.getPointerClickedTile() : space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
+	hoverSquare = space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
 
 	// What should selection.ts do?
 
@@ -362,6 +362,13 @@ function unselectPiece() {
 	legalmovehighlights.onPieceUnselected();
 }
 
+/** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
+function renderGhostPiece() {
+	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
+	// if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || !input.isMouseSupported() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
+	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
+}
+
 
 
 
@@ -415,7 +422,7 @@ function handleMovingSelectedPiece(coordsClicked: Coords, pieceClickedType?: str
 				// draganimation.setDragParity(false);
 			}
 		} else if (pieceClickedType !== 'voidsN' && !draggingPiece) { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
-			handleSelectingPiece(pieceClickedType);
+			// handleSelectingPiece(pieceClickedType);
 		}
 
 		return;
@@ -508,12 +515,6 @@ function makePromotionMove() {
 
 
 
-/** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
-function renderGhostPiece() {
-	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || config.VIDEO_MODE) return;
-	// if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || !input.isMouseSupported() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
-	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
-}
 
 
 // ------------------------------------------------------------------------------------
