@@ -117,84 +117,272 @@ function promoteToType(type: string) { promoteTo = type; }
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
 	// Guard clauses...
-	const gamefile = gameslot.getGamefile()!;
 	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
 	if (pawnIsPromotingOn) { // Do nothing else this frame but wait for a promotion piece to be selected
 		if (promoteTo) makePromotionMove();
 		return;
 	}
-	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefile.gameConclusion || guipause.areWePaused() || perspective.isLookingUp()) return;
+	const gamefile = gameslot.getGamefile()!;
+	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) return;
 
-	// Calculate if the hover square is legal so we know if we need to render a ghost image...
-		
 	// Update the hover square
 	hoverSquare = input.getPointerClicked() ? input.getPointerClickedTile() : space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
 
-	if (pieceSelected !== undefined) updateHoverSquareLegal(gamefile);
-	
-	const pieceClickedType: string | undefined = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
-	
-	if (draganimation.areDraggingPiece()) return handleDragging(pieceClickedType);
-	
-	// Pick up the piece on mousedown if we are allowed to move it. Otherwise only select when clicked.
-	const didClick = (canMovePieceType(pieceClickedType) && preferences.getDragEnabled()) ? input.getPointerDown() : input.getPointerClicked();
-	if (!didClick || input.isKeyHeld('control')) return; // Exit, we did not click
-	
-	if (pieceSelected) handleMovingSelectedPiece(hoverSquare, pieceClickedType); // A piece is already selected. Test if it was moved.
-	else if (pieceClickedType) handleSelectingPiece(pieceClickedType);
-	// Else we clicked, but there was no piece to select, *shrugs*
+	// What should selection.ts do?
+
+	// 1. Test if we selected a new piece, or a different piece.
+
+	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
+
+	testIfPieceSelected(gamefile); // Test this EVEN if a piece is currently selected, because we can always select a different piece.
+
+	// Piece IS selected...
+	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
+
+	// 2. Test if the piece was dropped.
+	// If it happened to be dropped on a legal square, then make the move.
+
+	testIfPieceDropped(gamefile);
+
+	// 3. Test if the piece was moved.
+
+	testIfPieceMoved(gamefile);
+}
+
+function testIfPieceMoved(gamefile: gamefile): void {
+	if (!pieceSelected) return;
+	if (!input.getPointerClicked()) return; // Pointer did not click, couldn't have moved a piece.
+
+	if (!hoverSquareLegal) return; // Don't move it
+	else moveGamefilePiece(hoverSquare);
+}
+
+function testIfPieceDropped(gamefile: gamefile): void {
+	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
+	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
+	// if (pawnIsPromotingOn) return; // Can't drop a piece while promoting
+	if (input.getPointerHeld()) return; // Not dropped yet
+
+	// The pointer has released, drop the piece.
+
+	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.
+
+	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
+	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
+	else if (hoverSquareLegal) moveGamefilePiece(hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
 /**
  * Updates the hover square, and tests if it is among
  * our pre-calculated legal moves for our selected piece.
+ * 
+ * This is required to call BEFORE we test if a piece should
+ * be selected, because if we are switching selections, but
+ * it turns out the new piece is legal to move to, we don't want
+ * to select it instead, but capture it.
  */
 function updateHoverSquareLegal(gamefile: gamefile): void {
+	if (!pieceSelected) return;
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(legalMoves!, pieceSelected!.coords, hoverSquare);
 	const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
-	hoverSquareLegal = canDropOnPieceType(typeAtHoverCoords) && (options.getEM() || legal);
-}
-
-
-
-
-
-
-/**
- * Update the location of the dragged piece or make a move if it was dropped.
- * @param pieceHoveredType - The type of piece hovered over, if there is one.
- * @param allowDrop - If false, dropping the piece will not make a move. Default is true.
- */
-function handleDragging(pieceHoveredType: string | undefined) {
-	if (input.getTouchHelds().length > 1) {
-		//Prevents accidental dragging when trying to zoom.
-		if (draganimation.getDragParity()) return unselectPiece();
-		return draganimation.cancelDragging();
-	}
-	if (input.getPointerHeld()) return; // Still dragging
-
-	const droparrowsCaptureCoords = droparrows.updateCapturedPiece_ReturnCapturedCoords();
-	if (droparrowsCaptureCoords !== undefined) {
-		moveGamefilePiece(droparrowsCaptureCoords);
-		draganimation.dropPiece();
-		return;
-	}
-
-	handleMovingSelectedPiece(hoverSquare, pieceHoveredType);
-	if (pawnIsPromotingOn) return; // The sound will be played after the user selects the piece to promote to.
-	draganimation.dropPiece();
+	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || options.getEM() && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
 }
 
 /**
- * Picks up the currently selected piece if we are allowed to.
- * Returns true if it was successful.
+ * Tests our selected piece can POSSIBLY be dropped on the provided type.
+ * As if edit mode was on, ignoring legal moves.
  */
-function startDragging(): boolean {
-	if (!preferences.getDragEnabled() || !canMovePieceType(pieceSelected!.type) || movement.boardHasMomentum()) return false; // Not allowed to
-	draganimation.pickUpPiece(pieceSelected!);
-	return true; // Dragging was just enabled.
+function canDropOnPieceTypeInEditMode(type?: string) {
+	if (type === undefined) return true; // Can drop on empty squares.
+	const color = colorutil.getPieceColorFromType(type);
+	const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected!.type);
+	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
+	return !type.startsWith('voids') && (color !== selectedPieceColor);
 }
+
+/**
+ * 0 => Can't select this piece type (i.e. voids, neutrals)
+ * 1 => Can select this piece type, but not draggable.
+ * 2 => Can select and move this piece type.
+ * @param type 
+ */
+function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
+	if (type === undefined) return 0; // Can't select nothing
+	if (type === 'voidsN') return 0; // Can't select voids
+	if (options.getEM()) return 2; // Edit mode allows any piece besides voids to be selected and dragged.
+	const color = colorutil.getPieceColorFromType(type);
+	if (color === colorutil.colorOfNeutrals) return 0; // Can't select neutrals, period.
+	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
+	const isOurTurn = onlinegame.areInOnlineGame() ? onlinegame.isItOurTurn() : /* Local Game */ gameslot.getGamefile()!.whosTurn === color;
+	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
+	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
+}
+
+/**
+ * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
+ * @param pieceType - the type of piece 
+ */
+function canMovePieceType(pieceType: string): boolean {
+	if (options.getEM()) return true; // Edit mode allows pieces to be moved on any turn.
+	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
+	if (isOpponentPiece) return false; // Don't move opponent pieces
+	const isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
+	return (!isPremove /*|| premovesEnabled*/);
+}
+
+/** If a piece was clicked, this will attempt to select that piece. */
+function testIfPieceSelected(gamefile: gamefile) {
+	// If we did not click, exit...
+	const dragEnabled = preferences.getDragEnabled();
+	if (dragEnabled && !input.getPointerDown() && !input.getPointerClicked()) return; // If dragging is enabled, all we need is pointer down event.
+	else if (!dragEnabled && !input.getPointerClicked()) return; // When dragging is off, we actually need a pointer click.
+
+	if (movement.boardHasMomentum()) return; // Don't select a piece if the board is moving
+
+	// We have clicked, test if we clicked a piece...
+
+	const pieceClicked = gamefileutility.getPieceAtCoords(gamefile, hoverSquare);
+
+	// Is the type selectable by us? (not necessarily moveable)
+	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
+	if (selectionLevel === 0) return; // Can't select this piece type
+	else if (selectionLevel === 1 && input.getPointerClicked()) {
+		/** Just quickly make sure that, if we already have selected a piece,
+		 * AND we just clicked a piece that's legal to MOVE to,
+		 * that we don't select it instead! */
+		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
+		// If we are viewing past moves, forward to front instead!!
+		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
+		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
+	} else if (selectionLevel === 2 && input.getPointerDown()) {
+		/** Just quickly make sure that, if we already have selected a piece,
+		 * AND we just clicked a piece that's legal to MOVE to,
+		 * that we don't select it instead! */
+		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
+		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
+		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
+	}
+}
+
+/** Forwards to the front of the game if we're viewing history, and returns true if we did. */
+function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
+	// If we're viewing history, return.
+	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
+
+	movesequence.viewFront(gamefile);
+	const lastMove = moveutil.getLastMove(gamefile.moves)!;
+	movesequence.animateMove(lastMove);
+	return true;
+}
+
+
+/**
+ * Selects the provided piece. If the piece is already selected, it will be deselected.
+ * @param gamefile 
+ * @param piece 
+ * @param drag - If true, the piece starts being dragged. This also means it won't be deselected if you clicked the selected piece again.
+ */
+function selectPiece(gamefile: gamefile, piece: Piece, drag: boolean) {
+	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
+	const alreadySelected = pieceSelected !== undefined && coordutil.areCoordsEqual(pieceSelected.coords, piece.coords);
+
+	if (drag) { // Pick up anyway, don't unselect it if it was already selected.
+		if (alreadySelected) {
+			draganimation.pickUpPiece(piece, false); // Reset parity since it's the same piece being picked up.
+			return; // Already selected, don't have to recalculate legal moves.
+		} draganimation.pickUpPiece(piece, true); // Reset parity since it's a new piece being picked up.
+	} else { // Not being dragged. If this piece is already selected, unselect it.
+		if (alreadySelected) return unselectPiece();
+	}
+
+	// Initiate
+	pieceSelected = piece;
+	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
+	legalMoves = legalmoves.calculate(gamefile, pieceSelected);
+
+	isOpponentPiece = isOpponentType(gamefile, piece.type);
+	isPremove = onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn() && !isOpponentType(gamefile, piece.type);
+
+	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
+}
+
+/** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
+function isOpponentType(gamefile: gamefile, type: string) {
+	const pieceColor = colorutil.getPieceColorFromType(type);
+	return onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
+	/* Local Game */ : pieceColor !== gamefile.whosTurn;
+}
+
+/**
+ * Moves the currently selected piece to the specified coordinates, then unselects the piece.
+ * The destination coordinates MUST contain any special move flags.
+ * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
+ */
+function moveGamefilePiece(coords: CoordsSpecial) {
+	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
+	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
+	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
+
+	const wasBeingDragged = draganimation.areDraggingPiece();
+
+	const animateMain = !wasBeingDragged; // This needs to be above makeMove(), since that will terminate the drag if the move ends the game.
+	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
+
+	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
+	movesequence.animateMove(move, true, animateMain);
+	// Normally the animation is in charge of playing the move sound when it's finished,
+	// but if it's a drop from dragging, then we have to play the sound NOW!
+	if (wasBeingDragged) {
+		const dist = math.chebyshevDistance(move.startCoords, move.endCoords); 
+		if (boardchanges.wasACapture(move)) sound.playSound_capture(dist);
+		else sound.playSound_move(dist);
+		// However, we still need to clear any other animations in progress
+		animation.clearAnimations();
+	}
+
+	movesendreceive.sendMove();
+
+	unselectPiece();
+}
+
+/**  Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
+function unselectPiece() {
+	pieceSelected = undefined;
+	isOpponentPiece = false;
+	isPremove = false;
+	legalMoves = undefined;
+	pawnIsPromotingOn = undefined;
+	promoteTo = undefined;
+	hoverSquareLegal = false;
+	guipromotion.close(); // Close the promotion UI
+	draganimation.cancelDragging();
+	frametracker.onVisualChange();
+	legalmovehighlights.onPieceUnselected();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /**
@@ -223,8 +411,8 @@ function handleMovingSelectedPiece(coordsClicked: Coords, pieceClickedType?: str
 				if (!draganimation.getDragParity()) unselectPiece(); // Toggle selection
 			} else { // The selected piece was clicked.
 				// Pick up the piece if it's ours; otherwise, unselect it now.
-				if (!canMovePieceType(pieceClickedType) || !startDragging()) unselectPiece();
-				draganimation.setDragParity(false);
+				// if (!canMovePieceType(pieceClickedType) || !startDragging()) unselectPiece();
+				// draganimation.setDragParity(false);
 			}
 		} else if (pieceClickedType !== 'voidsN' && !draggingPiece) { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
 			handleSelectingPiece(pieceClickedType);
@@ -256,58 +444,6 @@ function handleMovingSelectedPiece(coordsClicked: Coords, pieceClickedType?: str
 }
 
 /**
- * A piece is **not** already selected. This is called when you *click* a piece.
- * This will select the piece if it is a friendly, or forward
- * you to the game's front if your viewing past moves.
- * @param [pieceClickedType] - The type of piece clicked on, if there is one.
- */
-function handleSelectingPiece(pieceClickedType: string) {
-	const gamefile = gameslot.getGamefile()!;
-
-	// If we're viewing history, return. But also if we clicked a piece, forward moves.
-	if (!moveutil.areWeViewingLatestMove(gamefile)) {
-		// if (clickedPieceColor === gamefile.whosTurn ||
-		//     options.getEM() && pieceClickedType !== 'voidsN') 
-		// ^^ The extra conditions needed here so in edit mode and you click on an opponent piece
-		// it will still forward you to front!
-		movesequence.viewFront(gamefile);
-		const lastMove = moveutil.getLastMove(gamefile.moves)!;
-		movesequence.animateMove(lastMove);
-		return;
-	}
-
-	// If it's your turn, select that piece.
-
-	if (hoverSquareLegal) return; // Don't select different piece if the move is legal (its a capture)
-	const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
-	if (!options.getEM() && clickedPieceColor === colorutil.colorOfNeutrals) return; // Don't select neutrals, unless we're in edit mode
-	if (pieceClickedType === 'voidsN') return; // NEVER select voids, EVEN in edit mode.
-
-	const pieceToSelect = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceClickedType, hoverSquare);
-
-	// Select the piece
-	selectPiece(pieceToSelect);
-	if (canMovePieceType(pieceClickedType)) startDragging();
-	draganimation.setDragParity(true);
-}
-
-/** Selects the provided piece. Auto-calculates it's legal moves. */
-function selectPiece(piece: Piece) {
-	frametracker.onVisualChange();
-	const gamefile = gameslot.getGamefile()!;
-	pieceSelected = piece;
-	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-	legalMoves = legalmoves.calculate(gamefile, pieceSelected);
-
-	const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
-	isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
-    /* Local Game */ : pieceColor !== gamefile.whosTurn;
-	isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
-
-	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
-}
-
-/**
  * Reselects the currently selected piece by recalculating its legal moves again,
  * and changing the color if needed.
  * Typically called after our opponent makes a move while we have a piece selected.
@@ -327,54 +463,7 @@ function reselectPiece() {
 
 	// Reselect! Recalc its legal moves, and recolor.
 	const pieceToReselect = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
-	selectPiece(pieceToReselect);
-}
-
-/**  Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
-function unselectPiece() {
-	pieceSelected = undefined;
-	isOpponentPiece = false;
-	isPremove = false;
-	legalMoves = undefined;
-	pawnIsPromotingOn = undefined;
-	promoteTo = undefined;
-	hoverSquareLegal = false;
-	guipromotion.close(); // Close the promotion UI
-	draganimation.cancelDragging();
-	frametracker.onVisualChange();
-	legalmovehighlights.onPieceUnselected();
-}
-
-/**
- * Moves the currently selected piece to the specified coordinates, then unselects the piece.
- * The destination coordinates MUST contain any special move flags.
- * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
- */
-function moveGamefilePiece(coords: CoordsSpecial) {
-	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
-	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
-	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
-
-	const wasBeingDragged = draganimation.areDraggingPiece();
-
-	const animateMain = !wasBeingDragged; // This needs to be above makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
-
-	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
-	movesequence.animateMove(move, true, animateMain);
-	// Normally the animation is in charge of playing the move sound when it's finished,
-	// but if it's a drop from dragging, then we have to play the sound NOW!
-	if (wasBeingDragged) {
-		const dist = math.chebyshevDistance(move.startCoords, move.endCoords);
-		if (boardchanges.wasACapture(move)) sound.playSound_capture(dist);
-		else sound.playSound_move(dist);
-		// However, we still need to clear any other animations in progress
-		animation.clearAnimations();
-	}
-
-	movesendreceive.sendMove();
-
-	unselectPiece();
+	// selectPiece(gamefile, pieceToReselect);
 }
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
@@ -386,36 +475,43 @@ function makePromotionMove() {
 	perspective.relockMouse();
 }
 
-/**
- * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
- * @param pieceType - the type of piece 
- */
-function canMovePieceType(pieceType?: string): boolean {
-	if (pieceType === undefined || pieceType === 'voidsN') return false; // Never move voids
-	else if (options.getEM()) return true; // Edit mode allows pieces to be moved on any turn.
-	const pieceColor = colorutil.getPieceColorFromType(pieceType);
-	const isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
-	/* Local Game */ : pieceColor !== gameslot.getGamefile()!.whosTurn;
-	if (isOpponentPiece) return false; // Don't move opponent pieces
-	const isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
-	return (!isPremove /*|| premovesEnabled*/);
-}
 
-/**
- * Tests our selected piece can POSSIBLY be dropped on the provided type.
- * As if edit mode was on, ignoring legal moves.
- */
-function canDropOnPieceType(type?: string) {
-	if (type === undefined) return true; // Can drop on empty squares.
-	const color = colorutil.getPieceColorFromType(type);
-	const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected!.type)
-	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
-	return !type.startsWith('voids') && color !== selectedPieceColor;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
-	if (!isAPieceSelected() || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || !input.isMouseSupported() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
+	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || config.VIDEO_MODE) return;
+	// if (!pieceSelected || !hoverSquare || !hoverSquareLegal || draganimation.areDraggingPiece() || !input.isMouseSupported() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }
 

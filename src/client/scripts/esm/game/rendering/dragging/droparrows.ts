@@ -10,7 +10,7 @@ import type { Piece } from "../../../chess/logic/boardchanges.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 
 
-import arrows, { HoveredArrow } from "../arrows/arrows.js";
+import arrows from "../arrows/arrows.js";
 import selection from "../../chess/selection.js";
 import draganimation from "./draganimation.js";
 import space from "../../misc/space.js";
@@ -31,7 +31,7 @@ let capturedPieceThisFrame: Piece | undefined;
  * needed before the move is made, dragging disabled, and arrows shifted.
  */
 function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
-	if (!draganimation.areDraggingPiece()) throw Error('Should not be updating droparrows when not dragging a piece!!!')
+	if (!draganimation.areDraggingPiece()) throw Error('Should not be updating droparrows when not dragging a piece!');
 
 	capturedPieceThisFrame = undefined;
 
@@ -54,7 +54,7 @@ function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
 
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));
 
-	if (legalCaptureHoveredArrows.length === 1) capturedPieceThisFrame = legalCaptureHoveredArrows[0].piece;
+	if (legalCaptureHoveredArrows.length === 1) capturedPieceThisFrame = legalCaptureHoveredArrows[0]!.piece;
 	return capturedPieceThisFrame?.coords;
 }
 
@@ -64,7 +64,7 @@ function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
  * DO AFTER selection.ts has updated!!! Because making a move changes the board position.
  */
 function shiftArrows(): void {
-	if (!draganimation.areDraggingPiece()) throw Error('Should not be updating droparrows when not dragging a piece!!!')
+	if (!draganimation.areDraggingPiece()) return;
 
 	const selectedPiece = selection.getPieceSelected()!;
 

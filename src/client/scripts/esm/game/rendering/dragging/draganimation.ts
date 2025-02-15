@@ -87,10 +87,11 @@ const perspectiveConfigs: { z: number, shadowColor: Color } = {
 /** If true, `pieceSelected` is currently being held. */
 let areDragging = false;
 /**
- * When dropped in the same square, pieces are unselected every second time.
- * This alows players to move pieces by clicking.
+ * When true, the next time a piece is dropped on its own square, it will NOT be unselected.
+ * But if this is false, it WOULD be unselected.
+ * Pieces are unselected every second time dropped.
  */
-let didLastClickSelectPiece: boolean = false;
+let parity: boolean = true;
 
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
@@ -109,12 +110,9 @@ function areDraggingPiece(): boolean {
 	return areDragging;
 }
 
+/** If true, the last pick-up action newly selected that piece, vs picking up an already-selected piece. */
 function getDragParity(): boolean {
-	return didLastClickSelectPiece;
-}
-
-function setDragParity(value: boolean) {
-	return didLastClickSelectPiece = value;
+	return parity;
 }
 
 /**
@@ -122,16 +120,20 @@ function setDragParity(value: boolean) {
  * @param type - The type of piece being dragged
  * @param pieceCoords - the square the piece was on
  */
-function pickUpPiece(piece: Piece) {
+function pickUpPiece(piece: Piece, resetParity: boolean) {
+	if (!preferences.getDragEnabled()) return; // Dragging is disabled
 	areDragging = true;
+	if (resetParity) parity = true;
 	startCoords = piece.coords;
 	pieceType = piece.type;
+	frametracker.onVisualChange();
 }
 
 /**
  * Call AFTER selection.update()
  */
 function updateDragLocation() {
+	if (!areDragging) return;
 	worldLocation = input.getPointerWorldLocation() as Coords;
 	hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
 }
@@ -150,19 +152,20 @@ function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
  * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
  */
 function dropPiece() {
+	if (!areDragging) return;
 	areDragging = false;
 	pieceType = undefined;
 	startCoords = undefined;
 	worldLocation = undefined;
+	parity = false; // The next time this piece is dropped on its home square, it will be deselected
 	droparrows.onDragTermination();
 	frametracker.onVisualChange();
 }
 
 /** Puts the dragged piece back. Doesn't make a move. */
 function cancelDragging() {
-	if (!areDragging) return;
-	didLastClickSelectPiece = false;
 	dropPiece();
+	parity = true;
 }
 
 
@@ -175,12 +178,12 @@ function renderTransparentSquare() {
 
 	const color = [0,0,0,0];
 	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
-	return createModel(data, 2, "TRIANGLES", true).render([0,0,z])
+	return createModel(data, 2, "TRIANGLES", true).render([0,0,z]);
 }
 
 // Renders the box outline, the dragged piece and its shadow
 function renderPiece() {
-	if (perspective.isLookingUp() || !worldLocation) return;
+	if (!areDragging ||  perspective.isLookingUp() || !worldLocation) return;
 
 	const outlineModel: BufferModel = hoveredCoords !== undefined ? genOutlineModel() : genIntersectingLines();
 	outlineModel.render();
@@ -374,7 +377,6 @@ function genIntersectingLines(): BufferModel {
 export default {
 	areDraggingPiece,
 	getDragParity,
-	setDragParity,
 	pickUpPiece,
 	updateDragLocation,
 	setDragLocationAndHoverSquare,
