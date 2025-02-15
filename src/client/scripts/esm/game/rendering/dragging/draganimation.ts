@@ -96,7 +96,7 @@ let didLastClickSelectPiece: boolean = false;
 let startCoords: Coords | undefined;
 /** The world location the piece has been dragged to. */
 let worldLocation: Coords | undefined;
-/** The square that will be outlined. */
+/** The square that the piece would be moved to if dropped now. It will be outlined. */
 let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
 let pieceType: string | undefined;
@@ -129,14 +129,19 @@ function pickUpPiece(piece: Piece) {
 }
 
 /**
- * Update the location of the piece being dragged.
- * @param worldLoc - the world coordinates the piece has been dragged to
- * @param [hoverSquare] - The square the piece would be moved to if dropped now.
+ * Call AFTER selection.update()
  */
-function dragPiece(worldLoc: Coords, hoverSquare?: Coords) {
+function updateDragLocation() {
+	worldLocation = input.getPointerWorldLocation() as Coords;
+	hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
+}
+
+/**
+ * Call AFTER {@link updateDragLocation} and BEFORE {@link renderPiece}
+ */
+function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
 	worldLocation = worldLoc;
 	hoveredCoords = hoverSquare;
-	frametracker.onVisualChange();
 }
 
 /**
@@ -149,11 +154,13 @@ function dropPiece() {
 	pieceType = undefined;
 	startCoords = undefined;
 	worldLocation = undefined;
+	droparrows.onDragTermination();
 	frametracker.onVisualChange();
 }
 
 /** Puts the dragged piece back. Doesn't make a move. */
 function cancelDragging() {
+	if (!areDragging) return;
 	didLastClickSelectPiece = false;
 	dropPiece();
 }
@@ -162,11 +169,13 @@ function cancelDragging() {
 // Rendering --------------------------------------------------------------------------------------------
 
 
-// Hides the original piece
+// Hides the original piece by rendering a transparent square model above it in the depth field.
 function renderTransparentSquare() {
 	if (!startCoords) return;
-	const transparentModel = genTransparentModel();
-	transparentModel.render([0,0,z]); // Since this data did NOT contain the z coordinates, we can translate it by it here
+
+	const color = [0,0,0,0];
+	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
+	return createModel(data, 2, "TRIANGLES", true).render([0,0,z])
 }
 
 // Renders the box outline, the dragged piece and its shadow
@@ -178,16 +187,6 @@ function renderPiece() {
 
 	const draggedPieceModel = genPieceModel();
 	if (draggedPieceModel !== undefined) draggedPieceModel.render();
-}
-
-/**
- * Generates a transparent model to hide the original piece.
- * @returns The buffer model
- */
-function genTransparentModel(): BufferModel {
-	const color = [0,0,0,0];
-	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
-	return createModel(data, 2, "TRIANGLES", true);
 }
 
 /**
@@ -377,7 +376,8 @@ export default {
 	getDragParity,
 	setDragParity,
 	pickUpPiece,
-	dragPiece,
+	updateDragLocation,
+	setDragLocationAndHoverSquare,
 	dropPiece,
 	cancelDragging,
 	renderTransparentSquare,

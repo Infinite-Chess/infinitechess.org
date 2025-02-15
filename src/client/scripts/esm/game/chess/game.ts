@@ -18,10 +18,14 @@ import gameslot from './gameslot.js';
 import guinavigation from '../gui/guinavigation.js';
 import pieces from '../rendering/pieces.js';
 import guititle from '../gui/guititle.js';
-// @ts-ignore
+import droparrows from '../rendering/dragging/droparrows.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-// @ts-ignore
 import arrows from '../rendering/arrows/arrows.js';
+import clock from '../../chess/logic/clock.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import animation from '../rendering/animation.js';
+import draganimation from '../rendering/dragging/draganimation.js';
+import selection from './selection.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -31,17 +35,11 @@ import input from '../input.js';
 // @ts-ignore
 import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
-import clock from '../../chess/logic/clock.js';
-// @ts-ignore
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
 // @ts-ignore
-import selection from './selection.js';
-// @ts-ignore
 import board from '../rendering/board.js';
-// @ts-ignore
-import animation from '../rendering/animation.js';
 // @ts-ignore
 import webgl from '../rendering/webgl.js';
 // @ts-ignore
@@ -55,13 +53,9 @@ import options from '../rendering/options.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
-import dragAnimation from '../rendering/dragging/draganimation.js';
-// @ts-ignore
 import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
-// @ts-ignore
-import guigameinfo from '../gui/guigameinfo.js';
 // @ts-ignore
 import websocket from '../websocket.js';
 // @ts-ignore
@@ -166,6 +160,8 @@ function updateBoard(gamefile: gamefile) {
 	// NEEDS TO BE BEFORE selection.update() because that calls droparrows to update(), and that needs to overwrite any animation from animation.ts
 	animation.update();
 	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
+	draganimation.updateDragLocation();
+	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	// ALSO depends on whether or not a piece is selected/being dragged!
 	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.
 	movement.checkIfBoardDragged(); 
@@ -201,7 +197,7 @@ function render() {
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		highlights.render(gamefile);
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
-		dragAnimation.renderTransparentSquare(); // Required to hide the piece currently being animated
+		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	});
     
 	// The rendering of the pieces needs to use the normal depth function, because the
@@ -213,7 +209,7 @@ function render() {
 		animation.renderAnimations();
 		promotionlines.render();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
-		dragAnimation.renderPiece();
+		draganimation.renderPiece();
 		arrows.render();
 		perspective.renderCrosshair();
 	});
