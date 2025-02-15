@@ -63,6 +63,8 @@ import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
 
+import events from "../../chess/logic/events.js";
+
 
 // Type Definitions ----------------------------------------------------------
 
@@ -232,6 +234,11 @@ async function loadGamefile(loadOptions: LoadOptions) {
 		// done with loading, there's not gonna be another lag spike..
 		loadingscreen.close();
 		startStartingTransition();
+	});
+
+	events.addEventListener(getGamefile()!.events, "regenerateLists", (gamefile: gamefile) => {
+		piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+		return false;
 	});
 }
 

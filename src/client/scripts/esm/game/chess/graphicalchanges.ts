@@ -70,13 +70,6 @@ const animatableChanges: ChangeApplication<animationFunc> = {
 function addMeshPiece(gamefile: gamefile, change: Change) {
 	if (gamefile.mesh.model === undefined) return; // Mesh isn't generated yet. Don't make this graphical change.
 	piecesmodel.overwritebufferdata(gamefile, change['piece'], change['piece'].coords, change['piece'].type);
-
-	// Do we need to add more undefineds?
-	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-	if (organizedlines.areWeShortOnUndefineds(gamefile)) {
-		organizedlines.addMoreUndefineds(gamefile, { log: true });
-		piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
-	}
 }
 
 function deleteMeshPiece(gamefile: gamefile, change: Change) {

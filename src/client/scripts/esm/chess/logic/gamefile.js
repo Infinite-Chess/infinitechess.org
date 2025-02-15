@@ -9,7 +9,6 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
-import movesets from './movesets.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
@@ -24,6 +23,7 @@ import movesets from './movesets.js';
 /** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
 /** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
 /** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
+/** @typedef {import('./events.js').GameEvents} GameEvents*/
 
 'use strict'; 
 
@@ -152,6 +152,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 			this.mesh.callbacksOnUnlock.forEach(callback => callback(this));
 			this.mesh.callbacksOnUnlock.length = 0;
 		}
+	};
+
+	/** @type {GameEvents} */
+	this.events = {
+		regenerateLists: []
 	};
 
 	/** The object that contains the buffer model to render the voids */
