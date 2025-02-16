@@ -40,6 +40,7 @@ import preferences from "../../../components/header/preferences.js";
 import board from "../board.js";
 import droparrows from "./droparrows.js";
 import { Piece } from "../../../chess/logic/boardchanges.js";
+import selection from "../../chess/selection.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -134,7 +135,19 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
  */
 function updateDragLocation() {
 	if (!areDragging) return;
-	worldLocation = input.getPointerWorldLocation() as Coords;
+	
+	/**
+	 * If the promotion UI is open, change the world location of
+	 * the dragged piece to the promotion square
+	 */
+	const squarePawnPromotingOn = selection.getSquarePawnIsCurrentlyPromotingOn();
+	if (squarePawnPromotingOn !== undefined) {
+		const worldCoords = space.convertCoordToWorldSpace(squarePawnPromotingOn) as Coords;
+		worldLocation = worldCoords;
+		hoveredCoords = squarePawnPromotingOn;
+		return;
+	} else worldLocation = input.getPointerWorldLocation() as Coords; // Normal drag location
+
 	hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
 }
 

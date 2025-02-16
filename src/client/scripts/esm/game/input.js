@@ -380,7 +380,7 @@ function initListeners_Mouse() {
 
 	// This mousedown event is ONLY for perspective mode, and it attached to the document instead of overlay!
 	document.addEventListener("mousedown", (event) => {
-		event = event || window.event;
+		frametracker.onVisualChange();
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
 		pushMouseDown(event);
@@ -389,7 +389,7 @@ function initListeners_Mouse() {
 	});
 
 	overlayElement.addEventListener("mouseup", (event) => {
-		event = event || window.event;
+		frametracker.onVisualChange();
 		removeMouseHeld(event);
 		setTimeout(perspective.relockMouse, 1); // 1 millisecond, to give time for pause listener to fire
 

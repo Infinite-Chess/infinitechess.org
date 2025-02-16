@@ -78,7 +78,7 @@ let hoverSquareLegal: boolean = false;
 
 /** If a pawn is currently promoting (waiting on the promotion UI selection),
  * this will be set to the square it's moving to: `[x,y]`. */
-let pawnIsPromotingOn: Coords | undefined;
+let pawnIsPromotingOn: CoordsSpecial | undefined;
 /** When a promotion UI piece is selected, this is set to the promotion you selected. */
 let promoteTo: string | undefined;
 
@@ -102,7 +102,7 @@ function arePremoving() { return isPremove; }
 function getLegalMovesOfSelectedPiece() { return legalMoves; }
 
 /** Returns *true* if a pawn is currently promoting (promotion UI open). */
-function isPawnCurrentlyPromoting() { return pawnIsPromotingOn; }
+function getSquarePawnIsCurrentlyPromotingOn() { return pawnIsPromotingOn; }
 
 /**
  * Flags the currently selected pawn to be promoted next frame.
@@ -116,31 +116,29 @@ function promoteToType(type: string) { promoteTo = type; }
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
-	// Guard clauses...
 	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
+
+	// Guard clauses...
+	const gamefile = gameslot.getGamefile()!;
 	if (pawnIsPromotingOn) { // Do nothing else this frame but wait for a promotion piece to be selected
-		if (promoteTo) makePromotionMove();
+		if (promoteTo) makePromotionMove(gamefile);
 		return;
 	}
-	const gamefile = gameslot.getGamefile()!;
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) return;
 
 	// Update the hover square
 	hoverSquare = space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
+	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
 
 	// What should selection.ts do?
 
 	// 1. Test if we selected a new piece, or a different piece.
 
-	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
-
 	testIfPieceSelected(gamefile); // Test this EVEN if a piece is currently selected, because we can always select a different piece.
 
 	// Piece IS selected...
-	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
 
-	// 2. Test if the piece was dropped.
-	// If it happened to be dropped on a legal square, then make the move.
+	// 2. Test if the piece was dropped. If it happened to be dropped on a legal square, then make the move.
 
 	testIfPieceDropped(gamefile);
 
@@ -209,7 +207,10 @@ function canDropOnPieceTypeInEditMode(type?: string) {
 /**
  * 0 => Can't select this piece type (i.e. voids, neutrals)
  * 1 => Can select this piece type, but not draggable.
- * 2 => Can select and move this piece type.
+ * 2 => Can select and drag this piece type.
+ * 
+ * A piece will not be considered draggable (level 2) if the user disabled dragging.
+ * This means more information is needed to tell if the piece is moveable.
  * @param type 
  */
 function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
@@ -236,7 +237,7 @@ function canMovePieceType(pieceType: string): boolean {
 	return (!isPremove /*|| premovesEnabled*/);
 }
 
-/** If a piece was clicked, this will attempt to select that piece. */
+/** If a piece was clicked or dragged, this will attempt to select that piece. */
 function testIfPieceSelected(gamefile: gamefile) {
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
@@ -329,6 +330,15 @@ function isOpponentType(gamefile: gamefile, type: string) {
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
 function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
+	// Check if the move is a pawn promotion
+	if (coords.promoteTrigger) {
+		const color = colorutil.getPieceColorFromType(pieceSelected!.type);
+		guipromotion.open(color);
+		perspective.unlockMouse();
+		pawnIsPromotingOn = coords;
+		return;
+	}
+
 	// Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
 	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
 
@@ -360,6 +370,7 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 
 /**  Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
 function unselectPiece() {
+	if (pieceSelected === undefined) return; // No piece to unselect.
 	pieceSelected = undefined;
 	isOpponentPiece = false;
 	isPremove = false;
@@ -403,125 +414,15 @@ function reselectPiece() {
 	recalcSelectedPieceStuff(gamefile, pieceToReselect);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * A piece is already selected. This is called when you *click* somewhere.
- * This will execute the move if you clicked on a legal square to move to,
- * or it will select a different piece if you clicked another piece.
- * @param coordsClicked - The square clicked: `[x,y]`.
- * @param [pieceClickedType] The type of piece clicked on, if there is one.
- */
-function handleMovingSelectedPiece(coordsClicked: Coords, pieceClickedType?: string) {
-	const gamefile = gameslot.getGamefile()!;
-
-	tag: if (pieceClickedType) {
-
-		// Did we click a friendly piece?
-		// const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected.type)
-		// const clickedPieceColor = colorutil.getPieceColorFromType(pieceClickedType);
-		// if (selectedPieceColor !== clickedPieceColor) break tag; // Did not click a friendly
-
-		if (hoverSquareLegal) break tag; // This piece is capturable, don't select it instead
-
-		const draggingPiece = draganimation.areDraggingPiece();
-		// If it clicked iteself, deselect or pick it up again.
-		if (coordutil.areCoordsEqual(pieceSelected!.coords, coordsClicked)) {
-			if (draggingPiece) { // The piece was dropped in its original square.
-				if (!draganimation.getDragParity()) unselectPiece(); // Toggle selection
-			} else { // The selected piece was clicked.
-				// Pick up the piece if it's ours; otherwise, unselect it now.
-				// if (!canMovePieceType(pieceClickedType) || !startDragging()) unselectPiece();
-				// draganimation.setDragParity(false);
-			}
-		} else if (pieceClickedType !== 'voidsN' && !draggingPiece) { // Select that other piece instead. Prevents us from selecting a void after selecting an obstacle.
-			// handleSelectingPiece(pieceClickedType);
-		}
-
-		return;
-	}
-
-	// If we haven't return'ed at this point, check if the move is legal.
-	if (!hoverSquareLegal) return; // Illegal
-
-	// If it's a premove, hoverSquareLegal should not be true at this point unless
-	// we are actually starting to implement premoving.
-	if (isPremove) throw new Error("Don't know how to premove yet! Will not submit move normally.");
-
-	// Check if the move is a pawn promotion
-	if (specialdetect.isPawnPromotion(gamefile, pieceSelected!.type, coordsClicked)) {
-		const color = colorutil.getPieceColorFromType(pieceSelected!.type);
-		guipromotion.open(color);
-		perspective.unlockMouse();
-		pawnIsPromotingOn = coordsClicked;
-		return;
-	}
-
-}
-
-
 /** Adds the promotion flag to the destination coordinates before making the move. */
-function makePromotionMove() {
+function makePromotionMove(gamefile: gamefile) {
 	const coords = pawnIsPromotingOn!;
-	const coordsSpecial: CoordsSpecial = coordutil.copyCoords(coords);
-	coordsSpecial.promotion = promoteTo; // Add a tag on the coords of what piece we're promoting to
-	// moveGamefilePiece(coordsSpecial);
+	// DELETE THE promoteTrigger flag, and add the promoteTo flag
+	delete coords.promoteTrigger;
+	coords.promotion = promoteTo!;
+	moveGamefilePiece(gamefile, coords);
 	perspective.relockMouse();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // ------------------------------------------------------------------------------------
@@ -533,14 +434,10 @@ export default {
 	reselectPiece,
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,
-	isPawnCurrentlyPromoting,
+	getSquarePawnIsCurrentlyPromotingOn,
 	promoteToType,
 	update,
 	renderGhostPiece,
 	isOpponentPieceSelected,
 	arePremoving,
-};
-
-export type {
-	CoordsSpecial
 };

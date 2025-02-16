@@ -152,14 +152,13 @@ function updateBoard(gamefile: gamefile) {
 	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	guinavigation.update();
+	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
-	// NEEDS TO BE BEFORE selection.update() because that calls droparrows to update(), and that needs to overwrite any animation from animation.ts
 	animation.update();
-	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	draganimation.updateDragLocation();
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	// ALSO depends on whether or not a piece is selected/being dragged!

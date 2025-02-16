@@ -45,6 +45,7 @@ import wincondition from './wincondition.js';
  */
 type CoordsSpecial = Coords & { 
 	enpassant?: enpassant,
+	promoteTrigger?: promoteTrigger,
 	promotion?: promotion,
 	castle?: castle,
 	path?: path,
@@ -59,6 +60,11 @@ type CoordsSpecial = Coords & {
  * So we don't actually need to store more information in here.
  */
 type enpassant = true;
+/**
+ * A special move tag that, when the move is attempted to be made, should trigger the promotion UI to open.
+ * The special detect functions are in charge of adding this. selection.ts will delete it and open the promotion UI.
+ */
+type promoteTrigger = boolean;
 /** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
 type promotion = string;
 /** A special move tag for castling. */
