@@ -38,10 +38,6 @@ let generatedIcons: boolean = false;
 // Functions ------------------------------------------------------------------------
 
 
-function getModeSelected() {
-	return modeSelected;
-}
-
 /**
  * Returns the last selected checkmate practce. Useful
  * for knowing which one we just beat.
@@ -142,9 +138,10 @@ function changeCheckmateSelected(checkmateid: string) {
 
 /**
  * Updates each checkmate practice element's 'beaten' class.
- * @param {string[]} completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
+ * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
-function updateCheckmatesBeaten(completedCheckmates = checkmatepractice.getCompletedCheckmates()) {
+function updateCheckmatesBeaten() {
+	const completedCheckmates = checkmatepractice.getCompletedCheckmates();
 	for (const element of elements_checkmates) {
 		// What is the id string of this checkmate?
 		const id_string = element.id; // "2Q-1k"
@@ -206,9 +203,7 @@ function moveUpSelection(event: Event) {
 
 
 export default {
-	getModeSelected,
 	getCheckmateSelectedID,
 	open,
-	close,
 	updateCheckmatesBeaten,
 };

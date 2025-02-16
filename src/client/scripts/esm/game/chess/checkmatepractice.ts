@@ -116,10 +116,6 @@ function onGameUnload(): void {
 	inCheckmatePractice = false;
 }
 
-function areInCheckmatePracticeGame(): boolean {
-	return inCheckmatePractice;
-}
-
 function getCompletedCheckmates(): string[] {
 	if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
 	return completedCheckmates;
@@ -255,7 +251,6 @@ function onEngineGameConclude(): void {
 export default {
 	startCheckmatePractice,
 	onGameUnload,
-	areInCheckmatePracticeGame,
 	getCompletedCheckmates,
 	onEngineGameConclude,
 	eraseCheckmatePracticeProgress
