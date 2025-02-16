@@ -80,11 +80,15 @@ async function addPieceIcons() {
 	for (const checkmate of elements_checkmates) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
 			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]!]!.cloneNode(true));
+			const sprite = sprites[actualpiece.className.split(' ')[1]!]!.cloneNode(true);
+			(sprite as HTMLElement).classList.remove("promotepiece");
+			actualpiece.appendChild(sprite);
 		}
 		const pieceBlack = checkmate.getElementsByClassName('piecelistB')[0]!.getElementsByClassName('checkmatepiececontainer')[0]!;
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		actualpieceBlack.appendChild(sprites[actualpieceBlack.className.split(' ')[1]!]!.cloneNode(true));
+		const spriteBlack = sprites[actualpieceBlack.className.split(' ')[1]!]!.cloneNode(true);
+		(spriteBlack as HTMLElement).classList.remove("promotepiece");
+		actualpieceBlack.appendChild(spriteBlack);
 	}
 	generatedIcons = true;
 }
