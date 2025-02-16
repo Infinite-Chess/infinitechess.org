@@ -71,6 +71,7 @@ const staticTranslatedTemplates = [
 	"member",
 	"news",
 	"play",
+	"practice",
 	"termsofservice",
 	"errors/400",
 	"errors/401",

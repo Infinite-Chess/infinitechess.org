@@ -1,6 +1,6 @@
 {
 	"32": {
-		"note": "Added practice key on line 149 under play.main-menu.",
+		"note": "Added practice key on line 149 under play.main-menu. Added play.practice-menu section on line 206. Added menu_checkmate key on line 331. Added cannot_paste_in_engine key on line 336 under play.javascript.copypaste.",
 		"changes": []
 	},
 	"31": {

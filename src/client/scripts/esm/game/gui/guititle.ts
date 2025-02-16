@@ -62,8 +62,9 @@ function callback_Play(event: Event) {
 
 
 function callback_Practice(event: Event) {
-	close();
-	guipractice.open();
+	const currentUrl = document.location.href;
+	const baseUrl = currentUrl.substring(0, currentUrl.length - 4);
+	document.location.href = baseUrl + "practice";
 }
 function callback_Guide(event: Event) {
 	close();
