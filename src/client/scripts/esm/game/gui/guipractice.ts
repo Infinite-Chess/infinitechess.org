@@ -147,12 +147,12 @@ function updateCheckmatesBeaten() {
 		// If this id is inside our list of beaten checkmates, add the beaten class
 		if (completedCheckmates.includes(id_string)) {
 			element.classList.add('beaten');
-			amountBeaten += 1;
-		}
-		else element.classList.remove('beaten');
+			amountBeaten++;
+		} else element.classList.remove('beaten');
 	}
-	element_progressBar.textContent= `${translations['progress_checkmate']}: ${amountBeaten} / ${elements_checkmates.length}`;
-	const percentageBeaten = 100. * amountBeaten / elements_checkmates.length;
+	// Update the progress bar
+	element_progressBar.textContent = `${translations['progress_checkmate']}: ${amountBeaten} / ${elements_checkmates.length}`;
+	const percentageBeaten = 100 * amountBeaten / elements_checkmates.length;
 	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 128, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
 }
 
