@@ -49,8 +49,8 @@ function getCheckmateSelectedID() {
 }
 
 function open() {
-	style.revealElement(element_practiceSelection);
-	style.revealElement(element_menuExternalLinks);
+	element_practiceSelection.classList.remove("hidden");
+	element_menuExternalLinks.classList.remove("hidden");
 	changePracticeMode('checkmate-practice');
 	changeCheckmateSelected(checkmateSelectedID);
 	updateCheckmatesBeaten(); // Adds 'beaten' class to them
@@ -59,8 +59,8 @@ function open() {
 }
 
 function close() {
-	style.hideElement(element_practiceSelection);
-	style.hideElement(element_menuExternalLinks);
+	element_practiceSelection.classList.add("hidden");
+	element_menuExternalLinks.classList.add("hidden");
 	closeListeners();
 }
 

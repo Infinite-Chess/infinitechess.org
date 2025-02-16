@@ -1,4 +1,8 @@
 {
+	"32": {
+		"note": "Added practice key on line 149 under play.main-menu.",
+		"changes": []
+	},
 	"31": {
 		"note": "Added variant credits for 'Chess on an Infinite Plane - Huygens Options by V. Reinhart.' and 'Trappist-1 by V. Reinhart' on lines 81-82.",
 		"changes": []
@@ -29,7 +33,7 @@
 	},
 	"26": {
 		"note": "Modified webgl_unsupported, line 303",
-		"changes": ["play.javascript.webgl_unsupported"]
+		"changes": [ "play.javascript.webgl_unsupported" ]
 	},
 	"25": {
 		"note": "Added the following in header.settings, lines 21-23: selection, selection-drag, selection-premove.",
@@ -56,13 +60,13 @@
 	"21": {
 		"note": "Added notices for how to disable the holiday theme, lines 299-300. DELETED IN UPDATE 22.",
 		"changes": []
-	},	
+	},
 	"20": {
 		"note": "Added fields for game button tooltips, lines 241-247",
 		"changes": [
 			"play.gamebuttontooltips"
 		]
-	},	
+	},
 	"19": {
 		"note": "Updated wording of verify_message and resend_message, lines 94-95",
 		"changes": []
@@ -141,11 +145,11 @@
 	},
 	"8": {
 		"note": "Added a knightrider description for the guide, on line 170.",
-		"changes": ["play.guide.pieces.knightrider"]
+		"changes": [ "play.guide.pieces.knightrider" ]
 	},
 	"7": {
 		"note": "Added ws-server_under_maintenance on line 561.",
-		"changes": ["server.javascript.ws-server_under_maintenance"]
+		"changes": [ "server.javascript.ws-server_under_maintenance" ]
 	},
 	"6": {
 		"note": "Added all of play.javascript.termination, line 344, which provides spoken language descriptions of what caused the termination of the game.",
@@ -201,15 +205,15 @@
 	},
 	"4": {
 		"note": "Added news.july22-2024 on line 462",
-		"changes": ["news.july22-2024"]
+		"changes": [ "news.july22-2024" ]
 	},
 	"3": {
 		"note": "added play.javascript.invites.start_game on line 314",
-		"changes": ["play.javascript.invites.start_game"]
+		"changes": [ "play.javascript.invites.start_game" ]
 	},
 	"2": {
 		"note": "added login.login_button on line 448",
-		"changes": ["login.login_button"]
+		"changes": [ "login.login_button" ]
 	},
 	"1": {
 		"note": "inital commit of en-US-toml",

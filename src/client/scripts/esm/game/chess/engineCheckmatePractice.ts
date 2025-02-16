@@ -796,11 +796,11 @@ function move_to_gamefile_move(target_square: Coords): MoveDraft {
 function runEngine(gamefile: gamefile): void {
 	try {
 		// get real coordinates and parse type of black royal piece
-		if (gamefile.ourPieces.kingsB.length !== 0) {
+		if ((gamefile.ourPieces.kingsB?.length ?? 0) !== 0) {
 			gamefile_royal_coords = gamefile.ourPieces.kingsB[0]!;
 			royal_moves = king_moves;
 			royal_type = "k";
-		} else if (gamefile.ourPieces.royalCentaursB.length !== 0) {
+		} else if ((gamefile.ourPieces.royalCentaursB?.length ?? 0) !== 0) {
 			gamefile_royal_coords = gamefile.ourPieces.royalCentaursB[0]!;
 			royal_moves = centaur_moves;
 			royal_type = "rc";
