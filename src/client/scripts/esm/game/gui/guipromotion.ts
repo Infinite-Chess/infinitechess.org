@@ -10,6 +10,7 @@ import selection from '../chess/selection.js';
 import style from './style.js';
 // @ts-ignore
 import colorutil from '../../chess/util/colorutil.js';
+import frametracker from '../rendering/frametracker.js';
 
 "use strict";
 
@@ -23,9 +24,17 @@ const element_PromoteBlack = document.getElementById('promoteblack');
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
+const element_overlay: HTMLElement = document.getElementById('overlay')!;
 
 // Functions --------------------------------------------------------------------
 
+element_overlay.addEventListener('click', callback_CancelPromotionIfUIOpen);
+
+function callback_CancelPromotionIfUIOpen() {
+	if (!isUIOpen()) return;
+	selection.unselectPiece();
+	frametracker.onVisualChange();
+}
 
 function isUIOpen() { return selectionOpen; }
 

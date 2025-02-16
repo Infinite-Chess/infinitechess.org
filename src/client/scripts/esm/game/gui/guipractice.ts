@@ -6,11 +6,13 @@
 
 
 import checkmatepractice from '../chess/checkmatepractice.js';
-import gui from './gui.js';
-import guititle from './guititle.js';
 import spritesheet from '../rendering/spritesheet.js';
 // @ts-ignore
+import statustext from './statustext.js';
+// @ts-ignore
 import style from './style.js';
+// @ts-ignore
+import guipause from './guipause.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -56,6 +58,7 @@ function open() {
 	updateCheckmatesBeaten(); // Adds 'beaten' class to them
 	if (!generatedIcons) addPieceIcons();
 	initListeners();
+	guipause.init('practice');
 }
 
 function close() {
@@ -92,7 +95,7 @@ async function addPieceIcons() {
 function initListeners() {
 	element_practiceBack.addEventListener('click', callback_practiceBack);
 	element_checkmatePractice.addEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_tacticsPractice.addEventListener('click', () => statustext.showStatus(translations['planned_feature']));
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
 	for (const element of elements_checkmates) {
@@ -104,7 +107,7 @@ function initListeners() {
 function closeListeners() {
 	element_practiceBack.removeEventListener('click', callback_practiceBack);
 	element_checkmatePractice.removeEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.removeEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_tacticsPractice.removeEventListener('click', () => statustext.showStatus(translations['planned_feature']));
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
 	for (const element of elements_checkmates) {
@@ -152,8 +155,9 @@ function updateCheckmatesBeaten(completedCheckmates = checkmatepractice.getCompl
 }
 
 function callback_practiceBack(event: Event) {
-	close();
-	guititle.open();
+	const currentUrl = document.location.href;
+	const baseUrl = currentUrl.substring(0, currentUrl.length - 8);
+	document.location.href = baseUrl + "play";
 }
 
 function callback_checkmatePractice(event: Event) {

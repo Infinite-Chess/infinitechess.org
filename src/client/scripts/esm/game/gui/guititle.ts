@@ -3,10 +3,11 @@
  * This script handles our Title Screen
  */
 
-import guipractice from './guipractice.js';
 import gui from './gui.js';
 // @ts-ignore
 import guiguide from './guiguide.js';
+// @ts-ignore
+import guipause from './guipause.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
 
@@ -15,7 +16,6 @@ import guiplay from './guiplay.js';
 
 
 // Title Screen
-const boardVel = 0.6; // Speed at which board slowly moves while on title screen
 
 const titleElement = document.getElementById('title')!; // Visible when on the title screen
 const element_play = document.getElementById('play')!;
@@ -32,6 +32,7 @@ const element_menuExternalLinks = document.getElementById('menu-external-links')
 function open() {
 	titleElement.classList.remove('hidden');
 	element_menuExternalLinks.classList.remove('hidden');
+	guipause.init('play');
 	initListeners();
 };
 
@@ -74,7 +75,6 @@ function callback_Guide(event: Event) {
 
 
 export default {
-	boardVel,
 	open,
 	close,
 };

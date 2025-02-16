@@ -16,22 +16,10 @@ import frametracker from '../rendering/frametracker.js';
 import movement from '../rendering/movement.js';
 
 
-// Variables ------------------------------------------------------------------------------
-
-
-const element_overlay: HTMLElement = document.getElementById('overlay')!;
-
-
 // Functions ------------------------------------------------------------------------------
 
 
-element_overlay.addEventListener('click', callback_CancelPromotionIfUIOpen);
 
-function callback_CancelPromotionIfUIOpen() {
-	if (!guipromotion.isUIOpen()) return;
-	selection.unselectPiece();
-	frametracker.onVisualChange();
-}
 
 /**
  * Call when we first load the page, or leave any game. This prepares the board
