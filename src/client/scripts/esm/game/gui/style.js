@@ -32,6 +32,21 @@ function reinstateClass(element, className) {
 
 // Hide and show elements...
 
+/**
+ * Hides the provided document element by giving it a class with the property "display: none".
+ * @param {HTMLElement} element - The document element
+ */
+function hideElement(element) {
+	addClass(element, "hidden");
+}
+
+/**
+ * Reveals the provided document element by **removing** the class with the property "display: none".
+ * @param {HTMLElement} element - The document element
+ */
+function revealElement(element) {
+	removeClass(element, "hidden");
+}
 
 
 // Other operations
@@ -70,6 +85,37 @@ function getChildrenTextContents(parentElement) {
 }
 
 /**
+ * Finds the index of an element within its parent.
+ * @param {Element} element - The element to find the index of.
+ * @returns {number} - The index of the element within its parent, or -1 if not found.
+ */
+function getElementIndexWithinItsParent(element) {
+	if (!element || !element.parentNode) {
+		return -1;
+	}
+
+	// Get the parent node
+	const parent = element.parentNode;
+
+	// Convert the parent's children to an array and find the index of the element
+	const children = Array.prototype.slice.call(parent.children);
+	return children.indexOf(element);
+}
+
+/**
+ * Gets the child element at the specified index of a parent element.
+ * @param {Element} parent - The parent element.
+ * @param {number} index - The index of the child element.
+ * @returns {Element|null} - The child element at the specified index, or null if not found.
+ */
+function getChildByIndexInParent(parent, index) {
+	if (parent && parent.children && index >= 0 && index < parent.children.length) {
+		return parent.children[index];
+	}
+	return null;
+}
+
+/**
  * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.
  * @param {number[]} colorArray - An array containing [r, g, b, a] values, where r, g, b are in the range [0, 1].
  * @returns {string} A CSS rgba color string.
@@ -92,7 +138,11 @@ function arrayToCssColor(colorArray) {
 
 
 export default {
+	hideElement,
+	revealElement,
 	setNavStyle,
 	getChildrenTextContents,
 	arrayToCssColor,
+	getElementIndexWithinItsParent,
+	getChildByIndexInParent,
 };

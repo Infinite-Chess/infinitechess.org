@@ -438,6 +438,14 @@ function getGameRules(modifications: GameRuleModifications = {}, position?: { [c
 	return jsutil.deepCopyObject(gameRules) as GameRules; // Copy it so the game doesn't modify the values in this module.
 }
 
+/**
+ * Returns the bare-minimum gamerules a game needs to function.
+ * @returns {GameRules} The gameRules object
+ */
+function getBareMinimumGameRules(): GameRules {
+	return getGameRules({ promotionRanks: null, moveRule: null }); // Erase the defaults to end up with only the required's
+}
+
 // /**
 //  * Returns the turnOrder of the provided variant at the date (if specified).
 //  */
@@ -615,6 +623,7 @@ export default {
 	getMovesetsOfVariant,
 	getSpecialMovesOfVariant,
 	getSpecialVicinityOfVariant,
+	getBareMinimumGameRules,
 };
 
 export type {

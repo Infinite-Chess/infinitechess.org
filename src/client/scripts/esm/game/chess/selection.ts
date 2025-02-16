@@ -33,6 +33,8 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import input from '../input.js';
 // @ts-ignore
+import enginegame from '../misc/enginegame.js';
+// @ts-ignore
 import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
@@ -367,6 +369,7 @@ function moveGamefilePiece(coords: CoordsSpecial) {
 	}
 
 	movesendreceive.sendMove();
+	enginegame.submitMove();
 
 	unselectPiece();
 }
