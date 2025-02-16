@@ -297,15 +297,15 @@ function selectPiece(piece: Piece) {
 	legalMoves = legalmoves.calculate(gamefile, pieceSelected);
 
 	const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
-	if (onlinegame.areInOnlineGame()){
+	if (onlinegame.areInOnlineGame()) {
 		/* Online Game */
 		isOpponentPiece = pieceColor !== onlinegame.getOurColor();
 		isPremove = !isOpponentPiece && !onlinegame.isItOurTurn();
-	} else if(enginegame.areInEngineGame()){
+	} else if (enginegame.areInEngineGame()) {
 		/* Engine Game */
 		isOpponentPiece = pieceColor !== enginegame.getOurColor();
 		isPremove = !isOpponentPiece && !enginegame.isItOurTurn();
-	} else{
+	} else {
 		/* Local Game */
 		isOpponentPiece = pieceColor !== gamefile.whosTurn;
 		isPremove = false;
@@ -420,15 +420,15 @@ function canMovePieceType(pieceType?: string): boolean {
 	if (pieceType === undefined || pieceType === 'voidsN') return false; // Never move voids
 	else if (options.getEM()) return true; //Edit mode allows pieces to be moved on any turn.
 	const pieceColor = colorutil.getPieceColorFromType(pieceType);
-	if (onlinegame.areInOnlineGame()){
+	if (onlinegame.areInOnlineGame()) {
 		/* Online Game */
 		isOpponentPiece = pieceColor !== onlinegame.getOurColor();
 		isPremove = !isOpponentPiece && !onlinegame.isItOurTurn();
-	} else if(enginegame.areInEngineGame()){
+	} else if (enginegame.areInEngineGame()) {
 		/* Engine Game */
 		isOpponentPiece = pieceColor !== enginegame.getOurColor();
 		isPremove = !isOpponentPiece && !enginegame.isItOurTurn();
-	} else{
+	} else {
 		/* Local Game */
 		isOpponentPiece = pieceColor !== gameslot.getGamefile()!.whosTurn;
 		isPremove = false;

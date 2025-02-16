@@ -275,12 +275,16 @@ function getSVG_IDs_From_PieceType(type: string): string[] {
 	// console.log("Fetched all Classical SVGs!");
 })();
 
-function getCachedSVGElements(svgIDs: string[]) {
-	/** The SVG elements we will use in the game to construct our spritesheet */
+/**
+ * Retrieves cached SVG elements and returns cloned copies.
+ * @param svgIDs - The IDs of the cached SVG elements: ['pawnsW','pawnsB']
+ * @returns Cloned copies of the cached SVG elements.
+ */
+function getCachedSVGElements(svgIDs: string[]): SVGElement[] {
 	return svgIDs.map(id => {
 		const cachedSVG = cachedPieceSVGs[id];
 		if (cachedSVG === undefined) throw new Error(`Piece SVG of ID "${id}" required for game wasn't cached!`);
-		return cachedSVG;
+		return cachedSVG.cloneNode(true) as SVGElement;
 	});
 }
 

@@ -62,32 +62,29 @@ function close() {
 
 async function addPieceIcons() {
 	// let sprites = await spritesheet.getSVGElementsByIds();
-	const spritenames: string[] = [];
+	const spritenames = new Set<string>;
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of elements_checkmates) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
 			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			spritenames.push(actualpiece.className.split(' ')[1]!);
+			spritenames.add(actualpiece.className.split(' ')[1]!);
 		}
 		const pieceBlack = checkmate.getElementsByClassName('piecelistB')[0]!.getElementsByClassName('checkmatepiececontainer')[0]!;
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		spritenames.push(actualpieceBlack.className.split(' ')[1]!);
+		spritenames.add(actualpieceBlack.className.split(' ')[1]!);
 	}
-	const spriteSVGs = await spritesheet.getSVGElementsByIds(spritenames);
-	for (let i = 0; i < spritenames.length; i++) {
-		sprites[spritenames[i]!] = spriteSVGs[i]!;
+	const spriteSVGs = await spritesheet.getSVGElementsByIds([...spritenames]);
+	for (const svg of spriteSVGs) {
+		sprites[svg.id] = svg;
 	}
 	for (const checkmate of elements_checkmates) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
 			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			const sprite = sprites[actualpiece.className.split(' ')[1]!]!.cloneNode(true);
-			(sprite as HTMLElement).classList.remove("promotepiece");
-			actualpiece.appendChild(sprite);
+			actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]!]!.cloneNode(true));
 		}
 		const pieceBlack = checkmate.getElementsByClassName('piecelistB')[0]!.getElementsByClassName('checkmatepiececontainer')[0]!;
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
 		const spriteBlack = sprites[actualpieceBlack.className.split(' ')[1]!]!.cloneNode(true);
-		(spriteBlack as HTMLElement).classList.remove("promotepiece");
 		actualpieceBlack.appendChild(spriteBlack);
 	}
 	generatedIcons = true;
