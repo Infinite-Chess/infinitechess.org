@@ -153,7 +153,7 @@ function updateCheckmatesBeaten() {
 	// Update the progress bar
 	element_progressBar.textContent = `${translations['progress_checkmate']}: ${amountBeaten} / ${elements_checkmates.length}`;
 	const percentageBeaten = 100 * amountBeaten / elements_checkmates.length;
-	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 128, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
+	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
 }
 
 function callback_practiceBack(event: Event) {

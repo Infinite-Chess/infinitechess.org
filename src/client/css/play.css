@@ -582,10 +582,9 @@ canvas {
     border-bottom: 2px solid rgb(168, 168, 168);
     border-radius: min(1.3vw, 30px, calc(var(--vh-sub-nav) * 0.015));
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-content: center;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
+    padding: 0.5em 2em;
 }
 
 .checkmate-list {
@@ -639,11 +638,6 @@ canvas {
     margin: 0.8em;
 }
 
-.checkmate-progress-bar {
-    width: 75%;
-    margin-right: 2%;
-}
-
 .completion-mark {
     width: 10%;
     height: 100%;
@@ -681,13 +675,15 @@ canvas {
 }
 
 .checkmate-progress-bar {
+    align-items: center;
     display: flex;
     justify-content: center;
     align-content: center;
     width: 75%;
     outline-style: solid;
-    outline-width: 0.10em;
+    outline-width: 0.1em;
     border-radius: 0.25em;
+    font-size: 0.8em;
 }
 
 .checkmatepiececontainer {
