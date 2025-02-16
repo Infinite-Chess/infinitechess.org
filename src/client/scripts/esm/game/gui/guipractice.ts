@@ -62,7 +62,7 @@ function close() {
 
 async function addPieceIcons() {
 	// let sprites = await spritesheet.getSVGElementsByIds();
-	const spritenames = [];
+	const spritenames: string[] = [];
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of elements_checkmates) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
