@@ -1,4 +1,8 @@
 {
+	"33":{
+		"note": "Added progress_checkmate on line 332 under play.javascript",
+		"changes": []
+	},
 	"32": {
 		"note": [
 			"Added practice key on line 149 under play.main-menu.",

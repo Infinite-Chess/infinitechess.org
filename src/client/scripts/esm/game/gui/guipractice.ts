@@ -24,6 +24,7 @@ const element_practiceBack: HTMLElement = document.getElementById('practice-back
 const element_checkmatePractice: HTMLElement = document.getElementById('checkmate-practice')!;
 const element_tacticsPractice: HTMLElement = document.getElementById('tactics-practice')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
+const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
 
 const elements_checkmates = document.getElementsByClassName('checkmate')!;
 
@@ -49,7 +50,7 @@ function open() {
 	element_menuExternalLinks.classList.remove("hidden");
 	changePracticeMode('checkmate-practice');
 	changeCheckmateSelected(checkmateSelectedID);
-	updateCheckmatesBeaten(); // Adds 'beaten' class to them
+	updateCheckmatesBeaten();
 	if (!generatedIcons) addPieceIcons();
 	initListeners();
 }
@@ -139,18 +140,25 @@ function changeCheckmateSelected(checkmateid: string) {
 }
 
 /**
- * Updates each checkmate practice element's 'beaten' class.
+ * Updates each checkmate practice element's 'beaten' class, along with the progress bar on top.
  * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
 function updateCheckmatesBeaten() {
+	let amountBeaten = 0;
 	const completedCheckmates = checkmatepractice.getCompletedCheckmates();
 	for (const element of elements_checkmates) {
 		// What is the id string of this checkmate?
 		const id_string = element.id; // "2Q-1k"
 		// If this id is inside our list of beaten checkmates, add the beaten class
-		if (completedCheckmates.includes(id_string)) element.classList.add('beaten');
-		else element.classList.remove('beaten');
+		if (completedCheckmates.includes(id_string)) {
+			element.classList.add('beaten');
+			amountBeaten++;
+		} else element.classList.remove('beaten');
 	}
+	// Update the progress bar
+	element_progressBar.textContent = `${translations['progress_checkmate']}: ${amountBeaten} / ${elements_checkmates.length}`;
+	const percentageBeaten = 100 * amountBeaten / elements_checkmates.length;
+	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
 }
 
 function callback_practiceBack(event: Event) {

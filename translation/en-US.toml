@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "32"
+version = "33"
 maintainer = "Naviary"
 
 [header]
@@ -329,6 +329,7 @@ bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\n
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
 menu_checkmate = "Practice - Checkmates" # The title of the Practice page changes to this when "Checkmates" is selected over "Tactics"
+progress_checkmate = "Progress"
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
