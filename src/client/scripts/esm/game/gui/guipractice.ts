@@ -24,7 +24,7 @@ const element_practiceBack: HTMLElement = document.getElementById('practice-back
 const element_checkmatePractice: HTMLElement = document.getElementById('checkmate-practice')!;
 const element_tacticsPractice: HTMLElement = document.getElementById('tactics-practice')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
-const element_progressBar: HTMLElement = document.getElementById('checkmate-progress-bar')!;
+const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
 
 const elements_checkmates = document.getElementsByClassName('checkmate')!;
 

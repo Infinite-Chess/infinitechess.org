@@ -673,14 +673,14 @@ canvas {
     width: 10%;
 }
 
-#checkmate-difficulty {
+.checkmate-difficulty {
     display: flex;
     justify-content: center;
     align-content: center;
     width: 20%;
 }
 
-#checkmate-progress-bar {
+.checkmate-progress-bar {
     display: flex;
     justify-content: center;
     align-content: center;
