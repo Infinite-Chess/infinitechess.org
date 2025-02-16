@@ -118,7 +118,7 @@ function promoteToType(type: string) { promoteTo = type; }
 function update() {
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
-	// if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn
+	// if (onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn(gamefile)) return; // Not our turn in online game
 	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
 	if (pawnIsPromoting) { // Do nothing else this frame but wait for a promotion piece to be selected
 		if (promoteTo) makePromotionMove();
@@ -297,9 +297,19 @@ function selectPiece(piece: Piece) {
 	legalMoves = legalmoves.calculate(gamefile, pieceSelected);
 
 	const pieceColor = colorutil.getPieceColorFromType(pieceSelected.type);
-	isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
-    /* Local Game */ : pieceColor !== gamefile.whosTurn;
-	isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
+	if (onlinegame.areInOnlineGame()) {
+		/* Online Game */
+		isOpponentPiece = pieceColor !== onlinegame.getOurColor();
+		isPremove = !isOpponentPiece && !onlinegame.isItOurTurn();
+	} else if (enginegame.areInEngineGame()) {
+		/* Engine Game */
+		isOpponentPiece = pieceColor !== enginegame.getOurColor();
+		isPremove = !isOpponentPiece && !enginegame.isItOurTurn();
+	} else {
+		/* Local Game */
+		isOpponentPiece = pieceColor !== gamefile.whosTurn;
+		isPremove = false;
+	}
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
@@ -410,11 +420,21 @@ function canMovePieceType(pieceType?: string): boolean {
 	if (pieceType === undefined || pieceType === 'voidsN') return false; // Never move voids
 	else if (options.getEM()) return true; //Edit mode allows pieces to be moved on any turn.
 	const pieceColor = colorutil.getPieceColorFromType(pieceType);
-	const isOpponentPiece = onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
-	/* Local Game */ : pieceColor !== gameslot.getGamefile()!.whosTurn;
+	if (onlinegame.areInOnlineGame()) {
+		/* Online Game */
+		isOpponentPiece = pieceColor !== onlinegame.getOurColor();
+		isPremove = !isOpponentPiece && !onlinegame.isItOurTurn();
+	} else if (enginegame.areInEngineGame()) {
+		/* Engine Game */
+		isOpponentPiece = pieceColor !== enginegame.getOurColor();
+		isPremove = !isOpponentPiece && !enginegame.isItOurTurn();
+	} else {
+		/* Local Game */
+		isOpponentPiece = pieceColor !== gameslot.getGamefile()!.whosTurn;
+		isPremove = false;
+	}
 	if (isOpponentPiece) return false; // Don't move opponent pieces
-	const isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
-	return (!isPremove /*|| premovesEnabled*/);
+	else return (!isPremove /*|| premovesEnabled*/);
 }
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */

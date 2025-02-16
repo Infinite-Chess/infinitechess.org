@@ -47,6 +47,11 @@ function getOurColor(): 'white' | 'black' {
 	return ourColor!;
 }
 
+function isItOurTurn(): boolean {
+	if (!inEngineGame) throw Error("Cannot get isItOurTurn of engine game when we're not in an engine game.");
+	return gameslot.getGamefile()!.whosTurn === ourColor;
+}
+
 function getCurrentEngine() {
 	return currentEngine;
 }
@@ -157,6 +162,7 @@ function onGameConclude() {
 export default {
 	areInEngineGame,
 	getOurColor,
+	isItOurTurn,
 	getCurrentEngine,
 	initEngineGame,
 	closeEngineGame,

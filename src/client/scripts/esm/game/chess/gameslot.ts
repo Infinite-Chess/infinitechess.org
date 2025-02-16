@@ -218,8 +218,9 @@ async function loadGamefile(loadOptions: LoadOptions) {
 	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
 	sound.playSound_gamestart();
 
-	// Next start loading the GRAPHICAL stuff...
-	/*
+	/**
+	 * Next start loading the GRAPHICAL stuff...
+	 * 
 	 * The reason we attach a .then() to this instead of just 'await'ing,
 	 * is because we need loadGamefile() to return as soon as the logical
 	 * stuff has finished loading. The graphics may finish on its own time.
