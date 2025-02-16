@@ -102,7 +102,7 @@ async function submitMove() {
 	// Initialize the engine as a webworker
 	if (!window.Worker) return console.error("Your browser doesn't support web workers.");
 	// TODO: What happens if the engine fails / takes too long to load? =============================== !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	const engineWorker = new Worker(`../scripts/esm/game/chess/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
+	const engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
 	currentEngineMove = undefined;
 	engineWorker.onmessage = function(e: MessageEvent) { 
 		currentEngineMove = e.data;
