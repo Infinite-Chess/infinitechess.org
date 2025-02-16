@@ -673,11 +673,21 @@ canvas {
     width: 10%;
 }
 
-.checkmate-difficulty {
+#checkmate-difficulty {
     display: flex;
     justify-content: center;
     align-content: center;
     width: 20%;
+}
+
+#checkmate-progress-bar {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    width: 75%;
+    outline-style: solid;
+    outline-width: 0.10em;
+    border-radius: 0.25em;
 }
 
 .checkmatepiececontainer {
