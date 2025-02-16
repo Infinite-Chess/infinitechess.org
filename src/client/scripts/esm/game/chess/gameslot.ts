@@ -14,6 +14,9 @@ import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
 
+// @ts-ignore
+import enginegame from '../misc/enginegame.js';
+
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";
@@ -190,7 +193,45 @@ function isLoadedGameViewingWhitePerspective() {
 	return youAreColor === 'white';
 };
 
+// /**
+//  * Loads the provided gamefile onto the board.
+//  * Inits the promotion UI, mesh of all the pieces, and toggles miniimage rendering. (everything visual)
+//  * @param {gamefile} newGamefile - The gamefile
+//  */
+// async function loadGamefileFromFile(newGamefile) {
+// 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
 
+// 	// console.log('Started loading game...');
+// 	logicLoading = true;
+// 	graphicsLoading = true;
+// 	// Has to be awaited to give the document a chance to repaint.
+// 	await loadingscreen.open();
+
+// 	loadedGamefile = newGamefile;
+
+// 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
+// 	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
+// 		miniimage.disable();
+// 		arrows.setMode(0); // Disables arrows
+// 		// Checkmate is swapped out for royalcapture further down
+// 	} else miniimage.enable();
+
+// 	// Do we need to convert any checkmate win conditions to royalcapture?
+// 	if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
+
+// 	guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
+
+// 	// Regenerate the mesh of all the pieces.
+// 	piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
+
+// 	guinavigation.update_MoveButtons();
+
+// 	guigameinfo.updateWhosTurn(gamefile);
+// 	// Immediately conclude the game if we loaded a game that's over already
+// 	if (gamefileutility.isGameOver(gamefile)) gamefileutility.concludeGame(gamefile, gamefile.gameConclusion);
+
+// 	initListeners();
+// }
 
 /**
  * Loads a gamefile onto the board.
@@ -367,6 +408,7 @@ function concludeGame() {
 	board.darkenColor();
 	guigameinfo.gameEnd(loadedGamefile.gameConclusion);
 	onlinegame.onGameConclude();
+	enginegame.onGameConclude();
 
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {

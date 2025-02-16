@@ -7,6 +7,7 @@
 // Import Start
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
+import enginegame from '../misc/enginegame.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import backcompatible from '../../chess/logic/backcompatible.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
@@ -109,7 +110,8 @@ async function callbackPaste(event) {
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
-
+	// Make sure we're not in an engine match
+	if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 	// Make sure it's legal in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
