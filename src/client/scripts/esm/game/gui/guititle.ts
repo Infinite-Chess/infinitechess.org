@@ -23,6 +23,7 @@ const element_practice = document.getElementById('practice')!;
 const element_guide = document.getElementById('rules')!;
 const element_boardEditor = document.getElementById('board-editor')!;
 const element_menuExternalLinks = document.getElementById('menu-external-links')!;
+document.addEventListener('mainMenu', open);
 
 
 // Functions ----------------------------------------------------------------------------
@@ -32,7 +33,6 @@ const element_menuExternalLinks = document.getElementById('menu-external-links')
 function open() {
 	titleElement.classList.remove('hidden');
 	element_menuExternalLinks.classList.remove('hidden');
-	guipause.init('play');
 	initListeners();
 };
 

@@ -40,6 +40,7 @@ import perspective from "../rendering/perspective.js";
 
 /** The type of game we are in, whether local or online, if we are in a game. */
 let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine';
+document.addEventListener('mainMenu', unloadGame);
 
 
 // Getters --------------------------------------------------------------------

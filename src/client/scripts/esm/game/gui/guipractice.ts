@@ -54,7 +54,6 @@ function open() {
 	updateCheckmatesBeaten(); // Adds 'beaten' class to them
 	if (!generatedIcons) addPieceIcons();
 	initListeners();
-	guipause.init('practice');
 }
 
 function close() {

@@ -28,5 +28,6 @@ const DEV_BUILD: boolean = docutil.isLocalEnvironment();
 export default {
 	GAME_VERSION,
 	VIDEO_MODE,
-	DEV_BUILD
+	DEV_BUILD,
+	boardVel
 };

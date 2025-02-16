@@ -8,7 +8,6 @@ import drawoffers from '../misc/onlinegame/drawoffers.js';
 import moveutil from '../../chess/util/moveutil.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
-import gameloader from '../chess/gameloader.js';
 import gameslot from '../chess/gameslot.js';
 // Import End
 
@@ -28,7 +27,6 @@ const element_pastegame = document.getElementById('pastegame');
 const element_mainmenu = document.getElementById('mainmenu');
 const element_offerDraw = document.getElementById('offerdraw');
 const element_perspective = document.getElementById('toggleperspective');
-let returnPage;
 
 // Functions
 
@@ -40,10 +38,6 @@ function areWePaused() { return isPaused; }
 
 function getelement_perspective() {
 	return element_perspective;
-}
-
-function init(page) {
-	returnPage = page;
 }
 
 function open() {
@@ -156,15 +150,9 @@ function callback_Resume() {
 }
 
 function callback_MainMenu() {
-	onlinegame.onMainMenuPress();
 	callback_Resume();
-	gameloader.unloadGame();
-	const temp = returnPage;
-	returnPage = undefined;
-
-	const currentUrl = document.location.href;
-	const baseUrl = currentUrl.substring(0, currentUrl.length - 4);
-	document.location.href = baseUrl + (temp ?? (() => { throw new Error("No destination to return to!"); }));
+	const mainMenuEvent = new CustomEvent('mainMenu');
+	document.dispatchEvent(mainMenuEvent);
 }
 
 /** Called when the Offer Draw button is clicked in the pause menu */
@@ -211,5 +199,4 @@ export default {
 	updateTextOfMainMenuButton,
 	callback_Resume,
 	callback_ToggleArrows,
-	init,
 };
