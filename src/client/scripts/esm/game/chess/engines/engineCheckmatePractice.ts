@@ -32,7 +32,11 @@ self.onmessage = function(e: MessageEvent) {
 	const gamefile = message.gamefile;
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
+	globallyBestScore = -Infinity;
+	globalPliesToMate = Infinity;
+
 	if (!engineInitialized) initEvalWeightsAndSearchProperties();	// initialize the eval function weights and global search properties
+	
 	engineStartTime = Date.now();
 	enginePositionCounter = 0;
 	runEngine(gamefile);
@@ -48,10 +52,9 @@ let engineTimeLimitPerMoveMillis: number; // Time limit for the engine to think 
 let checkmateSelectedID: string;
 
 // The informtion that is currently considered best by this engine
-// Whenever this gets initialized or updated, the engine WebWorker should send a message to the main thread!!
 let globallyBestMove: Coords = [0,0];
-let globallyBestScore: number = -Infinity;
-let globalPliesToMate: number = Infinity;
+let globallyBestScore: number;
+let globalPliesToMate: number;
 
 // the real coordinates of the black royal piece in the gamefile
 let gamefile_royal_coords: Coords;
