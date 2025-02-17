@@ -1,7 +1,7 @@
 
 // This script when called as a function using the new keyword, will return a new gamefile.
 
-import organizedlines from './organizedlines.js';
+import organizedpieces from './organizedpieces.js';
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
 import initvariant from './initvariant.js';
@@ -20,9 +20,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
-/** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
-/** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
-/** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
+/** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
 /** @typedef {import('./events.js').GameEvents} GameEvents*/
 
 'use strict'; 
@@ -91,12 +89,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		moveRule: undefined
 	};
 
-	/** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` @type {PiecesByType} */
+	/** All pieces on the board @type {OrganizedPieces} */
 	this.ourPieces = undefined;
-	/** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` @type {PiecesByKey} */
-	this.piecesOrganizedByKey = undefined;
-	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` @type {LinesByStep} */
-	this.piecesOrganizedByLines = undefined;
 
 	/** The object that contains the buffer model to render the pieces */
 	this.mesh = {
@@ -156,7 +150,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** @type {GameEvents} */
 	this.events = {
-		regenerateLists: []
+		regenerateLists: [(gamefile) => {organizedpieces.regenerateLists(gamefile.ourPieces, gamefile.gameRules); return false;}]
 	};
 
 	/** The object that contains the buffer model to render the voids */
@@ -251,7 +245,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** @type {false | string} */
 	this.gameConclusion = false;
 
-	this.ourPieces = organizedlines.buildStateFromKeyList(this);
+	this.ourPieces = organizedpieces.buildStateFromKeyList(this, Int32Array);
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
 	gamefileutility.deleteUnusedMovesets(this);
 
@@ -259,14 +253,13 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
     
-	organizedlines.initOrganizedPieceLists(this);
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;
 	else gamefileutility.doGameOverChecks(this);
 
-	organizedlines.addMoreUndefineds(this, { regenModel: false });
+	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
 
 	clock.set(this, clockValues);
 };

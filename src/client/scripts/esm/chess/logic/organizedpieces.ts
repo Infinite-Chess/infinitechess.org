@@ -5,6 +5,7 @@ import math from "../../util/math";
 
 import type { RawType } from "../util/typeutil";
 import type { Coords, CoordsKey } from "../util/coordutil";
+import type { GameRules } from "../variants/gamerules";
 
 const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
 type PositionArray = Int8Array | Int16Array | Int32Array | BigInt64Array;
@@ -70,23 +71,25 @@ function getArrayType<C extends SizedArray>(a: C) {
 	throw Error();
 }
 
-function constuctNewArray(a: SizedArray, i: number) {
+function constuctNewArray<C extends SizedArray>(a: C, i: number): C {
 	const constructor = getArrayType(a);
-	return new constructor(a.length + i);
+	return new constructor(a.length + i) as C;
 }
 
-function regenerateLists(o: OrganizedPieces) {
-	const typeOrder = Object.keys(o.typeRanges);
+function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
+	const typeOrder = Object.keys(o.typeRanges).map(Number);
 	typeOrder.sort((a,b) => {return o.typeRanges[a].start - o.typeRanges[b].start;});
 
 	let totalUndefinedsNeeded = 0;
 	let currentOffset = 0;
-	const offsetByType = {};
-	const extraUndefinedsByType = {};
-	for (const t in typeOrder) {
+	const offsetByType: {[type: number]: number} = {};
+	const extraUndefinedsByType: {[type: number]: number} = {};
+	for (const t of typeOrder) {
 		offsetByType[t] = currentOffset;
-		let undefinedsNeeded = 0
-		if (isTypeATypeWereAppendingUndefineds(t)) undefinedsNeeded = Math.min(listExtras - o.typeRanges[t].undefineds.length, 0);
+		let undefinedsNeeded = 0;
+		if (isTypeATypeWereAppendingUndefineds(gamerule.promotionsAllowed!, t)) {
+			undefinedsNeeded = Math.min(listExtras - o.typeRanges[t].undefineds.length, undefinedsNeeded);
+		}
 		extraUndefinedsByType[t] = undefinedsNeeded;
 		totalUndefinedsNeeded += undefinedsNeeded;
 		currentOffset += undefinedsNeeded;
@@ -96,7 +99,8 @@ function regenerateLists(o: OrganizedPieces) {
 	const newYpos = constuctNewArray(o.YPositions, totalUndefinedsNeeded);
 	const newTypes = constuctNewArray(o.types, totalUndefinedsNeeded);
 
-	for (const t in o.typeRanges) {
+	for (const nt in o.typeRanges) {
+		const t = Number(nt);
 		const rangeData = o.typeRanges[t];
 		const extraNeeded = extraUndefinedsByType[t];
 		const currentOffset = offsetByType[t];
@@ -114,7 +118,7 @@ function regenerateLists(o: OrganizedPieces) {
 		rangeData.start += currentOffset;
 		rangeData.end += currentOffset;
 		// Add new undefineds
-		for (let i = rangeData.end + 1; i <= rangeData.end + extraNeeded; i++) {
+		for (let i = rangeData.end + 1; i < rangeData.end + extraNeeded; i++) {
 			rangeData.undefineds.push(i);
 		}
 
@@ -122,8 +126,9 @@ function regenerateLists(o: OrganizedPieces) {
 	}
 
 	for (const dir in o.lines) {
-		for (const linekey in o.lines[dir]) {
-			const line: number[] = o.lines[dir][linekey];
+		const l = o.lines.get(dir as Vec2Key);
+		for (const linekey in l) {
+			const line: number[] = l.get(linekey as LineKey)!;
 			for (const i in line) {
 				const idx = line[i];
 				line[i] = offsetByType[o.types[idx]] + idx;
@@ -131,12 +136,20 @@ function regenerateLists(o: OrganizedPieces) {
 		}
 	}
 
-	for (const dir )
+	for (const pos in o.coords ) {
+		const idx = o.coords.get(pos as CoordsKey)!;
+		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]]);
+	}
+
+	o.XPositions = newXpos;
+	o.YPositions = newYpos;
+	o.types = newTypes;
 }
 
-function areWeShortOnUndefineds(o: OrganizedPieces): boolean {
-	for (const t in o.typeRanges) {
-		if (!isTypeATypeWereAppendingUndefineds(, t)) return false;
+function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boolean {
+	for (const nt in o.typeRanges) {
+		const t = Number(nt);
+		if (!isTypeATypeWereAppendingUndefineds(gamerules.promotionsAllowed!, t)) return false;
 		if (o.typeRanges[t].undefineds.length === 0) return true;
 	}
 	return false;
@@ -231,6 +244,9 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
 	organizedPieces.types = toSizedArray(t, new Uint8Array(currentOffset));
 
 	placePieces(gamefile.startSnapshot.slidingPossible, organizedPieces);
+
+	// TODO: Trim piece lists that are empty and cant be promoted to.
+
 	return organizedPieces as OrganizedPieces;
 }
 
@@ -246,7 +262,7 @@ function placePieces(possibleLines: Vec2[], organizedPieces: Partial<OrganizedPi
 	}
 }
 
-function registerPieceInSpace(possibleLines: Vec2[], idx: number, organizedPieces: Partial<OrganizedPieces>) {
+function registerPieceInSpace(idx: number, organizedPieces: Partial<OrganizedPieces>) {
 	const x = organizedPieces.XPositions![idx];
 	const y = organizedPieces.YPositions![idx];
 	const coords = [x,y] as Coords;
@@ -254,12 +270,43 @@ function registerPieceInSpace(possibleLines: Vec2[], idx: number, organizedPiece
 	if (organizedPieces.coords![key] !== undefined) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
 	organizedPieces.coords!.set(key, idx);
 	const lines = organizedPieces.lines!;
-	for (const line of possibleLines) {
-		const lkey = getKeyFromLine(line, coords);
-		const strline = coordutil.getKeyFromCoords(line);
+	for (const line of lines) {
+		const strline = line[0]
+		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
 		// Is line initialized
-		if (lines[strline][lkey] === undefined) lines[strline].set(lkey, []);
-		lines[strline][lkey].push(idx);
+		if (line[1].get(lkey) === undefined) lines[strline].set(lkey, []);
+		line[1].get(lkey)!.push(idx);
+	}
+}
+
+function removePieceFromSpace(idx: number, organizedPieces: Partial<OrganizedPieces>) {
+	const x = organizedPieces.XPositions![idx];
+	const y = organizedPieces.YPositions![idx];
+	const coords = [x,y] as Coords;
+	const key = coordutil.getKeyFromCoords(coords);
+
+	organizedPieces.coords!.delete(key);
+	const lines = organizedPieces.lines!;
+	for (const line of lines) {
+		const strline = line[0];
+		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
+		// Is line initialized
+		if (line[1][lkey] === undefined) line[1].set(lkey, []);
+		removePieceFromLine(line[1], lkey);
+	}
+
+	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
+	function removePieceFromLine(organizedPieces: Map<LineKey,number[]>, lineKey: LineKey) {
+		const line = organizedPieces.get(lineKey)!;
+
+		for (let i = 0; i < line.length; i++) {
+			const thisPieceIdx = line[i]!;
+			if (thisPieceIdx !== idx) continue;
+			line.splice(i, 1); // Delete
+			// If the line length is now 0, remove itself from the organizedPieces
+			if (line.length === 0) organizedPieces.delete(lineKey);
+			break;
+		}
 	}
 }
 
@@ -355,3 +402,23 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 	}
 	return false;
 }
+
+export type {
+	OrganizedPieces
+};
+
+export default {
+	areHippogonalsPresentInGame,
+	areColinearSlidesPresentInGame,
+	buildStateFromKeyList,
+
+	registerPieceInSpace,
+	removePieceFromSpace,
+
+	regenerateLists,
+	areWeShortOnUndefineds,
+
+	getKeyFromLine,
+	getCFromKey,
+	getXFromLine,
+};

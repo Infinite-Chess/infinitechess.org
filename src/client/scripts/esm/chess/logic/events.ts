@@ -47,7 +47,8 @@ function removeEventListener<E extends Eventlist, N extends keyof E, L extends E
 }
 
 interface GameEvents extends Eventlist {
-	regenerateLists: ((gamefile: gamefile) => boolean)[]
+	// Runs when organizedPieces regenerate, DO NOT INTERRUPT.
+	regenerateLists: ((gamefile: gamefile) => false)[]
 }
 
 export type {
