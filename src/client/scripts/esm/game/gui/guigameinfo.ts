@@ -16,6 +16,7 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import winconutil from '../../chess/util/winconutil.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
+import guipractice from '../gui/guipractice.js';
 
 
 
@@ -30,22 +31,37 @@ const element_whosturn = document.getElementById('whosturn')!;
 const element_dot = document.getElementById('dot')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
+const element_undoButton = document.getElementById('undobutton')!;
+const element_restartButton = document.getElementById('restartbutton')!;
 
 let isOpen = false;
+let showButtons = false;
 
 // Functions
 
 /**
  * 
- * @param metadata - The metadata of the gamefile, with its respective White and Black player names.
+ * @param metadata - The metadata of the gamefile, with its respective White and Black player names
+ * @param {boolean} showGameControlButtons
  */
-function open(metadata: MetaData) {
+function open(metadata: MetaData, showGameControlButtons: boolean | undefined = undefined) {
+	if (showGameControlButtons !== undefined) showButtons = showGameControlButtons;
 	const { white, black } = getPlayerNamesForGame(metadata);
 
 	element_playerWhite.textContent = white;
 	element_playerBlack.textContent = black;
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
+
+	if (showButtons) {
+		element_undoButton.classList.remove('hidden');
+		element_restartButton.classList.remove('hidden');
+		initListeners_Gamecontrol();
+	} else {
+		element_undoButton.classList.add('hidden');
+		element_restartButton.classList.add('hidden');
+	}
+
 	isOpen = true;
 }
 
@@ -62,8 +78,32 @@ function close() {
 	
 	// Hide the whole bar
 	element_gameInfoBar.classList.add('hidden');
+	
+	// Close button listeners
+	closeListeners_Gamecontrol();
 
 	isOpen = false;
+}
+
+function initListeners_Gamecontrol() {
+	element_undoButton.addEventListener('click', undoMove);
+	element_restartButton.addEventListener('click', restartGame);
+}
+
+function closeListeners_Gamecontrol() {
+	element_undoButton.removeEventListener('click', undoMove);
+	element_restartButton.removeEventListener('click', restartGame);
+}
+
+function undoMove() {
+	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
+}
+
+function restartGame() {
+	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
+	
+	gameslot.unloadGame(); // Unload current game
+	guipractice.callback_practicePlay() // Effectively, the player just presses the Play button of the practice menu again
 }
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
@@ -80,7 +120,7 @@ function hidePlayerNames() {
 
 function toggle() {
 	if (isOpen) close();
-	else open(gameslot.getGamefile()!.metadata);
+	else open(gameslot.getGamefile()!.metadata, showButtons);
 	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
 	frametracker.onVisualChange();
 }

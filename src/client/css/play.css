@@ -1093,7 +1093,8 @@ button.join-button, button.copy-button {
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 84px; 
+    font-size: 84px;
+    height: 1em;
     box-shadow: 0px -1px 7px 0px rgba(0, 0, 0, 0.659);
     display: flex;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
@@ -1258,6 +1259,39 @@ button.join-button, button.copy-button {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
+/* Game Control Buttons (in the bottom nav bar) */
+
+.game-info-bar .buttoncontainer {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 0.3em;
+    height: 100%;
+}
+
+.game-info-bar .game-control.button {
+    width: 0.74em;
+    height: 0.74em;
+    margin: 0.07em;
+    border-radius: 0.16em; 
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0px 0px 7px 0px rgba(0, 0, 0, 0.878);
+    transition: transform 0.15s;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
+}
+
+.game-control svg {
+    position: absolute;
+}
+
+.game-control.button:hover {
+    transform: scale(1);
+}
+
+.game-control.button:active {
+    transform: scale(1.07);
+}
 
 
 /* Promotion UI */
@@ -1488,15 +1522,14 @@ a {
 
 /* Tooltips */
 
-.tooltip-dl, .tooltip-d, .tooltip-dr {
+.tooltip-dl, .tooltip-d, .tooltip-dr, .tooltip-u {
     position: relative;
 }
 
 /* The main tooltip black box */
-.tooltip-dl::before, .tooltip-d::before, .tooltip-dr::before {
+.tooltip-dl::before, .tooltip-d::before, .tooltip-dr::before, .tooltip-u::before {
     content: attr(data-tooltip);
     position: absolute;
-    top: calc(100% + 8px);
     background-color: black;
     color: rgb(236, 236, 236);
     text-align: center;
@@ -1514,25 +1547,34 @@ a {
 
 /* down-left */
 .tooltip-dl::before {
+    top: calc(100% + 8px);
     right: 0;
 }
 
 /* down */
 .tooltip-d::before {
+    top: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%); /* Shift it left by half of its width */
 }
 
 /* down-right */
 .tooltip-dr::before {
+    top: calc(100% + 8px);
     left: 0;
 }
 
-/* The arrow on the top of the tooltip box */
-.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after {
+/* up */
+.tooltip-u::before {
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%); /* Shift it left by half of its width */
+}
+
+/* The arrow above or below the tooltip box */
+.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after, .tooltip-u::after {
     content: "";
     position: absolute;
-    top: calc(100% + 8.5px);; /* Position right below the tooltip */
     left: 50%;
     border-width: 5px;
     border-style: solid;
@@ -1546,9 +1588,18 @@ a {
     pointer-events: none;
 }
 
+.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after {
+    top: calc(100% + 8.5px); /* Position right above the tooltip */
+}
+
+.tooltip-u::after {
+    transform: rotate(180deg);
+    bottom: calc(100% - 0.5px); /* Position right below the tooltip */
+}
+
 /* After 1s of hovering, the tooltip becomes visible */
-.tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before,
-.tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after {
+.tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before,
+.tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after {
     visibility: visible;
     opacity: 1;
     transition-delay: 0.5s; /* Delay the tooltip appearance. KEEP THE SAME AS IN TOOLTIPS.JS */
@@ -1556,23 +1607,23 @@ a {
 }
 
 /* Overwriting styles after you've already started hovering (no delay) */
-.tooltip-dl.fast-transition:hover::before, .tooltip-d.fast-transition:hover::before, .tooltip-dr.fast-transition:hover::before,
-.tooltip-dl.fast-transition:hover::after, .tooltip-d.fast-transition:hover::after, .tooltip-dr.fast-transition:hover::after {
+.tooltip-dl.fast-transition:hover::before, .tooltip-d.fast-transition:hover::before, .tooltip-dr.fast-transition:hover::before, .tooltip-u.fast-transition:hover::before,
+.tooltip-dl.fast-transition:hover::after, .tooltip-d.fast-transition:hover::after, .tooltip-dr.fast-transition:hover::after, .tooltip-u.fast-transition:hover::after {
     transition-delay: 0s; /* Delay the tooltip appearance */
 }
 
 /* Mobile devices should NOT show the tooltips on hover.. perhaps on active though? */
 @media not (pointer: fine) {
-    .tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before,
-    .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after {
+    .tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before,
+    .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after {
         visibility: hidden;
         opacity: 0;
         transition-delay: 0; /* Delay the tooltip appearance */
         z-index: 0;
     }
   
-    .tooltip-dl:active::before, .tooltip-d:active::before, .tooltip-dr:active::before,
-    .tooltip-dl:active::after, .tooltip-d:active::after, .tooltip-dr:active::after {
+    .tooltip-dl:active::before, .tooltip-d:active::before, .tooltip-dr:active::before, .tooltip-u:active::before,
+    .tooltip-dl:active::after, .tooltip-d:active::after, .tooltip-dr:active::after, .tooltip-u:active::after {
         visibility: visible;
         opacity: 1;
         transition-delay: 0.5s; /* Delay the tooltip appearance */

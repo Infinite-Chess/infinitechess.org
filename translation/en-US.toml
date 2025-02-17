@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "34"
+version = "35"
 maintainer = "Naviary"
 
 [header]
@@ -274,6 +274,8 @@ recenter = "Recenter"
 rewind_move = "Rewind move"
 forward_move = "Forward move"
 pause = "Pause"
+undo = "Undo Move"
+restart = "Restart Game"
 
 [play.pause]
 title = "Paused"
