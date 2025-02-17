@@ -110,7 +110,7 @@ function relockMouse() {
 	if (!enabled) return;
 	if (isMouseLocked()) return;
 	if (guipause.areWePaused()) return;
-	if (selection.isPawnCurrentlyPromoting()) return;
+	if (selection.getSquarePawnIsCurrentlyPromotingOn()) return;
 
 	lockMouse();
 }

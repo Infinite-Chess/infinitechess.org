@@ -5,7 +5,7 @@
 
 
 import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
-import type { CoordsSpecial } from '../../game/chess/selection.js';
+import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 // @ts-ignore
 import type { gamefile } from '../logic/gamefile.js';

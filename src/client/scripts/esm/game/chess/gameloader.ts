@@ -22,7 +22,6 @@ import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
-import checkmatepractice from "./checkmatepractice.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
@@ -57,6 +56,25 @@ function areInAGame(): boolean {
 /** Returns the type of game we are in. */
 function getTypeOfGameWeIn() {
 	return typeOfGameWeAreIn;
+}
+
+function areInLocalGame(): boolean {
+	return typeOfGameWeAreIn === 'local';
+}
+
+function isItOurTurn(color?: string): boolean {
+	if (typeOfGameWeAreIn === undefined) throw Error("Can't tell if it's our turn when we're not in a game!");
+	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
+	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
+	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.whosTurn === color;
+	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
+}
+
+function getOurColor(): 'white' | 'black' {
+	if (typeOfGameWeAreIn === undefined) throw Error("Can't get our color when we're not in a game!");
+	if (typeOfGameWeAreIn === 'online') return onlinegame.getOurColor();
+	else if (typeOfGameWeAreIn === 'engine') return enginegame.getOurColor();
+	throw Error("Can't get our color in this type of game: " + typeOfGameWeAreIn);
 }
 
 /**
@@ -184,6 +202,9 @@ function unloadGame() {
 
 export default {
 	areInAGame,
+	areInLocalGame,
+	isItOurTurn,
+	getOurColor,
 	getTypeOfGameWeIn,
 	update,
 	startLocalGame,

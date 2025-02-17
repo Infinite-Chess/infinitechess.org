@@ -15,6 +15,7 @@ import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
 import gameslot from './chess/gameslot.js';
+import draganimation from './rendering/dragging/draganimation.js';
 // Import End
 
 "use strict";
@@ -91,20 +92,12 @@ function getTouchClicked() {
 	return touchClicked;
 }
 
-function getTouchClickedTile() {
-	return touchClickedTile;
-}
-
 function getTouchClickedWorld() {
 	return touchClickedWorld;
 }
 
 function getMouseWheel() {
 	return mouseWheel;
-}
-
-function getMouseClickedTile() {
-	return mouseClickedTile;
 }
 
 function getMouseClicked() {
@@ -131,18 +124,16 @@ function getPointerHeld() {
 	return pointerIsTouch ? touchHelds.length === 1 : mouseHelds.includes(leftMouseKey);
 }
 
+/** Returns whether there was a simulated click by a finger or mouse */
 function getPointerClicked() {
 	return pointerIsTouch ? touchClicked : mouseClicked;
-}
-
-function getPointerClickedTile() {
-	return pointerIsTouch ? [touchClickedTile.x, touchClickedTile.y] : mouseClickedTile;
 }
 
 function getPointerWorldLocation() {
 	return [pointerWorldLocation[0], pointerWorldLocation[1]];
 }
 
+/** Returns true whether the most recent pointer input was from a touch event. */
 function getPointerIsTouch() {
 	return pointerIsTouch;
 }
@@ -205,6 +196,8 @@ function initListeners_Touch() {
 
 	overlayElement.addEventListener('touchmove', (event) => {
 		if (perspective.getEnabled()) return;
+		frametracker.onVisualChange();
+
 		event = event || window.event;
 		const touches = event.changedTouches;
 		for (let i = 0; i < touches.length; i++) {
@@ -327,10 +320,7 @@ function initListeners_Mouse() {
 	// AND SAFARI calls this 600 TIMES! This increases the sensitivity of the mouse in perspective
 	window.addEventListener('mousemove', (event) => {
 		event = event || window.event;
-		// We need to re-render if the mouse ever moves because rendering methods test if the mouse is hovering over
-		// pieces to change their opacity. The exception is if we're paused.
-		const renderThisFrame = !guipause.areWePaused() && (arrows.getMode() !== 0 || movement.isScaleLess1Pixel_Virtual() || selection.isAPieceSelected() || perspective.getEnabled());
-		if (renderThisFrame) frametracker.onVisualChange();
+		frametracker.onVisualChange();
 		
 		pointerIsTouch = false;
 		
@@ -390,7 +380,7 @@ function initListeners_Mouse() {
 
 	// This mousedown event is ONLY for perspective mode, and it attached to the document instead of overlay!
 	document.addEventListener("mousedown", (event) => {
-		event = event || window.event;
+		frametracker.onVisualChange();
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
 		pushMouseDown(event);
@@ -399,7 +389,7 @@ function initListeners_Mouse() {
 	});
 
 	overlayElement.addEventListener("mouseup", (event) => {
-		event = event || window.event;
+		frametracker.onVisualChange();
 		removeMouseHeld(event);
 		setTimeout(perspective.relockMouse, 1); // 1 millisecond, to give time for pause listener to fire
 
@@ -760,14 +750,12 @@ export default {
 	isMouseDown_Left,
 	isMouseDown_Right,
 	removeMouseDown_Left,
-	getTouchClickedTile,
 	getTouchClickedWorld,
 	isMouseHeld_Left,
 	isKeyDown,
 	atleast1KeyHeld,
 	isKeyHeld,
 	getMouseWheel,
-	getMouseClickedTile,
 	getMouseClicked,
 	getMousePos,
 	getMouseMoved,
@@ -785,7 +773,6 @@ export default {
 	getPointerDown,
 	getPointerHeld,
 	getPointerClicked,
-	getPointerClickedTile,
 	getPointerWorldLocation,
 	getPointerIsTouch
 };

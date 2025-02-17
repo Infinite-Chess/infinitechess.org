@@ -141,7 +141,8 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, resetAnima
 	// Generate smooth spline waypoints
 	const path_HighResolution = splines.generateSplinePath(path, SPLINES.RESOLUTION);
 	const segments = createAnimationSegments(path_HighResolution);
-	const totalDistance = calculateTotalAnimationDistance(segments);
+	// Calculates the total length of the path traveled by the piece in the animation.
+	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
 	const newAnimation: Animation = {
 		type,
@@ -197,11 +198,6 @@ function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
 		});
 	}
 	return segments;
-}
-
-/** Calculates the total length of the path traveled by the piece in the animation. */
-function calculateTotalAnimationDistance(segments: AnimationSegment[]): number {
-	return segments.reduce((sum, seg) => sum + seg.distance, 0);
 }
 
 /** Calculates the duration in milliseconds a particular move would take to animate. */
