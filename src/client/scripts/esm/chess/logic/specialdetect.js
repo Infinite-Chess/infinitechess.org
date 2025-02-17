@@ -189,7 +189,7 @@ function pawns(gamefile, coords, color) {
 function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
 	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
 	const enpassantSquare = [moveStartCoords[0], y];
-	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) };
+	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special flags
 }
 
 /**
