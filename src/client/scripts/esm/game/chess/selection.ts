@@ -184,7 +184,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
 	if (selectionLevel === 0) return; // Can't select this piece type
-	else if (selectionLevel === 1 && input.getPointerClicked()) {
+	else if (selectionLevel === 1 && input.getPointerClicked()) { // CAN select this piece type
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -192,7 +192,8 @@ function testIfPieceSelected(gamefile: gamefile) {
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
-	} else if (selectionLevel === 2 && input.getPointerDown()) {
+	} else if (selectionLevel === 2 && input.getPointerDown()) { // Can DRAG this piece type
+		if (input.isKeyHeld('control')) return; // Control key force drags the board, disallowing picking up a piece.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
