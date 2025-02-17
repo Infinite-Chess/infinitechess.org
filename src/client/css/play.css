@@ -1286,11 +1286,11 @@ button.join-button, button.copy-button {
 }
 
 .game-control.button:hover {
-    transform: scale(1);
+    transform: scale(1.07);
 }
 
 .game-control.button:active {
-    transform: scale(1.07);
+    transform: scale(1);
 }
 
 
