@@ -100,6 +100,7 @@ function undoMove() {
 	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
 
 	// TODO: Add support for rewinding moves also during engine's turn
+	// TODO: Add support for rewinding moves after game is concluded
 	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
 	if (enginegame.isItOurTurn() && gameslot.getGamefile()!.moves.length > 1) {
 		movesequence.rewindMove(gameslot.getGamefile()!);
