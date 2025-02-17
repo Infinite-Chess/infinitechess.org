@@ -31,17 +31,34 @@ self.onmessage = function(e: MessageEvent) {
 	const message = e.data;
 	const gamefile = message.gamefile;
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
+	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
+	globallyBestScore = -Infinity;
+	globalPliesToMate = Infinity;
+
+	if (!engineInitialized) initEvalWeightsAndSearchProperties();	// initialize the eval function weights and global search properties
+	
+	engineStartTime = Date.now();
+	enginePositionCounter = 0;
 	runEngine(gamefile);
 };
+
+/** Whether the engine has already been initialized for the current game */
+let engineInitialized: boolean = false;
+
+/** Start time of current engine calculation in millis */
+let engineStartTime: number;
+/** The number of positions evaluated by this engine in total during current calculation */
+let enginePositionCounter: number;
+/** Time limit for the engine to think in milliseconds */
+let engineTimeLimitPerMoveMillis: number;
 
 // the ID of the currently selected checkmate
 let checkmateSelectedID: string;
 
 // The informtion that is currently considered best by this engine
-// Whenever this gets initialized or updated, the engine WebWorker should send a message to the main thread!!
 let globallyBestMove: Coords = [0,0];
-let globallyBestScore: number = -Infinity;
-let globalPliesToMate: number = Infinity;
+let globallyBestScore: number;
+let globalPliesToMate: number;
 
 // the real coordinates of the black royal piece in the gamefile
 let gamefile_royal_coords: Coords;
@@ -240,6 +257,8 @@ function initEvalWeightsAndSearchProperties() {
 				16: 0
 			}
 		};
+
+		engineInitialized = true;
 	}
 
 	// variant-specific modifications to the weights:
@@ -694,9 +713,13 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Number} betaDepth 
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaDepth: number, betaDepth: number): { score: number, bestMove?: Coords, termination_depth: number } {
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaDepth: number, betaDepth: number): { score: number, bestMove?: Coords, termination_depth: number, terminate_now: boolean } {
+	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
+	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) { return {score: 0, termination_depth: 0, terminate_now: true}; }
+	enginePositionCounter++;
+	
 	if (depth === 0 || ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) ) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth};
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth, terminate_now: false };
 	}
 
 	let bestMove: Coords | undefined;
@@ -707,6 +730,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		for (const move of get_black_legal_moves(piecelist, coordlist)) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
 			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaDepth, betaDepth);
+			if (evaluation.terminate_now) return {score: 0, termination_depth: 0, terminate_now: true};
 			const new_score = evaluation.score;
 			const termination_depth = evaluation.termination_depth;
 			if (new_score >= maxScore) {
@@ -718,7 +742,6 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 						globallyBestMove = move;
 						globallyBestScore = new_score;
 						globalPliesToMate = Math.min(globalPliesToMate, termination_depth > 0 ? start_depth - termination_depth : Infinity);
-						self.postMessage(move_to_gamefile_move(globallyBestMove));
 					}
 				}
 			}
@@ -729,7 +752,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			}
 		}
 		if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
-		return { score: maxScore, bestMove: bestMove, termination_depth: deepestDepth};
+		return { score: maxScore, bestMove: bestMove, termination_depth: deepestDepth, terminate_now: false };
 	} else {
 		let minScore = Infinity;
 		let highestDepth = 0;
@@ -741,6 +764,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
 				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaDepth, betaDepth);
+				if (evaluation.terminate_now) return {score: 0, termination_depth: 0, terminate_now: true};
 				const new_score = evaluation.score;
 				const termination_depth = evaluation.termination_depth;
 				if (new_score <= minScore) {
@@ -756,7 +780,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				}
 			}
 		}
-		return { score: minScore, termination_depth: highestDepth };
+		return { score: minScore, termination_depth: highestDepth, terminate_now: false };
 	}
 }
 
@@ -769,15 +793,14 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)]!;
 	const [new_piecelist, new_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
 	globallyBestScore = get_position_evaluation(new_piecelist, new_coordlist, false);
-	self.postMessage(move_to_gamefile_move(globallyBestMove));
 	
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, depth, 0);
+		if (evaluation.terminate_now) break;
 		globallyBestMove = evaluation.bestMove!;
 		globallyBestScore = evaluation.score;
 		globalPliesToMate = evaluation.termination_depth > 0 ? depth - evaluation.termination_depth : Infinity;
-		self.postMessage(move_to_gamefile_move(globallyBestMove));
 		// console.log(`Depth ${depth}, Plies To Mate: ${globalPliesToMate}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestMove}.`);
 	}
 }
@@ -820,25 +843,11 @@ function runEngine(gamefile: gamefile): void {
 			start_coordlist.push([coords[0]! - gamefile_royal_coords[0]!, coords[1]! - gamefile_royal_coords[1]!]);
 		}
 
-		// initialize the eval function weights and global search properties
-		initEvalWeightsAndSearchProperties();
-
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
-		/*
-		let string = "";
-		let candidate_move_count = 0;
-		const candidate_moves = get_white_candidate_moves(start_piecelist, start_coordlist);
-		for (let i=0; i<start_coordlist.length; i++){
-			candidate_move_count += candidate_moves[i].length;
-			string += `Piece at: ${start_coordlist[i]} 
-			move to ${candidate_moves[i]}
-			total amount: ${candidate_moves[i].length}\n`;
-		}
-		// console.log(`Total move count: ${candidate_move_count}`)
-		console.log(string + `Total move count: ${candidate_move_count}`)
-		*/
+		// submit engine move
+		postMessage(move_to_gamefile_move(globallyBestMove));
 
 	} catch (e) {
 		console.error("An error occured in the engine computation of the checkmate practice");
