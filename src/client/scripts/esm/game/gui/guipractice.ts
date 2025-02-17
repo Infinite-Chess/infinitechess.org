@@ -68,7 +68,7 @@ function close() {
 /**
  * On first practice page load, generate list of checkmate HTML elements to be shown on page
  */
-async function createPracticeHTML() {
+function createPracticeHTML() {
 	const difficultyLabels: string[] = [];
 	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[0]).fill("easy"));
 	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[1]).fill("medium"));
