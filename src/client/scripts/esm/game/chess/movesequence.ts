@@ -84,6 +84,8 @@ function rewindMove(gamefile: gamefile) {
 	boardchanges.runMove(gamefile, lastMove, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	updateGui(false); // GUI changes
+	// Un-conclude the game if it was concluded
+	if (gamefileutility.isGameOver(gamefile)) gameslot.unConcludeGame();
 }
 
 
