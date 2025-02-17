@@ -195,6 +195,8 @@ function isLoadedGameViewingWhitePerspective() {
 
 /**
  * Loads a gamefile onto the board.
+ * This returns a promise that resolves when the game is loaded LOGICALLY.
+ * The loading animation will close when the game is loaded GRAPHICALLY.
  */
 async function loadGamefile(loadOptions: LoadOptions) {
 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
