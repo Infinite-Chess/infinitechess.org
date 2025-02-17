@@ -4,11 +4,22 @@
  * retrieving the game rules, or move sets of any given variant.
  */
 
+
+import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
+import type { Move } from '../logic/movepiece.js';
+import type { Piece } from '../logic/boardchanges.js';
+// @ts-ignore
+import type gamefile from '../logic/gamefile.js';
+// @ts-ignore
+import type { GameRules } from './gamerules.js';
+
+
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
 import colorutil from '../util/colorutil.js';
 import fivedimensionalgenerator from './fivedimensionalgenerator.js';
 import movesets from '../logic/movesets.js';
+import fivedimensionalmoves from '../logic/fivedimensionalmoves.js';
 // @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
 // @ts-ignore
@@ -20,15 +31,7 @@ import typeutil from '../util/typeutil.js';
 // @ts-ignore
 import specialmove from '../logic/specialmove.js';
 
-// Type Definitions...
 
-import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
-// @ts-ignore
-import type { GameRules } from './gamerules.js';
-import { Move } from '../logic/movepiece.js';
-// @ts-ignore
-import gamefile from '../logic/gamefile.js';
-import { Piece } from '../logic/boardchanges.js';
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
 interface GameRuleModifications {
@@ -68,7 +71,9 @@ interface Variant {
 	movesetGenerator?: TimeVariantProperty<() => Movesets>,
 	gameruleModifications: TimeVariantProperty<GameRuleModifications>
 	/** Special Move overrides */
-	specialMoves?: TimeVariantProperty<SpecialVicinity>
+	specialMoves?: TimeVariantProperty<{
+		[piece: string]: SpecialMoveFunction
+	}>
 	/**
 	 * Used for check calculation.
 	 * If we have any overrides for specialMoves, we should have overrides for
@@ -77,23 +82,33 @@ interface Variant {
 	specialVicinity?: TimeVariantProperty<SpecialVicinity>
 }
 
-/** Function that queues all of the changes a special move makes when executed. */
+/**
+ * Function that queues all of the changes a special move makes when executed.
+ * 
+ * TODO: Move this to specialmove.ts when it's converted to typescript.
+ */
 // eslint-disable-next-line no-unused-vars
 type SpecialMoveFunction = (gamefile: gamefile, piece: Piece, move: Move) => boolean;
 
 /**
  * An object storing the squares in the immediate vicinity
  * a piece has a CHANCE of making a special-move capture from.
+ * 
+ * TODO: Move this to specialmove.ts when it's converted to typescript.
  */
 interface SpecialVicinity {
 	/**
-	 * `piece` is the type without color information.
+	 * `piece` is the type without color information. (i.e. 'pawns')
 	 * The value is a list of coordinates that it may be possible for that piece type to make a special capture from that distance.
 	 */
 	[piece: string]: Coords[]
 }
 
-/** A position in keys format. Entries look like: `"5,2": "pawnsW"` */
+/**
+ * A position in keys format. Entries look like: `"5,2": "pawnsW"`
+ * 
+ * TODO: Move to organizedlines.ts
+ */
 interface Position {
 	[coordKey: string]: string
 }
@@ -266,7 +281,9 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
 		},
 		movesetGenerator: fivedimensionalgenerator.genMovesetOfFiveDimensional,
-		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, -2, -12], black: [1, 11, 21, -9, -19] } },
+		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, 38, 48, 58, 68, 78], black: [1, 11, 21, 31, 41, 51, 61, 71] } },
+		specialMoves: { pawns: fivedimensionalmoves.doFiveDimensionalPawnMove },
+		specialVicinity: { pawns: [[1,1],[-1,1],[-1,-1],[1,-1],[10,10],[10,-10],[-10,-10],[-10,10]] }
 	}
 };
 
@@ -419,6 +436,14 @@ function getGameRules(modifications: GameRuleModifications = {}, position?: { [c
 	if (modifications.slideLimit !== undefined) gameRules.slideLimit = modifications.slideLimit;
 
 	return jsutil.deepCopyObject(gameRules) as GameRules; // Copy it so the game doesn't modify the values in this module.
+}
+
+/**
+ * Returns the bare-minimum gamerules a game needs to function.
+ * @returns {GameRules} The gameRules object
+ */
+function getBareMinimumGameRules(): GameRules {
+	return getGameRules({ promotionRanks: null, moveRule: null }); // Erase the defaults to end up with only the required's
 }
 
 // /**
@@ -598,6 +623,7 @@ export default {
 	getMovesetsOfVariant,
 	getSpecialMovesOfVariant,
 	getSpecialVicinityOfVariant,
+	getBareMinimumGameRules,
 };
 
 export type {

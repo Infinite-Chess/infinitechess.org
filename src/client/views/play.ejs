@@ -74,6 +74,7 @@
                     <h1>Infinite Chess</h1>
                     <button id="play" class="play titlebubble button"><%=t('play.main-menu.play')%></button>
                     <button id="rules" class="rules titlebubble button"><%=t('play.main-menu.guide')%></button>
+                    <button id="practice" class="practice titlebubble button"><%=t('play.main-menu.practice')%></button>
                     <button id="board-editor" class="board-editor titlebubble button opacity-0_5"><%=t('play.main-menu.editor')%></button>
                 </div>
 
@@ -363,6 +364,51 @@
                     </div>
                     <button id="create-invite" class="create-invite titlebubble button"><%=t('play.play-menu.create_invite')%></button>
                     <button id="play-back" class="play-back titlebubble button"><%=t('play.play-menu.back')%></button>
+                </div>
+
+                <!-- Practice selection -->
+                <div id="practice-selection" class="practice-selection hidden">
+                    <p id="practice-name" class="practice-name"><%=t('play.practice-menu.title')%></p>
+                    <button id="checkmate-practice" class="checkmate-practice titlebubble button"><%=t('play.practice-menu.checkmates')%></button>
+                    <button id="tactics-practice" class="tactics-practice titlebubble opacity-0_5 button"><%=t('play.practice-menu.tactics')%></button>
+                    <div class="practice-box titlebubble">
+                        <div class="practice-head">
+                            <div class="checkmate-progress-bar"></div>
+                            <div class="checkmate-difficulty"><%=t('play.practice-menu.difficulty')%></div>
+                        </div>
+                        <div class="checkmate-list">
+                            <div id="checkmates">
+                                <!-- Checkmate list is inserted dynamically here on demand. -->
+                                <!-- Example looks like: -->
+                                <!-- <div class="checkmate unselectable selected" id="2R1N1P-1k">
+                                    <div class="completion-mark"></div>
+                                    <div class="piecelistW">
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece rooksW"><svg></svg></div>
+                                        </div>
+                                        <div class="checkmate-child checkmatepiececontainer collated-strong">
+                                            <div class="checkmatepiece rooksW"><svg></svg></div>
+                                        </div>
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece knightsW"><svg></svg></div>
+                                        </div>
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece pawnsW"><svg></svg></div>
+                                        </div>
+                                    </div>
+                                    <div class="checkmate-child versus">vs</div>
+                                    <div class="piecelistB">
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece kingsB"></div>
+                                        </div>
+                                    </div>
+                                    <div class="checkmate-difficulty">Medium</div>
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+                    <button id="practice-play" class="practice-play titlebubble button"><%=t('play.practice-menu.play')%></button>
+                    <button id="practice-back" class="practice-back titlebubble button"><%=t('play.practice-menu.back')%></button>
                 </div>
 
                 <!-- Stats below navigation bar -->

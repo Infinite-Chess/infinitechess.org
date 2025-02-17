@@ -14,6 +14,9 @@ import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
 
+// @ts-ignore
+import enginegame from '../misc/enginegame.js';
+
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";
@@ -190,8 +193,6 @@ function isLoadedGameViewingWhitePerspective() {
 	return youAreColor === 'white';
 };
 
-
-
 /**
  * Loads a gamefile onto the board.
  */
@@ -217,8 +218,9 @@ async function loadGamefile(loadOptions: LoadOptions) {
 	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
 	sound.playSound_gamestart();
 
-	// Next start loading the GRAPHICAL stuff...
-	/*
+	/**
+	 * Next start loading the GRAPHICAL stuff...
+	 * 
 	 * The reason we attach a .then() to this instead of just 'await'ing,
 	 * is because we need loadGamefile() to return as soon as the logical
 	 * stuff has finished loading. The graphics may finish on its own time.
@@ -367,6 +369,7 @@ function concludeGame() {
 	board.darkenColor();
 	guigameinfo.gameEnd(loadedGamefile.gameConclusion);
 	onlinegame.onGameConclude();
+	enginegame.onGameConclude();
 
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {

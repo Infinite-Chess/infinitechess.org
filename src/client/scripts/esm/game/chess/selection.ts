@@ -34,6 +34,8 @@ import legalmoves from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import input from '../input.js';
 // @ts-ignore
+import enginegame from '../misc/enginegame.js';
+// @ts-ignore
 import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
@@ -261,7 +263,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
 function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
 	if (type === 'voidsN') return 0; // Can't select voids
-	if (options.getEM()) return 2; // Edit mode allows any piece besides voids to be selected and dragged.
+	if (options.getEM()) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
 	const color = colorutil.getPieceColorFromType(type);
 	if (color === colorutil.colorOfNeutrals) return 0; // Can't select neutrals, period.
 	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
@@ -422,6 +424,7 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	}
 
 	movesendreceive.sendMove();
+	enginegame.submitMove();
 
 	unselectPiece();
 }

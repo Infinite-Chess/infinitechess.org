@@ -186,29 +186,20 @@ function pawns(gamefile, coords, color) {
 function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	if (gamefile.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 
-	const xLandDiff = gamefile.enpassant.square[0] - coords[0];
-	const oneOrNegOne = color === 'white' ? 1 : -1;
-	if (Math.abs(xLandDiff) !== 1) return; // Not immediately left or right of us
-	if (coords[1] + oneOrNegOne !== gamefile.enpassant.square[1]) return; // Not one in front of us
-
-	const captureSquare = [coords[0] + xLandDiff, coords[1] + oneOrNegOne];
-
-	const capturedPieceSquare = [coords[0] + xLandDiff, coords[1]];
-	const capturedPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, capturedPieceSquare);
-	// cannot capture nothing en passant
-	if (!capturedPieceType) return;
-	// cannot capture own piece en passant
-	if (color === colorutil.getPieceColorFromType(capturedPieceType)) return;
+	const xDifference = gamefile.enpassant.square[0] - coords[0];
+	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
+	const yParity = color === 'white' ? 1 : -1;
+	if (coords[1] + yParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
 
-	// Extra check to make sure there's no piece (bug if so)
-	if (gamefileutility.getPieceTypeAtCoords(gamefile, captureSquare)) return console.error("We cannot capture onpassant onto a square with an existing piece! " + captureSquare);
+	/** The square the pawn lands on. */
+	const enPassantSquare = coordutil.copyCoords(gamefile.enpassant.square);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
-	captureSquare.enpassant = true;
-	appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, captureSquare, color);
+	enPassantSquare.enpassant = true;
+	appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, enPassantSquare, color);
 }
 
 /**

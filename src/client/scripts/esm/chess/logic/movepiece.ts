@@ -138,7 +138,7 @@ interface Move extends MoveDraft {
  */
 function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
-	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
+	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
 	// Construct the full Move object
 	// Initialize the state, and change list, as empty for now.

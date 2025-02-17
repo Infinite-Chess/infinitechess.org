@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "31"
+version = "34"
 maintainer = "Naviary"
 
 [header]
@@ -146,6 +146,7 @@ error = "ERROR"
 [play.main-menu]
 credits = "Credits"
 play = "Play"
+practice = "Practice"
 guide = "Guide"
 editor = "Board Editor"
 
@@ -201,6 +202,14 @@ centaur = {name="Centaur", description="Moves like a knight and a guard combined
 knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
+
+[play.practice-menu]
+title = "Practice"
+checkmates = "Checkmates"
+tactics = "Tactics"
+play = "Play"
+back = "Back"
+difficulty = "Difficulty"
 
 [play.play-menu]
 title = "Play - Online"
@@ -314,10 +323,18 @@ webgl_unsupported = "Please upgrade your browser! It does not support WebGL2."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
+menu_checkmate = "Practice - Checkmates" # The title of the Practice page changes to this when "Checkmates" is selected over "Tactics"
+progress_checkmate = "Progress"
+versus = "vs"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
+insane = "Insane"
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
 cannot_paste_in_public = "Cannot paste game in a public match!"
+cannot_paste_in_engine = "Cannot paste game in an engine match!"
 cannot_paste_after_moves = "Cannot paste game after moves are made!"
 clipboard_denied = "Clipboard permission denied. This might be your browser."
 clipboard_invalid = "Clipboard is not in valid ICN notation."
