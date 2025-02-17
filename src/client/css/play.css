@@ -587,6 +587,10 @@ canvas {
     padding: 0.5em 2em;
 }
 
+.difficulty-title {
+    font-size: 0.8em;
+}
+
 .checkmate-list {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
     overflow-y: auto;
