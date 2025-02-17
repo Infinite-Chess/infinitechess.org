@@ -1577,7 +1577,6 @@ a {
     border-width: 5px;
     border-style: solid;
     border-color:  transparent transparent black transparent;
-    transform: translate(-50%, -100%);
     visibility: hidden; /* Hidden by default */
     opacity: 0;
     transition: opacity 0.1s ease-in-out;
@@ -1588,11 +1587,12 @@ a {
 
 .tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after {
     top: calc(100% + 8.5px); /* Position right above the tooltip */
+    transform: translate(-50%, -100%);
 }
 
 .tooltip-u::after, .tooltip-ul::after {
-    transform: rotate(180deg);
-    bottom: calc(100% - 0.5px); /* Position right below the tooltip */
+    bottom: calc(100% + 8.5px);
+    transform: rotate(180deg) translate(50%, -100%);
 }
 
 /* After 1s of hovering, the tooltip becomes visible */
