@@ -16,6 +16,8 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import winconutil from '../../chess/util/winconutil.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
+import guipractice from '../gui/guipractice.js';
+import movesequence from "../chess/movesequence.js";
 
 
 
@@ -30,22 +32,35 @@ const element_whosturn = document.getElementById('whosturn')!;
 const element_dot = document.getElementById('dot')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
+const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
+const element_undoButton = document.getElementById('undobutton')!;
+const element_restartButton = document.getElementById('restartbutton')!;
 
 let isOpen = false;
+/** Whether to show the practice mode game control buttons - undo move and restart. */
+let showButtons = false;
 
 // Functions
 
 /**
  * 
- * @param metadata - The metadata of the gamefile, with its respective White and Black player names.
+ * @param metadata - The metadata of the gamefile, with its respective White and Black player names
+ * @param {boolean} showGameControlButtons
  */
-function open(metadata: MetaData) {
+function open(metadata: MetaData, showGameControlButtons?: boolean) {
+	if (showGameControlButtons) showButtons = showGameControlButtons;
 	const { white, black } = getPlayerNamesForGame(metadata);
 
 	element_playerWhite.textContent = white;
 	element_playerBlack.textContent = black;
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
+
+	if (showButtons) {
+		element_practiceButtons.classList.remove('hidden');
+		initListeners_Gamecontrol();
+	}
+
 	isOpen = true;
 }
 
@@ -62,8 +77,44 @@ function close() {
 	
 	// Hide the whole bar
 	element_gameInfoBar.classList.add('hidden');
+	
+	// Close button listeners
+	closeListeners_Gamecontrol();
+	element_practiceButtons.classList.add('hidden');
+	showButtons = false;
 
 	isOpen = false;
+}
+
+function initListeners_Gamecontrol() {
+	element_undoButton.addEventListener('click', undoMove);
+	element_restartButton.addEventListener('click', restartGame);
+}
+
+function closeListeners_Gamecontrol() {
+	element_undoButton.removeEventListener('click', undoMove);
+	element_restartButton.removeEventListener('click', restartGame);
+}
+
+// TODO: Migrate this logic and imports to other file
+function undoMove() {
+	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
+
+	// TODO: Add support for rewinding moves also during engine's turn
+	// TODO: Add support for rewinding moves after game is concluded
+	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
+	if (enginegame.isItOurTurn() && gameslot.getGamefile()!.moves.length > 1) {
+		movesequence.rewindMove(gameslot.getGamefile()!);
+		movesequence.rewindMove(gameslot.getGamefile()!);
+	}
+}
+
+// TODO: Migrate this logic and imports to other file
+function restartGame() {
+	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
+	
+	gameloader.unloadGame(); // Unload current game
+	guipractice.callback_practicePlay(); // Effectively, the player just presses the Play button of the practice menu again
 }
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
@@ -80,7 +131,7 @@ function hidePlayerNames() {
 
 function toggle() {
 	if (isOpen) close();
-	else open(gameslot.getGamefile()!.metadata);
+	else open(gameslot.getGamefile()!.metadata, showButtons);
 	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
 	frametracker.onVisualChange();
 }

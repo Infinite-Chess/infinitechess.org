@@ -280,6 +280,7 @@ function moveUpSelection(event: Event) {
 
 
 export default {
+	callback_practicePlay,
 	getCheckmateSelectedID,
 	open,
 	updateCheckmatesBeaten,

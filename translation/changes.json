@@ -1,4 +1,8 @@
 {
+	"35": {
+		"note": "Added undo and restart to play.gamebuttontooltips on lines 277-278",
+		"changes": []
+	},
 	"34": {
 		"note": "Moved versus, easy, medium, hard and insane from play.practice-menu to play.javascript on lines 328-332",
 		"changes": []
