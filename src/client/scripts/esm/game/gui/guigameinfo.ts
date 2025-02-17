@@ -96,6 +96,7 @@ function closeListeners_Gamecontrol() {
 	element_restartButton.removeEventListener('click', restartGame);
 }
 
+// TODO: Migrate this logic and imports to other file
 function undoMove() {
 	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
 
@@ -108,6 +109,7 @@ function undoMove() {
 	}
 }
 
+// TODO: Migrate this logic and imports to other file
 function restartGame() {
 	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
 	

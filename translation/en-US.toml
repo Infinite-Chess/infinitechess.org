@@ -274,8 +274,8 @@ recenter = "Recenter"
 rewind_move = "Rewind move"
 forward_move = "Forward move"
 pause = "Pause"
-undo = "Undo Move"
-restart = "Restart Game"
+undo = "Undo move"
+restart = "Restart game"
 
 [play.pause]
 title = "Paused"
