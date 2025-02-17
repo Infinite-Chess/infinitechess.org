@@ -31,7 +31,7 @@ const element_progressBar: HTMLElement = document.querySelector('.checkmate-prog
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
 let modeSelected: 'checkmate-practice' | 'tactics-practice';
-let checkmateSelectedID: string = "2Q-1k"; // id of selected checkmate
+let checkmateSelectedID: string = checkmatepractice.validCheckmates[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedHTML: boolean = false;
 let generatedIcons: boolean = false;
