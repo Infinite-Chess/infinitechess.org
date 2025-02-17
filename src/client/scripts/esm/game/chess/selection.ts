@@ -252,13 +252,12 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
 
 
 /**
- * 0 => Can't select this piece type (i.e. voids, neutrals)
+ * 0 => Can't select this piece type EVER (i.e. voids, neutrals).
  * 1 => Can select this piece type, but not draggable.
  * 2 => Can select and drag this piece type.
  * 
  * A piece will not be considered draggable (level 2) if the user disabled dragging.
  * This means more information is needed to tell if the piece is moveable.
- * @param type 
  */
 function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
@@ -274,7 +273,6 @@ function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1
 
 /**
  * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
- * @param pieceType - the type of piece 
  */
 function canMovePieceType(pieceType: string): boolean {
 	if (options.getEM()) return true; // Edit mode allows pieces to be moved on any turn.

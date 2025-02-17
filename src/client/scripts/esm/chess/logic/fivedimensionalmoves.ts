@@ -54,11 +54,11 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 	// Is there a piece in front of it?
 	const coordsInFront = [coords[0], coords[1] + yDistanceParity] as Coords;
 	if (gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront) === undefined) {
-		individualMoves.push(coordsInFront); // No piece, add the move
+		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 		// Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as Coords;
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
-		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) individualMoves.push(doublePushCoord); // Add the double push!
+		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); // Add the double push!
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
@@ -81,7 +81,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 		// Make sure it isn't a void
 		if (pieceAtCoords === 'voidsN') continue;
 
-		individualMoves.push(thisCoordsToCapture); // Good to add the capture!
+		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Add the capture
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -113,7 +113,20 @@ function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coo
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
 	enPassantSquare.enpassant = true;
-	individualMoves.push(enPassantSquare);
+	appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, enPassantSquare, color);
+}
+
+/**
+ * Appends the provided move to the running individual moves list,
+ * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
+ */
+function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: string) {
+	if (gamefile.gameRules.promotionRanks !== undefined) {
+		const teamPromotionRanks = gamefile.gameRules.promotionRanks[color];
+		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
+	}
+
+	individualMoves.push(landCoords);
 }
 
 
