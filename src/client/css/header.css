@@ -89,6 +89,11 @@ header label {
     transform: scale(1.3);
 }
 
+.svg-undo {
+    transform: scale(1.8);
+    aspect-ratio: 1;
+}
+
 
 
 /* The Infinite Chess text and logo, left side of header */
@@ -538,9 +543,7 @@ span.arrow-head-left {
 
 .reset-default-container .svg-undo {
     width: 19px;
-    aspect-ratio: 1;
-    transform-origin: 70% 55%; /* Rotate around the center of mass (slightly downward) */
-    transform: scale(1.8);
+    transform-origin: 70% 55%;
 }
 
 

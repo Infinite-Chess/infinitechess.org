@@ -1093,8 +1093,7 @@ button.join-button, button.copy-button {
     position: absolute;
     bottom: 0;
     width: 100%;
-    font-size: 84px;
-    height: 1em;
+    height: 84px; 
     box-shadow: 0px -1px 7px 0px rgba(0, 0, 0, 0.659);
     display: flex;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
@@ -1224,7 +1223,7 @@ button.join-button, button.copy-button {
 
 /* Draw Offer UI (in the bottom nav bar) */
 
-.draw_offer_ui {
+.draw_offer_ui, .practice-engine-buttons {
     display: flex;
     align-items: center;
     gap: 0.3em;
@@ -1235,7 +1234,7 @@ button.join-button, button.copy-button {
     font-size: 0.9em;
 }
 
-.draw_offer_ui button {
+.draw_offer_ui button, .practice-engine-buttons button {
     background-color: white;
     border-radius: 1em;
     width: 4em;
@@ -1251,46 +1250,39 @@ button.join-button, button.copy-button {
     height: 90%;
 }
 
-.draw_offer_ui button:hover {
+.draw_offer_ui button:hover, .practice-engine-buttons button:hover {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
-.draw_offer_ui button:active {
+.draw_offer_ui button:active, .practice-engine-buttons button:active {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
 /* Game Control Buttons (in the bottom nav bar) */
 
-.game-info-bar .buttoncontainer {
+.practice-engine-buttons {
+    font-size: 30px;
     display: flex;
-    justify-content: left;
     align-items: center;
     gap: 0.3em;
     height: 100%;
+    margin: 0 0.5em;
 }
 
-.game-info-bar .game-control.button {
-    width: 0.74em;
-    height: 0.74em;
-    margin: 0.07em;
-    border-radius: 0.16em; 
-    background-color: rgb(255, 255, 255);
-    box-shadow: 0px 0px 7px 0px rgba(0, 0, 0, 0.878);
-    transition: transform 0.15s;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
+.practice-engine-buttons .svg-undo {
+    width: 72%;
+    transform-origin: 53% 55%;
 }
 
-.game-control svg {
-    position: absolute;
+.practice-engine-buttons .svg-restart {
+    aspect-ratio: 1;
+    width: 84%;
+    transform: translate(1px, 1px);
 }
 
-.game-control.button:hover {
-    transform: scale(1.07);
-}
-
-.game-control.button:active {
-    transform: scale(1);
+.practice-engine-buttons svg {
+    height: 100%;
+    width: 100%;
 }
 
 

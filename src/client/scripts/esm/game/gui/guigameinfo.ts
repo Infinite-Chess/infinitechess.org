@@ -32,6 +32,7 @@ const element_whosturn = document.getElementById('whosturn')!;
 const element_dot = document.getElementById('dot')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
+const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
 const element_undoButton = document.getElementById('undobutton')!;
 const element_restartButton = document.getElementById('restartbutton')!;
 
@@ -55,12 +56,8 @@ function open(metadata: MetaData, showGameControlButtons: boolean | undefined = 
 	element_gameInfoBar.classList.remove('hidden');
 
 	if (showButtons) {
-		element_undoButton.classList.remove('hidden');
-		element_restartButton.classList.remove('hidden');
+		element_practiceButtons.classList.remove('hidden');
 		initListeners_Gamecontrol();
-	} else {
-		element_undoButton.classList.add('hidden');
-		element_restartButton.classList.add('hidden');
 	}
 
 	isOpen = true;
@@ -82,6 +79,7 @@ function close() {
 	
 	// Close button listeners
 	closeListeners_Gamecontrol();
+	element_practiceButtons.classList.add('hidden');
 
 	isOpen = false;
 }
@@ -114,7 +112,7 @@ function restartGame() {
 	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
 	
 	gameloader.unloadGame(); // Unload current game
-	guipractice.callback_practicePlay() // Effectively, the player just presses the Play button of the practice menu again
+	guipractice.callback_practicePlay(); // Effectively, the player just presses the Play button of the practice menu again
 }
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
