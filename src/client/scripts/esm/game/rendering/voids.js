@@ -37,7 +37,8 @@ function toggleDebug() {
 	DEBUG = !DEBUG;
 	statustext.showStatus(`Toggled wireframe voids: ${DEBUG}`, false, 0.5);
 	regenModel(gameslot.getGamefile());
-	if (DEBUG) console.log("Number of triangles in void mesh: " + gameslot.getGamefile().voidMesh.data32.length / (stride * POINTS_PER_SQUARE_WIREFRAME / 2));
+	const gamefile = gameslot.getGamefile();
+	if (DEBUG && gamefile.voidMesh.data32 !== undefined) console.log("Number of triangles in void mesh: " + gamefile.voidMesh.data32.length / (stride * POINTS_PER_SQUARE_WIREFRAME / 2));
 }
 
 function regenModel(gamefile) {
