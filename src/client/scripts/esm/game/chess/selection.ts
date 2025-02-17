@@ -338,9 +338,12 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 		pawnIsPromotingOn = coords;
 		return;
 	}
-
 	// Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
-	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
+	if (gamefile.mesh.locked) {
+		statustext.pleaseWaitForTask();
+		unselectPiece();
+		return;
+	}
 
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
