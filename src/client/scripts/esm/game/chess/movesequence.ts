@@ -155,7 +155,7 @@ function navigateMove(gamefile: gamefile, forward: boolean): void {
  * We don't use boardchanges because custom functionality is needed.
  * @param move the move to animate
  * @param forward whether this is a forward or back animation
- * @param animateMain Whether the targeted piece should be animated. All secondary pieces are guaranteed affected.
+ * @param animateMain Whether the main piece targeted by the move should be animated. All secondary pieces are guaranteed animated. If this is false, the main piece animation will be instantanious, only playing the SOUND.
  */
 function animateMove(move: Move, forward = true, animateMain = true) {
 	const funcs = forward ? animatableChanges.forward : animatableChanges.backward;
@@ -167,8 +167,8 @@ function animateMove(move: Move, forward = true, animateMain = true) {
 	// How does the rose animate?
 	for (const change of move.changes) {
 		if (!(change.action in funcs)) continue; // There is no animation change function for this type of Change
-		if (!animateMain && change.main) continue; // Skip animating the main piece if animateMain is false, and this change IS for the main piece.
-		funcs[change.action]!(change, clearanimations); // Call the animation function
+		const instant = change.main && !animateMain; // Whether the animation should be instantanious, only playing the SOUND.
+		funcs[change.action]!(change, instant, clearanimations); // Call the animation function
 		clearanimations = false;
 	}
 }

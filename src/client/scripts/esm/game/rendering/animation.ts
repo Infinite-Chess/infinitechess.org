@@ -132,9 +132,10 @@ let DEBUG = false;
  * @param type - The type of piece to animate
  * @param path - The waypoints the piece will pass throughout the animation. Minimum: 2
  * @param captured - The piece captured, if one was captured. This will be rendered in place for the during of the animation.
+ * @param instant - If true, the piece was dropped and should not be animated. The SOUND will still be played.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type: string, path: Coords[], captured?: Piece, resetAnimations: boolean = true): void {
+function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: boolean, resetAnimations: boolean = true): void {
 	if (path.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
@@ -143,6 +144,9 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, resetAnima
 	const segments = createAnimationSegments(path_HighResolution);
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
+
+	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
+	if (instant) return playSoundOfDistance(totalDistance, captured !== undefined);
 
 	const newAnimation: Animation = {
 		type,
@@ -234,9 +238,14 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(animation: Animation, dampen: boolean) {
-	if (animation.captured !== undefined) sound.playSound_capture(animation.totalDistance, dampen);
-	else sound.playSound_move(animation.totalDistance, dampen);
+	playSoundOfDistance(animation.totalDistance, animation.captured !== undefined, dampen);
 	animation.soundPlayed = true;
+}
+
+/** Plays the sound of a move from just the distance traveled and whether it made a capture. */
+function playSoundOfDistance(distance: number, captured: boolean, dampen?: boolean) {
+	if (captured) sound.playSound_capture(distance, dampen);
+	else sound.playSound_move(distance, dampen);
 }
 
 

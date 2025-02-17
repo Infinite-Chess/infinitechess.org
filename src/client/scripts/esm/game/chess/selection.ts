@@ -411,13 +411,6 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	movesequence.animateMove(move, true, animateMain);
-	// Normally the animation is in charge of playing the move sound when it's finished,
-	// but if it's a drop from dragging, then we have to play the sound NOW!
-	if (wasBeingDragged) {
-		const dist = math.chebyshevDistance(move.startCoords, move.endCoords); 
-		if (boardchanges.wasACapture(move)) sound.playSound_capture(dist);
-		else sound.playSound_move(dist); 
-	}
 
 	movesendreceive.sendMove();
 	enginegame.submitMove();
