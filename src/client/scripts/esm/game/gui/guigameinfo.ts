@@ -18,6 +18,7 @@ import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import guipractice from '../gui/guipractice.js';
 import movesequence from "../chess/movesequence.js";
+import selection from '../chess/selection.js';
 
 
 
@@ -104,8 +105,10 @@ function undoMove() {
 	// TODO: Add support for rewinding moves after game is concluded
 	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
 	if (enginegame.isItOurTurn() && gameslot.getGamefile()!.moves.length > 1) {
-		movesequence.rewindMove(gameslot.getGamefile()!);
-		movesequence.rewindMove(gameslot.getGamefile()!);
+		const gamefile = gameslot.getGamefile()!;
+		movesequence.rewindMove(gamefile);
+		movesequence.rewindMove(gamefile);
+		selection.reselectPiece();
 	}
 }
 
