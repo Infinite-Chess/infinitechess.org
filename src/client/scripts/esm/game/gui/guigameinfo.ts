@@ -111,7 +111,7 @@ function undoMove() {
 function restartGame() {
 	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
 	
-	gameslot.unloadGame(); // Unload current game
+	gameloader.unloadGame(); // Unload current game
 	guipractice.callback_practicePlay() // Effectively, the player just presses the Play button of the practice menu again
 }
 
