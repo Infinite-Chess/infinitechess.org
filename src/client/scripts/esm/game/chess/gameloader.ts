@@ -178,7 +178,11 @@ async function startEngineGame(options: {
 
 
 
-/** These items must be done after the logical parts of the gamefile are fully loaded. */
+/**
+ * These items must be done after the logical parts of the gamefile are fully loaded
+ * @param metadata - The metadata of the gamefile
+ * @param showGameControlButtons - Whether to show the practice game control buttons "Undo Move" and "Retry"
+ */
 function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
 	guigameinfo.open(metadata, showGameControlButtons);
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();

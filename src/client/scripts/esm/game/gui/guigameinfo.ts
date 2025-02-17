@@ -37,6 +37,7 @@ const element_undoButton = document.getElementById('undobutton')!;
 const element_restartButton = document.getElementById('restartbutton')!;
 
 let isOpen = false;
+/** Whether to show the practice mode game control buttons - undo move and restart. */
 let showButtons = false;
 
 // Functions
@@ -46,8 +47,8 @@ let showButtons = false;
  * @param metadata - The metadata of the gamefile, with its respective White and Black player names
  * @param {boolean} showGameControlButtons
  */
-function open(metadata: MetaData, showGameControlButtons: boolean | undefined = undefined) {
-	if (showGameControlButtons !== undefined) showButtons = showGameControlButtons;
+function open(metadata: MetaData, showGameControlButtons?: boolean) {
+	if (showGameControlButtons) showButtons = showGameControlButtons;
 	const { white, black } = getPlayerNamesForGame(metadata);
 
 	element_playerWhite.textContent = white;
@@ -80,6 +81,7 @@ function close() {
 	// Close button listeners
 	closeListeners_Gamecontrol();
 	element_practiceButtons.classList.add('hidden');
+	showButtons = false;
 
 	isOpen = false;
 }
