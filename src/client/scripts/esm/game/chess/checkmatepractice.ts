@@ -57,10 +57,12 @@ const validCheckmates: string[] = [
 	"1K2N7B-1k",
 
 	// insane
-	"1K3NR-1k",
 	"1K1Q1P-1k",
+	"1K3NR-1k",
 	"1K3HA-1k",
 ];
+
+const difficultyListCheckmates: number[] = [8, 8, 7, 3]; // amount of easy, medium, hard and insane checkmates - for GUI purposes only
 
 const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
 /**
@@ -249,6 +251,8 @@ function onEngineGameConclude(): void {
 
 
 export default {
+	validCheckmates,
+	difficultyListCheckmates,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,

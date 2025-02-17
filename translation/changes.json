@@ -1,4 +1,8 @@
 {
+	"34": {
+		"note": "Moved versus, easy, medium, hard and insane from play.practice-menu to play.javascript on lines 328-332",
+		"changes": []
+	},
 	"33":{
 		"note": "Added progress_checkmate on line 332 under play.javascript",
 		"changes": []

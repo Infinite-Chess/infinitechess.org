@@ -654,6 +654,7 @@ canvas {
     display: flex;
     justify-content: center;
     width: 40%;
+    height: 100%;
     margin-right: 5%;
 }
 
@@ -665,6 +666,7 @@ canvas {
     display: flex;
     justify-content: center;
     width: 10%;
+    height: 100%;
 }
 
 .checkmate-difficulty {
@@ -687,6 +689,8 @@ canvas {
 }
 
 .checkmatepiececontainer {
+    align-self: center;
+    height: 100%;
     background-repeat: no-repeat;
     background-size: 0;
     padding: 0.02em;
