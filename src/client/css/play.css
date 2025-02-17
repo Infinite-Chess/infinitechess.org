@@ -1522,12 +1522,12 @@ a {
 
 /* Tooltips */
 
-.tooltip-dl, .tooltip-d, .tooltip-dr, .tooltip-u {
+.tooltip-dl, .tooltip-d, .tooltip-dr, .tooltip-u, .tooltip-ul {
     position: relative;
 }
 
 /* The main tooltip black box */
-.tooltip-dl::before, .tooltip-d::before, .tooltip-dr::before, .tooltip-u::before {
+.tooltip-dl::before, .tooltip-d::before, .tooltip-dr::before, .tooltip-u::before, .tooltip-ul::before {
     content: attr(data-tooltip);
     position: absolute;
     background-color: black;
@@ -1571,8 +1571,14 @@ a {
     transform: translateX(-50%); /* Shift it left by half of its width */
 }
 
+/* up left */
+.tooltip-ul::before {
+    bottom: calc(100% + 8px);
+    right: 0;
+}
+
 /* The arrow above or below the tooltip box */
-.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after, .tooltip-u::after {
+.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after, .tooltip-u::after, .tooltip-ul::after {
     content: "";
     position: absolute;
     left: 50%;
@@ -1592,14 +1598,14 @@ a {
     top: calc(100% + 8.5px); /* Position right above the tooltip */
 }
 
-.tooltip-u::after {
+.tooltip-u::after, .tooltip-ul::after {
     transform: rotate(180deg);
     bottom: calc(100% - 0.5px); /* Position right below the tooltip */
 }
 
 /* After 1s of hovering, the tooltip becomes visible */
-.tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before,
-.tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after {
+.tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before, .tooltip-ul:hover::before,
+.tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after, .tooltip-ul:hover::after {
     visibility: visible;
     opacity: 1;
     transition-delay: 0.5s; /* Delay the tooltip appearance. KEEP THE SAME AS IN TOOLTIPS.JS */
@@ -1607,23 +1613,23 @@ a {
 }
 
 /* Overwriting styles after you've already started hovering (no delay) */
-.tooltip-dl.fast-transition:hover::before, .tooltip-d.fast-transition:hover::before, .tooltip-dr.fast-transition:hover::before, .tooltip-u.fast-transition:hover::before,
-.tooltip-dl.fast-transition:hover::after, .tooltip-d.fast-transition:hover::after, .tooltip-dr.fast-transition:hover::after, .tooltip-u.fast-transition:hover::after {
+.tooltip-dl.fast-transition:hover::before, .tooltip-d.fast-transition:hover::before, .tooltip-dr.fast-transition:hover::before, .tooltip-u.fast-transition:hover::before, .tooltip-ul.fast-transition:hover::before,
+.tooltip-dl.fast-transition:hover::after, .tooltip-d.fast-transition:hover::after, .tooltip-dr.fast-transition:hover::after, .tooltip-u.fast-transition:hover::after, .tooltip-ul.fast-transition:hover::after {
     transition-delay: 0s; /* Delay the tooltip appearance */
 }
 
 /* Mobile devices should NOT show the tooltips on hover.. perhaps on active though? */
 @media not (pointer: fine) {
-    .tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before,
-    .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after {
+    .tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before, .tooltip-ul:hover::before,
+    .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after, .tooltip-ul:hover::after {
         visibility: hidden;
         opacity: 0;
         transition-delay: 0; /* Delay the tooltip appearance */
         z-index: 0;
     }
   
-    .tooltip-dl:active::before, .tooltip-d:active::before, .tooltip-dr:active::before, .tooltip-u:active::before,
-    .tooltip-dl:active::after, .tooltip-d:active::after, .tooltip-dr:active::after, .tooltip-u:active::after {
+    .tooltip-dl:active::before, .tooltip-d:active::before, .tooltip-dr:active::before, .tooltip-u:active::before, .tooltip-ul:active::before,
+    .tooltip-dl:active::after, .tooltip-d:active::after, .tooltip-dr:active::after, .tooltip-u:active::after, .tooltip-ul:active::after {
         visibility: visible;
         opacity: 1;
         transition-delay: 0.5s; /* Delay the tooltip appearance */
