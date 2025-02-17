@@ -106,12 +106,12 @@ async function createPracticeHTML() {
 			const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
 			const longPiece = formatconverter.ShortToLong_Piece(shortPiece);
 
-			for (let i = 0; i < amount; i++) {
+			for (let j = 0; j < amount; j++) {
 				const pieceDiv = document.createElement('div');
 				pieceDiv.className = `checkmatepiece ${longPiece}`;
 
 				const containerDiv = document.createElement('div');
-				const collation = (i === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
+				const collation = (j === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
 				containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
 				containerDiv.appendChild(pieceDiv);
 			
