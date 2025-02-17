@@ -17,6 +17,8 @@ import boardchanges from "./boardchanges.js";
 import state from "./state.js";
 // @ts-ignore
 import gamefile from "./gamefile.js";
+// @ts-ignore
+import specialdetect from "./specialdetect.js";
 
 
 // Legal Move Calculation -----------------------------------------------------------------
@@ -56,9 +58,12 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 	if (gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront) === undefined) {
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 		// Is the double push legal?
-		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as Coords;
+		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as CoordsSpecial;
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
-		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); // Add the double push!
+		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
+			doublePushCoord.enpassantCreate = specialdetect.getEnPassantGamefileProperty(coords, doublePushCoord);
+			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); // Add the double push!
+		}
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
@@ -136,19 +141,9 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves:
 /** Executes a five dimensional pawn move.  */
 function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
 	const moveChanges = move.changes;
-	let distance: 1 | 10;
 
-	const absXDistance = Math.abs(move.endCoords[0] - piece.coords[0]);
-	const absYDistance = Math.abs(move.endCoords[1] - piece.coords[1]);
-
-	// Piece moved forwards
-	if (absXDistance === 0) distance = absYDistance <= 2 ? 1 : 10;
-	else distance = absXDistance as 1 | 10;
-
-	if (absYDistance === 2 * distance) { // Double pushed either spacelike or timelike. Create the en passant state
-		const newEnPassantSquare: Coords = [piece.coords[0], (piece.coords[1] + move.endCoords[1]) / 2] as Coords;
-		state.createEnPassantState(move, gamefile.enpassant, { square: newEnPassantSquare, pawn: move.endCoords });
-	}
+	// If it was a double push, then queue adding the new enpassant square to the gamefile!
+	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.enpassant, move.enpassantCreate);
 
 	if (!move.enpassant && !move.promotion) return false; // No special move to execute, return false to signify we didn't move the piece.
 

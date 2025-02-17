@@ -16,6 +16,7 @@ import math from '../../util/math.js';
  * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('../util/coordutil.js').Coords} Coords
  * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
+ * @typedef {import('./movepiece.js').enpassantCreate} enpassantCreate
  */
 
 "use strict";
@@ -26,7 +27,7 @@ import math from '../../util/math.js';
  */
 
 /** All types of special moves that exist, for iterating through. */
-const allSpecials = ['enpassant','promoteTrigger','promotion','castle','path'];
+const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion','castle','path'];
 
 // EVERY one of these functions needs to include enough information in the special move tag
 // to be able to undo any of them!
@@ -143,7 +144,11 @@ function pawns(gamefile, coords, color) {
 		// Further... Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
-		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); // Add the double push!
+		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
+			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
+			console.log("Added enpassantCreate to double push coord", doublePushCoord);
+			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); 
+		}
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
@@ -173,6 +178,18 @@ function pawns(gamefile, coords, color) {
 	addPossibleEnPassant(gamefile, individualMoves, coords, color);
 
 	return individualMoves;
+}
+
+/**
+ * Returns what the gamefile's enpassant property should be after this double pawn push move
+ * @param {number[]} moveStartCoords - The start coordinates of the move
+ * @param {number[]} moveEndCoords - The end coordinates of the move
+ * @returns {enpassantCreate} The coordinates en passant is allowed
+ */
+function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
+	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
+	const enpassantSquare = [moveStartCoords[0], y];
+	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) };
 }
 
 /**
@@ -367,9 +384,9 @@ export default {
 	kings,
 	pawns,
 	roses,
-
+	getEnPassantGamefileProperty,
 	isPawnPromotion,
 	transferSpecialFlags_FromCoordsToMove,
 	transferSpecialFlags_FromMoveToCoords,
-	transferSpecialFlags_FromCoordsToCoords
+	transferSpecialFlags_FromCoordsToCoords,
 };
