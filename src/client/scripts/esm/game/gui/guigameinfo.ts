@@ -90,11 +90,18 @@ function close() {
 function initListeners_Gamecontrol() {
 	element_undoButton.addEventListener('click', undoMove);
 	element_restartButton.addEventListener('click', restartGame);
+	// For some reason we need this in order to stop the undo button from getting focused when clicked??
+	element_undoButton.addEventListener('mousedown', preventFocus);
 }
 
 function closeListeners_Gamecontrol() {
 	element_undoButton.removeEventListener('click', undoMove);
 	element_restartButton.removeEventListener('click', restartGame);
+	element_undoButton.removeEventListener('mousedown', preventFocus);
+}
+
+function preventFocus(event: Event) {
+	event?.preventDefault();
 }
 
 // TODO: Migrate this logic and imports to other file
