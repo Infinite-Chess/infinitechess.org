@@ -1267,6 +1267,7 @@ button.join-button, button.copy-button {
     gap: 0.3em;
     height: 100%;
     margin: 0 0.5em;
+    -webkit-tap-highlight-color: transparent; /* No more blue highlight when tapping buttons on mobile */
 }
 
 .practice-engine-buttons .svg-undo {
@@ -1278,11 +1279,6 @@ button.join-button, button.copy-button {
     aspect-ratio: 1;
     width: 84%;
     transform: translate(1px, 1px);
-}
-
-.practice-engine-buttons svg {
-    height: 100%;
-    width: 100%;
 }
 
 
