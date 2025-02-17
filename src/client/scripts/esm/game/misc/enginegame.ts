@@ -21,7 +21,8 @@ import perspective from '../rendering/perspective.js';
 
 interface EngineConfig { 
 	checkmateSelectedID: string,
-	engineTimeLimitPerMoveMillis: number // hard time limit for the engine to think in milliseconds
+	/** Hard time limit for the engine to think in milliseconds */
+	engineTimeLimitPerMoveMillis: number
 }
 
 
@@ -73,10 +74,11 @@ function initEngineGame(options: {
 	engineConfig = options.engineConfig;
 
 	// Initialize the engine as a webworker
-	if (!window.Worker) return console.error("Your browser doesn't support web workers.");
+	if (!window.Worker) return alert("Your browser doesn't support web workers. Cannot play against an engine.");
 	// TODO: What happens if the engine fails / takes too long to load? =============================== !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
 	engineWorker.onmessage = function(e: MessageEvent) { 
+		// Messages from the engine mean it has submitted a move
 		const engineMove = e.data;
 		makeEngineMove(engineMove);
 	};
@@ -94,6 +96,7 @@ function closeEngineGame() {
 
 	// terminate the webworker
 	if (engineWorker) engineWorker.terminate();
+	engineWorker = undefined;
 	checkmatepractice.onGameUnload();
 }
 

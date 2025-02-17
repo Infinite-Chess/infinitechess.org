@@ -42,11 +42,15 @@ self.onmessage = function(e: MessageEvent) {
 	runEngine(gamefile);
 };
 
-let engineInitialized: boolean = false; // Whether the engine has already been initialized for the current game
+/** Whether the engine has already been initialized for the current game */
+let engineInitialized: boolean = false;
 
-let engineStartTime: number; // Start time of current engine calculation in millis
-let enginePositionCounter: number; // The number of positions evaluated by this engine in total during current calculation
-let engineTimeLimitPerMoveMillis: number; // Time limit for the engine to think in milliseconds
+/** Start time of current engine calculation in millis */
+let engineStartTime: number;
+/** The number of positions evaluated by this engine in total during current calculation */
+let enginePositionCounter: number;
+/** Time limit for the engine to think in milliseconds */
+let engineTimeLimitPerMoveMillis: number;
 
 // the ID of the currently selected checkmate
 let checkmateSelectedID: string;
@@ -843,7 +847,7 @@ function runEngine(gamefile: gamefile): void {
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
 		// submit engine move
-		self.postMessage(move_to_gamefile_move(globallyBestMove));
+		postMessage(move_to_gamefile_move(globallyBestMove));
 
 	} catch (e) {
 		console.error("An error occured in the engine computation of the checkmate practice");
