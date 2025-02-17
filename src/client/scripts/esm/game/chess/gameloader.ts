@@ -55,6 +55,23 @@ function areInAGame(): boolean {
 	return typeOfGameWeAreIn !== undefined;
 }
 
+function areInLocalGame(): boolean {
+	return typeOfGameWeAreIn === 'local';
+}
+
+function isItOurTurn(color?: string): boolean {
+	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
+	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
+	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.whosTurn === color;
+	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
+}
+
+function getOurColor(): string {
+	if (typeOfGameWeAreIn === 'online') return onlinegame.getOurColor();
+	else if (typeOfGameWeAreIn === 'engine') return enginegame.getOurColor();
+	else if (typeOfGameWeAreIn === 'local') throw Error("Can't get our color in a local game.");
+}
+
 /**
  * Updates whatever game is currently loaded, for what needs to be updated.
  */
@@ -144,6 +161,9 @@ function unloadGame() {
 
 export default {
 	areInAGame,
+	areInLocalGame,
+	isItOurTurn,
+	getOurColor,
 	update,
 	startLocalGame,
 	startOnlineGame,

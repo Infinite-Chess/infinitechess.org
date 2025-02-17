@@ -15,7 +15,6 @@ import type gamefile from '../../chess/logic/gamefile.js';
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import droparrows from '../rendering/dragging/droparrows.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import colorutil from '../../chess/util/colorutil.js';
 import movesequence from './movesequence.js';
@@ -55,6 +54,7 @@ import { MoveDraft } from '../../chess/logic/movepiece.js';
 import math from '../../util/math.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import animation from '../rendering/animation.js';
+import gameloader from './gameloader.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -265,7 +265,7 @@ function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1
 	const color = colorutil.getPieceColorFromType(type);
 	if (color === colorutil.colorOfNeutrals) return 0; // Can't select neutrals, period.
 	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
-	const isOurTurn = onlinegame.areInOnlineGame() ? onlinegame.isItOurTurn() : /* Local Game */ gameslot.getGamefile()!.whosTurn === color;
+	const isOurTurn = gameloader.isItOurTurn(color);
 	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
 	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
@@ -278,8 +278,8 @@ function canMovePieceType(pieceType: string): boolean {
 	if (options.getEM()) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
-	const isPremove = !isOpponentPiece && onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn();
-	return (!isPremove /*|| premovesEnabled*/);
+	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
+	return (!isPremove);
 }
 
 /**
@@ -297,7 +297,7 @@ function canDropOnPieceTypeInEditMode(type?: string) {
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
 function isOpponentType(gamefile: gamefile, type: string) {
 	const pieceColor = colorutil.getPieceColorFromType(type);
-	return onlinegame.areInOnlineGame() ? pieceColor !== onlinegame.getOurColor()
+	return !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
 	/* Local Game */ : pieceColor !== gamefile.whosTurn;
 }
 
@@ -374,7 +374,7 @@ function initSelectedPieceInfo(gamefile: gamefile, piece: Piece) {
 	legalMoves = legalmoves.calculate(gamefile, pieceSelected);
 
 	isOpponentPiece = isOpponentType(gamefile, piece.type);
-	isPremove = onlinegame.areInOnlineGame() && !onlinegame.isItOurTurn() && !isOpponentType(gamefile, piece.type);
+	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(gamefile, piece.type);
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
