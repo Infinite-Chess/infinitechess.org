@@ -36,9 +36,9 @@ import gameslot from '../../chess/gameslot.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
 // @ts-ignore
-import type { LegalMoves } from '../../chess/selection.js';
-// @ts-ignore
 import type { Piece } from '../../../chess/logic/movepiece.js';
+// @ts-ignore
+import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
 import type { BoundingBox } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../chess/util/colorutil.js';
@@ -328,6 +328,8 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 	const dataSelectedPieceHighlight = shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 	model_SelectedPiece = createModel(dataSelectedPieceHighlight, 2, "TRIANGLES", true);
+	
+	frametracker.onVisualChange();
 }
 
 /**
@@ -541,7 +543,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
  * Renders an outline of the box containing all legal move highlights.
  */
 function renderOutlineofRenderBox() {
-	if (!options.isDebugModeOn()) return; // Skip if debug mode off
+	if (!camera.getDebug()) return; // Skip if camera debug mode off
 
 	const color = [1,0,1, 1];
 	const data = shapes.getDataRect_FromTileBoundingBox(boundingBoxOfRenderRange, color);

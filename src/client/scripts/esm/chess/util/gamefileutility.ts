@@ -19,7 +19,6 @@ import typeutil from './typeutil.js';
 import winconutil from './winconutil.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
-// @ts-ignore
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
 import math from '../../util/math.js';
@@ -294,18 +293,6 @@ function getJumpingRoyalCoordsOfColor(gamefile: gamefile, color: string): Coords
 	return royalCoordsList;
 }
 
-/**
- * Returns a Set of all piece types in the game, without the color extensions.
- */
-function getAllPieceTypesInGame(gamefile: gamefile): Set<string> {
-	const runningPieceTypes = new Set<string>();
-	for (const key of Object.keys(gamefile.ourPieces)) {
-		const strippedPieceType = colorutil.trimColorExtensionFromType(key);
-		runningPieceTypes.add(strippedPieceType);
-	}
-	return runningPieceTypes;
-}
-
 
 // Finding / Retrieving a Piece by Criteria, Or Getting Information About a Piece -----------------------------------------------------------------
 
@@ -451,11 +438,10 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: 'white' 
  * that aren't included in this game.
  */
 function deleteUnusedMovesets(gamefile: gamefile) {
-	const allPieceTypes = getAllPieceTypesInGame(gamefile);
+	const existingTypes = gamefile.startSnapshot.existingTypes;
 	for (const key of Object.keys(gamefile.pieceMovesets)) {
-		if (!allPieceTypes.has(key)) delete gamefile.pieceMovesets[key];
+		if (!existingTypes.includes(key)) delete gamefile.pieceMovesets[key];
 	}
-
 }
 
 
@@ -498,7 +484,6 @@ export default {
 	getCoordsOfAllPiecesByKey,
 	getRoyalCoordsOfColor,
 	getJumpingRoyalCoordsOfColor,
-	getAllPieceTypesInGame,
 	getPieceFromTypeAndCoords,
 	getPieceAtCoords,
 	getPieceTypeAtCoords,

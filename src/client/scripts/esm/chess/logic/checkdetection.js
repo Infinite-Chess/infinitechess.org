@@ -21,6 +21,8 @@ import moveutil from '../util/moveutil.js';
  * @typedef {import('./boardchanges.js').Piece} Piece
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  * @typedef {import('../util/coordutil.js').Coords} Coords
+ * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
+ * @typedef {import('./movepiece.js').path} path
  */
 
 "use strict";
@@ -62,7 +64,7 @@ function detectCheck(gamefile, color, attackers) {
 }
 
 // Checks if opponent is attacking specified square. If so, returns true.
-// If an attackers empty array [] is specified, it will fill it in the format: [ {coords, slidingCheck}, ... ]
+// If an attackers empty array [] is specified, it will fill it in the format: [ {coords, slidingCheck, path? }, ... ]
 function isSquareBeingAttacked(gamefile, coord, colorOfFriendly, attackers) {
 	// Input validation
 	if (!gamefile) throw new Error("Cannot detect if a square of an undefined game is being attacked!");
@@ -77,7 +79,7 @@ function isSquareBeingAttacked(gamefile, coord, colorOfFriendly, attackers) {
 
 	if (doesVicinityAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
 	// What about pawns? Could they capture us?
-	if (doesPawnAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
+	if (doesSpecialAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
 
 	// 2. We check every orthogonal and diagonal to see if there's any attacking pieces.
 	if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, attackers)) atleast1Attacker = true;
@@ -116,27 +118,57 @@ function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
 	return false;
 }
 
-function doesPawnAttackSquare(gamefile, coords, color, attackers) {
+/**
+ * TODO: Clean up.
+ * @param {gamefile} gamefile 
+ * @param {*} coords 
+ * @param {*} color 
+ * @param {*} attackers 
+ * @returns 
+ */
+function doesSpecialAttackSquare(gamefile, coords, color, attackers) {
+	const specialVicinity = gamefile.specialVicinity;
+	for (const [coordsKey, thisVicinity] of Object.entries(specialVicinity)) {
 
-	const oneOrNegOne = color === 'white' ? 1 : -1;
-	for (let a = -1; a <= 1; a += 2) {
-		const thisSquare = [coords[0] - a, coords[1] + oneOrNegOne];
+		const thisSquare = coordutil.getCoordsFromKey(coordsKey);
+		const actualSquare = [coords[0] - thisSquare[0], coords[1] - thisSquare[1]];
 
-		const key = coordutil.getKeyFromCoords(thisSquare);
-		const pieceOnSquare = gamefile.piecesOrganizedByKey[key];
-		if (!pieceOnSquare) continue;
+		// Fetch the square from our pieces organized by key
+		const actualSquareKey = coordutil.getKeyFromCoords(actualSquare);
+		const typeOnSquare = gamefile.piecesOrganizedByKey[actualSquareKey];
+		if (!typeOnSquare) continue; // Nothing there to capture us
+		// Is it the same color?
+		const typeOnSquareColor = colorutil.getPieceColorFromType(typeOnSquare);
+		if (color === typeOnSquareColor) continue; // A friendly can't capture us
 
-		const pieceIsFriendly = color === colorutil.getPieceColorFromType(pieceOnSquare);
-		if (pieceIsFriendly) continue; // Can't capture us
+		const trimmedTypeOnSquare = colorutil.trimColorExtensionFromType(typeOnSquare);
 
-		const pieceIsPawn = pieceOnSquare.startsWith('pawns');
-		if (pieceIsPawn) {
-			if (attackers) appendAttackerToList(attackers, { coords: thisSquare, slidingCheck: false });
-			return true; // A pawn can capture on this square. There'll never be more than 1 short-range checks.
-		}
+		// Is that a match with any piece type on this vicinity square?
+		if (thisVicinity.includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured...
+			// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
+			const pieceOnSquare = gamefileutility.getPieceFromTypeAndCoords(gamefile, typeOnSquare, actualSquare);
+			const specialPiecesLegalMoves = legalmoves.calculate(gamefile, pieceOnSquare, { onlyCalcSpecials: true, ignoreCheck: true });
+			// console.log("Calculated special pieces legal moves:");
+			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
+
+			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) return false; // This special piece can't make the capture THIS time... oof
+
+			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
+
+			const attacker = { coords: actualSquare, slidingCheck: false };
+			/**
+			 * If the `path` special flag is present (which it would be for Roses),
+			 * attach that to the attacker, so that checkdetection can test if any
+			 * legal moves can block the path to stop a check.
+			 */
+			if (coords.path !== undefined) attacker.path = coords.path;
+			if (attackers) appendAttackerToList(attackers, attacker);
+			return true; // There'll never be more than 1 short-range/jumping checks!
+		}; 
 	}
 
 	return false;
+
 }
 
 /**
@@ -294,7 +326,9 @@ function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, col
 }
 
 /**
- * If there's an existing check: Returns true and removes all sliding moves that don't address the check.
+ * If there's an existing check: Returns true and removes all sliding moves that don't have a chance at addressing the check.
+ * All moves that have a chance to address the check (because they land on a blocking square) are added as individual moves
+ * and simulated afterward to verify whether they resolve it or not.
  * @param {gamefile} gamefile - The gamefile
  * @param {LegalMoves} legalMoves - The legal moves object of which to delete moves that don't address check.
  * @param {Coords[]} royalCoords - A list of our friendly jumping royal pieces
@@ -319,7 +353,7 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
 
 	// 1. Capture the checking piece
 
-	const capturingNotPossible = attackerCount > 1; // Capturing not possible with a double-check (atleast not with a sliding move), forced to dodge, or block if possible.
+	const capturingNotPossible = attackerCount > 1; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
 
 	// Check if the piece has the ability to capture
 	if (!capturingNotPossible && legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, attacker.coords, { ignoreIndividualMoves: true })) {
@@ -328,17 +362,34 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
 
 	// 2. Block the check
 
-	// If it's a jumping move (not sliding), or if the piece is 1 square away,
-	// then there's no way to block.
+	/**
+	 * If it's a jumping move (not sliding),
+	 * AND it doesn't have the `path` special flag with atleast 3 waypoints (blockable),
+	 * 
+	 * or its a sliding move,
+	 * AND one square away from the checked piece,
+	 * 
+	 * then it's impossible to block.
+	 */
 	const dist = math.chebyshevDistance(royalCoords[0], attacker.coords);
-	if (!attacker.slidingCheck || dist === 1) {
+	if (!attacker.slidingCheck && (attacker.path?.length ?? 2) < 3
+		|| attacker.slidingCheck && dist === 1) {
+		// Impossible to block
 		delete legalMoves.sliding; // Erase all sliding moves
 		return true;
 	}
-    
-	appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
-	delete legalMoves.sliding; // Erase all sliding moves
 
+	/**
+	 * By this point we know it's either a:
+	 * 1. Sliding check
+	 * 2. Individual check, with 3+ path length
+	 */
+    
+	if (attacker.slidingCheck) appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
+	else appendPathBlockingMoves(attacker.path, legalMoves, selectedPieceCoords);
+
+	delete legalMoves.sliding; // Erase all sliding moves
+	
 	return true;
 }
 
@@ -468,13 +519,10 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
  * is able to get between squares 1 & 2.
  * @param {Coords} square1 - `[x,y]`
  * @param {Coords} square2 - `[x,y]`
- * @param {LegalMoves} moves - The moves object of the piece
+ * @param {LegalMoves} moves - The legal moves object of the piece selected, to see if it is able to block between squares 1 & 2
  * @param {Coords} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  */
 function appendBlockingMoves(square1, square2, moves, coords) { // coords is of the selected piece
-	// What is the line between our king and the attacking piece?
-	const direction = [square1[0] - square2[0], square1[1] - square2[1]]; // [dx,dy]
-
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. @type {BoundingBox} */
 	const box = {
 		left: Math.min(square1[0],square2[0]),
@@ -499,6 +547,30 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 
 		// Can our piece legally move there?
 		if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
+	}
+}
+
+/**
+ * Takes a `path` special flag of a checking attacker piece, and appends any legal individual
+ * blocking moves our selected piece can land on.
+ * @param {path} path - Individual move's `path` special move flag, with guaranteed atleast 3 waypoints within it.
+ * @param {LegalMoves} legalMoves - The precalculated legal moves of the selected piece
+ * @param {Coords} selectedPieceCoords 
+ */
+function appendPathBlockingMoves(path, legalMoves, selectedPieceCoords) {
+
+	/**
+	 * How do we tell if our selected piece can block an individual move with a path (Rose piece)?
+	 * 
+	 * Whether it can move to any of the waypoints in the path (exluding start and end waypoints).
+	 * The reason we exclude the start waypoint is because we already check earlier
+	 * if it's legal to capure the attacker.
+	 */
+
+	for (let i = 1; i < path.length - 1; i++) {
+		const blockPoint = path[i];
+		// Can our selected piece move to this square?
+		if (legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, blockPoint, { ignoreIndividualMoves: true })) legalMoves.individual.push(coordutil.copyCoords(blockPoint)); // Can block!
 	}
 }
 

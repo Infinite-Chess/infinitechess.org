@@ -7,6 +7,7 @@
 // Import Start
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
+import enginegame from '../misc/enginegame.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import backcompatible from '../../chess/logic/backcompatible.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
@@ -25,9 +26,6 @@ import gameloader from './gameloader.js';
  * This script handles copying and pasting games
  */
 
-/** Enable to only copy a single position without all the moves prior */
-const copySinglePosition = false; 
-
 /**
  * A list of metadata properties that are retained from the current game when pasting an external game.
  * These will overwrite the pasted game's metadata with the current game's metadata.
@@ -37,15 +35,15 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
 /**
  * Copies the current game to the clipboard in ICN notation.
  * This callback is called when the "Copy Game" button is pressed.
- * @param {event} event - The event fired from the event listener
+ * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
-function callbackCopy(event) {
+function copyGame(copySinglePosition) {
 	if (guinavigation.isCoordinateActive()) return;
 
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
-	const primedGamefile = primeGamefileForCopying(gamefile);
+	const primedGamefile = primeGamefileForCopying(gamefile, copySinglePosition);
 	const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_Fourth';
 	const specifyPosition = !largeGame;
 	const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
@@ -57,15 +55,16 @@ function callbackCopy(event) {
 /**
  * Primes the provided gamefile to for the formatconverter to turn it into an ICN
  * @param {gamefile} gamefile - The gamefile
+ * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  * @returns {Object} The primed gamefile for converting into ICN format
  */
-function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for copying
+function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the entire gamefile for copying
 	let primedGamefile = {};
 	/** What values do we need?
      * 
      * metadata
      * turn
-     * enpassant
+     * enpassant: Coords
      * moveRule
      * fullMove
      * startingPosition (can pass in shortformat string instead)
@@ -78,7 +77,12 @@ function primeGamefileForCopying(gamefile) { // Compress the entire gamefile for
 
 	primedGamefile.metadata = gamefile.metadata;
 	primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant] || primedGamefile.metadata.Variant; // Convert the variant metadata code to spoken language if translation is available
-	primedGamefile.enpassant = gamefile.startSnapshot.enpassant;
+	if (gamefile.startSnapshot.enpassant !== undefined) {
+		// gamefile.startSnapshot.enpassant is in the form: { square: Coords, pawn: Coords }
+		// need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!!
+		const yDistance = Math.abs(gamefile.startSnapshot.enpassant.square[1] - gamefile.startSnapshot.enpassant.pawn[1]);
+		if (yDistance === 1) primedGamefile.enpassant = gamefile.startSnapshot.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
+	}
 	if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
 	primedGamefile.fullMove = gamefile.startSnapshot.fullMove;
 	primedGamefile.startingPosition = gamefile.startSnapshot.positionString;
@@ -106,7 +110,8 @@ async function callbackPaste(event) {
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
-
+	// Make sure we're not in an engine match
+	if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 	// Make sure it's legal in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
@@ -204,7 +209,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 
 	/** longformat properties:
      * metadata
-     * enpassant
+     * enpassant: Coords
      * moveRule
      * fullMove
      * shortposition
@@ -250,13 +255,21 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	// `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
 	const variantOptions = {
 		fullMove: longformat.fullMove,
-		enpassant: longformat.enpassant,
 		moveRule: longformat.moveRule,
 		positionString: longformat.shortposition,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
 		gameRules: longformat.gameRules
 	};
+
+	if (longformat.enpassant !== undefined) {
+		// longformat.enpassant is in the form: Coords
+		// need to convert it to: { square: Coords, pawn: Coords }
+		const firstTurn = longformat.gameRules.turnOrder[0];
+		const oneOrNegOne = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error("Invalid turn order when pasting a game! Can't parse enpassant option."); })();
+		const newEnPassant = { square: longformat.enpassant, pawn: [longformat.enpassant[0], longformat.enpassant[1] - oneOrNegOne] };
+		variantOptions.enpassant = newEnPassant;
+	}
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
 		// Playing a custom private game! Save the pasted position in browser
@@ -319,6 +332,6 @@ function verifyGamerules(gameRules) {
 
 
 export default {
-	callbackCopy,
+	copyGame,
 	callbackPaste
 };

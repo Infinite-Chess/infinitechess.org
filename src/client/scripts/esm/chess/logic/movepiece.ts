@@ -11,13 +11,14 @@
 import type gamefile from './gamefile.js';
 import type { Piece } from './boardchanges.js';
 import type { Coords } from '../util/coordutil.js';
-import type { MoveState } from './state.js';
+import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
 
 import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
 import boardchanges from './boardchanges.js';
+import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -26,8 +27,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import math from '../../util/math.js';
-// @ts-ignore
-import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import checkdetection from './checkdetection.js';
 // @ts-ignore
@@ -39,20 +38,70 @@ import wincondition from './wincondition.js';
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
 
+/**
+ * A pair of coordinates, WITH attached special move information.
+ * This usually denotes a legal square you can move to that will
+ * activate said special move.
+ */
+type CoordsSpecial = Coords & { 
+	enpassantCreate?: enpassantCreate,
+	enpassant?: enpassant,
+	promoteTrigger?: promoteTrigger,
+	promotion?: promotion,
+	castle?: castle,
+	path?: path,
+}
+
+/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
+type enpassantCreate = EnPassant
+/**
+ * A special move tag for enpassant capture.
+ * 
+ * If true, the specialMove function for pawns will read the gamefile's
+ * enpassant property to figure out where the pawn to capture is.
+ * After that, the captured piece is appended to the move's changes list,
+ * So we don't actually need to store more information in here.
+ */
+type enpassant = true;
+/**
+ * A special move tag that, when the move is attempted to be made, should trigger the promotion UI to open.
+ * The special detect functions are in charge of adding this. selection.ts will delete it and open the promotion UI.
+ */
+type promoteTrigger = boolean;
+/** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
+type promotion = string;
+/** A special move tag for castling. */
+type castle = {
+	/** 1 => King castled right   2 => King castled left */
+	dir: 1 | -1,
+	/** The coordinate of the piece the king castled with, usually a rook. */
+	coord: Coords
+}
+/**
+ * A special move tag that stores a list of all the waypoints along
+ * the travel path of a piece. Inclusive to start and end.
+ * 
+ * Used for Rose piece.
+ */
+type path = Coords[]
+
 /** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
 interface MoveDraft {
 	startCoords: Coords,
 	endCoords: Coords,
-	/** Present if the move was special-move enpassant capture. This will be
-	 * 1 for the captured piece is 1 square above, or -1 for 1 square below. */
-	enpassant?: -1 | 1,
+	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
+	enpassantCreate?: enpassantCreate,
+	/** Present if the move was special-move enpassant capture. This will be `true` */
+	enpassant?: enpassant,
 	/** Present if the move was a special-move promotion. This will be
 	 * a string of the type of piece being promoted to: "queensW" */
-	promotion?: string,
+	promotion?: promotion,
 	/** Present if the move was a special-move casle. This may look like an
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
 	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
-	castle?: { coord: Coords, dir: 1 | -1 },
+	castle?: castle,
+	/** Present if the move is for a Rose. */
+	path?: path,
 }
 
 /**
@@ -73,10 +122,14 @@ interface Move extends MoveDraft {
 	generateIndex: number,
 	/** The move in most compact notation: `8,7>8,8Q` */
 	compact: string,
-	/** Whether the move delivered check. */
-	check: boolean,
-	/** Whether the move delivered mate (or the killing move). */
-	mate: boolean,
+	flags: {
+		/** Whether the move delivered check. */
+		check: boolean,
+		/** Whether the move delivered mate (or the killing move). */
+		mate: boolean,
+		/** Whether the move caused a capture */
+		capture: boolean,
+	}
 }
 
 
@@ -90,7 +143,7 @@ interface Move extends MoveDraft {
  */
 function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
-	if (!piece) throw new Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
+	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
 	// Construct the full Move object
 	// Initialize the state, and change list, as empty for now.
@@ -101,14 +154,20 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		generateIndex: gamefile.moveIndex + 1,
 		state: { local: [], global: [] },
 		compact: formatconverter.LongToShort_CompactMove(moveDraft),
-		check: false, // This will be set later
-		mate: false, // This will be set later
+		flags: {
+			// These will be set later, but we need a default value
+			check: false,
+			mate: false,
+			capture: false,
+		}
 	};
 
-	// This needs to be before calculating the moves changes,
-	// as special moves functions may add MORE enpassant or specialRights,
-	// and if this comes afterward, then those values will be overwritten with undefined.
-	queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile, move);
+	/**
+	 * Delete the current enpassant state.
+	 * If any specialMove function adds a new EnPassant state,
+	 * this one's future value will be overwritten
+	 */
+	state.createEnPassantState(move, gamefile.enpassant, undefined);
 
 	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
 	let specialMoveMade: boolean = false;
@@ -118,6 +177,11 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
 	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
+	// Must be set before calling queueIncrementMoveRuleStateChange()
+	move.flags.capture = boardchanges.wasACapture(move);
+	
+	// Delete all special rights that should be revoked from the move.
+	queueSpecialRightDeletionStateChanges(gamefile, move);
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
@@ -136,24 +200,33 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
 	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
 
-	if (capturedPiece) {
-		boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
-		return;
-	};
-
-	boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
+	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
 }
 
 /**
- * Queues a gamefile StateChange to delete the gamefile's current `enpassant`,
- * and the specialRights of the piece moved and its destination.
+ * Queues gamefile state changes to delete all 
+ * special rights that should have been revoked from the move.
+ * This includes the startCoords and endCoords of all move actions.
  */
-function queueEnpassantAndSpecialRightsDeletionStateChanges(gamefile: gamefile, move: Move) {
-	state.createState(move, 'enpassant', gamefile.enpassant, undefined);
-	let key = coordutil.getKeyFromCoords(move.startCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key });
-	key = coordutil.getKeyFromCoords(move.endCoords);
-	state.createState(move, `specialrights`, gamefile.specialRights[key], undefined, { coordsKey: key }); // We also delete the captured pieces specialRights for ANY move.
+function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
+	move.changes.forEach(change => {
+		if (change.action === 'move') {
+			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
+			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+		} else if (change.action === 'capture') {
+			// Delete the special rights off the start coords AND the capture coords, if there are ones.
+			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords);
+			state.createSpecialRightsState(move, captureCoordsKey, gamefile.specialRights[captureCoordsKey], undefined);
+		} else if (change.action === 'delete') {
+			// Delete the special rights of the coords, if there is one.
+			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+			state.createSpecialRightsState(move, coordsKey, gamefile.specialRights[coordsKey], undefined);
+		}
+	});
 }
 
 /**
@@ -165,7 +238,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
-	state.createState(move, 'moverulestate', gamefile.moveRuleState, newMoveRule);
+	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
 
@@ -185,7 +258,7 @@ function makeMove(gamefile: gamefile, move: Move) {
 
 	// Now we can test for check, and modify the state of the gamefile if it is.
 	createCheckState(gamefile, move);
-	if (gamefile.inCheck) move.check = true;
+	if (gamefile.inCheck) move.flags.check = true;
 	// The "mate" property of the move will be added after our game conclusion checks...
 }
 
@@ -220,7 +293,7 @@ function updateTurn(gamefile: gamefile) {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(gamefile: gamefile, move: Move) {
-	let attackers: [] | undefined = undefined;
+	let attackers: [] | undefined;
 	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
@@ -228,8 +301,8 @@ function createCheckState(gamefile: gamefile, move: Move) {
 
 	const futureInCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
-	state.createState(move, "check", gamefile.inCheck, futureInCheck, {}, gamefile); // Passes in the gamefile as an argument
-	state.createState(move, "attackers", gamefile.attackers, attackers || [], {}, gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.createCheckState(move, gamefile.inCheck, futureInCheck, gamefile); // Passes in the gamefile as an argument
+	state.createAttackersState(move, gamefile.attackers, attackers ?? [], gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 /**
@@ -345,33 +418,6 @@ function goToMove(gamefile: gamefile, index: number, callback: CallableFunction)
 	}
 }
 
-// COMMENTED-OUT because it's 99% identical to goToMove(), and no other part of the code implements it.
-/**
- * Iterates from moveIndex to the target index
- * Callbacks should not update the board
- */
-// function forEachMove(gamefile: gamefile, targetIndex: number, callback: CallableFunction) {
-// 	if (targetIndex === gamefile.moveIndex) return;
-
-// 	const forwards = targetIndex >= gamefile.moveIndex;
-// 	const offset = forwards ? 0 : 1;
-// 	let i = gamefile.moveIndex;
-	
-// 	if (gamefile.moves.length <= targetIndex + offset || targetIndex + offset < 0) throw new Error("Target index is outside of the movelist!");
-
-// 	while (i !== targetIndex) {
-// 		i = math.moveTowards(i, targetIndex, 1);
-// 		const move = gamefile.moves[i + offset];
-
-// 		if (move === undefined) {
-// 			console.log(`Undefined! ${i}, ${targetIndex}`);
-// 			continue;
-// 		}
-
-// 		callback(move);
-// 	}
-// }
-
 
 // Move Wrappers ----------------------------------------------------------------------------------------------------
 
@@ -423,13 +469,19 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 export type {
 	Move,
 	MoveDraft,
+	CoordsSpecial,
+	enpassantCreate,
+	enpassant,
+	promoteTrigger,
+	promotion,
+	castle,
+	path
 };
 
 export default {
 	generateMove,
 	makeMove,
 	updateTurn,
-	// forEachMove,
 	goToMove,
 	makeAllMovesInGame,
 	applyMove,

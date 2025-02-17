@@ -29,6 +29,7 @@ import organizedlines from '../../../chess/logic/organizedlines.js';
 import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
+import space from '../../misc/space.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -46,9 +47,8 @@ import options from '../options.js';
 // @ts-ignore
 import board from '../board.js';
 // @ts-ignore
-import space from '../../misc/space.js';
-// @ts-ignore
 import shapes from '../shapes.js';
+import gamefileutility from '../../../chess/util/gamefileutility.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -196,7 +196,7 @@ let boundingBoxInt: BoundingBox | undefined;
  * with a reference to the piece they are pointing to.
  * Other scripts may access this so they can add interaction with them.
  */
-const hoveredArrows: HoveredArrow[] = [];
+let hoveredArrows: HoveredArrow[] = [];
 
 /**
  * A list of all arrows present for the current frame.
@@ -226,6 +226,7 @@ function reset() {
 	hoveredArrows.length = 0;
 	boundingBoxFloat = undefined;
 	boundingBoxInt = undefined;
+	shifts.length = 0;
 }
 
 /**
@@ -276,14 +277,11 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
-	if (mode === 0) return; // Arrow indicators are off, nothing is visible.
-	if (board.gtileWidth_Pixels(true) < renderZoomLimitVirtualPixels) { // Too zoomed out, the arrows would be really tiny.
-		reset();
-		arrowlegalmovehighlights.reset();
+	reset(); // Initiate the arrows empty
+	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
+		arrowlegalmovehighlights.reset(); // Also reset this
 		return;
 	}
-
-	reset(); // Initiate the arrows empty
 
 	/**
 	 * To be able to test if a piece is offscreen or not,
@@ -314,6 +312,12 @@ function update() {
 	// since we've now removed all the ones not visible.
 
 	calculateSlideArrows_AndHovered(slideArrowsDraft);
+}
+
+/** Whether the arrows should be calculated and rendered this frame */
+function areArrowsActiveThisFrame() {
+	// false if the arrows are off, or if the board is too zoomed out
+	return mode !== 0 && board.gtileWidth_Pixels(true) >= renderZoomLimitVirtualPixels;
 }
 
 /**
@@ -578,7 +582,7 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const worldHalfWidth = worldWidth / 2;
 
-	const mouseWorldLocation = input.getTouchClickedWorld() ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
+	const mouseWorldLocation = input.getPointerWorldLocation() as Coords;
 
 	// Take the arrows draft, construct the actual
 	for (const [key, value] of Object.entries(slideArrowsDraft)) {
@@ -682,6 +686,51 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 // Adding / Removing Arrows before rendering ------------------------------------------------------------------------------------------------
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * 1. animation.update()
+ * 
+ * Piece is moved.
+ * Optional: Captured piece is added.
+ * 
+ * 2. droparrows.update()
+ * 
+ * Piece is deleted
+ * ==> Deletes any previous shift with a start or end on the deletion coords.
+ * 
+ * Piece is moved
+ * ==> Deletes any previous shift with a start or end on the deletion
+ */
+
+type Shift = { type: string } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
+
+/**
+ * A list of arrow modifications made by other scripts
+ * after update() and before render(),
+ * such as animation.js or droparrows.js
+ */
+let shifts: Shift[] = [];
+
 /**
  * Deletes any arrow indicators present for the provided piece, and creates
  * new ones, if visible, for its new coordinate location.
@@ -694,32 +743,83 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
  * 
  * It has to be added to the game so that the arrow lines are calculated correctly,
  * as it changes how far other pieces can slide along the line its on.
+ * @param type - The type of arrow that will be added on {@link end}
+ * @param start - The coordinates the arrow will be deleted off of
+ * @param end - The coordinates the arrow will be added on
  */
-function shiftArrow(piece: Piece, newCoords: Coords, capturedPiece?: Piece) {
-	if (mode === 0) return; // Anything added won't be visible
+function shiftArrow(type: string, start?: Coords, end?: Coords) {
+	if (start === undefined && end === undefined) throw Error('Must provide one of either start or end coords of modified arrow.');
+	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
+
+	// console.log("Shifting arrow:");
+	// console.error(jsutil.deepCopyObject({ type, start, end }));
+
+	if (start !== undefined) { // Guaranteed a deletion
+
+		/**
+		 * For each previous shift, if either their start or end
+		 * is on this start (deletion coords), then delete it!
+		 * 
+		 * check to see if the start is the same as this end coords.
+		 * If so, replace that shift with a delete action, and retain the same order.
+		 */
+
+		shifts = shifts.filter(shift => !coordutil.areCoordsEqual(shift.start, start) && !coordutil.areCoordsEqual(shift.end, start) );
+	} else console.log("Skipping filtering");
+
+	shifts.push({ type, start, end } as Shift);
+}
+
+/** Execute any arrow modifications made by animation.js or arrowsdrop.js */
+function executeArrowShifts() {
+	// console.log("Executing arrow shifts");
+	// console.log(jsutil.deepCopyObject(shifts));
+
 	const gamefile = gameslot.getGamefile()!;
-	const animatedPiece = { type: piece.type, index: piece.index, coords: newCoords };
-
-	// Delete the piece from its true location, and add it at its animated location
-
 	const changes: Change[] = [];
-	boardchanges.queueDeletePiece(changes, piece, true);
-	boardchanges.queueAddPiece(changes, animatedPiece);
-	// Sometimes the animations coordinates match exactly the captured piece's coordinates
-	// on the last frame of the animation, so skip adding the captured piece in that scenario, or there will be a crash
-	if (capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(newCoords, capturedPiece.coords)) boardchanges.queueAddPiece(changes, capturedPiece);
+
+	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
+
+		// Delete the piece from the start location, and add it at the end location
+
+		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start)! : undefined;
+
+		// This matches the original piece's index, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
+		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end, index: originalPiece?.index } as Piece : undefined;
+
+		// Do the delete action first, so that organized piece lists have an undefined placeholder for the proceeding addition
+		if (shift.start !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
+		// Add a safety net to prevent adding a piece that is already on the board.
+		// This can happen when the current animation position of a piece is EXACTLY over an existing piece.
+		if (shift.end !== undefined) queueAddPieceIfNoneAddedOnCoords(addedPiece!);
+	});
+	
+	/**
+	 * Will queue adding a piece to the running move changes list.
+	 * Contains safety nets in case we attempt to add in on an existing piece
+	 */
+	function queueAddPieceIfNoneAddedOnCoords(piece: Piece) {
+		// If the game already has a piece on the coordinates, don't add it.
+		if (gamefileutility.isPieceOnCoords(gamefile, piece.coords)) return;
+		// If another arrow is adding a piece on these exact coords, leave it be.
+		// An example where this can happen is castling, when the animated rook and king are right on top of each other.
+		if (changes.some(change => change.action === 'add' && coordutil.areCoordsEqual(change.piece.coords, piece.coords))) return;
+		boardchanges.queueAddPiece(changes, piece);
+	}
+
+	// console.log("Applying changes:");
+	// console.log(changes);
+
+	// Apply the board changes
 	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
 
-	// Recalculate every single line it is on.
-	recalculateLineOfPiece(gamefile, piece); // Source coords
-	recalculateLineOfPiece(gamefile, animatedPiece); // Destination coords
-	// We only need to recalculate the line of the captured piece
-	// if the captured piece was on a different coordinate then the destination coords!
-	// This can happen iwith en passant
-	if (capturedPiece !== undefined && !coordutil.areCoordsEqual_noValidate(piece.coords, capturedPiece.coords)) recalculateLineOfPiece(gamefile, capturedPiece);
+	shifts.forEach(shift => {
+		// Recalculate every single line on the start and end coordinates.
+		if (shift.start !== undefined) recalculateLinesThroughCoords(gamefile, shift.start, false); 
+		if (shift.end !== undefined) recalculateLinesThroughCoords(gamefile, shift.end, false);
+	});
 
-	// Restore the piece
-
+	// Restore the board state
 	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.backward, false);
 }
 
@@ -727,17 +827,17 @@ function shiftArrow(piece: Piece, newCoords: Coords, capturedPiece?: Piece) {
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLineOfPiece(gamefile: gamefile, piece: Piece) {
+function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, resetHovered: boolean) {
 	// Recalculate every single line it is on.
 
-	// ENABLING THIS LINE prevents legal move highlights from rendering for
+	// Prevents legal move highlights from rendering for
 	// the currently animated arrow indicator when hovering over its destination
-	// hoveredArrows = hoveredArrows.filter(hoveredArrow => hoveredArrow.piece.coords !== piece.coords);
+	if (resetHovered) hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, coords));
 
 	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
 
-		const lineKey = organizedlines.getKeyFromLine(slide, piece.coords);
+		const lineKey = organizedlines.getKeyFromLine(slide, coords);
 
 		// Delete the original arrow line if it exists
 		if (slideKey in slideArrows) {
@@ -791,6 +891,19 @@ function recalculateLineOfPiece(gamefile: gamefile, piece: Piece) {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Rendering ------------------------------------------------------------------------------------------------------------------------
 
 
@@ -801,8 +914,11 @@ function recalculateLineOfPiece(gamefile: gamefile, piece: Piece) {
  * arrows to be updated.
  */
 function render() {
+	executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js
 	arrowlegalmovehighlights.update();
 	regenerateModelAndRender();
+
+	// console.log("End frame ================");
 }
 
 function regenerateModelAndRender() {
@@ -940,7 +1056,15 @@ export default {
 	setMode,
 	toggleArrows,
 	getHoveredArrows,
+
 	shiftArrow,
+	// shiftArrow,
+	// shiftArrow2,
+
 	update,
 	render,
+};
+
+export type {
+	HoveredArrow
 };

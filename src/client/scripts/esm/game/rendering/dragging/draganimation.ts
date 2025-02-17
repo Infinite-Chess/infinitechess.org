@@ -15,6 +15,7 @@ import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import { createModel } from "../buffermodel.js";
+import space from "../../misc/space.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
@@ -37,8 +38,9 @@ import themes from "../../../components/header/themes.js";
 import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import board from "../board.js";
-// @ts-ignore
-import space from "../../misc/space.js";
+import droparrows from "./droparrows.js";
+import { Piece } from "../../../chess/logic/boardchanges.js";
+import selection from "../../chess/selection.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -83,11 +85,20 @@ const perspectiveConfigs: { z: number, shadowColor: Color } = {
 };
 
 
+/** If true, `pieceSelected` is currently being held. */
+let areDragging = false;
+/**
+ * When true, the next time a piece is dropped on its own square, it will NOT be unselected.
+ * But if this is false, it WOULD be unselected.
+ * Pieces are unselected every second time dropped.
+ */
+let parity: boolean = true;
+
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
 /** The world location the piece has been dragged to. */
 let worldLocation: Coords | undefined;
-/** The square that will be outlined. */
+/** The square that the piece would be moved to if dropped now. It will be outlined. */
 let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
 let pieceType: string | undefined;
@@ -96,32 +107,102 @@ let pieceType: string | undefined;
 // Functions --------------------------------------------------------------------------------------
 
 
-// Hides the original piece
+function areDraggingPiece(): boolean {
+	return areDragging;
+}
+
+/** If true, the last pick-up action newly selected that piece, vs picking up an already-selected piece. */
+function getDragParity(): boolean {
+	return parity;
+}
+
+/**
+ * Start dragging a piece.
+ * @param type - The type of piece being dragged
+ * @param pieceCoords - the square the piece was on
+ */
+function pickUpPiece(piece: Piece, resetParity: boolean) {
+	if (!preferences.getDragEnabled()) return; // Dragging is disabled
+	areDragging = true;
+	if (resetParity) parity = true;
+	startCoords = piece.coords;
+	pieceType = piece.type;
+	frametracker.onVisualChange();
+}
+
+/**
+ * Call AFTER selection.update()
+ */
+function updateDragLocation() {
+	if (!areDragging) return;
+	
+	/**
+	 * If the promotion UI is open, change the world location of
+	 * the dragged piece to the promotion square
+	 */
+	const squarePawnPromotingOn = selection.getSquarePawnIsCurrentlyPromotingOn();
+	if (squarePawnPromotingOn !== undefined) {
+		const worldCoords = space.convertCoordToWorldSpace(squarePawnPromotingOn) as Coords;
+		worldLocation = worldCoords;
+		hoveredCoords = squarePawnPromotingOn;
+		return;
+	} else worldLocation = input.getPointerWorldLocation() as Coords; // Normal drag location
+
+	hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
+}
+
+/**
+ * Call AFTER {@link updateDragLocation} and BEFORE {@link renderPiece}
+ */
+function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
+	worldLocation = worldLoc;
+	hoveredCoords = hoverSquare;
+}
+
+/**
+ * Stop dragging the piece and optionally play a sound.
+ * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
+ * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
+ */
+function dropPiece() {
+	if (!areDragging) return;
+	areDragging = false;
+	pieceType = undefined;
+	startCoords = undefined;
+	worldLocation = undefined;
+	parity = false; // The next time this piece is dropped on its home square, it will be deselected
+	droparrows.onDragTermination();
+	frametracker.onVisualChange();
+}
+
+/** Puts the dragged piece back. Doesn't make a move. */
+function cancelDragging() {
+	dropPiece();
+	parity = true;
+}
+
+
+// Rendering --------------------------------------------------------------------------------------------
+
+
+// Hides the original piece by rendering a transparent square model above it in the depth field.
 function renderTransparentSquare() {
 	if (!startCoords) return;
-	const transparentModel = genTransparentModel();
-	transparentModel.render([0,0,z]); // Since this data did NOT contain the z coordinates, we can translate it by it here
+
+	const color = [0,0,0,0];
+	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
+	return createModel(data, 2, "TRIANGLES", true).render([0,0,z]);
 }
 
 // Renders the box outline, the dragged piece and its shadow
 function renderPiece() {
-	if (perspective.isLookingUp() || !worldLocation) return;
+	if (!areDragging ||  perspective.isLookingUp() || !worldLocation) return;
 
 	const outlineModel: BufferModel = hoveredCoords !== undefined ? genOutlineModel() : genIntersectingLines();
 	outlineModel.render();
 
 	const draggedPieceModel = genPieceModel();
 	if (draggedPieceModel !== undefined) draggedPieceModel.render();
-}
-
-/**
- * Generates a transparent model to hide the original piece.
- * @returns The buffer model
- */
-function genTransparentModel(): BufferModel {
-	const color = [0,0,0,0];
-	const data = shapes.getTransformedDataQuad_Color_FromCoord(startCoords, color); // Hide orginal piece
-	return createModel(data, 2, "TRIANGLES", true);
 }
 
 /**
@@ -153,9 +234,9 @@ function genPieceModel(): BufferModel | undefined {
 		
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
-	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset : 0);
+	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
 	const right = worldLocation![0] + halfSize;
-	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset : 0);
+	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
 	
 	const data: number[] = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
@@ -304,49 +385,16 @@ function genIntersectingLines(): BufferModel {
 	return createModel(data, 2, "LINES", true);
 }
 
-/**
- * Start dragging a piece.
- * @param type - The type of piece being dragged
- * @param pieceCoords - the square the piece was on
- */
-function pickUpPiece(type: string, pieceCoords: Coords) {
-	startCoords = pieceCoords;
-	pieceType = type;
-}
-
-/**
- * Update the location of the piece being dragged.
- * @param  coords - the world coordinates the piece has been dragged to
- * @param [hoverSquare] - The square the piece would be moved to if dropped now.
- */
-function dragPiece(coords: Coords, hoverSquare?: Coords) {
-	worldLocation = coords;
-	hoveredCoords = hoverSquare;
-	frametracker.onVisualChange();
-}
-
-/**
- * Stop dragging the piece and optionally play a sound.
- * @param playSound - Plays a sound. This should be true if the piece moved; false if it was dropped on the original square.
- * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
- */
-function dropPiece(playSound: boolean = false, wasCapture: boolean = false) {
-	if (playSound) {
-		if (wasCapture) sound.playSound_capture(0, false);
-		else sound.playSound_move(0, false);
-	}
-	pieceType = undefined;
-	startCoords = undefined;
-	worldLocation = undefined;
-	frametracker.onVisualChange();
-}
-
 
 
 export default {
+	areDraggingPiece,
+	getDragParity,
 	pickUpPiece,
-	dragPiece,
+	updateDragLocation,
+	setDragLocationAndHoverSquare,
 	dropPiece,
+	cancelDragging,
 	renderTransparentSquare,
 	renderPiece
 };

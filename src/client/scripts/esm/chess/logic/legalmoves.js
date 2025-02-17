@@ -3,20 +3,18 @@
  * This script calculates legal moves
  */
 
-// Import Start
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
 import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../util/colorutil.js';
-import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
 import math from '../../util/math.js';
-// Import End
+import variant from '../variants/variant.js';
 
 /** 
  * Type Definitions 
@@ -27,6 +25,7 @@ import math from '../../util/math.js';
  * @typedef {import('./movesets.js').BlockingFunction} BlockingFunction
  * @typedef {import('./movesets.js').IgnoreFunction} IgnoreFunction
  * @typedef {import('./movesets.js').Coords} Coords
+ * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
 */
 
 
@@ -51,35 +50,48 @@ import math from '../../util/math.js';
  * Must be called after the piece movesets are initialized. 
  * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
  * DOES NOT include pawn moves.
- * @returns {gamefile} gamefile - The gamefile
+ * @param {gamefile} gamefile - The gamefile
  * @returns {Object} The vicinity object
  */
 function genVicinity(gamefile) {
 	const vicinity = {};
 	if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
 
-	// For every piece moveset...
-	for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
-		const thisPieceType = typeutil.colorsTypes.white[i];
-		let thisPieceIndividualMoveset;
-		if (getPieceMoveset(gamefile, thisPieceType).individual) thisPieceIndividualMoveset = getPieceMoveset(gamefile, thisPieceType).individual;
-		else thisPieceIndividualMoveset = [];
+	// For every type in the game...
+	gamefile.startSnapshot.existingTypes.forEach(type => {
+		const movesetFunc = gamefile.pieceMovesets[type];
+		if (movesetFunc === undefined) return; // This piece type can't move, it can't check us from anywhere in the vicinity
+		const individualMoves = movesetFunc().individual ?? [];
+		individualMoves.forEach(coords => {
+			const key = coordutil.getKeyFromCoords(coords);
+			if (!vicinity[key]) vicinity[key] = []; // Make sure the key's already initialized
+			if (!vicinity[key].includes(type)) vicinity[key].push(type); // Make sure the key contains the piece type that can capture from that distance
+		});
+	});
+	return vicinity;
+}
 
-		// For each individual move...
-		for (let a = 0; a < thisPieceIndividualMoveset.length; a++) {
-			const thisIndividualMove = thisPieceIndividualMoveset[a];
-            
-			// Convert the move into a key
-			const key = coordutil.getKeyFromCoords(thisIndividualMove);
-
-			// Make sure the key's already initialized
-			if (!vicinity[key]) vicinity[key] = [];
-
-			const pieceTypeConcat = colorutil.trimColorExtensionFromType(thisPieceType); // Remove the 'W'/'B' from end of type
-
-			// Make sure the key contains the piece type that can capture from that distance
-			if (!vicinity[key].includes(pieceTypeConcat)) vicinity[key].push(pieceTypeConcat);
-		}
+/**
+ * Calculates the area around you in which special pieces HAVE A CHANCE to capture you from that distance.
+ * This is used for efficient calculating if a move would put you in check by a special piece.
+ * If a special piece is found at any of these distances, their legal moves are calculated
+ * to see if they would check you or not.
+ * This saves us from having to iterate through every single
+ * special piece in the game to see if they would check you.
+ * @param {gamefile} gamefile
+ * @returns {Object} The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
+ */
+function genSpecialVicinity(gamefile) {
+	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(gamefile.metadata);
+	const vicinity = {};
+	const existingTypes = gamefile.startSnapshot.existingTypes;
+	for (const [type, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
+		if (!existingTypes.includes(type)) continue; // This piece isn't present in our game
+		pieceVicinity.forEach(coords => {
+			const coordsKey = coordutil.getKeyFromCoords(coords);
+			vicinity[coordsKey] = vicinity[coordsKey] ?? []; // Make sure its initialized
+			vicinity[coordsKey].push(type);
+		});
 	}
 	return vicinity;
 }
@@ -123,7 +135,7 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset) {
  * @param {Object} options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
  * @returns {LegalMoves} The legalmoves object.
  */
-function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piece: { type, coords }
+function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = false } = {}) { // piece: { type, coords }
 	if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
 	const coords = piece.coords;
 	const type = piece.type;
@@ -160,7 +172,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 	}
     
 	// Add any special moves!
-	if (gamefile.specialDetects[trimmedType]) gamefile.specialDetects[trimmedType](gamefile, coords, color, legalIndividualMoves);
+	if (thisPieceMoveset.special) legalIndividualMoves.push(...thisPieceMoveset.special(gamefile, coords, color));
 
 	const moves = {
 		individual: legalIndividualMoves,
@@ -168,7 +180,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false } = {}) { // piec
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
-	checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
+	if (!ignoreCheck) checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
 
 	return moves;
 }
@@ -197,7 +209,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, slideKe
 /**
  * Shifts/translates the individual/jumping portion
  * of a moveset by the coordinates of a piece.
- * @param {Coords[]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
+ * @param {CoordsSpecial[]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
  */
 function shiftIndividualMovesetByCoords(indivMoveset, coords) {
 	if (!indivMoveset) return;
@@ -465,6 +477,7 @@ function hasAtleast1Move(moves) { // { individual, horizontal, vertical, ... }
 
 export default {
 	genVicinity,
+	genSpecialVicinity,
 	getPieceMoveset,
 	calculate,
 	checkIfMoveLegal,

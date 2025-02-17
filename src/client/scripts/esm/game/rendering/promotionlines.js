@@ -4,6 +4,7 @@ import board from './board.js';
 import movement from './movement.js';
 import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
+import jsutil from '../../util/jsutil.js';
 // Import End
 
 /**
@@ -15,11 +16,12 @@ import gameslot from '../chess/gameslot.js';
 
 /** This script handles the rendering of our promotion lines. */
 
-const startEnd = [-3, 12];
+/** How many tiles on both ends the promotion lines should extend past the farthest piece */
+const extraLength = 2; // Default: 4
 const thickness = 0.010;
 
 function render() {
-	if (!gameslot.getGamefile().gameRules.promotionRanks) return; // No promotion ranks in this game
+	if (gameslot.getGamefile().gameRules.promotionRanks === undefined) return; // No promotion ranks in this game
 	const model = initModel();
 
 	const boardPos = movement.getBoardPos();
@@ -45,35 +47,37 @@ function render() {
  * @returns {BufferModel} The buffer model
  */
 function initModel() {
-	const startX = startEnd[0] - board.gsquareCenter();
-	const endX = startEnd[1] + 1 - board.gsquareCenter();
+	const squareCenter = board.gsquareCenter();
 
 	const gamefile = gameslot.getGamefile();
-    
-	const yLow1 = gamefile.gameRules.promotionRanks[0] + 1 - board.gsquareCenter() - thickness;
-	const yHigh1 = gamefile.gameRules.promotionRanks[0] + 1 - board.gsquareCenter() + thickness;
+	const startPositionBox = jsutil.deepCopyObject(gamefile.startSnapshot.box);
 
-	const yLow2 = gamefile.gameRules.promotionRanks[1] - board.gsquareCenter() - thickness;
-	const yHigh2 = gamefile.gameRules.promotionRanks[1] - board.gsquareCenter() + thickness;
+	const startX = startPositionBox.left - squareCenter - extraLength;
+	const endX = startPositionBox.right + 1 - squareCenter + extraLength;
 
-	const data = [
-        // x      y             r g b a
-        startX, yLow1,        0, 0, 0,  1,
-        startX, yHigh1,       0, 0, 0,  1,
-        endX, yLow1,          0, 0, 0,  1,
-        endX, yLow1,          0, 0, 0,  1,
-        startX, yHigh1,       0, 0, 0,  1,
-        endX, yHigh1,         0, 0, 0,  1,
+	const color = [0,0,0,1];
 
-        startX, yLow2,        0, 0, 0,  1,
-        startX, yHigh2,       0, 0, 0,  1,
-        endX, yLow2,          0, 0, 0,  1,
-        endX, yLow2,          0, 0, 0,  1,
-        startX, yHigh2,       0, 0, 0,  1,
-        endX, yHigh2,         0, 0, 0,  1,
-    ];
+	const vertexData = [];
 
-	return createModel(data, 2, "TRIANGLES", true);
+	addDataForSide(gamefile.gameRules.promotionRanks.white, 1);
+	addDataForSide(gamefile.gameRules.promotionRanks.black, 0);
+
+	function addDataForSide(ranks, zeroOrOne) {
+		ranks.forEach(rank => {
+			const yLow = rank + zeroOrOne - squareCenter - thickness;
+			const yHigh = rank + zeroOrOne - squareCenter + thickness;
+			vertexData.push(
+				startX, yLow,   ...color,
+				startX, yHigh,  ...color,
+				endX, yLow,     ...color,
+				endX, yLow,     ...color,
+				startX, yHigh,  ...color,
+				endX, yHigh,    ...color,
+			);
+		});
+	}
+
+	return createModel(vertexData, 2, "TRIANGLES", true);
 }
 
 export default {

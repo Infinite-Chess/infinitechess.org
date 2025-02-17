@@ -58,6 +58,10 @@ function loadItem(key: string): any {
 		return;
 	}
 	// Not expired...
+
+	// console.log(`Fetched key ${key} from local storage:`);
+	// console.log(save);
+
 	return save.value;
 }
 

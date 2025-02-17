@@ -1,25 +1,4 @@
 
-// Import Start
-import perspective from './perspective.js';
-import miniimage from './miniimage.js';
-import stats from '../gui/stats.js';
-import options from './options.js';
-import mat4 from './gl-matrix.js';
-import { gl } from './webgl.js';
-import guidrawoffer from '../gui/guidrawoffer.js';
-import jsutil from '../../util/jsutil.js';
-import frametracker from './frametracker.js';
-import preferences from '../../components/header/preferences.js';
-import movement from './movement.js';
-// Import End
-
-/**
- * Type Definitions
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- */
-
-"use strict";
-
 /**
  * This script handles and stores the matrixes of our shader programs, which
  * store the location of the camera, and contains data about our canvas and window.
@@ -30,6 +9,33 @@ import movement from './movement.js';
  * projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
  * worldMatrix  is custom for each rendered object, translating it how desired.
  */
+
+// Import Start
+import perspective from './perspective.js';
+import miniimage from './miniimage.js';
+import stats from '../gui/stats.js';
+import mat4 from './gl-matrix.js';
+import { gl } from './webgl.js';
+import guidrawoffer from '../gui/guidrawoffer.js';
+import jsutil from '../../util/jsutil.js';
+import frametracker from './frametracker.js';
+import preferences from '../../components/header/preferences.js';
+import movement from './movement.js';
+import statustext from '../gui/statustext.js';
+import piecesmodel from './piecesmodel.js';
+import gameslot from '../chess/gameslot.js';
+import options from './options.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ */
+
+"use strict";
+
+/** If true, the camera is stationed farther back. */
+let DEBUG = false;
 
 // This will NEVER change! The camera stays while the board position is what moves!
 // What CAN change is the rotation of the view matrix!
@@ -75,7 +81,7 @@ let viewMatrix;
 
 // Returns devMode-sensitive camera position.
 function getPosition(ignoreDevmode) {
-	return jsutil.deepCopyObject(!ignoreDevmode && options.isDebugModeOn() ? position_devMode : position);
+	return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? position_devMode : position);
 }
 
 function getZFar() {
@@ -94,6 +100,19 @@ function getCanvasRect() {
 	return jsutil.deepCopyObject(canvasRect);
 }
 
+function toggleDebug() {
+	DEBUG = !DEBUG;
+	frametracker.onVisualChange(); // Visual change, render the screen this frame
+	onPositionChange();
+	perspective.initCrosshairModel();
+	piecesmodel.regenModel(gameslot.getGamefile(), options.getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
+	statustext.showStatus(`Toggled camera debug: ${DEBUG}`);
+}
+
+function getDebug() {
+	return DEBUG;
+}
+
 // Returns the bounding box of the screen in world-space, NOT tile/board space.
 
 /**
@@ -102,7 +121,7 @@ function getCanvasRect() {
  * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {BoundingBox} The bounding box of the screen
  */
-function getScreenBoundingBox(debugMode = options.isDebugModeOn()) {
+function getScreenBoundingBox(debugMode = DEBUG) {
 	return jsutil.deepCopyObject(debugMode ? screenBoundingBox_devMode : screenBoundingBox);
 }
 
@@ -112,7 +131,7 @@ function getScreenBoundingBox(debugMode = options.isDebugModeOn()) {
  * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {number} The height of the screen in squares
  */
-function getScreenHeightWorld(debugMode = options.isDebugModeOn()) {
+function getScreenHeightWorld(debugMode = DEBUG) {
 	const boundingBox = getScreenBoundingBox(debugMode);
 	return boundingBox.top - boundingBox.bottom;
 }
@@ -293,6 +312,8 @@ export default {
 	getCanvasWidthVirtualPixels,
 	getCanvasHeightVirtualPixels,
 	getCanvasRect,
+	toggleDebug,
+	getDebug,
 	getScreenBoundingBox,
 	getScreenHeightWorld,
 	getViewMatrix,

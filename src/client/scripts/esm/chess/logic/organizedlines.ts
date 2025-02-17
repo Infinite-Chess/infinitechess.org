@@ -77,8 +77,6 @@ interface PieceLinesByKey {
 /** A unique identifier for a single line of pieces. `C|X` */
 type LineKey = `${number}|${number}`
 
-// (Deleted "use strict" as I don't think it has an effect if we're using typescript)
-
 
 // Functions ----------------------------------------------------------------------------
 

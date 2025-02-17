@@ -22,6 +22,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
 /** @typedef {import('./events.js').GameEvents} GameEvents*/
+/** @typedef {import('./state.js').EnPassant} EnPassant */
 
 'use strict'; 
 
@@ -48,7 +49,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		position: undefined,
 		positionString: undefined,
 		specialRights: undefined,
-		/** What square coords, if legal, enpassant capture is possible in the starting position of the game. */
+		/** What square coords, if legal, enpassant capture is possible in the starting position of the game. @type {EnPassant | undefined }*/
 		enpassant: undefined,
 		/** The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push) */
 		moveRuleState: undefined,
@@ -59,6 +60,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** The count of pieces the game started with. @type {number} */
 		pieceCount: undefined,
 		/** The bounding box surrounding the starting position, without padding.
+		 * For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }`
          * @type {BoundingBox} */
 		box: undefined,
 		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {number[]} */
@@ -176,12 +178,12 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
      * DOES NOT include pawn moves. */
 	this.vicinity = undefined;
-	/** Contains the methods for detecting legal special moves for this game. */
-	this.specialDetects = undefined;
+	/** A variant of `vicinity`, except this only contains squares that
+	 * a special piece MIGHT be able to capture using a special move.
+	 * To find out for sure we'll have to calculate its legal moves. */
+	this.specialVicinity = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
-	/** Contains the methods for undo'ing special moves for this game. */
-	this.specialUndos = undefined;
 
 	/** The clocks of the game, if the game is timed. */
 	this.clocks = {
@@ -225,7 +227,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
 	this.moveIndex = -1;
-	/** If enpassant is allowed at the front of the game, this defines the coordinates. */
+	/** If enpassant is allowed at the front of the game, this defines the coordinates. @type {EnPassant | undefined} */
 	this.enpassant = jsutil.deepCopyObject(this.startSnapshot.enpassant);
 	/** An object containing the information if each individual piece has its special move rights. */
 	this.specialRights = jsutil.deepCopyObject(this.startSnapshot.specialRights);

@@ -63,7 +63,7 @@ function isConclusionDecisive(condition) {
  * For example, "white checkmate" => `{ victor: 'white', condition: 'checkmate' }`.
  * If the game was aborted, victor will be undefined.
  * @param {string} gameConclusion - The gameConclusion of the gamefile. Examples: 'white checkmate' / 'draw stalemate'  
- * @returns {Object} An object containing 2 properties: `victor` and `condition`
+ * @returns {{ victor?: string, condition: string }} An object containing 2 properties: `victor` and `condition`
  */
 function getVictorAndConditionFromGameConclusion(gameConclusion) {
 	if (gameConclusion === false) throw new Error('Should not be getting victor and condition from false gameConclusion! Game is not over.');

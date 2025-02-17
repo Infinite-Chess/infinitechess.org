@@ -1,12 +1,11 @@
 
 // Import Start
 import input from '../input.js';
+import enginegame from '../misc/enginegame.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import stats from '../gui/stats.js';
-import perspective from './perspective.js';
 import selection from '../chess/selection.js';
 import piecesmodel from './piecesmodel.js';
-import camera from './camera.js';
 import board from './board.js';
 import statustext from '../gui/statustext.js';
 import colorutil from '../../chess/util/colorutil.js';
@@ -25,10 +24,6 @@ import gameslot from '../chess/gameslot.js';
  * *Highlight color
  * etc
  */
-
-// When enabled, your view is expanded to show what you normally can't see beyond the edge of the screen.
-// Useful for making sure rendering methods are as expected.
-let debugMode = false; // Must be toggled by calling toggleDeveloperMode()
 
 let theme;
 
@@ -51,21 +46,8 @@ function initTheme() {
 	setTheme(selectedThemeName);
 }
 
-function isDebugModeOn() {
-	return debugMode;
-}
-
 function getTheme() {
 	return theme;
-}
-
-function toggleDeveloperMode() {
-	frametracker.onVisualChange(); // Visual change, render the screen this frame
-	debugMode = !debugMode;
-	camera.onPositionChange();
-	perspective.initCrosshairModel();
-	piecesmodel.regenModel(gameslot.getGamefile(), getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
-	statustext.showStatus(`${translations.rendering.toggled_debug} ` + (debugMode ? translations.rendering.on : translations.rendering.off));
 }
 
 function disableEM() {
@@ -87,6 +69,7 @@ function toggleEM() {
 	// Make sure it's legal
 	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
+	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
 
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	em = !em;
@@ -274,9 +257,7 @@ function toggleFPS() {
 
 
 export default {
-	isDebugModeOn,
 	getTheme,
-	toggleDeveloperMode,
 	toggleEM,
 	getDefaultTiles,
 	getLegalMoveHighlightColor,

@@ -16,6 +16,9 @@ import { fetchWithDeduplication } from "../../util/fetchDeduplicator.js";
  * @throws An error if any of the SVG elements with the given IDs are not found.
  */
 async function fetchPieceSVGs(relativeURL: string, svgIds: string[]): Promise<SVGElement[]> {
+	// console.error("Fetching all piece SVGs of ids:");
+	// console.log(svgIds);
+
 	// Fetch and parse the SVG document
 	const response = await fetchWithDeduplication(`svg/pieces/${relativeURL}`);
 

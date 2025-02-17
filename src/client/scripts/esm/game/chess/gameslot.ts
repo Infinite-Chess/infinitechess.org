@@ -14,12 +14,16 @@ import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
 
+// @ts-ignore
+import enginegame from '../misc/enginegame.js';
+
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
+import moveutil from "../../chess/util/moveutil.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -53,8 +57,6 @@ import movement from "../rendering/movement.js";
 // @ts-ignore
 import arrows from "../rendering/arrows/arrows.js";
 // @ts-ignore
-import moveutil from "../../chess/util/moveutil.js";
-// @ts-ignore
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
@@ -62,6 +64,9 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
+// @ts-ignore
+import animation from "../rendering/animation.js";
+import { EnPassant } from "../../chess/logic/state.js";
 
 import events from "../../chess/logic/events.js";
 
@@ -104,7 +109,7 @@ interface VariantOptions {
 	 */
 	fullMove: number,
 	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-	enpassant?: Coords,
+	enpassant?: EnPassant,
 	gameRules: GameRules,
 	/** If the move moveRule gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
 	moveRule?: `${number}/${number}`,
@@ -190,8 +195,6 @@ function isLoadedGameViewingWhitePerspective() {
 	return youAreColor === 'white';
 };
 
-
-
 /**
  * Loads a gamefile onto the board.
  */
@@ -217,8 +220,9 @@ async function loadGamefile(loadOptions: LoadOptions) {
 	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
 	sound.playSound_gamestart();
 
-	// Next start loading the GRAPHICAL stuff...
-	/*
+	/**
+	 * Next start loading the GRAPHICAL stuff...
+	 * 
 	 * The reason we attach a .then() to this instead of just 'await'ing,
 	 * is because we need loadGamefile() to return as soon as the logical
 	 * stuff has finished loading. The graphics may finish on its own time.
@@ -325,6 +329,9 @@ function unloadGame() {
 	// Stop the timer that animates the latest-played move when rejoining a game, after a short delay
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
+
+	// Clear all animations from the last game
+	animation.clearAnimations();
 	
 	options.disableEM();
 }
@@ -342,14 +349,18 @@ function startStartingTransition() {
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
 function initCopyPastGameListeners() {
-	document.addEventListener('copy', copypastegame.callbackCopy);
+	document.addEventListener('copy', callbackCopy);
 	document.addEventListener('paste', copypastegame.callbackPaste);
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
 function closeCopyPasteGameListeners() {
-	document.removeEventListener('copy', copypastegame.callbackCopy);
+	document.removeEventListener('copy', callbackCopy);
 	document.removeEventListener('paste', copypastegame.callbackPaste);
+}
+
+function callbackCopy(event: Event) {
+	copypastegame.copyGame(false);
 }
 
 /**
@@ -365,6 +376,7 @@ function concludeGame() {
 	board.darkenColor();
 	guigameinfo.gameEnd(loadedGamefile.gameConclusion);
 	onlinegame.onGameConclude();
+	enginegame.onGameConclude();
 
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {

@@ -1,12 +1,13 @@
 
 // Import Start
 import movement from './movement.js';
-import options from './options.js';
 import piecesmodel from './piecesmodel.js';
 import { createModel } from './buffermodel.js';
 import board from './board.js';
 import coordutil from '../../chess/util/coordutil.js';
 import gameslot from '../chess/gameslot.js';
+import statustext from '../gui/statustext.js';
+import frametracker from './frametracker.js';
 // Import End
 
 /** 
@@ -29,6 +30,17 @@ const color_wireframe = [1, 0, 1, 1];
 const stride = 6; // Using color shader. Stride per VERTEX (2 vertex, 4 color)
 const POINTS_PER_SQUARE_WIREFRAME = 12; // Compared to  piecesmodel.POINTS_PER_SQUARE  which is 6 when rendering triangles
 
+/** Enables wireframe mode */
+let DEBUG = false;
+
+function toggleDebug() {
+	DEBUG = !DEBUG;
+	statustext.showStatus(`Toggled wireframe voids: ${DEBUG}`, false, 0.5);
+	regenModel(gameslot.getGamefile());
+	const gamefile = gameslot.getGamefile();
+	if (DEBUG && gamefile.voidMesh.data32 !== undefined) console.log("Number of triangles in void mesh: " + gamefile.voidMesh.data32.length / (stride * POINTS_PER_SQUARE_WIREFRAME / 2));
+}
+
 function regenModel(gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
 	const voidList = gameslot.getGamefile().ourPieces.voidsN;
@@ -45,8 +57,7 @@ function regenModel(gamefile) {
 	const rectangleCount = simplifiedMesh.length;
 	// console.log(`Void rectangle count: ${rectangleCount}`)
     
-	const inDevMode = options.isDebugModeOn();
-	const thisPointsPerSquare = !inDevMode ? piecesmodel.POINTS_PER_SQUARE : POINTS_PER_SQUARE_WIREFRAME;
+	const thisPointsPerSquare = !DEBUG ? piecesmodel.POINTS_PER_SQUARE : POINTS_PER_SQUARE_WIREFRAME;
 	const indicesPerPiece = stride * thisPointsPerSquare; // 6 * (6 or 12) depending on wireframe
 	const totalElements = rectangleCount * indicesPerPiece;
 
@@ -63,8 +74,8 @@ function regenModel(gamefile) {
 
 		const { startX, startY, endX, endY } = getCoordDataOfRectangle(gamefile, thisRect);
 
-		const colorToUse = !inDevMode ? color : color_wireframe;
-		const funcToUse = !inDevMode ? getDataOfSquare : getDataOfSquare_Wireframe;
+		const colorToUse = !DEBUG ? color : color_wireframe;
+		const funcToUse = !DEBUG ? getDataOfSquare : getDataOfSquare_Wireframe;
 		const data = funcToUse(startX, startY, endX, endY, colorToUse);
 
 		for (let a = 0; a < data.length; a++) {
@@ -74,8 +85,9 @@ function regenModel(gamefile) {
 		}
 	}
 
-	const mode = inDevMode ? "LINES" : "TRIANGLES";
+	const mode = DEBUG ? "LINES" : "TRIANGLES";
 	gamefile.voidMesh.model = createModel(data32, 2, mode, true);
+	frametracker.onVisualChange();
 }
 
 // The passed in sides should be the center-coordinate value of the square in the corner
@@ -317,6 +329,7 @@ function render(gamefile) {
 }
 
 export default {
+	toggleDebug,
 	regenModel,
 	shiftModel,
 	render

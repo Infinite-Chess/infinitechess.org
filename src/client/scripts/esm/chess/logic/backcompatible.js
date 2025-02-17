@@ -3,7 +3,6 @@
 import formatconverter from './formatconverter.js';
 import moveutil from '../util/moveutil.js';
 import jsutil from '../../util/jsutil.js';
-import variant from '../variants/variant.js';
 // Import End
 
 'use script';
@@ -48,11 +47,9 @@ function getLongformatInNewNotation(longformat) {
 	}
 	let turnOrder = ['white','black'];
 	if (longformat.moves?.length > 0) {
-		// If it's a black-moves-first game, then the `turn` property of the results will be set to black.
-		const results = {};
-		const moveslong = moveutil.convertMovesTo1DFormat(longformat.moves, results); // Long format still, needs to be compressed
+		const { moves: moveslong, turn } = moveutil.convertMovesTo1DFormat(longformat.moves, results); // Long format still, needs to be compressed
 		let turnOrderArray = ['w','b'];
-		if (results.turn === 'black') {
+		if (turn === 'black') {
 			turnOrderArray = ['b','w'];
 			turnOrder = ['black','white'];
 		}
@@ -68,8 +65,9 @@ function getLongformatInNewNotation(longformat) {
 		converted.moves = shortmovessplit;
 	}
 	if (longformat.promotionRanks) {
-		if (!longformat.gameRules) longformat.gameRules = { promotionRanks: longformat.promotionRanks };
-		else longformat.gameRules.promotionRanks = longformat.promotionRanks;
+		const newRanks = { white: longformat.promotionRanks[1], black: longformat.promotionRanks[0] };
+		if (!longformat.gameRules) longformat.gameRules = { promotionRanks: newRanks };
+		else longformat.gameRules.promotionRanks = newRanks;
 	}
 	if (longformat.gameRules) {
 		// Example of old gameRules format:
@@ -98,11 +96,6 @@ function getLongformatInNewNotation(longformat) {
 				if (value === 'both' || value === 'black') newWinConditions.black.push(condition);
 			}
 			newGameRules.winConditions = newWinConditions;
-		}
-		if (longformat.promotionRanks) {
-			newGameRules.promotionRanks = [longformat.promotionRanks[1], longformat.promotionRanks[0]];
-			// The old gamefiles did not specify promotions allowed, because it's determined by the pieces the game starts with
-			newGameRules.promotionsAllowed = variant.getPromotionsAllowed(longformat.startingPosition, newGameRules.promotionRanks);
 		}
 		if (longformat.gameRules.slideLimit && longformat.gameRules.slideLimit !== "Infinity") newGameRules.slideLimit = longformat.gameRules.slideLimit;
 		converted.gameRules = newGameRules;
