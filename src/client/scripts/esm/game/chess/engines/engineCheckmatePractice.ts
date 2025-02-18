@@ -152,7 +152,7 @@ function initEvalWeightsAndSearchProperties() {
 	ignorepawnmoves = true;
 
 	// default
-	wiggleroom = 2;
+	wiggleroom = 1;
 
 	// weights for piece values of white pieces
 	pieceExistenceEvalDictionary = {
@@ -263,13 +263,6 @@ function initEvalWeightsAndSearchProperties() {
 
 	// variant-specific modifications to the weights:
 	switch (checkmateSelectedID) {
-		case "1K1Q1P-1k":
-			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
-			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
-			break;
-		case "2AM-1rc":
-			wiggleroom = 1;
-			break;
 		case "1K2N7B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
 			legalMoveEvalDictionary = {
@@ -299,8 +292,9 @@ function initEvalWeightsAndSearchProperties() {
 				}
 			};
 			break;
-		case "1K3NR-1k":
-			wiggleroom = 1;
+		case "1K1Q1P-1k":
+			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
+			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
 			break;
 	}
 }
