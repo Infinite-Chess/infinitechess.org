@@ -26,43 +26,43 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 // Variables ----------------------------------------------------------------------------
 
 
-const validCheckmates: string[] = [
-	// easy
-	"2Q-1k",
-	"3R-1k",
-	"2CH-1k",
-	"1Q1CH-1k",
-	"1K2R-1k",
-	"1K2B2B-1k",
-	"3B3B-1k",
-	"1K1AM-1k",
+const validCheckmates = {
+	easy: [
+		"2Q-1k",
+		"3R-1k",
+		"2CH-1k",
+		"1Q1CH-1k",
+		"1K2R-1k",
+		"1K2B2B-1k",
+		"3B3B-1k",
+		"1K1AM-1k"
+	],
+	medium: [
+		"1K1Q1B-1k",
+		"1K1Q1N-1k",
+		"1Q1B1B-1k",
+		"1Q2N-1k",
+		"2R1N1P-1k",
+		"1K1R1B1B-1k",
+		"1K1AR1R-1k",
+		"2AM-1rc"
+	],
+	hard: [
+		"1K1N2B1B-1k",
+		"1K2N1B1B-1k",
+		"1K1R1N1B-1k",
+		"1K1R2N-1k",
+		"2K1R-1k",
+		"1K2AR-1k",
+		"1K2N7B-1k"
+	],
+	insane: [
+		"1K1Q1P-1k",
+		"1K3NR-1k",
+		"1K3HA-1k"
+	]
+};
 
-	// medium
-	"1K1Q1B-1k",
-	"1K1Q1N-1k",
-	"1Q1B1B-1k",
-	"1Q2N-1k",
-	"2R1N1P-1k",
-	"1K1R1B1B-1k",
-	"1K1AR1R-1k",
-	"2AM-1rc",
-
-	// hard
-	"1K1N2B1B-1k",
-	"1K2N1B1B-1k",
-	"1K1R1N1B-1k",
-	"1K1R2N-1k",
-	"2K1R-1k",
-	"1K2AR-1k",
-	"1K2N7B-1k",
-
-	// insane
-	"1K1Q1P-1k",
-	"1K3NR-1k",
-	"1K3HA-1k",
-];
-
-const difficultyListCheckmates: number[] = [8, 8, 7, 3]; // amount of easy, medium, hard and insane checkmates - for GUI purposes only
 
 const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
 /**
@@ -130,7 +130,7 @@ function getCompletedCheckmates(): string[] {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// error if user somehow submitted invalid checkmate ID
-	if (!validCheckmates.includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+	if (!Object.values(validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
 
 	const startingPosition: { [key: string]: string } = {}; // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
@@ -252,7 +252,6 @@ function onEngineGameConclude(): void {
 
 export default {
 	validCheckmates,
-	difficultyListCheckmates,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,
