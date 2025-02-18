@@ -11,6 +11,8 @@ import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
 import gameloader from '../chess/gameloader.js';
 import gameslot from '../chess/gameslot.js';
+import guipractice from './guipractice.js';
+import enginegame from '../misc/enginegame.js';
 // Import End
 
 "use strict";
@@ -27,6 +29,7 @@ const element_pointers = document.getElementById('togglepointers');
 const element_copygame = document.getElementById('copygame');
 const element_pastegame = document.getElementById('pastegame');
 const element_mainmenu = document.getElementById('mainmenu');
+const element_practicemenu = document.getElementById('practicemenu');
 const element_offerDraw = document.getElementById('offerdraw');
 const element_perspective = document.getElementById('toggleperspective');
 
@@ -46,7 +49,14 @@ function open() {
 	isPaused = true;
 	updateTextOfMainMenuButton();
 	updatePasteButtonTransparency();
-	updateDrawOfferButton();
+	if (enginegame.areInEngineGame()) {
+		element_offerDraw.classList.add('hidden');
+		element_practicemenu.classList.remove('hidden');
+	} else {
+		element_offerDraw.classList.remove('hidden');
+		element_practicemenu.classList.add('hidden');
+		updateDrawOfferButton();
+	}
 	element_pauseUI.classList.remove('hidden');
 	initListeners();
 }
@@ -125,6 +135,7 @@ function initListeners() {
 	element_copygame.addEventListener('click', callback_CopyGame);
 	element_pastegame.addEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.addEventListener('click', callback_MainMenu);
+	element_practicemenu.addEventListener('click', callback_PracticeMenu);
 	element_offerDraw.addEventListener('click', callback_OfferDraw);
 	element_perspective.addEventListener('click', callback_Perspective);
 }
@@ -135,6 +146,7 @@ function closeListeners() {
 	element_copygame.removeEventListener('click', callback_CopyGame);
 	element_pastegame.removeEventListener('click', copypastegame.callbackPaste);
 	element_mainmenu.removeEventListener('click', callback_MainMenu);
+	element_practicemenu.removeEventListener('click', callback_PracticeMenu);
 	element_offerDraw.removeEventListener('click', callback_OfferDraw);
 	element_perspective.removeEventListener('click', callback_Perspective);
 }
@@ -157,6 +169,13 @@ function callback_MainMenu() {
 	gameloader.unloadGame();
 
 	guititle.open();
+}
+
+function callback_PracticeMenu() {
+	callback_Resume();
+	gameloader.unloadGame();
+
+	guipractice.open()
 }
 
 /** Called when the Offer Draw button is clicked in the pause menu */
