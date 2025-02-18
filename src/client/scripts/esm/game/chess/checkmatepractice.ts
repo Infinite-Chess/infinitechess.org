@@ -139,7 +139,7 @@ function initListeners() {
 
 function closeListeners() {
 	document.removeEventListener("undoButtonPressed", undoMove);
-	document.removeEventListener("restartButtonPressed", undoMove);
+	document.removeEventListener("restartButtonPressed", restartGame);
 }
 
 function getCompletedCheckmates(): string[] {
