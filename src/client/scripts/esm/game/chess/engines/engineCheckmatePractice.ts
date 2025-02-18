@@ -740,6 +740,8 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 					bestMove = move;
 					maxScore = new_score;
 					maxPlies = survivalPlies;
+					alpha = Math.max(alpha, new_score);
+					alphaPlies = Math.max(alphaPlies, survivalPlies);
 					if (depth === start_depth && new_score >= globallyBestScore && survivalPlies >= globalSurvivalPlies) {
 						globallyBestMove = move;
 						globallyBestScore = new_score;
@@ -747,9 +749,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 					}
 				}
 			}
-			alpha = Math.max(alpha, new_score);
-			alphaPlies = Math.max(alphaPlies, survivalPlies);
-			if ((beta < alpha) || (beta === alpha && betaPlies <= alphaPlies)) {
+			if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
 				break;
 			}
 		}
@@ -773,11 +773,11 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 					if (new_score < minScore || survivalPlies < minPlies) {
 						minScore = new_score;
 						minPlies = survivalPlies;
+						beta = Math.min(beta, new_score);
+						betaPlies = Math.min(betaPlies, survivalPlies);
 					}
 				}
-				beta = Math.min(beta, new_score);
-				betaPlies = Math.min(betaPlies, survivalPlies);
-				if ((beta < alpha) || (beta === alpha && betaPlies <= alphaPlies)) {
+				if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
 					break;
 				}
 			}
@@ -849,7 +849,7 @@ function runEngine(gamefile: gamefile): void {
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist))
-		console.log(globalSurvivalPlies)
+		// console.log(globalSurvivalPlies)
 
 		// submit engine move
 		postMessage(move_to_gamefile_move(globallyBestMove));
