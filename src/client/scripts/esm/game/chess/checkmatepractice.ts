@@ -62,8 +62,6 @@ const validCheckmates: string[] = [
 	"1K3HA-1k",
 ];
 
-const difficultyListCheckmates: number[] = [8, 8, 7, 3]; // amount of easy, medium, hard and insane checkmates - for GUI purposes only
-
 const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
 /**
  * A list of checkmate strings we have beaten
@@ -130,7 +128,7 @@ function getCompletedCheckmates(): string[] {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// error if user somehow submitted invalid checkmate ID
-	if (!validCheckmates.includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+	if (!Object.values(validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
 
 	// place the black king not so far away for specific variants
 	const blackroyalnearer = (checkmateID === "1K3HA-1k" || checkmateID === "2K1R-1k" ? true : false);
@@ -255,7 +253,6 @@ function onEngineGameConclude(): void {
 
 export default {
 	validCheckmates,
-	difficultyListCheckmates,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,

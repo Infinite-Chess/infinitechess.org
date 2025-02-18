@@ -14,6 +14,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import style from './style.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
+import svgcache from '../../chess/rendering/svgcache.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -31,7 +32,7 @@ const element_progressBar: HTMLElement = document.querySelector('.checkmate-prog
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
 let modeSelected: 'checkmate-practice' | 'tactics-practice';
-let checkmateSelectedID: string = checkmatepractice.validCheckmates[0]!; // id of selected checkmate
+let checkmateSelectedID: string = checkmatepractice.validCheckmates.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedHTML: boolean = false;
 let generatedIcons: boolean = false;
@@ -69,68 +70,63 @@ function close() {
  * On first practice page load, generate list of checkmate HTML elements to be shown on page
  */
 function createPracticeHTML() {
-	const difficultyLabels: string[] = [];
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[0]).fill("easy"));
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[1]).fill("medium"));
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[2]).fill("hard"));
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[3]).fill("insane"));
+	for (const [difficulty, checkmates] of Object.entries(checkmatepractice.validCheckmates)) {
+		checkmates.forEach((checkmateID: string) => {
+			const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
+			if (!piecelist) return;
 
-	for (let i = 0; i < checkmatepractice.validCheckmates.length; i++) {
-		const checkmateID: string = checkmatepractice.validCheckmates[i]!;
-		const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
-		if (!piecelist) continue;
+			const checkmatePuzzle = document.createElement('div');
+			checkmatePuzzle.className = 'checkmate unselectable';
+			checkmatePuzzle.id = checkmateID;
 
-		const checkmatePuzzle = document.createElement('div');
-		checkmatePuzzle.className = 'checkmate unselectable';
-    	checkmatePuzzle.id = checkmateID;
+			const completionMark = document.createElement('div');
+			completionMark.className = 'completion-mark';
 
-		const completionMark = document.createElement('div');
-		completionMark.className = 'completion-mark';
+			const piecelistW = document.createElement('div');
+			piecelistW.className = 'piecelistW';
 
-		const piecelistW = document.createElement('div');
-		piecelistW.className = 'piecelistW';
+			const versusText = document.createElement('div');
+			versusText.className = 'checkmate-child versus';
+			versusText.textContent = translations['versus'];
 
-		const versusText = document.createElement('div');
-		versusText.className = 'checkmate-child versus';
-		versusText.textContent = translations['versus'];
+			const piecelistB = document.createElement('div');
+			piecelistB.className = 'piecelistB';
 
-		const piecelistB = document.createElement('div');
-		piecelistB.className = 'piecelistB';
+			const checkmateDifficulty = document.createElement('div');
+			checkmateDifficulty.className = 'checkmate-difficulty';
+			checkmateDifficulty.textContent = translations[difficulty];
 
-		const checkmateDifficulty = document.createElement('div');
-		checkmateDifficulty.className = 'checkmate-difficulty';
-		checkmateDifficulty.textContent = translations[difficultyLabels[i]!];
+			for (const entry of piecelist) {
+				const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
+				const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
+				const longPiece = formatconverter.ShortToLong_Piece(shortPiece);
 
-		for (const entry of piecelist) {
-			const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-			const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-			const longPiece = formatconverter.ShortToLong_Piece(shortPiece);
+				for (let j = 0; j < amount; j++) {
+					const pieceDiv = document.createElement('div');
+					pieceDiv.className = `checkmatepiece ${longPiece}`;
 
-			for (let j = 0; j < amount; j++) {
-				const pieceDiv = document.createElement('div');
-				pieceDiv.className = `checkmatepiece ${longPiece}`;
+					const containerDiv = document.createElement('div');
+					const collation = (j === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
+					containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
+					containerDiv.appendChild(pieceDiv);
 
-				const containerDiv = document.createElement('div');
-				const collation = (j === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
-				containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
-				containerDiv.appendChild(pieceDiv);
-			
-				if (colorutil.getPieceColorFromType(longPiece) === "white") piecelistW.appendChild(containerDiv);
-				else piecelistB.appendChild(containerDiv);
+					if (colorutil.getPieceColorFromType(longPiece) === "white") piecelistW.appendChild(containerDiv);
+					else piecelistB.appendChild(containerDiv);
+				}
 			}
-		}
-		checkmatePuzzle.appendChild(completionMark);
-		checkmatePuzzle.appendChild(piecelistW);
-		checkmatePuzzle.appendChild(versusText);
-		checkmatePuzzle.appendChild(piecelistB);
-		checkmatePuzzle.appendChild(checkmateDifficulty);
-		element_checkmates.appendChild(checkmatePuzzle);
+			checkmatePuzzle.appendChild(completionMark);
+			checkmatePuzzle.appendChild(piecelistW);
+			checkmatePuzzle.appendChild(versusText);
+			checkmatePuzzle.appendChild(piecelistB);
+			checkmatePuzzle.appendChild(checkmateDifficulty);
+			element_checkmates.appendChild(checkmatePuzzle);
+		});
 	}
 	generatedHTML = true;
 }
 
 async function addPieceIcons() {
-	// let sprites = await spritesheet.getSVGElementsByIds();
+	// let sprites = await svgcache.getSVGElements();
 	const spritenames = new Set<string>;
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of element_checkmates.children) {
@@ -142,7 +138,7 @@ async function addPieceIcons() {
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
 		spritenames.add(actualpieceBlack.className.split(' ')[1]!);
 	}
-	const spriteSVGs = await spritesheet.getSVGElementsByIds([...spritenames]);
+	const spriteSVGs = await svgcache.getSVGElements([...spritenames]);
 	for (const svg of spriteSVGs) {
 		sprites[svg.id] = svg;
 	}

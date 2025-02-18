@@ -146,7 +146,6 @@ function pawns(gamefile, coords, color) {
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
 		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
 			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
-			console.log("Added enpassantCreate to double push coord", doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); 
 		}
 	}

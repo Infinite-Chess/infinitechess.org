@@ -390,6 +390,14 @@ function concludeGame() {
 	guipause.updateTextOfMainMenuButton();
 }
 
+/** Undoes the conclusion of the game. */
+function unConcludeGame() {
+	loadedGamefile!.gameConclusion = false;
+	// Delete the Result and Condition metadata
+	gamefileutility.eraseTerminationMetadata(loadedGamefile!);
+	board.resetColor();
+}
+
 
 export default {
 	getGamefile,
@@ -401,6 +409,7 @@ export default {
 	loadGamefile,
 	unloadGame,
 	concludeGame,
+	unConcludeGame,
 };
 
 export type {

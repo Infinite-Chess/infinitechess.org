@@ -1278,7 +1278,7 @@ button.join-button, button.copy-button {
 .practice-engine-buttons .svg-restart {
     aspect-ratio: 1;
     width: 84%;
-    transform: translate(1px, 1px);
+    transform: translate(0.5px, 0.5px);
 }
 
 
