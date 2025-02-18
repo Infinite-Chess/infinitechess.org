@@ -62,6 +62,9 @@ const validCheckmates = {
 	]
 };
 
+/** These checkmates we may place the black king nearer to the white pieces. */
+const checkmatesWithBlackRoyalNearer = ["1K3HA-1k", "2K1R-1k"];
+
 const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
 /**
  * A list of checkmate strings we have beaten
@@ -131,7 +134,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 	if (!Object.values(validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
 
 	// place the black king not so far away for specific variants
-	const blackroyalnearer = (checkmateID === "1K3HA-1k" || checkmateID === "2K1R-1k" ? true : false);
+	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
 
 	const startingPosition: { [key: string]: string } = {}; // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
