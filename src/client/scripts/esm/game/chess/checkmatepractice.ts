@@ -42,6 +42,7 @@ const validCheckmates = {
 		"1K1Q1N-1k",
 		"1Q1B1B-1k",
 		"1Q2N-1k",
+		"2R1N1P-1k",
 		"1K1AR1R-1k",
 		"1K2AR-1k",
 		"2AM-1rc"
@@ -50,7 +51,7 @@ const validCheckmates = {
 		"1K1N2B1B-1k",
 		"1K2N1B1B-1k",
 		"1K1R1N1B-1k",
-		"2R1N1P-1k",
+		"1K1CH1N-1k",
 		"1K1R2N-1k",
 		"2K1R-1k",
 		"1K2N6B-1k"
