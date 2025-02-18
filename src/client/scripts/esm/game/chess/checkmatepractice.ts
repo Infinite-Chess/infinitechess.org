@@ -25,6 +25,7 @@ import winconutil from '../../chess/util/winconutil.js';
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
+import guigameinfo from '../gui/guigameinfo.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -87,6 +88,9 @@ const expiryOfCompletedCheckmatesMillis: number = 1000 * 60 * 60 * 24 * 365; // 
 /** Whether we are in a checkmate practice engine game. */
 let inCheckmatePractice: boolean = false;
 
+/** Whether the player is allowed to undo a move in the current position. */
+let undoingIsLegal : boolean = false;
+
 
 // Functions ----------------------------------------------------------------------------
 
@@ -97,6 +101,8 @@ let inCheckmatePractice: boolean = false;
 function startCheckmatePractice(checkmateSelectedID: string): void {
 	console.log("Loading practice checkmate game.");
 	inCheckmatePractice = true;
+	undoingIsLegal = false;
+	guigameinfo.update_GameControlButtons(false);
 	initListeners();
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
@@ -267,11 +273,41 @@ function onEngineGameConclude(): void {
 	markCheckmateBeaten(checkmatePracticeID);
 }
 
+/**
+ * This function gets called by enginegame.ts whenever a human player submitted a move
+ */
+function registerHumanMove() {
+	const gamefile = gameslot.getGamefile()!;
+	if (inCheckmatePractice && !undoingIsLegal && gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 0) {
+		// allow player to undo move if it ended the game
+		undoingIsLegal = true;
+		guigameinfo.update_GameControlButtons(true);
+	} else if (inCheckmatePractice && undoingIsLegal && !gamefileutility.isGameOver(gamefile)) {
+		// don't allow player to undo move while engine thinks
+		undoingIsLegal = false;
+		guigameinfo.update_GameControlButtons(false);
+	}
+}
+
+/**
+ * This function gets called by enginegame.ts whenever an engine player submitted a move
+ */
+function registerEngineMove() {
+	const gamefile = gameslot.getGamefile()!;
+	if (inCheckmatePractice && !undoingIsLegal && gamefile.moves.length > 1) {
+		// allow player to undo move after engine has moved
+		undoingIsLegal = true;
+		guigameinfo.update_GameControlButtons(true);
+	}
+}
+
 function undoMove() {
 	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
 	const gamefile = gameslot.getGamefile()!;
 
-	if ((enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
+	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
+		undoingIsLegal = false;
+		guigameinfo.update_GameControlButtons(false);
 		// If it's their turn, only rewind one move.	
 		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
 		movesequence.rewindMove(gamefile);
@@ -296,5 +332,7 @@ export default {
 	onGameUnload,
 	getCompletedCheckmates,
 	onEngineGameConclude,
-	eraseCheckmatePracticeProgress
+	eraseCheckmatePracticeProgress,
+	registerHumanMove,
+	registerEngineMove
 };

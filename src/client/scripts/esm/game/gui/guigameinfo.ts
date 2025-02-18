@@ -123,6 +123,14 @@ function restartGame() {
 	document.dispatchEvent(event);
 }
 
+/**
+ * Disables / Enables the "Undo Move" button
+ */
+function update_GameControlButtons(undoingIsLegal: boolean) {
+	if (undoingIsLegal) element_undoButton.classList.remove('opacity-0_5');
+	else element_undoButton.classList.add('opacity-0_5');
+}
+
 function preventFocus(event: Event) {
 	event.preventDefault();
 }
@@ -281,6 +289,7 @@ function getHeightOfGameInfoBar(): number {
 export default {
 	open,
 	close,
+	update_GameControlButtons,
 	revealPlayerNames,
 	hidePlayerNames,
 	toggle,
