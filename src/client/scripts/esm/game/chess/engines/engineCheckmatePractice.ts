@@ -33,7 +33,7 @@ self.onmessage = function(e: MessageEvent) {
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;
-	globalPliesToMate = Infinity;
+	globalSurvivalPlies = -Infinity;
 
 	if (!engineInitialized) initEvalWeightsAndSearchProperties();	// initialize the eval function weights and global search properties
 	
@@ -58,7 +58,7 @@ let checkmateSelectedID: string;
 // The informtion that is currently considered best by this engine
 let globallyBestMove: Coords = [0,0];
 let globallyBestScore: number;
-let globalPliesToMate: number;
+let globalSurvivalPlies: number;
 
 // the real coordinates of the black royal piece in the gamefile
 let gamefile_royal_coords: Coords;
@@ -152,7 +152,7 @@ function initEvalWeightsAndSearchProperties() {
 	ignorepawnmoves = true;
 
 	// default
-	wiggleroom = 2;
+	wiggleroom = 1;
 
 	// weights for piece values of white pieces
 	pieceExistenceEvalDictionary = {
@@ -263,13 +263,6 @@ function initEvalWeightsAndSearchProperties() {
 
 	// variant-specific modifications to the weights:
 	switch (checkmateSelectedID) {
-		case "1K1Q1P-1k":
-			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
-			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
-			break;
-		case "2AM-1rc":
-			wiggleroom = 1;
-			break;
 		case "1K2N7B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
 			legalMoveEvalDictionary = {
@@ -299,8 +292,9 @@ function initEvalWeightsAndSearchProperties() {
 				}
 			};
 			break;
-		case "1K3NR-1k":
-			wiggleroom = 1;
+		case "1K1Q1P-1k":
+			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
+			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
 			break;
 	}
 }
@@ -709,53 +703,55 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Boolean} black_to_move 
  * @param {Number} alpha 
  * @param {Number} beta 
- * @param {Number} alphaDepth 
- * @param {Number} betaDepth 
+ * @param {Number} alphaPlies
+ * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaDepth: number, betaDepth: number): { score: number, bestMove?: Coords, termination_depth: number, terminate_now: boolean } {
-	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
-	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) { return {score: 0, termination_depth: 0, terminate_now: true}; }
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestMove?: Coords, survivalPlies: number, terminate_now: boolean } {
 	enginePositionCounter++;
-	
-	if (depth === 0 || ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) ) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), termination_depth: depth, terminate_now: false };
+	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
+	if (enginePositionCounter % 3000 === 1 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
+		return {score: -Infinity, survivalPlies: Infinity, terminate_now: true};
+	} else if ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) {
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), survivalPlies: start_depth - depth, terminate_now: false };
+	} else if (depth === 0) {
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), survivalPlies: Infinity, terminate_now: false };
 	}
 
 	let bestMove: Coords | undefined;
 
 	if (black_to_move) {
 		let maxScore = -Infinity;
-		let deepestDepth = depth;
+		let maxPlies = -Infinity;
 		for (const move of get_black_legal_moves(piecelist, coordlist)) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaDepth, betaDepth);
-			if (evaluation.terminate_now) return {score: 0, termination_depth: 0, terminate_now: true};
+			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaPlies, betaPlies);
+			if (evaluation.terminate_now) return {score: -Infinity, survivalPlies: Infinity, terminate_now: true};
 			const new_score = evaluation.score;
-			const termination_depth = evaluation.termination_depth;
+			const survivalPlies = evaluation.survivalPlies;
 			if (new_score >= maxScore) {
-				if (new_score > maxScore || termination_depth < deepestDepth || (termination_depth === deepestDepth && Math.random() < 0.5)) {
+				if (new_score > maxScore || survivalPlies > maxPlies || (survivalPlies === maxPlies && Math.random() < 0.5)) {
 					bestMove = move;
 					maxScore = new_score;
-					deepestDepth = termination_depth;
-					if (depth === start_depth && new_score > globallyBestScore && globalPliesToMate >= start_depth - termination_depth) {
+					maxPlies = survivalPlies;
+					alpha = Math.max(alpha, new_score);
+					alphaPlies = Math.max(alphaPlies, survivalPlies);
+					if (depth === start_depth && new_score >= globallyBestScore && survivalPlies >= globalSurvivalPlies) {
 						globallyBestMove = move;
 						globallyBestScore = new_score;
-						globalPliesToMate = Math.min(globalPliesToMate, termination_depth > 0 ? start_depth - termination_depth : Infinity);
+						globalSurvivalPlies = survivalPlies;
 					}
 				}
 			}
-			alpha = Math.max(alpha, new_score);
-			alphaDepth = Math.min(alphaDepth, termination_depth);
-			if (beta <= alpha && betaDepth >= alphaDepth) {
+			if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
 				break;
 			}
 		}
 		if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
-		return { score: maxScore, bestMove: bestMove, termination_depth: deepestDepth, terminate_now: false };
+		return { score: maxScore, bestMove: bestMove, survivalPlies: maxPlies, terminate_now: false };
 	} else {
 		let minScore = Infinity;
-		let highestDepth = 0;
+		let minPlies = Infinity;
 		const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
 		// go through pieces for in increasing order of what piece has how many candidate moves
 		const indices = [...Array(piecelist.length).keys()];
@@ -763,24 +759,24 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaDepth, betaDepth);
-				if (evaluation.terminate_now) return {score: 0, termination_depth: 0, terminate_now: true};
+				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaPlies, betaPlies);
+				if (evaluation.terminate_now) return {score: -Infinity, survivalPlies: Infinity, terminate_now: true};
 				const new_score = evaluation.score;
-				const termination_depth = evaluation.termination_depth;
+				const survivalPlies = evaluation.survivalPlies;
 				if (new_score <= minScore) {
-					if (new_score < minScore || termination_depth > highestDepth || (termination_depth === highestDepth && Math.random() < 0.5)) {
+					if (new_score < minScore || survivalPlies < minPlies) {
 						minScore = new_score;
-						highestDepth = termination_depth;
+						minPlies = survivalPlies;
+						beta = Math.min(beta, new_score);
+						betaPlies = Math.min(betaPlies, survivalPlies);
 					}
 				}
-				beta = Math.min(beta, new_score);
-				betaDepth = Math.max(betaDepth, termination_depth);
-				if (beta <= alpha && betaDepth >= alphaDepth) {
+				if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
 					break;
 				}
 			}
 		}
-		return { score: minScore, termination_depth: highestDepth, terminate_now: false };
+		return { score: minScore, survivalPlies: minPlies, terminate_now: false };
 	}
 }
 
@@ -796,12 +792,12 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, depth, 0);
+		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, -Infinity, Infinity);
 		if (evaluation.terminate_now) break;
 		globallyBestMove = evaluation.bestMove!;
 		globallyBestScore = evaluation.score;
-		globalPliesToMate = evaluation.termination_depth > 0 ? depth - evaluation.termination_depth : Infinity;
-		// console.log(`Depth ${depth}, Plies To Mate: ${globalPliesToMate}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestMove}.`);
+		globalSurvivalPlies = evaluation.survivalPlies;
+		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestMove}.`);
 	}
 }
 
@@ -845,6 +841,9 @@ function runEngine(gamefile: gamefile): void {
 
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
+
+		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist))
+		// console.log(globalSurvivalPlies)
 
 		// submit engine move
 		postMessage(move_to_gamefile_move(globallyBestMove));
