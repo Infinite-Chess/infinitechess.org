@@ -123,10 +123,10 @@ function undoMove() {
 	const gamefile = gameslot.getGamefile()!;
 
 	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
-	if (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 1) {
+	if ((enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
 		const gamefile = gameslot.getGamefile()!;
 		// If it's their turn, only rewind one move.
-		if (enginegame.isItOurTurn()) movesequence.rewindMove(gamefile);
+		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
 		movesequence.rewindMove(gamefile);
 		selection.reselectPiece();
 	}
