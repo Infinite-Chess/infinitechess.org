@@ -50,6 +50,7 @@ let showButtons = false;
  */
 function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showGameControlButtons) showButtons = showGameControlButtons;
+	else showButtons = false;
 	const { white, black } = getPlayerNamesForGame(metadata);
 
 	element_playerWhite.textContent = white;
@@ -60,7 +61,7 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showButtons) {
 		element_practiceButtons.classList.remove('hidden');
 		initListeners_Gamecontrol();
-	}
+	} else element_practiceButtons.classList.add('hidden');
 
 	isOpen = true;
 }
@@ -82,7 +83,6 @@ function close() {
 	// Close button listeners
 	closeListeners_Gamecontrol();
 	element_practiceButtons.classList.add('hidden');
-	showButtons = false;
 
 	isOpen = false;
 }
