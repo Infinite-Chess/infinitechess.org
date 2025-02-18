@@ -6,12 +6,13 @@
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Position } from '../../chess/variants/variant.js';
+import type { VariantOptions } from './gameslot.js';
 
 
 import localstorage from '../../util/localstorage.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
-import gameslot, { VariantOptions } from './gameslot.js';
+import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
 import variant from '../../chess/variants/variant.js';
 import gameloader from './gameloader.js';
