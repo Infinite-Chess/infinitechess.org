@@ -100,20 +100,16 @@ function closeListeners_Gamecontrol() {
 	element_undoButton.removeEventListener('mousedown', preventFocus);
 }
 
-function preventFocus(event: Event) {
-	event?.preventDefault();
-}
-
 // TODO: Migrate this logic and imports to other file
 function undoMove() {
 	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
+	const gamefile = gameslot.getGamefile()!;
 
-	// TODO: Add support for rewinding moves also during engine's turn
-	// TODO: Add support for rewinding moves after game is concluded
 	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
-	if (enginegame.isItOurTurn() && gameslot.getGamefile()!.moves.length > 1) {
+	if (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 1) {
 		const gamefile = gameslot.getGamefile()!;
-		movesequence.rewindMove(gamefile);
+		// If it's their turn, only rewind one move.
+		if (enginegame.isItOurTurn()) movesequence.rewindMove(gamefile);
 		movesequence.rewindMove(gamefile);
 		selection.reselectPiece();
 	}
@@ -125,6 +121,10 @@ function restartGame() {
 	
 	gameloader.unloadGame(); // Unload current game
 	guipractice.callback_practicePlay(); // Effectively, the player just presses the Play button of the practice menu again
+}
+
+function preventFocus(event: Event) {
+	event.preventDefault();
 }
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
