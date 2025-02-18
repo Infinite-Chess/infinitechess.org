@@ -10,6 +10,7 @@ import selection from '../chess/selection.js';
 import style from './style.js';
 // @ts-ignore
 import colorutil from '../../chess/util/colorutil.js';
+import svgcache from '../../chess/rendering/svgcache.js';
 
 "use strict";
 
@@ -62,8 +63,8 @@ function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 
-	const whiteSVGs = spritesheet.getCachedSVGElements(white.map(promotion => promotion + whiteExt));
-	const blackSVGs = spritesheet.getCachedSVGElements(black.map(promotion => promotion + blackExt));
+	const whiteSVGs = svgcache.getCachedSVGElements(white.map(promotion => promotion + whiteExt));
+	const blackSVGs = svgcache.getCachedSVGElements(black.map(promotion => promotion + blackExt));
 
 	// Create and append allowed promotion options for white
 	whiteSVGs.forEach(svg => {

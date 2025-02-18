@@ -14,6 +14,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import style from './style.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
+import svgcache from '../../chess/rendering/svgcache.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -125,7 +126,7 @@ function createPracticeHTML() {
 }
 
 async function addPieceIcons() {
-	// let sprites = await spritesheet.getSVGElementsByIds();
+	// let sprites = await svgcache.getSVGElementsByIds();
 	const spritenames = new Set<string>;
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of element_checkmates.children) {
@@ -137,7 +138,7 @@ async function addPieceIcons() {
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
 		spritenames.add(actualpieceBlack.className.split(' ')[1]!);
 	}
-	const spriteSVGs = await spritesheet.getSVGElementsByIds([...spritenames]);
+	const spriteSVGs = await svgcache.getSVGElementsByIds([...spritenames]);
 	for (const svg of spriteSVGs) {
 		sprites[svg.id] = svg;
 	}
