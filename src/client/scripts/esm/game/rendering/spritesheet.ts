@@ -73,20 +73,18 @@ function getSpritesheetDataTexLocation(type: string): Coords {
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
 
 	/** All piece types in the game. */
-	let existingTypes: string[] = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes); // ['pawns','obstacles', ...]
+	let existingTypes: string[] = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes); // ['pawns','obstacles','voids', ...]
 	// Remove the pieces that don't need/have an SVG, such as VOIDS
 	existingTypes = existingTypes.filter(type => !typesThatDontNeedAnSVG.includes(type)); // ['pawns','obstacles', ...]
 
 	/** Makes all the types in the game singular instead of plural */
 	const typesNeeded = existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end => ['pawn','obstacle', ...]
-	/** A list of svg IDs we need for the game */
-	const svgIDs: string[] = svgcache.getSVG_IDsFromPieceTypes(typesNeeded); // ['pawnW','pawnsB','queensW', ...]
 
 	/**
 	 * The SVG elements we will use in the game to construct our spritesheet
 	 * This is what may take a while, waiting for the fetch requests to return.
-	*/
-	const svgElements = await svgcache.getSVGElementsByIds(svgIDs);
+	 */
+	const svgElements = await svgcache.getSVGElementsFromSingularTypes(typesNeeded);
 
 	// console.log("Finished acquiring all piece SVGs!");
 

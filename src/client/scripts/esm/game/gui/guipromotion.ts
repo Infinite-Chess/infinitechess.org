@@ -51,7 +51,7 @@ function close() {
  * @param {Object} promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
+async function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	if (promotionsAllowed === undefined) return;
 	const white = promotionsAllowed['white']!; // ['queens','bishops']
 	const black = promotionsAllowed['black']!;
@@ -63,8 +63,8 @@ function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 
-	const whiteSVGs = svgcache.getCachedSVGElements(white.map(promotion => promotion + whiteExt));
-	const blackSVGs = svgcache.getCachedSVGElements(black.map(promotion => promotion + blackExt));
+	const whiteSVGs = await svgcache.getSVGElements(white.map(promotion => promotion + whiteExt));
+	const blackSVGs = await svgcache.getSVGElements(black.map(promotion => promotion + blackExt));
 
 	// Create and append allowed promotion options for white
 	whiteSVGs.forEach(svg => {

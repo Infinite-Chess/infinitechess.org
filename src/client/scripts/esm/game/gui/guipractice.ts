@@ -126,7 +126,7 @@ function createPracticeHTML() {
 }
 
 async function addPieceIcons() {
-	// let sprites = await svgcache.getSVGElementsByIds();
+	// let sprites = await svgcache.getSVGElements();
 	const spritenames = new Set<string>;
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of element_checkmates.children) {
@@ -138,7 +138,7 @@ async function addPieceIcons() {
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
 		spritenames.add(actualpieceBlack.className.split(' ')[1]!);
 	}
-	const spriteSVGs = await svgcache.getSVGElementsByIds([...spritenames]);
+	const spriteSVGs = await svgcache.getSVGElements([...spritenames]);
 	for (const svg of spriteSVGs) {
 		sprites[svg.id] = svg;
 	}
