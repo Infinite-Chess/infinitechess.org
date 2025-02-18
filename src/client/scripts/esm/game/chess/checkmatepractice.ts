@@ -107,7 +107,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		Event: 'Infinite chess checkmate practice',
 		youAreColor: 'white' as 'white',
 		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
-		engineConfig: { checkmateSelectedID: checkmateSelectedID, engineTimeLimitPerMoveMillis: 500 },
+		engineConfig: { checkmateSelectedID: checkmateSelectedID, engineTimeLimitPerMoveMillis: 600 },
 		variantOptions
 	};
 
