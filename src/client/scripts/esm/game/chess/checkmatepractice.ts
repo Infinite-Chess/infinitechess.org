@@ -16,6 +16,9 @@ import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
 import variant from '../../chess/variants/variant.js';
 import gameloader from './gameloader.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import movesequence from "../chess/movesequence.js";
+import selection from '../chess/selection.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -94,6 +97,7 @@ let inCheckmatePractice: boolean = false;
 function startCheckmatePractice(checkmateSelectedID: string): void {
 	console.log("Loading practice checkmate game.");
 	inCheckmatePractice = true;
+	initListeners();
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
 	const specialRights = {};
@@ -118,7 +122,18 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 }
 
 function onGameUnload(): void {
+	closeListeners();
 	inCheckmatePractice = false;
+}
+
+function initListeners() {
+	document.addEventListener("undoButtonPressed", undoMove);
+	document.addEventListener("restartButtonPressed", restartGame);
+}
+
+function closeListeners() {
+	document.removeEventListener("undoButtonPressed", undoMove);
+	document.removeEventListener("undoButtonPressed", undoMove);
 }
 
 function getCompletedCheckmates(): string[] {
@@ -250,6 +265,25 @@ function onEngineGameConclude(): void {
 	// Add the checkmate to the list of completed!
 	const checkmatePracticeID: string = guipractice.getCheckmateSelectedID();
 	markCheckmateBeaten(checkmatePracticeID);
+}
+
+function undoMove() {
+	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
+	const gamefile = gameslot.getGamefile()!;
+
+	if ((enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
+		// If it's their turn, only rewind one move.	
+		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
+		movesequence.rewindMove(gamefile);
+		selection.reselectPiece();
+	}
+}
+
+function restartGame() {
+	if (!inCheckmatePractice) return console.error("Restarting games is currently not supported for non-practice mode games");
+	
+	gameloader.unloadGame(); // Unload current game
+	startCheckmatePractice(guipractice.getCheckmateSelectedID());
 }
 
 

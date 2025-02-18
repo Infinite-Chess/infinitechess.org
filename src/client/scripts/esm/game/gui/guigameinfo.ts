@@ -18,10 +18,6 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
-import guipractice from '../gui/guipractice.js';
-import movesequence from "../chess/movesequence.js";
-import selection from '../chess/selection.js';
-
 
 
 "use strict";
@@ -117,27 +113,14 @@ function closeListeners_Gamecontrol() {
 	element_undoButton.removeEventListener('mousedown', preventFocus);
 }
 
-// TODO: Migrate this logic and imports to other file
 function undoMove() {
-	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
-	const gamefile = gameslot.getGamefile()!;
-
-	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
-	if ((enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
-		const gamefile = gameslot.getGamefile()!;
-		// If it's their turn, only rewind one move.
-		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
-		movesequence.rewindMove(gamefile);
-		selection.reselectPiece();
-	}
+	const event = new Event("undoButtonPressed");
+	document.dispatchEvent(event);
 }
 
-// TODO: Migrate this logic and imports to other file
 function restartGame() {
-	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
-	
-	gameloader.unloadGame(); // Unload current game
-	guipractice.callback_practicePlay(); // Effectively, the player just presses the Play button of the practice menu again
+	const event = new Event("restartButtonPressed");
+	document.dispatchEvent(event);
 }
 
 function preventFocus(event: Event) {
