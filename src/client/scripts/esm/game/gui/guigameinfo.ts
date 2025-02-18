@@ -183,8 +183,8 @@ function updateWhosTurn() {
 	if (color !== 'white' && color !== 'black') throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
 
 	let textContent = "";
-	if (onlinegame.areInOnlineGame()) {
-		const ourTurn = onlinegame.isItOurTurn();
+	if (!gameloader.areInLocalGame()) {
+		const ourTurn = gameloader.isItOurTurn();
 		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
 	} else textContent = color === "white" ? translations['white_to_move'] : translations['black_to_move'];
 
