@@ -7,13 +7,15 @@
 import type { MetaData } from '../../chess/util/metadata.js';
 
 
-import frametracker from '../rendering/frametracker.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
-import gameslot from '../chess/gameslot.js';
 // @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
+// @ts-ignore
+import input from '../input.js';
+import frametracker from '../rendering/frametracker.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import guipractice from '../gui/guipractice.js';
@@ -58,6 +60,8 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
 
+	initListeners();
+
 	if (showButtons) {
 		element_practiceButtons.classList.remove('hidden');
 		initListeners_Gamecontrol();
@@ -79,12 +83,25 @@ function close() {
 	
 	// Hide the whole bar
 	element_gameInfoBar.classList.add('hidden');
+
+	closeListeners();
 	
 	// Close button listeners
 	closeListeners_Gamecontrol();
 	element_practiceButtons.classList.add('hidden');
 
 	isOpen = false;
+}
+
+function initListeners() {
+	// Prevents you from moving the selected piece when you click anywhere on the bar.
+	element_gameInfoBar.addEventListener("mousedown", input.doIgnoreMouseDown);
+	element_gameInfoBar.addEventListener("touchstart", input.doIgnoreMouseDown);
+}
+
+function closeListeners() {
+	element_gameInfoBar.removeEventListener("mousedown", input.doIgnoreMouseDown);
+	element_gameInfoBar.removeEventListener("touchstart", input.doIgnoreMouseDown);
 }
 
 function initListeners_Gamecontrol() {
