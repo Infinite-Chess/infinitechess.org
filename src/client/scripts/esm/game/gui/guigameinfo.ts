@@ -127,8 +127,14 @@ function restartGame() {
  * Disables / Enables the "Undo Move" button
  */
 function update_GameControlButtons(undoingIsLegal: boolean) {
-	if (undoingIsLegal) element_undoButton.classList.remove('opacity-0_5');
-	else element_undoButton.classList.add('opacity-0_5');
+	if (undoingIsLegal) {
+		element_undoButton.classList.remove('opacity-0_5');
+		element_undoButton.style.cursor = "pointer";
+	}
+	else {
+		element_undoButton.classList.add('opacity-0_5');
+		element_undoButton.style.cursor = "not-allowed";
+	}
 }
 
 function preventFocus(event: Event) {
