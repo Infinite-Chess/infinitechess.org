@@ -133,6 +133,9 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
 	const gamefile = gameslot.getGamefile()!;
+
+	// go to latest move when making a new move
+	movesequence.viewFront(gamefile);
 	/**
 	 * PERHAPS we don't need this stuff? It's just to find and apply any special move flag
 	 * that should go with the move. But shouldn't the engine provide that info with its move?

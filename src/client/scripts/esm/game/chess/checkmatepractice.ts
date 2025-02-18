@@ -308,7 +308,11 @@ function undoMove() {
 	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
 		undoingIsLegal = false;
 		guigameinfo.update_GameControlButtons(false);
-		// If it's their turn, only rewind one move.	
+
+		// go to latest move before undoing moves
+		movesequence.viewFront(gamefile);
+
+		// If it's their turn, only rewind one move.
 		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
 		movesequence.rewindMove(gamefile);
 		selection.reselectPiece();
