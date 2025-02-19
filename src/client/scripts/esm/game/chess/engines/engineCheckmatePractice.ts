@@ -123,8 +123,7 @@ const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is
 	10: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]],
 		jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // archbishop
 	11: {rides: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // knightrider
-	12: {jumps: [[2, 0], [3, 0], [5, 0], [7, 0], [11, 0], [-2, 0], [-3, 0], [-5, 0], [-7, 0], [-11, 0],
-				 [0, 2], [0, 3], [0, 5], [0, 7], [0, 11], [0, -2], [0, -3], [0, -5], [0, -7], [0, -11]],
+	12: {jumps: [[2, 0], [-2, 0], [0, 2], [0, -2]],
 		 rides: [[1, 0], [0, 1], [-1, 0], [0, -1]], is_huygen: true } // huygen
 };
 
@@ -606,7 +605,6 @@ function add_suitable_squares_to_candidate_list(
 		const is_huygen = (pieceTypeDictionary[piecelist[piece_index]!]!.is_huygen ? true : false);
 		if (is_huygen) {
 			const distance = manhattanDistance(piece_square, target_square);
-			if (distance < 13) continue candidates_loop;
 			if (!isprime.primalityTest(distance, null)) continue candidates_loop;
 		}
 
@@ -617,8 +615,8 @@ function add_suitable_squares_to_candidate_list(
 		if (!rider_threatens(v1, piece_square, target_square, is_huygen, piecelist, coordlist, {exclude_white_piece_squares: true})) continue;
 
 		// ensure that target square threatens square near black king
-		if (!rider_threatens(v2, target_square, square_near_king_1, is_huygen, piecelist, coordlist, {threatening_own_square: true}) &&
-			!rider_threatens(v2, target_square, square_near_king_2, is_huygen, piecelist, coordlist, {threatening_own_square: true})
+		if (!rider_threatens(v2, target_square, square_near_king_1, false, piecelist, coordlist, {threatening_own_square: true}) &&
+			!rider_threatens(v2, target_square, square_near_king_2, false, piecelist, coordlist, {threatening_own_square: true})
 		) continue;
 
 		// check if target_square is a royal move
@@ -879,7 +877,7 @@ function runEngine(gamefile: gamefile): void {
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
-		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist))
+		console.log(get_white_candidate_moves(start_piecelist, start_coordlist))
 		// console.log(globalSurvivalPlies)
 
 		// submit engine move
