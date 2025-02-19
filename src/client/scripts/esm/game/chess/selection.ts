@@ -218,6 +218,10 @@ function testIfPieceDropped(gamefile: gamefile): void {
 
 	// The pointer has released, drop the piece.
 
+	// If it was dropped an an arrow indicator pointing to a legal piece to capture, capture that!
+	const dropArrowsCaptureCoords = droparrows.updateCapturedPiece_ReturnCapturedCoords()
+	if (dropArrowsCaptureCoords) return moveGamefilePiece(gamefile, dropArrowsCaptureCoords);
+
 	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.
 
 	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
