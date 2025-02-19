@@ -32,8 +32,8 @@ const element_dot = document.getElementById('dot')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
 const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
-const element_undoButton = document.getElementById('undobutton')!;
-const element_restartButton = document.getElementById('restartbutton')!;
+const element_undoButton: HTMLButtonElement = document.getElementById('undobutton')! as HTMLButtonElement;
+const element_restartButton: HTMLButtonElement = document.getElementById('restartbutton')! as HTMLButtonElement;
 
 let isOpen = false;
 /** Whether to show the practice mode game control buttons - undo move and restart. */
@@ -114,12 +114,12 @@ function closeListeners_Gamecontrol() {
 }
 
 function undoMove() {
-	const event = new Event("undoButtonPressed");
+	const event = new Event("guigameinfo-undoMove");
 	document.dispatchEvent(event);
 }
 
 function restartGame() {
-	const event = new Event("restartButtonPressed");
+	const event = new Event("guigameinfo-restart");
 	document.dispatchEvent(event);
 }
 
@@ -130,10 +130,12 @@ function update_GameControlButtons(undoingIsLegal: boolean) {
 	if (undoingIsLegal) {
 		element_undoButton.classList.remove('opacity-0_5');
 		element_undoButton.style.cursor = "pointer";
+		element_undoButton.disabled = false;
 	}
 	else {
 		element_undoButton.classList.add('opacity-0_5');
 		element_undoButton.style.cursor = "not-allowed";
+		element_undoButton.disabled = true; // Disables the 'click' event from firing when it is pressed
 	}
 }
 

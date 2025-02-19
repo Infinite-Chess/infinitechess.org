@@ -19,13 +19,13 @@ import gameloader from './gameloader.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import movesequence from "../chess/movesequence.js";
 import selection from '../chess/selection.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
-import guigameinfo from '../gui/guigameinfo.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -130,16 +130,17 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 function onGameUnload(): void {
 	closeListeners();
 	inCheckmatePractice = false;
+	undoingIsLegal = false;
 }
 
 function initListeners() {
-	document.addEventListener("undoButtonPressed", undoMove);
-	document.addEventListener("restartButtonPressed", restartGame);
+	document.addEventListener("guigameinfo-undoMove", undoMove);
+	document.addEventListener("guigameinfo-restart", restartGame);
 }
 
 function closeListeners() {
-	document.removeEventListener("undoButtonPressed", undoMove);
-	document.removeEventListener("restartButtonPressed", restartGame);
+	document.removeEventListener("guigameinfo-undoMove", undoMove);
+	document.removeEventListener("guigameinfo-restart", restartGame);
 }
 
 function getCompletedCheckmates(): string[] {
