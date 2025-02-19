@@ -16,6 +16,7 @@ import math from '../../util/math.js';
  * @typedef {import('./movepiece.js').MoveDraft} MoveDraft
  * @typedef {import('../util/coordutil.js').Coords} Coords
  * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
+ * @typedef {import('./movepiece.js').enpassantCreate} enpassantCreate
  */
 
 "use strict";
@@ -26,10 +27,7 @@ import math from '../../util/math.js';
  */
 
 /** All types of special moves that exist, for iterating through. */
-const allSpecials = ['enpassant','promotion','castle','path'];
-
-/** Returns the list of all special moves that exist, for iterating. */
-function getAllSpecialMoves() { return allSpecials; }
+const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion','castle','path'];
 
 // EVERY one of these functions needs to include enough information in the special move tag
 // to be able to undo any of them!
@@ -141,12 +139,15 @@ function pawns(gamefile, coords, color) {
 	// Is there a piece in front of it?
 	const coordsInFront = [coords[0], coords[1] + yOneorNegOne];
 	if (!gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront)) {
-		individualMoves.push(coordsInFront); // No piece, add the move
+		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 
-		// Is the double push legal?
+		// Further... Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
-		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) individualMoves.push(doublePushCoord); // Add the double push!
+		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
+			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
+			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); 
+		}
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
@@ -169,12 +170,25 @@ function pawns(gamefile, coords, color) {
 		// Make sure it isn't a void
 		if (pieceAtCoords === 'voidsN') continue;
 
-		individualMoves.push(thisCoordsToCapture); // Good to add the capture!
+		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
 	addPossibleEnPassant(gamefile, individualMoves, coords, color);
+
 	return individualMoves;
+}
+
+/**
+ * Returns what the gamefile's enpassant property should be after this double pawn push move
+ * @param {number[]} moveStartCoords - The start coordinates of the move
+ * @param {number[]} moveEndCoords - The end coordinates of the move
+ * @returns {enpassantCreate} The coordinates en passant is allowed
+ */
+function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
+	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
+	const enpassantSquare = [moveStartCoords[0], y];
+	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special flags
 }
 
 /**
@@ -201,7 +215,20 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
 	enPassantSquare.enpassant = true;
-	individualMoves.push(enPassantSquare);
+	appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, enPassantSquare, color);
+}
+
+/**
+ * Appends the provided move to the running individual moves list,
+ * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
+ */
+function appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, landCoords, color) {
+	if (gamefile.gameRules.promotionRanks !== undefined) {
+		const teamPromotionRanks = gamefile.gameRules.promotionRanks[color];
+		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
+	}
+
+	individualMoves.push(landCoords);
 }
 
 /**
@@ -356,10 +383,9 @@ export default {
 	kings,
 	pawns,
 	roses,
-
-	getAllSpecialMoves,
+	getEnPassantGamefileProperty,
 	isPawnPromotion,
 	transferSpecialFlags_FromCoordsToMove,
 	transferSpecialFlags_FromMoveToCoords,
-	transferSpecialFlags_FromCoordsToCoords
+	transferSpecialFlags_FromCoordsToCoords,
 };

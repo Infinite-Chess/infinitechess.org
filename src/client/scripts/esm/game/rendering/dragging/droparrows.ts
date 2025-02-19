@@ -10,7 +10,7 @@ import type { Piece } from "../../../chess/logic/boardchanges.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 
 
-import arrows, { HoveredArrow } from "../arrows/arrows.js";
+import arrows from "../arrows/arrows.js";
 import selection from "../../chess/selection.js";
 import draganimation from "./draganimation.js";
 import space from "../../misc/space.js";
@@ -19,33 +19,22 @@ import legalmoves from "../../../chess/logic/legalmoves.js";
 
 
 
-function update_ReturnCaptureCoords(): Coords | undefined {
+let capturedPieceThisFrame: Piece | undefined;
 
-	const selectedPiece = selection.getPieceSelected()!;
-	const capturePiece = getCapturePiece();
 
-	// Modify the arrow indicators to reflect the potentialcapture
-
-	if (capturePiece !== undefined) {
-		const worldCoords = space.convertCoordToWorldSpace(capturePiece.coords) as Coords;
-		draganimation.dragPiece(worldCoords, capturePiece.coords); // Reflect the dragged piece's new location
-	}
-
-	// Delete the captured piece arrow
-	if (capturePiece !== undefined) arrows.shiftArrow(capturePiece.type, capturePiece.coords, undefined);
-
-	// New location of the selected piece
-	const newLocation = capturePiece !== undefined ? capturePiece.coords : undefined;
-	arrows.shiftArrow(selectedPiece.type, selectedPiece.coords, newLocation);
-
-	return capturePiece?.coords;
-}
 
 /**
- * Returns the piece that would be captured if we were to let
- * go of the dragged piece right now, if there is a piece to capture.
+ * Update the piece that would be captured if we were to let
+ * go of the dragged piece right now.
+ * 
+ * DO BEFORE update()'ing!!! This is so selection.ts can make any capture
+ * needed before the move is made, dragging disabled, and arrows shifted.
  */
-function getCapturePiece(): Piece | undefined {
+function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
+	if (!draganimation.areDraggingPiece()) throw Error('Should not be updating droparrows when not dragging a piece!');
+
+	capturedPieceThisFrame = undefined;
+
 	const selectedPiece = selection.getPieceSelected()!;
 	const selectedPieceLegalMoves = selection.getLegalMovesOfSelectedPiece()!;
 
@@ -65,26 +54,45 @@ function getCapturePiece(): Piece | undefined {
 
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));
 
-	const captureLegal: HoveredArrow | undefined = legalCaptureHoveredArrows[0];
-
-	// console.log(captureLegal);
-
-	return captureLegal?.piece;
+	if (legalCaptureHoveredArrows.length === 1) capturedPieceThisFrame = legalCaptureHoveredArrows[0]!.piece;
+	return capturedPieceThisFrame?.coords;
 }
 
 /**
- * Returns the coordinates the selected piece would be dropped on,
- * if we were to let go at this moment.
+ * Shifts an arrow indicator if we are hovering the dragged piece over a capturable arrow.
  * 
- * This won't always be underneath the mouse, because we could be
- * dropping it on an arrow indicator.
+ * DO AFTER selection.ts has updated!!! Because making a move changes the board position.
  */
-function getCaptureCoords(): Coords | undefined {
-	return getCapturePiece()?.coords;
+function shiftArrows(): void {
+	if (!draganimation.areDraggingPiece()) return;
+
+	const selectedPiece = selection.getPieceSelected()!;
+
+	// Modify the arrow indicators to reflect the potentialcapture
+
+	let newLocationOfSelectedPiece: Coords | undefined;
+
+	if (capturedPieceThisFrame !== undefined) {
+		// Reflect the dragged piece's new location in draganimation.ts
+		const worldCoords = space.convertCoordToWorldSpace(capturedPieceThisFrame.coords) as Coords;
+		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
+		// Delete the captured piece arrow
+		arrows.shiftArrow(capturedPieceThisFrame.type, capturedPieceThisFrame.coords, undefined);
+		// Place the selected piece's arrow location on it
+		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
+	}
+
+	// Shift the arrow of the selected piece
+	arrows.shiftArrow(selectedPiece.type, selectedPiece.coords, newLocationOfSelectedPiece);
+}
+
+function onDragTermination() {
+	capturedPieceThisFrame = undefined;
 }
 
 
 export default {
-	update_ReturnCaptureCoords,
-	getCaptureCoords,
+	updateCapturedPiece_ReturnCapturedCoords,
+	shiftArrows,
+	onDragTermination,
 };

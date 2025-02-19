@@ -7,15 +7,20 @@
 import type { MetaData } from '../../chess/util/metadata.js';
 
 
-import frametracker from '../rendering/frametracker.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
-import gameslot from '../chess/gameslot.js';
 // @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
+// @ts-ignore
+import input from '../input.js';
+import frametracker from '../rendering/frametracker.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
+import guipractice from '../gui/guipractice.js';
+import movesequence from "../chess/movesequence.js";
+import selection from '../chess/selection.js';
 
 
 
@@ -30,22 +35,38 @@ const element_whosturn = document.getElementById('whosturn')!;
 const element_dot = document.getElementById('dot')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
+const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
+const element_undoButton = document.getElementById('undobutton')!;
+const element_restartButton = document.getElementById('restartbutton')!;
 
 let isOpen = false;
+/** Whether to show the practice mode game control buttons - undo move and restart. */
+let showButtons = false;
 
 // Functions
 
 /**
  * 
- * @param metadata - The metadata of the gamefile, with its respective White and Black player names.
+ * @param metadata - The metadata of the gamefile, with its respective White and Black player names
+ * @param {boolean} showGameControlButtons
  */
-function open(metadata: MetaData) {
+function open(metadata: MetaData, showGameControlButtons?: boolean) {
+	if (showGameControlButtons) showButtons = showGameControlButtons;
+	else showButtons = false;
 	const { white, black } = getPlayerNamesForGame(metadata);
 
 	element_playerWhite.textContent = white;
 	element_playerBlack.textContent = black;
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
+
+	initListeners();
+
+	if (showButtons) {
+		element_practiceButtons.classList.remove('hidden');
+		initListeners_Gamecontrol();
+	} else element_practiceButtons.classList.add('hidden');
+
 	isOpen = true;
 }
 
@@ -63,7 +84,64 @@ function close() {
 	// Hide the whole bar
 	element_gameInfoBar.classList.add('hidden');
 
+	closeListeners();
+	
+	// Close button listeners
+	closeListeners_Gamecontrol();
+	element_practiceButtons.classList.add('hidden');
+
 	isOpen = false;
+}
+
+function initListeners() {
+	// Prevents you from moving the selected piece when you click anywhere on the bar.
+	element_gameInfoBar.addEventListener("mousedown", input.doIgnoreMouseDown);
+	element_gameInfoBar.addEventListener("touchstart", input.doIgnoreMouseDown);
+}
+
+function closeListeners() {
+	element_gameInfoBar.removeEventListener("mousedown", input.doIgnoreMouseDown);
+	element_gameInfoBar.removeEventListener("touchstart", input.doIgnoreMouseDown);
+}
+
+function initListeners_Gamecontrol() {
+	element_undoButton.addEventListener('click', undoMove);
+	element_restartButton.addEventListener('click', restartGame);
+	// For some reason we need this in order to stop the undo button from getting focused when clicked??
+	element_undoButton.addEventListener('mousedown', preventFocus);
+}
+
+function closeListeners_Gamecontrol() {
+	element_undoButton.removeEventListener('click', undoMove);
+	element_restartButton.removeEventListener('click', restartGame);
+	element_undoButton.removeEventListener('mousedown', preventFocus);
+}
+
+// TODO: Migrate this logic and imports to other file
+function undoMove() {
+	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
+	const gamefile = gameslot.getGamefile()!;
+
+	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
+	if ((enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
+		const gamefile = gameslot.getGamefile()!;
+		// If it's their turn, only rewind one move.
+		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
+		movesequence.rewindMove(gamefile);
+		selection.reselectPiece();
+	}
+}
+
+// TODO: Migrate this logic and imports to other file
+function restartGame() {
+	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
+	
+	gameloader.unloadGame(); // Unload current game
+	guipractice.callback_practicePlay(); // Effectively, the player just presses the Play button of the practice menu again
+}
+
+function preventFocus(event: Event) {
+	event.preventDefault();
 }
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
@@ -80,7 +158,7 @@ function hidePlayerNames() {
 
 function toggle() {
 	if (isOpen) close();
-	else open(gameslot.getGamefile()!.metadata);
+	else open(gameslot.getGamefile()!.metadata, showButtons);
 	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
 	frametracker.onVisualChange();
 }
@@ -122,8 +200,8 @@ function updateWhosTurn() {
 	if (color !== 'white' && color !== 'black') throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
 
 	let textContent = "";
-	if (onlinegame.areInOnlineGame()) {
-		const ourTurn = onlinegame.isItOurTurn();
+	if (!gameloader.areInLocalGame()) {
+		const ourTurn = gameloader.isItOurTurn();
 		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
 	} else textContent = color === "white" ? translations['white_to_move'] : translations['black_to_move'];
 

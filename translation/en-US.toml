@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "32"
+version = "35"
 maintainer = "Naviary"
 
 [header]
@@ -210,12 +210,7 @@ checkmates = "Checkmates"
 tactics = "Tactics"
 play = "Play"
 back = "Back"
-versus = "vs"
 difficulty = "Difficulty"
-easy = "Easy"
-medium = "Medium"
-hard = "Hard"
-insane = "Insane"
 
 [play.play-menu]
 title = "Play - Online"
@@ -280,6 +275,8 @@ recenter = "Recenter"
 rewind_move = "Rewind move"
 forward_move = "Forward move"
 pause = "Pause"
+undo = "Undo move" # Checkmate practice game
+restart = "Restart game" # Checkmate practice game
 
 [play.pause]
 title = "Paused"
@@ -330,6 +327,12 @@ bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\n
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
 menu_checkmate = "Practice - Checkmates" # The title of the Practice page changes to this when "Checkmates" is selected over "Tactics"
+progress_checkmate = "Progress"
+versus = "vs"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
+insane = "Insane"
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"

@@ -50,7 +50,7 @@ interface MetaData {
  * @param victor - The victor of the game. Can be 'white', 'black', 'draw', or 'aborted'.
  * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
  */
-function getResultFromVictor(victor: string): string {
+function getResultFromVictor(victor?: string): string {
 	if (victor === 'white') return '1-0';
 	else if (victor === 'black') return '0-1';
 	else if (victor === 'draw') return '1/2-1/2';

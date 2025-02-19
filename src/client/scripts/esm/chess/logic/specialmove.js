@@ -60,9 +60,7 @@ function pawns(gamefile, piece, move) {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
-	if (isPawnMoveADoublePush(piece.coords, move.endCoords)) {
-		state.createEnPassantState(move, gamefile.enpassant, getEnPassantGamefileProperty(piece.coords, move.endCoords));
-	}
+	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.enpassant, move.enpassantCreate);
 
 	const enpassantTag = move.enpassant; // true | undefined
 	const promotionTag = move.promotion; // promote type
@@ -90,20 +88,6 @@ function pawns(gamefile, piece, move) {
 
 	// Special move was executed!
 	return true;
-}
-
-function isPawnMoveADoublePush(pawnCoords, endCoords) { return Math.abs(pawnCoords[1] - endCoords[1]) === 2; }
-
-/**
- * Returns what the gamefile's enpassant property should be after this double pawn push move
- * @param {number[]} moveStartCoords - The start coordinates of the move
- * @param {number[]} moveEndCoords - The end coordinates of the move
- * @returns {EnPassant} The coordinates en passant is allowed
- */
-function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
-	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
-	const enpassantSquare = [moveStartCoords[0], y];
-	return { square: enpassantSquare, pawn: moveEndCoords };
 }
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.

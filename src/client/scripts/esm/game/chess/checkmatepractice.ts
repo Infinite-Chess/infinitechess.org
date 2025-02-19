@@ -6,12 +6,13 @@
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Position } from '../../chess/variants/variant.js';
+import type { VariantOptions } from './gameslot.js';
 
 
 import localstorage from '../../util/localstorage.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
-import gameslot, { VariantOptions } from './gameslot.js';
+import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
 import variant from '../../chess/variants/variant.js';
 import gameloader from './gameloader.js';
@@ -25,42 +26,46 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 
 // Variables ----------------------------------------------------------------------------
 
+const validCheckmates = {
+	easy: [
+		"2Q-1k",
+		"3R-1k",
+		"3B3B-1k",
+		"1K2B2B-1k",
+		"1K2R-1k",
+		"2CH-1k",
+		"1Q1CH-1k",
+		"1K1AM-1k"
+	],
+	medium: [
+		"1K1R1B1B-1k",
+		"1K1Q1B-1k",
+		"1K1Q1N-1k",
+		"1Q1B1B-1k",
+		"1Q2N-1k",
+		"2R1N1P-1k",
+		"1K1AR1R-1k",
+		"1K2AR-1k",
+		"2AM-1rc"
+	],
+	hard: [
+		"1K1N2B1B-1k",
+		"1K2N1B1B-1k",
+		"1K1R1N1B-1k",
+		"1K1CH1N-1k",
+		"1K1R2N-1k",
+		"2K1R-1k",
+		"1K2N6B-1k"
+	],
+	insane: [
+		"1K1Q1P-1k",
+		"1K3NR-1k",
+		"1K3HA-1k"
+	]
+};
 
-const validCheckmates: string[] = [
-	// easy
-	"2Q-1k",
-	"3R-1k",
-	"2CH-1k",
-	"1Q1CH-1k",
-	"1K2R-1k",
-	"1K2B2B-1k",
-	"3B3B-1k",
-	"1K1AM-1k",
-
-	// medium
-	"1K1Q1B-1k",
-	"1K1Q1N-1k",
-	"1Q1B1B-1k",
-	"1Q2N-1k",
-	"2R1N1P-1k",
-	"1K1R1B1B-1k",
-	"1K1AR1R-1k",
-	"2AM-1rc",
-
-	// hard
-	"1K1N2B1B-1k",
-	"1K2N1B1B-1k",
-	"1K1R1N1B-1k",
-	"1K1R2N-1k",
-	"2K1R-1k",
-	"1K2AR-1k",
-	"1K2N7B-1k",
-
-	// insane
-	"1K3NR-1k",
-	"1K1Q1P-1k",
-	"1K3HA-1k",
-];
+/** These checkmates we may place the black king nearer to the white pieces. */
+const checkmatesWithBlackRoyalNearer = ["1K3HA-1k", "2K1R-1k"];
 
 const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
 /**
@@ -105,7 +110,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		Event: 'Infinite chess checkmate practice',
 		youAreColor: 'white' as 'white',
 		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
-		engineConfig: { checkmateSelectedID: checkmateSelectedID },
+		engineConfig: { checkmateSelectedID: checkmateSelectedID, engineTimeLimitPerMoveMillis: 500 },
 		variantOptions
 	};
 
@@ -128,7 +133,10 @@ function getCompletedCheckmates(): string[] {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// error if user somehow submitted invalid checkmate ID
-	if (!validCheckmates.includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+	if (!Object.values(validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+
+	// place the black king not so far away for specific variants
+	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
 
 	const startingPosition: { [key: string]: string } = {}; // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
@@ -149,8 +157,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				if (blackpieceplaced) throw Error("Must place all white pieces before placing black pieces.");
 
 				// randomly generate white piece coordinates near origin in square from -5 to 5
-				const x: number = Math.floor(Math.random() * 11) - 5;
-				const y: number = Math.floor(Math.random() * 11) - 5;
+				const x: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
+				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
 				const key: string = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
@@ -160,8 +168,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				}
 			} else {
 				// randomly generate black piece coordinates at a distance
-				const x: number = Math.floor(Math.random() * 3) + 12;
-				const y: number = Math.floor(Math.random() * 35) - 17;
+				const x: number = Math.floor(Math.random() * 3) + (blackroyalnearer ? 7 : 12);
+				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 15 : 35)) - (blackroyalnearer ? 8 : 17);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 				// check if square is occupied or potentially threatened
 				if (!(key in startingPosition) && squareNotInSight(key, startingPosition)) {
@@ -249,6 +257,7 @@ function onEngineGameConclude(): void {
 
 
 export default {
+	validCheckmates,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,

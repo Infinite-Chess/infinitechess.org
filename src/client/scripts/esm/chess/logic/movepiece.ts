@@ -11,7 +11,7 @@
 import type gamefile from './gamefile.js';
 import type { Piece } from './boardchanges.js';
 import type { Coords } from '../util/coordutil.js';
-import type { MoveState } from './state.js';
+import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
 
 import colorutil from '../util/colorutil.js';
@@ -44,12 +44,16 @@ import wincondition from './wincondition.js';
  * activate said special move.
  */
 type CoordsSpecial = Coords & { 
+	enpassantCreate?: enpassantCreate,
 	enpassant?: enpassant,
+	promoteTrigger?: promoteTrigger,
 	promotion?: promotion,
 	castle?: castle,
 	path?: path,
 }
 
+/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
+type enpassantCreate = EnPassant
 /**
  * A special move tag for enpassant capture.
  * 
@@ -59,6 +63,11 @@ type CoordsSpecial = Coords & {
  * So we don't actually need to store more information in here.
  */
 type enpassant = true;
+/**
+ * A special move tag that, when the move is attempted to be made, should trigger the promotion UI to open.
+ * The special detect functions are in charge of adding this. selection.ts will delete it and open the promotion UI.
+ */
+type promoteTrigger = boolean;
 /** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
 type promotion = string;
 /** A special move tag for castling. */
@@ -80,6 +89,8 @@ type path = Coords[]
 interface MoveDraft {
 	startCoords: Coords,
 	endCoords: Coords,
+	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
+	enpassantCreate?: enpassantCreate,
 	/** Present if the move was special-move enpassant capture. This will be `true` */
 	enpassant?: enpassant,
 	/** Present if the move was a special-move promotion. This will be
@@ -459,7 +470,9 @@ export type {
 	Move,
 	MoveDraft,
 	CoordsSpecial,
+	enpassantCreate,
 	enpassant,
+	promoteTrigger,
 	promotion,
 	castle,
 	path
