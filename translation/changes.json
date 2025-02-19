@@ -1,9 +1,6 @@
 {
-	"36": {
-		"note": [
-			"Improved the grammar for play.guide paragraphs.",
-			"Added the huygen to play.guide.pieces (line 203)."
-		],
+	"37": {
+		"note": "Added the huygen to play.guide.pieces (line 203).",
 		"changes": []
 	},
 	"35": {
