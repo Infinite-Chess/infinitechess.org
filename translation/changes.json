@@ -1,4 +1,11 @@
 {
+	"36": {
+		"note": [
+			"Improved the grammar for play.guide paragraphs.",
+			"Added the huygen to play.guide.pieces (line 203)."
+		],
+		"changes": []
+	},
 	"35": {
 		"note": "Added undo and restart to play.gamebuttontooltips on lines 277-278",
 		"changes": []
