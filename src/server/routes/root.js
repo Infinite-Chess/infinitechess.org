@@ -40,6 +40,7 @@ router.get("/createaccount(.html)?", serveFile("createaccount.html"));
 router.get("/termsofservice(.html)?", serveFile("termsofservice.html"));
 router.get("/member(.html)?/:member", serveFile("member.html"));
 router.get("/admin(.html)?", serveFile("admin.html", false));
+router.get("/practice(.html)?", serveFile("practice.html"));
 
 // Error pages
 router.get("/400(.html)?", serveFile("errors/400.html", true));

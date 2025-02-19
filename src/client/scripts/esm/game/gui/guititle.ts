@@ -3,10 +3,11 @@
  * This script handles our Title Screen
  */
 
-import guipractice from './guipractice.js';
 import gui from './gui.js';
 // @ts-ignore
 import guiguide from './guiguide.js';
+// @ts-ignore
+import guipause from './guipause.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
 
@@ -15,7 +16,6 @@ import guiplay from './guiplay.js';
 
 
 // Title Screen
-const boardVel = 0.6; // Speed at which board slowly moves while on title screen
 
 const titleElement = document.getElementById('title')!; // Visible when on the title screen
 const element_play = document.getElementById('play')!;
@@ -23,6 +23,7 @@ const element_practice = document.getElementById('practice')!;
 const element_guide = document.getElementById('rules')!;
 const element_boardEditor = document.getElementById('board-editor')!;
 const element_menuExternalLinks = document.getElementById('menu-external-links')!;
+document.addEventListener('mainMenu', open);
 
 
 // Functions ----------------------------------------------------------------------------
@@ -62,8 +63,9 @@ function callback_Play(event: Event) {
 
 
 function callback_Practice(event: Event) {
-	close();
-	guipractice.open();
+	const currentUrl = document.location.href;
+	const baseUrl = currentUrl.substring(0, currentUrl.length - 4);
+	document.location.href = baseUrl + "practice";
 }
 function callback_Guide(event: Event) {
 	close();
@@ -73,7 +75,6 @@ function callback_Guide(event: Event) {
 
 
 export default {
-	boardVel,
 	open,
 	close,
 };

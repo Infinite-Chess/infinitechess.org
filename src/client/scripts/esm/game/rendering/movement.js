@@ -7,9 +7,8 @@ import board from './board.js';
 import math from '../../util/math.js';
 import transition from './transition.js';
 import guipromotion from '../gui/guipromotion.js';
-import guititle from '../gui/guititle.js';
+import config from '../config.js';
 import frametracker from './frametracker.js';
-import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
@@ -444,8 +443,8 @@ function randomizePanVelDir() {
 
 	const XYComponents = math.getXYComponents_FromAngle(randTheta);
 
-	panVel[0] = XYComponents[0] * guititle.boardVel;
-	panVel[1] = XYComponents[1] * guititle.boardVel;
+	panVel[0] = XYComponents[0] * config.boardVel;
+	panVel[1] = XYComponents[1] * config.boardVel;
 }
 
 // Called if the board is being dragged, calculates new board position.

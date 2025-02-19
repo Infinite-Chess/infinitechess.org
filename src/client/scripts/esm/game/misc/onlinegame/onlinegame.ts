@@ -57,6 +57,8 @@ let serverHasConcludedGame: boolean | undefined;
  */
 let inSync: boolean | undefined;
 
+document.addEventListener('mainMenu', onMainMenuPress);
+
 
 // Getters --------------------------------------------------------------------------------------------------------------
 
