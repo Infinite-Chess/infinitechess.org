@@ -186,7 +186,7 @@ function initEvalWeightsAndSearchProperties() {
 		5: [[30, manhattanNorm], [30, manhattanNorm]], // king
 		6: [[200, pawnNorm], [200, pawnNorm]], // pawn
 		7: [[14, manhattanNorm], [14, manhattanNorm]], // amazon
-		8: [[16, manhattanNorm], [16, manhattanNorm]], // hawk
+		8: [[7, manhattanNorm], [7, manhattanNorm]], // hawk
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
 		10: [[16, manhattanNorm], [16, manhattanNorm]], // archbishop
 		11: [[16, manhattanNorm], [16, manhattanNorm]], // knightrider
