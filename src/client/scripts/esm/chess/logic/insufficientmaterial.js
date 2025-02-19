@@ -72,7 +72,8 @@ const insuffmatScenarios_0K1k = [
     {'guardsW': 2},
     {'amazonsW': 1},
     {'knightridersW': 3},
-    {'pawnsW': 6}
+    {'pawnsW': 6},
+	{'huygensW': 4}
 ];
 
 // other special insuffmat scenarios

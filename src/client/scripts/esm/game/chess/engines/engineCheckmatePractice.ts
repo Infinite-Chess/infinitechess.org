@@ -7,6 +7,10 @@
  * @author Andreas Tsevas
  */
 
+// @ts-ignore
+import isprime from '../../../util/isprime.js';
+
+
 /**
  * Typescript types are erased during compilation, so adding these
  * here doesn't actually mean adding dependancies.
@@ -97,11 +101,12 @@ const pieceNameDictionary: { [pieceType: string]: number } = {
 	"hawksW": 8,
 	"chancellorsW": 9,
 	"archbishopsW": 10,
-	"knightridersW": 11
+	"knightridersW": 11,
+	"huygensW": 12
 };
 
 // legal move storage for pieces in piecelist
-const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is_royal?: boolean, is_pawn?: boolean } } = {
+const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is_royal?: boolean, is_pawn?: boolean, is_huygen?: boolean } } = {
 	// 0 corresponds to a captured piece
 	1: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]}, // queen
 	2: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]]}, // rook
@@ -117,7 +122,10 @@ const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is
 		jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // chancellor
 	10: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]],
 		jumps: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // archbishop
-	11: {rides: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]} // knightrider
+	11: {rides: [[1, 2], [-1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, 1], [-2, -1]]}, // knightrider
+	12: {jumps: [[2, 0], [3, 0], [5, 0], [7, 0], [11, 0], [-2, 0], [-3, 0], [-5, 0], [-7, 0], [-11, 0],
+				 [0, 2], [0, 3], [0, 5], [0, 7], [0, 11], [0, -2], [0, -3], [0, -5], [0, -7], [0, -11]],
+		 rides: [[1, 0], [0, 1], [-1, 0], [0, -1]], is_huygen: true } // huygen
 };
 
 // define what "short range" means for each piece. Jump moves to at least as near as the values in this table are considered shortrange
@@ -129,6 +137,7 @@ const shortRangeJumpDictionary: { [key: number]: number } = {
 	8: 8, // hawk
 	9: 5, // chancellor
 	10: 5, // archbishop
+	12: 10, // huygen
 };
 
 // weights for the evaluation function
@@ -167,7 +176,8 @@ function initEvalWeightsAndSearchProperties() {
 		8: -800_000, // hawk
 		9: -800_000, // chancellor
 		10: -800_000, // archbishop
-		11: -800_000 // knightrider
+		11: -800_000, // knightrider
+		12: -800_000 // huygen
 	};
 
 	// weights and distance functions for white piece distance to the black king
@@ -184,6 +194,7 @@ function initEvalWeightsAndSearchProperties() {
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
 		10: [[16, manhattanNorm], [16, manhattanNorm]], // archbishop
 		11: [[16, manhattanNorm], [16, manhattanNorm]], // knightrider
+		12: [[16, manhattanNorm], [16, manhattanNorm]], // huygen
 	};
 
 	// eval scores for number of legal moves of black royal
@@ -262,6 +273,10 @@ function initEvalWeightsAndSearchProperties() {
 	}
 
 	// variant-specific modifications to the weights:
+
+	// variants with a rook need more wiggleroom
+	if (/[0-9]R([^a-zA-Z]|$)/.test(checkmateSelectedID)) wiggleroom = 2;
+
 	switch (checkmateSelectedID) {
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
@@ -314,6 +329,11 @@ function manhattanNorm(square: Coords): number {
 	return Math.abs(square[0]) + Math.abs(square[1]);
 }
 
+// computes the manhattan distance of two squares
+function manhattanDistance(square1: Coords, square2: Coords): number {
+	return Math.abs(square1[0] - square2[0]) + Math.abs(square1[1] - square2[1]);
+}
+
 // special norm for the pawn
 // the pawn is more threatening if it has a negative y-coordinate
 function pawnNorm(square: Coords): number {
@@ -345,11 +365,12 @@ function is_natural_multiple(v: Vec2, direction: Vec2): [boolean, number] {
 // exclude_white_piece_squares specifies whether to exclude occupied squares from being threatened
 // ignore_blockers specifies whether to completely ignore blocking pieces in piecelist&coordlist
 // threatening_own_square specifies whether a piece can threaten its own square
-function rider_threatens(direction: Vec2, piece_square: Coords, target_square: Coords, piecelist: number[], coordlist: Coords[],
+function rider_threatens(direction: Vec2, piece_square: Coords, target_square: Coords, is_huygen: boolean, piecelist: number[], coordlist: Coords[],
 	{ exclude_white_piece_squares = false, ignore_blockers = false, threatening_own_square = false} = {}): boolean {
 	if (threatening_own_square && squares_are_equal(piece_square, target_square)) return true;
 	const [works, distance] = is_natural_multiple([target_square[0] - piece_square[0], target_square[1] - piece_square[1]], direction);
 	if (!works) return false;
+	if (is_huygen && !isprime.primalityTest(distance, null)) return false;
 	if (ignore_blockers) return true;
 	// loop over all potential blockers
 	for (let i = 0; i < coordlist.length; i++) {
@@ -419,7 +440,8 @@ function piece_threatens_square(piece_index: number, target_square: Coords, piec
 	// rider move threatening
 	if (piece_properties.rides) {
 		for (const ride_directrion of piece_properties.rides) {
-			if (rider_threatens(ride_directrion, piece_square, target_square, piecelist, coordlist)) return true;
+			const is_huygen = (piece_properties.is_huygen ? true : false);
+			if (rider_threatens(ride_directrion, piece_square, target_square, is_huygen, piecelist, coordlist)) return true;
 		}
 	}
 
@@ -579,14 +601,26 @@ function add_suitable_squares_to_candidate_list(
 		const target_square = add_move(piece_square, rescaleVector(rc1, v1));
 		// do not add square already in candidates list
 		if (tuplelist_contains_tuple(candidate_squares, target_square)) continue candidates_loop;
+
+		// if piece is huygens, discard all nonprime candidate squares or squares already covered by jump moves
+		const is_huygen = (pieceTypeDictionary[piecelist[piece_index]!]!.is_huygen ? true : false);
+		if (is_huygen) {
+			const distance = manhattanDistance(piece_square, target_square);
+			if (distance < 13) continue candidates_loop;
+			if (!isprime.primalityTest(distance, null)) continue candidates_loop;
+		}
+
 		const square_near_king_1 = add_move(target_square, rescaleVector(c2_min, v2));
 		const square_near_king_2 = add_move(target_square, rescaleVector(c2_max, v2));
+
 		// ensure that piece threatens target square
-		if (!rider_threatens(v1, piece_square, target_square, piecelist, coordlist, {exclude_white_piece_squares: true})) continue;
+		if (!rider_threatens(v1, piece_square, target_square, is_huygen, piecelist, coordlist, {exclude_white_piece_squares: true})) continue;
+
 		// ensure that target square threatens square near black king
-		if (!rider_threatens(v2, target_square, square_near_king_1, piecelist, coordlist, {threatening_own_square: true}) &&
-			!rider_threatens(v2, target_square, square_near_king_2, piecelist, coordlist, {threatening_own_square: true})
+		if (!rider_threatens(v2, target_square, square_near_king_1, is_huygen, piecelist, coordlist, {threatening_own_square: true}) &&
+			!rider_threatens(v2, target_square, square_near_king_2, is_huygen, piecelist, coordlist, {threatening_own_square: true})
 		) continue;
+
 		// check if target_square is a royal move
 		if (tuplelist_contains_tuple(royal_moves, target_square)) {
 			// create copy of piece list without piece at piece_index
@@ -607,13 +641,16 @@ function add_suitable_squares_to_candidate_list(
 			for (let i = 0; i < candidate_squares.length; i++) {
 				// skip over accepted candidate square if it is a royal move
 				if (tuplelist_contains_tuple(royal_moves, candidate_squares[i]!)) continue redundancy_loop;
+
 				// skip over accepted candidate square if its coords have a different sign from the current candidate square
 				else if (Math.sign(target_square[0]!) !== Math.sign(candidate_squares[i]![0]!)) continue redundancy_loop;
 				else if (Math.sign(target_square[1]!) !== Math.sign(candidate_squares[i]![1]!)) continue redundancy_loop;
+
 				// eliminate current candidate square if it lies on the same line as accepted candidate square, but further away
-				else if (rider_threatens(v2, target_square, candidate_squares[i]!, piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
+				else if (rider_threatens(v2, target_square, candidate_squares[i]!, is_huygen, piecelist, coordlist, {ignore_blockers: true})) continue candidates_loop;
+
 				// replace accepted candidate square with current candidate square if they lie on the same line as, but new square is nearer
-				else if (rider_threatens(v2, candidate_squares[i]!, target_square, piecelist, coordlist, {ignore_blockers: true})) {
+				else if (rider_threatens(v2, candidate_squares[i]!, target_square, is_huygen, piecelist, coordlist, {ignore_blockers: true})) {
 					candidate_squares[i] = target_square;
 					continue candidates_loop;
 				}
