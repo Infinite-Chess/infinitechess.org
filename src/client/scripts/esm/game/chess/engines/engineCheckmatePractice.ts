@@ -276,6 +276,9 @@ function initEvalWeightsAndSearchProperties() {
 	// variants with a rook need more wiggleroom
 	if (/[0-9]R([^a-zA-Z]|$)/.test(checkmateSelectedID)) wiggleroom = 2;
 
+	// variants with a huygen need more wiggleroom
+	if (/[0-9]HU([^a-zA-Z]|$)/.test(checkmateSelectedID)) wiggleroom = 5;
+
 	switch (checkmateSelectedID) {
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
@@ -877,7 +880,7 @@ function runEngine(gamefile: gamefile): void {
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
-		console.log(get_white_candidate_moves(start_piecelist, start_coordlist))
+		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist))
 		// console.log(globalSurvivalPlies)
 
 		// submit engine move
