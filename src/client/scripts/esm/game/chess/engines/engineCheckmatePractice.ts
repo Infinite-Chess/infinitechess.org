@@ -145,11 +145,11 @@ let pieceExistenceEvalDictionary: { [key: number]: number };
 let distancesEvalDictionary: { [key: number]: [number, (square: Coords) => number][] };
 let legalMoveEvalDictionary: { [key: number]: { [key: number]: number } };
 
+// number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
+let wiggleroomDictionary: { [key: number]: number };
+
 // whether to consider white pawn moves as candidate moves
 let ignorepawnmoves: boolean;
-
-// number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
-let wiggleroom: number;
 
 /**
  * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
@@ -158,9 +158,6 @@ function initEvalWeightsAndSearchProperties() {
 
 	// default: ignoring white pawns moves as candidate moves makes engine much stronger at low depths
 	ignorepawnmoves = true;
-
-	// default
-	wiggleroom = 1;
 
 	// weights for piece values of white pieces
 	pieceExistenceEvalDictionary = {
@@ -193,7 +190,7 @@ function initEvalWeightsAndSearchProperties() {
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
 		10: [[16, manhattanNorm], [16, manhattanNorm]], // archbishop
 		11: [[16, manhattanNorm], [16, manhattanNorm]], // knightrider
-		12: [[16, manhattanNorm], [16, manhattanNorm]], // huygen
+		12: [[2, manhattanNorm], [2, manhattanNorm]], // huygen
 	};
 
 	// eval scores for number of legal moves of black royal
@@ -271,13 +268,19 @@ function initEvalWeightsAndSearchProperties() {
 		engineInitialized = true;
 	}
 
+	// number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
+	wiggleroomDictionary = {
+		1: 1, // queen
+		2: 2, // rook
+		3: 2, // bishop
+		7: 1, // amazon
+		9: 1, // chancellor
+		10: 1, // archbishop
+		11: 1, // knightrider
+		12: 5 // huygen
+	};
+
 	// variant-specific modifications to the weights:
-
-	// variants with a rook need more wiggleroom
-	if (/[0-9]R([^a-zA-Z]|$)/.test(checkmateSelectedID)) wiggleroom = 2;
-
-	// variants with a huygen need more wiggleroom
-	if (/[0-9]HU([^a-zA-Z]|$)/.test(checkmateSelectedID)) wiggleroom = 5;
 
 	switch (checkmateSelectedID) {
 		case "1K2N6B-1k":
@@ -569,10 +572,10 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 				const c2 = - crossProduct(v1, piece_square) / denominator;
 				if (c1 < 0 || c2 <= 0) continue;
 				// suitable values for c1 and c2 were found, now compute min and max values for c1 and c2 to consider
-				const c1_min = Math.ceil(c1 - wiggleroom);
-				const c1_max = Math.floor(c1 + wiggleroom);
-				const c2_min = Math.ceil(c2 - wiggleroom);
-				const c2_max = Math.floor(c2 + wiggleroom);
+				const c1_min = Math.ceil(c1 - wiggleroomDictionary[piece_type]!);
+				const c1_max = Math.floor(c1 + wiggleroomDictionary[piece_type]!);
+				const c2_min = Math.ceil(c2 - wiggleroomDictionary[piece_type]!);
+				const c2_max = Math.floor(c2 + wiggleroomDictionary[piece_type]!);
 
 				// adds suitable squares along v1 to the candidates list
 				add_suitable_squares_to_candidate_list(
