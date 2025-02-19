@@ -64,7 +64,8 @@ const validCheckmates = {
 	insane: [
 		"1K1Q1P-1k",
 		"1K3NR-1k",
-		"1K3HA-1k"
+		"1K3HA-1k",
+		"5HU-1k"
 	]
 };
 
