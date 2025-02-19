@@ -137,9 +137,7 @@ function isCoordinateActive(): boolean {
 
 function initListeners_Navigation() {
 	element_Navigation.addEventListener("mousedown", input.doIgnoreMouseDown);
-	//element_Navigation.addEventListener("mouseup", input.doIgnoreMouseDown)
 	element_Navigation.addEventListener("touchstart", input.doIgnoreMouseDown);
-	//element_Navigation.addEventListener("touchend", input.doIgnoreMouseDown)
 
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);

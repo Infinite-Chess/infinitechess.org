@@ -1,4 +1,23 @@
 {
+	"36": {
+		"note": [
+			"Improved the grammar for play.guide paragraphs.",
+			"Added the huygen to play.guide.pieces (line 203)."
+		],
+		"changes": []
+	},
+	"35": {
+		"note": "Added undo and restart to play.gamebuttontooltips on lines 277-278",
+		"changes": []
+	},
+	"34": {
+		"note": "Moved versus, easy, medium, hard and insane from play.practice-menu to play.javascript on lines 328-332",
+		"changes": []
+	},
+	"33":{
+		"note": "Added progress_checkmate on line 332 under play.javascript",
+		"changes": []
+	},
 	"32": {
 		"note": [
 			"Added practice key on line 149 under play.main-menu.",

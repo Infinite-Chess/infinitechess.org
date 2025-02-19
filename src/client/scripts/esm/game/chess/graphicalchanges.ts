@@ -45,9 +45,12 @@ const meshChanges: ChangeApplication<genericChangeFunc> = {
  * A generic function that animates a move change.
  * 
  * DOES NOT ALTER the mesh or piece lists.
+ * @param change - The change to animate.
+ * @param instant - Whether to animate instantly. Only the SOUND will be played.
+ * @param clearanimations - Whether to delete all previous animations before starting this one.
  */
 // eslint-disable-next-line no-unused-vars
-type animationFunc = (change: Change, clearanimations: boolean) => void
+type animationFunc = (change: Change, instant: boolean, clearanimations: boolean) => void
 
 /**
  * An object mapping move changes to a function that starts the animation for that action.
@@ -108,22 +111,22 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 // Animate -----------------------------------------------------------------------------------------
 
 
-function animateMove(change: Change, clearanimations: boolean) {
+function animateMove(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move') throw Error(`animateMove called with non-move action: ${change.action}`);
 	const waypoints = change.path ?? [change.piece.coords, change.endCoords];
-	animation.animatePiece(change['piece'].type, waypoints, undefined, clearanimations);
+	animation.animatePiece(change['piece'].type, waypoints, undefined, instant, clearanimations);
 }
 
-function animateReturn(change: Change, clearanimations: boolean) {
+function animateReturn(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`animateReturn called with non-move action: ${change.action}`);
 	const waypoints = change.path?.slice().reverse() ?? [change['endCoords'], change['piece'].coords]; // slice() required because reverse() is mutating
-	animation.animatePiece(change['piece'].type, waypoints, undefined, clearanimations);
+	animation.animatePiece(change['piece'].type, waypoints, undefined, instant, clearanimations);
 }
 
-function animateCapture(change: Change, clearanimations: boolean) {
+function animateCapture(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'capture') throw Error(`animateCapture called with non-capture action: ${change.action}`);
 	const waypoints = change.path ?? [change.piece.coords, change.endCoords];
-	animation.animatePiece(change.piece.type, waypoints, change.capturedPiece, clearanimations);
+	animation.animatePiece(change.piece.type, waypoints, change.capturedPiece, instant, clearanimations);
 }
 
 

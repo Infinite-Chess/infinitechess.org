@@ -17,6 +17,8 @@ import boardchanges from "./boardchanges.js";
 import state from "./state.js";
 // @ts-ignore
 import gamefile from "./gamefile.js";
+// @ts-ignore
+import specialdetect from "./specialdetect.js";
 
 
 // Legal Move Calculation -----------------------------------------------------------------
@@ -54,11 +56,14 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 	// Is there a piece in front of it?
 	const coordsInFront = [coords[0], coords[1] + yDistanceParity] as Coords;
 	if (gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront) === undefined) {
-		individualMoves.push(coordsInFront); // No piece, add the move
+		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 		// Is the double push legal?
-		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as Coords;
+		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as CoordsSpecial;
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
-		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) individualMoves.push(doublePushCoord); // Add the double push!
+		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
+			doublePushCoord.enpassantCreate = specialdetect.getEnPassantGamefileProperty(coords, doublePushCoord);
+			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); // Add the double push!
+		}
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
@@ -81,7 +86,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 		// Make sure it isn't a void
 		if (pieceAtCoords === 'voidsN') continue;
 
-		individualMoves.push(thisCoordsToCapture); // Good to add the capture!
+		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Add the capture
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -113,7 +118,20 @@ function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coo
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
 	enPassantSquare.enpassant = true;
-	individualMoves.push(enPassantSquare);
+	appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, enPassantSquare, color);
+}
+
+/**
+ * Appends the provided move to the running individual moves list,
+ * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
+ */
+function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: string) {
+	if (gamefile.gameRules.promotionRanks !== undefined) {
+		const teamPromotionRanks = gamefile.gameRules.promotionRanks[color];
+		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
+	}
+
+	individualMoves.push(landCoords);
 }
 
 
@@ -123,19 +141,9 @@ function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coo
 /** Executes a five dimensional pawn move.  */
 function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
 	const moveChanges = move.changes;
-	let distance: 1 | 10;
 
-	const absXDistance = Math.abs(move.endCoords[0] - piece.coords[0]);
-	const absYDistance = Math.abs(move.endCoords[1] - piece.coords[1]);
-
-	// Piece moved forwards
-	if (absXDistance === 0) distance = absYDistance <= 2 ? 1 : 10;
-	else distance = absXDistance as 1 | 10;
-
-	if (absYDistance === 2 * distance) { // Double pushed either spacelike or timelike. Create the en passant state
-		const newEnPassantSquare: Coords = [piece.coords[0], (piece.coords[1] + move.endCoords[1]) / 2] as Coords;
-		state.createEnPassantState(move, gamefile.enpassant, { square: newEnPassantSquare, pawn: move.endCoords });
-	}
+	// If it was a double push, then queue adding the new enpassant square to the gamefile!
+	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.enpassant, move.enpassantCreate);
 
 	if (!move.enpassant && !move.promotion) return false; // No special move to execute, return false to signify we didn't move the piece.
 

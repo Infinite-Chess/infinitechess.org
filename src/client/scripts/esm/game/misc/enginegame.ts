@@ -19,7 +19,11 @@ import perspective from '../rendering/perspective.js';
 // Type Definitions -------------------------------------------------------------
 
 
-interface EngineConfig { checkmateSelectedID: string }
+interface EngineConfig { 
+	checkmateSelectedID: string,
+	/** Hard time limit for the engine to think in milliseconds */
+	engineTimeLimitPerMoveMillis: number
+}
 
 
 // Variables --------------------------------------------------------------------
@@ -29,10 +33,8 @@ interface EngineConfig { checkmateSelectedID: string }
 let inEngineGame: boolean = false;
 let ourColor: 'white' | 'black' | undefined;
 let currentEngine: string | undefined; // name of the current engine used
-let currentEngineMove: Coords | undefined; // currently best move recommended by the engine
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
-
-const engineTimeLimitPerMoveMillis: number = 500; // hard time limit for the engine to think in milliseconds
+let engineWorker: Worker | undefined;
 
 
 // Functions ------------------------------------------------------------------------
@@ -47,12 +49,18 @@ function getOurColor(): 'white' | 'black' {
 	return ourColor!;
 }
 
+function isItOurTurn(): boolean {
+	if (!inEngineGame) throw Error("Cannot get isItOurTurn of engine game when we're not in an engine game.");
+	return gameslot.getGamefile()!.whosTurn === ourColor;
+}
+
 function getCurrentEngine() {
 	return currentEngine;
 }
 
 /**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
+ * This method launches an engine webworker for the current game.
  * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
@@ -63,8 +71,18 @@ function initEngineGame(options: {
 	inEngineGame = true;
 	ourColor = options.youAreColor;
 	currentEngine = options.currentEngine;
-	currentEngineMove = undefined;
 	engineConfig = options.engineConfig;
+
+	// Initialize the engine as a webworker
+	if (!window.Worker) return alert("Your browser doesn't support web workers. Cannot play against an engine.");
+	// TODO: What happens if the engine fails / takes too long to load? =============================== !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
+	engineWorker.onmessage = function(e: MessageEvent) { 
+		// Messages from the engine mean it has submitted a move
+		const engineMove = e.data;
+		makeEngineMove(engineMove);
+	};
+
 	console.log(`Started engine game with engine "${currentEngine}".`);
 }
 
@@ -73,10 +91,12 @@ function closeEngineGame() {
 	inEngineGame = false;
 	ourColor = undefined;
 	currentEngine = undefined;
-	currentEngineMove = undefined;
 	engineConfig = undefined;
 	perspective.resetRotations(); // Without this, leaving an engine game of which we were black, won't reset our rotation.
 
+	// terminate the webworker
+	if (engineWorker) engineWorker.terminate();
+	engineWorker = undefined;
 	checkmatepractice.onGameUnload();
 }
 
@@ -91,34 +111,16 @@ function areWeColor(color: string): boolean {
 
 /**
  * This method is called externally when the player submits his move in an engine game
- * It launches an engine webworker and submits the gamefile to the webworker
- * Finally, it closes the webworker again and calls makeEngineMove()
+ * It submits the gamefile to the webworker
  */
 async function submitMove() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
-	// Initialize the engine as a webworker
-	if (!window.Worker) return console.error("Your browser doesn't support web workers.");
-	// TODO: What happens if the engine fails / takes too long to load? =============================== !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	const engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
-	currentEngineMove = undefined;
-	engineWorker.onmessage = function(e: MessageEvent) { 
-		currentEngineMove = e.data;
-		// console.log(`Updated the engine recommended move to ${JSON.stringify(currentEngineMove)}`);
-	};
-
 	// Send the gamefile to the engine web worker
-	engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig })));
-
-	// give the engine time to think
-	await thread.sleep(engineTimeLimitPerMoveMillis);
-
-	// terminate the webworker and make the recommended engine move
-	engineWorker.terminate();
-	if (!currentEngineMove) return console.error("Engine failed to submit a move within the allocated time limit!");
-	makeEngineMove(currentEngineMove);
+	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig })));
+	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 
 /**
@@ -157,6 +159,7 @@ function onGameConclude() {
 export default {
 	areInEngineGame,
 	getOurColor,
+	isItOurTurn,
 	getCurrentEngine,
 	initEngineGame,
 	closeEngineGame,

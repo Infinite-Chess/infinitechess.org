@@ -12,7 +12,7 @@ import docutil from "./docutil.js";
 // Variables ----------------------------------------------------------------------------
 
 
-const tooltipClasses: string[] = ['tooltip-dl', 'tooltip-d', 'tooltip-dr'];
+const tooltipClasses: string[] = ['tooltip-dl', 'tooltip-d', 'tooltip-dr','tooltip-u', 'tooltip-ul'];
 const tooltipClasses_Dotted = tooltipClasses.map(classname => '.' + classname );
 
 const tooltips = document.querySelectorAll(tooltipClasses_Dotted.join(', '));
