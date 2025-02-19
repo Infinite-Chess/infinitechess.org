@@ -16,6 +16,8 @@ const GAME_VERSION: string = "1.6"; // The current version of the game
 /** Video mode disables the rendering of some items, making making recordings more immersive. */
 const VIDEO_MODE: boolean = false;
 
+const boardVel = 0.6; // Speed at which board slowly moves while on title screen
+
 /**
  * True if the current page is running on a local environment (localhost or local IP).
  * If so, some dev/debugging features are enabled.
@@ -26,5 +28,6 @@ const DEV_BUILD: boolean = docutil.isLocalEnvironment();
 export default {
 	GAME_VERSION,
 	VIDEO_MODE,
-	DEV_BUILD
+	DEV_BUILD,
+	boardVel
 };

@@ -5,11 +5,9 @@ import arrows from '../rendering/arrows/arrows.js';
 import statustext from './statustext.js';
 import copypastegame from '../chess/copypastegame.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
-import guititle from './guititle.js';
 import moveutil from '../../chess/util/moveutil.js';
 import perspective from '../rendering/perspective.js';
 import frametracker from '../rendering/frametracker.js';
-import gameloader from '../chess/gameloader.js';
 import gameslot from '../chess/gameslot.js';
 // Import End
 
@@ -152,11 +150,9 @@ function callback_Resume() {
 }
 
 function callback_MainMenu() {
-	onlinegame.onMainMenuPress();
 	callback_Resume();
-	gameloader.unloadGame();
-
-	guititle.open();
+	const mainMenuEvent = new CustomEvent('mainMenu');
+	document.dispatchEvent(mainMenuEvent);
 }
 
 /** Called when the Offer Draw button is clicked in the pause menu */

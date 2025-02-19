@@ -6,15 +6,14 @@
 
 
 import checkmatepractice from '../chess/checkmatepractice.js';
-import gui from './gui.js';
-import guititle from './guititle.js';
 import spritesheet from '../rendering/spritesheet.js';
 import colorutil from '../../chess/util/colorutil.js';
 // @ts-ignore
+import statustext from './statustext.js';
+// @ts-ignore
 import style from './style.js';
 // @ts-ignore
-import formatconverter from '../../chess/logic/formatconverter.js';
-import svgcache from '../../chess/rendering/svgcache.js';
+import guipause from './guipause.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -158,7 +157,7 @@ async function addPieceIcons() {
 function initListeners() {
 	element_practiceBack.addEventListener('click', callback_practiceBack);
 	element_checkmatePractice.addEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_tacticsPractice.addEventListener('click', () => statustext.showStatus(translations['planned_feature']));
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
 	for (const element of element_checkmates.children) {
@@ -170,7 +169,7 @@ function initListeners() {
 function closeListeners() {
 	element_practiceBack.removeEventListener('click', callback_practiceBack);
 	element_checkmatePractice.removeEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.removeEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_tacticsPractice.removeEventListener('click', () => statustext.showStatus(translations['planned_feature']));
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
 	for (const element of element_checkmates.children) {
@@ -226,8 +225,9 @@ function updateCheckmatesBeaten() {
 }
 
 function callback_practiceBack(event: Event) {
-	close();
-	guititle.open();
+	const currentUrl = document.location.href;
+	const baseUrl = currentUrl.substring(0, currentUrl.length - 8);
+	document.location.href = baseUrl + "play";
 }
 
 function callback_checkmatePractice(event: Event) {
