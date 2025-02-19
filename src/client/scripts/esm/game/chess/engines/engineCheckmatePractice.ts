@@ -263,7 +263,7 @@ function initEvalWeightsAndSearchProperties() {
 
 	// variant-specific modifications to the weights:
 	switch (checkmateSelectedID) {
-		case "1K2N7B-1k":
+		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
 			legalMoveEvalDictionary = {
 				// in check
@@ -710,7 +710,7 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestMove?: Coords, survivalPlies: number, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
-	if (enginePositionCounter % 3000 === 1 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
+	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
 		return {score: -Infinity, survivalPlies: Infinity, terminate_now: true};
 	} else if ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) {
 		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), survivalPlies: start_depth - depth, terminate_now: false };

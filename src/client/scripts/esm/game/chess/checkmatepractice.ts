@@ -16,6 +16,10 @@ import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
 import variant from '../../chess/variants/variant.js';
 import gameloader from './gameloader.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import movesequence from "../chess/movesequence.js";
+import selection from '../chess/selection.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -84,9 +88,20 @@ const expiryOfCompletedCheckmatesMillis: number = 1000 * 60 * 60 * 24 * 365; // 
 /** Whether we are in a checkmate practice engine game. */
 let inCheckmatePractice: boolean = false;
 
+/** Whether the player is allowed to undo a move in the current position. */
+let undoingIsLegal : boolean = false;
+
 
 // Functions ----------------------------------------------------------------------------
 
+function setUndoingIsLegal(value: boolean) {
+	undoingIsLegal = value;
+	guigameinfo.update_GameControlButtons(value);
+}
+
+function areInCheckmatePractice(): boolean {
+	return inCheckmatePractice;
+}
 
 /**
  * Starts a checkmate practice game
@@ -94,6 +109,8 @@ let inCheckmatePractice: boolean = false;
 function startCheckmatePractice(checkmateSelectedID: string): void {
 	console.log("Loading practice checkmate game.");
 	inCheckmatePractice = true;
+	setUndoingIsLegal(false);
+	initListeners();
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
 	const specialRights = {};
@@ -118,7 +135,19 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 }
 
 function onGameUnload(): void {
+	closeListeners();
 	inCheckmatePractice = false;
+	setUndoingIsLegal(false);
+}
+
+function initListeners() {
+	document.addEventListener("guigameinfo-undoMove", undoMove);
+	document.addEventListener("guigameinfo-restart", restartGame);
+}
+
+function closeListeners() {
+	document.removeEventListener("guigameinfo-undoMove", undoMove);
+	document.removeEventListener("guigameinfo-restart", restartGame);
 }
 
 function getCompletedCheckmates(): string[] {
@@ -252,15 +281,70 @@ function onEngineGameConclude(): void {
 	markCheckmateBeaten(checkmatePracticeID);
 }
 
+/**
+ * This function gets called by enginegame.ts whenever a human player submitted a move
+ */
+function registerHumanMove() {
+	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+
+	const gamefile = gameslot.getGamefile()!;
+	if (!undoingIsLegal && gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 0) {
+		// allow player to undo move if it ended the game
+		setUndoingIsLegal(true);
+	} else if (undoingIsLegal && !gamefileutility.isGameOver(gamefile)) {
+		// don't allow player to undo move while engine thinks
+		setUndoingIsLegal(false);
+	}
+}
+
+/**
+ * This function gets called by enginegame.ts whenever an engine player submitted a move
+ */
+function registerEngineMove() {
+	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+
+	const gamefile = gameslot.getGamefile()!;
+	if (!undoingIsLegal && gamefile.moves.length > 1) {
+		// allow player to undo move after engine has moved
+		setUndoingIsLegal(true);
+	}
+}
+
+function undoMove() {
+	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
+	const gamefile = gameslot.getGamefile()!;
+	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
+		setUndoingIsLegal(false);
+
+		// go to latest move before undoing moves
+		movesequence.viewFront(gamefile);
+
+		// If it's their turn, only rewind one move.
+		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
+		movesequence.rewindMove(gamefile);
+		selection.reselectPiece();
+	}
+}
+
+function restartGame() {
+	if (!inCheckmatePractice) return console.error("Restarting games is currently not supported for non-practice mode games");
+	
+	gameloader.unloadGame(); // Unload current game
+	startCheckmatePractice(guipractice.getCheckmateSelectedID());
+}
+
 
 // Exports ------------------------------------------------------------------------------
 
 
 export default {
 	validCheckmates,
+	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,
 	onEngineGameConclude,
-	eraseCheckmatePracticeProgress
+	eraseCheckmatePracticeProgress,
+	registerHumanMove,
+	registerEngineMove
 };

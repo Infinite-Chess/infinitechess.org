@@ -1366,7 +1366,7 @@ button.join-button, button.copy-button {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
-.pauseUI p.paused, button.paused, button.resume, button.mainmenu, button.offerdraw {
+.pauseUI p.paused, button.paused, button.resume, button.mainmenu, button.offerdraw, button.practicemenu {
     grid-column: 1 / 3;
 }
 

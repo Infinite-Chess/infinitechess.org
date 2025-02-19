@@ -116,6 +116,7 @@ function areWeColor(color: string): boolean {
 async function submitMove() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
+	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
 	// Send the gamefile to the engine web worker
@@ -132,6 +133,9 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
 	const gamefile = gameslot.getGamefile()!;
+
+	// Go to latest move before making a new move
+	movesequence.viewFront(gamefile);
 	/**
 	 * PERHAPS we don't need this stuff? It's just to find and apply any special move flag
 	 * that should go with the move. But shouldn't the engine provide that info with its move?
@@ -145,6 +149,8 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	movesequence.animateMove(move, true, true);
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
+
+	checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
 }
 
 function onGameConclude() {
