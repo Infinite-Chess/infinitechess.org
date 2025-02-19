@@ -154,10 +154,10 @@ editor = "Board Editor"
 title = "Guide"
 rules = "Rules"
 rules_paragraphs = [
-"The rules to Infinite Chess are almost identical to classical chess, except the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
-"Pieces with sliding moves, such as the rooks, bishops, and queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions of squares!",
-["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines—they are faint—see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
-"Square notation is no longer described by the letter and rank number (i.e., a1); rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
+"The rules to Infinite Chess are almost identical to classical chess, except that the board is infinite in all directions! These are the only notes and changes you need to be aware of:",
+"Pieces with sliding moves, such as rooks, bishops, and the queen, have no limit to how far they can move in one turn! As long as their path is unobstructed, you can move millions of squares!",
+["In the \"Classical\" default variant, white pawns promote at rank 8, and black pawns at rank 1. In this image, this is indicated by the thin black lines—they are faint, see if you can spot them! Pawns only need to reach the opposite line to promote, ", "not", " cross it."],
+"Squares are no longer described by their letter and rank number (e.g., a1); rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
 "All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
 ]
 careful_heading = "Be Careful!"
@@ -171,19 +171,19 @@ keybinds = [
 " to move around.",
 ["Space", " and ", "Shift", " to zoom in and out."],
 ["Escape", " to pause the game."],
-["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which shows an arrow for pieces that can move to your location from where they're at. But ", "Tab", " can switch this mode to \"All\", or \"Off\", of which \"All\" reveals all pieces on those orthogonals and diagonals, whether or not they can move orthogonally or diagonally. This setting can also be toggled in the pause menu. Clicking these arrows will teleport you to the piece they're pointing to."],
+["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which displays arrows pointing to all pieces that can move to your screen along their direction of movement. But ", "Tab", " can switch this mode to \"All\", or \"Off\"; \"All\" displays arrows for all pieces, regardless of if they can move to your screen. This setting can also be toggled in the pause menu. Clicking an arrow will teleport you to the piece it points to."],
 " will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
 ]
 controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
 keybinds_extra = [
 " will reset the rendering of the pieces. This is useful if they turn invisible. This glitch can happen if you move extreme distances (like 1e21).",
 " will toggle the rendering of the navigation and game info bars, which can be useful for recording. Streaming and making videos on the game is welcome!",
-" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed to save compute.",
-" will toggle icon rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it is a performance throttler, but they can be toggled back on with ",
+" will toggle your FPS meter. This displays the number of times the game is updating per second, not always the number of frames rendered, as the game skips rendering when nothing visible has changed to increase performance.",
+" will toggle icon rendering. These are the clickable mini-pictures of the pieces when you zoom out far enough. In imported games with over 50,000 pieces this is automatically toggled off, as it drastically lowers performance, but they can be toggled back on with ",
 [" (backtick, on the same key as ", ") will toggle Debug mode."],
 ]
 fairy_heading = "Fairy Pieces"
-fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, let's learn how they work here!"
+fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, learn how they work here!"
 editing_heading = "Board Editing"
 editing_paragraphs = [
 ["There is an external ", "board editor", " currently available on a public Google Sheet! It includes instructions on how to use it. This requires some basic Google Sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
@@ -200,6 +200,7 @@ guard = {name="Guard", description="Moves like a king, except it is not suscepti
 hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."}
 centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
 knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
+huygen = {name="Huygen", description="Skips onto any square whose distance from the huygen is a prime number."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
