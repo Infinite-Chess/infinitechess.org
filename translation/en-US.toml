@@ -200,7 +200,7 @@ guard = {name="Guard", description="Moves like a king, except it is not suscepti
 hawk = {name="Hawk", description="Leaps exactly 2 or 3 squares in any direction."}
 centaur = {name="Centaur", description="Moves like a knight and a guard combined."}
 knightrider = {name="Knightrider", description="Hops like a knight infinitely in one direction, until obstructed."}
-huygen = {name="Huygen", description="Leaps to any square whose distance from the huygen is a prime number."}
+huygen = {name="Huygen", description="Skips onto any square whose distance from the huygen is a prime number."}
 obstacle = {name="Obstacle", description="A neutral piece (not controlled by either player) that blocks movement, but can be captured."}
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
