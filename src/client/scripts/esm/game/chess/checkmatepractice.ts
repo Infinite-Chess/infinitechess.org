@@ -88,6 +88,10 @@ let inCheckmatePractice: boolean = false;
 // Functions ----------------------------------------------------------------------------
 
 
+function areInCheckmatePractice(): boolean {
+	return inCheckmatePractice;
+}
+
 /**
  * Starts a checkmate practice game
  */
@@ -258,6 +262,7 @@ function onEngineGameConclude(): void {
 
 export default {
 	validCheckmates,
+	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,

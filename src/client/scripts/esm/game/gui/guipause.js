@@ -12,7 +12,7 @@ import frametracker from '../rendering/frametracker.js';
 import gameloader from '../chess/gameloader.js';
 import gameslot from '../chess/gameslot.js';
 import guipractice from './guipractice.js';
-import enginegame from '../misc/enginegame.js';
+import checkmatepractice from '../chess/checkmatepractice.js';
 // Import End
 
 "use strict";
@@ -49,10 +49,12 @@ function open() {
 	isPaused = true;
 	updateTextOfMainMenuButton();
 	updatePasteButtonTransparency();
-	if (enginegame.areInEngineGame()) {
+	if (checkmatepractice.areInCheckmatePractice()) {
+		// Hide the draw offer button and show the Practice Menu button
 		element_offerDraw.classList.add('hidden');
 		element_practicemenu.classList.remove('hidden');
 	} else {
+		// Show the draw offer button and hide the Practice Menu button
 		element_offerDraw.classList.remove('hidden');
 		element_practicemenu.classList.add('hidden');
 		updateDrawOfferButton();
@@ -175,7 +177,7 @@ function callback_PracticeMenu() {
 	callback_Resume();
 	gameloader.unloadGame();
 
-	guipractice.open()
+	guipractice.open();
 }
 
 /** Called when the Offer Draw button is clicked in the pause menu */
