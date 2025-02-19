@@ -18,10 +18,6 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
-import guipractice from '../gui/guipractice.js';
-import movesequence from "../chess/movesequence.js";
-import selection from '../chess/selection.js';
-
 
 
 "use strict";
@@ -36,8 +32,8 @@ const element_dot = document.getElementById('dot')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
 const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
-const element_undoButton = document.getElementById('undobutton')!;
-const element_restartButton = document.getElementById('restartbutton')!;
+const element_undoButton: HTMLButtonElement = document.getElementById('undobutton')! as HTMLButtonElement;
+const element_restartButton: HTMLButtonElement = document.getElementById('restartbutton')! as HTMLButtonElement;
 
 let isOpen = false;
 /** Whether to show the practice mode game control buttons - undo move and restart. */
@@ -117,27 +113,30 @@ function closeListeners_Gamecontrol() {
 	element_undoButton.removeEventListener('mousedown', preventFocus);
 }
 
-// TODO: Migrate this logic and imports to other file
 function undoMove() {
-	if (!enginegame.areInEngineGame()) return console.error("Undoing moves is currently not allowed for non-practice mode games");
-	const gamefile = gameslot.getGamefile()!;
-
-	// TODO: Maybe limit players to only be able to rewind a single move per move? Else, this is far too powerful
-	if ((enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
-		const gamefile = gameslot.getGamefile()!;
-		// If it's their turn, only rewind one move.
-		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
-		movesequence.rewindMove(gamefile);
-		selection.reselectPiece();
-	}
+	const event = new Event("guigameinfo-undoMove");
+	document.dispatchEvent(event);
 }
 
-// TODO: Migrate this logic and imports to other file
 function restartGame() {
-	if (!enginegame.areInEngineGame()) return console.error("Restarting games is currently not supported for non-practice mode games");
-	
-	gameloader.unloadGame(); // Unload current game
-	guipractice.callback_practicePlay(); // Effectively, the player just presses the Play button of the practice menu again
+	const event = new Event("guigameinfo-restart");
+	document.dispatchEvent(event);
+}
+
+/**
+ * Disables / Enables the "Undo Move" button
+ */
+function update_GameControlButtons(undoingIsLegal: boolean) {
+	if (undoingIsLegal) {
+		element_undoButton.classList.remove('opacity-0_5');
+		element_undoButton.style.cursor = "pointer";
+		element_undoButton.disabled = false;
+	}
+	else {
+		element_undoButton.classList.add('opacity-0_5');
+		element_undoButton.style.cursor = "not-allowed";
+		element_undoButton.disabled = true; // Disables the 'click' event from firing when it is pressed
+	}
 }
 
 function preventFocus(event: Event) {
@@ -298,6 +297,7 @@ function getHeightOfGameInfoBar(): number {
 export default {
 	open,
 	close,
+	update_GameControlButtons,
 	revealPlayerNames,
 	hidePlayerNames,
 	toggle,
