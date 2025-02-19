@@ -134,7 +134,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
         
 	const gamefile = gameslot.getGamefile()!;
 
-	// go to latest move when making a new move
+	// Go to latest move before making a new move
 	movesequence.viewFront(gamefile);
 	/**
 	 * PERHAPS we don't need this stuff? It's just to find and apply any special move flag

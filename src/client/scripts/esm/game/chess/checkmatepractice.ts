@@ -94,6 +94,10 @@ let undoingIsLegal : boolean = false;
 
 // Functions ----------------------------------------------------------------------------
 
+function setUndoingIsLegal(value: boolean) {
+	undoingIsLegal = value;
+	guigameinfo.update_GameControlButtons(value);
+}
 
 /**
  * Starts a checkmate practice game
@@ -101,8 +105,7 @@ let undoingIsLegal : boolean = false;
 function startCheckmatePractice(checkmateSelectedID: string): void {
 	console.log("Loading practice checkmate game.");
 	inCheckmatePractice = true;
-	undoingIsLegal = false;
-	guigameinfo.update_GameControlButtons(false);
+	setUndoingIsLegal(false);
 	initListeners();
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
@@ -130,7 +133,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 function onGameUnload(): void {
 	closeListeners();
 	inCheckmatePractice = false;
-	undoingIsLegal = false;
+	setUndoingIsLegal(false);
 }
 
 function initListeners() {
@@ -278,15 +281,15 @@ function onEngineGameConclude(): void {
  * This function gets called by enginegame.ts whenever a human player submitted a move
  */
 function registerHumanMove() {
+	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+
 	const gamefile = gameslot.getGamefile()!;
-	if (inCheckmatePractice && !undoingIsLegal && gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 0) {
+	if (!undoingIsLegal && gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 0) {
 		// allow player to undo move if it ended the game
-		undoingIsLegal = true;
-		guigameinfo.update_GameControlButtons(true);
-	} else if (inCheckmatePractice && undoingIsLegal && !gamefileutility.isGameOver(gamefile)) {
+		setUndoingIsLegal(true);
+	} else if (undoingIsLegal && !gamefileutility.isGameOver(gamefile)) {
 		// don't allow player to undo move while engine thinks
-		undoingIsLegal = false;
-		guigameinfo.update_GameControlButtons(false);
+		setUndoingIsLegal(false);
 	}
 }
 
@@ -294,21 +297,20 @@ function registerHumanMove() {
  * This function gets called by enginegame.ts whenever an engine player submitted a move
  */
 function registerEngineMove() {
+	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+
 	const gamefile = gameslot.getGamefile()!;
-	if (inCheckmatePractice && !undoingIsLegal && gamefile.moves.length > 1) {
+	if (!undoingIsLegal && gamefile.moves.length > 1) {
 		// allow player to undo move after engine has moved
-		undoingIsLegal = true;
-		guigameinfo.update_GameControlButtons(true);
+		setUndoingIsLegal(true);
 	}
 }
 
 function undoMove() {
 	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
 	const gamefile = gameslot.getGamefile()!;
-
 	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
-		undoingIsLegal = false;
-		guigameinfo.update_GameControlButtons(false);
+		setUndoingIsLegal(false);
 
 		// go to latest move before undoing moves
 		movesequence.viewFront(gamefile);
