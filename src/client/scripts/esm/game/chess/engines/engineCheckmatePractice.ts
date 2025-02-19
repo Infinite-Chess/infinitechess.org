@@ -263,7 +263,7 @@ function initEvalWeightsAndSearchProperties() {
 
 	// variant-specific modifications to the weights:
 	switch (checkmateSelectedID) {
-		case "1K2N7B-1k":
+		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
 			legalMoveEvalDictionary = {
 				// in check

@@ -99,6 +99,10 @@ function setUndoingIsLegal(value: boolean) {
 	guigameinfo.update_GameControlButtons(value);
 }
 
+function areInCheckmatePractice(): boolean {
+	return inCheckmatePractice;
+}
+
 /**
  * Starts a checkmate practice game
  */
@@ -335,6 +339,7 @@ function restartGame() {
 
 export default {
 	validCheckmates,
+	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,
