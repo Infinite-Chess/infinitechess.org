@@ -1,4 +1,11 @@
 {
+	"33": {
+		"note": [
+			"Improved the grammar for play.guide paragraphs.",
+			"Added the huygen to play.guide.pieces (line 203)."
+		],
+		"changes": []
+	}
 	"32": {
 		"note": [
 			"Added practice key on line 149 under play.main-menu.",
