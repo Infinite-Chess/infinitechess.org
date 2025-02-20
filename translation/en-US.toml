@@ -78,8 +78,7 @@ variants_credits = [
 "designed by Andreas Tsevas.",
 "designed by Cory Evans and Joel Hamkins.",
 "designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
-"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
-"Trappist-1 by V. Reinhart"
+"Chess on an Infinite Plane - Huygens Options by V. Reinhart."
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"
@@ -241,7 +240,6 @@ Chess = "Chess"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
 CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
-Trappist_1 = "Trappist-1"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
