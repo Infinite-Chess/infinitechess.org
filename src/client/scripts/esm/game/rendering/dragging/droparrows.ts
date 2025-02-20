@@ -25,10 +25,10 @@ let capturedPieceThisFrame: Piece | undefined;
 
 /**
  * Update the piece that would be captured if we were to let
- * go of the dragged piece right now.
+ * go of the dragged piece right now and return those coordinates if so.
+ * Returns the coordinates of the captured piece If one was.
  * 
- * DO BEFORE update()'ing!!! This is so selection.ts can make any capture
- * needed before the move is made, dragging disabled, and arrows shifted.
+ * CALL BEFORE shiftArrows()
  */
 function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
 	if (!draganimation.areDraggingPiece()) throw Error('Should not be updating droparrows when not dragging a piece!');
@@ -61,7 +61,7 @@ function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
 /**
  * Shifts an arrow indicator if we are hovering the dragged piece over a capturable arrow.
  * 
- * DO AFTER selection.ts has updated!!! Because making a move changes the board position.
+ * DO AFTER selection.update(). Because making a move changes the board.
  */
 function shiftArrows(): void {
 	if (!draganimation.areDraggingPiece()) return;
@@ -89,6 +89,7 @@ function shiftArrows(): void {
 function onDragTermination() {
 	capturedPieceThisFrame = undefined;
 }
+
 
 
 export default {
