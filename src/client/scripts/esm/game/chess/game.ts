@@ -159,7 +159,7 @@ function updateBoard(gamefile: gamefile) {
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
 	animation.update();
-	draganimation.updateDragLocation();
+	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	// ALSO depends on whether or not a piece is selected/being dragged!
 	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.
