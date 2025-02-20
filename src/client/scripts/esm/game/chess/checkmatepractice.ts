@@ -69,6 +69,10 @@ const validCheckmates = {
 		"1K3NR-1k",
 		"5HU-1k"
 	]
+
+	// superhuman (way too hard):
+	// "1K1AR1HA1P-1k" (the white pawn only exists in order to mitigate zugzwang for white)
+	// "2B60N-1k" (fewer knights suffice but exact amount unknown, see proof in https://chess.stackexchange.com/q/45998/35006 )
 };
 
 /** These checkmates we may place the black king nearer to the white pieces. */
