@@ -522,7 +522,7 @@ canvas {
     left: 0;
     right: 0;
     display: grid;
-    grid-template: repeat(2, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
+    grid-template: min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) min(58vw, 628px, calc(var(--vh-sub-nav) * 0.667)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
     gap: min(1.5vw, 16px, calc(var(--vh-sub-nav) * 0.0173));
     justify-content: center;
     align-content: center;

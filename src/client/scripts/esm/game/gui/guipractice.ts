@@ -25,13 +25,10 @@ const element_menuExternalLinks: HTMLElement = document.getElementById('menu-ext
 const element_practiceSelection: HTMLElement = document.getElementById('practice-selection')!;
 const element_practiceName: HTMLElement = document.getElementById('practice-name')!;
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
-const element_checkmatePractice: HTMLElement = document.getElementById('checkmate-practice')!;
-const element_tacticsPractice: HTMLElement = document.getElementById('tactics-practice')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
-let modeSelected: 'checkmate-practice' | 'tactics-practice';
 let checkmateSelectedID: string = checkmatepractice.validCheckmates.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedHTML: boolean = false;
@@ -53,7 +50,7 @@ function open() {
 	element_practiceSelection.classList.remove("hidden");
 	element_menuExternalLinks.classList.remove("hidden");
 	if (!generatedHTML) createPracticeHTML();
-	changePracticeMode('checkmate-practice');
+	element_practiceName.textContent = translations['menu_checkmate'];
 	changeCheckmateSelected(checkmateSelectedID);
 	updateCheckmatesBeaten();
 	if (!generatedIcons) addPieceIcons();
@@ -157,8 +154,6 @@ async function addPieceIcons() {
 
 function initListeners() {
 	element_practiceBack.addEventListener('click', callback_practiceBack);
-	element_checkmatePractice.addEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.addEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
 	for (const element of element_checkmates.children) {
@@ -169,25 +164,11 @@ function initListeners() {
 
 function closeListeners() {
 	element_practiceBack.removeEventListener('click', callback_practiceBack);
-	element_checkmatePractice.removeEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.removeEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
 	for (const element of element_checkmates.children) {
 		element.removeEventListener('click', callback_checkmateList);
 		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
-	}
-}
-
-function changePracticeMode(mode: 'checkmate-practice' | 'tactics-practice') {
-	modeSelected = mode;
-	if (mode === 'checkmate-practice') {
-		element_practiceName.textContent = translations['menu_checkmate'];
-		element_checkmatePractice.classList.add('selected');
-		element_tacticsPractice.classList.remove('selected');
-		// callback_updateOptions()
-	} else if (mode === 'tactics-practice') {
-		// nothing yet
 	}
 }
 
@@ -230,22 +211,14 @@ function callback_practiceBack(event: Event) {
 	guititle.open();
 }
 
-function callback_checkmatePractice(event: Event) {
-	changePracticeMode('checkmate-practice');
-}
-
 function callback_checkmateList(event: Event) {
 	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
 	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
 }
 
 function callback_practicePlay() {
-	if (modeSelected === 'checkmate-practice') {
-		close();
-		checkmatepractice.startCheckmatePractice(checkmateSelectedID);
-	} else if (modeSelected === 'tactics-practice') {
-		throw Error("Can't play tactics practice yet.");
-	}
+	close();
+	checkmatepractice.startCheckmatePractice(checkmateSelectedID);
 }
 
 /** If enter is pressed, click Play. Or if arrow keys are pressed, move up and down selection */
