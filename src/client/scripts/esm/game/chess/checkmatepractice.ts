@@ -37,8 +37,9 @@ const validCheckmates = {
 		"3B3B-1k",
 		"1K2B2B-1k",
 		"1K2R-1k",
-		"2CH-1k",
 		"1Q1CH-1k",
+		"2CH-1k",
+		"3AR-1k",
 		"1K1AM-1k"
 	],
 	medium: [
@@ -49,6 +50,7 @@ const validCheckmates = {
 		"1Q2N-1k",
 		"2R1N1P-1k",
 		"1K1AR1R-1k",
+		"1K1AR2HA-1k",
 		"1K2AR-1k",
 		"2AM-1rc"
 	],
@@ -63,8 +65,8 @@ const validCheckmates = {
 	],
 	insane: [
 		"1K1Q1P-1k",
-		"1K3NR-1k",
 		"1K3HA-1k",
+		"1K3NR-1k",
 		"5HU-1k"
 	]
 };
