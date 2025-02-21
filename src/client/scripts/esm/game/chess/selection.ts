@@ -209,7 +209,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 function testIfPieceDropped(gamefile: gamefile): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
-	// if (pawnIsPromotingOn) return; // Can't drop a piece while promoting
+	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
 	if (input.getTouchHelds().length > 1) { // Prevent accidental dragging when trying to zoom.
 		if (draganimation.getDragParity()) return unselectPiece();
 		return draganimation.dropPiece();
@@ -219,7 +219,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 	// The pointer has released, drop the piece.
 
 	// If it was dropped an an arrow indicator pointing to a legal piece to capture, capture that!
-	const dropArrowsCaptureCoords = droparrows.updateCapturedPiece_ReturnCapturedCoords();
+	const dropArrowsCaptureCoords = droparrows.getCaptureCoords();
 	if (dropArrowsCaptureCoords) return moveGamefilePiece(gamefile, dropArrowsCaptureCoords);
 
 	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.

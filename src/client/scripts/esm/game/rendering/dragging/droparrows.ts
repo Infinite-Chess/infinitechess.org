@@ -22,15 +22,13 @@ import legalmoves from "../../../chess/logic/legalmoves.js";
 let capturedPieceThisFrame: Piece | undefined;
 
 
-
 /**
  * Update the piece that would be captured if we were to let
  * go of the dragged piece right now and return those coordinates if so.
- * Returns the coordinates of the captured piece If one was.
  * 
  * CALL BEFORE shiftArrows()
  */
-function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
+function updateCapturedPiece(): void {
 	if (!draganimation.areDraggingPiece()) throw Error('Should not be updating droparrows when not dragging a piece!');
 
 	capturedPieceThisFrame = undefined;
@@ -55,6 +53,9 @@ function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));
 
 	if (legalCaptureHoveredArrows.length === 1) capturedPieceThisFrame = legalCaptureHoveredArrows[0]!.piece;
+}
+
+function getCaptureCoords(): Coords | undefined {
 	return capturedPieceThisFrame?.coords;
 }
 
@@ -93,7 +94,8 @@ function onDragTermination() {
 
 
 export default {
-	updateCapturedPiece_ReturnCapturedCoords,
+	updateCapturedPiece,
+	getCaptureCoords,
 	shiftArrows,
 	onDragTermination,
 };
