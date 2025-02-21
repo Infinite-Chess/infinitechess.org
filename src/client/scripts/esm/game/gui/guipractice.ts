@@ -27,7 +27,7 @@ const element_practiceName: HTMLElement = document.getElementById('practice-name
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
-const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
+const element_checkmateList: HTMLElement = document.getElementById('checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
 let checkmateSelectedID: string = checkmatepractice.validCheckmates.easy[0]!; // id of selected checkmate
@@ -36,7 +36,7 @@ let generatedHTML: boolean = false;
 let generatedIcons: boolean = false;
 
 // Variables for controlling the scrolling of the checkmate list
-let mouseIsDownOnList: boolean = false;
+let mouseIsDown: boolean = false;
 let mouseMovedAfterClick: boolean = true;
 let scrollTop: number;
 let startY : number;
@@ -162,11 +162,11 @@ function initListeners() {
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
 
-	document.addEventListener('mouseup', callback_mouseUp_Anywhere);
-	document.addEventListener('mousemove', callback_mouseMove_Anywhere);
-	element_checkmateList.addEventListener('mousedown', callback_mouseDown_checkmateList);
+	document.addEventListener('mouseup', callback_mouseUp);
+	document.addEventListener('mousemove', callback_mouseMove);
+	element_checkmateList.addEventListener('mousedown', callback_mouseDown);
 	for (const element of element_checkmates.children) {
-		(element as HTMLElement).addEventListener('mouseup', callback_mouseUp_checkmate);
+		(element as HTMLElement).addEventListener('mouseup', callback_mouseUp);
 		element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
 	}
 }
@@ -176,35 +176,32 @@ function closeListeners() {
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
 
-	document.removeEventListener('mouseup', callback_mouseUp_Anywhere);
-	document.removeEventListener('mousemove', callback_mouseMove_Anywhere);
-	element_checkmateList.removeEventListener('mousedown', callback_mouseDown_checkmateList);
+	document.removeEventListener('mouseup', callback_mouseUp);
+	document.removeEventListener('mousemove', callback_mouseMove);
+	element_checkmateList.removeEventListener('mousedown', callback_mouseDown);
 	for (const element of element_checkmates.children) {
-		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp_checkmate);
+		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp);
 		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
 	}
 }
 
-function callback_mouseDown_checkmateList(event: MouseEvent) {
-	mouseIsDownOnList = true;
+function callback_mouseDown(event: MouseEvent) {
+	mouseIsDown = true;
 	mouseMovedAfterClick = false;
 	startY = event.pageY - element_checkmateList.offsetTop;
 	scrollTop = element_checkmateList.scrollTop;
 }
 
-function callback_mouseUp_Anywhere() {
-	mouseIsDownOnList = false;
-}
-
-function callback_mouseUp_checkmate(event: MouseEvent) {
-	mouseIsDownOnList = false;
-	if (mouseMovedAfterClick) return;
+function callback_mouseUp(event: MouseEvent) {
+	mouseIsDown = false;
+	if (!(event.currentTarget as HTMLElement).id) return; // mouse not on checkmate target
+	if (mouseMovedAfterClick) return; // mouse moved after clicking
 	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
 	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
 }
 
-function callback_mouseMove_Anywhere(event: MouseEvent) {
-	if (!mouseIsDownOnList) return;
+function callback_mouseMove(event: MouseEvent) {
+	if (!mouseIsDown) return;
 	event.preventDefault();
 	mouseMovedAfterClick = true;
 	const y = event.pageY - element_checkmateList.offsetTop;
