@@ -40,6 +40,10 @@ let mouseIsDown: boolean = false;
 let mouseMovedAfterClick: boolean = true;
 let scrollTop: number;
 let startY : number;
+let lastY: number;
+let velocity: number;
+let momentumInterval: ReturnType<typeof setInterval>;
+const friction: number = 0.9;
 
 // Functions ------------------------------------------------------------------------
 
@@ -190,12 +194,18 @@ function callback_mouseDown(event: MouseEvent) {
 	mouseMovedAfterClick = false;
 	startY = event.pageY - element_checkmateList.offsetTop;
 	scrollTop = element_checkmateList.scrollTop;
+
+	velocity = 0;
+	clearInterval(momentumInterval);
 }
 
 function callback_mouseUp(event: MouseEvent) {
 	mouseIsDown = false;
 	if (!(event.currentTarget as HTMLElement).id) return; // mouse not on checkmate target
-	if (mouseMovedAfterClick) return; // mouse moved after clicking
+	if (mouseMovedAfterClick) {
+		applyMomentum();
+		return;
+	}
 	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
 	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
 }
@@ -207,6 +217,9 @@ function callback_mouseMove(event: MouseEvent) {
 	const y = event.pageY - element_checkmateList.offsetTop;
 	const walkY = y - startY;
 	element_checkmateList.scrollTop = scrollTop - walkY;
+
+	velocity = event.pageY - lastY;
+	lastY = event.pageY;
 }
 
 function changeCheckmateSelected(checkmateid: string) {
@@ -219,6 +232,17 @@ function changeCheckmateSelected(checkmateid: string) {
 			element.classList.remove('selected');
 		}
 	}
+}
+
+function applyMomentum() {
+	momentumInterval = setInterval(() => {
+		if (Math.abs(velocity) < 0.5) {
+			clearInterval(momentumInterval);
+			return;
+		}
+		element_checkmateList.scrollTop -= velocity;
+		velocity *= friction;
+	}, 16); // Approx. 60fps
 }
 
 /**
