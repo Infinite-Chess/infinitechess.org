@@ -799,9 +799,14 @@ function executeArrowShifts() {
 	 * Contains safety nets in case we attempt to add in on an existing piece
 	 */
 	function queueAddPieceIfNoneAddedOnCoords(piece: Piece) {
-		// If the game already has a piece on the coordinates, don't add it.
-		if (gamefileutility.isPieceOnCoords(gamefile, piece.coords)) return;
-		// If another arrow is adding a piece on these exact coords, leave it be.
+		/**
+		 * If the game already has a piece on the coordinates,
+		 * AND an arrow hasn't deleted it,
+		 * DON'T queue adding the piece.
+		 */
+		if (gamefileutility.isPieceOnCoords(gamefile, piece.coords)
+			&& !changes.some(change => change.action === 'delete' && coordutil.areCoordsEqual_noValidate(change.piece.coords, piece.coords))) return;
+		// Also, if another arrow is adding a piece on these exact coords, leave it be.
 		// An example where this can happen is castling, when the animated rook and king are right on top of each other.
 		if (changes.some(change => change.action === 'add' && coordutil.areCoordsEqual(change.piece.coords, piece.coords))) return;
 		boardchanges.queueAddPiece(changes, piece);
