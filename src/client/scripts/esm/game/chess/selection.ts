@@ -321,7 +321,7 @@ function selectPiece(gamefile: gamefile, piece: Piece, drag: boolean) {
 
 	if (drag) { // Pick up anyway, don't unselect it if it was already selected.
 		if (alreadySelected) {
-			draganimation.pickUpPiece(piece, false); // Reset parity since it's the same piece being picked up.
+			draganimation.pickUpPiece(piece, false); // Toggle the parity since it's the same piece being picked up.
 			return; // Already selected, don't have to recalculate legal moves.
 		} draganimation.pickUpPiece(piece, true); // Reset parity since it's a new piece being picked up.
 	} else { // Not being dragged. If this piece is already selected, unselect it.
