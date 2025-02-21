@@ -27,7 +27,7 @@ const element_practiceName: HTMLElement = document.getElementById('practice-name
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
-const element_checkmateList: HTMLElement = document.getElementById('checkmate-list')!;
+const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
 let checkmateSelectedID: string = checkmatepractice.validCheckmates.easy[0]!; // id of selected checkmate
