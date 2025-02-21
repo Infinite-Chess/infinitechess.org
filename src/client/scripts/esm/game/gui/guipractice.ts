@@ -50,7 +50,6 @@ function open() {
 	element_practiceSelection.classList.remove("hidden");
 	element_menuExternalLinks.classList.remove("hidden");
 	if (!generatedHTML) createPracticeHTML();
-	element_practiceName.textContent = translations['menu_checkmate'];
 	changeCheckmateSelected(checkmateSelectedID);
 	updateCheckmatesBeaten();
 	if (!generatedIcons) addPieceIcons();

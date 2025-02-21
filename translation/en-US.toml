@@ -204,9 +204,7 @@ obstacle = {name="Obstacle", description="A neutral piece (not controlled by eit
 void = {name="Void", description="A neutral piece (not controlled by either player) that represents the absence of board. Pieces may not move through or on top of it."}
 
 [play.practice-menu]
-title = "Practice"
-checkmates = "Checkmates"
-tactics = "Tactics"
+title = "Practice - Checkmates"
 play = "Play"
 back = "Back"
 difficulty = "Difficulty"
@@ -325,7 +323,6 @@ webgl_unsupported = "Please upgrade your browser! It does not support WebGL2."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
-menu_checkmate = "Practice - Checkmates" # The title of the Practice page changes to this when "Checkmates" is selected over "Tactics"
 progress_checkmate = "Progress"
 versus = "vs"
 easy = "Easy"
