@@ -35,15 +35,26 @@ let indexSelected: number = 0; // index of selected checkmate among its brothers
 let generatedHTML: boolean = false;
 let generatedIcons: boolean = false;
 
-// Variables for controlling the scrolling of the checkmate list
-let mouseIsDown: boolean = false;
-let mouseMovedAfterClick: boolean = true;
-let scrollTop: number;
-let startY : number;
-let lastY: number;
-let velocity: number;
-let momentumInterval: ReturnType<typeof setInterval>;
-const friction: number = 0.9;
+/** Variables for controlling the scrolling of the checkmate list */
+const SCROLL: {
+	mouseIsDown: boolean;
+	mouseMovedAfterClick: boolean;
+	scrollTop: number;
+	startY: number;
+	lastY: number;
+	velocity: number;
+	momentumInterval: ReturnType<typeof setInterval> | undefined;
+	friction: number;
+} = {
+	mouseIsDown: false,
+	mouseMovedAfterClick: true,
+	scrollTop: 0,
+	startY: 0,
+	lastY: 0,
+	velocity: 0,
+	momentumInterval: undefined,
+	friction: 0.9
+};
 
 // Functions ------------------------------------------------------------------------
 
@@ -67,7 +78,7 @@ function open() {
 }
 
 function close() {
-	clearInterval(momentumInterval);
+	clearScrollMomentumInterval();
 	element_practiceSelection.classList.add("hidden");
 	element_menuExternalLinks.classList.add("hidden");
 	closeListeners();
@@ -190,20 +201,24 @@ function closeListeners() {
 	}
 }
 
-function callback_mouseDown(event: MouseEvent) {
-	mouseIsDown = true;
-	mouseMovedAfterClick = false;
-	startY = event.pageY - element_checkmateList.offsetTop;
-	scrollTop = element_checkmateList.scrollTop;
 
-	velocity = 0;
-	clearInterval(momentumInterval);
+// Scrolling list with the left mouse button ------------------------------------------------
+
+
+function callback_mouseDown(event: MouseEvent) {
+	SCROLL.mouseIsDown = true;
+	SCROLL.mouseMovedAfterClick = false;
+	SCROLL.startY = event.pageY - element_checkmateList.offsetTop;
+	SCROLL.scrollTop = element_checkmateList.scrollTop;
+
+	SCROLL.velocity = 0;
+	clearScrollMomentumInterval();
 }
 
 function callback_mouseUp(event: MouseEvent) {
-	mouseIsDown = false;
+	SCROLL.mouseIsDown = false;
 	if (!(event.currentTarget as HTMLElement).id) return; // mouse not on checkmate target
-	if (mouseMovedAfterClick) {
+	if (SCROLL.mouseMovedAfterClick) {
 		applyMomentum();
 		return;
 	}
@@ -212,27 +227,36 @@ function callback_mouseUp(event: MouseEvent) {
 }
 
 function callback_mouseMove(event: MouseEvent) {
-	mouseMovedAfterClick = true;
-	if (!mouseIsDown) return;
+	SCROLL.mouseMovedAfterClick = true;
+	if (!SCROLL.mouseIsDown) return;
 	event.preventDefault();
 	const y = event.pageY - element_checkmateList.offsetTop;
-	const walkY = y - startY;
-	element_checkmateList.scrollTop = scrollTop - walkY;
+	const walkY = y - SCROLL.startY;
+	element_checkmateList.scrollTop = SCROLL.scrollTop - walkY;
 
-	velocity = event.pageY - lastY;
-	lastY = event.pageY;
+	SCROLL.velocity = event.pageY - SCROLL.lastY;
+	SCROLL.lastY = event.pageY;
 }
 
 function applyMomentum() {
-	momentumInterval = setInterval(() => {
-		if (Math.abs(velocity) < 0.5) {
-			clearInterval(momentumInterval);
+	SCROLL.momentumInterval = setInterval(() => {
+		if (Math.abs(SCROLL.velocity) < 0.5) {
+			clearScrollMomentumInterval();
 			return;
 		}
-		element_checkmateList.scrollTop -= velocity;
-		velocity *= friction;
+		element_checkmateList.scrollTop -= SCROLL.velocity;
+		SCROLL.velocity *= SCROLL.friction;
 	}, 16); // Approx. 60fps
 }
+
+function clearScrollMomentumInterval() {
+	clearInterval(SCROLL.momentumInterval);
+	SCROLL.momentumInterval = undefined;
+}
+
+
+// End of scrolling ---------------------------------------------------------------------
+
 
 function changeCheckmateSelected(checkmateid: string) {
 	for (const element of element_checkmates.children) {
@@ -288,7 +312,7 @@ function callback_keyPress(event: KeyboardEvent) {
 function moveDownSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected >= element_checkmates.children.length - 1) return;
-	clearInterval(momentumInterval);
+	clearScrollMomentumInterval();
 	indexSelected++;
 	const newSelectionElement = element_checkmates.children[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);
@@ -297,7 +321,7 @@ function moveDownSelection(event: Event) {
 function moveUpSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected <= 0) return;
-	clearInterval(momentumInterval);
+	clearScrollMomentumInterval();
 	indexSelected--;
 	const newSelectionElement = element_checkmates.children[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);
