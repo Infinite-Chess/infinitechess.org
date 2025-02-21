@@ -162,7 +162,6 @@ function initListeners() {
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
 
-	document.addEventListener('mousedown', callback_mouseDown_Anywhere);
 	document.addEventListener('mouseup', callback_mouseUp_Anywhere);
 	document.addEventListener('mousemove', callback_mouseMove_Anywhere);
 	element_checkmateList.addEventListener('mousedown', callback_mouseDown_checkmateList);
@@ -177,7 +176,6 @@ function closeListeners() {
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
 
-	document.removeEventListener('mousedown', callback_mouseDown_Anywhere);
 	document.removeEventListener('mouseup', callback_mouseUp_Anywhere);
 	document.removeEventListener('mousemove', callback_mouseMove_Anywhere);
 	element_checkmateList.removeEventListener('mousedown', callback_mouseDown_checkmateList);
@@ -185,11 +183,6 @@ function closeListeners() {
 		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp_checkmate);
 		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
 	}
-}
-
-function callback_mouseDown_Anywhere(event: MouseEvent) {
-	startY = event.pageY - element_checkmateList.offsetTop;
-	scrollTop = element_checkmateList.scrollTop;
 }
 
 function callback_mouseDown_checkmateList(event: MouseEvent) {
