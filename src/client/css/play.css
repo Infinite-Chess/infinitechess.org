@@ -522,7 +522,7 @@ canvas {
     left: 0;
     right: 0;
     display: grid;
-    grid-template: repeat(2, min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092))) min(50vw, 542px, calc(var(--vh-sub-nav) * 0.575)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
+    grid-template: min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) min(58vw, 628px, calc(var(--vh-sub-nav) * 0.667)) min(8vw, 86px, calc(var(--vh-sub-nav) * 0.092)) / repeat(6, min(13vw, 141px, calc(var(--vh-sub-nav) * 0.15)));
     gap: min(1.5vw, 16px, calc(var(--vh-sub-nav) * 0.0173));
     justify-content: center;
     align-content: center;
@@ -583,8 +583,10 @@ canvas {
     border-radius: min(1.3vw, 30px, calc(var(--vh-sub-nav) * 0.015));
     display: flex;
     justify-content: space-between;
+    align-items: center;
     align-content: center;
     padding: 0.5em 2em;
+    height: 4em;
 }
 
 .difficulty-title {
@@ -686,6 +688,7 @@ canvas {
     justify-content: center;
     align-content: center;
     width: 75%;
+    height: 1.4em;
     outline-style: solid;
     outline-width: 0.1em;
     border-radius: 0.25em;
