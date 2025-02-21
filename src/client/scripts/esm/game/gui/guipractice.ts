@@ -36,7 +36,7 @@ let generatedHTML: boolean = false;
 let generatedIcons: boolean = false;
 
 // Variables for controlling the scrolling of the checkmate list
-let mouseIsDown: boolean = false;
+let mouseIsDownOnList: boolean = false;
 let mouseMovedAfterClick: boolean = true;
 let scrollTop: number;
 let startY : number;
@@ -161,48 +161,57 @@ function initListeners() {
 	element_practiceBack.addEventListener('click', callback_practiceBack);
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
-	for (const element of element_checkmates.children) {
-		(element as HTMLElement).addEventListener('mousedown', callback_mouseDown_checkmateList);
-		(element as HTMLElement).addEventListener('mouseup', callback_mouseUp_checkmateList);
-		element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
-	}
+
+	document.addEventListener('mousedown', callback_mouseDown_Anywhere);
 	document.addEventListener('mouseup', callback_mouseUp_Anywhere);
 	document.addEventListener('mousemove', callback_mouseMove_Anywhere);
+	element_checkmateList.addEventListener('mousedown', callback_mouseDown_checkmateList);
+	for (const element of element_checkmates.children) {
+		(element as HTMLElement).addEventListener('mouseup', callback_mouseUp_checkmate);
+		element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
+	}
 }
 
 function closeListeners() {
 	element_practiceBack.removeEventListener('click', callback_practiceBack);
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
-	for (const element of element_checkmates.children) {
-		(element as HTMLElement).removeEventListener('mousedown', callback_mouseDown_checkmateList);
-		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp_checkmateList);
-		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
-	}
+
+	document.removeEventListener('mousedown', callback_mouseDown_Anywhere);
 	document.removeEventListener('mouseup', callback_mouseUp_Anywhere);
 	document.removeEventListener('mousemove', callback_mouseMove_Anywhere);
+	element_checkmateList.removeEventListener('mousedown', callback_mouseDown_checkmateList);
+	for (const element of element_checkmates.children) {
+		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp_checkmate);
+		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
+	}
+}
+
+function callback_mouseDown_Anywhere(event: MouseEvent) {
+	startY = event.pageY - element_checkmateList.offsetTop;
+	scrollTop = element_checkmateList.scrollTop;
 }
 
 function callback_mouseDown_checkmateList(event: MouseEvent) {
-	mouseIsDown = true;
+	mouseIsDownOnList = true;
 	mouseMovedAfterClick = false;
 	startY = event.pageY - element_checkmateList.offsetTop;
 	scrollTop = element_checkmateList.scrollTop;
 }
 
 function callback_mouseUp_Anywhere() {
-	mouseIsDown = false;
+	mouseIsDownOnList = false;
 }
 
-function callback_mouseUp_checkmateList(event: MouseEvent) {
-	mouseIsDown = false;
+function callback_mouseUp_checkmate(event: MouseEvent) {
+	mouseIsDownOnList = false;
 	if (mouseMovedAfterClick) return;
 	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
 	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
 }
 
 function callback_mouseMove_Anywhere(event: MouseEvent) {
-	if (!mouseIsDown) return;
+	if (!mouseIsDownOnList) return;
 	event.preventDefault();
 	mouseMovedAfterClick = true;
 	const y = event.pageY - element_checkmateList.offsetTop;
