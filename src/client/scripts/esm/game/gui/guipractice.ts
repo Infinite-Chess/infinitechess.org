@@ -67,6 +67,7 @@ function open() {
 }
 
 function close() {
+	clearInterval(momentumInterval);
 	element_practiceSelection.classList.add("hidden");
 	element_menuExternalLinks.classList.add("hidden");
 	closeListeners();
@@ -287,6 +288,7 @@ function callback_keyPress(event: KeyboardEvent) {
 function moveDownSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected >= element_checkmates.children.length - 1) return;
+	clearInterval(momentumInterval);
 	indexSelected++;
 	const newSelectionElement = element_checkmates.children[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);
@@ -295,6 +297,7 @@ function moveDownSelection(event: Event) {
 function moveUpSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected <= 0) return;
+	clearInterval(momentumInterval);
 	indexSelected--;
 	const newSelectionElement = element_checkmates.children[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);
