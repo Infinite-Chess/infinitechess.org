@@ -380,7 +380,7 @@ function rider_threatens(direction: Vec2, piece_square: Coords, target_square: C
 	// loop over all potential blockers
 	for (let i = 0; i < coordlist.length; i++) {
 		if (piecelist[i] === 0) continue;
-		else if (exclude_white_piece_squares && squares_are_equal(coordlist[i]!, target_square)) return true;
+		else if (exclude_white_piece_squares && squares_are_equal(coordlist[i]!, target_square)) return false;
 
 		const [collinear, thispiecedistance] = is_natural_multiple([coordlist[i]![0]! - piece_square[0]!, coordlist[i]![1]! - piece_square[1]!], direction);
 		if (!collinear) continue;
