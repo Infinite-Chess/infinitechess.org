@@ -211,15 +211,26 @@ function callback_mouseUp(event: MouseEvent) {
 }
 
 function callback_mouseMove(event: MouseEvent) {
+	mouseMovedAfterClick = true;
 	if (!mouseIsDown) return;
 	event.preventDefault();
-	mouseMovedAfterClick = true;
 	const y = event.pageY - element_checkmateList.offsetTop;
 	const walkY = y - startY;
 	element_checkmateList.scrollTop = scrollTop - walkY;
 
 	velocity = event.pageY - lastY;
 	lastY = event.pageY;
+}
+
+function applyMomentum() {
+	momentumInterval = setInterval(() => {
+		if (Math.abs(velocity) < 0.5) {
+			clearInterval(momentumInterval);
+			return;
+		}
+		element_checkmateList.scrollTop -= velocity;
+		velocity *= friction;
+	}, 16); // Approx. 60fps
 }
 
 function changeCheckmateSelected(checkmateid: string) {
@@ -232,17 +243,6 @@ function changeCheckmateSelected(checkmateid: string) {
 			element.classList.remove('selected');
 		}
 	}
-}
-
-function applyMomentum() {
-	momentumInterval = setInterval(() => {
-		if (Math.abs(velocity) < 0.5) {
-			clearInterval(momentumInterval);
-			return;
-		}
-		element_checkmateList.scrollTop -= velocity;
-		velocity *= friction;
-	}, 16); // Approx. 60fps
 }
 
 /**
