@@ -5,7 +5,6 @@ import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
-import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
@@ -138,8 +137,8 @@ function wasLastMoveARoyalCapture(gamefile) {
 
 	const capturedTypes = new Set();
 
-	boardchanges.getCapturedPieces(lastMove).forEach((piece) => {
-		capturedTypes.add(colorutil.trimColorExtensionFromType(piece.type));
+	boardchanges.getCapturedPieceTypes(lastMove).forEach((type) => {
+		capturedTypes.add(typeutil.getRawType(type));
 	});
 
 	if (!capturedTypes.size) return false; // Last move not a capture
