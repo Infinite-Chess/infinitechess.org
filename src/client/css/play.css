@@ -595,7 +595,7 @@ canvas {
 
 .checkmate-list {
     font-size: min(2.5vw, 27px, calc(var(--vh-sub-nav) * 0.029));
-    overflow-y: auto;
+    overflow-y: scroll;
     display: flex;
     flex-direction: column;
     flex-grow: 1;

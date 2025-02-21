@@ -27,6 +27,7 @@ const element_practiceName: HTMLElement = document.getElementById('practice-name
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
+const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
 let checkmateSelectedID: string = checkmatepractice.validCheckmates.easy[0]!; // id of selected checkmate
@@ -34,6 +35,11 @@ let indexSelected: number = 0; // index of selected checkmate among its brothers
 let generatedHTML: boolean = false;
 let generatedIcons: boolean = false;
 
+// Variables for controlling the scrolling of the checkmate list
+let mouseIsDown: boolean = false;
+let mouseMovedAfterClick: boolean = true;
+let scrollTop: number;
+let startY : number;
 
 // Functions ------------------------------------------------------------------------
 
@@ -156,9 +162,12 @@ function initListeners() {
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
 	for (const element of element_checkmates.children) {
-		element.addEventListener('click', callback_checkmateList);
+		(element as HTMLElement).addEventListener('mousedown', callback_mouseDown_checkmateList);
+		(element as HTMLElement).addEventListener('mouseup', callback_mouseUp_checkmateList);
 		element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
 	}
+	document.addEventListener('mouseup', callback_mouseUp_Anywhere);
+	document.addEventListener('mousemove', callback_mouseMove_Anywhere);
 }
 
 function closeListeners() {
@@ -166,9 +175,39 @@ function closeListeners() {
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
 	for (const element of element_checkmates.children) {
-		element.removeEventListener('click', callback_checkmateList);
+		(element as HTMLElement).removeEventListener('mousedown', callback_mouseDown_checkmateList);
+		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp_checkmateList);
 		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
 	}
+	document.removeEventListener('mouseup', callback_mouseUp_Anywhere);
+	document.removeEventListener('mousemove', callback_mouseMove_Anywhere);
+}
+
+function callback_mouseDown_checkmateList(event: MouseEvent) {
+	mouseIsDown = true;
+	mouseMovedAfterClick = false;
+	startY = event.pageY - element_checkmateList.offsetTop;
+	scrollTop = element_checkmateList.scrollTop;
+}
+
+function callback_mouseUp_Anywhere() {
+	mouseIsDown = false;
+}
+
+function callback_mouseUp_checkmateList(event: MouseEvent) {
+	mouseIsDown = false;
+	if (mouseMovedAfterClick) return;
+	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
+	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
+}
+
+function callback_mouseMove_Anywhere(event: MouseEvent) {
+	if (!mouseIsDown) return;
+	event.preventDefault();
+	mouseMovedAfterClick = true;
+	const y = event.pageY - element_checkmateList.offsetTop;
+	const walkY = y - startY;
+	element_checkmateList.scrollTop = scrollTop - walkY;
 }
 
 function changeCheckmateSelected(checkmateid: string) {
@@ -208,11 +247,6 @@ function updateCheckmatesBeaten() {
 function callback_practiceBack(event: Event) {
 	close();
 	guititle.open();
-}
-
-function callback_checkmateList(event: Event) {
-	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
-	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
 }
 
 function callback_practicePlay() {
