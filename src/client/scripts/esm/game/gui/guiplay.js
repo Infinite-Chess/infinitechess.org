@@ -130,7 +130,7 @@ function initListeners() {
 	element_playBack.addEventListener('click', callback_playBack);
 	element_online.addEventListener('click', callback_online);
 	element_local.addEventListener('click', callback_local);
-	element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_computer.addEventListener('click', callback_computer);
 	element_createInvite.addEventListener('click', callback_createInvite);
 	element_optionColor.addEventListener('change', callback_updateOptions);
 	element_optionClock.addEventListener('change', callback_updateOptions);
@@ -143,7 +143,7 @@ function closeListeners() {
 	element_playBack.removeEventListener('click', callback_playBack);
 	element_online.removeEventListener('click', callback_online);
 	element_local.removeEventListener('click', callback_local);
-	element_computer.removeEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_computer.removeEventListener('click', callback_computer);
 	element_createInvite.removeEventListener('click', callback_createInvite);
 	element_optionColor.removeEventListener('change', callback_updateOptions);
 	element_optionClock.removeEventListener('change', callback_updateOptions);
@@ -163,6 +163,8 @@ function changePlayMode(mode) { // online / local / computer
 		element_local.classList.remove('selected');
 		element_online.classList.remove('not-selected');
 		element_local.classList.add('not-selected');
+		element_computer.classList.remove('selected');
+		element_computer.classList.add('not-selected');
 		element_createInvite.textContent = translations.invites.create_invite;
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.remove('hidden');
@@ -175,12 +177,34 @@ function changePlayMode(mode) { // online / local / computer
 		// Enabling the button doesn't necessarily unlock it. It's enabled for "local" so that we
 		// can click "Start Game" at any point. But it will be re-disabled if we click "online" rapidly,
 		// because it was still locked from us still waiting for the server's repsponse to our last create/cancel command.
+		// add choose col
 		enableCreateInviteButton();
 		element_playName.textContent = translations.menu_local;
 		element_online.classList.remove('selected');
 		element_local.classList.add('selected');
 		element_online.classList.add('not-selected');
 		element_local.classList.remove('not-selected');
+		element_computer.classList.remove('selected');
+		element_computer.classList.add('not-selected');
+		element_createInvite.textContent = translations.invites.start_game;
+		element_optionCardColor.classList.add('hidden');
+		element_optionCardRated.classList.add('hidden');
+		element_optionCardPrivate.classList.add('hidden');
+		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
+		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
+		element_joinPrivate.classList.add('hidden');
+		element_inviteCode.classList.add('hidden');
+	} else if (mode === 'computer') {
+		//todo: add menu for choosing computer time, engine, difficulty, etc., show only classic variant works?
+		// time control for player?
+		enableCreateInviteButton();
+		element_playName.textContent = translations.menu_computer;
+		element_online.classList.remove('selected');
+		element_local.classList.remove('selected');
+		element_online.classList.add('not-selected');
+		element_local.classList.add('not-selected');
+		element_computer.classList.add('selected');
+		element_computer.classList.remove('not-selected');
 		element_createInvite.textContent = translations.invites.start_game;
 		element_optionCardColor.classList.add('hidden');
 		element_optionCardRated.classList.add('hidden');
@@ -205,6 +229,10 @@ function callback_local() {
 	changePlayMode('local');
 }
 
+function callback_computer() {
+	changePlayMode('computer');
+}
+
 // Also starts local games
 function callback_createInvite() {
 
@@ -221,6 +249,17 @@ function callback_createInvite() {
 	} else if (modeSelected === 'online') {
 		if (invites.doWeHave()) invites.cancel();
 		else invites.create(inviteOptions);
+	} else if (modeSelected === 'computer') {
+		// Load options the game loader needs to load a local loaded game
+		const options = {
+			Event:`Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
+			youAreColor: "white",
+			currentEngine: "engineCheckmatePractice",
+			engineConfig: {engineTimeLimitPerMoveMillis: 500 },
+			variant: inviteOptions.variant,
+		};
+		close(); // Close the invite creation screen
+		gameloader.startEngineGame(options); // Actually load the game
 	}
 }
 

@@ -77,6 +77,7 @@ function initEngineGame(options: {
 	if (!window.Worker) return alert("Your browser doesn't support web workers. Cannot play against an engine.");
 	// TODO: What happens if the engine fails / takes too long to load? =============================== !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
+	console.log(engineWorker);
 	engineWorker.onmessage = function(e: MessageEvent) { 
 		// Messages from the engine mean it has submitted a move
 		const engineMove = e.data;
