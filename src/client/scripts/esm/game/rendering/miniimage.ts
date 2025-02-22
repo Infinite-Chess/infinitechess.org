@@ -5,6 +5,7 @@
 
 
 import type { Coords } from '../../chess/util/coordutil.js';
+import type { PooledArray } from '../../chess/logic/organizedlines.js';
 
 
 import space from '../misc/space.js';
@@ -12,6 +13,8 @@ import frametracker from './frametracker.js';
 import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
 import { createModel, BufferModel } from './buffermodel.js';
+import animation from './animation.js';
+import coordutil from '../../chess/util/coordutil.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -30,8 +33,6 @@ import options from './options.js';
 import statustext from '../gui/statustext.js';
 // @ts-ignore
 import area from './area.js';
-// @ts-ignore
-import typeutil from '../../chess/util/typeutil.js';
 
 
 // Variables --------------------------------------------------------------
@@ -44,8 +45,6 @@ let widthWorld: number;
 const opacity: number = 0.6;
 
 let data: number[];
-
-let piecesClicked: Coords[];
 
 let hovering: boolean = false; // true if currently hovering over piece
 
@@ -117,7 +116,7 @@ function genModel(): BufferModel {
 
 	// Every frame we'll need to regenerate the buffer model
 	data = [];
-	piecesClicked = [];
+	const piecesClicked: Coords[] = [];
 
 	// Iterate through all pieces
 	// ...
@@ -130,55 +129,68 @@ function genModel(): BufferModel {
 	// We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
-	typeutil.forEachPieceType(concatBufferData, { ignoreVoids: true });
+	const atleastOneAnimation: boolean = animation.animations.length > 0;
 
-	// Adds pieces of that type's buffer to the overall data
-	function concatBufferData(pieceType: string): void {
-		const thesePieces = gamefile.ourPieces[pieceType];
+	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
+		const pieceType = key as string;
+		if (pieceType.startsWith('voids')) continue; // Skip voids
+		const thesePieces = value as PooledArray<Coords>;
 
-		if (!thesePieces) return; // Don't concat data if there are no pieces of this type
-
-		const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-
 		const { r, g, b } = options.getColorOfType(pieceType);
 
-		for (let i: number = 0; i < thesePieces.length; i++) {
-			const thisPiece: Coords = thesePieces[i]!;
+		thesePieces.forEach(coords => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
+	}
 
-			// Piece is undefined, skip! We have undefineds so others can retain their index.
-			if (!thisPiece) continue;
+	// Add the animated pieces
+	animation.animations.forEach(a => {
+		// Animate the main piece being animated
+		const currentCoords = animation.getCurrentAnimationPosition(a);
+		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
+		let { r, g, b } = options.getColorOfType(a.type);
+		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
 
-			const startX: number = (thisPiece[0] - boardPos[0]) * boardScale - halfWidth;
-			const startY: number = (thisPiece[1] - boardPos[1]) * boardScale - halfWidth;
-			const endX: number = startX + widthWorld;
-			const endY: number = startY + widthWorld;
+		// Animate the captured piece too, if there is one
+		if (!a.captured) return;
+		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
+		({ r, g, b } = options.getColorOfType(a.type));
+		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
+	})
 
-			let thisOpacity: number = opacity;
+	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
+		if (!coords) return; // Skip undefined placeholders
+		if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
 
-			// Are we hovering over? If so, opacity needs to be 100%
-			if (areWatchingMousePosition) {
-				const touchClicked: boolean = input.getTouchClicked();
-				const mouseWorldLocation: Coords = touchClicked ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
-				const mouseWorldX: number = mouseWorldLocation[0];
-				const mouseWorldY: number = mouseWorldLocation[1];
+		const startX: number = (coords[0] - boardPos[0]) * boardScale - halfWidth;
+		const startY: number = (coords[1] - boardPos[1]) * boardScale - halfWidth;
+		const endX: number = startX + widthWorld;
+		const endY: number = startY + widthWorld;
 
-				if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
-					thisOpacity = 1;
-					hovering = true;
-					// If we also clicked, then teleport!
-					if (input.isMouseDown_Left() || input.getTouchClicked()) {
-						// Add them to a list of pieces we're hovering over.
-						// If we click, we teleport to a location containing them all.
-						piecesClicked.push(thisPiece);
-					}
-				}
+		let thisOpacity: number = opacity;
+
+		// Are we hovering over? If so, opacity needs to be 100%
+		if (areWatchingMousePosition) {
+			const touchClicked: boolean = input.getTouchClicked();
+			const mouseWorldLocation: Coords = touchClicked ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
+			const mouseWorldX: number = mouseWorldLocation[0];
+			const mouseWorldY: number = mouseWorldLocation[1];
+
+			if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
+				thisOpacity = 1;
+				hovering = true;
+				/**
+				 * If we also clicked, then teleport!
+				 * Add them to a list of pieces we're hovering over.
+				 * If we click, we teleport to a location containing them all.
+				 */
+				// 
+				// if (input.isMouseDown_Left() || input.getTouchClicked()) piecesClicked.push(coords);
+				if (input.getPointerClicked()) piecesClicked.push(coords);
 			}
-
-			const newData: number[] = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity);
-
-			data.push(...newData);
 		}
+
+		data.push(...bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity));
 	}
 
 	// Teleport to clicked pieces
@@ -187,7 +199,6 @@ function genModel(): BufferModel {
 
 		const endCoords: Coords = theArea.coords as Coords;
 		const endScale: number = theArea.scale;
-		// const endScale = 0.00000000000001;
 		const tel = { endCoords, endScale };
 		transition.teleport(tel);
 		// Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)

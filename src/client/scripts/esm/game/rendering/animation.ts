@@ -400,4 +400,5 @@ export default {
 	update,
 	renderTransparentSquares,
 	renderAnimations,
+	getCurrentAnimationPosition,
 };
