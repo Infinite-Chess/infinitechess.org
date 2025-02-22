@@ -914,11 +914,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, reset
  * arrows to be updated.
  */
 function render() {
-	executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js
-	arrowlegalmovehighlights.update();
 	regenerateModelAndRender();
-
-	// console.log("End frame ================");
 }
 
 function regenerateModelAndRender() {
@@ -1056,11 +1052,8 @@ export default {
 	setMode,
 	toggleArrows,
 	getHoveredArrows,
-
 	shiftArrow,
-	// shiftArrow,
-	// shiftArrow2,
-
+	executeArrowShifts,
 	update,
 	render,
 };

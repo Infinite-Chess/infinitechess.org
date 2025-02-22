@@ -33,6 +33,8 @@ import options from './options.js';
 import statustext from '../gui/statustext.js';
 // @ts-ignore
 import area from './area.js';
+// @ts-ignore
+import board from './board.js';
 
 
 // Variables --------------------------------------------------------------
@@ -49,6 +51,8 @@ let data: number[];
 let hovering: boolean = false; // true if currently hovering over piece
 
 let disabled: boolean = false; // Disabled when there's too many pieces
+
+let model: BufferModel;
 
 
 // Getters & Setters --------------------------------------------------------------
@@ -91,26 +95,20 @@ function testIfToggled(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
-	if (disabled) statustext.showStatus(translations.rendering.icon_rendering_off);
-	else statustext.showStatus(translations.rendering.icon_rendering_on);
-}
-
-
-// Rendering ---------------------------------------------------------------
-
-
-function render(): void {
-	hovering = false;
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
-	if (disabled) return; // Too many pieces to render icons!
-	webgl.executeWithDepthFunc_ALWAYS(genModel().render);
+	if (disabled) statustext.showStatus(translations['rendering'].icon_rendering_off);
+	else statustext.showStatus(translations['rendering'].icon_rendering_on);
 }
 
 /**
  * Generates the buffer model of the miniimages of the pieces when we're zoomed out.
  * This also detects if we click on a mini-image and if so, teleports us there.
+ * 
+ * This must be done in the game's update() loop, because it listens for mouse events,
+ * and can start teleports.
  */
-function genModel(): BufferModel {
+function genModel() {
+	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (disabled) return; // Too many pieces to render icons!
 
 	const gamefile = gameslot.getGamefile()!;
 
@@ -146,7 +144,10 @@ function genModel(): BufferModel {
 	// Add the animated pieces
 	animation.animations.forEach(a => {
 		// Animate the main piece being animated
-		const currentCoords = animation.getCurrentAnimationPosition(a);
+		const maxDist_VirtualPixels = 2000;
+		const maxDistB4Teleport = maxDist_VirtualPixels / board.gtileWidth_Pixels(true); 
+		console.log(maxDistB4Teleport);
+		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
 		let { r, g, b } = options.getColorOfType(a.type);
 		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
@@ -156,7 +157,7 @@ function genModel(): BufferModel {
 		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
 		({ r, g, b } = options.getColorOfType(a.type));
 		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
-	})
+	});
 
 	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		if (!coords) return; // Skip undefined placeholders
@@ -171,10 +172,9 @@ function genModel(): BufferModel {
 
 		// Are we hovering over? If so, opacity needs to be 100%
 		if (areWatchingMousePosition) {
-			const touchClicked: boolean = input.getTouchClicked();
-			const mouseWorldLocation: Coords = touchClicked ? input.getTouchClickedWorld() : input.getMouseWorldLocation();
-			const mouseWorldX: number = mouseWorldLocation[0];
-			const mouseWorldY: number = mouseWorldLocation[1];
+			const pointerWorldLocation: Coords = input.getPointerWorldLocation() as Coords;
+			const mouseWorldX: number = pointerWorldLocation[0];
+			const mouseWorldY: number = pointerWorldLocation[1];
 
 			if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
 				thisOpacity = 1;
@@ -184,9 +184,8 @@ function genModel(): BufferModel {
 				 * Add them to a list of pieces we're hovering over.
 				 * If we click, we teleport to a location containing them all.
 				 */
-				// 
-				// if (input.isMouseDown_Left() || input.getTouchClicked()) piecesClicked.push(coords);
 				if (input.getPointerClicked()) piecesClicked.push(coords);
+				else if (input.getPointerDown()) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 			}
 		}
 
@@ -201,11 +200,20 @@ function genModel(): BufferModel {
 		const endScale: number = theArea.scale;
 		const tel = { endCoords, endScale };
 		transition.teleport(tel);
-		// Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-		if (!input.getTouchClicked()) input.removeMouseDown_Left();
 	}
 
-	return createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+}
+
+
+// Rendering ---------------------------------------------------------------
+
+
+function render(): void {
+	hovering = false;
+	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (disabled) return; // Too many pieces to render icons!
+	webgl.executeWithDepthFunc_ALWAYS(model.render);
 }
 
 
@@ -220,5 +228,6 @@ export default {
 	enable,
 	disable,
 	testIfToggled,
+	genModel,
 	render,
 };

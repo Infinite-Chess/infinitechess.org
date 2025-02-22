@@ -134,7 +134,8 @@ function genModel() {
 	// If we clicked, teleport to the point on the line closest to the click location.
 	// BUT we have to recalculate it in coords format instead of world-space
 
-	if (!input.isMouseDown_Left() && !input.getTouchClicked()) return;
+	if (input.isMouseDown_Left()) input.removeMouseDown_Left(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+	if (!input.getPointerClicked()) return; // Pointer did not click, we will not teleport down to this linee
 
 	const moveset = closestPoint.moveset;
 

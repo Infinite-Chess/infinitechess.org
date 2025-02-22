@@ -26,6 +26,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
+import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -64,6 +65,8 @@ import voids from '../rendering/voids.js';
 import camera from '../rendering/camera.js';
 // @ts-ignore
 import copypastegame from './copypastegame.js';
+// @ts-ignore
+import stats from '../gui/stats.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -105,6 +108,7 @@ function testOutGameDebugToggles() {
 
 	if (input.isKeyDown('`')) camera.toggleDebug();
 	if (input.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (input.isKeyDown('m')) stats.toggleFPS();
 }
 
 function testInGameDebugToggles(gamefile: gamefile) {
@@ -161,14 +165,19 @@ function updateBoard(gamefile: gamefile) {
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
+	miniimage.genModel(); // NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
+	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
 	// ALSO depends on whether or not a piece is selected/being dragged!
 	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.
+	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
 	movement.checkIfBoardDragged();
-	highlightline.genModel();
 
 	if (guipause.areWePaused()) return;
 
 	movement.dragBoard(); // Calculate new board position if it's being dragged. Needs to be after updateNavControls()
+
+	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update()
+	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 } 
 
 function render() {
@@ -182,7 +191,7 @@ function render() {
 	input.renderMouse();
 
 	/**
-	 * What is the order or rendering?
+	 * What is the order of rendering?
 	 * 
 	 * Board tiles
 	 * Highlights
