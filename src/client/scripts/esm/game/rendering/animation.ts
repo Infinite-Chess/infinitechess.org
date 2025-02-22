@@ -105,11 +105,11 @@ const MOVE_ANIMATION_DURATION = {
 	multiplierMillis: 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
 	multiplierMillis_Curved: 12, // Default: 12
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
 	baseMillis_Debug: 2000,
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis} when {@link DEBUG} is true. */
 	multiplierMillis_Debug: 30,
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link DEBUG} is true. */
 	multiplierMillis_Curved_Debug: 60,
 };
 
