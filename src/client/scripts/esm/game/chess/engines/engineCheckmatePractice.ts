@@ -38,6 +38,7 @@ self.onmessage = function(e: MessageEvent) {
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;
 	globalSurvivalPlies = -Infinity;
+	globallyBestVariation = {};
 
 	if (!engineInitialized) initEvalWeightsAndSearchProperties();	// initialize the eval function weights and global search properties
 	
@@ -60,9 +61,10 @@ let engineTimeLimitPerMoveMillis: number;
 let checkmateSelectedID: string;
 
 // The informtion that is currently considered best by this engine
-let globallyBestMove: Coords = [0,0];
 let globallyBestScore: number;
 let globalSurvivalPlies: number;
+let globallyBestVariation: { [key: number]: [number, Coords] };
+// e.g. { 0: [NaN, [1,0]], 1: [3,[2,4]], 2: [NaN, [-1,1]], 3: [2, [5,6]], ... } = { 0: black move, 1: white piece index & move, 2: black move, ... }
 
 // the real coordinates of the black royal piece in the gamefile
 let gamefile_royal_coords: Coords;
@@ -750,18 +752,18 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestMove?: Coords, survivalPlies: number, terminate_now: boolean } {
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
-		return {score: -Infinity, survivalPlies: Infinity, terminate_now: true};
+		return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
 	} else if ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), survivalPlies: start_depth - depth, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
 	} else if (depth === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), survivalPlies: Infinity, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: Infinity, terminate_now: false };
 	}
 
-	let bestMove: Coords | undefined;
+	let bestVariation: { [key: number]: [number, Coords] } = {};
 
 	if (black_to_move) {
 		let maxScore = -Infinity;
@@ -769,18 +771,19 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		for (const move of get_black_legal_moves(piecelist, coordlist)) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
 			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaPlies, betaPlies);
-			if (evaluation.terminate_now) return {score: -Infinity, survivalPlies: Infinity, terminate_now: true};
+			if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
 			const new_score = evaluation.score;
 			const survivalPlies = evaluation.survivalPlies;
 			if (new_score >= maxScore) {
-				if (new_score > maxScore || survivalPlies > maxPlies || (survivalPlies === maxPlies && Math.random() < 0.5)) {
-					bestMove = move;
+				if (new_score > maxScore || survivalPlies > maxPlies || (survivalPlies === maxPlies && Math.random() < 0.5) || Object.keys(bestVariation).length === 0) {
+					bestVariation = evaluation.bestVariation;
+					bestVariation[start_depth - depth] = [NaN, move];
 					maxScore = new_score;
 					maxPlies = survivalPlies;
 					alpha = Math.max(alpha, new_score);
 					alphaPlies = Math.max(alphaPlies, survivalPlies);
 					if (depth === start_depth && new_score >= globallyBestScore && survivalPlies >= globalSurvivalPlies) {
-						globallyBestMove = move;
+						globallyBestVariation = bestVariation;
 						globallyBestScore = new_score;
 						globalSurvivalPlies = survivalPlies;
 					}
@@ -790,8 +793,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				break;
 			}
 		}
-		if (!bestMove) bestMove = get_black_legal_moves(piecelist, coordlist)[0];
-		return { score: maxScore, bestMove: bestMove, survivalPlies: maxPlies, terminate_now: false };
+		return { score: maxScore, bestVariation: bestVariation, survivalPlies: maxPlies, terminate_now: false };
 	} else {
 		let minScore = Infinity;
 		let minPlies = Infinity;
@@ -803,11 +805,13 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
 				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaPlies, betaPlies);
-				if (evaluation.terminate_now) return {score: -Infinity, survivalPlies: Infinity, terminate_now: true};
+				if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
 				const new_score = evaluation.score;
 				const survivalPlies = evaluation.survivalPlies;
 				if (new_score <= minScore) {
-					if (new_score < minScore || survivalPlies < minPlies) {
+					if (new_score < minScore || survivalPlies < minPlies  || Object.keys(bestVariation).length === 0) {
+						bestVariation = evaluation.bestVariation;
+						bestVariation[start_depth - depth] = [piece_index, target_square];
 						minScore = new_score;
 						minPlies = survivalPlies;
 						beta = Math.min(beta, new_score);
@@ -819,7 +823,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				}
 			}
 		}
-		return { score: minScore, survivalPlies: minPlies, terminate_now: false };
+		return { score: minScore, bestVariation: bestVariation, survivalPlies: minPlies, terminate_now: false };
 	}
 }
 
@@ -829,15 +833,18 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
 	// immediately initialize and submit globallyBestMove, in case the engine gets immediately interrupted
 	const black_moves = get_black_legal_moves(piecelist, coordlist);
-	globallyBestMove = black_moves[Math.floor(Math.random() * black_moves.length)]!;
-	const [new_piecelist, new_coordlist] = make_black_move(globallyBestMove, piecelist, coordlist);
+	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+	const [new_piecelist, new_coordlist] = make_black_move(globallyBestVariation[0][1], piecelist, coordlist);
 	globallyBestScore = get_position_evaluation(new_piecelist, new_coordlist, false);
 	
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, -Infinity, Infinity);
-		if (evaluation.terminate_now) break;
-		globallyBestMove = evaluation.bestMove!;
+		if (evaluation.terminate_now) { 
+			console.log("Search interrupted at depth " + depth);
+			break;
+		}
+		globallyBestVariation = evaluation.bestVariation;
 		globallyBestScore = evaluation.score;
 		globalSurvivalPlies = evaluation.survivalPlies;
 		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestMove}.`);
@@ -885,11 +892,12 @@ function runEngine(gamefile: gamefile): void {
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
-		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist))
-		// console.log(globalSurvivalPlies)
+		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
+		console.log(globalSurvivalPlies);
+		console.log(globallyBestVariation);
 
 		// submit engine move
-		postMessage(move_to_gamefile_move(globallyBestMove));
+		postMessage(move_to_gamefile_move(globallyBestVariation[0]![1]!));
 
 	} catch (e) {
 		console.error("An error occured in the engine computation of the checkmate practice");

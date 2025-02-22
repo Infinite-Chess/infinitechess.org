@@ -76,7 +76,7 @@ const validCheckmates = {
 };
 
 /** These checkmates we may place the black king nearer to the white pieces. */
-const checkmatesWithBlackRoyalNearer = ["1K3HA-1k", "2K1R-1k"];
+const checkmatesWithBlackRoyalNearer = ["1K1AR2HA-1k", "2K1R-1k", "1K2N6B-1k", "1K3HA-1k"];
 
 const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
 /**
