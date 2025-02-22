@@ -761,8 +761,16 @@ button.join-button, button.copy-button {
     backdrop-filter: blur(8px); /* Apply a blur effect to the background */
 }
 
+.navigation-bar.vertical {
+    height: 100%;
+    width: 1em;
+    flex-direction: column;
+    box-shadow: 1px 0px 7px 0px rgba(0, 0, 0, 0.659);
+}
+
 .teleport, .coords, .right-nav {
     display: flex;
+    flex-direction: inherit;
     align-items: center;
 }
 
@@ -771,14 +779,25 @@ button.join-button, button.copy-button {
     padding-left: 0.14em;
 }
 
+.vertical .teleport {
+    padding-left: 0;
+    padding-top: 0.14em;
+}
+
 .coords {
     justify-content: center;
     flex-grow: 1;
+    width: fit-content;
 }
 
 .right-nav {
     justify-content: flex-end;
     padding-right: 0.14em;
+}
+
+.vertical .right-nav {
+    padding-right: 0;
+    padding-bottom: 0.14em;
 }
 
 #position {
@@ -1052,7 +1071,28 @@ button.join-button, button.copy-button {
     background: linear-gradient(to bottom, white, rgb(230, 230, 230), white);
 }
 
+/* Board Editor UI */
 
+.board-edit-tools {
+    position: absolute;
+    right: 0;
+    height: 100%;
+    box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
+    display: grid;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
+    -webkit-backdrop-filter: blur(5px); /* Must be BEFORE the unprefixed rules, so Lightning CSS correclty parses! */
+    backdrop-filter: blur(8px); /* Apply a blur effect to the background */
+    grid-template-columns: 65px 65px 65px;
+    font-size: 9px;
+}
+
+.board-edit-tools div {
+    cursor: pointer;
+}
+
+.board-edit-tools div :hover {
+    background-color: #e5e5e5;
+}
 
 /* Promotion UI */
 

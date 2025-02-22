@@ -71,6 +71,8 @@ import camera from '../rendering/camera.js';
 // @ts-ignore
 import copypastegame from './copypastegame.js';
 
+import boardeditor from '../misc/boardeditor.js';
+
 
 // Functions -------------------------------------------------------------------------------
 
@@ -165,6 +167,7 @@ function updateBoard(gamefile: gamefile) {
 	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
 	// NEEDS TO BE BEFORE selection.update() because that calls droparrows to update(), and that needs to overwrite any animation from animation.ts
 	animation.update();
+	boardeditor.update();
 	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// ALSO depends on whether or not a piece is selected/being dragged!
 	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.

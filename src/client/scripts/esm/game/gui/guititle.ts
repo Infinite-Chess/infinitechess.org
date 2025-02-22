@@ -9,6 +9,7 @@ import gui from './gui.js';
 import guiguide from './guiguide.js';
 // @ts-ignore
 import guiplay from './guiplay.js';
+import gameloader from '../chess/gameloader.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -43,13 +44,13 @@ function close() {
 function initListeners() {
 	element_play.addEventListener('click', callback_Play);
 	element_guide.addEventListener('click', callback_Guide);
-	element_boardEditor.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_boardEditor.addEventListener('click', callback_Edit);
 }
 
 function closeListeners() {
 	element_play.removeEventListener('click', callback_Play);
 	element_guide.removeEventListener('click', callback_Guide);
-	element_boardEditor.removeEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_boardEditor.removeEventListener('click', callback_Edit);
 }
 
 function callback_Play(event: Event) {
@@ -60,6 +61,11 @@ function callback_Play(event: Event) {
 function callback_Guide(event: Event) {
 	close();
 	guiguide.open();
+}
+
+function callback_Edit(event: Event) {
+	close();
+	gameloader.startEditor()
 }
 
 

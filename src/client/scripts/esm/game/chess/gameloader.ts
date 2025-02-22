@@ -30,6 +30,7 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
+import guiedit from "../gui/guiedit.js";
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -40,7 +41,7 @@ import perspective from "../rendering/perspective.js";
 
 
 /** The type of game we are in, whether local or online, if we are in a game. */
-let typeOfGameWeAreIn: undefined | 'local' | 'online';
+let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'edit';
 
 
 // Getters --------------------------------------------------------------------
@@ -124,16 +125,45 @@ async function startOnlineGame(options: JoinGameMessage) {
 	openGameinfoBarAndConcludeGameIfOver(options.metadata);
 }
 
+async function startEditor() {
+	const metadata = {
+		Variant: "CoaIP",
+		TimeControl: '-',
+		Event: `Position created using ingame board editor!`,
+		Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
+		Round: '-' as '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime()
+	};
+
+	await gameslot.loadGamefile({
+		metadata,
+		viewWhitePerspective: true,
+		allowEditCoords: true,
+	});
+	typeOfGameWeAreIn = 'edit';
+
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	openBoardEditorMenu();
+}
+
 /** These items must be done after the logical parts of the gamefile are fully loaded. */
 function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData) {
 	guigameinfo.open(metadata);
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 
+function openBoardEditorMenu() {
+	guiedit.open();
+}
+
 function unloadGame() {
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
 	guinavigation.close();
 	guigameinfo.close();
+	guiedit.close();
 	gameslot.unloadGame();
 	perspective.disable();
 	gui.prepareForOpen();
@@ -147,6 +177,7 @@ export default {
 	update,
 	startLocalGame,
 	startOnlineGame,
+	startEditor,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
 };
