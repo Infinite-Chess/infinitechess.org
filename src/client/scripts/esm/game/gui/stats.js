@@ -29,6 +29,8 @@ const elementStatusMoves = document.getElementById('status-moves');
 // This makes it so we can keep using setTimeout even if we refresh it's visibility!
 let visibilityWeight = 0;
 
+let fps = false;
+
 /**
  * Temporarily displays the move number in the corner of the screen.
  * @param {number} [durationSecs] The duration to show the move number. Default: 2.5
@@ -75,6 +77,12 @@ function hidePiecesMesh() {
 	elementStatusPiecesMesh.classList.add('hidden');
 }
 
+function toggleFPS() {
+	fps = !fps;
+	if (fps) showFPS();
+	else hideFPS();
+}
+
 function showFPS() {
 	if (config.VIDEO_MODE) return;
 	elementStatusFPS.classList.remove('hidden');
@@ -85,7 +93,7 @@ function hideFPS() {
 }
 
 function updateFPS(fps) {
-	if (!options.isFPSOn()) return;
+	if (!fps) return;
 	const truncated = fps | 0; // Bitwise operation that quickly rounds towards zero
 	elementStatusFPS.textContent = `FPS: ${truncated}`;
 }
@@ -120,8 +128,7 @@ export default {
 	showPiecesMesh,
 	updatePiecesMesh,
 	hidePiecesMesh,
-	showFPS,
-	hideFPS,
+	toggleFPS,
 	updateFPS,
 	showRotateMesh,
 	updateRotateMesh,

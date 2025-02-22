@@ -257,8 +257,10 @@ function checkIfBoardDragged() {
 	if (perspective.getEnabled() || transition.areWeTeleporting() || draganimation.areDraggingPiece()) return;
 
 	if (boardIsGrabbed === 0) { // Not already grabbed
-		if (input.isMouseDown_Left()) grabBoard_WithMouse();
-		else if (input.getTouchHelds().length > 0) grabBoard_WithFinger();
+		if (input.isMouseDown_Left()) {
+			grabBoard_WithMouse();
+			input.removeMouseDown_Left(); // Remove the event so other aspects of the code don't use it
+		} else if (input.getTouchDowns().length > 0) grabBoard_WithFinger();
 	}
 
 	else if (boardIsGrabbed === 2) updateBoardPinch(); // Fingers have pinched

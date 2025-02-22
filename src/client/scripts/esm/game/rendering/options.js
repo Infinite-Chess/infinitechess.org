@@ -29,8 +29,6 @@ let theme;
 
 let em = false; // editMode, allows moving pieces anywhere else on the board!
 
-let fps = false;
-
 
 
 (function() {
@@ -56,10 +54,6 @@ function disableEM() {
 
 function getEM() {
 	return em;
-}
-
-function isFPSOn() {
-	return fps;
 }
 
 // Toggles EDIT MODE! editMode
@@ -155,13 +149,6 @@ function getColorOfType(type) {
 		b: color[2],
 		a: color[3]
 	};
-}
-
-function toggleFPS() {
-	fps = !fps;
-
-	if (fps) stats.showFPS();
-	else stats.hideFPS();
 }
 
 
@@ -267,9 +254,7 @@ export default {
 	getPieceRegenColorArgs,
 	getColorOfType,
 	getEM,
-	toggleFPS,
 	disableEM,
-	isFPSOn,
 	initTheme,
 	// update,
 };
