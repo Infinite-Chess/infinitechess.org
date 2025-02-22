@@ -172,7 +172,7 @@ function detectInsufficientMaterial(gamefile) {
 		const piece = gamefile.piecesOrganizedByKey[key];
 		if (piece === "obstaclesN") continue;
 		else if (colorutil.trimColorExtensionFromType(piece) === "bishops") {
-			const parity = sum_tuple_coords(coordutil.getCoordsFromKey(key)) % 2;
+			const parity = Math.abs(sum_tuple_coords(coordutil.getCoordsFromKey(key))) % 2;
 			const color = colorutil.getColorExtensionFromType(piece);
 			if (color === "W") bishopsW_count[parity] += 1;
 			else if (color === "B") bishopsB_count[parity] += 1;
