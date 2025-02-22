@@ -328,6 +328,8 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 	const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 	const dataSelectedPieceHighlight = shapes.getDataQuad_Color_FromCoord(offsetCoord, color);
 	model_SelectedPiece = createModel(dataSelectedPieceHighlight, 2, "TRIANGLES", true);
+	
+	frametracker.onVisualChange();
 }
 
 /**

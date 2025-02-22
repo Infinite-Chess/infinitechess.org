@@ -74,6 +74,7 @@
                     <h1>Infinite Chess</h1>
                     <button id="play" class="play titlebubble button"><%=t('play.main-menu.play')%></button>
                     <button id="rules" class="rules titlebubble button"><%=t('play.main-menu.guide')%></button>
+                    <button id="practice" class="practice titlebubble button"><%=t('play.main-menu.practice')%></button>
                     <button id="board-editor" class="board-editor titlebubble button"><%=t('play.main-menu.editor')%></button>
                 </div>
 
@@ -173,6 +174,11 @@
                                 <source srcset="/img/game/guide/fairy/knightrider.webp" type="image/webp" />
                                 <img loading="lazy" src="/img/game/guide/fairy/knightrider.png">
                             </picture>
+                            <picture id="hu-img" class="img-fairymoveset hidden">
+                                <source srcset="/img/game/guide/fairy/huygen.avif" type="image/avif" />
+                                <source srcset="/img/game/guide/fairy/huygen.webp" type="image/webp" />
+                                <img loading="lazy" src="/img/game/guide/fairy/huygen.png">
+                            </picture>
                             <picture id="ob-img" class="img-fairymoveset hidden">
                                 <source srcset="/img/game/guide/fairy/obstacle.avif" type="image/avif" />
                                 <source srcset="/img/game/guide/fairy/obstacle.webp" type="image/webp" />
@@ -217,6 +223,10 @@
                                         <p class="fairy-card-title"><%=t('play.guide.pieces.knightrider.name')%></p>
                                         <p class="fairy-card-description"><%=t('play.guide.pieces.knightrider.description')%></p>
                                     </div>
+                                    <div id="hu-desc" class="fairy-card-desc hidden">
+                                        <p class="fairy-card-title"><%=t('play.guide.pieces.huygen.name')%></p>
+                                        <p class="fairy-card-description"><%=t('play.guide.pieces.huygen.description')%></p>
+                                    </div>
                                     <div id="ob-desc" class="fairy-card-desc hidden">
                                         <p class="fairy-card-title"><%=t('play.guide.pieces.obstacle.name')%></p>
                                         <p class="fairy-card-description"><%=t('play.guide.pieces.obstacle.description')%></p>
@@ -259,7 +269,6 @@
                                         <option value="Classical_Plus"><%=t('play.play-menu.Classical_Plus')%></option>
                                         <option value="CoaIP"><%=t('play.play-menu.CoaIP')%></option>
                                         <option value="CoaIP_HO"><%=t('play.play-menu.CoaIP_HO')%></option>
-                                        <option value="Trappist_1"><%=t('play.play-menu.Trappist_1')%></option>
                                         <option value="Knighted_Chess"><%=t('play.play-menu.Knighted_Chess')%></option>
                                         <option value="Pawndard"><%=t('play.play-menu.Pawndard')%></option>
                                         <option value="Knightline"><%=t('play.play-menu.Knightline')%></option>
@@ -365,6 +374,49 @@
                     <button id="play-back" class="play-back titlebubble button"><%=t('play.play-menu.back')%></button>
                 </div>
 
+                <!-- Practice selection -->
+                <div id="practice-selection" class="practice-selection hidden">
+                    <p id="practice-name" class="practice-name"><%=t('play.practice-menu.title')%></p>
+                    <div class="practice-box titlebubble">
+                        <div class="practice-head">
+                            <div class="checkmate-progress-bar"></div>
+                            <div class="checkmate-difficulty difficulty-title"><%=t('play.practice-menu.difficulty')%></div>
+                        </div>
+                        <div class="checkmate-list">
+                            <div id="checkmates">
+                                <!-- Checkmate list is inserted dynamically here on demand. -->
+                                <!-- Example looks like: -->
+                                <!-- <div class="checkmate unselectable selected" id="2R1N1P-1k">
+                                    <div class="completion-mark"></div>
+                                    <div class="piecelistW">
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece rooksW"><svg></svg></div>
+                                        </div>
+                                        <div class="checkmate-child checkmatepiececontainer collated-strong">
+                                            <div class="checkmatepiece rooksW"><svg></svg></div>
+                                        </div>
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece knightsW"><svg></svg></div>
+                                        </div>
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece pawnsW"><svg></svg></div>
+                                        </div>
+                                    </div>
+                                    <div class="checkmate-child versus">vs</div>
+                                    <div class="piecelistB">
+                                        <div class="checkmate-child checkmatepiececontainer">
+                                            <div class="checkmatepiece kingsB"></div>
+                                        </div>
+                                    </div>
+                                    <div class="checkmate-difficulty">Medium</div>
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+                    <button id="practice-play" class="practice-play titlebubble button"><%=t('play.practice-menu.play')%></button>
+                    <button id="practice-back" class="practice-back titlebubble button"><%=t('play.practice-menu.back')%></button>
+                </div>
+
                 <!-- Stats below navigation bar -->
                 <!-- This is absolutely positioned. Our javascript will udate it's 'top' ruleset based
                 on the height of the navigation bar. -->
@@ -449,6 +501,16 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Practice engine game game undo move + restart buttons -->
+                    <div class="practice-engine-buttons hidden">
+                        <button id="undobutton" class="game-control tooltip-u" data-tooltip="<%=t('play.gamebuttontooltips.undo')%>">
+                            <svg class="svg-undo"><use href="#svg-undo"></use></svg>
+                        </button>
+                        <button id="restartbutton" class="game-control tooltip-ul" data-tooltip="<%=t('play.gamebuttontooltips.restart')%>">
+                            <svg class="svg-restart" fill="none" viewBox="0 0 240 240"><g stroke="#555" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" clip-path="url(#a)"><path d="M120 30a90 90 0 11-57 20"/><path d="M30 45h40v40"/></g><defs><clipPath id="a"><path d="M0 0h240v240H0" fill="#555"/></clipPath></defs></svg>
+
+                        </button>
+                    </div>
                     <div id="playerblack" class="playerblack"></div>
                     <div id="timer-container-black" class="timerblackcontainer">
                         <div id="timer-black" class="timerblack">10:00</div>
@@ -502,6 +564,7 @@
                     <button id="copygame" class="copygame button"><%=t('play.pause.copy')%></button>
                     <button id="pastegame" class="pastegame button"><%=t('play.pause.paste')%></button>
                     <button id="offerdraw" class="offerdraw button"><%=t('play.pause.offer_draw')%></button>
+                    <button id="practicemenu" class="practicemenu button hidden"><%=t('play.pause.practice_menu')%></button>
                     <button id="mainmenu" class="mainmenu button"><%=t('play.pause.main_menu')%></button>
                 </div>
 
