@@ -393,6 +393,7 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 
 
 export default {
+	animations,
 	animatePiece,
 	clearAnimations,
 	toggleDebug,

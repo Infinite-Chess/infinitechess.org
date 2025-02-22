@@ -163,8 +163,7 @@ function updateBoard(gamefile: gamefile) {
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	// ALSO depends on whether or not a piece is selected/being dragged!
 	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.
-	movement.checkIfBoardDragged(); 
-	miniimage.genModel();
+	movement.checkIfBoardDragged();
 	highlightline.genModel();
 
 	if (guipause.areWePaused()) return;

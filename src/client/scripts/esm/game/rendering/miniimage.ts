@@ -44,8 +44,6 @@ let widthWorld: number;
 const opacity: number = 0.6;
 
 let data: number[];
-/** The buffer model of the mini piece images when zoomed out. */
-let model: BufferModel;
 
 let piecesClicked: Coords[];
 
@@ -102,13 +100,18 @@ function testIfToggled(): void {
 // Rendering ---------------------------------------------------------------
 
 
-// Called within update section
-// This also detects if we click on a mini-image and if so, teleports us there.
-function genModel(): void {
+function render(): void {
 	hovering = false;
-
 	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (disabled) return; // Too many pieces to render icons!
+	webgl.executeWithDepthFunc_ALWAYS(genModel().render);
+}
+
+/**
+ * Generates the buffer model of the miniimages of the pieces when we're zoomed out.
+ * This also detects if we click on a mini-image and if so, teleports us there.
+ */
+function genModel(): BufferModel {
 
 	const gamefile = gameslot.getGamefile()!;
 
@@ -178,8 +181,6 @@ function genModel(): void {
 		}
 	}
 
-	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
-
 	// Teleport to clicked pieces
 	if (piecesClicked.length > 0) {
 		const theArea = area.calculateFromCoordsList(piecesClicked);
@@ -192,15 +193,8 @@ function genModel(): void {
 		// Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 		if (!input.getTouchClicked()) input.removeMouseDown_Left();
 	}
-}
 
-function render(): void {
-	if (!movement.isScaleLess1Pixel_Virtual()) return;
-	if (disabled) return;
-
-	if (!model) genModel(); // LEAVE THIS HERE or mobile will crash when zooming out
-
-	webgl.executeWithDepthFunc_ALWAYS(model.render);
+	return createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
 
@@ -209,12 +203,11 @@ function render(): void {
 
 export default {
 	getWidthWorld,
+	recalcWidthWorld,
 	isHovering,
 	isDisabled,
-	testIfToggled,
-	genModel,
-	render,
 	enable,
 	disable,
-	recalcWidthWorld
+	testIfToggled,
+	render,
 };
