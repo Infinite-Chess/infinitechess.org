@@ -284,6 +284,12 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 18, 28, 38, 48, 58, 68, 78], black: [1, 11, 21, 31, 41, 51, 61, 71] } },
 		specialMoves: { pawns: fivedimensionalmoves.doFiveDimensionalPawnMove },
 		specialVicinity: { pawns: [[1,1],[-1,1],[-1,-1],[1,-1],[10,10],[10,-10],[-10,-10],[-10,10]] }
+	},
+	// The board editor currently can't add new types of pieces
+	// start the board with all types present
+	EditMode: {
+		positionString: 'K-6,1|P-5,1|N-4,1|B-3,1|R-2,1|HA1,1|CH2,1|AR3,1|GU4,1|GI6,1|CA5,1|ZE7,1|CE8,1|RQ9,1|RC10,1|NR11,1|HU12,1|RO13,1|k-6,2|p-5,2|n-4,2|b-3,2|q-1,2|am0,2|ha1,2|ar3,2|gu4,2|ca5,2|gi6,2|ze7,2|ce8,2|rq9,2|rc10,2|nr11,2|hu12,2|ro13,2|ch2,2|AM0,1|r-2,2|Q-1,1|vo14,1|ob15,1|',
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...typeutil.types])},
 	}
 };
 

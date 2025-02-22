@@ -57,6 +57,7 @@ import math from '../../util/math.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
+import boardeditor from '../misc/boardeditor.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -300,6 +301,7 @@ function canDropOnPieceTypeInEditMode(type?: string) {
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
 function isOpponentType(gamefile: gamefile, type: string) {
+	if (boardeditor.areInBoardEditor()) return false;
 	const pieceColor = colorutil.getPieceColorFromType(type);
 	return !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
 	/* Local Game */ : pieceColor !== gamefile.whosTurn;
@@ -418,6 +420,7 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 
 	movesendreceive.sendMove();
 	enginegame.submitMove();
+	boardeditor.submitMove();
 
 	unselectPiece();
 }

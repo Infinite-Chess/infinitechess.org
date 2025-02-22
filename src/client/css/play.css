@@ -1322,7 +1322,7 @@ button.join-button, button.copy-button {
     cursor: pointer;
 }
 
-.board-edit-tools div :hover {
+.board-edit-tools :hover {
     background-color: #e5e5e5;
 }
 

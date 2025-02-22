@@ -22,6 +22,7 @@ import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
 import selection from '../chess/selection.js';
+import boardeditor from '../misc/boardeditor.js';
 
 
 /**
@@ -251,8 +252,9 @@ function isItOkayToRewindOrForward() {
  */
 function update_MoveButtons() {
 	const gamefile = gameslot.getGamefile()!;
-	const decrementingLegal = moveutil.isDecrementingLegal(gamefile);
-	const incrementingLegal = moveutil.isIncrementingLegal(gamefile);
+	const inBoardEditor = boardeditor.areInBoardEditor();
+	const decrementingLegal = inBoardEditor ? boardeditor.canUndo() : moveutil.isDecrementingLegal(gamefile);
+	const incrementingLegal = inBoardEditor ? boardeditor.canRedo() : moveutil.isIncrementingLegal(gamefile);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -402,6 +404,8 @@ function testIfForwardMove() {
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
+	if (boardeditor.areInBoardEditor()) return boardeditor.undo();
+	
 	const gamefile = gameslot.getGamefile()!;
 	if (gamefile.mesh.locked > 0) return statustext.pleaseWaitForTask();
 	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
@@ -415,6 +419,8 @@ function rewindMove() {
 
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
+	if (boardeditor.areInBoardEditor()) return boardeditor.redo();
+	
 	const gamefile = gameslot.getGamefile()!;
 	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
 	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();

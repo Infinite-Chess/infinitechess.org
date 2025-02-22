@@ -1,8 +1,6 @@
 
 import boardchanges, { Change, Piece } from '../../chess/logic/boardchanges.js';
 import { meshChanges } from '../chess/graphicalchanges.js';
-import { Coords } from '../../chess/util/coordutil.js';
-import { Move } from '../../chess/logic/movepiece.js';
 // @ts-ignore
 import input from '../input.js';
 // @ts-ignore
@@ -17,65 +15,86 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
 
-/**
- * Problems:
- * - Pieces sometimes don't display when drawn especially kings.
- * - Pieces that were not in the starting position cannot be used.
- * - ctrl-c doesn't work because copypastgame doesn't recognise the custom "moves".
- */
+// Type Definitions -------------------------------------------------------------
 
+import { Coords } from '../../chess/util/coordutil.js';
+// @ts-ignore
+import { gamefile } from '../../chess/logic/gamefile.js'
+
+type Edit = Array<Change>;
+
+// Variables --------------------------------------------------------------------
+
+/** Whether we are currently using the editor. */
+let inBoardEditor = false;
 
 let currentColor = "white";
 let currentTool: string = "queens";
 
-let changesThisStoke: Array<Change> = [];
+/**
+ * Changes are stored in `thisEdit` until the user releases the button.
+ * Grouping changes together allow the user to undo an entire 
+ * brush stroke at once instead of one piece at a time.
+ */
+let thisEdit: Edit = [];
+let edits: Array<Edit> = [];
+let indexOfThisEdit = 0;
+
 let drawing = false;
 let previousSquare: Coords | undefined;
 
-function beginStroke() {
+// Functions ------------------------------------------------------------------------
+
+function areInBoardEditor () {
+	return inBoardEditor;
+}
+function initBoardEditor () {
+	inBoardEditor = true;
+}
+function closeBoardEditor () {
+	inBoardEditor = false;
+}
+function canUndo () {
+	return indexOfThisEdit > 0;
+}
+function canRedo () {
+	return indexOfThisEdit < edits.length;
+}
+
+function beginEdit() {
 	drawing = true;
 	previousSquare = undefined;
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 }
 
-function endStroke() {
-	const gamefile = gameslot.getGamefile()!;
-	// I know this isn't how moves are intended to be used
-	// but this allows us to undo edits.
-	gamefile.moves.length = gamefile.moveIndex + 1;
-	const strokeAsMove: Move = {
-		startCoords: [0, 0],
-		endCoords: [0, 0],
-		type: "",
-		changes: changesThisStoke,
-		state: {
-			local: [],
-			global: []
-		},
-		generateIndex: gamefile.moveIndex + 1,
-		compact:"",
-		flags: {
-			check: false,
-			mate: false,
-			capture: false
-		}
-	}
-	gamefile.moves.push(strokeAsMove);
-	gamefile.moveIndex++;
+function endEdit() {
 	drawing = false;
-	changesThisStoke = [];
+	addEditToHistory(thisEdit);
+	thisEdit = [];
 	guinavigation.update_MoveButtons();
+}
+
+/** Runs both logical and graphical changes. */
+function runChanges(gamefile: gamefile, changes: Array<Change>, forward?: boolean) {
+	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, forward);
+	boardchanges.runChanges(gamefile, changes, meshChanges, forward);
+}
+
+function addEditToHistory(edit: Edit) {
+	edits.length = indexOfThisEdit;
+	edits.push(edit);
+	indexOfThisEdit++;
 }
 
 function update() {
 	let gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
+	if (!gamefile || !inBoardEditor) return;
 	
 	if (drawing) {
-		if (!input.isMouseHeld_Right()) return endStroke();
+		if (!input.isMouseHeld_Right()) return endEdit();
 	} else {
-		if (input.isMouseDown_Right()) beginStroke();
+		if (input.isMouseDown_Right()) beginEdit();
 		else return;
 	}
 	
@@ -90,21 +109,58 @@ function update() {
 	
 	if (currentTool !== "eraser") {
 		const type = currentTool + colorutil.getColorExtensionFromColor(currentColor);
-		const piece: Piece = { type, coords, index: (undefined as any) as number};
+		const piece: Piece = { type, coords } as Piece;
 		boardchanges.queueAddPiece(changes, piece);
 	}
 	
-	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
-	boardchanges.applyChanges(gamefile, changes, meshChanges.forward, true);
-	changesThisStoke.push(...changes);
+	runChanges(gamefile, changes, true);
+	thisEdit.push(...changes);
 }
 
 function setTool(tool: string) {
 	if (tool === "save") return save();
 	if (tool === "color") return toggleColor();
+	if (tool === "clear") return clearAll();
 	currentTool = tool;
 }
 
+function toggleColor() {
+	return currentColor = colorutil.getOppositeColor(currentColor);
+}
+
+function clearAll() {
+	const changes: Array<Change> = [];
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return;
+	gamefileutility.forEachPieceInGame(gamefile, (type, coords, gamefile) => {
+		const pieceToDelete = gamefileutility.getPieceFromTypeAndCoords(gamefile!, type, coords);
+		boardchanges.queueDeletePiece(changes, pieceToDelete, false);
+	});
+	runChanges(gamefile!, changes, true);
+	addEditToHistory(changes);
+}
+
+function undo() {
+	if (indexOfThisEdit <= 0) return;
+	const gamefile = gameslot.getGamefile()!;
+	indexOfThisEdit--;
+	runChanges(gamefile, edits[indexOfThisEdit]!, false);
+	guinavigation.update_MoveButtons();
+}
+
+function redo() {
+	if (indexOfThisEdit >= edits.length) return;
+	const gamefile = gameslot.getGamefile()!;
+	runChanges(gamefile, edits[indexOfThisEdit]!, true);
+	indexOfThisEdit++;
+	guinavigation.update_MoveButtons();
+}
+
+/**
+ * copypastegame uses the move list instead of the position 
+ * which doesn't work for the board editor.
+ * This function uses the position of pieces on the board.
+ */
 function save() {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
@@ -116,11 +172,29 @@ function save() {
 	docutil.copyToClipboard(output);
 }
 
-function toggleColor() {
-	currentColor = colorutil.getOppositeColor(currentColor);
+function submitMove () {
+	const gamefile = gameslot.getGamefile()!;
+	edits.length = indexOfThisEdit;
+	for (let i = 0; i < gamefile.moves.length; i++) {
+		edits.push(gamefile.moves[i].changes);
+	}
+	indexOfThisEdit = edits.length;
+	gamefile.moves.length = 0;
+	gamefile.moveIndex = -1;
+	guinavigation.update_MoveButtons();
 }
 
 export default {
+	areInBoardEditor,
+	initBoardEditor,
+	closeBoardEditor,
+	submitMove,
 	update,
 	setTool,
+	toggleColor,
+	canUndo,
+	canRedo,
+	undo,
+	redo,
+	save,
 }
