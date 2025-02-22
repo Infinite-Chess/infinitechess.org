@@ -209,7 +209,7 @@ function initEvalWeightsAndSearchProperties() {
 		3: [[2, manhattanNorm], [2, manhattanNorm]], // bishop
 		4: [[15, manhattanNorm], [15, manhattanNorm]], // knight
 		5: [[30, manhattanNorm], [30, manhattanNorm]], // king
-		6: [[200, pawnNorm], [200, pawnNorm]], // pawn
+		6: [[200, specialNorm], [200, specialNorm]], // pawn
 		7: [[14, manhattanNorm], [14, manhattanNorm]], // amazon
 		8: [[7, manhattanNorm], [7, manhattanNorm]], // hawk
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
@@ -318,6 +318,12 @@ function initEvalWeightsAndSearchProperties() {
 		case "1K2N1B1B-1k":
 			distancesEvalDictionary[3] = [[12, manhattanNorm], [12, manhattanNorm]]; // bishop
 			break;
+		case "1K1R1B1B-1k":
+			distancesEvalDictionary[5] = [[15, specialNorm], [15, specialNorm]]; // king
+			break;
+		case "1K1R1N1B-1k":
+			distancesEvalDictionary[4] = [[8, specialNorm], [8, specialNorm]]; // knight
+			break;
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
 			legalMoveEvalDictionary = {
@@ -374,8 +380,8 @@ function manhattanDistance(square1: Coords, square2: Coords): number {
 	return Math.abs(square1[0] - square2[0]) + Math.abs(square1[1] - square2[1]);
 }
 
-// special norm for the pawn
-function pawnNorm(square: Coords): number {
+// special norm = manhattan + diagonal
+function specialNorm(square: Coords): number {
 	return diagonalNorm(square) + manhattanNorm(square);
 }
 
