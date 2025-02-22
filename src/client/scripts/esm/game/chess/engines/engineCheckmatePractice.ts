@@ -740,19 +740,20 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 }
 
 /**
- * Performs a standard search with alpha-beta pruning through the game tree and returns the best score and move for black it finds
+ * Performs a standard search with alpha-beta pruning through the game tree and updates globallyBestVariation and the like
  * @param {Array} piecelist 
  * @param {Array} coordlist 
  * @param {Number} depth 
  * @param {Number} start_depth - does not get changed at all during recursion
  * @param {Boolean} black_to_move 
+ * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
  * @param {Number} alpha 
  * @param {Number} beta 
- * @param {Number} alphaPlies
+ * @param {Number} alphaPlies - alpha beta for remaining plies in the game: tiebreak in case of early game over: the more plies the game lasts the better for black
  * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
@@ -764,14 +765,15 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	}
 
 	let bestVariation: { [key: number]: [number, Coords] } = {};
-
+	
+	// Black to move
 	if (black_to_move) {
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
 		const black_moves = get_black_legal_moves(piecelist, coordlist);
 
 		// principal variation ordering
-		if (globallyBestVariation[start_depth - depth]) {
+		if (followingPrincipal && depth > 2) {
 			for (let index = 0; index < black_moves.length; index++) {
 				if (squares_are_equal(black_moves[index]!, globallyBestVariation[start_depth - depth]![1]!)) {
 					const optimal_move = black_moves.splice(index, 1)[0]!;
@@ -779,12 +781,16 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 					break;
 				}
 			}
+		} else {
+			followingPrincipal = false;
 		}
 
 		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaPlies, betaPlies);
+			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
+			followingPrincipal = false;
+
 			const new_score = evaluation.score;
 			const survivalPlies = evaluation.survivalPlies;
 			if (new_score >= maxScore) {
@@ -807,6 +813,8 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			}
 		}
 		return { score: maxScore, bestVariation: bestVariation, survivalPlies: maxPlies, terminate_now: false };
+
+	// White to move
 	} else {
 		let minScore = Infinity;
 		let minPlies = Infinity;
@@ -817,7 +825,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		indices.sort((a, b) => { return candidate_moves[a]!.length - candidate_moves[b]!.length; });
 
 		// principal variation ordering
-		if (globallyBestVariation[start_depth - depth]) {
+		if (followingPrincipal && depth > 2) {
 			for (let p_index = 0; p_index < indices.length; p_index++) {
 				if (indices[p_index] === globallyBestVariation[start_depth - depth]![0]!) {
 					const optimal_index = indices.splice(p_index, 1)[0]!;
@@ -832,13 +840,17 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 					break;
 				}
 			}
+		} else {
+			followingPrincipal = false;
 		}
 
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, alpha, beta, alphaPlies, betaPlies);
+				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
 				if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
+				followingPrincipal = false;
+
 				const new_score = evaluation.score;
 				const survivalPlies = evaluation.survivalPlies;
 				if (new_score <= minScore) {
@@ -872,15 +884,15 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, -Infinity, Infinity, -Infinity, Infinity);
+		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, -Infinity, Infinity, -Infinity, Infinity);
 		if (evaluation.terminate_now) { 
-			console.log("Search interrupted at depth " + depth);
+			// console.log("Search interrupted at depth " + depth);
 			break;
 		}
 		globallyBestVariation = evaluation.bestVariation;
 		globallyBestScore = evaluation.score;
 		globalSurvivalPlies = evaluation.survivalPlies;
-		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestMove}.`);
+		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
 	}
 }
 
@@ -926,8 +938,8 @@ function runEngine(gamefile: gamefile): void {
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
-		console.log(globalSurvivalPlies);
-		console.log(globallyBestVariation);
+		// console.log(globalSurvivalPlies);
+		// console.log(globallyBestVariation);
 
 		// submit engine move
 		postMessage(move_to_gamefile_move(globallyBestVariation[0]![1]!));
