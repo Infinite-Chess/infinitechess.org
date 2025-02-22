@@ -920,9 +920,9 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 			// If a piece is captured, immediately check for insuffmat
 			// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
 			// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
-			if (new_piecelist.indexOf(0) > -1) {
-				const royal_string = (royal_type === "k" ? "kingsB" : "royalCentaursB");
-				const piecesOrganizedByKey: { [key: string]: string } = {"0,0": royal_string};
+			if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
+				const piecesOrganizedByKey: { [key: string]: string } = {};
+				piecesOrganizedByKey["0,0"] = (royal_type === "k" ? "kingsB" : "royalCentaursB");
 				for (let i = 0; i < piecelist.length; i++) {
 					if (new_piecelist[i] !== 0) {
 						piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
