@@ -172,9 +172,9 @@ function queueMovePiece(changes: Array<Change>, piece: Piece, main: boolean, end
  * either modifying the piece lists, or modifying the mesh,
  * depending on what changeFuncs are passed in.
  */
-function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
+function runChanges(gamefile: gamefile, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
-	applyChanges(gamefile, move.changes, funcs, forward);
+	applyChanges(gamefile, changes, funcs, forward);
 }
 
 /**
@@ -356,7 +356,7 @@ export default {
 	getCapturedPieces,
 	oneWayActions,
 	wasACapture,
-	runMove,
+	runChanges,
 	applyChanges,
 	changeFuncs,
 };

@@ -49,7 +49,7 @@ import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighligh
 function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	movepiece.makeMove(gamefile, move); // Logical changes
-	if (gamefile.mesh.model !== undefined) boardchanges.runMove(gamefile, move, meshChanges, true); // Graphical changes
+	if (gamefile.mesh.model !== undefined) boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes
@@ -81,7 +81,7 @@ function rewindMove(gamefile: gamefile) {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
-	boardchanges.runMove(gamefile, lastMove, meshChanges, false); // Graphical changes
+	boardchanges.runChanges(gamefile, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile)) gameslot.unConcludeGame();
@@ -103,7 +103,7 @@ function rewindMove(gamefile: gamefile) {
  */
 function viewMove(gamefile: gamefile, move: Move, forward = true) {
 	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
-	boardchanges.runMove(gamefile, move, meshChanges, forward); // Apply the graphical changes.
+	boardchanges.runChanges(gamefile, move.changes, meshChanges, forward); // Apply the graphical changes.
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
