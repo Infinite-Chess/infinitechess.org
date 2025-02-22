@@ -14,12 +14,14 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { Additional, VariantOptions } from "./gameslot.js";
 import type { EngineConfig } from "../misc/enginegame.js";
+import type { TeamColor } from "../../chess/util/typeutil.js";
 
 
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
+import typeutil from "../../chess/util/typeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
 // @ts-ignore
@@ -62,7 +64,7 @@ function areInLocalGame(): boolean {
 	return typeOfGameWeAreIn === 'local';
 }
 
-function isItOurTurn(color?: string): boolean {
+function isItOurTurn(color?: TeamColor): boolean {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't tell if it's our turn when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
@@ -148,7 +150,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 async function startEngineGame(options: {
 	/** The "Event" string of the game's metadata */
 	Event: string,
-	youAreColor: 'white' | 'black',
+	youAreColor: TeamColor,
 	currentEngine: 'engineCheckmatePractice', // Expand to a union type when more engines are added
 	engineConfig: EngineConfig,
 	variantOptions: VariantOptions
@@ -158,8 +160,8 @@ async function startEngineGame(options: {
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		TimeControl: '-',
-		White: options.youAreColor === 'white' ? '(You)' : 'Engine',
-		Black: options.youAreColor === 'black' ? '(You)' : 'Engine',
+		White: options.youAreColor === typeutil.colors.WHITE ? '(You)' : 'Engine',
+		Black: options.youAreColor === typeutil.colors.BLACK ? '(You)' : 'Engine',
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};

@@ -1,7 +1,7 @@
 
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import organizedlines from './organizedlines.js';
+import organizedpieces from './organizedpieces.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
@@ -46,8 +46,8 @@ function kings(gamefile, coords, color, ) {
 
 	const x = coords[0];
 	const y = coords[1];
-	const key = organizedlines.getKeyFromLine([1,0],coords);
-	const row = gamefile.piecesOrganizedByLines['1,0'][key];
+	const key = organizedpieces.getKeyFromLine([1,0],coords);
+	const row = gamefile.ourPieces.lines.get('1,0').get(key);
 
 
 	// Castling. What makes a castle legal?

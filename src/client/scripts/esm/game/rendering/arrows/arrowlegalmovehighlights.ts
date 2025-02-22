@@ -14,8 +14,10 @@ import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 
 import arrows from "./arrows.js";
 import colorutil from "../../../chess/util/colorutil.js";
+import typeutil from "../../../chess/util/typeutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
+import boardutil from "../../../chess/util/boardutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
@@ -111,7 +113,7 @@ function onPieceIndicatorHover(piece: Piece) {
 	// Calculate the mesh...
 
 	// Determine what color the legal move highlights should be...
-	const pieceColor = colorutil.getPieceColorFromType(piece.type);
+	const pieceColor = typeutil.getColorFromType(piece.type);
 	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;

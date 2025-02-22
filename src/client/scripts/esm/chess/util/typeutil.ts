@@ -1,4 +1,6 @@
 
+import { rawTypes, colors } from "../config";
+
 /**
  * All piece types the game is currently compatible with (excluding neutrals).
  * 
@@ -7,42 +9,11 @@
  */
 const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'roses', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'];
 
-const rawTypes = {
-	VOID: 0,
-	OBSTACLE: 1,
-	KING: 2,
-	GIRAFFE: 3,
-	CAMEL: 4,
-	ZEBRA: 5,
-	KNIGHTRIDER: 6,
-	AMAZON: 7,
-	QUEEN: 8,
-	ROYALQUEEN: 9,
-	HAWK: 10,
-	CHANCELLOR: 11,
-	ARCHBISHOP: 12,
-	CENTAUR: 13,
-	ROYALCENTAUR: 14,
-	ROSE: 15,
-	KNIGHT: 16,
-	GUARD: 17,
-	HUYGEN: 18,
-	ROOK: 19,
-	BISHOP: 20,
-	PAWN: 21
-} as const;
-
 const jumpingroyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
 
 const slidingroyals = [rawTypes.ROYALQUEEN];
 
 const royals = [...jumpingroyals, ...slidingroyals];
-
-const colors = {
-	NEUTRAL: 0,
-	WHITE: 1,
-	BLACK: 2,
-} as const;
 
 const strcolors = ["neutral", "white", "black"];
 
@@ -63,8 +34,12 @@ function getColorStringFromType(type: number): string {
 	return strcolors[getColorFromType(type)];
 }
 
-function buildType(type: RawType, color: number): number {
+function buildType(type: RawType, color: TeamColor): number {
 	return color * numTypes + type;
+}
+
+function splitType(type: number): [RawType, TeamColor] {
+	return [getRawType(type), getColorFromType(type)];
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -74,6 +49,16 @@ function forEachPieceType(callback: (pieceType: number) => void, colors: TeamCol
 			callback(buildType(r, colors[i]));
 		}
 	}
+}
+
+function invertType(type: number): number {
+	const c = getColorFromType(type);
+	const r = getRawType(type);
+	const newc = c === colors.WHITE ? colors.BLACK :
+				 c === colors.BLACK ? colors.WHITE :
+				 undefined;
+	if ( newc === undefined ) return type;
+	return buildType(r, newc);
 }
 
 export type {
@@ -91,5 +76,7 @@ export default {
 	getColorFromType,
 	getColorStringFromType,
 	buildType,
+	splitType,
+	invertType,
 	forEachPieceType,
 };

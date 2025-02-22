@@ -9,6 +9,7 @@ import colorutil from '../util/colorutil.js';
 import math from '../../util/math.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
+import { rawTypes } from '../config.js';
 
 // Type definitions...
 
@@ -134,17 +135,17 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 
 	return {
 		// Finitely moving
-		pawns: {
+		[rawTypes.PAWN]: {
 			individual: [],
 			special: specialdetect.pawns
 		},
-		knights: {
+		[rawTypes.KNIGHT]: {
 			individual: [
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
             ]
 		},
-		hawks: {
+		[rawTypes.HAWK]: {
 			individual: [
                 [-3,0],[-2,0],[2,0],[3,0],
                 [0,-3],[0,-2],[0,2],[0,3],
@@ -152,44 +153,35 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
                 [-3,-3],[-3,3],[3,-3],[3,3]
             ]
 		},
-		kings: {
+		[rawTypes.KING]: {
 			individual: [
                 [-1,0],[-1,1],[0,1],[1,1],
                 [1,0],[1,-1],[0,-1],[-1,-1]
             ],
 			special: specialdetect.kings
 		},
-		guards: {
+		[rawTypes.GUARD]: {
 			individual: [
                 [-1,0],[-1,1],[0,1],[1,1],
                 [1,0],[1,-1],[0,-1],[-1,-1]
             ]
 		},
 		// Infinitely moving
-		rooks: {
+		[rawTypes.ROOK]: {
 			individual: [],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
 			}
 		},
-		bishops: {
+		[rawTypes.BISHOP]: {
 			individual: [],
 			sliding: {
 				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
-		queens: {
-			individual: [],
-			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
-			}
-		},
-		royalQueens: {
+		[rawTypes.QUEEN]: {
 			individual: [],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
@@ -198,7 +190,16 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
-		chancellors: {
+		[rawTypes.ROYALQUEEN]: {
+			individual: [],
+			sliding: {
+				'1,0': [-slideLimit, slideLimit],
+				'0,1': [-slideLimit, slideLimit],
+				'1,1': [-slideLimit, slideLimit],
+				'1,-1': [-slideLimit, slideLimit]
+			}
+		},
+		[rawTypes.CHANCELLOR]: {
 			individual: [
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
@@ -208,7 +209,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'0,1': [-slideLimit, slideLimit]
 			}
 		},
-		archbishops: {
+		[rawTypes.ARCHBISHOP]: {
 			individual: [
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
@@ -218,7 +219,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
-		amazons: {
+		[rawTypes.AMAZON]: {
 			individual: [
                 [-2,1],[-1,2],[1,2],[2,1],
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
@@ -230,25 +231,25 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
-		camels: {
+		[rawTypes.CAMEL]: {
 			individual: [
                 [-3,1],[-1,3],[1,3],[3,1],
                 [-3,-1],[-1,-3],[1,-3],[3,-1]
             ]
 		},
-		giraffes: {
+		[rawTypes.GIRAFFE]: {
 			individual: [
                 [-4,1],[-1,4],[1,4],[4,1],
                 [-4,-1],[-1,-4],[1,-4],[4,-1]
             ]
 		},
-		zebras: {
+		[rawTypes.ZEBRA]: {
 			individual: [
                 [-3,2],[-2,3],[2,3],[3,2],
                 [-3,-2],[-2,-3],[2,-3],[3,-2]
             ]
 		},
-		knightriders: {
+		[rawTypes.KNIGHTRIDER]: {
 			individual: [],
 			sliding: {
 				'1,2' : [-slideLimit, slideLimit],
@@ -257,7 +258,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'2,-1' : [-slideLimit,slideLimit],
 			}
 		},
-		centaurs: {
+		[rawTypes.CENTAUR]: {
 			individual: [
                 // Guard moveset
                 [-1,0],[-1,1],[0,1],[1,1],
@@ -267,7 +268,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
                 [-2,-1],[-1,-2],[1,-2],[2,-1]
             ]
 		},
-		royalCentaurs: {
+		[rawTypes.ROYALCENTAUR]: {
 			individual: [
                 // Guard moveset
                 [-1,0],[-1,1],[0,1],[1,1],
@@ -278,7 +279,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
             ],
 			special: specialdetect.kings
 		},
-		huygens: {
+		[rawTypes.HUYGEN]: {
 			individual: [],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
@@ -298,7 +299,7 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				return isPrime;
 			}
 		},
-		roses: {
+		[rawTypes.ROSE]: {
 			individual: [],
 			special: specialdetect.roses
 		}

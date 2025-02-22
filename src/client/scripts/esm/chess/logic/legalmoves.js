@@ -4,7 +4,7 @@
  */
 
 import movepiece from './movepiece.js';
-import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import checkdetection from './checkdetection.js';
@@ -13,7 +13,6 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
-import math from '../../util/math.js';
 import variant from '../variants/variant.js';
 
 /** 
@@ -159,13 +158,12 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 		// Legal sliding moves
 		if (thisPieceMoveset.sliding) {
 			const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
-			const lines = gamefile.startSnapshot.slidingPossible;
-			for (let i = 0; i < lines.length; i++) {
-				const line = lines[i]; // [x,y]
-				const lineKey = math.getKeyFromVec2(line); // 'x,y'
-				if (!thisPieceMoveset.sliding[lineKey]) continue;
+			for (const [linekey, limits] of Object.entries(thisPieceMoveset.sliding)) {
+				const lines = gamefile.ourPieces.lines.get(linekey);
+				if (lines === undefined) continue;
 				const key = organizedlines.getKeyFromLine(line, coords);
-				legalSliding[line] = slide_CalcLegalLimit(blockingFunc, gamefile.piecesOrganizedByLines[line][key], line, thisPieceMoveset.sliding[lineKey], coords, color);
+				const line = coordutil.getCoordsFromKey(linekey);
+				legalSliding[linekey] = slide_CalcLegalLimit(blockingFunc, lines.get(key), line, limits, coords, color);
 			};
 		};
 
@@ -195,7 +193,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
  * @param {Piece[]} organizedLine - The organized line of the above key that our piece is on
  * @returns {undefined | Coords}
  */
-function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, slideKey, lineKey, organizedLine) {
+function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, slideKey, organizedLine) {
 	const thisPieceMoveset = getPieceMoveset(gamefile, piece.type); // Default piece moveset
 	if (!('sliding' in thisPieceMoveset)) return; // This piece can't slide at all
 	if (!(slideKey in thisPieceMoveset.sliding)) return; // This piece can't slide ALONG the provided line
@@ -227,7 +225,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
 		const thisMove = individualMoves[i];
 
 		// Is there a piece on this square?
-		const pieceAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisMove);
+		const pieceAtSquare = boardutil.getPieceFromCoords(gamefile.ourPieces, thisMove);
 		if (!pieceAtSquare) continue; // Next move if there is no square here
 
 		// Do the colors match?
@@ -363,7 +361,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	movepiece.goToMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
 
 	// Make sure a piece exists on the start coords
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraftCopy.startCoords); // { type, index, coords }
+	const piecemoved = boardutil.getPieceFromCoords(gamefile.ourPieces, moveDraftCopy.startCoords); // { type, index, coords }
 	if (!piecemoved) {
 		console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason('No piece exists at start coords.');

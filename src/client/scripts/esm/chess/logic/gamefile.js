@@ -4,6 +4,7 @@
 import organizedpieces from './organizedpieces.js';
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
@@ -22,6 +23,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
 /** @typedef {import('./events.js').GameEvents} GameEvents*/
+/** @typedef {import('../util/typeutil.js').TeamColor} TeamColor*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 
 'use strict'; 
@@ -65,11 +67,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		box: undefined,
 		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {number[]} */
 		existingTypes: undefined,
-		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Vec2[]}*/
-		slidingPossible: undefined,
-		/** Whether hippogonal lines, or greater, are present in the gamefile.
-		 * True if there are knightriders, or greater, riders. @type {boolean} */
-		hippogonalsPresent: undefined,
 	};
     
 	/** @type {GameRules} */
@@ -204,7 +201,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		},
 		/** We need this separate from gamefile's "whosTurn", because when we are
 		 * in an online game and we make a move, we want our Clock to continue
-		 * ticking until we receive the Clock information back from the server! @type {string} */
+		 * ticking until we receive the Clock information back from the server! @type {} */
 		colorTicking: undefined,
 		/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
 		 * When set to undefined no clocks are ticking @type {number | null} */
@@ -220,9 +217,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
 	/** The number of half-moves played since the last capture or pawn push. */
 	this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
-
-	gamefileutility.initStartingAreaBox(this);
-
 	/** The move list. @type {Move[]} */
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
@@ -248,7 +242,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.gameConclusion = false;
 
 	this.ourPieces = organizedpieces.buildStateFromKeyList(this, Int32Array);
-	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
+	this.startSnapshot.pieceCount = boardutil.getPieceCountOfGame(this.ourPieces);
 	gamefileutility.deleteUnusedMovesets(this);
 
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
@@ -264,6 +258,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
 
 	clock.set(this, clockValues);
+
+	gamefileutility.initStartingAreaBox(this);
 };
 
 // Typedef export DO NOT USE

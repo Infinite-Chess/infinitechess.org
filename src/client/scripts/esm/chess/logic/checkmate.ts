@@ -13,6 +13,7 @@ import legalmoves from './legalmoves.js';
 // @ts-ignore
 import typeutil from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
 
 
@@ -28,13 +29,13 @@ function detectCheckmateOrStalemate(gamefile: gamefile): string | false {
 	// Iterate through every piece, calculating its legal moves. The first legal move we find, we
 	// know the game is not over yet...
 
-	const teamTypes = typeutil.colorsTypes[gamefile.whosTurn]; // All types of our one specific color
-	for (const thisType of teamTypes) {
-		const thesePieces = gamefile.ourPieces[thisType];
+	for (const rType of Object.values(typeutil.rawTypes)) {
+		const thisType = typeutil.buildType(rType, gamefile.whosTurn);
+		const thesePieces = gamefile.ourPieces.typeRanges.get(thisType);
 		if (!thesePieces) continue; // The game doesn't have this type of piece
-		for (const coords of thesePieces) {
-			if (!coords) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const thisPiece = gamefileutility.getPieceFromTypeAndCoords(gamefile, thisType, coords);
+		for (let idx = thesePieces.start; idx < thesePieces.end; idx++) {
+			const thisPiece = boardutil.getPieceFromIdx(gamefile.ourPieces, idx);
+			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
 			const moves = legalmoves.calculate(gamefile, thisPiece);
 			if (legalmoves.hasAtleast1Move(moves)) return false; // Not checkmate
 		}

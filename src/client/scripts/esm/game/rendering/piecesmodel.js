@@ -3,7 +3,7 @@
 import loadbalancer from '../misc/loadbalancer.js';
 import math from '../../util/math.js';
 import bufferdata from './bufferdata.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
+import boardutil from '../../chess/util/boardutil.js';
 import stats from '../gui/stats.js';
 import voids from './voids.js';
 import statustext from '../gui/statustext.js';
@@ -71,7 +71,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
 
 	// How many indeces will we need?
-	const totalPieceCount = gamefileutility.getPieceCount_IncludingUndefineds(gamefile);
+	const totalPieceCount = boardutil.getPieceCount_IncludingUndefineds(gamefile);
 	const thisStride = colorArgs ? strideWithColoredTexture : strideWithTexture; // 4 or 8
 	const indicesPerPiece = thisStride * POINTS_PER_SQUARE; // (4|8) * 6
 	const totalElements = totalPieceCount * indicesPerPiece;
@@ -101,15 +101,14 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	stats.showPiecesMesh();
 
 	// Iterates through every single piece and performs specified function on said piece
-	for (const pieceType in gamefile.ourPieces) {
+	for (const [pieceType, range] of gamefile.ourPieces.typeRanges) {
 		if (pieceType.startsWith('voids')) continue;
-		await concatBufferData(pieceType);
+		await concatBufferData(pieceType, range);
 	}
 
 	// Adds pieces of that type's buffer to the overall data
-	async function concatBufferData(pieceType) {
+	async function concatBufferData(pieceType, range) {
 		if (gamefile.mesh.terminate) return;
-		const thesePieces = gamefile.ourPieces[pieceType];
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 
@@ -125,14 +124,14 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 			/* eslint-enable no-var */
 		}
 
-		for (let i = 0; i < thesePieces.length; i++) {
-			const thisPiece = thesePieces[i];
-
+		for (let i = range.start; i < range.end; i++) {
 			// If the piece is undefined, just leave the 0's there..
-			if (!thisPiece) {
+			if (i in range.undefineds) {
 				currIndex += indicesPerPiece;
 				continue;
 			}
+
+			const thisPiece = [gamefile.ourPieces.XPositions[i], gamefile.ourPieces.YPositions[i]];
 
 			const offsetCoord = coordutil.subtractCoordinates(thisPiece, gamefile.mesh.offset);
 			const { left, right, bottom, top } = shapes.getBoundingBoxOfCoord(offsetCoord);
@@ -219,11 +218,9 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
  * @param {Object} piece - The piece: `{ type, index }`
  * @param {number[]} newCoords - The destination coordinates
  */
-function movebufferdata(gamefile, piece, newCoords) {
+function movebufferdata(gamefile, index, newCoords) {
 	if (!gamefile.mesh.data64) throw Error("Should not be moving piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) throw Error("Should not be moving piece data when data32 is not defined!");
-    
-	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 
@@ -274,10 +271,9 @@ function movebufferdata(gamefile, piece, newCoords) {
  * @param {gamefile} gamefile - The gamefile the piece belongs to
  * @param {Object} piece - The piece: `{ type, index }`
  */
-function deletebufferdata(gamefile, piece) {
+function deletebufferdata(gamefile, index) {
 	if (!gamefile.mesh.data64) throw Error("Should not be deleting piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) throw Error("Should not be deleting piece data when data32 is not defined!");
-	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece; // Start index of deleted piece
@@ -313,11 +309,9 @@ function deletebufferdata(gamefile, piece) {
  * @param {number[]} coords - The destination coordinates
  * @param {string} type - The type of piece to write
  */
-function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
+function overwritebufferdata(gamefile, index, coords, type) {
 	if (!gamefile.mesh.data64) throw Error("Should not be overwriting piece data when data64 is not defined!");
 	if (!gamefile.mesh.data32) throw Error("Should not be overwriting piece data when data32 is not defined!");
-    
-	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, undefinedPiece);
 
 	const stridePerPiece = gamefile.mesh.stride * POINTS_PER_SQUARE;
 	const i = index * stridePerPiece;
@@ -373,10 +367,8 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
  */
 function printbufferdataOnCoords(gamefile, coords) {
 	// Find the piece on the coords
-	const piece = gamefileutility.getPieceAtCoords(gamefile, coords);
-	if (!piece) console.log("No piece at these coords to retrieve data from!");
-
-	const index = gamefileutility.calcPieceIndexInAllPieces(gamefile, piece);
+	const index = gamefile.ourPieces.coords.get(coordutil.getKeyFromCoords(coords));
+	if (!index) console.log("No piece at these coords to retrieve data from!");
 	printbufferdataOnIndex(index);
 }
 
@@ -492,7 +484,7 @@ async function initRotatedPiecesModel(gamefile, ignoreGenerating = false) {
 	const stride = gamefile.mesh.stride; // 4 / 8
 	const indicesPerPiece = stride * POINTS_PER_SQUARE; // 4|8 * 6
     
-	const totalPieceCount = gamefileutility.getPieceCount_IncludingUndefineds(gamefile) * 2; // * 2 for the data32 and data64 arrays
+	const totalPieceCount = boardutil.getPieceCount_IncludingUndefineds(gamefile.ourPieces) * 2; // * 2 for the data32 and data64 arrays
 
 	// How much time can we spend on this potentially long task?
 	let pieceLimitToRecalcTime = 1000;

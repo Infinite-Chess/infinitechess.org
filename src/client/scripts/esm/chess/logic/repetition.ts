@@ -54,12 +54,12 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 			// The remaining actions are two-way, so we need to create fluxes for them..
 			if (change.action === 'move') {
 				// If this change was undo'd, there would be a DEFICIT on its endCoords
-				addDeficit(`${change.endCoords[0]},${change.endCoords[1]},${change.piece.type}`);
+				addDeficit(`${change.endCoords[0]},${change.endCoords[1]},${change.type}`);
 				// There would also be a SURPLUS on its startCoords
-				addSurplus(`${change.piece.coords[0]},${change.piece.coords[1]},${move.type}`);
+				addSurplus(`${change.coords[0]},${change.coords[1]},${change.type}`);
 			} else if (change.action === 'add') {
 				// If this change was undo'd, there would be a DEFICIT on its coords
-				addDeficit(`${change.piece.coords[0]},${change.piece.coords[1]},${change.piece.type}`);
+				addDeficit(`${change.coords[0]},${change.coords[1]},${change.type}`);
 			}
 		}
 

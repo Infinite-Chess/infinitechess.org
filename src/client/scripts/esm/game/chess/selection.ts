@@ -5,7 +5,7 @@
  */
 
 
-import type { Piece } from '../../chess/logic/boardchanges.js';
+import type { Piece } from '../../chess/util/boardutil.js';
 // @ts-ignore
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 // @ts-ignore
@@ -16,6 +16,7 @@ import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import boardutil from '../../chess/util/boardutil.js';
 import colorutil from '../../chess/util/colorutil.js';
 import movesequence from './movesequence.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
@@ -57,6 +58,7 @@ import math from '../../util/math.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
+import typeutil from '../../chess/util/typeutil.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -162,7 +164,7 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 	if (!pieceSelected) return;
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(legalMoves!, pieceSelected!.coords, hoverSquare);
-	const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
+	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, hoverSquare);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || options.getEM() && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
 }
 
@@ -181,7 +183,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 
 	// We have clicked, test if we clicked a piece...
 
-	const pieceClicked = gamefileutility.getPieceAtCoords(gamefile, hoverSquare);
+	const pieceClicked = boardutil.getPieceFromCoords(gamefile.ourPieces, hoverSquare);
 
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
@@ -261,6 +263,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
  */
 function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
+
 	if (type === 'voidsN') return 0; // Can't select voids
 	if (options.getEM()) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
 	const color = colorutil.getPieceColorFromType(type);
@@ -274,7 +277,7 @@ function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1
 /**
  * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
  */
-function canMovePieceType(pieceType: string): boolean {
+function canMovePieceType(pieceType: number): boolean {
 	if (options.getEM()) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
@@ -295,8 +298,8 @@ function canDropOnPieceTypeInEditMode(type?: string) {
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
-function isOpponentType(gamefile: gamefile, type: string) {
-	const pieceColor = colorutil.getPieceColorFromType(type);
+function isOpponentType(gamefile: gamefile, type: number) {
+	const pieceColor = typeutil.getColorFromType(type);
 	return !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
 	/* Local Game */ : pieceColor !== gamefile.whosTurn;
 }

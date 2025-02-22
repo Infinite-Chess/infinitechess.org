@@ -13,7 +13,7 @@ function runEvent<E extends Eventlist, N extends keyof E, A extends Parameters<E
 	const funcs = eventlist[event];
 	if (funcs === undefined) return false;
 	for (const f of funcs) {
-		// @ts-ignore ts thinks that the paramters of the function could not match the parameters of the function
+		// @ts-ignore ts thinks that the paramters of the function "could" not match the parameters of the function
 		if (f(...args)) {
 			return true;
 		}

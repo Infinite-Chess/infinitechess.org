@@ -1,9 +1,8 @@
 
 // Import Start
-import gamefileutility from '../util/gamefileutility.js';
 import moveutil from '../util/moveutil.js';
-import colorutil from '../util/colorutil.js';
-import coordutil from '../util/coordutil.js';
+import typeutil from '../util/typeutil.js';
+import boardutil from '../util/boardutil.js';
 import gamerules from '../variants/gamerules.js';
 // Import End
 
@@ -160,29 +159,30 @@ function detectInsufficientMaterial(gamefile) {
 	if (lastMove && !lastMove.flags.capture) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle pieces
-	if (gamefileutility.getPieceCountOfGame(gamefile, { ignoreObstacles: true }) >= 11) return false;
+	if (boardutil.getPieceCountOfGame(gamefile, { ignoreTypes: [typeutil.rawTypes.OBSTACLE] }) >= 11) return false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};
 	// bishops are treated specially and separated by parity
 	const bishopsW_count = [0, 0];
 	const bishopsB_count = [0, 0];
-	for (const key in gamefile.piecesOrganizedByKey) {
-		const piece = gamefile.piecesOrganizedByKey[key];
-		if (piece === "obstaclesN") continue;
-		else if (colorutil.trimColorExtensionFromType(piece) === "bishops") {
-			const parity = sum_tuple_coords(coordutil.getCoordsFromKey(key)) % 2;
-			const color = colorutil.getColorExtensionFromType(piece);
-			if (color === "W") bishopsW_count[parity] += 1;
-			else if (color === "B") bishopsB_count[parity] += 1;
+	for (const idx of gamefile.ourPieces.coords.values()) {
+		const piece = boardutil.getPieceFromIdx(gamefile.ourPieces, idx);
+		const [raw, color] = typeutil.splitType(piece.type);
+		if (raw === typeutil.rawTypes.OBSTACLE && color === typeutil.colors.NEUTRAL) continue;
+		
+		else if (raw === typeutil.rawTypes.BISHOP) {
+			const parity = sum_tuple_coords(piece.coords) % 2;
+			if (color === typeutil.colors.WHITE) bishopsW_count[parity] += 1;
+			else if (color === typeutil.colors.BLACK) bishopsB_count[parity] += 1;
 		}
-		else if (piece in scenario) scenario[piece] += 1;
-		else scenario[piece] = 1;
+		else if (piece.type in scenario) scenario[piece.type] += 1;
+		else scenario[piece.type] = 1;
 	}
 
 	// add bishop tuples to scenario, and make sure the first entry of the bishop lists is the largest one
-	if (sum_tuple_coords(bishopsW_count) !== 0) scenario.bishopsW = ordered_tuple_descending(bishopsW_count);
-	if (sum_tuple_coords(bishopsB_count) !== 0) scenario.bishopsB = ordered_tuple_descending(bishopsB_count);
+	if (sum_tuple_coords(bishopsW_count) !== 0) scenario[typeutil.buildType(typeutil.rawTypes.BISHOP, typeutil.colors.WHITE)] = ordered_tuple_descending(bishopsW_count);
+	if (sum_tuple_coords(bishopsB_count) !== 0) scenario[typeutil.buildType(typeutil.rawTypes.BISHOP, typeutil.colors.BLACK)] = ordered_tuple_descending(bishopsB_count);
 
 	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
 	// This is fully enough for the checkmate practice mode, for now
@@ -197,7 +197,7 @@ function detectInsufficientMaterial(gamefile) {
 	// Create scenario object with inverted colors
 	const invertedScenario = {};
 	for (const piece in scenario) {
-		const pieceInverted = piece.endsWith("W") ? piece.replace(/W$/, "B") : piece.replace(/B$/, "W");
+		const pieceInverted = typeutil.invertType(piece);
 		invertedScenario[pieceInverted] = scenario[piece];
 	}
 

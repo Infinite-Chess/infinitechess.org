@@ -366,7 +366,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
-	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
+	gamefile.ourPieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
 
 		// Find the 2 points on opposite sides of the bounding box
@@ -380,12 +380,12 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 		containingPointsLineC.sort((a, b) => a - b); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
 
 		// For all our lines in the game with this slope...
-		const organizedLinesOfDir = gamefile.piecesOrganizedByLines[slideKey];
-		for (const lineKey of Object.keys(organizedLinesOfDir)) {
+		const organizedLinesOfDir = gamefile.ourPieces.lines.get(slideKey)!;
+		for (const [lineKey, organizedLine] of organizedLinesOfDir) {
 			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
 			const C = organizedlines.getCFromKey(lineKey as LineKey);
 			if (C < containingPointsLineC[0] || C > containingPointsLineC[1]) continue; // Next line, this one is off-screen, so no piece arrows are visible
-			const organizedLine = organizedLinesOfDir[lineKey]!;
+
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLineDraft(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine as Piece[], lineKey as LineKey);
 			if (arrowsLine === undefined) continue;
@@ -553,7 +553,7 @@ function getSlideExceptions(): Vec2Key[] {
 	const gamefile = gameslot.getGamefile()!;
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
-	if (mode === 2) slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
+	if (mode === 2) slideExceptions = gamefile.ourPieces.slides.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
 	return slideExceptions;
 }
 
@@ -685,28 +685,6 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 
 // Adding / Removing Arrows before rendering ------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * 1. animation.update()
  * 
@@ -834,8 +812,8 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, reset
 	// the currently animated arrow indicator when hovering over its destination
 	if (resetHovered) hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, coords));
 
-	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
-		const slideKey = math.getKeyFromVec2(slide);
+	for (const [slideKey, linegroup] of gamefile.ourPieces.lines) { // For each slide direction in the game...
+		const slide = coordutil.getCoordsFromKey(slideKey);
 
 		const lineKey = organizedlines.getKeyFromLine(slide, coords);
 
@@ -848,18 +826,18 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, reset
 		// Recalculate the arrow line...
 
 		// Fetch the organized line that our piece is on this direction.
-		const organizedLine = gamefile.piecesOrganizedByLines[slideKey][lineKey];
-		if (organizedLine === undefined) return; // No pieces on line, empty
+		const organizedLine = linegroup.get(lineKey);
+		if (organizedLine === undefined) continue; // No pieces on line, empty
 
 		const arrowsLineDraft = calcArrowsLineDraft(gamefile, boundingBoxInt!, boundingBoxFloat!, slide, slideKey, organizedLine, lineKey);
-		if (arrowsLineDraft === undefined) return; // Only intersects the corner of our screen, not visible.
+		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
 
 		// Remove Unnecessary arrows...
 
 		const slideExceptions = getSlideExceptions();
 		if (!slideExceptions.includes(slideKey)) {
 			removeTypesThatCantSlideOntoScreenFromLineDraft(arrowsLineDraft);
-			if (arrowsLineDraft.negDotProd.length === 0 && arrowsLineDraft.posDotProd.length === 0) return; // No more pieces on this line
+			if (arrowsLineDraft.negDotProd.length === 0 && arrowsLineDraft.posDotProd.length === 0) continue; // No more pieces on this line
 		}
 
 		// Calculate more detailed information, enough to render...
@@ -887,7 +865,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, reset
 
 		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
 		slideArrows[slideKey][lineKey] = { posDotProd, negDotProd }; // Set the new arrow line
-	});
+	};
 }
 
 

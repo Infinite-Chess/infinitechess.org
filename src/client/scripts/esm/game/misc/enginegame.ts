@@ -61,7 +61,7 @@ function getCurrentEngine() {
  * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
-	youAreColor: 'white' | 'black',
+	youAreColor: TeamColor,
 	currentEngine: string,
 	engineConfig: EngineConfig
 }) {

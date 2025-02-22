@@ -3,10 +3,12 @@
 import legalmoves from './legalmoves.js';
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import specialdetect from './specialdetect.js';
-import organizedlines from './organizedlines.js';
+import organizedpieces from './organizedpieces.js';
 import math from '../../util/math.js';
 import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import boardchanges from './boardchanges.js';
@@ -48,7 +50,7 @@ function detectCheck(gamefile, color, attackers) {
 	if (attackers !== undefined && attackers.length !== 0) throw new Error(`Attackers parameter must be an empty array []! Received: ${JSON.stringify(attackers)}`);
 
 	// Coordinates of ALL royals of this color!
-	const royalCoords = gamefileutility.getRoyalCoordsOfColor(gamefile, color); // [ coords1, coords2 ]
+	const royalCoords = boardutil.getRoyalCoordsOfColor(gamefile.ourPieces, color); // [ coords1, coords2 ]
 	// Array of coordinates of royal pieces that are in check
 	const royalsInCheck = [];
 
@@ -100,7 +102,7 @@ function doesVicinityAttackSquare(gamefile, coords, color, attackers) {
 
 		// Fetch the square from our pieces organized by key
 		const key2 = coordutil.getKeyFromCoords(actualSquare);
-		const typeOnSquare = gamefile.piecesOrganizedByKey[key2];
+		const typeOnSquare = gamefile.ourPieces.coords.get(key2);
 		if (!typeOnSquare) continue; // Nothing there to capture us
 		// Is it the same color?
 		const typeOnSquareColor = colorutil.getPieceColorFromType(typeOnSquare);
@@ -134,19 +136,18 @@ function doesSpecialAttackSquare(gamefile, coords, color, attackers) {
 		const actualSquare = [coords[0] - thisSquare[0], coords[1] - thisSquare[1]];
 
 		// Fetch the square from our pieces organized by key
-		const actualSquareKey = coordutil.getKeyFromCoords(actualSquare);
-		const typeOnSquare = gamefile.piecesOrganizedByKey[actualSquareKey];
-		if (!typeOnSquare) continue; // Nothing there to capture us
+		const pieceOnSquare = boardutil.getPieceFromCoords(gamefile.ourPieces, actualSquare);
+		if (!pieceOnSquare) continue; // Nothing there to capture us
 		// Is it the same color?
-		const typeOnSquareColor = colorutil.getPieceColorFromType(typeOnSquare);
+		const typeOnSquareColor = typeutil.getColorFromType(pieceOnSquare.type);
 		if (color === typeOnSquareColor) continue; // A friendly can't capture us
 
-		const trimmedTypeOnSquare = colorutil.trimColorExtensionFromType(typeOnSquare);
+		const trimmedTypeOnSquare = typeutil.getRawType(pieceOnSquare.type);
 
 		// Is that a match with any piece type on this vicinity square?
 		if (thisVicinity.includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured...
 			// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
-			const pieceOnSquare = gamefileutility.getPieceFromTypeAndCoords(gamefile, typeOnSquare, actualSquare);
+			
 			const specialPiecesLegalMoves = legalmoves.calculate(gamefile, pieceOnSquare, { onlyCalcSpecials: true, ignoreCheck: true });
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
@@ -184,10 +185,11 @@ function doesSlideAttackSquare(gamefile, coords, color, attackers) {
 
 	let atleast1Attacker = false;
 
-	for (const direction of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
-		const directionKey = coordutil.getKeyFromCoords(direction);
-		const key = organizedlines.getKeyFromLine(direction, coords);
-		if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[directionKey][key], direction, coords, color, attackers)) atleast1Attacker = true;
+	for (const direction of gamefile.ourPieces.lines) { // [dx,dy]
+		const directionVec = coordutil.getCoordsFromKey(direction[0]);
+		const key = organizedpieces.getKeyFromLine(directionVec, coords);
+		if (!direction[1].has(key)) continue;
+		if (doesLineAttackSquare(gamefile, direction[1].has(key), directionVec, coords, color, attackers)) atleast1Attacker = true;
 	}
 
 	return atleast1Attacker;
@@ -198,7 +200,7 @@ function doesSlideAttackSquare(gamefile, coords, color, attackers) {
  * THIS REQUIRES `coords` be already on the line!!!
  * Appends any attackeres to the provided `attackers` array.
  * @param {gamefile} gamefile 
- * @param {Piece[]} line - The line of pieces
+ * @param {number[]} line - The line of pieces
  * @param {Coords} direction - Step of the line: [dx,dy]
  * @param {number} coords - The coordinates of the square to test if any piece on the line can move to.
  * @param {string} color - The color of friendlies. We will exclude pieces of the same color, because they cannot capture friendlies.
@@ -212,8 +214,8 @@ function doesLineAttackSquare(gamefile, line, direction, coords, color, attacker
 	let foundCheckersCount = 0;
 
 	// Iterate through every piece on the line, and test if they can attack our square
-	for (const thisPiece of line) { // { coords, type }
-
+	for (const idx of line) { // { coords, type }
+		const thisPiece = organizedpieces.getPieceFromIdx(gamefile.ourPieces, idx);
 		const thisPieceColor = colorutil.getPieceColorFromType(thisPiece.type);
 		if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
 		if (thisPieceColor === colorutil.colorOfNeutrals) continue; // Neutrals can't move, that means they can't make captures, right?
@@ -309,8 +311,8 @@ function doesMovePutInCheck(gamefile, pieceSelected, destCoords, color) { // pie
 function removeSlidingMovesThatPutYouInCheck(gamefile, moves, pieceSelected, color) {
 	if (!moves.sliding) return; // No sliding moves to remove
 
-	/** List of coordinates of all our royal jumping pieces @type {Coords[]} */
-	const royalCoords = gamefileutility.getJumpingRoyalCoordsOfColor(gamefile, color);
+	/** List of coordinates of all our royal jumping pieces */
+	const royalCoords = boardutil.getJumpingRoyalCoordsOfColor(gamefile.ourPieces, color);
 	if (royalCoords.length === 0) return; // No king, no open discoveries, don't remove any sliding moves
 
 	// There are 2 ways a sliding move can put you in check:
@@ -400,7 +402,7 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
  * @returns {boolean} true if atleast one of our royals is included in the gamefile's list of royals in check this turn
  */
 function isColorInCheck(gamefile, color) {
-	const royals = gamefileutility.getRoyalCoordsOfColor(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royals = boardutil.getRoyalCoordsOfColor(gamefile.ourPieces, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
 	if (royalsInCheck.length === 0) return false;
 
@@ -423,9 +425,9 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	/** A list of line directions that we're sharing with the king! */
 	const sameLines = []; // [ [dx,dy], [dx,dy] ]
 	// Only check current possible slides
-	for (const line of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
-		const lineKey1 = organizedlines.getKeyFromLine(line, kingCoords);
-		const lineKey2 = organizedlines.getKeyFromLine(line, selectedPieceCoords);
+	for (const line of gamefile.ourPieces.slides) { // [dx,dy]
+		const lineKey1 = organizedpieces.getKeyFromLine(line, kingCoords);
+		const lineKey2 = organizedpieces.getKeyFromLine(line, selectedPieceCoords);
 		if (lineKey1 !== lineKey2) continue; // Not same line
 		sameLines.push(line); // The piece is sharing this line with the king
 	};
@@ -440,8 +442,8 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	// For every line direction we share with the king...
 	for (const direction1 of sameLines) { // [dx,dy]
 		const strline = coordutil.getKeyFromCoords(direction1); // 'dx,dy'
-		const key = organizedlines.getKeyFromLine(direction1,kingCoords); // 'C|X'
-		const line = gamefile.piecesOrganizedByLines[strline][key];
+		const key = organizedpieces.getKeyFromLine(direction1,kingCoords); // 'C|X'
+		const line = gamefile.ourPieces.lines.get(strline)?.get(key);
 		const opensDiscovered = doesLineAttackSquare(gamefile, line, direction1, kingCoords, color);
 		if (!opensDiscovered) continue;
 		// The piece opens a discovered if it were to be gone!
@@ -450,7 +452,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 		for (const direction2 of Object.keys(moves.sliding)) { // 'dx,dy'
 			const direction2NumbArray = coordutil.getCoordsFromKey(direction2); // [dx,dy]
 			if (coordutil.areCoordsEqual(direction1, direction2NumbArray)) continue; // Same line, it's okay to keep because it wouldn't open a discovered
-			delete moves.sliding[direction2]; // Not same line, delete it because it would open a discovered.
+			delete moves.sliding[direction2]; // Not  same line, delete it because it would open a discovered.
 		}
 	}
 

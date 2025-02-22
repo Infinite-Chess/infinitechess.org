@@ -814,10 +814,10 @@ function runEngine(gamefile: gamefile): void {
 		for (const key in gamefile.piecesOrganizedByKey) {
 			const pieceType = gamefile.piecesOrganizedByKey[key]!;
 			if (pieceType.slice(-1) !== "W") continue; // ignore nonwhite pieces
-			const coords = key.split(',').map(Number);
+			const coords = key.split(',').map(Number) as Coords;
 			start_piecelist.push(pieceNameDictionary[pieceType]!);
 			// shift all white pieces, so that the black royal is at [0,0]
-			start_coordlist.push([coords[0]! - gamefile_royal_coords[0]!, coords[1]! - gamefile_royal_coords[1]!]);
+			start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
 		}
 
 		// initialize the eval function weights and global search properties

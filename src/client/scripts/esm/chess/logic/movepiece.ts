@@ -9,7 +9,7 @@
 
 // @ts-ignore
 import type gamefile from './gamefile.js';
-import type { Piece } from './boardchanges.js';
+import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
@@ -18,11 +18,10 @@ import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
 import boardchanges from './boardchanges.js';
+import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
-// @ts-ignore
-import gamefileutility from '../util/gamefileutility.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
 // @ts-ignore
@@ -198,7 +197,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
  */
 function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
+	const capturedPiece = boardutil.getTypeFromCoords(gamefile.ourPieces, move.endCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
 	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);

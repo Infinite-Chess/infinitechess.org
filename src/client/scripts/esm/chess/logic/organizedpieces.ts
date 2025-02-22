@@ -1,16 +1,16 @@
-import type gamefile from "./gamefile";
 import typeutil from "../util/typeutil";
 import coordutil from "../util/coordutil";
 import math from "../../util/math";
 
+import type gamefile from "./gamefile";
 import type { RawType } from "../util/typeutil";
 import type { Coords, CoordsKey } from "../util/coordutil";
 import type { GameRules } from "../variants/gamerules";
 
 const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
-type PositionArray = Int8Array | Int16Array | Int32Array | BigInt64Array;
+type PositionArray = Int8Array | Int16Array | Int32Array; //| BigInt64Array;
 type SizedArray = PositionArray | Uint8Array
-type PositionArrayConstructor = Int32ArrayConstructor | Int8ArrayConstructor | BigInt64ArrayConstructor | Int16ArrayConstructor;
+type PositionArrayConstructor = Int32ArrayConstructor | Int8ArrayConstructor | Int16ArrayConstructor; //| BigInt64ArrayConstructor;
 /** Stores the maximum values for each typed array */
 const MaxTypedArrayValues: Record<string, bigint> = {
 	Int8Array: 127n,
@@ -19,7 +19,7 @@ const MaxTypedArrayValues: Record<string, bigint> = {
 	BigInt64Array: 9223372036854775807n,
 };
 
-const listExtras = 20;
+
 
 /** A length-2 number array. Commonly used for storing directions. */
 type Vec2 = [number,number]
@@ -31,14 +31,14 @@ type Vec2Key = `${number},${number}`;
 /** A unique identifier for a single line of pieces. `C|X` */
 type LineKey = `${number}|${number}`
 
-interface TypeRanges {
-	[type: number]: {
-		start: number,
-		end: number,
-		/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
-		undefineds: Array<number>
-	},
+interface TypeRange {
+	start: number,
+	end: number, // Exclusive
+	/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
+	undefineds: Array<number>
 }
+
+type TypeRanges = Map<number, TypeRange>
 
 interface OrganizedPieces {
 	XPositions: PositionArray
@@ -61,6 +61,8 @@ interface OrganizedPieces {
 	 * Map{ 'dx,dy' => Map { 'yint|xafter0' => [idx, idx, idx...] }}
 	 */
 	lines: Map<Vec2Key, Map<LineKey,number[]>>
+	slides: Vec2[]
+	hippogonalsPresent: boolean
 }
 
 
@@ -74,6 +76,10 @@ function getArrayType<C extends SizedArray>(a: C) {
 function constuctNewArray<C extends SizedArray>(a: C, i: number): C {
 	const constructor = getArrayType(a);
 	return new constructor(a.length + i) as C;
+}
+
+function regenerateLines(o: Partial<OrganizedPieces>) {
+
 }
 
 function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
@@ -164,7 +170,7 @@ function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boole
  * @param {string} type - The type of piece (e.g. "pawnsW")
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
-function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color: string]: number[]}, type: number): boolean {
+function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color: string]: number[]} | undefined, type: number): boolean {
 	if (!promotionGameRule) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
 	const color = typeutil.getColorStringFromType(type);
@@ -180,14 +186,14 @@ function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color: string]:
  * @param {gamefile} gamefile
  */
 function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
-	const state: TypeRanges = {};
+	const state: TypeRanges = new Map();
 
 	typeutil.forEachPieceType(t => {
-		state[t] = {
+		state.set(t, {
 			start: 0,
 			end: -1,
 			undefineds: []
-		};
+		});
 	}, [typeutil.colors.NEUTRAL, typeutil.colors.WHITE, typeutil.colors.BLACK],
 	gamefile.startSnapshot.existingTypes as RawType[]);
 
@@ -243,22 +249,54 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
 	organizedPieces.YPositions = toSizedArray(y, new coordConstructor(currentOffset));
 	organizedPieces.types = toSizedArray(t, new Uint8Array(currentOffset));
 
-	placePieces(gamefile.startSnapshot.slidingPossible, organizedPieces);
+	initSlidingMoves(gamefile, organizedPieces);
+
+	placePieces(organizedPieces);
 
 	// TODO: Trim piece lists that are empty and cant be promoted to.
 
 	return organizedPieces as OrganizedPieces;
 }
 
-function placePieces(possibleLines: Vec2[], organizedPieces: Partial<OrganizedPieces>) {
+/**
+ * Calculates all possible slides that should be possible in the provided game,
+ * excluding pieces that aren't in the provided position.
+ */
+function getPossibleSlides(gamefile: gamefile): Vec2[] {
+	const rawtypes = gamefile.startSnapshot.existingTypes;
+	const movesets = gamefile.pieceMovesets;
+	const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
+	for (const type of rawtypes) {
+		let moveset = movesets[type];
+		if (!moveset) continue;
+		moveset = moveset();
+		if (!moveset.sliding) continue;
+		Object.keys(moveset.sliding).forEach(slide => slides.add(slide));
+	}
+	const temp: Vec2[] = [];
+	slides.forEach(slideline => temp.push(coordutil.getCoordsFromKey(slideline as Vec2Key)));
+	return temp;
+}
+
+/**
+ * Inits the `slidingMoves` property of the `startSnapshot` of the gamefile.
+ * This contains the information of what slides are possible, according to
+ * what piece types are in this game.
+ */
+function initSlidingMoves(gamefile: gamefile, o: Partial<OrganizedPieces>) {
+	o.slides = getPossibleSlides(gamefile);
+	o.hippogonalsPresent = areHippogonalsPresentInGame(o.slides);
+}
+
+function placePieces(organizedPieces: Partial<OrganizedPieces>) {
 	organizedPieces.lines = new Map();
 	organizedPieces.coords = new Map();
-	for (const line of possibleLines) {
+	for (const line of organizedPieces.slides!) {
 		const strline = coordutil.getKeyFromCoords(line);
 		organizedPieces.lines.set(strline, new Map());
 	}
 	for (let i = 0; i < organizedPieces.types!.length; i++) {
-		registerPieceInSpace(possibleLines, i, organizedPieces);
+		registerPieceInSpace(i, organizedPieces);
 	}
 }
 
@@ -270,12 +308,11 @@ function registerPieceInSpace(idx: number, organizedPieces: Partial<OrganizedPie
 	if (organizedPieces.coords![key] !== undefined) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
 	organizedPieces.coords!.set(key, idx);
 	const lines = organizedPieces.lines!;
-	for (const line of lines) {
-		const strline = line[0]
+	for (const [strline, linegroup] of lines) {
 		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
 		// Is line initialized
-		if (line[1].get(lkey) === undefined) lines[strline].set(lkey, []);
-		line[1].get(lkey)!.push(idx);
+		if (linegroup.get(lkey) === undefined) lines[strline].set(lkey, []);
+		linegroup.get(lkey)!.push(idx);
 	}
 }
 
@@ -287,12 +324,11 @@ function removePieceFromSpace(idx: number, organizedPieces: Partial<OrganizedPie
 
 	organizedPieces.coords!.delete(key);
 	const lines = organizedPieces.lines!;
-	for (const line of lines) {
-		const strline = line[0];
+	for (const [strline, linegroup] of lines) {
 		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
 		// Is line initialized
-		if (line[1][lkey] === undefined) line[1].set(lkey, []);
-		removePieceFromLine(line[1], lkey);
+		if (linegroup.get(lkey) === undefined) continue;
+		removePieceFromLine(linegroup, lkey);
 	}
 
 	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
@@ -366,8 +402,8 @@ function getCFromKey(lineKey: LineKey): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(gamefile: gamefile): boolean {
-	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
+function areColinearSlidesPresentInGame(o: OrganizedPieces): boolean {
+	const slidingPossible = o.slides; // [[1,1],[1,0]]
 
 	// How to know if 2 lines are colinear?
 	// They will have the exact same slope!
@@ -403,8 +439,11 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 	return false;
 }
 
+
+
 export type {
-	OrganizedPieces
+	OrganizedPieces,
+	TypeRange,
 };
 
 export default {
@@ -417,6 +456,7 @@ export default {
 
 	regenerateLists,
 	areWeShortOnUndefineds,
+	isTypeATypeWereAppendingUndefineds,
 
 	getKeyFromLine,
 	getCFromKey,
