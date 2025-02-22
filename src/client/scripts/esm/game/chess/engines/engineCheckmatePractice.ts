@@ -40,6 +40,7 @@ self.onmessage = function(e: MessageEvent) {
 	globallyBestScore = -Infinity;
 	globalSurvivalPlies = -Infinity;
 	globallyBestVariation = {};
+	game_movenumber++;
 
 	if (!engineInitialized) initEvalWeightsAndSearchProperties();	// initialize the eval function weights and global search properties
 	
@@ -93,6 +94,12 @@ let royal_type: 'k' | 'rc'; // "k" or "rc"
 // White pieces. Their coordinates are relative to the black royal
 let start_piecelist: number[]; // list of white pieces in starting position, like [3,4,4,4,2, ... ]. Meaning of numbers given by pieceNameDictionary
 let start_coordlist: Coords[]; // list of tuples, like [[2,3], [5,6], [6,7], ...], pieces are corresponding to ordering in start_piecelist
+
+// Storage of previous positions for 3fold repetition detection
+// "positionstring": "occurrences, movenumber"
+let game_movenumber: number = 0;
+const previousPositions: { [key: string] : [number, number]} = {};
+const previousPositionsStorageLimit: number = 40;
 
 // only used for parsing in the position
 const pieceNameDictionary: { [pieceType: string]: number } = {
@@ -368,7 +375,6 @@ function manhattanDistance(square1: Coords, square2: Coords): number {
 }
 
 // special norm for the pawn
-// the pawn is more threatening if it has a negative y-coordinate
 function pawnNorm(square: Coords): number {
 	return diagonalNorm(square) + manhattanNorm(square);
 }
@@ -837,6 +843,16 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
 		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
+
+			// check for 3fold repetitions, only at start_depth 1
+			const new_position_string = `${new_piecelist.toString()}|${new_coordlist.toString()}`;
+			if (start_depth === 1 && previousPositions[new_position_string]) {
+				if (previousPositions[new_position_string]![0]! === 2) {
+					globallyBestVariation[0] = [NaN, move];
+					return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
+				}
+			}
+
 			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
 			followingPrincipal = false;
@@ -943,7 +959,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 		globalSurvivalPlies = evaluation.survivalPlies;
 		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
 
-		// early exit conditions
+		// early exit condition
 		if (depth === 1) {
 			const black_move = globallyBestVariation[0]![1]!;
 			const [new_piecelist, new_coordlist] = make_black_move(black_move, piecelist, coordlist);
@@ -1016,13 +1032,29 @@ async function runEngine() {
 		// console.log(globalSurvivalPlies);
 		// console.log(globallyBestVariation);
 		// console.log(enginePositionCounter);
-		
+
+		// Save position after black move, for 3fold repetition detection
+		const play_move = globallyBestVariation[0]![1]!;
+		const [new_piecelist, new_coordlist] = make_black_move(play_move, start_piecelist, start_coordlist);
+		const new_position_string = `${new_piecelist.toString()}|${new_coordlist.toString()}`;
+		let foundPositionInLog: boolean = false;
+		for (const [key, value] of Object.entries(previousPositions)) {
+			if (key === new_position_string) {
+				previousPositions[key]![0]! += 1;
+				previousPositions[key]![1]! = game_movenumber;
+				foundPositionInLog = true;
+			}
+			// discard positions that are too far in the past
+			else if (game_movenumber - value[1] > previousPositionsStorageLimit) delete previousPositions[key];
+		}
+		if (!foundPositionInLog) previousPositions[new_position_string] = [1, game_movenumber];
+
 		// submit engine move after enough time has passed
 		const time_now = Date.now();
 		if (time_now - engineStartTime < engineTimeLimitPerMoveMillis) {
 			await new Promise(r => setTimeout(r, engineTimeLimitPerMoveMillis - (time_now - engineStartTime)));
 		}
-		postMessage(move_to_gamefile_move(globallyBestVariation[0]![1]!));
+		postMessage(move_to_gamefile_move(play_move));
 
 	} catch (e) {
 		console.error("An error occured in the engine computation of the checkmate practice");
