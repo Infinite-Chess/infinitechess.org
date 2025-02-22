@@ -41,15 +41,17 @@ import board from './board.js';
 
 
 /** Width of ghost-pieces when zoomed out, in virtual pixels. */
-const width: number = 36; // Default: 36
-/** {@link width}, but converted to world-space units. This is recalculated on every screen resize. */
+const MINI_IMAGE_WIDTH_VPIXELS: number = 36; // Default: 36
+const MINI_IMAGE_OPACITY: number = 0.6;
+/** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
+const MAX_ANIM_DIST_VPIXELS = 2000;
+
+
+/** {@link MINI_IMAGE_WIDTH_VPIXELS}, but converted to world-space units. This is recalculated on every screen resize. */
 let widthWorld: number;
-const opacity: number = 0.6;
-
-let data: number[];
-
-let hovering: boolean = false; // true if currently hovering over piece
-
+/** True if currently hovering over a mini image */
+let hovering: boolean = false;
+/** True if we're disabled and not rendering mini images, such as when there's too many pieces. */
 let disabled: boolean = false; // Disabled when there's too many pieces
 
 let model: BufferModel;
@@ -65,7 +67,7 @@ function getWidthWorld(): number {
 // Call after screen resize
 function recalcWidthWorld(): void {
 	// Convert width to world-space
-	widthWorld = space.convertPixelsToWorldSpace_Virtual(width);
+	widthWorld = space.convertPixelsToWorldSpace_Virtual(MINI_IMAGE_WIDTH_VPIXELS);
 }
 
 function isHovering(): boolean {
@@ -85,7 +87,7 @@ function disable(): void {
 }
 
 
-// Updating --------------------------------------------------------------
+// Updating --------------------------------------------------------------------------
 
 
 function testIfToggled(): void {
@@ -113,7 +115,7 @@ function genModel() {
 	const gamefile = gameslot.getGamefile()!;
 
 	// Every frame we'll need to regenerate the buffer model
-	data = [];
+	const data: number[] = [];
 	const piecesClicked: Coords[] = [];
 
 	// Iterate through all pieces
@@ -141,24 +143,6 @@ function genModel() {
 		thesePieces.forEach(coords => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
 	}
 
-	// Add the animated pieces
-	animation.animations.forEach(a => {
-		// Animate the main piece being animated
-		const maxDist_VirtualPixels = 2000;
-		const maxDistB4Teleport = maxDist_VirtualPixels / board.gtileWidth_Pixels(true); 
-		console.log(maxDistB4Teleport);
-		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		let { r, g, b } = options.getColorOfType(a.type);
-		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
-
-		// Animate the captured piece too, if there is one
-		if (!a.captured) return;
-		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
-		({ r, g, b } = options.getColorOfType(a.type));
-		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
-	});
-
 	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		if (!coords) return; // Skip undefined placeholders
 		if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
@@ -168,7 +152,7 @@ function genModel() {
 		const endX: number = startX + widthWorld;
 		const endY: number = startY + widthWorld;
 
-		let thisOpacity: number = opacity;
+		let thisOpacity: number = MINI_IMAGE_OPACITY;
 
 		// Are we hovering over? If so, opacity needs to be 100%
 		if (areWatchingMousePosition) {
@@ -192,7 +176,23 @@ function genModel() {
 		data.push(...bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity));
 	}
 
-	// Teleport to clicked pieces
+	// Add the animated pieces
+	animation.animations.forEach(a => {
+		// Animate the main piece being animated
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(true); 
+		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
+		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
+		let { r, g, b } = options.getColorOfType(a.type);
+		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
+
+		// Animate the captured piece too, if there is one
+		if (!a.captured) return;
+		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
+		({ r, g, b } = options.getColorOfType(a.type));
+		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
+	});
+
+	// Finally, teleport to clicked pieces
 	if (piecesClicked.length > 0) {
 		const theArea = area.calculateFromCoordsList(piecesClicked);
 
