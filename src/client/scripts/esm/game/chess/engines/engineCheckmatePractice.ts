@@ -768,7 +768,20 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	if (black_to_move) {
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
-		for (const move of get_black_legal_moves(piecelist, coordlist)) {
+		const black_moves = get_black_legal_moves(piecelist, coordlist);
+
+		// principal variation ordering
+		if (globallyBestVariation[start_depth - depth]) {
+			for (let index = 0; index < black_moves.length; index++) {
+				if (squares_are_equal(black_moves[index]!, globallyBestVariation[start_depth - depth]![1]!)) {
+					const optimal_move = black_moves.splice(index, 1)[0]!;
+					black_moves.unshift(optimal_move);
+					break;
+				}
+			}
+		}
+
+		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
 			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
@@ -798,9 +811,29 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		let minScore = Infinity;
 		let minPlies = Infinity;
 		const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
+
 		// go through pieces for in increasing order of what piece has how many candidate moves
 		const indices = [...Array(piecelist.length).keys()];
 		indices.sort((a, b) => { return candidate_moves[a]!.length - candidate_moves[b]!.length; });
+
+		// principal variation ordering
+		if (globallyBestVariation[start_depth - depth]) {
+			for (let p_index = 0; p_index < indices.length; p_index++) {
+				if (indices[p_index] === globallyBestVariation[start_depth - depth]![0]!) {
+					const optimal_index = indices.splice(p_index, 1)[0]!;
+					indices.unshift(optimal_index);
+					for (let m_index = 0; m_index < candidate_moves[optimal_index]!.length; m_index++) {
+						if (squares_are_equal(candidate_moves[optimal_index]![m_index]!, globallyBestVariation[start_depth - depth]![1]!)) {
+							const optimal_move = candidate_moves[optimal_index]!.splice(m_index, 1)[0]!;
+							candidate_moves[optimal_index]!.unshift(optimal_move);
+							break;
+						}
+					}
+					break;
+				}
+			}
+		}
+
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
