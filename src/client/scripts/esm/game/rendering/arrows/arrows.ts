@@ -683,44 +683,8 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 }
 
 
-// Adding / Removing Arrows before rendering ------------------------------------------------------------------------------------------------
+// Arrow Shifting: Adding / Removing Arrows before rendering ------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * 1. animation.update()
- * 
- * Piece is moved.
- * Optional: Captured piece is added.
- * 
- * 2. droparrows.update()
- * 
- * Piece is deleted
- * ==> Deletes any previous shift with a start or end on the deletion coords.
- * 
- * Piece is moved
- * ==> Deletes any previous shift with a start or end on the deletion
- */
 
 type Shift = { type: string } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 
@@ -755,7 +719,6 @@ function shiftArrow(type: string, start?: Coords, end?: Coords) {
 	// console.error(jsutil.deepCopyObject({ type, start, end }));
 
 	if (start !== undefined) { // Guaranteed a deletion
-
 		/**
 		 * For each previous shift, if either their start or end
 		 * is on this start (deletion coords), then delete it!
@@ -763,9 +726,9 @@ function shiftArrow(type: string, start?: Coords, end?: Coords) {
 		 * check to see if the start is the same as this end coords.
 		 * If so, replace that shift with a delete action, and retain the same order.
 		 */
-
 		shifts = shifts.filter(shift => !coordutil.areCoordsEqual(shift.start, start) && !coordutil.areCoordsEqual(shift.end, start) );
-	} else console.log("Skipping filtering");
+	}
+	// else console.log("Skipping filtering");
 
 	shifts.push({ type, start, end } as Shift);
 }
@@ -785,7 +748,7 @@ function executeArrowShifts() {
 		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start)! : undefined;
 
 		// This matches the original piece's index, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
-		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end, index: originalPiece?.index } as Piece : undefined;
+		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end } as Piece : undefined;
 
 		// Do the delete action first, so that organized piece lists have an undefined placeholder for the proceeding addition
 		if (shift.start !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
@@ -894,19 +857,6 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 		slideArrows[slideKey][lineKey] = { posDotProd, negDotProd }; // Set the new arrow line
 	});
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Rendering ------------------------------------------------------------------------------------------------------------------------
