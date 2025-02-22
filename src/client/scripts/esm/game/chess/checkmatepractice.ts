@@ -37,6 +37,7 @@ const validCheckmates = {
 		"3B3B-1k",
 		"1K2B2B-1k",
 		"1K2R-1k",
+		"1Q1R1B-1k",
 		"1Q1CH-1k",
 		"2CH-1k",
 		"3AR-1k",

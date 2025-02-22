@@ -9,7 +9,8 @@
 
 // @ts-ignore
 import isprime from '../../../util/isprime.js';
-
+// @ts-ignore
+import insufficientmaterial from '../../../chess/logic/insufficientmaterial.js';
 
 /**
  * Typescript types are erased during compilation, so adding these
@@ -33,7 +34,7 @@ import type { Vec2 } from "../../../util/math";
 // Here, the engine webworker received messages from the outside
 self.onmessage = function(e: MessageEvent) {
 	const message = e.data;
-	const gamefile = message.gamefile;
+	input_gamefile = message.gamefile;
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;
@@ -44,11 +45,14 @@ self.onmessage = function(e: MessageEvent) {
 	
 	engineStartTime = Date.now();
 	enginePositionCounter = 0;
-	runEngine(gamefile);
+	runEngine();
 };
 
 /** Whether the engine has already been initialized for the current game */
 let engineInitialized: boolean = false;
+
+/** Externally supplied gamefile */
+let input_gamefile : gamefile;
 
 /** Start time of current engine calculation in millis */
 let engineStartTime: number;
@@ -106,6 +110,16 @@ const pieceNameDictionary: { [pieceType: string]: number } = {
 	"knightridersW": 11,
 	"huygensW": 12
 };
+
+function invertPieceNameDictionary(json: { [key: string]: number }) {
+	const inv: { [key: number]: string } = {};
+	for (const key in json) {
+		inv[json[key]!] = key;
+	}
+	return inv;
+}
+
+const invertedPieceNameDictionaty = invertPieceNameDictionary(pieceNameDictionary);
 
 // legal move storage for pieces in piecelist
 const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is_royal?: boolean, is_pawn?: boolean, is_huygen?: boolean } } = {
@@ -758,8 +772,10 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
 		return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
+	// If game over, return position evaluation
 	} else if ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) {
 		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
+	// At max depth, return position evaluation
 	} else if (depth === 0) {
 		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: Infinity, terminate_now: false };
 	}
@@ -772,19 +788,22 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		let maxPlies = -Infinity;
 		const black_moves = get_black_legal_moves(piecelist, coordlist);
 
-		// principal variation ordering
+		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && depth > 2) {
 			for (let index = 0; index < black_moves.length; index++) {
 				if (squares_are_equal(black_moves[index]!, globallyBestVariation[start_depth - depth]![1]!)) {
+					// Shuffe principal move to the front of black_moves
 					const optimal_move = black_moves.splice(index, 1)[0]!;
 					black_moves.unshift(optimal_move);
 					break;
 				}
 			}
 		} else {
+			// We are too deep now, principal variation no longer applies
 			followingPrincipal = false;
 		}
 
+		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
 		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
 			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
@@ -824,14 +843,17 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		const indices = [...Array(piecelist.length).keys()];
 		indices.sort((a, b) => { return candidate_moves[a]!.length - candidate_moves[b]!.length; });
 
-		// principal variation ordering
+		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && depth > 2) {
 			for (let p_index = 0; p_index < indices.length; p_index++) {
 				if (indices[p_index] === globallyBestVariation[start_depth - depth]![0]!) {
+					// Shuffe principal piece index to the front of indices
 					const optimal_index = indices.splice(p_index, 1)[0]!;
 					indices.unshift(optimal_index);
+					// Loop over candidate moves for principal piece
 					for (let m_index = 0; m_index < candidate_moves[optimal_index]!.length; m_index++) {
 						if (squares_are_equal(candidate_moves[optimal_index]![m_index]!, globallyBestVariation[start_depth - depth]![1]!)) {
+							// Shuffe principal move to the front of candidate_moves for that piece
 							const optimal_move = candidate_moves[optimal_index]!.splice(m_index, 1)[0]!;
 							candidate_moves[optimal_index]!.unshift(optimal_move);
 							break;
@@ -841,9 +863,11 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				}
 			}
 		} else {
+			// We are too deep now, principal variation no longer applies
 			followingPrincipal = false;
 		}
 
+		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
@@ -854,7 +878,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				const new_score = evaluation.score;
 				const survivalPlies = evaluation.survivalPlies;
 				if (new_score <= minScore) {
-					if (new_score < minScore || survivalPlies < minPlies  || Object.keys(bestVariation).length === 0) {
+					if (new_score < minScore || survivalPlies < minPlies || (survivalPlies === minPlies && Math.random() < 0.5) || Object.keys(bestVariation).length === 0) {
 						bestVariation = evaluation.bestVariation;
 						bestVariation[start_depth - depth] = [piece_index, target_square];
 						minScore = new_score;
@@ -876,12 +900,6 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
  * Performs a search with alpha-beta pruning through the game tree with iteratively greater depths
  */
 function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
-	// immediately initialize and submit globallyBestMove, in case the engine gets immediately interrupted
-	const black_moves = get_black_legal_moves(piecelist, coordlist);
-	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
-	const [new_piecelist, new_coordlist] = make_black_move(globallyBestVariation[0][1], piecelist, coordlist);
-	globallyBestScore = get_position_evaluation(new_piecelist, new_coordlist, false);
-	
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, -Infinity, Infinity, -Infinity, Infinity);
@@ -893,6 +911,32 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 		globallyBestScore = evaluation.score;
 		globalSurvivalPlies = evaluation.survivalPlies;
 		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
+
+		// early exit conditions
+		if (depth === 1) {
+			const black_move = globallyBestVariation[0]![1]!;
+			const [new_piecelist, new_coordlist] = make_black_move(black_move, piecelist, coordlist);
+
+			// If a piece is captured, immediately check for insuffmat
+			// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
+			// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
+			if (new_piecelist.indexOf(0) > -1) {
+				const royal_string = (royal_type === "k" ? "kingsB" : "royalCentaursB");
+				const piecesOrganizedByKey: { [key: string]: string } = {"0,0": royal_string};
+				for (let i = 0; i < piecelist.length; i++) {
+					if (new_piecelist[i] !== 0) {
+						piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
+					}
+				}
+				const dummy_gamefile = { 
+					piecesOrganizedByKey: piecesOrganizedByKey,
+					ourPieces: {},
+					moves: [],
+					gameRules: input_gamefile.gameRules
+				} as unknown as gamefile;
+				if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
+			}
+		}
 	}
 }
 
@@ -907,15 +951,15 @@ function move_to_gamefile_move(target_square: Coords): MoveDraft {
 /**
  * This function is called from outside and initializes the engine calculation given the provided gamefile
  */
-function runEngine(gamefile: gamefile): void {
+async function runEngine() {
 	try {
 		// get real coordinates and parse type of black royal piece
-		if ((gamefile.ourPieces.kingsB?.length ?? 0) !== 0) {
-			gamefile_royal_coords = gamefile.ourPieces.kingsB[0]!;
+		if ((input_gamefile.ourPieces.kingsB?.length ?? 0) !== 0) {
+			gamefile_royal_coords = input_gamefile.ourPieces.kingsB[0]!;
 			royal_moves = king_moves;
 			royal_type = "k";
-		} else if ((gamefile.ourPieces.royalCentaursB?.length ?? 0) !== 0) {
-			gamefile_royal_coords = gamefile.ourPieces.royalCentaursB[0]!;
+		} else if ((input_gamefile.ourPieces.royalCentaursB?.length ?? 0) !== 0) {
+			gamefile_royal_coords = input_gamefile.ourPieces.royalCentaursB[0]!;
 			royal_moves = centaur_moves;
 			royal_type = "rc";
 		} else {
@@ -925,8 +969,8 @@ function runEngine(gamefile: gamefile): void {
 		// create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
 		start_piecelist = [];
 		start_coordlist = [];
-		for (const key in gamefile.piecesOrganizedByKey) {
-			const pieceType = gamefile.piecesOrganizedByKey[key]!;
+		for (const key in input_gamefile.piecesOrganizedByKey) {
+			const pieceType = input_gamefile.piecesOrganizedByKey[key]!;
 			if (pieceType.slice(-1) !== "W") continue; // ignore nonwhite pieces
 			const coords = key.split(',').map(Number);
 			start_piecelist.push(pieceNameDictionary[pieceType]!);
@@ -940,8 +984,13 @@ function runEngine(gamefile: gamefile): void {
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
 		// console.log(globalSurvivalPlies);
 		// console.log(globallyBestVariation);
-
-		// submit engine move
+		// console.log(enginePositionCounter);
+		
+		// submit engine move after enough time has passed
+		const time_now = Date.now();
+		if (time_now - engineStartTime < engineTimeLimitPerMoveMillis) {
+			await new Promise(r => setTimeout(r, engineTimeLimitPerMoveMillis - (time_now - engineStartTime)));
+		}
 		postMessage(move_to_gamefile_move(globallyBestVariation[0]![1]!));
 
 	} catch (e) {
