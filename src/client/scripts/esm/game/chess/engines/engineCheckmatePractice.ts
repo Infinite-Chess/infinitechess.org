@@ -160,6 +160,8 @@ let pieceExistenceEvalDictionary: { [key: number]: number };
 // eslint-disable-next-line no-unused-vars
 let distancesEvalDictionary: { [key: number]: [number, (square: Coords) => number][] };
 let legalMoveEvalDictionary: { [key: number]: { [key: number]: number } };
+// eslint-disable-next-line no-unused-vars
+let centerOfMassEvalDictionary: { [key: string]: [number, number, number, (square: Coords) => number][] };
 
 // number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
 let wiggleroomDictionary: { [key: number]: number };
@@ -206,7 +208,7 @@ function initEvalWeightsAndSearchProperties() {
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
 		10: [[16, manhattanNorm], [16, manhattanNorm]], // archbishop
 		11: [[16, manhattanNorm], [16, manhattanNorm]], // knightrider
-		12: [[2, manhattanNorm], [2, manhattanNorm]], // huygen
+		12: [[16, manhattanNorm], [16, manhattanNorm]], // huygen
 	};
 
 	// eval scores for number of legal moves of black royal
@@ -296,9 +298,19 @@ function initEvalWeightsAndSearchProperties() {
 		12: 5 // huygen
 	};
 
-	// variant-specific modifications to the weights:
+	// variant-specific weights:
+
+	// score for distance of black royal to center of mass of white pieces of given type near black king
+	// piecetype, cutoff, weight, distancefunction
+	centerOfMassEvalDictionary = {
+		"1K1N2B1B-1k": [[3, 14, 20, manhattanNorm], [3, 14, 20, manhattanNorm]], // bishop
+		"5HU-1k": [[12, 30, 25, manhattanNorm], [12, 30, 25, manhattanNorm]], // huygen
+	};
 
 	switch (checkmateSelectedID) {
+		case "1K2N1B1B-1k":
+			distancesEvalDictionary[3] = [[12, manhattanNorm], [12, manhattanNorm]]; // bishop
+			break;
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
 			legalMoveEvalDictionary = {
@@ -366,6 +378,19 @@ function knightmareNorm(square: Coords): number {
 	const diagnormsquared = diagonalNormSquared(square);
 	const penalty = diagnormsquared < 3 ? -16 : ( diagnormsquared < 9 ? -8 : (diagnormsquared < 19 ? -4 : 0));
 	return manhattanNorm(square) + penalty;
+}
+
+// center of mass of all white pieces near the black king
+function get_center_of_mass(piece_type: number, cutoff: number, piecelist: number[], coordlist: Coords[]) {
+	let numpieces: number = 0;
+	let center: Coords = [0,0];
+	for (let i = 0; i < piecelist.length; i++) {
+		if (piecelist[i] === piece_type && manhattanNorm(coordlist[i]!) <= cutoff) {
+			center = add_move(center, coordlist[i]!);
+			numpieces++;
+		}
+	}
+	return rescaleVector(1. / numpieces, center);
 }
 
 /**
@@ -748,6 +773,12 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 			const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]!]![black_to_move_num]!;
 			score += weight * distancefunction(coordlist[i]!);
 		}
+	}
+
+	// add score based on distance of black royal to center of mass of white pieces near black king
+	if (checkmateSelectedID in centerOfMassEvalDictionary) {
+		const [piecetype, cutoff, weight, distancefunction] = centerOfMassEvalDictionary[checkmateSelectedID]![black_to_move_num]!;
+		score += weight * distancefunction(get_center_of_mass(piecetype, cutoff, piecelist, coordlist));
 	}
 	
 	return score;
