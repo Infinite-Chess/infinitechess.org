@@ -196,7 +196,7 @@ let boundingBoxInt: BoundingBox | undefined;
  * with a reference to the piece they are pointing to.
  * Other scripts may access this so they can add interaction with them.
  */
-let hoveredArrows: HoveredArrow[] = [];
+const hoveredArrows: HoveredArrow[] = [];
 
 /**
  * A list of all arrows present for the current frame.
@@ -820,8 +820,8 @@ function executeArrowShifts() {
 
 	shifts.forEach(shift => {
 		// Recalculate every single line on the start and end coordinates.
-		if (shift.start !== undefined) recalculateLinesThroughCoords(gamefile, shift.start, false); 
-		if (shift.end !== undefined) recalculateLinesThroughCoords(gamefile, shift.end, false);
+		if (shift.start !== undefined) recalculateLinesThroughCoords(gamefile, shift.start); 
+		if (shift.end !== undefined) recalculateLinesThroughCoords(gamefile, shift.end);
 	});
 
 	// Restore the board state
@@ -832,12 +832,12 @@ function executeArrowShifts() {
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, resetHovered: boolean) {
+function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 	// Recalculate every single line it is on.
 
 	// Prevents legal move highlights from rendering for
 	// the currently animated arrow indicator when hovering over its destination
-	if (resetHovered) hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, coords));
+	// hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, coords));
 
 	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
