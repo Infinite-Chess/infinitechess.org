@@ -104,16 +104,12 @@ function update() {
 
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameDebugToggles() {
-	if (guinavigation.isCoordinateActive()) return; // Don't listen for keyboard presses when the coordinate input is active
-
 	if (input.isKeyDown('`')) camera.toggleDebug();
 	if (input.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
 	if (input.isKeyDown('m')) stats.toggleFPS();
 }
 
 function testInGameDebugToggles(gamefile: gamefile) {
-	if (guinavigation.isCoordinateActive()) return; // Don't listen for keyboard presses when the coordinate input is active
-
 	if (input.isKeyDown('2')) {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
@@ -131,15 +127,13 @@ function updateSelectionScreen() {
 
 // Called within update() when we are in a game (not title screen)
 function updateBoard(gamefile: gamefile) {
-	if (!guinavigation.isCoordinateActive()) {
-		if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
-		if (input.isKeyDown('escape')) guipause.toggle();
-		if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
-		if (input.isKeyDown('n')) {
-			guinavigation.toggle();
-			guigameinfo.toggle();
-		}
+	if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
+	if (input.isKeyDown('escape')) guipause.toggle();
+	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
+	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
+	if (input.isKeyDown('n')) {
+		guinavigation.toggle();
+		guigameinfo.toggle();
 	}
 
 	const timeWinner = clock.update(gamefile);

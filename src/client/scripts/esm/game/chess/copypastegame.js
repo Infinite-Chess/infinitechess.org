@@ -38,8 +38,6 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
  * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
 function copyGame(copySinglePosition) {
-	if (guinavigation.isCoordinateActive()) return;
-
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
@@ -106,7 +104,7 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
  * @param {event} event - The event fired from the event listener
  */
 async function callbackPaste(event) {
-	if (guinavigation.isCoordinateActive()) return;
+	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
 	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
 	

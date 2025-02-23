@@ -355,6 +355,7 @@ function closeCopyPasteGameListeners() {
 }
 
 function callbackCopy(event: Event) {
+	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	copypastegame.copyGame(false);
 }
 
