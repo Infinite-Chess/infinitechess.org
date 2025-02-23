@@ -38,7 +38,7 @@ self.onmessage = function(e: MessageEvent) {
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;
-	globalSurvivalPlies = -Infinity;
+	globalSurvivalPlies = 0;
 	globallyBestVariation = {};
 
 	if (!engineInitialized) initEvalWeightsAndSearchProperties();	// initialize the eval function weights and global search properties
@@ -842,13 +842,13 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
-		return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
+		return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 	// If game over, return position evaluation
 	} else if ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) {
 		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
 	// At max depth, return position evaluation
 	} else if (depth === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: Infinity, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
 	}
 
 	let bestVariation: { [key: number]: [number, Coords] } = {};
@@ -878,7 +878,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
 			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
-			if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
+			if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 			followingPrincipal = false;
 
 			const new_score = evaluation.score;
@@ -943,7 +943,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
 				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
-				if (evaluation.terminate_now) return {score: -Infinity, bestVariation: {}, survivalPlies: Infinity, terminate_now: true};
+				if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 				followingPrincipal = false;
 
 				const new_score = evaluation.score;
@@ -976,10 +976,11 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
 	const [dummy_piecelist, dummy_coordlist] = make_black_move(globallyBestVariation[0]![1]!, piecelist, coordlist);
 	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false);
+	globalSurvivalPlies = 1;
 
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, -Infinity, Infinity, -Infinity, Infinity);
+		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, -Infinity, Infinity, 0, Infinity);
 		if (evaluation.terminate_now) { 
 			// console.log("Search interrupted at depth " + depth);
 			break;
