@@ -156,12 +156,6 @@ function updateBoard(gamefile: gamefile) {
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
-	miniimage.genModel(); // NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
-	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
-	// ALSO depends on whether or not a piece is selected/being dragged!
-	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.
-	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
-	movement.checkIfBoardDragged();
 
 	if (guipause.areWePaused()) return;
 
@@ -173,6 +167,15 @@ function updateBoard(gamefile: gamefile) {
 	transition.update();
 
 	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
+
+	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
+	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	miniimage.genModel();
+	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
+	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
+	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
+	// BEFORE: executeA
+	movement.checkIfBoardDragged();
 } 
 
 function render() {
