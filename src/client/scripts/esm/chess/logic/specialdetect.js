@@ -206,6 +206,8 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
 	const yParity = color === 'white' ? 1 : -1;
 	if (coords[1] + yParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
+	if (!gamefileutility.getPieceTypeAtCoords(gamefile, [coords[0] + xDifference, coords[1]])) return; // cannot en passant capture nothing
+	if (color === colorutil.getPieceColorFromType(gamefileutility.getPieceTypeAtCoords(gamefile, [coords[0] + xDifference, coords[1]])) ) return; // cannot en passant capture own piece
 
 	// It is capturable en passant!
 
