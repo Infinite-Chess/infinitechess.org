@@ -174,7 +174,6 @@ function updateBoard(gamefile: gamefile) {
 	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
-	// BEFORE: executeA
 	movement.checkIfBoardDragged();
 } 
 

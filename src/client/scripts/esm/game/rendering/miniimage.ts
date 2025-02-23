@@ -181,7 +181,7 @@ function genModel() {
 	// Add the animated pieces
 	animation.animations.forEach(a => {
 		// Animate the main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(true); 
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
 		let { r, g, b } = options.getColorOfType(a.type);

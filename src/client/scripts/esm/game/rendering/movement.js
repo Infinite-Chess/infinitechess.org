@@ -21,16 +21,16 @@ import draganimation from './dragging/draganimation.js';
 
 /** This script stores our board position and scale and controls our panning and zooming. */
 
-const panAccel_3D = 75; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
-const panAccel_2D = 145; // 2D mode: Deccelleration rate of panning.   Default: 100
-const panVelCap_2D = 22.0; // Hyptenuse cap of x & y speeds   Default: 11
-const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 11
+const panAccel_3D = 75; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 75
+const panAccel_2D = 145; // 2D mode: Deccelleration rate of panning.   Default: 145
+const panVelCap_2D = 22.0; // Hyptenuse cap of x & y speeds   Default: 22
+const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 16
 
 const scaleAccel_Desktop = 6.0; // Acceleration of board scaling   Default: 6
-const scaleAccel_Mobile = 14.0; // Acceleration of board scaling   Default: 6
-const scaleVelCap = 1.0; // Default: 1.0
-const maximumScale = 5.0;
-const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.03
+const scaleAccel_Mobile = 14.0; // Acceleration of board scaling   Default: 14
+const scaleVelCap = 1.0; // Default: 1
+const maximumScale = 5.0; // Default: 5
+const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.015
 const scrollScaleVelCap = 2.5;
 
 // Camera position does not change, only the board position

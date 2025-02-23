@@ -317,7 +317,7 @@ function update() {
 /** Whether the arrows should be calculated and rendered this frame */
 function areArrowsActiveThisFrame() {
 	// false if the arrows are off, or if the board is too zoomed out
-	return mode !== 0 && board.gtileWidth_Pixels(true) >= renderZoomLimitVirtualPixels;
+	return mode !== 0 && board.gtileWidth_Pixels() >= renderZoomLimitVirtualPixels;
 }
 
 /**
