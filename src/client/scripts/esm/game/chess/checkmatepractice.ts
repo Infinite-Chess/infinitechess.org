@@ -26,6 +26,7 @@ import winconutil from '../../chess/util/winconutil.js';
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
+import animation from '../rendering/animation.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -337,6 +338,9 @@ function undoMove() {
 	const gamefile = gameslot.getGamefile()!;
 	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
 		setUndoingIsLegal(false);
+
+		// terminate all current animations
+		animation.clearAnimations();
 
 		// go to latest move before undoing moves
 		movesequence.viewFront(gamefile);
