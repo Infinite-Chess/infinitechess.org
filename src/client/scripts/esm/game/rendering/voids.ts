@@ -1,22 +1,4 @@
 
-// Import Start
-import movement from './movement.js';
-import piecesmodel from './piecesmodel.js';
-import { createModel } from './buffermodel.js';
-import board from './board.js';
-import coordutil from '../../chess/util/coordutil.js';
-import gameslot from '../chess/gameslot.js';
-import statustext from '../gui/statustext.js';
-import frametracker from './frametracker.js';
-// Import End
-
-/** 
- * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
-*/
-
-"use strict";
-
 /**
  * This generates and renders the mesh of the void squares
  * in the game.
@@ -24,26 +6,49 @@ import frametracker from './frametracker.js';
  * the mesh complexity.
  */
 
-const color = [0, 0, 0, 1];
-const color_wireframe = [1, 0, 1, 1];
+import type { BoundingBox } from '../../util/math.js';
+import type { PooledArray } from '../../chess/logic/organizedlines.js';
+import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
+import type { Color } from '../../chess/util/colorutil.js';
+// @ts-ignore
+import type { gamefile } from '../../chess/logic/gamefile.js';
 
-const stride = 6; // Using color shader. Stride per VERTEX (2 vertex, 4 color)
-const POINTS_PER_SQUARE_WIREFRAME = 12; // Compared to  piecesmodel.POINTS_PER_SQUARE  which is 6 when rendering triangles
+
+import { createModel } from './buffermodel.js';
+import coordutil from '../../chess/util/coordutil.js';
+import gameslot from '../chess/gameslot.js';
+import frametracker from './frametracker.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
+// @ts-ignore
+import board from './board.js';
+// @ts-ignore
+import movement from './movement.js';
+// @ts-ignore
+import piecesmodel from './piecesmodel.js';
+
+
+
+const color: Color = [0, 0, 0, 1];
+const color_wireframe: Color = [1, 0, 1, 1];
+
+const stride: number = 6; // Using color shader. Stride per VERTEX (2 vertex, 4 color)
+const POINTS_PER_SQUARE_WIREFRAME: number = 12; // Compared to  piecesmodel.POINTS_PER_SQUARE  which is 6 when rendering triangles
 
 /** Enables wireframe mode */
-let DEBUG = false;
+let DEBUG: boolean = false;
 
 function toggleDebug() {
 	DEBUG = !DEBUG;
 	statustext.showStatus(`Toggled wireframe voids: ${DEBUG}`, false, 0.5);
-	regenModel(gameslot.getGamefile());
-	const gamefile = gameslot.getGamefile();
+	regenModel(gameslot.getGamefile()!);
+	const gamefile = gameslot.getGamefile()!;
 	if (DEBUG && gamefile.voidMesh.data32 !== undefined) console.log("Number of triangles in void mesh: " + gamefile.voidMesh.data32.length / (stride * POINTS_PER_SQUARE_WIREFRAME / 2));
 }
 
-function regenModel(gamefile) {
+function regenModel(gamefile: gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
-	const voidList = gameslot.getGamefile().ourPieces.voidsN;
+	const voidList = gameslot.getGamefile()!.ourPieces.voidsN;
 	if (!voidList) return; // No voids are present in this game
 
 	// Simplify the mesh by combining adjacent voids into larger rectangles!
@@ -69,21 +74,19 @@ function regenModel(gamefile) {
 	const data64 = gamefile.voidMesh.data64;
 	const data32 = gamefile.voidMesh.data32;
 	// Iterate through every void and append it's data!
-	for (let i = 0; i < rectangleCount; i++) {
-		const thisRect = simplifiedMesh[i];
-
-		const { startX, startY, endX, endY } = getCoordDataOfRectangle(gamefile, thisRect);
-
+	simplifiedMesh.forEach(thisRect => {
+		const { left, bottom, right, top } = getCoordDataOfRectangle(gamefile, thisRect)
+		;
 		const colorToUse = !DEBUG ? color : color_wireframe;
 		const funcToUse = !DEBUG ? getDataOfSquare : getDataOfSquare_Wireframe;
-		const data = funcToUse(startX, startY, endX, endY, colorToUse);
+		const data = funcToUse(left, bottom, right, top, colorToUse);
 
 		for (let a = 0; a < data.length; a++) {
 			data64[currIndex] = data[a];
 			data32[currIndex] = data[a];
 			currIndex++;
 		}
-	}
+	});
 
 	const mode = DEBUG ? "LINES" : "TRIANGLES";
 	gamefile.voidMesh.model = createModel(data32, 2, mode, true);
@@ -92,7 +95,7 @@ function regenModel(gamefile) {
 
 // The passed in sides should be the center-coordinate value of the square in the corner
 // For example, bottomleft square is [-5,-7], just pass in -5 for "left"
-function getCoordDataOfRectangle(gamefile, {left, right, bottom, top}) { // Just pass in the rectangle
+function getCoordDataOfRectangle(gamefile: gamefile, { left, right, bottom, top }: BoundingBox): BoundingBox { // Just pass in the rectangle
 	const squareCenter = board.gsquareCenter();
 	const startX = left - squareCenter - gamefile.mesh.offset[0];
 	const startY = bottom - squareCenter - gamefile.mesh.offset[1];
@@ -100,11 +103,11 @@ function getCoordDataOfRectangle(gamefile, {left, right, bottom, top}) { // Just
 	const height = top - bottom + 1;
 	const endX = startX + width;
 	const endY = startY + height;
-	return { startX, startY, endX, endY };
+	return { left: startX, right: endX, bottom: startY, top: endY };
 }
 
 // Returns an array of the data that can be entered into the buffer model!
-function getDataOfSquare(startX, startY, endX, endY, color) {
+function getDataOfSquare(startX: number, startY: number, endX: number, endY: number, color: Color): number[] {
 	const [ r, g, b, a ] = color;
 	return [
     //      Vertex               Color
@@ -119,7 +122,7 @@ function getDataOfSquare(startX, startY, endX, endY, color) {
 }
 
 // Returns gl_lines data
-function getDataOfSquare_Wireframe(startX, startY, endX, endY, color) {
+function getDataOfSquare_Wireframe(startX: number, startY: number, endX: number, endY: number, color: Color): number[] {
 	const [ r, g, b, a ] = color;
 	return [
     //      Vertex               Color
@@ -151,7 +154,7 @@ function getDataOfSquare_Wireframe(startX, startY, endX, endY, color) {
  * @param {number} diffXOffset - The x-amount to shift the voids vertex data
  * @param {number} diffYOffset - The y-amount to shift the voids vertex data
  */
-function shiftModel(gamefile, diffXOffset, diffYOffset) {
+function shiftModel(gamefile: gamefile, diffXOffset: number, diffYOffset: number): void {
 	if (gamefile.voidMesh.model === undefined) return;
 	
 	const data64 = gamefile.voidMesh.data64;
@@ -168,23 +171,25 @@ function shiftModel(gamefile, diffXOffset, diffYOffset) {
 
 /**
  * Simplifies a list of void squares and merges them into larger rectangles.
- * @param {array[]} voidList - The list of coordinates where all the voids are
- * @returns {array[]} An array of rectangles that look like: `{ left, right, bottom, top }`.
+ * @param voidList - The list of coordinates where all the voids are
+ * @returns An array of rectangles that look like: `{ left, right, bottom, top }`.
  */
-function simplifyMesh(voidList) { // array of coordinates
+function simplifyMesh(voidList: PooledArray<Coords>): BoundingBox[] { // array of coordinates
 
 	// console.log("Simplifying void mesh..")
 
-	const voidHash = { };
+	const voidHash: { [coordsKey: CoordsKey]: true } = {};
 	for (const thisVoid of voidList) {
+		if (!thisVoid) continue;
 		const key = coordutil.getKeyFromCoords(thisVoid);
 		voidHash[key] = true;
 	}
 
-	const rectangles = []; // rectangle: { left, right, bottom, top }
-	const alreadyMerged = { }; // Set the coordinate key `x,y` to true when a void has been merged
+	const rectangles: BoundingBox[] = []; // rectangle: { left, right, bottom, top }
+	const alreadyMerged: { [coordsKey: CoordsKey]: true } = { }; // Set the coordinate key `x,y` to true when a void has been merged
 
 	for (const thisVoid of voidList) { // [x,y]
+		if (!thisVoid) continue;
 
 		// Has this void already been merged with another previous?
 		const key = coordutil.getKeyFromCoords(thisVoid);
@@ -203,12 +208,12 @@ function simplifyMesh(voidList) { // array of coordinates
 
 			// First test left neighbors
 
-			let potentialMergers = [];
+			let potentialMergers: CoordsKey[] = [];
 			let allNeighborsAreVoid = true;
 			let testX = left - 1;
 			for (let a = 0; a < height; a++) { // Start from bottom and go up
 				const thisTestY = bottom + a;
-				const thisCoord = [testX, thisTestY];
+				const thisCoord: Coords = [testX, thisTestY];
 				const thisKey = coordutil.getKeyFromCoords(thisCoord);
 				const isVoid = voidHash[thisKey];
 				if (!isVoid || alreadyMerged[thisKey]) {
@@ -232,7 +237,7 @@ function simplifyMesh(voidList) { // array of coordinates
 			testX = right + 1;
 			for (let a = 0; a < height; a++) { // Start from bottom and go up
 				const thisTestY = bottom + a;
-				const thisCoord = [testX, thisTestY];
+				const thisCoord: Coords = [testX, thisTestY];
 				const thisKey = coordutil.getKeyFromCoords(thisCoord);
 				const isVoid = voidHash[thisKey];
 				if (!isVoid || alreadyMerged[thisKey]) {
@@ -256,7 +261,7 @@ function simplifyMesh(voidList) { // array of coordinates
 			let testY = bottom - 1;
 			for (let a = 0; a < width; a++) { // Start from bottom and go up
 				const thisTestX = left + a;
-				const thisCoord = [thisTestX, testY];
+				const thisCoord: Coords = [thisTestX, testY];
 				const thisKey = coordutil.getKeyFromCoords(thisCoord);
 				const isVoid = voidHash[thisKey];
 				if (!isVoid || alreadyMerged[thisKey]) {
@@ -280,7 +285,7 @@ function simplifyMesh(voidList) { // array of coordinates
 			testY = top + 1;
 			for (let a = 0; a < width; a++) { // Start from bottom and go up
 				const thisTestX = left + a;
-				const thisCoord = [thisTestX, testY];
+				const thisCoord: Coords = [thisTestX, testY];
 				const thisKey = coordutil.getKeyFromCoords(thisCoord);
 				const isVoid = voidHash[thisKey];
 				if (!isVoid || alreadyMerged[thisKey]) {
@@ -300,7 +305,7 @@ function simplifyMesh(voidList) { // array of coordinates
 			foundNeighbor = false; // Cannot expand this rectangle! Stop searching
 		}
 
-		const rectangle = { left, right, bottom, top };
+		const rectangle: BoundingBox = { left, right, bottom, top };
 		rectangles.push(rectangle);
 	}
 
@@ -313,17 +318,17 @@ function simplifyMesh(voidList) { // array of coordinates
  * @param {gamefile} gamefile 
  * @returns 
  */
-function render(gamefile) {
+function render(gamefile: gamefile) {
 	if (gamefile.voidMesh.model === undefined) return;
 
 	const boardPos = movement.getBoardPos();
-	const position = [ // Translate
+	const position: [number,number,number] = [ // Translate
         -boardPos[0] + gamefile.mesh.offset[0], // Add the model's offset. 
         -boardPos[1] + gamefile.mesh.offset[1],
         0
     ]; // While separate these are each big decimals, TOGETHER they are small number! That's fast for rendering!
 	const boardScale = movement.getBoardScale();
-	const scale = [boardScale, boardScale, 1];
+	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
 	gamefile.voidMesh.model.render(position, scale);
 }
