@@ -126,7 +126,12 @@ function update() {
 		if (promoteTo) makePromotionMove(gamefile);
 		return;
 	}
-	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) return;
+	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) {
+		// We might be zoomed way out.
+		// If we are still dragging a piece, we still want to be able to drop it.
+		if (!input.getPointerHeld()) draganimation.dropPiece(); // Drop it without moving it.
+		return;
+	}
 
 	// Update the hover square
 	hoverSquare = space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
