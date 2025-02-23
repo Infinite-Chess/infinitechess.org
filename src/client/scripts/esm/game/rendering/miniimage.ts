@@ -44,7 +44,7 @@ import board from './board.js';
 const MINI_IMAGE_WIDTH_VPIXELS: number = 36; // Default: 36
 const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
-const MAX_ANIM_DIST_VPIXELS = 2000;
+const MAX_ANIM_DIST_VPIXELS = 2300;
 
 
 /** {@link MINI_IMAGE_WIDTH_VPIXELS}, but converted to world-space units. This is recalculated on every screen resize. */
