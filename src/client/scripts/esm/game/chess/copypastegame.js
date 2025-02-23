@@ -86,13 +86,15 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
 	if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
 	primedGamefile.fullMove = gamefile.startSnapshot.fullMove;
 	primedGamefile.startingPosition = gamefile.startSnapshot.positionString;
-	primedGamefile.moves = gamefile.moves.slice(0, gamefile.moveIndex + 1); // Only copy the moves up to the current move
 	primedGamefile.gameRules = gameRulesCopy;
 
 	if (copySinglePosition) {
 		primedGamefile.startingPosition = gamefile.startSnapshot.position;
 		primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
 		primedGamefile = formatconverter.GameToPosition(primedGamefile, Infinity);
+		primedGamefile.moves = gamefile.moves.slice(0, gamefile.moveIndex + 1); // Only copy the moves up to the current move
+	} else {
+		primedGamefile.moves = gamefile.moves;
 	}
 
 	return primedGamefile;
