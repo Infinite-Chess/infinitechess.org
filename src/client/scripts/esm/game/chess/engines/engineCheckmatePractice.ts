@@ -208,7 +208,7 @@ function initEvalWeightsAndSearchProperties() {
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
 		10: [[16, manhattanNorm], [16, manhattanNorm]], // archbishop
 		11: [[16, manhattanNorm], [16, manhattanNorm]], // knightrider
-		12: [[16, manhattanNorm], [16, manhattanNorm]], // huygen
+		12: [[6, manhattanNorm], [6, manhattanNorm]], // huygen
 	};
 
 	// eval scores for number of legal moves of black royal
@@ -304,10 +304,39 @@ function initEvalWeightsAndSearchProperties() {
 	// piecetype, cutoff, weight, distancefunction
 	centerOfMassEvalDictionary = {
 		"1K1N2B1B-1k": [[3, 14, 20, manhattanNorm], [3, 14, 20, manhattanNorm]], // bishop
-		"5HU-1k": [[12, 30, 25, manhattanNorm], [12, 30, 25, manhattanNorm]], // huygen
+		"5HU-1k": [[12, 20, 30, manhattanNorm], [12, 20, 30, manhattanNorm]], // huygen
 	};
 
 	switch (checkmateSelectedID) {
+		case "1K1AM-1k":
+			distancesEvalDictionary[5] = [[200, specialNorm], [200, specialNorm]]; // king
+			legalMoveEvalDictionary = {
+				// in check
+				0: {
+					0: -Infinity, // checkmate
+					1: 0,
+					2: 0,
+					3: 0,
+					4: 0,
+					5: 0,
+					6: 0,
+					7: 0,
+					8: 0
+				},
+				// not in check
+				1: {
+					0: Infinity, // stalemate
+					1: 0,
+					2: 0,
+					3: 0,
+					4: 0,
+					5: 0,
+					6: 0,
+					7: 0,
+					8: 0
+				}
+			};
+			break;
 		case "1K2N1B1B-1k":
 			distancesEvalDictionary[3] = [[12, manhattanNorm], [12, manhattanNorm]]; // bishop
 			break;
@@ -316,6 +345,12 @@ function initEvalWeightsAndSearchProperties() {
 			break;
 		case "1K1R1N1B-1k":
 			distancesEvalDictionary[4] = [[8, specialNorm], [8, specialNorm]]; // knight
+			break;
+		case "1K1AR2HA-1k":
+			distancesEvalDictionary[10] = [[25, manhattanNorm], [25, manhattanNorm]]; // archbishop
+			break;
+		case "2K1R-1k":
+			distancesEvalDictionary[5] = [[40, specialNorm], [40, specialNorm]]; // king
 			break;
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
@@ -599,8 +634,8 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 				best_target_square = target_square;
 			}
 		}
-		// if no jump move has been added and piece has no ride moves, add single best jump move as candidate
-		if (candidate_squares.length === 0 && !piece_properties.rides) candidate_squares.push(best_target_square!);
+		// if no jump move has been added and piece has no ride moves or is a huygens, add single best jump move as candidate
+		if (candidate_squares.length === 0 && ( !piece_properties.rides || piece_properties.is_huygen )) candidate_squares.push(best_target_square!);
 	}
 
 	// ride moves
@@ -936,6 +971,12 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
  * Performs a search with alpha-beta pruning through the game tree with iteratively greater depths
  */
 function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
+	// immediately initialize and set globallyBestVariation randomly, in case nothing better ever gets found
+	const black_moves = get_black_legal_moves(piecelist, coordlist);
+	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+	const [dummy_piecelist, dummy_coordlist] = make_black_move(globallyBestVariation[0]![1]!, piecelist, coordlist);
+	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false);
+
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, -Infinity, Infinity, -Infinity, Infinity);
