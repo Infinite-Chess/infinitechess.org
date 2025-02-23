@@ -779,7 +779,7 @@ function executeArrowShifts() {
 	// console.log(changes);
 
 	// Apply the board changes
-	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.forward, true);
+	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, true);
 
 	shifts.forEach(shift => {
 		// Recalculate every single line on the start and end coordinates.
@@ -788,7 +788,7 @@ function executeArrowShifts() {
 	});
 
 	// Restore the board state
-	boardchanges.applyChanges(gamefile, changes, boardchanges.changeFuncs.backward, false);
+	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, false);
 }
 
 /**
