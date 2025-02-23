@@ -89,8 +89,8 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
 	if (copySinglePosition) {
 		primedGamefile.startingPosition = gamefile.startSnapshot.position;
 		primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
-		primedGamefile = formatconverter.GameToPosition(primedGamefile, Infinity);
 		primedGamefile.moves = gamefile.moves.slice(0, gamefile.moveIndex + 1); // Only copy the moves up to the current move
+		primedGamefile = formatconverter.GameToPosition(primedGamefile, Infinity);
 	} else {
 		primedGamefile.moves = gamefile.moves;
 	}
