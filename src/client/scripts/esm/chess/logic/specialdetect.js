@@ -201,13 +201,12 @@ function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
 // If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	if (gamefile.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
+	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
 	const yParity = color === 'white' ? 1 : -1;
 	if (coords[1] + yParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
-	if (!gamefileutility.getPieceTypeAtCoords(gamefile, [coords[0] + xDifference, coords[1]])) return; // cannot en passant capture nothing
-	if (color === colorutil.getPieceColorFromType(gamefileutility.getPieceTypeAtCoords(gamefile, [coords[0] + xDifference, coords[1]])) ) return; // cannot en passant capture own piece
 
 	// It is capturable en passant!
 
