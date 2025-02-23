@@ -80,8 +80,6 @@ function init() {
 	guititle.open();
 
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
-	
-	board.recalcVariables(); // Variables dependant on the board position & scale
 }
 
 // Update the game every single frame
@@ -145,6 +143,8 @@ function updateBoard(gamefile: gamefile) {
 	}
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
+	
+	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	guinavigation.update();
 	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
@@ -171,7 +171,6 @@ function updateBoard(gamefile: gamefile) {
 	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
 	transition.update();
-	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
 } 
