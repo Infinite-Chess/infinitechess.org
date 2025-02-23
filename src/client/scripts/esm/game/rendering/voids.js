@@ -177,6 +177,7 @@ function simplifyMesh(voidList) { // array of coordinates
 
 	const voidHash = { };
 	for (const thisVoid of voidList) {
+		if (!thisVoid) continue;
 		const key = coordutil.getKeyFromCoords(thisVoid);
 		voidHash[key] = true;
 	}
@@ -185,7 +186,7 @@ function simplifyMesh(voidList) { // array of coordinates
 	const alreadyMerged = { }; // Set the coordinate key `x,y` to true when a void has been merged
 
 	for (const thisVoid of voidList) { // [x,y]
-
+		if (!thisVoid) continue;
 		// Has this void already been merged with another previous?
 		const key = coordutil.getKeyFromCoords(thisVoid);
 		if (alreadyMerged[key]) continue; // Next void
