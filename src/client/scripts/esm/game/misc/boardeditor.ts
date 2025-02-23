@@ -8,6 +8,8 @@ import board from '../rendering/board.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
 import colorutil from '../../chess/util/colorutil.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
@@ -36,9 +38,10 @@ let currentTool: string = "queens";
  * Grouping changes together allow the user to undo an entire 
  * brush stroke at once instead of one piece at a time.
  */
-let thisEdit: Edit = [];
-let edits: Array<Edit> = [];
-let indexOfThisEdit = 0;
+let thisEdit: Edit | undefined;
+/** The list of all edits the user has made. */
+let edits: Array<Edit> | undefined;
+let indexOfThisEdit: number | undefined = 0;
 
 let drawing = false;
 let previousSquare: Coords | undefined;
@@ -50,46 +53,59 @@ function areInBoardEditor () {
 }
 function initBoardEditor () {
 	inBoardEditor = true;
+	edits = [];
+	indexOfThisEdit = 0;
 }
 function closeBoardEditor () {
 	inBoardEditor = false;
+	drawing = false;
+	thisEdit = undefined;
+	edits = undefined;
+	indexOfThisEdit = undefined;
+	previousSquare = undefined;
 }
 function canUndo () {
-	return indexOfThisEdit > 0;
+	// comparing undefined always returns false
+	return indexOfThisEdit! > 0;
 }
 function canRedo () {
-	return indexOfThisEdit < edits.length;
+	// comparing undefined always returns false
+	return indexOfThisEdit! < edits?.length!;
 }
 
 function beginEdit() {
 	drawing = true;
-	previousSquare = undefined;
+	thisEdit = [];
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 }
 
 function endEdit() {
 	drawing = false;
-	addEditToHistory(thisEdit);
-	thisEdit = [];
+	previousSquare = undefined;
+	addEditToHistory(thisEdit!);
+	thisEdit = undefined;
 	guinavigation.update_MoveButtons();
 }
 
 /** Runs both logical and graphical changes. */
 function runChanges(gamefile: gamefile, changes: Array<Change>, forward?: boolean) {
+	// Pieces must be unselected before they are modified
+	selection.unselectPiece();
 	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, forward);
 	boardchanges.runChanges(gamefile, changes, meshChanges, forward);
 }
 
 function addEditToHistory(edit: Edit) {
-	edits.length = indexOfThisEdit;
-	edits.push(edit);
-	indexOfThisEdit++;
+	edits!.length = indexOfThisEdit!;
+	edits!.push(edit);
+	indexOfThisEdit!++;
 }
 
 function update() {
-	let gamefile = gameslot.getGamefile();
-	if (!gamefile || !inBoardEditor) return;
+	if (!inBoardEditor) return;
+	
+	const gamefile = gameslot.getGamefile()!;
 	
 	if (drawing) {
 		if (!input.isMouseHeld_Right()) return endEdit();
@@ -108,19 +124,22 @@ function update() {
 	if (pieceToRemove) boardchanges.queueDeletePiece(changes, pieceToRemove, false);
 	
 	if (currentTool !== "eraser") {
-		const type = currentTool + colorutil.getColorExtensionFromColor(currentColor);
+		const colorExtension = typeutil.neutralTypes.includes(currentTool) ? colorutil.colorExtensionOfNeutrals : colorutil.getColorExtensionFromColor(currentColor);
+		const type = currentTool + colorExtension;
 		const piece: Piece = { type, coords } as Piece;
 		boardchanges.queueAddPiece(changes, piece);
 	}
 	
 	runChanges(gamefile, changes, true);
-	thisEdit.push(...changes);
+	thisEdit!.push(...changes);
 }
 
 function setTool(tool: string) {
+	if (!inBoardEditor) return;
 	if (tool === "save") return save();
 	if (tool === "color") return toggleColor();
 	if (tool === "clear") return clearAll();
+	if (tool === "special") return; // TODO
 	currentTool = tool;
 }
 
@@ -129,9 +148,9 @@ function toggleColor() {
 }
 
 function clearAll() {
+	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.")
+	const gamefile = gameslot.getGamefile()!;
 	const changes: Array<Change> = [];
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
 	gamefileutility.forEachPieceInGame(gamefile, (type, coords, gamefile) => {
 		const pieceToDelete = gamefileutility.getPieceFromTypeAndCoords(gamefile!, type, coords);
 		boardchanges.queueDeletePiece(changes, pieceToDelete, false);
@@ -141,18 +160,20 @@ function clearAll() {
 }
 
 function undo() {
-	if (indexOfThisEdit <= 0) return;
+	if (!inBoardEditor) throw Error("Cannot undo edit when we're not using the board editor.");
+	if (indexOfThisEdit! <= 0) return;
 	const gamefile = gameslot.getGamefile()!;
-	indexOfThisEdit--;
-	runChanges(gamefile, edits[indexOfThisEdit]!, false);
+	indexOfThisEdit!--;
+	runChanges(gamefile, edits![indexOfThisEdit!]!, false);
 	guinavigation.update_MoveButtons();
 }
 
 function redo() {
-	if (indexOfThisEdit >= edits.length) return;
+	if (!inBoardEditor) throw Error("Cannot redo edit when we're not using the board editor.");
+	if (indexOfThisEdit! >= edits!.length) return;
 	const gamefile = gameslot.getGamefile()!;
-	runChanges(gamefile, edits[indexOfThisEdit]!, true);
-	indexOfThisEdit++;
+	runChanges(gamefile, edits![indexOfThisEdit!]!, true);
+	indexOfThisEdit!++;
 	guinavigation.update_MoveButtons();
 }
 
@@ -173,12 +194,13 @@ function save() {
 }
 
 function submitMove () {
+	if (!inBoardEditor) return;
 	const gamefile = gameslot.getGamefile()!;
-	edits.length = indexOfThisEdit;
+	edits!.length = indexOfThisEdit!;
 	for (let i = 0; i < gamefile.moves.length; i++) {
-		edits.push(gamefile.moves[i].changes);
+		edits!.push(gamefile.moves[i].changes);
 	}
-	indexOfThisEdit = edits.length;
+	indexOfThisEdit = edits!.length;
 	gamefile.moves.length = 0;
 	gamefile.moveIndex = -1;
 	guinavigation.update_MoveButtons();
