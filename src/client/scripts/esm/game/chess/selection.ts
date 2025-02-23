@@ -265,7 +265,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
  */
 function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
-	if (type === 'voidsN') return 0; // Can't select voids
+	if (type.startsWith('voids')) return 0; // Can't select voids
 	if (options.getEM()) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
 	const color = colorutil.getPieceColorFromType(type);
 	if (color === colorutil.colorOfNeutrals) return 0; // Can't select neutrals, period.

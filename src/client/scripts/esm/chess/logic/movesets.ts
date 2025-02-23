@@ -111,7 +111,7 @@ type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => Co
 /** The default blocking function of each piece's sliding moves, if not specified. */
 function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece): 0 | 1 | 2 {
 	const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
-	const isVoid = blockingPiece.type === 'voidsN';
+	const isVoid = blockingPiece.type.startsWith('voids');
 	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
 	else return 2; // Allow the capture if enemy, but block afterward
 }

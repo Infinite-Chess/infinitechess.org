@@ -168,7 +168,7 @@ function pawns(gamefile, coords, color) {
 		if (color === colorOfPiece) continue; // Same color, don't add the capture
 
 		// Make sure it isn't a void
-		if (pieceAtCoords === 'voidsN') continue;
+		if (pieceAtCoords.startsWith('voids')) continue;
 
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
 	}

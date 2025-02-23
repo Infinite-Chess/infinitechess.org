@@ -84,7 +84,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 		if (color === colorOfPiece) continue; // Same color, don't add the capture
 
 		// Make sure it isn't a void
-		if (pieceAtCoords === 'voidsN') continue;
+		if (pieceAtCoords.startsWith('voids')) continue;
 
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Add the capture
 	}
