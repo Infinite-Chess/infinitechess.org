@@ -35,6 +35,8 @@ import statustext from '../gui/statustext.js';
 import area from './area.js';
 // @ts-ignore
 import board from './board.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
 
 
 // Variables --------------------------------------------------------------
@@ -132,16 +134,16 @@ function genModel() {
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
 
 	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
-		const pieceType = key as string;
-		if (pieceType.startsWith('voids')) continue; // Skip voids
-		const thesePieces = value as PooledArray<Coords>;
+	typeutil.forEachPieceType((pieceType: string) => {
+		if (pieceType.startsWith('voids')) return; // Skip voids
+		if (!(pieceType in gamefile.ourPieces)) return; // Skip if we don't have any of this piece type
+		const thesePieces = gamefile.ourPieces[pieceType];
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 		const { r, g, b } = options.getColorOfType(pieceType);
 
-		thesePieces.forEach(coords => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
-	}
+		thesePieces.forEach((coords: Coords | undefined) => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
+	}, { ignoreVoids: true });
 
 	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		if (!coords) return; // Skip undefined placeholders
