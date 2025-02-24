@@ -293,9 +293,6 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: {
 			// Setting everything to an allowed promotion prevents graphical issues when adding lots of that piece type.
 			promotionsAllowed: { 'white': [...typeutil.types], 'black': [...typeutil.types], 'neutral': [...typeutil.neutralTypes] },
-			// Disable check and checkmate
-			// Doesn't prevent stalemate
-			winConditions: { 'white': [], 'black': [] },
 		},
 	}
 };

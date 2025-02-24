@@ -69,6 +69,7 @@ import copypastegame from './copypastegame.js';
 import stats from '../gui/stats.js';
 
 import boardeditor from '../misc/boardeditor.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -120,6 +121,7 @@ function testInGameDebugToggles(gamefile: gamefile) {
 	if (input.isKeyDown('5')) voids.toggleDebug(); // Renders the wireframe of voids
 	if (input.isKeyDown('6')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
+	if (input.isKeyDown('7')) specialrighthighlights.toggleDebug();
 }
 
 function updateSelectionScreen() {

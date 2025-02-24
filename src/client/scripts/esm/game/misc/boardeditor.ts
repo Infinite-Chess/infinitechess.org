@@ -1,5 +1,5 @@
 
-import boardchanges, { Change, Piece } from '../../chess/logic/boardchanges.js';
+import boardchanges from '../../chess/logic/boardchanges.js';
 import { meshChanges } from '../chess/graphicalchanges.js';
 // @ts-ignore
 import input from '../input.js';
@@ -16,14 +16,20 @@ import guinavigation from '../gui/guinavigation.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
+import state from '../../chess/logic/state.js';
 
 // Type Definitions -------------------------------------------------------------
 
-import { Coords } from '../../chess/util/coordutil.js';
+import type { Coords } from '../../chess/util/coordutil.js';
 // @ts-ignore
-import { gamefile } from '../../chess/logic/gamefile.js'
+import type { gamefile } from '../../chess/logic/gamefile.js'
+import type { Change, Piece } from '../../chess/logic/boardchanges.js'
+import type { StateChange } from '../../chess/logic/state.js';
 
-type Edit = Array<Change>;
+type Edit = {
+	changes: Array<Change>,
+	stateChanges: Array<StateChange>
+}
 
 // Variables --------------------------------------------------------------------
 
@@ -75,7 +81,7 @@ function canRedo () {
 
 function beginEdit() {
 	drawing = true;
-	thisEdit = [];
+	thisEdit = { changes:[], stateChanges:[] };
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 }
@@ -89,11 +95,16 @@ function endEdit() {
 }
 
 /** Runs both logical and graphical changes. */
-function runChanges(gamefile: gamefile, changes: Array<Change>, forward?: boolean) {
+function runEdit(gamefile: gamefile, edit: Edit, forward: boolean = true) {
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
-	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, forward);
-	boardchanges.runChanges(gamefile, changes, meshChanges, forward);
+	// Run graphical and logical changes
+	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
+	boardchanges.runChanges(gamefile, edit.changes, meshChanges, forward);
+	// Update special rights
+	for (const stateChange of edit.stateChanges) {
+		state.applyState(gamefile, stateChange, forward);
+	}
 }
 
 function addEditToHistory(edit: Edit) {
@@ -118,20 +129,36 @@ function update() {
 	if (coordutil.areCoordsEqual(coords, previousSquare)) return;
 	previousSquare = coords;
 	
-	let changes: Array<Change> = [];
+	const coordsKey = coordutil.getKeyFromCoords(coords);
+	const type = gamefile.piecesOrganizedByKey[coordsKey];
+	const pieceHovered = type === undefined ? undefined : gamefileutility.getPieceFromTypeAndCoords(gamefile, type, coords);
 	
-	const pieceToRemove = gamefileutility.getPieceAtCoords(gamefile, coords);
-	if (pieceToRemove) boardchanges.queueDeletePiece(changes, pieceToRemove, false);
+	let edit: Edit = { changes: [], stateChanges: [] };
 	
-	if (currentTool !== "eraser") {
-		const colorExtension = typeutil.neutralTypes.includes(currentTool) ? colorutil.colorExtensionOfNeutrals : colorutil.getColorExtensionFromColor(currentColor);
-		const type = currentTool + colorExtension;
-		const piece: Piece = { type, coords } as Piece;
-		boardchanges.queueAddPiece(changes, piece);
+	// TODO: Move tools into their own functions.
+	// This function is becoming very cluttered.
+	if (currentTool === "special") {
+		if (!pieceHovered) return;
+		const current: undefined | true = gamefile.specialRights[coordsKey];
+		const future = current ? undefined : true;
+		edit.stateChanges.push({ type: 'specialrights', current, future, coordsKey });
+	} else {
+		if (pieceHovered) {
+			boardchanges.queueDeletePiece(edit.changes, pieceHovered, false);
+			const current = gamefile!.specialRights[coordsKey];
+			edit.stateChanges.push({ type: 'specialrights', current, coordsKey });
+		}
+		
+		if (currentTool !== "eraser") {
+			const colorExtension = typeutil.neutralTypes.includes(currentTool) ? colorutil.colorExtensionOfNeutrals : colorutil.getColorExtensionFromColor(currentColor);
+			const type = currentTool + colorExtension;
+			const piece: Piece = { type, coords } as Piece;
+			boardchanges.queueAddPiece(edit.changes, piece);
+		}
 	}
-	
-	runChanges(gamefile, changes, true);
-	thisEdit!.push(...changes);
+	runEdit(gamefile, edit, true);
+	thisEdit!.changes.push(...edit.changes);
+	thisEdit!.stateChanges.push(...edit.stateChanges);
 }
 
 function setTool(tool: string) {
@@ -139,7 +166,6 @@ function setTool(tool: string) {
 	if (tool === "save") return save();
 	if (tool === "color") return toggleColor();
 	if (tool === "clear") return clearAll();
-	if (tool === "special") return; // TODO
 	currentTool = tool;
 }
 
@@ -150,13 +176,17 @@ function toggleColor() {
 function clearAll() {
 	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.")
 	const gamefile = gameslot.getGamefile()!;
-	const changes: Array<Change> = [];
+	const edit: Edit = { changes: [], stateChanges: [] }
 	gamefileutility.forEachPieceInGame(gamefile, (type, coords, gamefile) => {
 		const pieceToDelete = gamefileutility.getPieceFromTypeAndCoords(gamefile!, type, coords);
-		boardchanges.queueDeletePiece(changes, pieceToDelete, false);
+		boardchanges.queueDeletePiece(edit.changes, pieceToDelete, false);
+		
+		const coordsKey = coordutil.getKeyFromCoords(coords);
+		const current = gamefile!.specialRights[coordsKey];
+		edit.stateChanges.push({ type: 'specialrights', current, coordsKey });
 	});
-	runChanges(gamefile!, changes, true);
-	addEditToHistory(changes);
+	runEdit(gamefile!, edit, true);
+	addEditToHistory(edit);
 }
 
 function undo() {
@@ -164,7 +194,7 @@ function undo() {
 	if (indexOfThisEdit! <= 0) return;
 	const gamefile = gameslot.getGamefile()!;
 	indexOfThisEdit!--;
-	runChanges(gamefile, edits![indexOfThisEdit!]!, false);
+	runEdit(gamefile, edits![indexOfThisEdit!]!, false);
 	guinavigation.update_MoveButtons();
 }
 
@@ -172,7 +202,7 @@ function redo() {
 	if (!inBoardEditor) throw Error("Cannot redo edit when we're not using the board editor.");
 	if (indexOfThisEdit! >= edits!.length) return;
 	const gamefile = gameslot.getGamefile()!;
-	runChanges(gamefile, edits![indexOfThisEdit!]!, true);
+	runEdit(gamefile, edits![indexOfThisEdit!]!, true);
 	indexOfThisEdit!++;
 	guinavigation.update_MoveButtons();
 }
@@ -198,7 +228,12 @@ function submitMove () {
 	const gamefile = gameslot.getGamefile()!;
 	edits!.length = indexOfThisEdit!;
 	for (let i = 0; i < gamefile.moves.length; i++) {
-		edits!.push(gamefile.moves[i].changes);
+		const move = gamefile.moves[i];
+		const edit: Edit = {
+			changes: move.changes,
+			stateChanges: [...move.state.global, ...move.state.local]
+		}
+		edits!.push(edit);
 	}
 	indexOfThisEdit = edits!.length;
 	gamefile.moves.length = 0;

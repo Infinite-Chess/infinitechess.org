@@ -418,7 +418,8 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
+	const doGameOverChecks = !boardeditor.areInBoardEditor();
+	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft, { doGameOverChecks });
 	if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	movesequence.animateMove(move, true, animateMain);

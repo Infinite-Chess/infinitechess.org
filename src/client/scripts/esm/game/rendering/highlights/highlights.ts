@@ -17,6 +17,7 @@ import legalmovehighlights from "./legalmovehighlights.js";
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
+import specialrighthighlights from "./specialrighthighlights.js";
 
 
 /**
@@ -35,6 +36,7 @@ function render(gamefile: gamefile) {
 	highlightLastMove(gamefile);
 	checkhighlight.render(gamefile);
 	legalmovehighlights.render();
+	specialrighthighlights.render();
 }
 
 export default {
