@@ -60,10 +60,11 @@ function render() {
 }
 
 function renderSpecialRights(gamefile: gamefile, position: Vec3, scale: Vec3) {
+	// Instance data
 	const squaresToHighlight: Array<number> = [];
 	for (const key in gamefile.specialRights) {
-		if (!gamefile.specialRights[key]) continue;
-		squaresToHighlight.push(...coordutil.getCoordsFromKey(key as CoordsKey));
+		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+		squaresToHighlight.push(...coords);
 	}
 	const color = [1, 0.2, 0, 0.7] as [number, number, number, number];
 	const vertexData: number[] = legalmoveshapes.getDataLegalMoveCornerTris(color);

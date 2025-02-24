@@ -680,7 +680,8 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
     
 	if (!longformat.moves || longformat.moves.length === 0) return longformat;
 	const ret = modify_input ? longformat : deepCopyObject(longformat);
-	let enpassantcoordinates = (ret.enpassant ? ret.enpassant : "");
+	const yParity = longformat.gameRules.turnOrder[0] === 'white' ? 1 : -1;
+	let pawnThatDoublePushedKey = (ret.enpassant ? [ret.enpassant[0], ret.enpassant[1] - yParity].toString() : "");
 	ret.fullMove = longformat.fullMove + Math.floor(ret.moves.length / longformat.gameRules.turnOrder.length);
 	for (let i = 0; i < Math.min(halfmoves, ret.moves.length); i++) {
 		const move = ret.moves[i];
@@ -712,16 +713,14 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// delete captured piece en passant
 		if (move.enpassant) {
-			delete ret.startingPosition[enpassantcoordinates];
-			if (ret.specialRights) delete ret.specialRights[enpassantcoordinates];
+			delete ret.startingPosition[pawnThatDoublePushedKey];
+			if (ret.specialRights) delete ret.specialRights[pawnThatDoublePushedKey];
 		}
 
 		// update en passant
-		if (move.type.slice(0, -1) == "pawns" && Math.abs(move.startCoords[1] - move.endCoords[1]) > 1 ) {
-			ret.enpassant = [move.endCoords[0], Math.round(0.5 * (move.startCoords[1] + move.endCoords[1]))];
-		} else {
-			delete ret.enpassant;
-		}
+		if (move.type.startsWith('pawns') && Math.abs(move.endCoords[1] - move.startCoords[1]) === 2) {
+			ret.enpassant = [move.endCoords[0], (move.startCoords[1] + move.endCoords[1]) / 2];
+		} else delete ret.enpassant;
 
 		// update coords of castled piece
 		if (move.castle) {
@@ -732,7 +731,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		}
 
 		// save move coords for potential en passant
-		enpassantcoordinates = endString;
+		pawnThatDoublePushedKey = endString;
 
 		// Rotate the turn order, moving the first player to the back
 		ret.gameRules.turnOrder.push(ret.gameRules.turnOrder.shift());
