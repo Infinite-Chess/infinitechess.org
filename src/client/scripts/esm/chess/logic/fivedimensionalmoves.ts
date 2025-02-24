@@ -84,7 +84,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 		if (color === colorOfPiece) continue; // Same color, don't add the capture
 
 		// Make sure it isn't a void
-		if (pieceAtCoords === 'voidsN') continue;
+		if (pieceAtCoords.startsWith('voids')) continue;
 
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Add the capture
 	}
@@ -104,6 +104,9 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
  */
 function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string, distance: number): void {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
+	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
+	const enpassantCapturedPawn = gamefileutility.getPieceTypeAtCoords(gamefile, gamefile.enpassant.pawn)!;
+	if (colorutil.getPieceColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== distance) return; // Not immediately left or right of us

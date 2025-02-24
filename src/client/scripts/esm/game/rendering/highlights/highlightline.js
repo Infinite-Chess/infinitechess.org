@@ -57,7 +57,7 @@ function genModel() {
 	const color = jsutil.deepCopyObject(options.getLegalMoveHighlightColor());
 	color[3] = 1;
 
-	const snapDist = miniimage.gwidthWorld() / 2;
+	const snapDist = miniimage.getWidthWorld() / 2;
     
 	const a = perspective.distToRenderBoard;
 	/** @type {BoundingBox} */
@@ -116,12 +116,12 @@ function genModel() {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
-	const halfWidth = miniimage.gwidthWorld() / 2;
+	const halfWidth = miniimage.getWidthWorld() / 2;
 
 	const startX = closestPoint.coords[0] - halfWidth;
 	const startY = closestPoint.coords[1] - halfWidth;
-	const endX = startX + miniimage.gwidthWorld();
-	const endY = startY + miniimage.gwidthWorld();
+	const endX = startX + miniimage.getWidthWorld();
+	const endY = startY + miniimage.getWidthWorld();
 
 	const { r, g, b } = options.getColorOfType(type);
 
@@ -134,7 +134,8 @@ function genModel() {
 	// If we clicked, teleport to the point on the line closest to the click location.
 	// BUT we have to recalculate it in coords format instead of world-space
 
-	if (!input.isMouseDown_Left() && !input.getTouchClicked()) return;
+	if (input.isMouseDown_Left()) input.removeMouseDown_Left(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+	if (!input.getPointerClicked()) return; // Pointer did not click, we will not teleport down to this linee
 
 	const moveset = closestPoint.moveset;
 

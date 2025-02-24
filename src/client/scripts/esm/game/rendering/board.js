@@ -95,8 +95,8 @@ function gsquareCenter() {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels(virtual) {
-	return virtual ? tileWidthPixels_Virtual : tileWidthPixels_Physical;
+function gtileWidth_Pixels() {
+	return tileWidthPixels_Virtual;
 }
 
 function gtile_MouseOver_Float() {
@@ -144,8 +144,8 @@ function recalcTile_MouseCrosshairOver() {
 function recalcTileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox();
-	tileWidthPixels_Virtual = (camera.canvas.height * 0.5 / screenBoundingBox.top) * movement.getBoardScale(); // Greater for retina displays
-	tileWidthPixels_Physical = tileWidthPixels_Virtual / window.devicePixelRatio;
+	tileWidthPixels_Physical = (camera.canvas.height * 0.5 / screenBoundingBox.top) * movement.getBoardScale(); // Greater for retina displays
+	tileWidthPixels_Virtual = tileWidthPixels_Physical / window.devicePixelRatio;
 }
 
 function recalcTile_MouseOver() {

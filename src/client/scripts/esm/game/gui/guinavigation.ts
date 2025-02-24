@@ -77,6 +77,8 @@ function isOpen() {
 function toggle() {
 	if (navigationOpen) close();
 	else open({ allowEditCoords: !onlinegame.areInOnlineGame() });
+	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
+	frametracker.onVisualChange();
 }
 
 function open({ allowEditCoords = true }: { allowEditCoords?: boolean }) {

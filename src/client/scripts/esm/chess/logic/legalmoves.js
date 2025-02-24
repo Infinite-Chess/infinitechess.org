@@ -235,8 +235,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
 
 		// If they match colors, move is illegal because we cannot capture friendly pieces. Remove the move.
 		// ALSO remove if it's a void!
-		if (color === pieceAtSquareColor
-            || pieceAtSquare === 'voidsN') individualMoves.splice(i, 1);
+		if (color === pieceAtSquareColor || pieceAtSquare.startsWith('voids')) individualMoves.splice(i, 1);
 	}
 
 	return individualMoves;

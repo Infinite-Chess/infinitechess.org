@@ -127,7 +127,12 @@ function update() {
 		if (promoteTo) makePromotionMove(gamefile);
 		return;
 	}
-	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) return;
+	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) {
+		// We might be zoomed way out.
+		// If we are still dragging a piece, we still want to be able to drop it.
+		if (!input.getPointerHeld()) draganimation.dropPiece(); // Drop it without moving it.
+		return;
+	}
 
 	// Update the hover square
 	hoverSquare = space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
@@ -266,7 +271,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
  */
 function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
-	if (type === 'voidsN') return 0; // Can't select voids
+	if (type.startsWith('voids')) return 0; // Can't select voids
 	if (options.getEM()) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
 	const color = colorutil.getPieceColorFromType(type);
 	if (color === colorutil.colorOfNeutrals) return 0; // Can't select neutrals, period.
@@ -323,7 +328,7 @@ function selectPiece(gamefile: gamefile, piece: Piece, drag: boolean) {
 
 	if (drag) { // Pick up anyway, don't unselect it if it was already selected.
 		if (alreadySelected) {
-			draganimation.pickUpPiece(piece, false); // Reset parity since it's the same piece being picked up.
+			draganimation.pickUpPiece(piece, false); // Toggle the parity since it's the same piece being picked up.
 			return; // Already selected, don't have to recalculate legal moves.
 		} draganimation.pickUpPiece(piece, true); // Reset parity since it's a new piece being picked up.
 	} else { // Not being dragged. If this piece is already selected, unselect it.

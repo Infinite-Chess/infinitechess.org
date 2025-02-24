@@ -105,11 +105,11 @@ const MOVE_ANIMATION_DURATION = {
 	multiplierMillis: 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
 	multiplierMillis_Curved: 12, // Default: 12
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
 	baseMillis_Debug: 2000,
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis} when {@link DEBUG} is true. */
 	multiplierMillis_Debug: 30,
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link DEBUG} is true. */
 	multiplierMillis_Curved_Debug: 60,
 };
 
@@ -349,30 +349,35 @@ function calculateBoardPosition(coords: Coords) {
 // Animation Calculations -----------------------------------------------------
 
 
-/** Returns the coordinate the animation's piece should be rendered this frame. */
-function getCurrentAnimationPosition(animation: Animation): Coords {
+/**
+ * Returns the coordinate the animation's piece should be rendered this frame.
+ * @param animation - The animation to calculate the position for.
+ * @param customMaxDistB4Teleport - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
+ */
+function getCurrentAnimationPosition(animation: Animation, customMaxDistB4Teleport?: number): Coords {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
 	const t = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
 	const easedT = math.easeInOut(t);
 
-	return calculateInterpolatedPosition(animation, easedT);
+	const MAX_DISTANCE = customMaxDistB4Teleport ?? MAX_DISTANCE_BEFORE_TELEPORT;
+	return calculateInterpolatedPosition(animation, easedT, MAX_DISTANCE);
 }
 
 /** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
-function calculateInterpolatedPosition(animation: Animation, easedProgress: number): Coords {
-	const targetDistance = animation.totalDistance <= MAX_DISTANCE_BEFORE_TELEPORT ? easedProgress * animation.totalDistance : calculateTeleportDistance(animation.totalDistance, easedProgress);
+function calculateInterpolatedPosition(animation: Animation, easedProgress: number, MAX_DISTANCE: number): Coords {
+	const targetDistance = animation.totalDistance <= MAX_DISTANCE ? easedProgress * animation.totalDistance : calculateTeleportDistance(animation.totalDistance, easedProgress, MAX_DISTANCE);
 	return findPositionInSegments(animation.segments, targetDistance);
 }
 
 /** Calculates the distance the piece animation should be rendered along the path, when the total distance is great enough to merit teleporting. */
-function calculateTeleportDistance(totalDistance: number, easedProgress: number): number {
+function calculateTeleportDistance(totalDistance: number, easedProgress: number, MAX_DISTANCE: number): number {
 	// First half
-	if (easedProgress < 0.5) return easedProgress * 2 * (MAX_DISTANCE_BEFORE_TELEPORT / 2);
+	if (easedProgress < 0.5) return easedProgress * 2 * (MAX_DISTANCE / 2);
 	// Second half: animate final portion of path
-	const portionFromEnd = (easedProgress - 0.5) * 2 * (MAX_DISTANCE_BEFORE_TELEPORT / 2);
-	return (totalDistance - MAX_DISTANCE_BEFORE_TELEPORT / 2) + portionFromEnd;
+	const portionFromEnd = (easedProgress - 0.5) * 2 * (MAX_DISTANCE / 2);
+	return (totalDistance - MAX_DISTANCE / 2) + portionFromEnd;
 }
 
 /** Finds the position of the piece at a certain distance along the path. */
@@ -393,10 +398,12 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 
 
 export default {
+	animations,
 	animatePiece,
 	clearAnimations,
 	toggleDebug,
 	update,
 	renderTransparentSquares,
 	renderAnimations,
+	getCurrentAnimationPosition,
 };

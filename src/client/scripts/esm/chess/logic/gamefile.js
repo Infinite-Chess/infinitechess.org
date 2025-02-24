@@ -125,7 +125,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		stride: undefined,
 		/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
          * This helps require less severe uniform translations upon rendering when traveling massive distances.
-         * The amount it is shifted depends on the nearest `REGEN_RANGE`. */
+         * The amount it is shifted depends on the nearest `REGEN_RANGE`. @type {Coords} */
 		offset: undefined,
 		/** A number for whether the mesh of the pieces is currently being generated.
          * @type {number} 0+. When > 0, is it generating. */

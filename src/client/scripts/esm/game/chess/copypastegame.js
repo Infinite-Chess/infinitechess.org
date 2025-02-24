@@ -38,8 +38,6 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
  * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
 function copyGame(copySinglePosition) {
-	if (guinavigation.isCoordinateActive()) return;
-
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
@@ -86,13 +84,15 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
 	if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
 	primedGamefile.fullMove = gamefile.startSnapshot.fullMove;
 	primedGamefile.startingPosition = gamefile.startSnapshot.positionString;
-	primedGamefile.moves = gamefile.moves;
 	primedGamefile.gameRules = gameRulesCopy;
 
 	if (copySinglePosition) {
 		primedGamefile.startingPosition = gamefile.startSnapshot.position;
 		primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
+		primedGamefile.moves = gamefile.moves.slice(0, gamefile.moveIndex + 1); // Only copy the moves up to the current move
 		primedGamefile = formatconverter.GameToPosition(primedGamefile, Infinity);
+	} else {
+		primedGamefile.moves = gamefile.moves;
 	}
 
 	return primedGamefile;
@@ -104,7 +104,7 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
  * @param {event} event - The event fired from the event listener
  */
 async function callbackPaste(event) {
-	if (guinavigation.isCoordinateActive()) return;
+	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
 	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
 	

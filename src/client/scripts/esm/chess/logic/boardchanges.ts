@@ -349,14 +349,13 @@ export type {
 };
 
 export default {
+	changeFuncs,
+	queueCapture,
 	queueAddPiece,
 	queueDeletePiece,
 	queueMovePiece,
-	queueCapture,
+	runChanges,
 	getCapturedPieces,
 	oneWayActions,
 	wasACapture,
-	runChanges,
-	applyChanges,
-	changeFuncs,
 };
