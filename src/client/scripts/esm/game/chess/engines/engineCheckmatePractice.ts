@@ -169,6 +169,9 @@ let wiggleroomDictionary: { [key: number]: number };
 // whether to consider white pawn moves as candidate moves
 let ignorepawnmoves: boolean;
 
+// whether to consider white royal moves as candidate moves
+let ignoreroyalmoves: boolean;
+
 /**
  * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
  */
@@ -176,6 +179,9 @@ function initEvalWeightsAndSearchProperties() {
 
 	// default: ignoring white pawns moves as candidate moves makes engine much stronger at low depths
 	ignorepawnmoves = true;
+
+	// default
+	ignoreroyalmoves = false;
 
 	// weights for piece values of white pieces
 	pieceExistenceEvalDictionary = {
@@ -309,7 +315,7 @@ function initEvalWeightsAndSearchProperties() {
 
 	switch (checkmateSelectedID) {
 		case "1K1AM-1k":
-			distancesEvalDictionary[5] = [[200, specialNorm], [200, specialNorm]]; // king
+			ignoreroyalmoves = true;
 			legalMoveEvalDictionary = {
 				// in check
 				0: {
@@ -351,6 +357,9 @@ function initEvalWeightsAndSearchProperties() {
 			break;
 		case "2K1R-1k":
 			distancesEvalDictionary[5] = [[40, specialNorm], [40, specialNorm]]; // king
+			break;
+		case "1K2AR-1k":
+			distancesEvalDictionary[10] = [[25, manhattanNorm], [25, manhattanNorm]]; // archbishop
 			break;
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
@@ -592,6 +601,7 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 	const piece_square = coordlist[piece_index]!;
 
 	if (ignorepawnmoves && piece_properties.is_pawn) return candidate_squares;
+	if (ignoreroyalmoves && piece_properties.is_royal) return candidate_squares;
 
 	// jump moves
 	if (piece_properties.jumps) {

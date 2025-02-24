@@ -81,12 +81,15 @@ const validCheckmates = {
 
 /** These checkmates we may place the black king nearer to the white pieces. */
 const checkmatesWithBlackRoyalNearer = [
+	"1K1Q1N-1k",
 	"1Q1R1N-1k",
 	"1Q2N-1k",
 	"1Q1B1N-1k",
-	"1K1AR2HA-1k",
+	"1K1N2B1B-1k",
 	"1K2N1B1B-1k",
 	"1K1R1N1B-1k",
+	"1K1AR1R-1k",
+	"1K1AR2HA-1k",
 	"1K1CH1N-1k",
 	"1K1R2N-1k",
 	"2K1R-1k",
@@ -208,9 +211,9 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 			if (colorutil.getPieceColorFromType(piece) === "white") {
 				if (blackpieceplaced) throw Error("Must place all white pieces before placing black pieces.");
 
-				// randomly generate white piece coordinates near origin in square from -5 to 5
-				const x: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
-				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
+				// randomly generate white piece coordinates in square around origin
+				const x: number = Math.floor(Math.random() * (blackroyalnearer ? 5 : 11)) - (blackroyalnearer ? 2 : 5);
+				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 5 : 11)) - (blackroyalnearer ? 2 : 5);
 				const key: string = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
@@ -220,7 +223,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				}
 			} else {
 				// randomly generate black piece coordinates at a distance
-				const x: number = Math.floor(Math.random() * 3) + (blackroyalnearer ? 7 : 12);
+				const x: number = Math.floor(Math.random() * 3) + (blackroyalnearer ? 8 : 12);
 				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 15 : 35)) - (blackroyalnearer ? 8 : 17);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 				// check if square is occupied or potentially threatened
