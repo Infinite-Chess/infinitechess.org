@@ -57,6 +57,7 @@ import math from '../../util/math.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
+import boardeditor from '../misc/boardeditor.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -305,6 +306,7 @@ function canDropOnPieceTypeInEditMode(type?: string) {
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
 function isOpponentType(gamefile: gamefile, type: string) {
+	if (boardeditor.areInBoardEditor()) return false;
 	const pieceColor = colorutil.getPieceColorFromType(type);
 	return !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
 	/* Local Game */ : pieceColor !== gamefile.whosTurn;
@@ -416,13 +418,15 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
+	const doGameOverChecks = !boardeditor.areInBoardEditor();
+	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft, { doGameOverChecks });
 	if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	movesequence.animateMove(move, true, animateMain);
 
 	movesendreceive.sendMove();
 	enginegame.submitMove();
+	boardeditor.submitMove();
 
 	unselectPiece();
 }

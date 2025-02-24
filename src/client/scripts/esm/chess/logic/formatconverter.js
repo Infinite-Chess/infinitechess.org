@@ -1040,5 +1040,6 @@ export default {
 	generateSpecialRights,
 	convertShortMovesToLong,
 	longToShortMoves,
+	LongToShort_Piece,
 	ShortToLong_Piece
 };

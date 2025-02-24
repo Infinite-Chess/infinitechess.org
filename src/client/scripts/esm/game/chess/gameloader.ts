@@ -32,13 +32,15 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
+import guiedit from "../gui/guiedit.js";
+import boardeditor from "../misc/boardeditor.js";
 
 
 // Variables --------------------------------------------------------------------
 
 
 /** The type of game we are in, whether local or online, if we are in a game. */
-let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine';
+let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine' | 'editor';
 
 
 // Getters --------------------------------------------------------------------
@@ -66,6 +68,7 @@ function isItOurTurn(color?: string): boolean {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't tell if it's our turn when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
+	else if (typeOfGameWeAreIn === 'editor') return true;
 	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.whosTurn === color;
 	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
 }
@@ -176,7 +179,27 @@ async function startEngineGame(options: {
 	openGameinfoBarAndConcludeGameIfOver(metadata, true);
 }
 
+async function startEditor() {
+	const metadata : MetaData = {
+		Variant: "EditMode",
+		TimeControl: '-',
+		Event: `Position created using ingame board editor!`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime()
+	};
 
+	await gameslot.loadGamefile({
+		metadata,
+		viewWhitePerspective: true,
+		allowEditCoords: true,
+	});
+	typeOfGameWeAreIn = 'editor';
+	boardeditor.initBoardEditor();
+
+	guiedit.open();
+}
 
 /**
  * These items must be done after the logical parts of the gamefile are fully loaded
@@ -191,9 +214,11 @@ function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameContro
 function unloadGame() {
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
 	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
+	else if (typeOfGameWeAreIn === 'editor') boardeditor.closeBoardEditor();
 	
 	guinavigation.close();
 	guigameinfo.close();
+	guiedit.close();
 	gameslot.unloadGame();
 	perspective.disable();
 	gui.prepareForOpen();
@@ -214,6 +239,7 @@ export default {
 	startLocalGame,
 	startOnlineGame,
 	startEngineGame,
+	startEditor,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
 };

@@ -18,6 +18,8 @@ import piecesmodel from "../rendering/piecesmodel.js";
 import organizedlines from "../../chess/logic/organizedlines.js";
 // @ts-ignore
 import options from "../rendering/options.js";
+// @ts-ignore
+import voids from "../rendering/voids.js";
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
@@ -71,6 +73,7 @@ const animatableChanges: ChangeApplication<animationFunc> = {
 
 
 function addMeshPiece(gamefile: gamefile, change: Change) {
+	if (change.piece.type === 'voidsN') return voids.regenModel(gamefile);
 	if (gamefile.mesh.model === undefined) return; // Mesh isn't generated yet. Don't make this graphical change.
 	piecesmodel.overwritebufferdata(gamefile, change['piece'], change['piece'].coords, change['piece'].type);
 
@@ -83,6 +86,7 @@ function addMeshPiece(gamefile: gamefile, change: Change) {
 }
 
 function deleteMeshPiece(gamefile: gamefile, change: Change) {
+	if (change.piece.type === 'voidsN') return voids.regenModel(gamefile);
 	piecesmodel.deletebufferdata(gamefile, change.piece);
 }
 

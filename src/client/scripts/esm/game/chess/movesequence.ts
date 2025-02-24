@@ -36,6 +36,7 @@ import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import frametracker from "../rendering/frametracker.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
+import boardeditor from "../misc/boardeditor.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -55,7 +56,7 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	// GUI changes
 	updateGui(false);
 
-	if (!onlinegame.areInOnlineGame()) {
+	if (!onlinegame.areInOnlineGame() && !boardeditor.areInBoardEditor()) {
 		clock.push(gamefile);
 		guiclock.push(gamefile);
 	}

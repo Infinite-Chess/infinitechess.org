@@ -55,6 +55,7 @@ function forEachPieceType(callback, { ignoreNeutrals, ignoreVoids } = {}) { // C
 }
 
 export default {
+	types,
 	neutralTypes,
 	colorsTypes,
 	royals,
