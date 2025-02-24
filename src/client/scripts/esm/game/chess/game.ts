@@ -27,6 +27,7 @@ import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -117,6 +118,7 @@ function testInGameDebugToggles(gamefile: gamefile) {
 	if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
 	if (input.isKeyDown('5')) voids.toggleDebug(); // Renders the wireframe of voids
 	if (input.isKeyDown('6')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
+	if (input.isKeyDown('7')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 }
 
