@@ -26,8 +26,22 @@ import legalmoveshapes from "../legalmoveshapes.js";
 // Variables -------------------------------------------------------------------------------------
 
 
-const SPECIAL_RIGHTS_COLOR = [1, 0.2, 0, 0.7] as [number, number, number, number];
-const ENPASSANT_COLOR = [0.2, 1, 0, 0.7] as [number, number, number, number];
+/** Customizations for the special rights highlights */
+const SPECIAL_RIGHTS = {
+	COLOR: [0, 1, 0.5, 0.3] as [number, number, number, number],
+	/** Method that returns the single-instance vertex data for the shape */
+	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
+	SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
+};
+
+/** Customizations for the enpassant highlight */
+const ENPASSANT = {
+	COLOR: [1, 0, 1, 0.3] as [number, number, number, number],
+	/** Method that returns the single-instance vertex data for the shape */
+	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
+	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveDot,
+	SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
+};
 
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
@@ -64,7 +78,7 @@ function regenModel() {
 		const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
 	}
-	const vertexData: number[] = legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
+	const vertexData: number[] = SPECIAL_RIGHTS.SHAPE_FUNC(SPECIAL_RIGHTS.COLOR);
 	model = createModel_Instanced(vertexData, squaresToHighlight, "TRIANGLES", true);
 }
 
@@ -98,7 +112,7 @@ function renderEnPassant() {
 	const boardScale: number = movement.getBoardScale();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
-	const data = legalmoveshapes.getDataLegalMoveCornerTris(ENPASSANT_COLOR);
+	const data = ENPASSANT.SHAPE_FUNC(ENPASSANT.COLOR);
 	const model = createModel(data, 2, "TRIANGLES", true);
 	const transformedPosition: Vec3 = [
 		position[0] + gamefile.enpassant.square[0],

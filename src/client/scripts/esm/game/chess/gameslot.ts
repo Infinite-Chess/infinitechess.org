@@ -67,6 +67,7 @@ import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
 import { EnPassant } from "../../chess/logic/state.js";
+import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 
 
 // Type Definitions ----------------------------------------------------------
@@ -263,6 +264,8 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	// Immediately conclude the game if we loaded a game that's over already
 	loadedGamefile = newGamefile;
+
+	specialrighthighlights.regenModel();
 }
 
 /** Loads all of the graphical components of a game */
@@ -329,6 +332,7 @@ function unloadGame() {
 	animation.clearAnimations();
 	
 	options.disableEM();
+	specialrighthighlights.onGameClose();
 }
 
 /**
