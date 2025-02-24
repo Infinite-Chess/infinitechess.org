@@ -22,6 +22,7 @@ import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
+import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
@@ -197,6 +198,7 @@ function unloadGame() {
 	gameslot.unloadGame();
 	perspective.disable();
 	gui.prepareForOpen();
+	specialrighthighlights.onGameClose();
 	typeOfGameWeAreIn = undefined;
 }
 

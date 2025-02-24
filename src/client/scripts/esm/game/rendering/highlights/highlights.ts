@@ -36,7 +36,7 @@ function render(gamefile: gamefile) {
 	highlightLastMove(gamefile);
 	checkhighlight.render(gamefile);
 	legalmovehighlights.render();
-	specialrighthighlights.render();
+	specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
 }
 
 export default {

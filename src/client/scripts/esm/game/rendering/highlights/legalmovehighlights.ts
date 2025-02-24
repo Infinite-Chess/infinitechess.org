@@ -44,6 +44,7 @@ import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { Color } from '../../../chess/util/colorutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
+import specialrighthighlights from './specialrighthighlights.js';
 
 
 
@@ -303,11 +304,15 @@ function getDimensionsOfPerspectiveViewRange(): Coords {
 
 /**
  * Regenerates both the models of our selected piece's legal move highlights,
- * and the models of pieces legal moves of which we're currently hovering over their arrow.
+ * and the models of pieces legal moves of which we're currently hovering over their arrow,
+ * and the model of the special rights highlights.
+ * 
+ * Basically everything that relies on {@link model_Offset}
  */
 function regenerateAll() {
 	regenSelectedPieceLegalMovesHighlightsModel();
 	arrowlegalmovehighlights.regenModelsOfHoveredPieces();
+	specialrighthighlights.regenModel();
 
 	frametracker.onVisualChange();
 }
