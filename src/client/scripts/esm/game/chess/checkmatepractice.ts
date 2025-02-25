@@ -66,10 +66,10 @@ const validCheckmates = {
 		"2K1R-1k",
 		"1K2N6B-1k",
 		"1K1B2HA-1k",
+		"5HU-1k",
 	],
 	insane: [
 		"1K1Q1P-1k",
-		"5HU-1k",
 		"1K3HA-1k",
 		"1K3NR-1k",
 	]

@@ -172,6 +172,13 @@ let ignorepawnmoves: boolean;
 // whether to consider white royal moves as candidate moves
 let ignoreroyalmoves: boolean;
 
+// whether to enter "trap flee mode" whenever the black royal is surrounded by white pieces
+let mayEnterTrapFleeMode: boolean;
+let numOfPiecesForTrap: number;
+let maxDistanceForTrap: number;
+let maxDistanceForRoyal: number;
+let trapFleeDictionary: { [key: string]: [number, number, number] };
+
 /**
  * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
  */
@@ -182,6 +189,9 @@ function initEvalWeightsAndSearchProperties() {
 
 	// default
 	ignoreroyalmoves = false;
+
+	// default
+	mayEnterTrapFleeMode = false;
 
 	// weights for piece values of white pieces
 	pieceExistenceEvalDictionary = {
@@ -313,6 +323,17 @@ function initEvalWeightsAndSearchProperties() {
 		"5HU-1k": [[12, 20, 30, manhattanNorm], [12, 20, 30, manhattanNorm]], // huygen
 	};
 
+	// whether to enter "trap flee mode" whenever the black royal is surrounded by white pieces
+	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal
+	trapFleeDictionary = {
+		"1K1B2HA-1k": [3, 6, 10],
+	}
+
+	if (checkmateSelectedID in trapFleeDictionary){
+		mayEnterTrapFleeMode = true;
+		[numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal] = trapFleeDictionary[checkmateSelectedID]!;
+	}
+
 	switch (checkmateSelectedID) {
 		case "1K1AM-1k":
 			ignoreroyalmoves = true;
@@ -390,10 +411,6 @@ function initEvalWeightsAndSearchProperties() {
 		case "1K1Q1P-1k":
 			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
 			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
-			break;
-		case "1K1B2HA-1k":
-			distancesEvalDictionary[3] = [[10, manhattanNorm], [10, manhattanNorm]]; // bishop
-			distancesEvalDictionary[8] = [[5, vincinityNorm], [5, vincinityNorm]]; // hawk
 			break;
 	}
 }
@@ -558,15 +575,16 @@ function square_is_threatened(target_square: Coords, piecelist: number[], coordl
 /**
  * Computes an array of all the squares that the black royal can legally move to in the given position
  */
-function get_black_legal_moves(piecelist: number[], coordlist: Coords[]): Coords[] {
-	return royal_moves.filter((square) => !square_is_threatened(square, piecelist, coordlist));
+function get_black_legal_moves(inTrapFleeMode: boolean, piecelist: number[], coordlist: Coords[]): Coords[] {
+	// If black is in flee mode, he cannot capture white pieces
+	return royal_moves.filter((square) => !square_is_threatened(square, piecelist, coordlist) && !(inTrapFleeMode && square_is_occupied(square, piecelist, coordlist)) );
 }
 
 /**
  * Computes the number of squares that the black royal can legally move to in the given position
  */
-function get_black_legal_move_amount(piecelist: number[], coordlist: Coords[]): number {
-	return get_black_legal_moves(piecelist, coordlist).length;
+function get_black_legal_move_amount(inTrapFleeMode: boolean, piecelist: number[], coordlist: Coords[]): number {
+	return get_black_legal_moves(inTrapFleeMode, piecelist, coordlist).length;
 }
 
 // checks if the black royal is in check
@@ -578,17 +596,31 @@ function is_check(piecelist: number[], coordlist: Coords[]): boolean {
 // Unused functions
 /*
 // checks if the black royal is mated
-function is_mate(piecelist, coordlist) {
-	if (get_black_legal_move_amount(piecelist, coordlist) == 0 && square_is_threatened([0, 0], piecelist, coordlist)) return true;
+function is_mate(inTrapFleeMode, piecelist, coordlist) {
+	if (get_black_legal_move_amount(inTrapFleeMode, piecelist, coordlist) == 0 && square_is_threatened([0, 0], piecelist, coordlist)) return true;
 	else return false;
 }
 
 // checks if the black royal is stalemated
-function is_stalemate(piecelist, coordlist) {
-	if (get_black_legal_move_amount(piecelist, coordlist) == 0 && !square_is_threatened([0, 0], piecelist, coordlist)) return true;
+function is_stalemate(inTrapFleeMode, piecelist, coordlist) {
+	if (get_black_legal_move_amount(inTrapFleeMode, piecelist, coordlist) == 0 && !square_is_threatened([0, 0], piecelist, coordlist)) return true;
 	else return false;
 }
 */
+
+// determine if black is surrounded by at least numOfPiecesForTrap nonroyal white pieces
+function isBlackInTrap(piecelist: number[], coordlist: Coords[]) {
+	let nearbyNonroyalWhites = 0;
+	for (let i = 0; i < piecelist.length; i++) {
+		if (piecelist[i]! !== 0 && manhattanNorm(coordlist[i]!) <= maxDistanceForTrap) {
+			if (!pieceTypeDictionary[piecelist[i]!]!.is_royal) nearbyNonroyalWhites++;
+			// black is not in trap if white royal is nearby
+			else if (manhattanNorm(coordlist[i]!) <= maxDistanceForRoyal) return false;
+		}
+	}
+	// black is surrounded by at least numOfPiecesForTrap nonroyal white pieces
+	return (nearbyNonroyalWhites >= numOfPiecesForTrap);
+}
 
 // calculate a list of interesting squares to move to for a white piece with a certain piece index
 function get_white_piece_candidate_squares(piece_index: number, piecelist: number[], coordlist: Coords[]): Coords[] {
@@ -813,7 +845,7 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 
 	// add penalty based on number of legal moves of black royal
 	const incheck = is_check(piecelist, coordlist);
-	score += legalMoveEvalDictionary[incheck ? 0 : 1]![get_black_legal_move_amount(piecelist, coordlist)]!;
+	score += legalMoveEvalDictionary[incheck ? 0 : 1]![get_black_legal_move_amount(false, piecelist, coordlist)]!;
 
 	const black_to_move_num = black_to_move ? 0 : 1;
 	for (let i = 0; i < piecelist.length; i++) {
@@ -845,19 +877,20 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Number} start_depth - does not get changed at all during recursion
  * @param {Boolean} black_to_move 
  * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
+ * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search
  * @param {Number} alpha 
  * @param {Number} beta 
  * @param {Number} alphaPlies - alpha beta for remaining plies in the game: tiebreak in case of early game over: the more plies the game lasts the better for black
  * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
 		return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 	// If game over, return position evaluation
-	} else if ( black_to_move && get_black_legal_move_amount(piecelist, coordlist) === 0) {
+	} else if ( black_to_move && get_black_legal_move_amount(false, piecelist, coordlist) === 0) {
 		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
 	// At max depth, return position evaluation
 	} else if (depth === 0) {
@@ -870,7 +903,10 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	if (black_to_move) {
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
-		const black_moves = get_black_legal_moves(piecelist, coordlist);
+		const black_moves = get_black_legal_moves(inTrapFleeMode, piecelist, coordlist);
+
+		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
+		if (mayEnterTrapFleeMode && depth === start_depth && isBlackInTrap(piecelist, coordlist)) inTrapFleeMode = true;
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
@@ -890,7 +926,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
 		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
+			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 			followingPrincipal = false;
 
@@ -921,7 +957,10 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	} else {
 		let minScore = Infinity;
 		let minPlies = Infinity;
-		const candidate_moves = get_white_candidate_moves(piecelist, coordlist);
+		let candidate_moves: Coords[][];
+
+		if (inTrapFleeMode) candidate_moves = [[coordlist[0]], ...Array(piecelist.length - 1).fill([])];
+		else candidate_moves = get_white_candidate_moves(piecelist, coordlist);
 
 		// go through pieces for in increasing order of what piece has how many candidate moves
 		const indices = [...Array(piecelist.length).keys()];
@@ -955,7 +994,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, alpha, beta, alphaPlies, betaPlies);
+				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, alpha, beta, alphaPlies, betaPlies);
 				if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 				followingPrincipal = false;
 
@@ -985,7 +1024,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
  */
 function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
 	// immediately initialize and set globallyBestVariation randomly, in case nothing better ever gets found
-	const black_moves = get_black_legal_moves(piecelist, coordlist);
+	const black_moves = get_black_legal_moves(false, piecelist, coordlist);
 	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
 	const [dummy_piecelist, dummy_coordlist] = make_black_move(globallyBestVariation[0]![1]!, piecelist, coordlist);
 	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false);
@@ -993,7 +1032,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, -Infinity, Infinity, 0, Infinity);
+		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, -Infinity, Infinity, 0, Infinity);
 		if (evaluation.terminate_now) { 
 			// console.log("Search interrupted at depth " + depth);
 			break;
@@ -1072,6 +1111,7 @@ async function runEngine() {
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
+		// console.log(isBlackInTrap(start_piecelist, start_coordlist));
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
 		// console.log(globalSurvivalPlies);
 		// console.log(globallyBestVariation);
