@@ -7,6 +7,7 @@
 
 import type { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
 import type { Vec3 } from "../../../util/math.js";
+import type { Color } from "../../../chess/util/colorutil.js";
 
 
 import { BufferModelInstanced, createModel, createModel_Instanced } from "../buffermodel.js";
@@ -28,7 +29,7 @@ import legalmoveshapes from "../instancedshapes.js";
 
 /** Customizations for the special rights highlights */
 const SPECIAL_RIGHTS = {
-	COLOR: [0, 1, 0.5, 0.3] as [number, number, number, number],
+	COLOR: [0, 1, 0.5, 0.3] as Color,
 	/** Method that returns the single-instance vertex data for the shape */
 	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
 	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
@@ -37,7 +38,7 @@ const SPECIAL_RIGHTS = {
 
 /** Customizations for the enpassant highlight */
 const ENPASSANT = {
-	COLOR: [1, 0, 1, 0.3] as [number, number, number, number],
+	COLOR: [0.5, 0, 1, 0.3] as Color,
 	/** Method that returns the single-instance vertex data for the shape */
 	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
 	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveDot,
