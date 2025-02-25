@@ -142,7 +142,7 @@ async function callbackPaste(event) {
 
 	if (!verifyLongformat(longformat)) return;
 
-	console.log(longformat);
+	// console.log(longformat);
     
 	pasteGame(longformat);
 }

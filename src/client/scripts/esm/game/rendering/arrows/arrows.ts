@@ -745,13 +745,14 @@ function executeArrowShifts() {
 
 		// Delete the piece from the start location, and add it at the end location
 
-		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start)! : undefined;
+		// This may be defined if the animations haven't been reset and we're viewing different moves.
+		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start) : undefined;
 
 		// This matches the original piece's index, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
 		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end } as Piece : undefined;
 
 		// Do the delete action first, so that organized piece lists have an undefined placeholder for the proceeding addition
-		if (shift.start !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
+		if (originalPiece !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
 		// Add a safety net to prevent adding a piece that is already on the board.
 		// This can happen when the current animation position of a piece is EXACTLY over an existing piece.
 		if (shift.end !== undefined) queueAddPieceIfNoneAddedOnCoords(addedPiece!);

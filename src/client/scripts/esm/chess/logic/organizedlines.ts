@@ -19,6 +19,7 @@ import type gamefile from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Piece } from './boardchanges.js';
 import type { Vec2 } from '../../util/math.js';
+import clientEventDispatcher from '../../util/clientEventDispatcher.js';
 
 
 
@@ -102,8 +103,6 @@ function initOrganizedPieceLists(gamefile: gamefile) {
 	gamefileutility.forEachPieceInGame(gamefile, organizePiece);
     
 	// console.log("Finished organizing lists!")
-
-	// We no longer initUndefineds() since that is done in the PooledArray contructor
 }
 
 function resetOrganizedLists(gamefile: gamefile) {
@@ -213,6 +212,14 @@ function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 		const undefinedCount = list.undefineds.length;
 		for (let i = undefinedCount; i < extraUndefineds; i++) list.addUndefineds();
 	}
+
+	// piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+	/**
+	 * DISPATCH an event instead of calling piecesmodel.regenModel directly,
+	 * that way we don't tie up the game code as a dependancy.
+	 */
+	// console.log("Fired 'inserted-undefineds' event.");
+	clientEventDispatcher.dispatch('inserted-undefineds');
 }
 
 /**

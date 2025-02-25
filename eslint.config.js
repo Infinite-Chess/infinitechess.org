@@ -55,6 +55,7 @@ export default [
 				translations: "readonly", // Injected into the html through ejs
 				header: "readonly",
 				htmlscript: "readonly",
+				EventListener: "readonly",
 			}
 		}
 	},

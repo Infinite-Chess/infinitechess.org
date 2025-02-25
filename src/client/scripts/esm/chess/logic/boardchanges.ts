@@ -213,13 +213,8 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	// If no index specified, make the default the first undefined in the list!
 	if (piece.index === undefined) change['piece'].index = list.undefineds[0];
 
-	if (piece.index === undefined) {
-		// Piece index still undefined, this must mean there are zero undefined placeholders.
-		// The only scenario this is okay is when the gamefile is initiating, and
-		// the undefined arrays haven't been generated yet.
-		piece.index = list.length;
-		list.push(piece.coords);
-	} else { // desiredIndex specified
+	if (piece.index === undefined) throw Error(`No undefined placeholders remaining for new piece! ${piece.type}`);
+	else { // desiredIndex specified
 
 		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, piece.coords) !== undefined;
 		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
@@ -232,6 +227,10 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	}
 
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
+	
+	// Do we need to add more undefineds?
+	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
+	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
 }
 
 /**

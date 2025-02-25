@@ -249,6 +249,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.gameConclusion = false;
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
+	organizedlines.addMoreUndefineds(this); // Add several undefined placeholders in the lists, for when pieces are added (promotion, arrow addition, etc.)
+
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
 	gamefileutility.deleteUnusedMovesets(this);
 
@@ -262,8 +264,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;
 	else gamefileutility.doGameOverChecks(this);
-
-	organizedlines.addMoreUndefineds(this, { regenModel: false });
 
 	clock.set(this, clockValues);
 };
