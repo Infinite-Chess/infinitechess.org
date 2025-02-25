@@ -61,11 +61,11 @@ const validCheckmates = {
 	],
 	hard: [
 		"2R1N1P-1k",
-		"1K1CH1N-1k",
 		"1K1R2N-1k",
 		"2K1R-1k",
 		"1K2N6B-1k",
 		"1K1B2HA-1k",
+		"1K1CH1N-1k",
 		"5HU-1k",
 	],
 	insane: [
