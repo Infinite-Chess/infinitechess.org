@@ -48,6 +48,20 @@ const CORNER_TRIS = {
 	OPACITY_OFFSET: 0.2
 };
 
+/**
+ * Properties for the plus sign that is rendered when the special rights highlighing
+ * debug mode is enabled, next to each piece that has its special rights.
+ */
+const PLUS = {
+	/** Default position of the plus sign center within a square ([0,0] is square center, [0.5,0.5] is top-right corner) */
+	POSITION: [0.3, 0.3] as Coords, // Default: [0.3, 0.3]
+	/** Length of both arms (horizontal and vertical) where 1.0 spans full square */
+	ARM_LENGTH: 0.4, // Default: 0.4
+	/** Width of the plus sign arms */
+	EDGE_WIDTH: 0.12, // Default: 0.12
+	/** Added to color alpha for better visibility */
+	OPACITY_OFFSET: 0.2 // Default: 0.2
+};
 
 // Functions ------------------------------------------------------------------------------
 
@@ -169,8 +183,84 @@ function getDataCornerTriangles(centerX: number, centerY: number, triWidth: numb
 	return vertices;
 }
 
+/**
+ * Generates vertex data for a plus sign using 5 non-overlapping rectangles
+ * @param color - Color [r, g, b, a] from theme (opacity offset will be applied)
+ */
+function getDataPlusSign(color: [number, number, number, number]): number[] {
+	// eslint-disable-next-line prefer-const
+	let [r, g, b, a] = color;
+	a = Math.min(a + PLUS.OPACITY_OFFSET, 1);
+	
+	const halfEdge = PLUS.EDGE_WIDTH / 2;
+	const armLength = PLUS.ARM_LENGTH;
+	const [posX, posY] = PLUS.POSITION;
+	
+	const vertices: number[] = [];
+	
+	// Helper to add quad vertices (2 triangles)
+	const addQuad = (
+		x1: number, y1: number,
+		x2: number, y2: number,
+		x3: number, y3: number,
+		x4: number, y4: number
+	) => {
+		// Triangle 1
+		vertices.push(x1, y1, r, g, b, a);
+		vertices.push(x2, y2, r, g, b, a);
+		vertices.push(x3, y3, r, g, b, a);
+		// Triangle 2
+		vertices.push(x3, y3, r, g, b, a);
+		vertices.push(x4, y4, r, g, b, a);
+		vertices.push(x1, y1, r, g, b, a);
+	};
+
+	// Vertical arm (top segment)
+	addQuad(
+		posX - halfEdge, posY + armLength / 2,  // top-left
+		posX + halfEdge, posY + armLength / 2,  // top-right
+		posX + halfEdge, posY + halfEdge,      // bottom-right
+		posX - halfEdge, posY + halfEdge       // bottom-left
+	);
+
+	// Vertical arm (bottom segment)
+	addQuad(
+		posX - halfEdge, posY - halfEdge,      // top-left
+		posX + halfEdge, posY - halfEdge,      // top-right
+		posX + halfEdge, posY - armLength / 2,  // bottom-right
+		posX - halfEdge, posY - armLength / 2   // bottom-left
+	);
+
+	// Horizontal arm (left segment)
+	addQuad(
+		posX - armLength / 2, posY + halfEdge,  // top-left
+		posX - halfEdge, posY + halfEdge,      // top-right
+		posX - halfEdge, posY - halfEdge,      // bottom-right
+		posX - armLength / 2, posY - halfEdge   // bottom-left
+	);
+
+	// Horizontal arm (right segment)
+	addQuad(
+		posX + halfEdge, posY + halfEdge,      // top-left
+		posX + armLength / 2, posY + halfEdge,  // top-right
+		posX + armLength / 2, posY - halfEdge,  // bottom-right
+		posX + halfEdge, posY - halfEdge       // bottom-left
+	);
+
+	// Center square
+	addQuad(
+		posX - halfEdge, posY + halfEdge,  // top-left
+		posX + halfEdge, posY + halfEdge,  // top-right
+		posX + halfEdge, posY - halfEdge,  // bottom-right
+		posX - halfEdge, posY - halfEdge   // bottom-left
+	);
+
+	return vertices;
+}
+
 export default {
 	getDataLegalMoveSquare,
 	getDataLegalMoveDot,
 	getDataLegalMoveCornerTris,
+	getDataPlusSign,
 };

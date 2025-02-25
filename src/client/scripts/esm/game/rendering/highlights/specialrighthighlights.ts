@@ -31,7 +31,8 @@ const SPECIAL_RIGHTS = {
 	COLOR: [0, 1, 0.5, 0.3] as [number, number, number, number],
 	/** Method that returns the single-instance vertex data for the shape */
 	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
-	SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
+	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
+	SHAPE_FUNC: legalmoveshapes.getDataPlusSign,
 };
 
 /** Customizations for the enpassant highlight */
@@ -60,7 +61,7 @@ function toggle() {
 
 function render() {
 	if (!enabled) return; // Not enabled
-	
+
 	renderSpecialRights();
 	renderEnPassant();
 }
