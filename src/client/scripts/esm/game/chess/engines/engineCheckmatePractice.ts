@@ -327,9 +327,9 @@ function initEvalWeightsAndSearchProperties() {
 	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal
 	trapFleeDictionary = {
 		"1K1B2HA-1k": [3, 6, 10],
-	}
+	};
 
-	if (checkmateSelectedID in trapFleeDictionary){
+	if (checkmateSelectedID in trapFleeDictionary) {
 		mayEnterTrapFleeMode = true;
 		[numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal] = trapFleeDictionary[checkmateSelectedID]!;
 	}
@@ -862,7 +862,7 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 	// add score based on distance of black royal to center of mass of white pieces near black king
 	if (checkmateSelectedID in centerOfMassEvalDictionary) {
 		const [piecetype, cutoff, weight, distancefunction] = centerOfMassEvalDictionary[checkmateSelectedID]![black_to_move_num]!;
-		const center_of_mass = get_center_of_mass(piecetype, cutoff, piecelist, coordlist);
+		const center_of_mass = get_center_of_mass(piecetype, cutoff, start_piecelist, start_coordlist);
 		if (center_of_mass) score += weight * distancefunction(center_of_mass);
 	}
 	
