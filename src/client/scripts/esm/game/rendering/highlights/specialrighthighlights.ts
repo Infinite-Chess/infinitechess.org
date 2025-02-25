@@ -70,7 +70,7 @@ function render() {
 function regenModel() {
 	if (!enabled) return; // Not enabled
 
-	console.log("Regenerating specialrights model");
+	// console.log("Regenerating specialrights model");
 	const gamefile = gameslot.getGamefile()!;
 	const model_Offset: Coords = legalmovehighlights.getOffset();
 	// Instance data
