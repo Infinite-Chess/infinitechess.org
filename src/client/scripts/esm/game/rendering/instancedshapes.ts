@@ -157,12 +157,7 @@ function getDataPlusSign(color: [number, number, number, number]): number[] {
 	const vertices: number[] = [];
 	
 	// Helper to add quad vertices (2 triangles)
-	const addQuad = (
-		x1: number, y1: number,
-		x2: number, y2: number,
-		x3: number, y3: number,
-		x4: number, y4: number
-	) => {
+	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) => {
 		// Triangle 1
 		vertices.push(x1, y1, r, g, b, a);
 		vertices.push(x2, y2, r, g, b, a);
@@ -180,7 +175,6 @@ function getDataPlusSign(color: [number, number, number, number]): number[] {
 		posX + halfEdge, posY + halfEdge,      // bottom-right
 		posX - halfEdge, posY + halfEdge       // bottom-left
 	);
-
 	// Vertical arm (bottom segment)
 	addQuad(
 		posX - halfEdge, posY - halfEdge,      // top-left
@@ -188,7 +182,6 @@ function getDataPlusSign(color: [number, number, number, number]): number[] {
 		posX + halfEdge, posY - armLength / 2,  // bottom-right
 		posX - halfEdge, posY - armLength / 2   // bottom-left
 	);
-
 	// Horizontal arm (left segment)
 	addQuad(
 		posX - armLength / 2, posY + halfEdge,  // top-left
@@ -196,7 +189,6 @@ function getDataPlusSign(color: [number, number, number, number]): number[] {
 		posX - halfEdge, posY - halfEdge,      // bottom-right
 		posX - armLength / 2, posY - halfEdge   // bottom-left
 	);
-
 	// Horizontal arm (right segment)
 	addQuad(
 		posX + halfEdge, posY + halfEdge,      // top-left
@@ -204,7 +196,6 @@ function getDataPlusSign(color: [number, number, number, number]): number[] {
 		posX + armLength / 2, posY - halfEdge,  // bottom-right
 		posX + halfEdge, posY - halfEdge       // bottom-left
 	);
-
 	// Center square
 	addQuad(
 		posX - halfEdge, posY + halfEdge,  // top-left
