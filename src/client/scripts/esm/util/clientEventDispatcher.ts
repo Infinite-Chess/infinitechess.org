@@ -6,6 +6,7 @@
  */
 
 
+/** Whether the current environment is a browser. */
 const isBrowser = typeof window !== 'undefined' && typeof window.dispatchEvent === 'function';
 const target: Window = isBrowser ? window : null!;
 
