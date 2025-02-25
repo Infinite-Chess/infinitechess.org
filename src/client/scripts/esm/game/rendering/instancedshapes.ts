@@ -63,6 +63,7 @@ const PLUS_SIGN = {
 	OPACITY_OFFSET: 0.2 // Default: 0.2
 };
 
+
 // Functions ------------------------------------------------------------------------------
 
 
@@ -99,90 +100,47 @@ function getDataLegalMoveDot(color: [number,number,number,number]): number[] {
 }
 
 /**
- * Generates the legal move corner triangle mesh, centered on [0,0]
- * @param color - The color as an array [r, g, b, a].
- * @returns The vertex data for the four corner triangles.
+ * Generates vertex data for four corner triangles used for legal move indicators,
+ * with opacity adjustment and proper visual centering.
+ * @param color - Color [r, g, b, a] from theme (opacity offset will be applied)
+ * @returns Vertex data for four corner triangles
  */
-function getDataLegalMoveCornerTris(color: [number,number,number,number]): number[] {
-	const opacityOffset = 0.2; // Increase opacity for better visibility
+function getDataLegalMoveCornerTris(color: [number, number, number, number]): number[] {
+	// Configuration from CORNER_TRIS constants
+	const TRI_WIDTH = 0.5;
+	const OPACITY_OFFSET = 0.2;
+
+	// Adjust opacity
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
-	a += opacityOffset; // Add the offset
-	a = Math.min(a, 1); // Cap it
+	a = Math.min(a + OPACITY_OFFSET, 1);
 
-	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
-	// The calculated vertex data's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
-	const x = coords[0] + (1 - board.gsquareCenter()) - 0.5;
-	const y = coords[1] + (1 - board.gsquareCenter()) - 0.5;
+	// Calculate visual center position (original [0,0] instance adjusted for board centering)
+	const boardCenterAdjust = (1 - board.gsquareCenter()) - 0.5;
+	const centerX = boardCenterAdjust;
+	const centerY = boardCenterAdjust;
 
-	// Generate and return the vertex data for the four corner triangles
-	return getDataCornerTriangles(x, y, CORNER_TRIS.TRI_WIDTH, r, g, b, a);
-}
-
-/**
- * Generates vertex data for four small triangles, each located in a corner of a square.
- * @param centerX - The X coordinate of the square's center.
- * @param centerY - The Y coordinate of the square's center.
- * @param triWidth - The size of the small triangles (side length), where 1 is the width of a whole square.
- * @param r - Red
- * @param g - Green
- * @param b - Blue
- * @param a - Alpha
- * @returns The vertex data for the four triangles.
- */
-function getDataCornerTriangles(centerX: number, centerY: number, triWidth: number, r: number, g: number, b: number, a: number) {
 	const vertices: number[] = [];
-	const pointFive = 1 / 2;
+	const squareHalfSize = 0.5;
+	const triHalfWidth = TRI_WIDTH / 2;
 
-	// Helper function to add a triangle's vertex data
-	function addTriangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) {
+	// Helper to add a single corner triangle
+	const addTriangle = (cornerX: number, cornerY: number, dx: number, dy: number) => {
 		vertices.push(
-			x1, y1, r, g, b, a, // Vertex 1
-			x2, y2, r, g, b, a, // Vertex 2
-			x3, y3, r, g, b, a  // Vertex 3
+			cornerX, cornerY, r, g, b, a,
+			cornerX + dx, cornerY, r, g, b, a,
+			cornerX, cornerY + dy, r, g, b, a
 		);
-	}
+	};
 
-	// Calculate the corner positions
-	const topLeft: Coords = [centerX - pointFive, centerY + pointFive];
-	const topRight: Coords = [centerX + pointFive, centerY + pointFive];
-	const bottomLeft: Coords = [centerX - pointFive, centerY - pointFive];
-	const bottomRight: Coords = [centerX + pointFive, centerY - pointFive];
-
-	// Offset triangles into each corner
-	const cornerOffset = triWidth / 2;
-
-	// Top-left triangle (triangles are clockwise in each corner)
-	addTriangle(
-		topLeft[0], topLeft[1],                             // Corner of the square
-		topLeft[0] + cornerOffset, topLeft[1],              // Right of the triangle
-		topLeft[0], topLeft[1] - cornerOffset               // Bottom of the triangle
-	);
-
-	// Top-right triangle
-	addTriangle(
-		topRight[0], topRight[1],                           // Corner of the square
-		topRight[0] - cornerOffset, topRight[1],            // Left of the triangle
-		topRight[0], topRight[1] - cornerOffset             // Bottom of the triangle
-	);
-
-	// Bottom-left triangle
-	addTriangle(
-		bottomLeft[0], bottomLeft[1],                       // Corner of the square
-		bottomLeft[0] + cornerOffset, bottomLeft[1],        // Right of the triangle
-		bottomLeft[0], bottomLeft[1] + cornerOffset         // Top of the triangle
-	);
-
-	// Bottom-right triangle
-	addTriangle(
-		bottomRight[0], bottomRight[1],                     // Corner of the square
-		bottomRight[0] - cornerOffset, bottomRight[1],      // Left of the triangle
-		bottomRight[0], bottomRight[1] + cornerOffset       // Top of the triangle
-	);
+	// Generate all four corners
+	addTriangle(centerX - squareHalfSize, centerY + squareHalfSize, triHalfWidth, -triHalfWidth);  // Top-left
+	addTriangle(centerX + squareHalfSize, centerY + squareHalfSize, -triHalfWidth, -triHalfWidth); // Top-right
+	addTriangle(centerX - squareHalfSize, centerY - squareHalfSize, triHalfWidth, triHalfWidth);   // Bottom-left
+	addTriangle(centerX + squareHalfSize, centerY - squareHalfSize, -triHalfWidth, triHalfWidth);  // Bottom-right
 
 	return vertices;
 }
-
 /**
  * Generates vertex data for a plus sign using 5 non-overlapping rectangles
  * @param color - Color [r, g, b, a] from theme (opacity offset will be applied)
