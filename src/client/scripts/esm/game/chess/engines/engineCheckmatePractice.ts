@@ -352,9 +352,6 @@ function initEvalWeightsAndSearchProperties() {
 		case "1K1R1N1B-1k":
 			distancesEvalDictionary[4] = [[8, specialNorm], [8, specialNorm]]; // knight
 			break;
-		case "1K1AR2HA-1k":
-			distancesEvalDictionary[10] = [[25, manhattanNorm], [25, manhattanNorm]]; // archbishop
-			break;
 		case "2K1R-1k":
 			distancesEvalDictionary[5] = [[40, specialNorm], [40, specialNorm]]; // king
 			break;
@@ -362,7 +359,7 @@ function initEvalWeightsAndSearchProperties() {
 			distancesEvalDictionary[10] = [[25, manhattanNorm], [25, manhattanNorm]]; // archbishop
 			break;
 		case "1K2N6B-1k":
-			distancesEvalDictionary[4] = [[30, knightmareNorm], [30, knightmareNorm]]; // knight
+			distancesEvalDictionary[4] = [[30, vincinityNorm], [30, vincinityNorm]]; // knight
 			legalMoveEvalDictionary = {
 				// in check
 				0: {
@@ -394,6 +391,10 @@ function initEvalWeightsAndSearchProperties() {
 			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
 			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
 			break;
+		case "1K1B2HA-1k":
+			distancesEvalDictionary[3] = [[10, manhattanNorm], [10, manhattanNorm]]; // bishop
+			distancesEvalDictionary[8] = [[5, vincinityNorm], [5, vincinityNorm]]; // hawk
+			break;
 	}
 }
 
@@ -422,8 +423,8 @@ function specialNorm(square: Coords): number {
 	return diagonalNorm(square) + manhattanNorm(square);
 }
 
-// special norm for the knight, which gives a massive malus to the knight near the black king for black
-function knightmareNorm(square: Coords): number {
+// special norm, which gives a massive malus to the piece being near the black king for black
+function vincinityNorm(square: Coords): number {
 	const diagnormsquared = diagonalNormSquared(square);
 	const penalty = diagnormsquared < 3 ? -16 : ( diagnormsquared < 9 ? -8 : (diagnormsquared < 19 ? -4 : 0));
 	return manhattanNorm(square) + penalty;
@@ -439,7 +440,8 @@ function get_center_of_mass(piece_type: number, cutoff: number, piecelist: numbe
 			numpieces++;
 		}
 	}
-	return rescaleVector(1. / numpieces, center);
+	if (numpieces === 0) return false;
+	else return rescaleVector(1. / numpieces, center);
 }
 
 /**
@@ -828,7 +830,8 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 	// add score based on distance of black royal to center of mass of white pieces near black king
 	if (checkmateSelectedID in centerOfMassEvalDictionary) {
 		const [piecetype, cutoff, weight, distancefunction] = centerOfMassEvalDictionary[checkmateSelectedID]![black_to_move_num]!;
-		score += weight * distancefunction(get_center_of_mass(piecetype, cutoff, piecelist, coordlist));
+		const center_of_mass = get_center_of_mass(piecetype, cutoff, piecelist, coordlist);
+		if (center_of_mass) score += weight * distancefunction(center_of_mass);
 	}
 	
 	return score;
@@ -870,7 +873,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		const black_moves = get_black_legal_moves(piecelist, coordlist);
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
-		if (followingPrincipal && depth > 2) {
+		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
 			for (let index = 0; index < black_moves.length; index++) {
 				if (squares_are_equal(black_moves[index]!, globallyBestVariation[start_depth - depth]![1]!)) {
 					// Shuffe principal move to the front of black_moves
@@ -925,7 +928,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		indices.sort((a, b) => { return candidate_moves[a]!.length - candidate_moves[b]!.length; });
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
-		if (followingPrincipal && depth > 2) {
+		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
 			for (let p_index = 0; p_index < indices.length; p_index++) {
 				if (indices[p_index] === globallyBestVariation[start_depth - depth]![0]!) {
 					// Shuffe principal piece index to the front of indices
@@ -948,7 +951,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			followingPrincipal = false;
 		}
 
-		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
+		// loop over all possible white moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
