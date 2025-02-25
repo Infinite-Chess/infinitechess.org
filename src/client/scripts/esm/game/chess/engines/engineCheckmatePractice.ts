@@ -326,7 +326,7 @@ function initEvalWeightsAndSearchProperties() {
 	// whether to enter "trap flee mode" whenever the black royal is surrounded by white pieces
 	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal
 	trapFleeDictionary = {
-		"1K1B2HA-1k": [3, 6, 10],
+		"1K2HA1B-1k": [3, 6, 10],
 	};
 
 	if (checkmateSelectedID in trapFleeDictionary) {
