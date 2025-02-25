@@ -170,6 +170,7 @@ function dropPiece() {
 	pieceType = undefined;
 	startCoords = undefined;
 	worldLocation = undefined;
+	hoveredCoords = undefined;
 	parity = false; // The next time this piece is dropped on its home square, it will be deselected
 	droparrows.onDragTermination();
 	frametracker.onVisualChange();
@@ -201,8 +202,7 @@ function renderPiece() {
 	const outlineModel: BufferModel = hoveredCoords !== undefined ? genOutlineModel() : genIntersectingLines();
 	outlineModel.render();
 
-	const draggedPieceModel = genPieceModel();
-	if (draggedPieceModel !== undefined) draggedPieceModel.render();
+	genPieceModel()?.render();
 }
 
 /**
@@ -225,13 +225,13 @@ function genPieceModel(): BufferModel | undefined {
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
 	let size: number = boardScale;
+	if (!selection.getSquarePawnIsCurrentlyPromotingOn() && !perspective.getEnabled()) { // Apply a minimum size only if we're not currently promoting a pawn (promote UI open) and not in perspective mode.
+		// The minimum world space the dragged piece should be rendered
+		const minSizeWorldSpace = touchscreenUsed ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch)  // Mobile/touchscreen mode
+												  : space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse); // 2D desktop mode
+		size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
+	}
 
-	// The minimum world space the dragged piece should be rendered
-	const minSizeWorldSpace = touchscreenUsed     ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch) // Mobile/touchscreen mode
-							: !perspectiveEnabled ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse) // 2D desktop mode
-							: 0; // No minimum size in perspective mode
-	size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
-		
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
 	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
