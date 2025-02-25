@@ -19,7 +19,7 @@ import statustext from "../../gui/statustext.js";
 // @ts-ignore
 import movement from "../movement.js";
 // @ts-ignore
-import legalmoveshapes from "../legalmoveshapes.js";
+import legalmoveshapes from "../instancedshapes.js";
 
 
 

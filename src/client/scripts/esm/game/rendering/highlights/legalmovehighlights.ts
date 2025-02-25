@@ -22,7 +22,7 @@ import frametracker from '../frametracker.js';
 import preferences from '../../../components/header/preferences.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 // @ts-ignore
-import legalmoveshapes from '../legalmoveshapes.js';
+import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore
 import shapes from '../shapes.js';
 import { BufferModel, BufferModelInstanced, createModel, createModel_Instanced } from '../buffermodel.js';

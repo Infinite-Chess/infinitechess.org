@@ -1,10 +1,10 @@
 
 /**
- * This scripts calculates the vertex data of a single instance
- * of our legal moves shapes, like the square, dot, or corner triangles.
+ * This script calculates the vertex data of a single instance
+ * of several different kinds of shapes.
  * 
- * We can further use instanced rendering to render the vertex data
- * in any location, for as many legal moves as the piece has.
+ * Many are used for rendering legal moves, like the square, dot, or corner triangles.
+ * The plus sign is used for special rights highlighting.
  */
 
 
@@ -52,7 +52,7 @@ const CORNER_TRIS = {
  * Properties for the plus sign that is rendered when the special rights highlighing
  * debug mode is enabled, next to each piece that has its special rights.
  */
-const PLUS = {
+const PLUS_SIGN = {
 	/** Default position of the plus sign center within a square ([0,0] is square center, [0.5,0.5] is top-right corner) */
 	POSITION: [0.3, 0.3] as Coords, // Default: [0.3, 0.3]
 	/** Length of both arms (horizontal and vertical) where 1.0 spans full square */
@@ -190,11 +190,11 @@ function getDataCornerTriangles(centerX: number, centerY: number, triWidth: numb
 function getDataPlusSign(color: [number, number, number, number]): number[] {
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
-	a = Math.min(a + PLUS.OPACITY_OFFSET, 1);
+	a = Math.min(a + PLUS_SIGN.OPACITY_OFFSET, 1);
 	
-	const halfEdge = PLUS.EDGE_WIDTH / 2;
-	const armLength = PLUS.ARM_LENGTH;
-	const [posX, posY] = PLUS.POSITION;
+	const halfEdge = PLUS_SIGN.EDGE_WIDTH / 2;
+	const armLength = PLUS_SIGN.ARM_LENGTH;
+	const [posX, posY] = PLUS_SIGN.POSITION;
 	
 	const vertices: number[] = [];
 	
