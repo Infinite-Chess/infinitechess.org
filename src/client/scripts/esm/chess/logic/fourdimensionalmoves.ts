@@ -15,13 +15,12 @@ import colorutil from "../util/colorutil.js";
 import coordutil from "../util/coordutil.js";
 import gamefileutility from "../util/gamefileutility.js";
 import boardchanges from "./boardchanges.js";
-import fivedimensionalgenerator from "../variants/fourdimensionalgenerator.js";
+import fourdimensionalgenerator from "../variants/fourdimensionalgenerator.js";
 import state from "./state.js";
 // @ts-ignore
 import gamefile from "./gamefile.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
-import fourdimensionalgenerator from "../variants/fourdimensionalgenerator.js";
 
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
@@ -47,7 +46,7 @@ function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
  * @param movetype - spacelike move or timelike move
  */
 function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movetype: "spacelike" | "timelike"): Coords[] {
-	const dim = fivedimensionalgenerator.get4DBoardDimensions();
+	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 	const distance = (movetype === "spacelike" ? 1 : dim.BOARD_SPACING);
 	
 	// White and black pawns move and capture in opposite directions.
@@ -184,7 +183,7 @@ function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: st
  */
 function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
 	const individualMoves: Coords[] = [];
-	const dim = fivedimensionalgenerator.get4DBoardDimensions();
+	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
 	for (let baseH = 2; baseH >= -2; baseH--) {
 		for (let baseV = 2; baseV >= -2; baseV--) {
@@ -249,7 +248,7 @@ function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: stri
  */
 function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
 	const individualMoves: Coords[] = [];
-	const dim = fivedimensionalgenerator.get4DBoardDimensions();
+	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
 	for (let baseH = 1; baseH >= -1; baseH--) {
 		for (let baseV = 1; baseV >= -1; baseV--) {
