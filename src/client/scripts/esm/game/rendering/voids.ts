@@ -104,7 +104,6 @@ function movebufferdata(gamefile: gamefile, piece: { type: string, index: number
 	gamefile.voidMesh.model.instanceData[i + 1] = offsetCoord[1];
 
 	// Update the buffer on the gpu!
-
 	gamefile.voidMesh.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE);
 }
 
@@ -118,7 +117,7 @@ function movebufferdata(gamefile: gamefile, piece: { type: string, index: number
 function deletebufferdata(gamefile: gamefile, piece: Piece) {
 	const i = piece.index * STRIDE_PER_PIECE;
 
-	gamefile.voidMesh.instanceData64[i] = Infinity; // Unfortunately we can't them to 0 to hide it, as an actual void instance would be visible at [0,0]
+	gamefile.voidMesh.instanceData64[i] = Infinity; // Unfortunately we can't set them to 0 to hide it, as an actual void instance would be visible at [0,0]
 	gamefile.voidMesh.instanceData64[i + 1] = Infinity;
 	gamefile.voidMesh.model.instanceData[i] = Infinity;
 	gamefile.voidMesh.model.instanceData[i + 1] = Infinity;
@@ -150,7 +149,6 @@ function overwritebufferdata(gamefile: gamefile, undefinedPiece: { type: string,
 	gamefile.voidMesh.model.instanceData[i + 1] = offsetCoord[1];
 
 	// Update the buffer on the gpu!
-
 	gamefile.voidMesh.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE);
 }
 
