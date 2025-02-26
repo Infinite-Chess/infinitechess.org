@@ -97,7 +97,8 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
-	addPossibleEnPassant(gamefile, individualMoves, coords, color, distance);
+	addPossibleEnPassant(gamefile, individualMoves, coords, color, 1, distance);
+	addPossibleEnPassant(gamefile, individualMoves, coords, color, distance, 1);
 	return individualMoves;
 }
 
@@ -107,17 +108,19 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
  * @param individualMoves - The list of individual moves to add the en passant capture to
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
- * @param distance - 1 for spacelike, dim.BOARD_SPACING for timelike
+ * @param xdistance
+ * @param ydistance
  */
-function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string, distance: number): void {
+function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string, xdistance: number, ydistance: number): void {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawn = gamefileutility.getPieceTypeAtCoords(gamefile, gamefile.enpassant.pawn)!;
 	if (colorutil.getPieceColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
-	if (Math.abs(xDifference) !== distance) return; // Not immediately left or right of us
-	const yDistanceParity = color === 'white' ? distance : -distance;
+	if (Math.abs(xDifference) !== xdistance) return; // Not immediately left or right of us
+	const yDistanceParity = (color === 'white' ? ydistance : -ydistance);
+
 	if (coords[1] + yDistanceParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
