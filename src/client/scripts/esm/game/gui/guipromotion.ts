@@ -18,14 +18,18 @@ import svgcache from '../../chess/rendering/svgcache.js';
 // Variables --------------------------------------------------------------------
 
 
-const element_Promote = document.getElementById('promote');
-const element_PromoteWhite = document.getElementById('promotewhite');
-const element_PromoteBlack = document.getElementById('promoteblack');
+const element_Promote = document.getElementById('promote')!;
+const element_PromoteWhite = document.getElementById('promotewhite')!;
+const element_PromoteBlack = document.getElementById('promoteblack')!;
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
 
 // Functions --------------------------------------------------------------------
+
+
+// Prevent right-clicking on the promotion UI
+element_Promote.addEventListener('contextmenu', (event) => event.preventDefault());
 
 
 function isUIOpen() { return selectionOpen; }
