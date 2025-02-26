@@ -72,14 +72,16 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
+	const strong_pawns = fourdimensionalgenerator.getMovementType().STRONG_PAWNS;
 
+	// latter two capture coordinates are only enabled for strong pawns
 	const coordsToCapture: Coords[] = [
 		[coords[0] - distance, coords[1] + yDistanceParity],
 		[coords[0] + distance, coords[1] + yDistanceParity],
 		[coords[0] - 1, coords[1] + yDistanceParity],
 		[coords[0] + 1, coords[1] + yDistanceParity]
 	];
-	for (let i = 0; i < 4; i++) {
+	for (let i = 0; i < (strong_pawns ? 4 : 2); i++) {
 		const thisCoordsToCapture = coordsToCapture[i]!;
 
 		// Is there an enemy piece at this coords?
@@ -97,8 +99,11 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
-	addPossibleEnPassant(gamefile, individualMoves, coords, color, 1, distance);
-	addPossibleEnPassant(gamefile, individualMoves, coords, color, distance, 1);
+	addPossibleEnPassant(gamefile, individualMoves, coords, color, distance, distance);
+	if (strong_pawns) {
+		addPossibleEnPassant(gamefile, individualMoves, coords, color, 1, distance);
+		addPossibleEnPassant(gamefile, individualMoves, coords, color, distance, 1);
+	}
 	return individualMoves;
 }
 
