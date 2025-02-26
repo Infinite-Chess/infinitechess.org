@@ -7,7 +7,6 @@ import bufferdata from './bufferdata.js';
 import input from '../input.js';
 import perspective from './perspective.js';
 import movement from './movement.js';
-import options from './options.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
@@ -18,6 +17,8 @@ import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.j
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
+import preferences from '../../components/header/preferences.js';
+import piecesmodel from './piecesmodel.js';
 // Import End
 
 /** 
@@ -76,6 +77,16 @@ const limitToDampScale = 0.000_01; // We need to soft limit the scale so the gam
 
 let lightTiles; // [r,g,b,a]
 let darkTiles;
+
+
+(function() {
+	document.addEventListener('theme-change', (event) => { // Custom Event listener.
+		console.log(`Theme change event detected: ${preferences.getTheme()}`);
+		updateTheme();
+		piecesmodel.regenModel(gameslot.getGamefile());
+	});
+})();
+
 
 async function initTextures() {
 	const lightTilesCssColor = style.arrayToCssColor(lightTiles);
@@ -329,7 +340,7 @@ function updateNavColor() {
 	let navG = 255;
 	let navB = 255;
 
-	if (options.getTheme() !== 'white') {
+	if (preferences.getTheme() !== 'white') {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;
@@ -348,7 +359,7 @@ function updateNavColor() {
     `);
 }
 
-function resetColor(newLightTiles = options.getDefaultTiles(true), newDarkTiles = options.getDefaultTiles(false)) {
+function resetColor(newLightTiles = preferences.getColorOfLightTiles(), newDarkTiles = preferences.getColorOfDarkTiles()) {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
 	initTextures();
@@ -356,8 +367,8 @@ function resetColor(newLightTiles = options.getDefaultTiles(true), newDarkTiles 
 }
 
 function darkenColor() {
-	const defaultLightTiles = options.getDefaultTiles(true);
-	const defaultDarkTiles = options.getDefaultTiles(false);
+	const defaultLightTiles = preferences.getColorOfLightTiles();
+	const defaultDarkTiles = preferences.getColorOfDarkTiles();
 
 	const darkenBy = 0.09;
 	const darkWR = Math.max(defaultLightTiles[0] - darkenBy, 0);

@@ -20,6 +20,9 @@ import type { Coords } from "../../chess/util/coordutil.js";
 // Variables ------------------------------------------------------------------------------
 
 
+/**
+ * Properties for the dots that are rendered on legal squares without an occupying piece.
+ */
 const DOTS = {
 	/** The radius of the dots, where 1 equals the width of one square. */
 	RADIUS: 0.16,
@@ -106,14 +109,10 @@ function getDataLegalMoveDot(color: [number,number,number,number]): number[] {
  * @returns Vertex data for four corner triangles
  */
 function getDataLegalMoveCornerTris(color: [number, number, number, number]): number[] {
-	// Configuration from CORNER_TRIS constants
-	const TRI_WIDTH = 0.5;
-	const OPACITY_OFFSET = 0.2;
-
 	// Adjust opacity
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
-	a = Math.min(a + OPACITY_OFFSET, 1);
+	a = Math.min(a + CORNER_TRIS.OPACITY_OFFSET, 1);
 
 	// Calculate visual center position (original [0,0] instance adjusted for board centering)
 	const boardCenterAdjust = (1 - board.gsquareCenter()) - 0.5;
@@ -122,7 +121,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 
 	const vertices: number[] = [];
 	const squareHalfSize = 0.5;
-	const triHalfWidth = TRI_WIDTH / 2;
+	const triHalfWidth = CORNER_TRIS.TRI_WIDTH / 2;
 
 	// Helper to add a single corner triangle
 	const addTriangle = (cornerX: number, cornerY: number, dx: number, dy: number) => {

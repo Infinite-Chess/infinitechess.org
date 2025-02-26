@@ -142,8 +142,6 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 	const trimmedType = colorutil.trimColorExtensionFromType(type);
 	const color = colorutil.getPieceColorFromType(type); // Color of piece calculating legal moves of
 
-	// if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
-
 	const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
 	
 	let legalIndividualMoves = [];

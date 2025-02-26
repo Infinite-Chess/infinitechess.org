@@ -28,6 +28,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import voids from '../rendering/voids.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -51,8 +52,6 @@ import highlightline from '../rendering/highlights/highlightline.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
-import options from '../rendering/options.js';
-// @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
 import piecesmodel from '../rendering/piecesmodel.js';
@@ -60,8 +59,6 @@ import piecesmodel from '../rendering/piecesmodel.js';
 import loadbalancer from '../misc/loadbalancer.js';
 // @ts-ignore
 import websocket from '../websocket.js';
-// @ts-ignore
-import voids from '../rendering/voids.js';
 // @ts-ignore
 import camera from '../rendering/camera.js';
 // @ts-ignore
@@ -74,7 +71,7 @@ import stats from '../gui/stats.js';
 
 
 function init() {
-	options.initTheme();
+	board.updateTheme();
 
 	gui.prepareForOpen();
 
@@ -129,10 +126,10 @@ function updateSelectionScreen() {
 
 // Called within update() when we are in a game (not title screen)
 function updateBoard(gamefile: gamefile) {
-	if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
+	if (input.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
 	if (input.isKeyDown('escape')) guipause.toggle();
 	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
+	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, true);
 	if (input.isKeyDown('n')) {
 		guinavigation.toggle();
 		guigameinfo.toggle();

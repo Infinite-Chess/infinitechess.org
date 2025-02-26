@@ -40,7 +40,7 @@ const themeDictionary = {
 
 	/*
 	 * By using computed property names, we greatly compact this script,
-	 * as our bunder changes the symbols to a single letter.
+	 * as our bundler changes the symbols to a single letter.
 	 */
 
 	wood_light: { // 5D Chess

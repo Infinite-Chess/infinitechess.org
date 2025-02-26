@@ -30,6 +30,8 @@ import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
+import gamefileutility from '../../../chess/util/gamefileutility.js';
+import preferences from '../../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -43,12 +45,9 @@ import transition from '../transition.js';
 // @ts-ignore
 import movement from '../movement.js';
 // @ts-ignore
-import options from '../options.js';
-// @ts-ignore
 import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -958,7 +957,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
-	const { r, g, b } = options.getColorOfType(arrow.piece.type);
+	const { r, g, b } = preferences.getTintColorOfType(arrow.piece.type);
 	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
 
 	// Opacity changing with distance

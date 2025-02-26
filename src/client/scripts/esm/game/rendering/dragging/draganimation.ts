@@ -19,12 +19,11 @@ import { createModel } from "../buffermodel.js";
 import space from "../../misc/space.js";
 import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
 import bufferdata from "../bufferdata.js";
-// @ts-ignore
-import options from "../options.js";
 // @ts-ignore
 import perspective from "../perspective.js";
 // @ts-ignore
@@ -37,8 +36,6 @@ import input from "../../input.js";
 import camera from "../camera.js";
 // @ts-ignore
 import themes from "../../../components/header/themes.js";
-// @ts-ignore
-import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import board from "../board.js";
 
@@ -217,7 +214,7 @@ function genPieceModel(): BufferModel | undefined {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-	const { r, g, b, a } = options.getColorOfType(pieceType);
+	const { r, g, b, a } = preferences.getTintColorOfType(pieceType!);
 	
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
@@ -256,7 +253,7 @@ function genOutlineModel(): BufferModel {
 	const pointerIsTouch = input.getPointerIsTouch();
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * movement.getBoardScale();
-	const color = options.getDefaultOutlineColor();
+	const color = preferences.getBoxOutlineColor();
 	
 	// Outline the enire rank & file when:
 	// 1. We're not hovering over the start square.
@@ -375,7 +372,7 @@ function genIntersectingLines(): BufferModel {
 	} else boundingBox = camera.getScreenBoundingBox(false);
 	
 	const { left, right, bottom, top } = boundingBox;
-	const [ r, g, b, a ] = options.getDefaultOutlineColor();
+	const [ r, g, b, a ] = preferences.getBoxOutlineColor();
 	const data = [
 		left, worldLocation![1], r, g, b, a,
 		right, worldLocation![1],r, g, b, a,

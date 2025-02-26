@@ -16,8 +16,6 @@ import animation from "../rendering/animation.js";
 import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
 import organizedlines from "../../chess/logic/organizedlines.js";
-// @ts-ignore
-import options from "../rendering/options.js";
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
