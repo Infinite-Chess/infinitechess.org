@@ -21,6 +21,7 @@ import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";
 import preferences from "../../../components/header/preferences.js";
 import themes from "../../../components/header/themes.js";
+import animation from "../animation.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
@@ -121,7 +122,10 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
 	if (resetParity) parity = true;
 	startCoords = piece.coords;
 	pieceType = piece.type;
-	frametracker.onVisualChange();
+	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
+	if (animation.animations.some(a => coordutil.areCoordsEqual_noValidate(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations();
+	// No longer needed since input.js will render a frame whenever receiving an input? Test!
+	// frametracker.onVisualChange();
 }
 
 /**
