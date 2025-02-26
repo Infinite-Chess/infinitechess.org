@@ -1,7 +1,8 @@
+/* eslint-disable max-depth */
 
 /**
  * This script both calculates the legal moves of
- * pieces in the five dimensional variant and executes them.
+ * pieces in the four dimensional variant and executes them.
  */
 
 
@@ -14,6 +15,7 @@ import colorutil from "../util/colorutil.js";
 import coordutil from "../util/coordutil.js";
 import gamefileutility from "../util/gamefileutility.js";
 import boardchanges from "./boardchanges.js";
+import fivedimensionalgenerator from "../variants/fourdimensionalgenerator.js";
 import state from "./state.js";
 // @ts-ignore
 import gamefile from "./gamefile.js";
@@ -24,11 +26,72 @@ import specialdetect from "./specialdetect.js";
 // Legal Move Calculation -----------------------------------------------------------------
 
 
-/** Calculates the legal pawn moves in the five dimensional variant. */
-function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+/** Calculates the legal knight moves in the four dimensional variant. */
+function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
 	const legalMoves: Coords[] = [];
-	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 1)); // Spacelike
-	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 9)); // Timelike
+	legalMoves.push(...knightLegalMoves(gamefile, coords, color));
+	return legalMoves;
+}
+
+/**
+ * Calculates legal knight moves for either the spacelike or timelike dimensions.
+ * @param gamefile
+ * @param coords - The coordinates of the knight
+ * @param color - The color of the knight
+ */
+function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+	const individualMoves: Coords[] = [];
+	const dim = fivedimensionalgenerator.get4DBoardDimensions();
+
+	for (let baseH = 2; baseH >= -2; baseH--) {
+		for (let baseV = 2; baseV >= -2; baseV--) {
+			for (let offsetH = 2; offsetH >= -2; offsetH--) {
+				for (let offsetV = 2; offsetV >= -2; offsetV--) {
+					// If the squared distance to the tile is 5, then add the move
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
+						const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
+						const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
+						const endCoords = [x, y] as Coords;
+						const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
+
+						// do not allow capturing friendly pieces
+						if (endPiece && color === colorutil.getPieceColorFromType(endPiece)) continue;
+
+						// do not allow knight to leave the 4D board
+						if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
+
+						// do not allow the knight to make move if (baseH, baseV) do not match change in 2D chessboard
+						if (Math.floor((endCoords[0] - dim.MIN_X) / dim.BOARD_SPACING) - Math.floor((coords[0] - dim.MIN_X) / dim.BOARD_SPACING) !== baseH || 
+							Math.floor((endCoords[1] - dim.MIN_Y) / dim.BOARD_SPACING) - Math.floor((coords[1] - dim.MIN_Y) / dim.BOARD_SPACING) !== baseV
+						) continue;
+						individualMoves.push(endCoords);
+					}
+				}
+			}
+		}
+	}
+
+	return individualMoves;
+}
+
+/** Executes a four dimensional knight move.  */
+function doFourDimensionalKnightMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
+	const moveChanges = move.changes;
+
+	const captureCoords = move.endCoords;
+	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+
+	if (capturedPiece) boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece); // Delete the piece captured
+	else boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Move the knight
+
+	return true; // Special move was executed!
+}
+
+/** Calculates the legal pawn moves in the four dimensional variant. */
+function fourDimensionalPawnMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+	const legalMoves: Coords[] = [];
+	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "spacelike")); // Spacelike
+	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "timelike")); // Timelike
 	return legalMoves;
 }
 
@@ -42,10 +105,12 @@ function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
  * @param gamefile
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
- * @param distance - 1 for spacelike, 9 for timelike
+ * @param movetype - spacelike move or timelike move
  */
-function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, distance: 1 | 9): Coords[] {
-
+function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movetype: "spacelike" | "timelike"): Coords[] {
+	const dim = fivedimensionalgenerator.get4DBoardDimensions();
+	const distance = (movetype === "spacelike" ? 1 : dim.BOARD_SPACING);
+	
 	// White and black pawns move and capture in opposite directions.
 	const yDistanceParity = color === 'white' ? distance : -distance;
 	const individualMoves: Coords[] = [];
@@ -53,9 +118,10 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
 
 	// 1. It can move forward if there is no piece there
 
-	// Is there a piece in front of it?
+	// Is there a piece in front of it? And do not allow pawn to leave the 4D board
 	const coordsInFront = [coords[0], coords[1] + yDistanceParity] as Coords;
-	if (gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront) === undefined) {
+	if (gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront) === undefined &&
+		coordsInFront[0] > dim.MIN_X && coordsInFront[0] < dim.MAX_X && coordsInFront[1] > dim.MIN_Y && coordsInFront[1] < dim.MAX_Y) {
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 		// Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as CoordsSpecial;
@@ -100,7 +166,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
  * @param individualMoves - The list of individual moves to add the en passant capture to
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
- * @param distance - 1 for spacelike, 9 for timelike
+ * @param distance - 1 for spacelike, dim.BOARD_SPACING for timelike
  */
 function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string, distance: number): void {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
@@ -141,8 +207,8 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves:
 // Move Execution ----------------------------------------------------------------------
 
 
-/** Executes a five dimensional pawn move.  */
-function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
+/** Executes a four dimensional pawn move.  */
+function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
@@ -169,6 +235,8 @@ function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 
 
 export default {
-	fivedimensionalpawnmove,
-	doFiveDimensionalPawnMove
+	fourDimensionalKnightMove,
+	doFourDimensionalKnightMove,
+	fourDimensionalPawnMove,
+	doFourDimensionalPawnMove
 };

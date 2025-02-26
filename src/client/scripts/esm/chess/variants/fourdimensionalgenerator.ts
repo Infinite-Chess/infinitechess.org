@@ -10,37 +10,68 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 
 
 import coordutil from "../util/coordutil.js";
-import fivedimensionalmoves from "../logic/fivedimensionalmoves.js";
+import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
 // @ts-ignore
 import specialdetect from "../logic/specialdetect.js";
-import math from "../../util/math.js";
 
 /**
- * BOARD_SPACING: The spacing of the timelike boards.
+ * dim: contains all relevant quantities for the size of the 4D chess board.
+ * BOARD_SPACING: The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
+ * BOARDS_X: number of 2D boards in x-direction.
+ * BOARDS_Y: number of 2D boards in y-direction.
+ * The rest designate the board edges on the real chessboard.
  */
+const dim: {
+	BOARD_SPACING: number;
+	BOARDS_X: number;
+	BOARDS_Y: number;
+	MIN_X: number;
+	MAX_X: number;
+	MIN_Y: number;
+	MAX_Y: number;
+} = {
+	BOARD_SPACING: NaN,
+	BOARDS_X: NaN,
+	BOARDS_Y: NaN,
+	MIN_X: NaN,
+	MAX_X: NaN,
+	MIN_Y: NaN,
+	MAX_Y: NaN
+};
 
-function genPositionOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_SPACING: number, repeat_position?: string) {
-	const MIN_X = 0;
-	const MAX_X = MIN_X + BOARDS_X * BOARD_SPACING;
-	const MIN_Y = 0;
-	const MAX_Y = MIN_Y + BOARDS_Y * BOARD_SPACING;
+function set4DBoardDimensions(boards_x: number, boards_y: number, board_spacing: number) {
+	dim.BOARDS_X = boards_x;
+	dim.BOARDS_Y = boards_y;
+	dim.BOARD_SPACING = board_spacing;
+	dim.MIN_X = 0;
+	dim.MAX_X = dim.MIN_X + dim.BOARDS_X * dim.BOARD_SPACING;
+	dim.MIN_Y = 0;
+	dim.MAX_Y = dim.MIN_Y + dim.BOARDS_Y * dim.BOARD_SPACING;
+}
 
+function get4DBoardDimensions() {
+	return dim;
+}
+
+function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number, repeat_position?: string) {
+
+	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 	const resultPos: Position = {};
 
 	if (repeat_position) {
 		const repeat_position_long : Position = formatconverter.ShortToLong_Format(repeat_position).startingPosition;
 		
 		// Loop through from the leftmost column that should be voids to the right most, and also vertically
-		for (let i = MIN_X; i <= MAX_X; i++) {
-			for (let j = MIN_Y; j <= MAX_Y; j++) {
+		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
+			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
 				// Only the edges of boards should be voids
-				if ((i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9)
-					|| (j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
+				if ((i % dim.BOARD_SPACING === 0 || i % dim.BOARD_SPACING === 9)
+					|| (j % dim.BOARD_SPACING === 0 || j % dim.BOARD_SPACING === 9)) {
 					resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 					// Only add the standard position in a board
-					if ((i < MAX_X) && (i % BOARD_SPACING === 0) && (j < MAX_Y) && (j % BOARD_SPACING === 0)) {
+					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
 						for (const key in repeat_position_long) {
 							const coords = coordutil.getCoordsFromKey(key as CoordsKey);
 							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
@@ -55,32 +86,30 @@ function genPositionOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_
 	return resultPos;
 }
 
-function genMovesetOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_SPACING: number) {
-	const MIN_X = 0;
-	const MAX_X = MIN_X + BOARDS_X * BOARD_SPACING;
-	const MIN_Y = 0;
-	const MAX_Y = MIN_Y + BOARDS_Y * BOARD_SPACING;
+function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number) {
+
+	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 
 	const movesets: Movesets = {
 		queens: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > MIN_X && endCoords[0] < MAX_X && endCoords[1] > MIN_Y && endCoords[1] < MAX_Y);
+				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
 			}
 		},
 		bishops: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > MIN_X && endCoords[0] < MAX_X && endCoords[1] > MIN_Y && endCoords[1] < MAX_Y);
+				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
 			}
 		},
 		rooks: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > MIN_X && endCoords[0] < MAX_X && endCoords[1] > MIN_Y && endCoords[1] < MAX_Y);
+				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
 			}
 		},
 		kings: {
@@ -89,14 +118,11 @@ function genMovesetOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_S
 		},
 		knights: {
 			individual: [],
-			ignore: (startCoords: Coords, endCoords: Coords) => {
-				const distance = math.manhattanDistance(startCoords, endCoords);
-				return (distance === 3) && ((startCoords[0] % BOARD_SPACING !== endCoords[0] % BOARD_SPACING) || (startCoords[1] % BOARD_SPACING !== endCoords[1] % BOARD_SPACING));
-			}
+			special: fourdimensionalmoves.fourDimensionalKnightMove
 		},
 		pawns: {
 			individual: [],
-			special: fivedimensionalmoves.fivedimensionalpawnmove
+			special: fourdimensionalmoves.fourDimensionalPawnMove
 		}
 	};
 	let kingIndex = 0;
@@ -104,8 +130,8 @@ function genMovesetOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_S
 		for (let baseV = 1; baseV >= -1; baseV--) {
 			for (let offsetH = 1; offsetH >= -1; offsetH--) {
 				for (let offsetV = 1; offsetV >= -1; offsetV--) {
-					const x = (BOARD_SPACING * baseH + offsetH);
-					const y = (BOARD_SPACING * baseV + offsetV);
+					const x = (dim.BOARD_SPACING * baseH + offsetH);
+					const y = (dim.BOARD_SPACING * baseV + offsetV);
 					movesets['kings']!.individual[kingIndex] = [x, y];
 					kingIndex++;
 					if (x < 0) continue; // If the x coordinate is negative, skip this iteration
@@ -125,28 +151,11 @@ function genMovesetOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_S
 		}
 	}
 
-	// Knights are special, since they can move two tiles in one dimension
-	let knightIndex = 0;
-	for (let baseH = 2; baseH >= -2; baseH--) {
-		for (let baseV = 2; baseV >= -2; baseV--) {
-			for (let offsetH = 2; offsetH >= -2; offsetH--) {
-				for (let offsetV = 2; offsetV >= -2; offsetV--) {
-					// If the squared distance to the tile is 5, then add the move
-					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
-						movesets['knights']!.individual[knightIndex] = [BOARD_SPACING * baseH + offsetH, BOARD_SPACING * baseV + offsetV];
-						knightIndex++;
-					}
-				}
-			}
-		}
-	}
-
 	return movesets;
 }
 
-
-
 export default {
-	genPositionOfFiveDimensional,
-	genMovesetOfFiveDimensional
+	get4DBoardDimensions,
+	gen4DPosition,
+	gen4DMoveset
 };
