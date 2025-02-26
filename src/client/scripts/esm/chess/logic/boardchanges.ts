@@ -56,6 +56,7 @@ type Change = {
 	action: 'capture',
 	endCoords: Coords,
 	capturedPiece: Piece,
+	/** A custom path the moving piece took to make the capture. (e.g. Rose piece) */
 	path?: Coords[],
 } | {
 	action: 'move',

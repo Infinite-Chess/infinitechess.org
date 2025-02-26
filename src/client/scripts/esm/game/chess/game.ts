@@ -74,7 +74,7 @@ import stats from '../gui/stats.js';
 
 
 function init() {
-	options.initTheme();
+	options.updateTheme();
 
 	gui.prepareForOpen();
 

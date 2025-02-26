@@ -18,6 +18,7 @@ import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.j
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 /** 
@@ -329,7 +330,7 @@ function updateNavColor() {
 	let navG = 255;
 	let navB = 255;
 
-	if (options.getTheme() !== 'white') {
+	if (preferences.getTheme() !== 'white') {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;

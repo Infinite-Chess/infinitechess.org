@@ -25,28 +25,16 @@ import gameslot from '../chess/gameslot.js';
  * etc
  */
 
-let theme;
-
 let em = false; // editMode, allows moving pieces anywhere else on the board!
 
 
 
 (function() {
-	document.addEventListener('theme-change', function(event) { // Custom Event listener.   detail: themeName
-		const selectedTheme = event.detail;
-		console.log(`Theme change event detected: ${selectedTheme}`);
-		setTheme(selectedTheme);
+	document.addEventListener('theme-change', (event) => { // Custom Event listener.
+		console.log(`Theme change event detected: ${preferences.getTheme()}`);
+		updateTheme();
 	});
 })();
-
-function initTheme() {
-	const selectedThemeName = preferences.getTheme();
-	setTheme(selectedThemeName);
-}
-
-function getTheme() {
-	return theme;
-}
 
 function disableEM() {
 	em = false;
@@ -76,35 +64,34 @@ function toggleEM() {
  * @returns 
  */
 function getDefaultTiles(isWhite) {
-	if (isWhite) return themes.getPropertyOfTheme(theme, 'lightTiles');
-	else return themes.getPropertyOfTheme(theme, 'darkTiles');
+	const themeName = preferences.getTheme();
+	if (isWhite) return themes.getPropertyOfTheme(themeName, 'lightTiles');
+	else return themes.getPropertyOfTheme(themeName, 'darkTiles');
 }
 
 function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
-	if (isOpponentPiece) return themes.getPropertyOfTheme(theme, 'legalMovesHighlightColor_Opponent');
-	else if (isPremove) return themes.getPropertyOfTheme(theme, 'legalMovesHighlightColor_Premove');
-	else return themes.getPropertyOfTheme(theme, 'legalMovesHighlightColor_Friendly');
+	const themeName = preferences.getTheme();
+	if (isOpponentPiece) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Opponent');
+	else if (isPremove) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Premove');
+	else return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Friendly');
 }
 
 function getDefaultLastMoveHighlightColor() {
-	return themes.getPropertyOfTheme(theme, 'lastMoveHighlightColor');
+	const themeName = preferences.getTheme();
+	return themes.getPropertyOfTheme(themeName, 'lastMoveHighlightColor');
 }
 
 function getDefaultCheckHighlightColor() {
-	return themes.getPropertyOfTheme(theme, 'checkHighlightColor'); 
+	const themeName = preferences.getTheme();
+	return themes.getPropertyOfTheme(themeName, 'checkHighlightColor'); 
 }
 
 function getDefaultOutlineColor() {
-	return themes.getPropertyOfTheme(theme, 'boxOutlineColor');
+	const themeName = preferences.getTheme();
+	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
-function setTheme(newTheme) {
-	if (!themes.isThemeValid(newTheme)) {
-		console.error(`Invalid theme "${newTheme}"! Setting to default..`);
-		newTheme = themes.defaultTheme;
-	}
-	theme = newTheme;
-
+function updateTheme() {
 	board.updateTheme();
 	piecesmodel.regenModel(gameslot.getGamefile(), getPieceRegenColorArgs());
 }
@@ -125,13 +112,14 @@ function getHollidayTheme() {
  * @returns {Object} An object containing the properties "white", "black", and "neutral".
  */
 function getPieceRegenColorArgs() {
-	const themeProperties = themes.themes[theme];
+	const themeName = preferences.getTheme();
+	const themeProperties = themes.themes[themeName];
 	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
 
 	return {
-		white: themes.getPropertyOfTheme(theme, 'whitePiecesColor'), // [r,g,b,a]
-		black: themes.getPropertyOfTheme(theme, 'blackPiecesColor'),
-		neutral: themes.getPropertyOfTheme(theme, 'neutralPiecesColor'),
+		white: themes.getPropertyOfTheme(themeName, 'whitePiecesColor'), // [r,g,b,a]
+		black: themes.getPropertyOfTheme(themeName, 'blackPiecesColor'),
+		neutral: themes.getPropertyOfTheme(themeName, 'neutralPiecesColor'),
 	};
 }
 
@@ -244,7 +232,6 @@ function getColorOfType(type) {
 
 
 export default {
-	getTheme,
 	toggleEM,
 	getDefaultTiles,
 	getLegalMoveHighlightColor,
@@ -255,6 +242,4 @@ export default {
 	getColorOfType,
 	getEM,
 	disableEM,
-	initTheme,
-	// update,
 };
