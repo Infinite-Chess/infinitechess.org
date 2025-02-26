@@ -26,9 +26,8 @@ While in the game on the Play page, there are a few keys that will activate usef
 * `2`: Prints the gamefile, with all its properties, to the console. Useful for checking if it has the expected properties.
 * `3`: Greatly slows the animation of pieces, and renders the spline path the piece will travel. Especially beautiful when observing the Rose's movement. Also useful when working with animated arrow indicators.
 * `4`: Simulates 2 seconds of websocket sent-message latency. This helps you to discover bugs caused by low ping, something you have zero of when developing. There is an additional variable [config.simulatedWebsocketLatencyMillis](src/server/config/config.js) which you can adjust to add latency to the **server's** sent messages, if you want both ends to be balanced.
-* `5`: Toggles wireframe voids. The void mesh is simplified greatly, as adjacent voids can be merged into one quad to decrease the total vertices in the vertex data. This is also a mesmerizing effect when observing positions with thousands of void squares.
-* `6`: Copies the game as a single position, according to the move you are viewing. This is useful for stripping the moves list from a game so you can use it to continue that position by pasting it in a private online match.
-* `7`: Indicates with a `+` sign what pieces still have their special rights (pawns that can double push, kings/rooks that can castle), and highlights the square enpassant capture is legal on, if it is.
+* `5`: Copies the game as a single position, according to the move you are viewing. This is useful for stripping the moves list from a game so you can use it to continue that position by pasting it in a private online match.
+* `6`: Indicates with a `+` sign what pieces still have their special rights (pawns that can double push, kings/rooks that can castle), and highlights the square enpassant capture is legal on, if it is.
 
 
 ## Client ##

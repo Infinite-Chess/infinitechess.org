@@ -144,6 +144,11 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: 
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
+	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
+	if (spritesheet.typesWithoutSVG.some(typeNoSVG => {
+		return type.startsWith(typeNoSVG) || (captured !== undefined && captured.type.startsWith(typeNoSVG));
+	})) instant = true; // But, still instant animate it so that the sound plays
+
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
 	if (instant) return playSoundOfDistance(totalDistance, captured !== undefined);
 
