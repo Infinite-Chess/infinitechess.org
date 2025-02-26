@@ -64,7 +64,8 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 		// Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as CoordsSpecial;
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
-		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
+		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords) &&
+		doublePushCoord[0] > dim.MIN_X && doublePushCoord[0] < dim.MAX_X && doublePushCoord[1] > dim.MIN_Y && doublePushCoord[1] < dim.MAX_Y) { // Add the double push!
 			doublePushCoord.enpassantCreate = specialdetect.getEnPassantGamefileProperty(coords, doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); // Add the double push!
 		}
@@ -74,9 +75,11 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 
 	const coordsToCapture: Coords[] = [
 		[coords[0] - distance, coords[1] + yDistanceParity],
-		[coords[0] + distance, coords[1] + yDistanceParity]
+		[coords[0] + distance, coords[1] + yDistanceParity],
+		[coords[0] - 1, coords[1] + yDistanceParity],
+		[coords[0] + 1, coords[1] + yDistanceParity]
 	];
-	for (let i = 0; i < 2; i++) {
+	for (let i = 0; i < 4; i++) {
 		const thisCoordsToCapture = coordsToCapture[i]!;
 
 		// Is there an enemy piece at this coords?
