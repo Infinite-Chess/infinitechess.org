@@ -23,69 +23,7 @@ import gamefile from "./gamefile.js";
 import specialdetect from "./specialdetect.js";
 
 
-// Legal Move Calculation -----------------------------------------------------------------
-
-
-/** Calculates the legal knight moves in the four dimensional variant. */
-function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
-	const legalMoves: Coords[] = [];
-	legalMoves.push(...knightLegalMoves(gamefile, coords, color));
-	return legalMoves;
-}
-
-/**
- * Calculates legal knight moves for either the spacelike or timelike dimensions.
- * @param gamefile
- * @param coords - The coordinates of the knight
- * @param color - The color of the knight
- */
-function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
-	const individualMoves: Coords[] = [];
-	const dim = fivedimensionalgenerator.get4DBoardDimensions();
-
-	for (let baseH = 2; baseH >= -2; baseH--) {
-		for (let baseV = 2; baseV >= -2; baseV--) {
-			for (let offsetH = 2; offsetH >= -2; offsetH--) {
-				for (let offsetV = 2; offsetV >= -2; offsetV--) {
-					// If the squared distance to the tile is 5, then add the move
-					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
-						const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
-						const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
-						const endCoords = [x, y] as Coords;
-						const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
-
-						// do not allow capturing friendly pieces
-						if (endPiece && color === colorutil.getPieceColorFromType(endPiece)) continue;
-
-						// do not allow knight to leave the 4D board
-						if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
-
-						// do not allow the knight to make move if (baseH, baseV) do not match change in 2D chessboard
-						if (Math.floor((endCoords[0] - dim.MIN_X) / dim.BOARD_SPACING) - Math.floor((coords[0] - dim.MIN_X) / dim.BOARD_SPACING) !== baseH || 
-							Math.floor((endCoords[1] - dim.MIN_Y) / dim.BOARD_SPACING) - Math.floor((coords[1] - dim.MIN_Y) / dim.BOARD_SPACING) !== baseV
-						) continue;
-						individualMoves.push(endCoords);
-					}
-				}
-			}
-		}
-	}
-
-	return individualMoves;
-}
-
-/** Executes a four dimensional knight move.  */
-function doFourDimensionalKnightMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
-	const moveChanges = move.changes;
-
-	const captureCoords = move.endCoords;
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
-
-	if (capturedPiece) boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece); // Delete the piece captured
-	else boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Move the knight
-
-	return true; // Special move was executed!
-}
+// Pawn Legal Move Calculation -----------------------------------------------------------------
 
 /** Calculates the legal pawn moves in the four dimensional variant. */
 function fourDimensionalPawnMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
@@ -231,12 +169,138 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 }
 
 
+// Knight Legal Move Calculation -----------------------------------------------------------------
+
+
+/** Calculates the legal knight moves in the four dimensional variant. */
+function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+	const legalMoves: Coords[] = [];
+	legalMoves.push(...knightLegalMoves(gamefile, coords, color));
+	return legalMoves;
+}
+
+/**
+ * Calculates legal knight moves for either the spacelike or timelike dimensions.
+ * @param gamefile
+ * @param coords - The coordinates of the knight
+ * @param color - The color of the knight
+ */
+function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+	const individualMoves: Coords[] = [];
+	const dim = fivedimensionalgenerator.get4DBoardDimensions();
+
+	for (let baseH = 2; baseH >= -2; baseH--) {
+		for (let baseV = 2; baseV >= -2; baseV--) {
+			for (let offsetH = 2; offsetH >= -2; offsetH--) {
+				for (let offsetV = 2; offsetV >= -2; offsetV--) {
+					// If the squared distance to the tile is 5, then add the move
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
+						const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
+						const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
+						const endCoords = [x, y] as Coords;
+						const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
+
+						// do not allow capturing friendly pieces
+						if (endPiece && color === colorutil.getPieceColorFromType(endPiece)) continue;
+
+						// do not allow knight to leave the 4D board
+						if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
+
+						// do not allow the knight to make move if (baseH, baseV) do not match change in 2D chessboard
+						if (Math.floor((endCoords[0] - dim.MIN_X) / dim.BOARD_SPACING) - Math.floor((coords[0] - dim.MIN_X) / dim.BOARD_SPACING) !== baseH || 
+							Math.floor((endCoords[1] - dim.MIN_Y) / dim.BOARD_SPACING) - Math.floor((coords[1] - dim.MIN_Y) / dim.BOARD_SPACING) !== baseV
+						) continue;
+						individualMoves.push(endCoords);
+					}
+				}
+			}
+		}
+	}
+
+	return individualMoves;
+}
+
+/** Executes a four dimensional knight move.  */
+function doFourDimensionalKnightMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
+	const moveChanges = move.changes;
+
+	const captureCoords = move.endCoords;
+	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+
+	if (capturedPiece) boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece); // Delete the piece captured
+	else boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Move the knight
+
+	return true; // Special move was executed!
+}
+
+
+// King Legal Move Calculation -----------------------------------------------------------------
+
+/** Calculates the legal king moves in the four dimensional variant. */
+function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+	const legalMoves: Coords[] = [];
+	legalMoves.push(...kingLegalMoves(gamefile, coords, color));
+	legalMoves.push(...specialdetect.kings(gamefile, coords, color));
+	return legalMoves;
+}
+
+/**
+ * Calculates legal king moves for either the spacelike or timelike dimensions.
+ * @param gamefile
+ * @param coords - The coordinates of the king
+ * @param color - The color of the king
+ */
+function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+	const individualMoves: Coords[] = [];
+	const dim = fivedimensionalgenerator.get4DBoardDimensions();
+
+	for (let baseH = 1; baseH >= -1; baseH--) {
+		for (let baseV = 1; baseV >= -1; baseV--) {
+			for (let offsetH = 1; offsetH >= -1; offsetH--) {
+				for (let offsetV = 1; offsetV >= -1; offsetV--) {
+					const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
+					const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
+
+					const endCoords = [x, y] as Coords;
+					const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
+
+					// do not allow capturing friendly pieces
+					if (endPiece && color === colorutil.getPieceColorFromType(endPiece)) continue;
+
+					// do not allow king to leave the 4D board
+					if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
+
+					individualMoves.push(endCoords);
+				}
+			}
+		}
+	}
+
+	return individualMoves;
+}
+
+/** Executes a four dimensional king move.  */
+function doFourDimensionalKingMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
+	const moveChanges = move.changes;
+
+	const captureCoords = move.endCoords;
+	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+
+	if (capturedPiece) boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece); // Delete the piece captured
+	else boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Move the king
+
+	return true; // Special move was executed!
+}
+
+
 // Exports ---------------------------------------------------------------------
 
 
 export default {
+	fourDimensionalPawnMove,
+	doFourDimensionalPawnMove,
 	fourDimensionalKnightMove,
 	doFourDimensionalKnightMove,
-	fourDimensionalPawnMove,
-	doFourDimensionalPawnMove
+	fourDimensionalKingMove,
+	doFourDimensionalKingMove
 };

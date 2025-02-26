@@ -13,8 +13,6 @@ import coordutil from "../util/coordutil.js";
 import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
-// @ts-ignore
-import specialdetect from "../logic/specialdetect.js";
 
 /**
  * dim: contains all relevant quantities for the size of the 4D chess board.
@@ -83,6 +81,7 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 			}
 		}
 	}
+	// position is object and should populate 2D boards according to its entries
 	else if (typeof input_position === 'object') {
 		// Loop through from the leftmost column that should be voids to the right most, and also vertically
 		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
@@ -137,7 +136,7 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number)
 		},
 		kings: {
 			individual: [],
-			special: specialdetect.kings // Makes sure legal castling is still calculated
+			special: fourdimensionalmoves.fourDimensionalKingMove
 		},
 		knights: {
 			individual: [],
@@ -148,15 +147,14 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number)
 			special: fourdimensionalmoves.fourDimensionalPawnMove
 		}
 	};
-	let kingIndex = 0;
+
 	for (let baseH = 1; baseH >= -1; baseH--) {
 		for (let baseV = 1; baseV >= -1; baseV--) {
 			for (let offsetH = 1; offsetH >= -1; offsetH--) {
 				for (let offsetV = 1; offsetV >= -1; offsetV--) {
 					const x = (dim.BOARD_SPACING * baseH + offsetH);
 					const y = (dim.BOARD_SPACING * baseV + offsetV);
-					movesets['kings']!.individual[kingIndex] = [x, y];
-					kingIndex++;
+
 					if (x < 0) continue; // If the x coordinate is negative, skip this iteration
 					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
 					// Add the moves

@@ -282,7 +282,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		},
 		movesetGenerator: () => { return fourdimensionalgenerator.gen4DMoveset(4, 4, 5); },
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [4, 9, 14, 19], black: [1, 6, 11, 16] } },
-		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove, knights: fourdimensionalmoves.doFourDimensionalKnightMove },
+		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove, knights: fourdimensionalmoves.doFourDimensionalKnightMove, kings: fourdimensionalmoves.doFourDimensionalKingMove },
 		specialVicinity: { pawns: [[1,1],[-1,1],[-1,-1],[1,-1],[5,5],[5,-5],[-5,-5],[-5,5]] }
 	},
 	'8x8x8x8_Chess': {
@@ -292,7 +292,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		},
 		movesetGenerator: () => { return fourdimensionalgenerator.gen4DMoveset(8, 8, 9); },
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 17, 26, 35, 44, 53, 62, 71], black: [1, 10, 19, 28, 37, 46, 55, 64] } },
-		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove, knights: fourdimensionalmoves.doFourDimensionalKnightMove },
+		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove, knights: fourdimensionalmoves.doFourDimensionalKnightMove, kings: fourdimensionalmoves.doFourDimensionalKingMove },
 		specialVicinity: { pawns: [[1,1],[-1,1],[-1,-1],[1,-1],[9,9],[9,-9],[-9,-9],[-9,9]] }
 	}
 };
