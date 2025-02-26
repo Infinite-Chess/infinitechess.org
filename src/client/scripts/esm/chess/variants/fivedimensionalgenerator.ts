@@ -15,63 +15,39 @@ import fivedimensionalmoves from "../logic/fivedimensionalmoves.js";
 import formatconverter from "../logic/formatconverter.js";
 // @ts-ignore
 import specialdetect from "../logic/specialdetect.js";
-
-
-
-const BOARDS_X = 8;
-const BOARDS_Y = 8;
+import math from "../../util/math.js";
 
 /**
- * The spacing of the timelike boards.
- * Currently board spacings other than 10 are not supported by the position generator, but are supported by the moveset generator.
+ * BOARD_SPACING: The spacing of the timelike boards.
  */
-const BOARD_SPACING = 10;
 
-const MIN_X = 0;
-const MAX_X = MIN_X + BOARDS_X * BOARD_SPACING - 1;
-const MIN_Y = 0;
-const MAX_Y = MIN_Y + BOARDS_Y * BOARD_SPACING - 1;
+function genPositionOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_SPACING: number, repeat_position?: string) {
+	const MIN_X = 0;
+	const MAX_X = MIN_X + BOARDS_X * BOARD_SPACING;
+	const MIN_Y = 0;
+	const MAX_Y = MIN_Y + BOARDS_Y * BOARD_SPACING;
 
-/**
- * The width of the giant void wall.
- * Large enough to contain all knights.
- */
-const VOID_WIDTH = 20;
-
-
-
-function genPositionOfFiveDimensional() {
-	// Start with standard
-	const standardPosStr = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
-
-	// Store the standard position so we can reference it later
-	const standardPos: Position = formatconverter.ShortToLong_Format(standardPosStr).startingPosition;
 	const resultPos: Position = {};
 
-	// Loop through from the leftmost column that should be voids to the right most, and also vertically
-	for (let i = MIN_X; i <= MAX_X; i++) {
-		for (let j = MIN_Y; j <= MAX_Y; j++) {
-			// Only the edges of boards should be voids
-			if ((i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9)
-				|| (j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
-				resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
-				// Only add the standard position in a board
-				if ((i % BOARD_SPACING === 0) && (j % BOARD_SPACING === 0)) {
-					for (const key in standardPos) {
-						const coords = coordutil.getCoordsFromKey(key as CoordsKey);
-						const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
-						resultPos[newKey] = standardPos[key as CoordsKey]!;
+	if (repeat_position) {
+		const repeat_position_long : Position = formatconverter.ShortToLong_Format(repeat_position).startingPosition;
+		
+		// Loop through from the leftmost column that should be voids to the right most, and also vertically
+		for (let i = MIN_X; i <= MAX_X; i++) {
+			for (let j = MIN_Y; j <= MAX_Y; j++) {
+				// Only the edges of boards should be voids
+				if ((i % BOARD_SPACING === 0 || i % BOARD_SPACING === 9)
+					|| (j % BOARD_SPACING === 0 || j % BOARD_SPACING === 9)) {
+					resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
+					// Only add the standard position in a board
+					if ((i < MAX_X) && (i % BOARD_SPACING === 0) && (j < MAX_Y) && (j % BOARD_SPACING === 0)) {
+						for (const key in repeat_position_long) {
+							const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
+							resultPos[newKey] = repeat_position_long[key as CoordsKey]!;
+						}
 					}
 				}
-			}
-		}
-	}
-
-	// Surround the whole game with a giant void wall
-	for (let i = MIN_X - VOID_WIDTH; i <= MAX_X + VOID_WIDTH; i++) {
-		for (let j = MIN_Y - VOID_WIDTH; j <= MAX_Y + VOID_WIDTH; j++) {
-			if (i < MIN_X || i > MAX_X || j < MIN_Y || j > MAX_Y) {
-				resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 			}
 		}
 	}
@@ -79,26 +55,44 @@ function genPositionOfFiveDimensional() {
 	return resultPos;
 }
 
-function genMovesetOfFiveDimensional() {
+function genMovesetOfFiveDimensional(BOARDS_X: number, BOARDS_Y: number, BOARD_SPACING: number) {
+	const MIN_X = 0;
+	const MAX_X = MIN_X + BOARDS_X * BOARD_SPACING;
+	const MIN_Y = 0;
+	const MAX_Y = MIN_Y + BOARDS_Y * BOARD_SPACING;
+
 	const movesets: Movesets = {
 		queens: {
 			individual: [],
-			sliding: {}
+			sliding: {},
+			ignore: (startCoords: Coords, endCoords: Coords) => {
+				return (endCoords[0] > MIN_X && endCoords[0] < MAX_X && endCoords[1] > MIN_Y && endCoords[1] < MAX_Y);
+			}
 		},
 		bishops: {
 			individual: [],
-			sliding: {}
+			sliding: {},
+			ignore: (startCoords: Coords, endCoords: Coords) => {
+				return (endCoords[0] > MIN_X && endCoords[0] < MAX_X && endCoords[1] > MIN_Y && endCoords[1] < MAX_Y);
+			}
 		},
 		rooks: {
 			individual: [],
-			sliding: {}
+			sliding: {},
+			ignore: (startCoords: Coords, endCoords: Coords) => {
+				return (endCoords[0] > MIN_X && endCoords[0] < MAX_X && endCoords[1] > MIN_Y && endCoords[1] < MAX_Y);
+			}
 		},
 		kings: {
 			individual: [],
 			special: specialdetect.kings // Makes sure legal castling is still calculated
 		},
 		knights: {
-			individual: []
+			individual: [],
+			ignore: (startCoords: Coords, endCoords: Coords) => {
+				const distance = math.manhattanDistance(startCoords, endCoords);
+				return (distance === 3) && ((startCoords[0] % BOARD_SPACING !== endCoords[0] % BOARD_SPACING) || (startCoords[1] % BOARD_SPACING !== endCoords[1] % BOARD_SPACING));
+			}
 		},
 		pawns: {
 			individual: [],

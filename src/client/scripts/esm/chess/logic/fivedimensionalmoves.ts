@@ -28,7 +28,7 @@ import specialdetect from "./specialdetect.js";
 function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
 	const legalMoves: Coords[] = [];
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 1)); // Spacelike
-	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 10)); // Timelike
+	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 9)); // Timelike
 	return legalMoves;
 }
 
@@ -42,9 +42,9 @@ function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
  * @param gamefile
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
- * @param distance - 1 for spacelike, 10 for timelike
+ * @param distance - 1 for spacelike, 9 for timelike
  */
-function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, distance: 1 | 10): Coords[] {
+function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, distance: 1 | 9): Coords[] {
 
 	// White and black pawns move and capture in opposite directions.
 	const yDistanceParity = color === 'white' ? distance : -distance;
@@ -100,7 +100,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, dista
  * @param individualMoves - The list of individual moves to add the en passant capture to
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
- * @param distance - 1 for spacelike, 10 for timelike
+ * @param distance - 1 for spacelike, 9 for timelike
  */
 function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string, distance: number): void {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
