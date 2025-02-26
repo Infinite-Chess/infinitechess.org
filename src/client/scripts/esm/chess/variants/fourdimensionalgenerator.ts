@@ -16,10 +16,13 @@ import formatconverter from "../logic/formatconverter.js";
 
 /**
  * dim: contains all relevant quantities for the size of the 4D chess board.
- * BOARD_SPACING: The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
- * BOARDS_X: number of 2D boards in x-direction.
- * BOARDS_Y: number of 2D boards in y-direction.
- * The rest designate the board edges on the real chessboard.
+ * @param BOARD_SPACING: The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
+ * @param BOARDS_X: number of 2D boards in x-direction.
+ * @param BOARDS_Y: number of 2D boards in y-direction.
+ * @param MIN_X Board edges on the real chessboard.
+ * @param MAX_X Board edges on the real chessboard.
+ * @param MAX_X Board edges on the real chessboard.
+ * @param MAX_Y Board edges on the real chessboard.
  */
 const dim: {
 	BOARD_SPACING: number;
@@ -40,9 +43,17 @@ const dim: {
 };
 
 /**
- * strong: allow quadragonal and triagonal movement. weak: do not allow it
+ * mov: contains all relevant information for movement logic
+ * @param strong_kings_and_queens - true: allow quadragonal and triagonal king and queen movement. false: do not allow it
+ * @param strong_pawns - true: pawns can capture along any forward-sideways diagonal. false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
  */
-let MOVESET_TYPE: 'strong' | 'weak';
+const mov: {
+	STRONG_KINGS_AND_QUEENS: boolean;
+	STRONG_PAWNS: boolean;
+} = {
+	STRONG_KINGS_AND_QUEENS: false,
+	STRONG_PAWNS: true
+};
 
 function set4DBoardDimensions(boards_x: number, boards_y: number, board_spacing: number) {
 	dim.BOARDS_X = boards_x;
@@ -58,12 +69,13 @@ function get4DBoardDimensions() {
 	return dim;
 }
 
-function setMovesetType(moveset_type: 'strong' | 'weak') {
-	MOVESET_TYPE = moveset_type;
+function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean) {
+	mov.STRONG_KINGS_AND_QUEENS = strong_kings_and_queens;
+	mov.STRONG_PAWNS = strong_pawns;
 }
 
-function getMovesetType(): 'strong' | 'weak' {
-	return MOVESET_TYPE;
+function getMovementType() {
+	return mov;
 }
 
 /**
@@ -134,13 +146,14 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
  * @param boards_x - Number of 2D boards in x direction
  * @param boards_y - Number of 2D boards in y direction
  * @param board_spacing - The spacing of the 2D boards - should be equal to (sidelength of a 2D board) + 1
- * @param moveset_type - "strong": allow quadragonal and triagonal movement. "weak": do not allow it
+ * @param strong_kings_and_queens - true: allow quadragonal and triagonal movement. false: do not allow it
+ * @param strong_pawns - true: pawns can capture along any diagonal. false: pawns can only capture along strictly spacelike or timelike diagonals
  * @returns 
  */
-function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number, moveset_type: 'strong' | 'weak') {
+function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number, strong_kings_and_queens: boolean, strong_pawns: boolean) {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
-	setMovesetType(moveset_type);
+	setMovementType(strong_kings_and_queens, strong_pawns);
 
 	const movesets: Movesets = {
 		queens: {
@@ -189,18 +202,18 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
 					// Add the moves
 
-					// allow any queen move with strong moveset type
-					if (moveset_type === 'strong') movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
+					if (mov.STRONG_KINGS_AND_QUEENS) movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					
 					// Only add a bishop move if the move moves in two dimensions
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
 						movesets['bishops']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
-						if (moveset_type === 'weak') movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						if (!mov.STRONG_KINGS_AND_QUEENS) movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 					// Only add a rook move if the move moves in one dimension
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
 						movesets['rooks']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
-						if (moveset_type === 'weak') movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						if (!mov.STRONG_KINGS_AND_QUEENS) movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 				}
 			}
@@ -214,5 +227,5 @@ export default {
 	get4DBoardDimensions,
 	gen4DPosition,
 	gen4DMoveset,
-	getMovesetType
+	getMovementType
 };
