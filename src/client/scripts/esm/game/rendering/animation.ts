@@ -307,8 +307,7 @@ function renderAnimations() {
 		return piecesData;
 	});
 
-	createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
-		.render();
+	createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet()).render();
 }
 
 /**
@@ -352,17 +351,16 @@ function calculateBoardPosition(coords: Coords) {
 /**
  * Returns the coordinate the animation's piece should be rendered this frame.
  * @param animation - The animation to calculate the position for.
- * @param customMaxDistB4Teleport - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
+ * @param maxDistB4Teleport - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
  */
-function getCurrentAnimationPosition(animation: Animation, customMaxDistB4Teleport?: number): Coords {
+function getCurrentAnimationPosition(animation: Animation, maxDistB4Teleport = MAX_DISTANCE_BEFORE_TELEPORT): Coords {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
 	const t = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
 	const easedT = math.easeInOut(t);
 
-	const MAX_DISTANCE = customMaxDistB4Teleport ?? MAX_DISTANCE_BEFORE_TELEPORT;
-	return calculateInterpolatedPosition(animation, easedT, MAX_DISTANCE);
+	return calculateInterpolatedPosition(animation, easedT, maxDistB4Teleport);
 }
 
 /** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
