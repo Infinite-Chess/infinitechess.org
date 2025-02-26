@@ -7,12 +7,11 @@
 import space from '../../misc/space.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 import { BufferModel, createModel } from '../buffermodel.js';
+import preferences from '../../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
 import movement from '../movement.js';
-// @ts-ignore
-import preferences from '../../../components/header/preferences.js';
 
 
 // Type Definitions ----------------------------------------------------------------

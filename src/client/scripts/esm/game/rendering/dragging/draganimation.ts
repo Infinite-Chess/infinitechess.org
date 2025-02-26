@@ -19,6 +19,7 @@ import { createModel } from "../buffermodel.js";
 import space from "../../misc/space.js";
 import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
@@ -35,8 +36,6 @@ import input from "../../input.js";
 import camera from "../camera.js";
 // @ts-ignore
 import themes from "../../../components/header/themes.js";
-// @ts-ignore
-import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import board from "../board.js";
 

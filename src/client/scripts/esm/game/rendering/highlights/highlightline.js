@@ -54,7 +54,8 @@ function genModel() {
 	const pieceCoords = selection.getPieceSelected().coords;
 	const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
 
-	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor());
+	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
+	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor(color_options));
 	color[3] = 1;
 
 	const snapDist = miniimage.getWidthWorld() / 2;

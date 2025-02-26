@@ -1,3 +1,6 @@
+
+
+// @ts-ignore
 import themes from "./themes.js";
 import localstorage from "../../util/localstorage.js";
 import timeutil from "../../util/timeutil.js";
@@ -7,32 +10,60 @@ import docutil from "../../util/docutil.js";
 import colorutil from "../../chess/util/colorutil.js";
 
 
-let preferences; // { theme, legal_moves }
+import type { Color } from "../../chess/util/colorutil.js";
 
-// The legal moves shape preference
-const default_legal_moves = 'squares'; // dots/squares
-const default_drag_enabled = true;
-const default_premove_mode = false; // Change this to true when premoves are implemented.
-const default_perspective_sensitivity = 100;
-const default_perspective_fov = 90;
+
+
+// Type Definitions ------------------------------------------------------------
+
 
 /** Prefs that do NOT get saved on the server side */
-const clientSidePrefs = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_mode'];
+const clientSidePrefs: string[] = ['perspective_sensitivity', 'perspective_fov', 'drag_enabled', 'premove_mode'];
+interface ClientSidePreferences {
+	perspective_sensitivity: number;
+	perspective_fov: number;
+	drag_enabled: boolean;
+	premove_mode: boolean;
+}
+
+interface ServerSidePreferences {
+	theme: string;
+	legal_moves: string;
+}
+
+/** Both client and server side preferences */
+type Preferences = ServerSidePreferences & ClientSidePreferences;
+
+
+// Variables ------------------------------------------------------------
+
+
+let preferences: Preferences;
+
+// The legal moves shape preference
+const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
+const default_drag_enabled: boolean = true;
+const default_premove_mode: boolean = false; // Change this to true when premoves are implemented.
+const default_perspective_sensitivity: number = 100;
+const default_perspective_fov: number = 90;
+
 
 /**
  * Whether a change was made to the preferences since the last time we sent them over to the server.
  * We only change this to true if we change a preference that isn't only client side.
  */
-let changeWasMade = false;
+let changeWasMade: boolean = false;
 
 
-(function init() {
+// Functions -----------------------------------------------------------------------
+
+
+(function init(): void {
 	loadPreferences();
 })();
 
-function loadPreferences() {
-	
-	const browserStoragePrefs = localstorage.loadItem('preferences') || {
+function loadPreferences(): void {
+	const browserStoragePrefs: Preferences = localstorage.loadItem('preferences') || {
 		theme: themes.defaultTheme,
 		legal_moves: default_legal_moves,
 		perspective_sensitivity: default_perspective_sensitivity,
@@ -40,64 +71,62 @@ function loadPreferences() {
 	};
 	preferences = browserStoragePrefs;
 
-	let cookiePrefs = docutil.getCookieValue('preferences');
+	let cookiePrefs: string | undefined = docutil.getCookieValue('preferences');
 	if (cookiePrefs) {
 		// console.log("Preferences cookie was present!");
-		cookiePrefs = JSON.parse(decodeURIComponent(cookiePrefs));
-		// console.log(cookiePrefs);
-		clientSidePrefs.forEach(pref => { cookiePrefs[pref] = browserStoragePrefs[pref]; });
-		preferences = cookiePrefs;
-		savePreferences(); // Save preferences for whoever was logged in last into local storage
+		preferences = JSON.parse(decodeURIComponent(cookiePrefs)) as Preferences;
+		// console.log(jsutil.deepCopyObject(preferences));
+		clientSidePrefs.forEach(pref => preferences![pref] = browserStoragePrefs[pref] );
 	}
 }
 
-function savePreferences() {
-	const oneYearInMillis = timeutil.getTotalMilliseconds({ years: 1 });
+function savePreferences(): void {
+	const oneYearInMillis: number = timeutil.getTotalMilliseconds({ years: 1 });
 	localstorage.saveItem('preferences', preferences, oneYearInMillis);
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing
 }
 
-function onChangeMade() {
+function onChangeMade(): void {
 	changeWasMade = true;
 	validatorama.getAccessToken(); // Preload the access token so that we are ready to quickly save our preferences on the server if the page is unloaded
 }
 
-async function sendPrefsToServer() {
+async function sendPrefsToServer(): Promise<void> {
 	if (!validatorama.areWeLoggedIn()) return;  // Ensure user is logged in
 	if (!changeWasMade) return;  // Only send if preferences were changed
 	changeWasMade = false;  // Reset the flag after sending
 
 	console.log('Sending preferences to the server!');
-	const preparedPrefs = preparePrefs();  // Prepare the preferences to send
+	const preparedPrefs: ServerSidePreferences = preparePrefs();  // Prepare the preferences to send
 	POSTPrefs(preparedPrefs);
 }
 
-async function POSTPrefs(preparedPrefs) {
+async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 	// Configure the POST request
-	const config = {
+	const config: RequestInit = {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			"is-fetch-request": "true" // Custom header
-		},
+		} as Record<string, string>,
 		body: JSON.stringify({ preferences: preparedPrefs }),  // Send the preferences as JSON
 	};
 
 	// Get the access token and add it to the Authorization header
-	const token = await validatorama.getAccessToken();
-	if (token) config.headers.Authorization = `Bearer ${token}`;  // If you use tokens for authentication
+	const token: string | undefined = await validatorama.getAccessToken();
+	if (token) config.headers!['Authorization'] = `Bearer ${token}`;  // If you use tokens for authentication
 
 	try {
-		const response = await fetch('/api/set-preferences', config);
+		const response: Response = await fetch('/api/set-preferences', config);
 		
 		// Check if the response status code indicates success (e.g., 200-299 range)
 		if (response.ok) {
 			console.log('Preferences updated successfully on the server.');
 		} else {
 			// Handle unsuccessful response
-			const errorData = await response.json();
+			const errorData: any = await response.json();
 			console.error('Failed to update preferences on the server:', errorData.message || errorData);
 		}
 	} catch (error) {
@@ -105,8 +134,8 @@ async function POSTPrefs(preparedPrefs) {
 	}
 }
 
-function preparePrefs() {
-	const prefsCopy = jsutil.deepCopyObject(preferences);
+function preparePrefs(): ServerSidePreferences {
+	const prefsCopy: Preferences = jsutil.deepCopyObject(preferences);
 	Object.keys(prefsCopy).forEach(prefName => {
 		if (clientSidePrefs.includes(prefName)) delete prefsCopy[prefName];
 	});
@@ -115,60 +144,67 @@ function preparePrefs() {
 	return prefsCopy;
 }
 
-
-function getTheme() {
+function getTheme(): string {
 	return preferences.theme || themes.defaultTheme;
 }
-function setTheme(theme) {
+
+function setTheme(theme: string): void {
 	preferences.theme = theme;
-	console.log('Set theme')
+	console.log('Set theme');
 	onChangeMade();
 	savePreferences();
 }
 
-function getLegalMovesShape() {
+function getLegalMovesShape(): string {
 	return preferences.legal_moves || default_legal_moves;
 }
-function setLegalMovesShape(legal_moves) {
+
+function setLegalMovesShape(legal_moves: string): void {
 	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
 	onChangeMade();
 	savePreferences();
 }
 
-function getDragEnabled() {
+function getDragEnabled(): boolean {
 	return preferences.drag_enabled ?? default_drag_enabled;
 }
-function setDragEnabled(drag_enabled) {
+
+function setDragEnabled(drag_enabled: boolean): void {
 	if (typeof drag_enabled !== 'boolean') throw new Error('Cannot set preference drag_enabled when it is not a boolean.');
 	preferences.drag_enabled = drag_enabled;
 	savePreferences();
 }
-function getPremoveMode() {
+
+function getPremoveMode(): boolean {
 	return preferences.premove_mode ?? default_premove_mode;
 }
-function setPremoveMode(premove_mode) {
-	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a string.');
+
+function setPremoveMode(premove_mode: boolean): void {
+	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
 	preferences.premove_mode = premove_mode;
 	savePreferences();
 }
 
-function getPerspectiveSensitivity() {
+function getPerspectiveSensitivity(): number {
 	return preferences.perspective_sensitivity || default_perspective_sensitivity;
 }
-function setPerspectiveSensitivity(perspective_sensitivity) {
+
+function setPerspectiveSensitivity(perspective_sensitivity: number): void {
 	if (typeof perspective_sensitivity !== 'number') throw new Error('Cannot set preference perspective_sensitivity when it is not a number.');
 	preferences.perspective_sensitivity = perspective_sensitivity;
 	savePreferences();
 }
 
-function getPerspectiveFOV() {
+function getPerspectiveFOV(): number {
 	return preferences.perspective_fov || default_perspective_fov;
 }
-function getDefaultPerspectiveFOV() {
+
+function getDefaultPerspectiveFOV(): number {
 	return default_perspective_fov;
 }
-function setPerspectiveFOV(perspective_fov) {
+
+function setPerspectiveFOV(perspective_fov: number): void {
 	if (typeof perspective_fov !== 'number') throw new Error('Cannot set preference perspective_fov when it is not a number.');
 	preferences.perspective_fov = perspective_fov;
 	savePreferences();
@@ -179,45 +215,45 @@ function setPerspectiveFOV(perspective_fov) {
 // Getters for our current theme properties --------------------------------------------------------
 
 
-function getColorOfLightTiles() {
-	const themeName = getTheme();
+function getColorOfLightTiles(): Color {
+	const themeName: string = getTheme();
 	return themes.getPropertyOfTheme(themeName, 'lightTiles');
 }
 
-function getColorOfDarkTiles() {
-	const themeName = getTheme();
+function getColorOfDarkTiles(): Color {
+	const themeName: string = getTheme();
 	return themes.getPropertyOfTheme(themeName, 'darkTiles');
 }
 
-function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
-	const themeName = getTheme();
+function getLegalMoveHighlightColor({ isOpponentPiece, isPremove }: { isOpponentPiece: boolean, isPremove: boolean }): Color {
+	const themeName: string = getTheme();
 	if (isOpponentPiece) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Opponent');
 	else if (isPremove) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Premove');
 	else return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Friendly');
 }
 
-function getLastMoveHighlightColor() {
-	const themeName = getTheme();
+function getLastMoveHighlightColor(): Color {
+	const themeName: string = getTheme();
 	return themes.getPropertyOfTheme(themeName, 'lastMoveHighlightColor');
 }
 
-function getCheckHighlightColor() {
-	const themeName = getTheme();
+function getCheckHighlightColor(): Color {
+	const themeName: string = getTheme();
 	return themes.getPropertyOfTheme(themeName, 'checkHighlightColor'); 
 }
 
-function getBoxOutlineColor() {
-	const themeName = getTheme();
+function getBoxOutlineColor(): Color {
+	const themeName: string = getTheme();
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
 /** Returns { r, g, b, a } depending on our current theme! */
-function getTintColorOfType(type) {
-	const colorArgs = getPieceRegenColorArgs(); // { white, black, neutral }
+function getTintColorOfType(type: string): { r: number, g: number, b: number, a: number } {
+	const colorArgs: { white: number[], black: number[], neutral: number[] } | undefined = getPieceRegenColorArgs(); // { white, black, neutral }
 	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-	const pieceColor = colorutil.getPieceColorFromType(type); // white/black/neutral
-	const color = colorArgs[pieceColor]; // [r,g,b,a]
+	const pieceColor: string = colorutil.getPieceColorFromType(type); // white/black/neutral
+	const color: number[] = colorArgs[pieceColor]; // [r,g,b,a]
 
 	return {
 		r: color[0],
@@ -231,9 +267,9 @@ function getTintColorOfType(type) {
  * Returns the color arrays for the pieces, according to our theme.
  * @returns {Object | undefined} An object containing the properties "white", "black", and "neutral".
  */
-function getPieceRegenColorArgs() {
-	const themeName = getTheme();
-	const themeProperties = themes.themes[themeName];
+function getPieceRegenColorArgs(): { white: number[], black: number[], neutral: number[] } | undefined {
+	const themeName: string = getTheme();
+	const themeProperties: any = themes.themes[themeName];
 	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
 
 	return {

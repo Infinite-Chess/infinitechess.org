@@ -21,12 +21,11 @@ import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
 import legalmovehighlights from "../highlights/legalmovehighlights.js";
 import moveutil from "../../../chess/util/moveutil.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import movement from "../movement.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import preferences from "../../../components/header/preferences.js";
 
 
 // Type Definitions -------------------------------------------------------------------------------------------

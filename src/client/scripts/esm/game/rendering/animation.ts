@@ -15,6 +15,7 @@ import spritesheet from './spritesheet.js';
 import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
+import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -29,8 +30,6 @@ import perspective from './perspective.js';
 import shapes from './shapes.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-// @ts-ignore
-import preferences from '../../components/header/preferences.js';
 
 
 // Type Definitions -----------------------------------------------------------------------

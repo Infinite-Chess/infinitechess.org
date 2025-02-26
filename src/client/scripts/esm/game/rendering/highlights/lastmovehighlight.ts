@@ -6,6 +6,7 @@
 
 import { createModel } from "../buffermodel.js";
 import moveutil from "../../../chess/util/moveutil.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 
@@ -15,8 +16,6 @@ import shapes from "../shapes.js";
 
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
-// @ts-ignore
-import preferences from "../../../components/header/preferences.js";
 
 
 // Variables -----------------------------------------------------------------------------

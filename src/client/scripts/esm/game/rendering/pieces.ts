@@ -13,6 +13,7 @@ import type { gamefile } from '../../chess/logic/gamefile.js';
 import spritesheet from './spritesheet.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import { createModel } from './buffermodel.js';
+import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -27,8 +28,6 @@ import voids from './voids.js';
 import board from './board.js';
 // @ts-ignore
 import shapes from './shapes.js';
-// @ts-ignore
-import preferences from '../../components/header/preferences.js';
 
 
 // Variables ---------------------------------------------------------------------

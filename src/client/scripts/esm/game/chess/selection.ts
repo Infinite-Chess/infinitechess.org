@@ -30,6 +30,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -50,8 +51,6 @@ import transition from '../rendering/transition.js';
 import movement from '../rendering/movement.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-// @ts-ignore
-import preferences from '../../components/header/preferences.js';
 
 
 // Variables -----------------------------------------------------------------------------
