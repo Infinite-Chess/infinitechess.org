@@ -151,7 +151,9 @@ async function startEngineGame(options: {
 	youAreColor: 'white' | 'black',
 	currentEngine: 'engineCheckmatePractice', // Expand to a union type when more engines are added
 	engineConfig: EngineConfig,
-	variantOptions: VariantOptions
+	variantOptions: VariantOptions,
+	/** Whether the show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
+	showGameControlButtons?: true
 }) {
 	const metadata: MetaData = {
 		Event: options.Event,
@@ -173,7 +175,7 @@ async function startEngineGame(options: {
 	typeOfGameWeAreIn = 'engine';
 	enginegame.initEngineGame(options);
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, true);
+	openGameinfoBarAndConcludeGameIfOver(metadata, showGameControlButtons);
 }
 
 
