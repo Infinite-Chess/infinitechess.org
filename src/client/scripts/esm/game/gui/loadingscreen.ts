@@ -7,7 +7,6 @@
 
 import preferences from "../../components/header/preferences.js";
 import thread from "../../util/thread.js";
-// @ts-ignore
 import themes from "../../components/header/themes.js";
 // @ts-ignore
 import style from "./style.js";

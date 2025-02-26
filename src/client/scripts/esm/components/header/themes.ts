@@ -3,6 +3,9 @@
 
 import jsutil from "../../util/jsutil.js";
 
+import type { Color } from "../../chess/util/colorutil.js";
+
+
 /*
  * Strings for computed property names.
  *
@@ -18,11 +21,27 @@ const lastMoveHighlightColor = "lastMoveHighlightColor";
 const checkHighlightColor = "checkHighlightColor";
 const boxOutlineColor = "boxOutlineColor";
 
+
+interface ThemeProperties {
+	[lightTiles]?: Color;
+	[darkTiles]?: Color;
+	[legalMovesHighlightColor_Friendly]?: Color;
+	[legalMovesHighlightColor_Opponent]?: Color;
+	[legalMovesHighlightColor_Premove]?: Color;
+	[lastMoveHighlightColor]?: Color;
+	[checkHighlightColor]?: Color;
+	[boxOutlineColor]?: Color;
+	useColoredPieces?: boolean;
+	whitePiecesColor?: Color;
+	blackPiecesColor?: Color;
+	neutralPiecesColor?: Color;
+}
+
 /**
  * Fallback properties for a themes properties
  * to use if it doesn't have them present
  */
-const defaults = {
+const defaults: ThemeProperties = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
@@ -36,7 +55,7 @@ const defaults = {
 
 const defaultTheme = 'wood_light';
 
-const themeDictionary = {
+const themeDictionary: { [themeName: string]: ThemeProperties } = {
 
 	/*
 	 * By using computed property names, we greatly compact this script,
@@ -265,17 +284,21 @@ const themeDictionary = {
 
 /**
  * Returns the specified property of the provided theme.
- * @param {string} themeName - e.g. "sandstone"
- * @param {string} property - e.g. "legalMoveHighlightColor_Friendly"
- * @returns {Object} - The property of the theme
+ * @param {string} themeName - The name of the theme, e.g., "sandstone".
+ * @param {string} property - The property to retrieve, e.g., "legalMovesHighlightColor_Friendly".
+ * @returns - The property of the theme or the default value.
  */
-function getPropertyOfTheme(themeName, property) {
-	const value = themeDictionary[themeName][property] !== undefined ? themeDictionary[themeName][property] : defaults[property];
-	return jsutil.deepCopyObject(value); // Return a deep copy so the originals have no risk of modification.
+function getPropertyOfTheme(themeName: string, property: keyof ThemeProperties): any {
+	const value = themeDictionary[themeName]?.[property] ?? defaults[property]!;
+	return jsutil.deepCopyObject(value); // Return a deep copy to avoid modifying the original.
 }
 
-function isThemeValid(themeName) {
-	if (typeof themeName !== 'string') return false;
+/**
+ * Checks if a theme name is valid.
+ * @param themeName - The name of the theme to check.
+ * @returns - True if the theme exists, false otherwise.
+ */
+function isThemeValid(themeName: string): boolean {
 	return themeDictionary[themeName] !== undefined;
 }
 

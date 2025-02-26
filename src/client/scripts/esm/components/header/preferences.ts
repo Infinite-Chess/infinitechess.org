@@ -1,6 +1,5 @@
 
 
-// @ts-ignore
 import themes from "./themes.js";
 import localstorage from "../../util/localstorage.js";
 import timeutil from "../../util/timeutil.js";
