@@ -21,6 +21,7 @@ import state from "./state.js";
 import gamefile from "./gamefile.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
+import fourdimensionalgenerator from "../variants/fourdimensionalgenerator.js";
 
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
@@ -266,7 +267,11 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coor
 					// do not allow king to leave the 4D board
 					if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
 
-					individualMoves.push(endCoords);
+					if (fourdimensionalgenerator.getMovesetType() === 'strong') individualMoves.push(endCoords);
+					else {
+						// only allow moves that change one or two dimensions
+						if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV <= 2) individualMoves.push(endCoords);
+					}
 				}
 			}
 		}

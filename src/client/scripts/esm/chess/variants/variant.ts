@@ -297,7 +297,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			}); },
 			rules: { pawnDoublePush: true, castleWith: undefined }
 		},
-		movesetGenerator: () => { return fourdimensionalgenerator.gen4DMoveset(4, 4, 5); },
+		movesetGenerator: () => { return fourdimensionalgenerator.gen4DMoveset(4, 4, 5, 'weak'); },
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [19], black: [1] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove, knights: fourdimensionalmoves.doFourDimensionalKnightMove, kings: fourdimensionalmoves.doFourDimensionalKingMove },
 		specialVicinity: { pawns: [[1,1],[-1,1],[-1,-1],[1,-1],[5,5],[5,-5],[-5,-5],[-5,5]] }
@@ -307,7 +307,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			algorithm: () => { return fourdimensionalgenerator.gen4DPosition(8, 8, 9, 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+'); },
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }
 		},
-		movesetGenerator: () => { return fourdimensionalgenerator.gen4DMoveset(8, 8, 9); },
+		movesetGenerator: () => { return fourdimensionalgenerator.gen4DMoveset(8, 8, 9, 'strong'); },
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [8, 17, 26, 35, 44, 53, 62, 71], black: [1, 10, 19, 28, 37, 46, 55, 64] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove, knights: fourdimensionalmoves.doFourDimensionalKnightMove, kings: fourdimensionalmoves.doFourDimensionalKingMove },
 		specialVicinity: { pawns: [[1,1],[-1,1],[-1,-1],[1,-1],[9,9],[9,-9],[-9,-9],[-9,9]] }

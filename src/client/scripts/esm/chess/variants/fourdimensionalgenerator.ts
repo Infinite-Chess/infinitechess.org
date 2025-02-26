@@ -39,6 +39,11 @@ const dim: {
 	MAX_Y: NaN
 };
 
+/**
+ * strong: allow quadragonal and triagonal movement. weak: do not allow it
+ */
+let MOVESET_TYPE: 'strong' | 'weak';
+
 function set4DBoardDimensions(boards_x: number, boards_y: number, board_spacing: number) {
 	dim.BOARDS_X = boards_x;
 	dim.BOARDS_Y = boards_y;
@@ -53,6 +58,22 @@ function get4DBoardDimensions() {
 	return dim;
 }
 
+function setMovesetType(moveset_type: 'strong' | 'weak') {
+	MOVESET_TYPE = moveset_type;
+}
+
+function getMovesetType(): 'strong' | 'weak' {
+	return MOVESET_TYPE;
+}
+
+/**
+ * Generate 4D chess position
+ * @param boards_x - Number of 2D boards in x direction
+ * @param boards_y - Number of 2D boards in y direction
+ * @param board_spacing - The spacing of the 2D boards - should be equal to (sidelength of a 2D board) + 1
+ * @param input_position - If this is a position string, populate all 2D boards with it. If it is a dictionary, populate the boards according to it
+ * @returns 
+ */
 function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number, input_position?: string | {[key: string] : string}) {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
@@ -108,9 +129,18 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 	return resultPos;
 }
 
-function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number) {
+/**
+ * Generates the moveset for the sliding pieces
+ * @param boards_x - Number of 2D boards in x direction
+ * @param boards_y - Number of 2D boards in y direction
+ * @param board_spacing - The spacing of the 2D boards - should be equal to (sidelength of a 2D board) + 1
+ * @param moveset_type - "strong": allow quadragonal and triagonal movement. "weak": do not allow it
+ * @returns 
+ */
+function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number, moveset_type: 'strong' | 'weak') {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
+	setMovesetType(moveset_type);
 
 	const movesets: Movesets = {
 		queens: {
@@ -158,14 +188,16 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number)
 					if (x < 0) continue; // If the x coordinate is negative, skip this iteration
 					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
 					// Add the moves
-					movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					if (moveset_type === 'strong') movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					// Only add a bishop move if the move moves in two dimensions
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
 						movesets['bishops']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						if (moveset_type === 'weak') movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 					// Only add a rook move if the move moves in one dimension
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
 						movesets['rooks']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						if (moveset_type === 'weak') movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 				}
 			}
@@ -178,5 +210,6 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number)
 export default {
 	get4DBoardDimensions,
 	gen4DPosition,
-	gen4DMoveset
+	gen4DMoveset,
+	getMovesetType
 };
