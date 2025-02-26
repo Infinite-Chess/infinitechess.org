@@ -260,6 +260,9 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coor
 		for (let baseV = 1; baseV >= -1; baseV--) {
 			for (let offsetH = 1; offsetH >= -1; offsetH--) {
 				for (let offsetV = 1; offsetV >= -1; offsetV--) {
+					// only allow moves that change one or two dimensions with weak moveset type
+					if (fourdimensionalgenerator.getMovesetType() === 'weak' && baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2) continue;
+					
 					const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
 					const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
 
@@ -272,11 +275,7 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coor
 					// do not allow king to leave the 4D board
 					if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
 
-					if (fourdimensionalgenerator.getMovesetType() === 'strong') individualMoves.push(endCoords);
-					else {
-						// only allow moves that change one or two dimensions
-						if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV <= 2) individualMoves.push(endCoords);
-					}
+					individualMoves.push(endCoords);
 				}
 			}
 		}

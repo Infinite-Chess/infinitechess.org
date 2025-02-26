@@ -188,7 +188,10 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 					if (x < 0) continue; // If the x coordinate is negative, skip this iteration
 					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
 					// Add the moves
+
+					// allow any queen move with strong moveset type
 					if (moveset_type === 'strong') movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					
 					// Only add a bishop move if the move moves in two dimensions
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
 						movesets['bishops']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
