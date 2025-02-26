@@ -277,11 +277,28 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	// },
 	'4x4x4x4_Chess': {
 		generator: {
-			algorithm: () => { return fourdimensionalgenerator.gen4DPosition(4, 4, 5, {"0,0": "K1,2+|P2,2+|P3,2+", "0,3": "k1,2+|p2,2+|p3,2+"}); },
-			rules: { pawnDoublePush: true, castleWith: 'rooks' }
+			algorithm: () => { return fourdimensionalgenerator.gen4DPosition(4, 4, 5, {
+				"0,0": "P1,2+|P2,2+|P3,2+|P4,2+|R1,1|N2,1|N3,1|R4,1",
+				"1,0": "P1,2+|P2,2+|P3,2+|P4,2+|B1,1|Q2,1|P3,1+|B4,1",
+				"2,0": "P1,2+|P2,2+|P3,2+|P4,2+|B1,1|K2,1|Q3,1|B4,1",
+				"3,0": "P1,2+|P2,2+|P3,2+|P4,2+|R1,1|N2,1|N3,1|R4,1",
+				"0,1": "P1,1+|P2,1+|P3,1+|P4,1+",
+				"1,1": "P1,1+|P2,1+|P3,1+|P4,1+",
+				"2,1": "P1,1+|P2,1+|P3,1+|P4,1+",
+				"3,1": "P1,1+|P2,1+|P3,1+|P4,1+",
+				"0,2": "p1,4+|p2,4+|p3,4+|p4,4+",
+				"1,2": "p1,4+|p2,4+|p3,4+|p4,4+",
+				"2,2": "p1,4+|p2,4+|p3,4+|p4,4+",
+				"3,2": "p1,4+|p2,4+|p3,4+|p4,4+",
+				"0,3": "p1,3+|p2,3+|p3,3+|p4,3+|r1,4|n2,4|n3,4|r4,4",
+				"1,3": "p1,3+|p2,3+|p3,3+|p4,3+|b1,4|q2,4|p3,4|b4,4",
+				"2,3": "p1,3+|p2,3+|p3,3+|p4,3+|b1,4|k2,4|q3,4|b4,4",
+				"3,3": "p1,3+|p2,3+|p3,3+|p4,3+|r1,4|n2,4|n3,4|r4,4"
+			}); },
+			rules: { pawnDoublePush: true, castleWith: undefined }
 		},
 		movesetGenerator: () => { return fourdimensionalgenerator.gen4DMoveset(4, 4, 5); },
-		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [4, 9, 14, 19], black: [1, 6, 11, 16] } },
+		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { white: [19], black: [1] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove, knights: fourdimensionalmoves.doFourDimensionalKnightMove, kings: fourdimensionalmoves.doFourDimensionalKingMove },
 		specialVicinity: { pawns: [[1,1],[-1,1],[-1,-1],[1,-1],[5,5],[5,-5],[-5,-5],[-5,5]] }
 	},

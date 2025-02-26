@@ -23,7 +23,7 @@ import gamefile from "./gamefile.js";
 import specialdetect from "./specialdetect.js";
 
 
-// Pawn Legal Move Calculation -----------------------------------------------------------------
+// Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 
 /** Calculates the legal pawn moves in the four dimensional variant. */
 function fourDimensionalPawnMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
@@ -141,10 +141,6 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves:
 	individualMoves.push(landCoords);
 }
 
-
-// Move Execution ----------------------------------------------------------------------
-
-
 /** Executes a four dimensional pawn move.  */
 function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
 	const moveChanges = move.changes;
@@ -169,7 +165,7 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 }
 
 
-// Knight Legal Move Calculation -----------------------------------------------------------------
+// Knight Legal Move Calculation and Execution -----------------------------------------------------------------
 
 
 /** Calculates the legal knight moves in the four dimensional variant. */
@@ -180,7 +176,7 @@ function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: st
 }
 
 /**
- * Calculates legal knight moves for either the spacelike or timelike dimensions.
+ * Calculates legal knight moves for the spacelike and timelike dimensions.
  * @param gamefile
  * @param coords - The coordinates of the knight
  * @param color - The color of the knight
@@ -234,7 +230,7 @@ function doFourDimensionalKnightMove(gamefile: gamefile, piece: Piece, move: Mov
 }
 
 
-// King Legal Move Calculation -----------------------------------------------------------------
+// King Legal Move Calculation and Execution -----------------------------------------------------------------
 
 /** Calculates the legal king moves in the four dimensional variant. */
 function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
@@ -245,7 +241,7 @@ function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: stri
 }
 
 /**
- * Calculates legal king moves for either the spacelike or timelike dimensions.
+ * Calculates legal king moves for either the spacelike and timelike dimensions.
  * @param gamefile
  * @param coords - The coordinates of the king
  * @param color - The color of the king
