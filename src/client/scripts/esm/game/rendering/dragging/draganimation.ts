@@ -205,6 +205,8 @@ function renderPiece() {
  */
 function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
+	if (spritesheet.typesWithoutSVG.some(type => pieceType!.startsWith(type))) return; // No SVG/texture for this piece (void), can't render it.
+
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = input.getPointerIsTouch();
 	const boardScale = movement.getBoardScale();
@@ -245,7 +247,6 @@ function genPieceModel(): BufferModel | undefined {
  * @returns The buffer model
  */
 function genOutlineModel(): BufferModel {
-	const boardScale = movement.getBoardScale();
 	const data: number[] = [];
 	const pointerIsTouch = input.getPointerIsTouch();
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);

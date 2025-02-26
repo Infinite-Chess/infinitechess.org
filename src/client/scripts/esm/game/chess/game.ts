@@ -113,9 +113,8 @@ function testInGameDebugToggles(gamefile: gamefile) {
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 	}
 	if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (input.isKeyDown('5')) voids.toggleDebug(); // Renders the wireframe of voids
-	if (input.isKeyDown('6')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
-	if (input.isKeyDown('7')) specialrighthighlights.toggle(); // Highlights special rights and en passant
+	if (input.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
+	if (input.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 }
 

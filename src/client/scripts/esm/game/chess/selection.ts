@@ -31,6 +31,7 @@ import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
+import spritesheet from '../rendering/spritesheet.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -458,6 +459,8 @@ function makePromotionMove(gamefile: gamefile) {
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
+	if (spritesheet.typesWithoutSVG.some(type => pieceSelected!.type.startsWith(type))) return; // No svg/texture for this piece (void), don't render the ghost image.
+
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }
 

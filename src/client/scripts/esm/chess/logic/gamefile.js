@@ -9,13 +9,13 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
-import movesets from './movesets.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
 /** @typedef {import('./movepiece.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
+/** @typedef {import('../../game/rendering/buffermodel.js').BufferModelInstanced} BufferModelInstanced */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
@@ -159,12 +159,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** The object that contains the buffer model to render the voids */
 	this.voidMesh = {
 		/** High precision Float64Array for performing arithmetic. @type {Float64Array} */
-		data64: undefined,
-		/** Low precision Float32Array for passing into gpu. @type {Float32Array} */
-		data32: undefined,
+		instanceData64: undefined,
 		/** The buffer model of the void squares. These are rendered separately
-         * from the pieces because we can simplify the mesh greatly.
-         * @type {BufferModel} */
+         * from the pieces because if they used a texture they would form gridlines.
+         * @type {BufferModelInstanced} */
 		model: undefined,
 	};
 

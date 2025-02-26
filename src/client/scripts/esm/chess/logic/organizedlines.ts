@@ -174,19 +174,11 @@ function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 }
 
 function areWeShortOnUndefineds(gamefile: gamefile) {
-
-	let weShort = false;
-	typeutil.forEachPieceType(areWeShort);
-
-	function areWeShort(listType: string) {
-		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
-
-		const list = gamefile.ourPieces[listType];
-		const undefinedCount = list.undefineds.length;
-		if (undefinedCount === 0) weShort = true;
+	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
+		if (!isTypeATypeWereAppendingUndefineds(gamefile, key)) continue;
+		if ((value as PooledArray<Coords>).undefineds.length === 0) return true;
 	}
-
-	return weShort;
+	return false;
 }
 
 /**
@@ -203,14 +195,10 @@ function areWeShortOnUndefineds(gamefile: gamefile) {
 function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 	if (log) console.log('Adding more placeholder undefined pieces.');
     
-	typeutil.forEachPieceType(add);
-
-	function add(listType: string) {
-		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
-
-		const list = gamefile.ourPieces[listType];
-		const undefinedCount = list.undefineds.length;
-		for (let i = undefinedCount; i < extraUndefineds; i++) list.addUndefineds();
+	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
+		if (!isTypeATypeWereAppendingUndefineds(gamefile, key)) continue;
+		const list = value as PooledArray<Coords>;
+		for (let i = list.undefineds.length; i < extraUndefineds; i++) list.addUndefineds();
 	}
 
 	// piecesmodel.regenModel(gamefile);
