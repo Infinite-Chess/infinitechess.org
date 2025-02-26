@@ -1,7 +1,6 @@
 
 // Import Start
 import moveutil from '../../chess/util/moveutil.js';
-import options from '../rendering/options.js';
 import config from '../config.js';
 import gameslot from '../chess/gameslot.js';
 import guinavigation from './guinavigation.js';

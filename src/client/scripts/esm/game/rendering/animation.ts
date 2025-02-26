@@ -22,8 +22,6 @@ import sound from '../misc/sound.js';
 // @ts-ignore
 import movement from './movement.js';
 // @ts-ignore
-import options from './options.js';
-// @ts-ignore
 import board from './board.js';
 // @ts-ignore
 import perspective from './perspective.js';
@@ -31,6 +29,8 @@ import perspective from './perspective.js';
 import shapes from './shapes.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
+// @ts-ignore
+import preferences from '../../components/header/preferences.js';
 
 
 // Type Definitions -----------------------------------------------------------------------
@@ -320,7 +320,7 @@ function generatePieceData(type: string, coords: Coords): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { startX, startY, endX, endY } = calculateBoardPosition(coords);
-	const { r, g, b, a } = options.getColorOfType(type);
+	const { r, g, b, a } = preferences.getTintColorOfType(type);
     
 	return bufferdata.getDataQuad_ColorTexture(
 		startX, startY, endX, endY,

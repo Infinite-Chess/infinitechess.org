@@ -11,7 +11,6 @@ import perspective from '../perspective.js';
 import miniimage from '../miniimage.js';
 import board from '../board.js';
 import transition from '../transition.js';
-import options from '../options.js';
 import selection from '../../chess/selection.js';
 import camera from '../camera.js';
 import math from '../../../util/math.js';
@@ -21,6 +20,7 @@ import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
+import preferences from '../../../components/header/preferences.js';
 // Import End
 
 /**
@@ -54,7 +54,7 @@ function genModel() {
 	const pieceCoords = selection.getPieceSelected().coords;
 	const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
 
-	const color = jsutil.deepCopyObject(options.getLegalMoveHighlightColor());
+	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor());
 	color[3] = 1;
 
 	const snapDist = miniimage.getWidthWorld() / 2;
@@ -123,7 +123,7 @@ function genModel() {
 	const endX = startX + miniimage.getWidthWorld();
 	const endY = startY + miniimage.getWidthWorld();
 
-	const { r, g, b } = options.getColorOfType(type);
+	const { r, g, b } = preferences.getTintColorOfType(type);
 
 	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, opacityOfGhostImage);
 

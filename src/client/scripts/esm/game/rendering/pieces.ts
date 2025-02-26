@@ -26,9 +26,9 @@ import voids from './voids.js';
 // @ts-ignore
 import board from './board.js';
 // @ts-ignore
-import options from './options.js';
-// @ts-ignore
 import shapes from './shapes.js';
+// @ts-ignore
+import preferences from '../../components/header/preferences.js';
 
 
 // Variables ---------------------------------------------------------------------
@@ -90,7 +90,7 @@ function renderPieces(gamefile: gamefile) {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: string, coords: Coords) {
-	const color = options.getColorOfType(type); color.a *= ghostOpacity;
+	const color = preferences.getTintColorOfType(type); color.a *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();

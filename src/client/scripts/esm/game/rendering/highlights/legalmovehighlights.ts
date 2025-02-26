@@ -10,8 +10,6 @@ import perspective from '../perspective.js';
 // @ts-ignore
 import movement from '../movement.js';
 // @ts-ignore
-import options from '../options.js';
-// @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
 import board from '../board.js';
@@ -323,7 +321,7 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 	// console.log("Regenerating legal moves model..");
 
 	// The model of the selected piece's legal moves
-	const color = options.getLegalMoveHighlightColor(); // [r,g,b,a]
+	const color = preferences.getLegalMoveHighlightColor(); // [r,g,b,a]
 	const { NonCaptureModel, CaptureModel } = generateModelsForPiecesLegalMoveHighlights(pieceSelected!.coords, selectedPieceLegalMoves!, color);
 	model_NonCapture = NonCaptureModel;
 	model_Capture = CaptureModel;

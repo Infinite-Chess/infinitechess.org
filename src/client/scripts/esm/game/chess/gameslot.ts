@@ -42,8 +42,6 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
-import options from "../rendering/options.js";
-// @ts-ignore
 import selection from "./selection.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
@@ -310,7 +308,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 }
 
 async function regenModel() {
-	await piecesmodel.regenModel(loadedGamefile!, options.getPieceRegenColorArgs());
+	await piecesmodel.regenModel(loadedGamefile!);
 }
 
 /** The canvas will no longer render the current game */
@@ -342,7 +340,7 @@ function unloadGame() {
 	// Clear all animations from the last game
 	animation.clearAnimations();
 	
-	options.disableEM();
+	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
 
 	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.

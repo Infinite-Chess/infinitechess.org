@@ -7,8 +7,6 @@
 import { createModel } from "../buffermodel.js";
 import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
-import options from "../options.js";
-// @ts-ignore
 import shapes from "../shapes.js";
 
 
@@ -17,6 +15,8 @@ import shapes from "../shapes.js";
 
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
+// @ts-ignore
+import preferences from "../../../components/header/preferences.js";
 
 
 // Variables -----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ function highlightLastMove(gamefile: gamefile) {
 	const lastMove = moveutil.getCurrentMove(gamefile);
 	if (!lastMove) return; // Don't render if last move is undefined.
 
-	const color = options.getDefaultLastMoveHighlightColor();
+	const color = preferences.getLastMoveHighlightColor();
 
 	const data: number[] = [];
 

@@ -4,6 +4,7 @@ import timeutil from "../../util/timeutil.js";
 import validatorama from "../../util/validatorama.js";
 import jsutil from "../../util/jsutil.js";
 import docutil from "../../util/docutil.js";
+import colorutil from "../../chess/util/colorutil.js";
 
 
 let preferences; // { theme, legal_moves }
@@ -175,6 +176,178 @@ function setPerspectiveFOV(perspective_fov) {
 }
 
 
+// Getters for our current theme properties --------------------------------------------------------
+
+
+function getColorOfLightTiles() {
+	const themeName = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'lightTiles');
+}
+
+function getColorOfDarkTiles() {
+	const themeName = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'darkTiles');
+}
+
+function getLegalMoveHighlightColor({ isOpponentPiece = selection.isOpponentPieceSelected(), isPremove = selection.arePremoving() } = {}) {
+	const themeName = getTheme();
+	if (isOpponentPiece) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Opponent');
+	else if (isPremove) return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Premove');
+	else return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Friendly');
+}
+
+function getLastMoveHighlightColor() {
+	const themeName = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'lastMoveHighlightColor');
+}
+
+function getCheckHighlightColor() {
+	const themeName = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'checkHighlightColor'); 
+}
+
+function getBoxOutlineColor() {
+	const themeName = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
+}
+
+/** Returns { r, g, b, a } depending on our current theme! */
+function getTintColorOfType(type) {
+	const colorArgs = getPieceRegenColorArgs(); // { white, black, neutral }
+	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
+
+	const pieceColor = colorutil.getPieceColorFromType(type); // white/black/neutral
+	const color = colorArgs[pieceColor]; // [r,g,b,a]
+
+	return {
+		r: color[0],
+		g: color[1],
+		b: color[2],
+		a: color[3]
+	};
+}
+
+/**
+ * Returns the color arrays for the pieces, according to our theme.
+ * @returns {Object | undefined} An object containing the properties "white", "black", and "neutral".
+ */
+function getPieceRegenColorArgs() {
+	const themeName = getTheme();
+	const themeProperties = themes.themes[themeName];
+	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
+
+	return {
+		white: themes.getPropertyOfTheme(themeName, 'whitePiecesColor'), // [r,g,b,a]
+		black: themes.getPropertyOfTheme(themeName, 'blackPiecesColor'),
+		neutral: themes.getPropertyOfTheme(themeName, 'neutralPiecesColor'),
+	};
+}
+
+// /**
+//  * Determines the theme based on the current date.
+//  * @returns {string} The theme for the current date ('halloween', 'christmas', or 'default').
+//  */
+// function getHollidayTheme() {
+// 	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)
+// 	// if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
+// 	if (timeutil.isCurrentDateWithinRange(12, 19, 12, 25)) return 'christmas'; // Christmas week (December 19 to 25)
+// 	return themes.defaultTheme; // Default theme if not in a holiday week
+// }
+
+
+/*
+ * The commented stuff below was ONLY used for fast
+ * modifying of theme colors using the keyboard keys!!!
+ */
+
+// const allProperties = Object.keys(themes.themes[themes.defaultTheme]);
+// let currPropertyIndex = 0;
+// let currProperty = allProperties[currPropertyIndex];
+// function update() {
+
+// 	const themeProperties = themes.themes[theme];
+	
+// 	if (input.isKeyDown('u')) {
+// 		currPropertyIndex--;
+// 		if (currPropertyIndex < 0) currPropertyIndex = allProperties.length - 1;
+// 		currProperty = allProperties[currPropertyIndex];
+// 		console.log(`Selected property: ${currProperty}`);
+// 	}
+// 	if (input.isKeyDown('i')) {
+// 		currPropertyIndex++;
+// 		if (currPropertyIndex > allProperties.length - 1) currPropertyIndex = 0;
+// 		currProperty = allProperties[currPropertyIndex];
+// 		console.log(`Selected property: ${currProperty}`);
+// 	}
+
+// 	const amount = 0.02;
+
+// 	if (input.isKeyDown('j')) {
+// 		const dig = 0;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown('m')) {
+// 		const dig = 0;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+// 	if (input.isKeyDown('k')) {
+// 		const dig = 1;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown(',')) {
+// 		const dig = 1;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+// 	if (input.isKeyDown('l')) {
+// 		const dig = 2;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown('.')) {
+// 		const dig = 2;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+// 	if (input.isKeyDown(';')) {
+// 		const dig = 3;
+// 		themeProperties[currProperty][dig] += amount;
+// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+// 	if (input.isKeyDown('/')) {
+// 		const dig = 3;
+// 		themeProperties[currProperty][dig] -= amount;
+// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		console.log(themeProperties[currProperty]);
+// 	}
+
+
+// 	if (input.isKeyDown('\\')) {
+// 		console.log(JSON.stringify(themes.themes[theme]));
+// 	}
+
+// 	board.updateTheme();
+// 	piecesmodel.regenModel(gameslot.getGamefile());
+// 	highlights.regenModel();
+// }
+
+
+// Exports -----------------------------------------------------------------------------------------
+
+
 export default {
 	getTheme,
 	setTheme,
@@ -190,4 +363,12 @@ export default {
 	getDefaultPerspectiveFOV,
 	setPerspectiveFOV,
 	sendPrefsToServer,
+	getColorOfLightTiles,
+	getColorOfDarkTiles,
+	getLegalMoveHighlightColor,
+	getLastMoveHighlightColor,
+	getCheckHighlightColor,
+	getBoxOutlineColor,
+	getTintColorOfType,
+	getPieceRegenColorArgs,
 };

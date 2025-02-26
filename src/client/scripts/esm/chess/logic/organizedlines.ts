@@ -213,7 +213,7 @@ function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 		for (let i = undefinedCount; i < extraUndefineds; i++) list.addUndefineds();
 	}
 
-	// piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+	// piecesmodel.regenModel(gamefile);
 	/**
 	 * DISPATCH an event instead of calling piecesmodel.regenModel directly,
 	 * that way we don't tie up the game code as a dependancy.
