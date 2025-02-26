@@ -218,7 +218,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	}
 
 	// Safety net
-	const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, piece.coords) !== undefined;
+	const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, piece.coords);
 	if (isPieceOnCoords) throw new Error("Can't add a piece on top of another piece!");
 
 	// Remove the undefined from the undefineds list

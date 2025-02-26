@@ -24,6 +24,7 @@ interface ClientSidePreferences {
 	perspective_fov: number;
 	drag_enabled: boolean;
 	premove_mode: boolean;
+	[key: string]: any;
 }
 
 interface ServerSidePreferences {
@@ -68,13 +69,16 @@ function loadPreferences(): void {
 		legal_moves: default_legal_moves,
 		perspective_sensitivity: default_perspective_sensitivity,
 		perspective_fov: default_perspective_fov,
+		drag_enabled: default_drag_enabled,
+		premove_mode: default_premove_mode,
 	};
+
 	preferences = browserStoragePrefs;
 
-	let cookiePrefs: string | undefined = docutil.getCookieValue('preferences');
+	const cookiePrefs: string | undefined = docutil.getCookieValue('preferences');
 	if (cookiePrefs) {
 		// console.log("Preferences cookie was present!");
-		preferences = JSON.parse(decodeURIComponent(cookiePrefs)) as Preferences;
+		preferences = JSON.parse(decodeURIComponent(cookiePrefs));
 		// console.log(jsutil.deepCopyObject(preferences));
 		clientSidePrefs.forEach(pref => preferences![pref] = browserStoragePrefs[pref] );
 	}
@@ -105,7 +109,7 @@ async function sendPrefsToServer(): Promise<void> {
 
 async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 	// Configure the POST request
-	const config: RequestInit = {
+	const config = {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -116,7 +120,7 @@ async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 
 	// Get the access token and add it to the Authorization header
 	const token: string | undefined = await validatorama.getAccessToken();
-	if (token) config.headers!['Authorization'] = `Bearer ${token}`;  // If you use tokens for authentication
+	if (token) config.headers['Authorization'] = `Bearer ${token}`;  // If you use tokens for authentication
 
 	try {
 		const response: Response = await fetch('/api/set-preferences', config);
@@ -249,11 +253,11 @@ function getBoxOutlineColor(): Color {
 
 /** Returns { r, g, b, a } depending on our current theme! */
 function getTintColorOfType(type: string): { r: number, g: number, b: number, a: number } {
-	const colorArgs: { white: number[], black: number[], neutral: number[] } | undefined = getPieceRegenColorArgs(); // { white, black, neutral }
+	const colorArgs: { white: Color, black: Color, neutral: Color } | undefined = getPieceRegenColorArgs(); // { white, black, neutral }
 	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-	const pieceColor: string = colorutil.getPieceColorFromType(type); // white/black/neutral
-	const color: number[] = colorArgs[pieceColor]; // [r,g,b,a]
+	const pieceColor = colorutil.getPieceColorFromType(type) as 'white' | 'black' | 'neutral';
+	const color: Color = colorArgs[pieceColor];
 
 	return {
 		r: color[0],
@@ -267,13 +271,13 @@ function getTintColorOfType(type: string): { r: number, g: number, b: number, a:
  * Returns the color arrays for the pieces, according to our theme.
  * @returns {Object | undefined} An object containing the properties "white", "black", and "neutral".
  */
-function getPieceRegenColorArgs(): { white: number[], black: number[], neutral: number[] } | undefined {
+function getPieceRegenColorArgs(): { white: Color, black: Color, neutral: Color } | undefined {
 	const themeName: string = getTheme();
 	const themeProperties: any = themes.themes[themeName];
 	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
 
 	return {
-		white: themes.getPropertyOfTheme(themeName, 'whitePiecesColor'), // [r,g,b,a]
+		white: themes.getPropertyOfTheme(themeName, 'whitePiecesColor'),
 		black: themes.getPropertyOfTheme(themeName, 'blackPiecesColor'),
 		neutral: themes.getPropertyOfTheme(themeName, 'neutralPiecesColor'),
 	};
