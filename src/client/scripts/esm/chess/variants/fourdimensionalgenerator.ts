@@ -45,7 +45,8 @@ const dim: {
 /**
  * mov: contains all relevant information for movement logic
  * @param strong_kings_and_queens - true: allow quadragonal and triagonal king and queen movement. false: do not allow it
- * @param strong_pawns - true: pawns can capture along any forward-sideways diagonal. false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
+ * @param strong_pawns - true: pawns can capture along any forward-sideways diagonal.
+ * 						 false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
  */
 const mov: {
 	STRONG_KINGS_AND_QUEENS: boolean;
@@ -223,9 +224,107 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 	return movesets;
 }
 
+
+/**
+ * Sets the specialVicinity object for the pawn
+ * @param board_spacing - The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
+ * @param strong_pawns - true: pawns can capture along any forward-sideways diagonal.
+ * 						 false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
+ * @returns 
+ */
+function getPawnVicinity(board_spacing: number, strong_pawns: boolean): Coords[] {
+	const individualMoves: Coords[] = [];
+
+	for (let baseH = 1; baseH >= -1; baseH--) {
+		for (let baseV = 1; baseV >= -1; baseV--) {
+			for (let offsetH = 1; offsetH >= -1; offsetH--) {
+				for (let offsetV = 1; offsetV >= -1; offsetV--) {
+					// only allow changing two things at once
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV !== 2) continue;
+
+					// do not allow two moves forward
+					if (baseH * baseH + offsetH * offsetH === 2) continue;
+
+					// do not allow two moves sideways
+					if (baseV * baseV + offsetV * offsetV === 2) continue;
+
+					// disallow strong captures if pawns are weak
+					if (!strong_pawns && Math.abs(baseH) !== Math.abs(baseV) && Math.abs(offsetH) !== Math.abs(offsetV)) continue;
+					
+					const x = board_spacing * baseH + offsetH;
+					const y = board_spacing * baseV + offsetV;
+					const endCoords = [x, y] as Coords;
+
+					individualMoves.push(endCoords);
+				}
+			}
+		}
+	}
+	return individualMoves;
+}
+
+
+/**
+ * Sets the specialVicinity object for the knight
+ * @param board_spacing - The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
+ * @returns 
+ */
+function getKnightVicinity(board_spacing: number): Coords[] {
+	const individualMoves: Coords[] = [];
+
+	for (let baseH = 2; baseH >= -2; baseH--) {
+		for (let baseV = 2; baseV >= -2; baseV--) {
+			for (let offsetH = 2; offsetH >= -2; offsetH--) {
+				for (let offsetV = 2; offsetV >= -2; offsetV--) {
+					// If the squared distance to the tile is 5, then add the move
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
+						const x = board_spacing * baseH + offsetH;
+						const y = board_spacing * baseV + offsetV;
+						const endCoords = [x, y] as Coords;
+						individualMoves.push(endCoords);
+					}
+				}
+			}
+		}
+	}
+	return individualMoves;
+}
+
+
+/**
+ * Sets the specialVicinity object for the king
+ * @param board_spacing - The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
+ * @param strong_kings_and_queens - true: allow quadragonal and triagonal king and queen movement. false: do not allow it
+ * @returns 
+ */
+function getKingVicinity(board_spacing: number, strong_kings_and_queens: boolean): Coords[] {
+	const individualMoves: Coords[] = [];
+
+	for (let baseH = 1; baseH >= -1; baseH--) {
+		for (let baseV = 1; baseV >= -1; baseV--) {
+			for (let offsetH = 1; offsetH >= -1; offsetH--) {
+				for (let offsetV = 1; offsetV >= -1; offsetV--) {
+					// only allow moves that change one or two dimensions if triagonals and diagonals are disabled
+					if (!strong_kings_and_queens && baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2) continue;
+					
+					const x = board_spacing * baseH + offsetH;
+					const y = board_spacing * baseV + offsetV;
+					const endCoords = [x, y] as Coords;
+
+					individualMoves.push(endCoords);
+				}
+			}
+		}
+	}
+	return individualMoves;
+}
+
 export default {
 	get4DBoardDimensions,
+	getMovementType,
 	gen4DPosition,
 	gen4DMoveset,
-	getMovementType
+	getPawnVicinity,
+	getKnightVicinity,
+	getKingVicinity
 };
