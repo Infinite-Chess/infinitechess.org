@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "36"
+version = "41"
 maintainer = "Naviary"
 
 [header]
