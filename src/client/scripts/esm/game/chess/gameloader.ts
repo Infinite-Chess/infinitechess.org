@@ -107,6 +107,7 @@ async function startLocalGame(options: {
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
+		// additional: { editor: true } // Enable to dev test undefineds behavior in board editor mode.
 	});
 	typeOfGameWeAreIn = 'local';
 

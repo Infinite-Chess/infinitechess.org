@@ -36,9 +36,10 @@ import gamerules from '../variants/gamerules.js';
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
  * @param {ClockValues} [options.clockValues] - Any already existing clock values for the gamefile
+ * @param {true} [options.editor] - Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that!
  * @returns {Object} The gamefile
  */
-function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues } = {}) {
+function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues, editor } = {}) {
 
 	// Everything for JSDoc stuff...
 
@@ -213,6 +214,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** True if the game is not timed. @type {Boolean}*/
 		untimed: undefined,
 	};
+	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
+	this.editor = editor;
+
 	// JSDoc stuff over...
 
 	// Init things related to the variant, and the startSnapshot of the position

@@ -26,6 +26,8 @@ import clientEventDispatcher from '../../util/clientEventDispatcher.js';
 // Amount of extra undefined pieces to store with each type array!
 // These placeholders are utilized when pieces are added or pawns promote!
 const extraUndefineds = 5; // After this many promotions, need to add more undefineds and recalc the model!
+/** {@link extraUndefineds}, but when in the board editor. */
+const extraUndefineds_Editor = 100;
 
 
 // Type Definitions ---------------------------------------------------------------------------------------
@@ -175,7 +177,7 @@ function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 
 function areWeShortOnUndefineds(gamefile: gamefile) {
 	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
-		if (!isTypeATypeWereAppendingUndefineds(gamefile, key)) continue;
+		if (getTypeUndefinedsBehavior(gamefile, key) === 0) continue;
 		if ((value as PooledArray<Coords>).undefineds.length === 0) return true;
 	}
 	return false;
@@ -196,9 +198,12 @@ function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 	if (log) console.log('Adding more placeholder undefined pieces.');
     
 	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
-		if (!isTypeATypeWereAppendingUndefineds(gamefile, key)) continue;
+		const undefinedsBehavior = getTypeUndefinedsBehavior(gamefile, key);
+		if (undefinedsBehavior === 0) continue; // This piece does not need undefineds
 		const list = value as PooledArray<Coords>;
-		for (let i = list.undefineds.length; i < extraUndefineds; i++) list.addUndefineds();
+		// In the board editor, the length of the list should be doubled every time we run out of undefined slots, with a minimum of 100.
+		const expectedUndefinedCount = gamefile.editor ? Math.max(extraUndefineds_Editor, (list.length - list.undefineds.length)) : extraUndefineds;
+		for (let i = list.undefineds.length; i < expectedUndefinedCount; i++) list.addUndefineds();
 	}
 
 	// piecesmodel.regenModel(gamefile);
@@ -211,23 +216,22 @@ function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 }
 
 /**
- * Sees if the provided type is a type we need to append undefined
- * placeholders to the piece list of this type.
- * The mesh of all the pieces needs placeholders in case we
- * promote to a new piece.
- * @param {gamefile} gamefile - The gamefile
- * @param {string} type - The type of piece (e.g. "pawnsW")
- * @returns {boolean} *true* if we need to append placeholders for this type.
+ * Returns a number signifying the importance of this piece type needing undefineds placeholders in its type list.
+ * 
+ * 0 => Pieces of this type can not increase in count in this gamefile
+ * 1 => Can increase in count, but slowly (promotion)
+ * 2 => Can increase in count rapidly (board editor)
  */
-function isTypeATypeWereAppendingUndefineds(gamefile: gamefile, type: string): boolean {
-	if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
+function getTypeUndefinedsBehavior(gamefile: gamefile, type: string): 0 | 1 | 2 {
+	if (gamefile.editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
 
+	if (!gamefile.gameRules.promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const color = colorutil.getPieceColorFromType(type);
-
-	if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
-    
+	if (!gamefile.gameRules.promotionsAllowed[color]) return 0; // Eliminates neutral pieces.
 	const trimmedType = colorutil.trimColorExtensionFromType(type);
-	return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
+	if (!gamefile.gameRules.promotionsAllowed[color].includes(trimmedType)) return 0; // Eliminates all pieces that can't be promoted to
+
+	return 1; // Pieces of this type CAN be added to the game, but rarely (promotion).
 }
 
 /**
@@ -265,8 +269,10 @@ function getEmptyTypeState(gamefile: gamefile) {
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 	const neutralExt = colorutil.getColorExtensionFromColor('neutral');
-
-	for (const type of typesInGame) {
+	
+	// If in the board editor, EVERY type of piece can commonly be added, so we need both a list of, and undefineds, for every type of piece.
+	if (gamefile.editor) typeutil.forEachPieceType((type: string) => state[type] = new PooledArray());
+	else for (const type of typesInGame) {
 		if (neutralTypes.includes(type)) { 
 			state[type + neutralExt] = new PooledArray();
 		} else {
