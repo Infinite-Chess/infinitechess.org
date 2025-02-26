@@ -55,13 +55,14 @@ function get4DBoardDimensions() {
 	return dim;
 }
 
-function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number, repeat_position?: string) {
+function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number, input_position?: string | {[key: string] : string}) {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 	const resultPos: Position = {};
 
-	if (repeat_position) {
-		const repeat_position_long : Position = formatconverter.ShortToLong_Format(repeat_position).startingPosition;
+	// position is string and should identically populate all 2D boards
+	if (typeof input_position === 'string') {
+		const input_position_long : Position = formatconverter.ShortToLong_Format(input_position).startingPosition;
 		
 		// Loop through from the leftmost column that should be voids to the right most, and also vertically
 		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
@@ -70,12 +71,34 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 				if ((i % dim.BOARD_SPACING === 0 || i % dim.BOARD_SPACING === 9)
 					|| (j % dim.BOARD_SPACING === 0 || j % dim.BOARD_SPACING === 9)) {
 					resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
-					// Only add the standard position in a board
+					// Add input_position_long to the board
 					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
-						for (const key in repeat_position_long) {
+						for (const key in input_position_long) {
 							const coords = coordutil.getCoordsFromKey(key as CoordsKey);
 							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
-							resultPos[newKey] = repeat_position_long[key as CoordsKey]!;
+							resultPos[newKey] = input_position_long[key as CoordsKey]!;
+						}
+					}
+				}
+			}
+		}
+	}
+	else if (typeof input_position === 'object') {
+		// Loop through from the leftmost column that should be voids to the right most, and also vertically
+		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
+			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
+				// Only the edges of boards should be voids
+				if ((i % dim.BOARD_SPACING === 0 || i % dim.BOARD_SPACING === 9)
+					|| (j % dim.BOARD_SPACING === 0 || j % dim.BOARD_SPACING === 9)) {
+					resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
+					// Add the subposition to the correct board
+					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
+						const sub_position_short = input_position[`${Math.floor(i / dim.BOARD_SPACING)},${Math.floor(j / dim.BOARD_SPACING)}`];
+						const sub_position_long = (sub_position_short ? formatconverter.ShortToLong_Format(sub_position_short).startingPosition : {});
+						for (const key in sub_position_long) {
+							const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
+							resultPos[newKey] = sub_position_long[key as CoordsKey]!;
 						}
 					}
 				}
