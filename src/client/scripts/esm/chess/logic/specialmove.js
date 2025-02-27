@@ -41,19 +41,17 @@ function kings(gamefile, piece, move) {
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	// Move the king to new square
-
 	const moveChanges = move.changes;
 	boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Make normal move
 
 	// Move the rook to new square
-
 	const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, false, landSquare); // Make normal move
 
-	// Special move was executed!
-	// There is no captured piece with castling
-	return true;
+	// (There is no captured piece with castling)
+
+	return true; // Special move was executed!
 }
 
 function pawns(gamefile, piece, move) {
