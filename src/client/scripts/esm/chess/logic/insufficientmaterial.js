@@ -26,6 +26,7 @@ const insuffmatScenarios_1K1k = [
     {'bishopsW': [Infinity, 1]},
     {'knightsW': 3},
     {'hawksW': 2},
+	{'hawksW': 1, 'bishopsW': [1, 0]},
     {'rooksW': 1, 'knightsW': 1},
     {'rooksW': 1, 'bishopsW': [1, 0]},
     {'rooksW': 1, 'rooksB': 1},
@@ -71,7 +72,8 @@ const insuffmatScenarios_0K1k = [
     {'guardsW': 2},
     {'amazonsW': 1},
     {'knightridersW': 3},
-    {'pawnsW': 6}
+    {'pawnsW': 6},
+	{'huygensW': 4}
 ];
 
 // other special insuffmat scenarios
@@ -172,7 +174,7 @@ function detectInsufficientMaterial(gamefile) {
 		if (raw === typeutil.rawTypes.OBSTACLE && color === typeutil.colors.NEUTRAL) continue;
 		
 		else if (raw === typeutil.rawTypes.BISHOP) {
-			const parity = sum_tuple_coords(piece.coords) % 2;
+			const parity = Math.abs(sum_tuple_coords(piece.coords)) % 2;
 			if (color === typeutil.colors.WHITE) bishopsW_count[parity] += 1;
 			else if (color === typeutil.colors.BLACK) bishopsB_count[parity] += 1;
 		}

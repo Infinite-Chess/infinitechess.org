@@ -276,7 +276,7 @@ function applyMove(gamefile: gamefile, move: Move, forward = true, { global = fa
 	const indexToApply = gamefile.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
-	boardchanges.runMove(gamefile, move, boardchanges.changeFuncs, forward); // Logical board changes
+	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
 }
 

@@ -10,22 +10,23 @@ import type { BufferModel } from "../buffermodel.js";
 import type { Color } from "../../../chess/util/colorutil.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { BoundingBox } from "../../../util/math.js";
+import type { Piece } from "../../../chess/logic/boardchanges.js";
 
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import { createModel } from "../buffermodel.js";
 import space from "../../misc/space.js";
+import droparrows from "./droparrows.js";
+import selection from "../../chess/selection.js";
+import preferences from "../../../components/header/preferences.js";
+import themes from "../../../components/header/themes.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
 import bufferdata from "../bufferdata.js";
 // @ts-ignore
-import options from "../options.js";
-// @ts-ignore
 import perspective from "../perspective.js";
-// @ts-ignore
-import sound from "../../misc/sound.js";
 // @ts-ignore
 import movement from "../movement.js";
 // @ts-ignore
@@ -33,14 +34,7 @@ import input from "../../input.js";
 // @ts-ignore
 import camera from "../camera.js";
 // @ts-ignore
-import themes from "../../../components/header/themes.js";
-// @ts-ignore
-import preferences from "../../../components/header/preferences.js";
-// @ts-ignore
 import board from "../board.js";
-import droparrows from "./droparrows.js";
-import { Piece } from "../../../chess/logic/boardchanges.js";
-import selection from "../../chess/selection.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -170,6 +164,7 @@ function dropPiece() {
 	pieceType = undefined;
 	startCoords = undefined;
 	worldLocation = undefined;
+	hoveredCoords = undefined;
 	parity = false; // The next time this piece is dropped on its home square, it will be deselected
 	droparrows.onDragTermination();
 	frametracker.onVisualChange();
@@ -201,8 +196,7 @@ function renderPiece() {
 	const outlineModel: BufferModel = hoveredCoords !== undefined ? genOutlineModel() : genIntersectingLines();
 	outlineModel.render();
 
-	const draggedPieceModel = genPieceModel();
-	if (draggedPieceModel !== undefined) draggedPieceModel.render();
+	genPieceModel()?.render();
 }
 
 /**
@@ -211,13 +205,15 @@ function renderPiece() {
  */
 function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
+	if (spritesheet.typesWithoutSVG.some(type => pieceType!.startsWith(type))) return; // No SVG/texture for this piece (void), can't render it.
+
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = input.getPointerIsTouch();
 	const boardScale = movement.getBoardScale();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-	const { r, g, b, a } = options.getColorOfType(pieceType);
+	const { r, g, b, a } = preferences.getTintColorOfType(pieceType!);
 	
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
@@ -225,13 +221,13 @@ function genPieceModel(): BufferModel | undefined {
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
 	let size: number = boardScale;
+	if (!selection.getSquarePawnIsCurrentlyPromotingOn() && !perspective.getEnabled()) { // Apply a minimum size only if we're not currently promoting a pawn (promote UI open) and not in perspective mode.
+		// The minimum world space the dragged piece should be rendered
+		const minSizeWorldSpace = touchscreenUsed ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch)  // Mobile/touchscreen mode
+												  : space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse); // 2D desktop mode
+		size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
+	}
 
-	// The minimum world space the dragged piece should be rendered
-	const minSizeWorldSpace = touchscreenUsed     ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch) // Mobile/touchscreen mode
-							: !perspectiveEnabled ? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse) // 2D desktop mode
-							: 0; // No minimum size in perspective mode
-	size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
-		
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
 	const bottom = worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
@@ -251,12 +247,11 @@ function genPieceModel(): BufferModel | undefined {
  * @returns The buffer model
  */
 function genOutlineModel(): BufferModel {
-	const boardScale = movement.getBoardScale();
 	const data: number[] = [];
 	const pointerIsTouch = input.getPointerIsTouch();
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * movement.getBoardScale();
-	const color = options.getDefaultOutlineColor();
+	const color = preferences.getBoxOutlineColor();
 	
 	// Outline the enire rank & file when:
 	// 1. We're not hovering over the start square.
@@ -375,7 +370,7 @@ function genIntersectingLines(): BufferModel {
 	} else boundingBox = camera.getScreenBoundingBox(false);
 	
 	const { left, right, bottom, top } = boundingBox;
-	const [ r, g, b, a ] = options.getDefaultOutlineColor();
+	const [ r, g, b, a ] = preferences.getBoxOutlineColor();
 	const data = [
 		left, worldLocation![1], r, g, b, a,
 		right, worldLocation![1],r, g, b, a,

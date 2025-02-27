@@ -26,6 +26,9 @@ import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
+import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import voids from '../rendering/voids.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -49,8 +52,6 @@ import highlightline from '../rendering/highlights/highlightline.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
-import options from '../rendering/options.js';
-// @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
 import piecesmodel from '../rendering/piecesmodel.js';
@@ -59,18 +60,18 @@ import loadbalancer from '../misc/loadbalancer.js';
 // @ts-ignore
 import websocket from '../websocket.js';
 // @ts-ignore
-import voids from '../rendering/voids.js';
-// @ts-ignore
 import camera from '../rendering/camera.js';
 // @ts-ignore
 import copypastegame from './copypastegame.js';
+// @ts-ignore
+import stats from '../gui/stats.js';
 
 
 // Functions -------------------------------------------------------------------------------
 
 
 function init() {
-	options.initTheme();
+	board.updateTheme();
 
 	gui.prepareForOpen();
 
@@ -101,22 +102,19 @@ function update() {
 
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameDebugToggles() {
-	if (guinavigation.isCoordinateActive()) return; // Don't listen for keyboard presses when the coordinate input is active
-
 	if (input.isKeyDown('`')) camera.toggleDebug();
 	if (input.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (input.isKeyDown('m')) stats.toggleFPS();
 }
 
 function testInGameDebugToggles(gamefile: gamefile) {
-	if (guinavigation.isCoordinateActive()) return; // Don't listen for keyboard presses when the coordinate input is active
-
 	if (input.isKeyDown('2')) {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 	}
 	if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (input.isKeyDown('5')) voids.toggleDebug(); // Renders the wireframe of voids
-	if (input.isKeyDown('6')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
+	if (input.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
+	if (input.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 }
 
@@ -127,15 +125,13 @@ function updateSelectionScreen() {
 
 // Called within update() when we are in a game (not title screen)
 function updateBoard(gamefile: gamefile) {
-	if (!guinavigation.isCoordinateActive()) {
-		if (input.isKeyDown('1')) options.toggleEM(); // EDIT MODE TOGGLE
-		if (input.isKeyDown('escape')) guipause.toggle();
-		if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-		if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs(), true);
-		if (input.isKeyDown('n')) {
-			guinavigation.toggle();
-			guigameinfo.toggle();
-		}
+	if (input.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
+	if (input.isKeyDown('escape')) guipause.toggle();
+	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
+	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, true);
+	if (input.isKeyDown('n')) {
+		guinavigation.toggle();
+		guigameinfo.toggle();
 	}
 
 	const timeWinner = clock.update(gamefile);
@@ -145,10 +141,7 @@ function updateBoard(gamefile: gamefile) {
 	}
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
-
-	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
-	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
-	transition.update();
+	
 	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	guinavigation.update();
@@ -159,17 +152,27 @@ function updateBoard(gamefile: gamefile) {
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
 	animation.update();
-	draganimation.updateDragLocation();
+	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
-	// ALSO depends on whether or not a piece is selected/being dragged!
-	// NEEDS TO BE AFTER animation.update() because shift arrows needs to overwrite that.
-	movement.checkIfBoardDragged(); 
-	miniimage.genModel();
-	highlightline.genModel();
 
 	if (guipause.areWePaused()) return;
 
-	movement.dragBoard(); // Calculate new board position if it's being dragged. Needs to be after updateNavControls()
+	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
+	arrowlegalmovehighlights.update(); // After executeArrowShifts()
+
+	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
+	transition.update();
+
+	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
+
+	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
+	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	miniimage.genModel();
+	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
+	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
+	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
+	movement.checkIfBoardDragged();
 } 
 
 function render() {
@@ -183,7 +186,7 @@ function render() {
 	input.renderMouse();
 
 	/**
-	 * What is the order or rendering?
+	 * What is the order of rendering?
 	 * 
 	 * Board tiles
 	 * Highlights

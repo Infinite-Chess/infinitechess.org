@@ -9,7 +9,8 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
-import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
+import type { CoordsKey } from "../../chess/util/coordutil.js";
+import type { EnPassant } from "../../chess/logic/state.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
@@ -24,6 +25,8 @@ import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
+import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
+import clientEventDispatcher from "../../util/clientEventDispatcher.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -38,8 +41,6 @@ import copypastegame from "./copypastegame.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import piecesmodel from "../rendering/piecesmodel.js";
-// @ts-ignore
-import options from "../rendering/options.js";
 // @ts-ignore
 import selection from "./selection.js";
 // @ts-ignore
@@ -66,7 +67,6 @@ import guipause from "../gui/guipause.js";
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
-import { EnPassant } from "../../chess/logic/state.js";
 
 import events from "../../chess/logic/events.js";
 
@@ -197,6 +197,8 @@ function isLoadedGameViewingWhitePerspective() {
 
 /**
  * Loads a gamefile onto the board.
+ * This returns a promise that resolves when the game is loaded LOGICALLY.
+ * The loading animation will close when the game is loaded GRAPHICALLY.
  */
 async function loadGamefile(loadOptions: LoadOptions) {
 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
@@ -268,6 +270,8 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	// Immediately conclude the game if we loaded a game that's over already
 	loadedGamefile = newGamefile;
+
+	specialrighthighlights.regenModel();
 }
 
 /** Loads all of the graphical components of a game */
@@ -301,7 +305,17 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	}
 
 	// Regenerate the mesh of all the pieces.
-	await piecesmodel.regenModel(loadedGamefile!, options.getPieceRegenColorArgs());
+	await regenModel();
+
+	/**
+	 * Listen for the event that inserts more undefineds into the piece lists.
+	 * When that occurs, we need to regenerate the model.
+	 */
+	clientEventDispatcher.listen('inserted-undefineds', regenModel);
+}
+
+async function regenModel() {
+	await piecesmodel.regenModel(loadedGamefile!);
 }
 
 /** The canvas will no longer render the current game */
@@ -333,7 +347,11 @@ function unloadGame() {
 	// Clear all animations from the last game
 	animation.clearAnimations();
 	
-	options.disableEM();
+	selection.disableEditMode();
+	specialrighthighlights.onGameClose();
+
+	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.
+	clientEventDispatcher.removeListener('inserted-undefineds', regenModel);
 }
 
 /**
@@ -360,6 +378,7 @@ function closeCopyPasteGameListeners() {
 }
 
 function callbackCopy(event: Event) {
+	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	copypastegame.copyGame(false);
 }
 
@@ -395,6 +414,14 @@ function concludeGame() {
 	guipause.updateTextOfMainMenuButton();
 }
 
+/** Undoes the conclusion of the game. */
+function unConcludeGame() {
+	loadedGamefile!.gameConclusion = false;
+	// Delete the Result and Condition metadata
+	gamefileutility.eraseTerminationMetadata(loadedGamefile!);
+	board.resetColor();
+}
+
 
 export default {
 	getGamefile,
@@ -406,6 +433,7 @@ export default {
 	loadGamefile,
 	unloadGame,
 	concludeGame,
+	unConcludeGame,
 };
 
 export type {

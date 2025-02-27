@@ -1,4 +1,28 @@
 {
+	"40": {
+		"note": "Deleted toggled_edit, line 356",
+		"changes": []
+	},
+	"39": {
+		"note": "Deleted checkmates and tactics, lines 208-209. Modified title line 207. Deleted menu_checkmate line 326",
+		"changes": []
+	},
+	"38": {
+		"note": "Deleted Trappist_1 line 244, and deleted credit for Trappist-1 on line 82.",
+		"changes": []
+	},
+	"37": {
+		"note": "Added the huygen to play.guide.pieces (line 203).",
+		"changes": []
+	},
+	"36": {
+		"note": "Added practice_menu to play.pause on line 288",
+		"changes": []
+	},
+	"35": {
+		"note": "Added undo and restart to play.gamebuttontooltips on lines 277-278",
+		"changes": []
+	},
 	"34": {
 		"note": "Moved versus, easy, medium, hard and insane from play.practice-menu to play.javascript on lines 328-332",
 		"changes": []

@@ -16,6 +16,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
 /** @typedef {import('./movepiece.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
+/** @typedef {import('../../game/rendering/buffermodel.js').BufferModelInstanced} BufferModelInstanced */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
@@ -116,7 +117,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		stride: undefined,
 		/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
          * This helps require less severe uniform translations upon rendering when traveling massive distances.
-         * The amount it is shifted depends on the nearest `REGEN_RANGE`. */
+         * The amount it is shifted depends on the nearest `REGEN_RANGE`. @type {Coords} */
 		offset: undefined,
 		/** A number for whether the mesh of the pieces is currently being generated.
          * @type {number} 0+. When > 0, is it generating. */
@@ -155,12 +156,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** The object that contains the buffer model to render the voids */
 	this.voidMesh = {
 		/** High precision Float64Array for performing arithmetic. @type {Float64Array} */
-		data64: undefined,
-		/** Low precision Float32Array for passing into gpu. @type {Float32Array} */
-		data32: undefined,
+		instanceData64: undefined,
 		/** The buffer model of the void squares. These are rendered separately
-         * from the pieces because we can simplify the mesh greatly.
-         * @type {BufferModel} */
+         * from the pieces because if they used a texture they would form gridlines.
+         * @type {BufferModelInstanced} */
 		model: undefined,
 	};
 
@@ -243,6 +242,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	this.ourPieces = organizedpieces.buildStateFromKeyList(this, Int32Array);
 	this.startSnapshot.pieceCount = boardutil.getPieceCountOfGame(this.ourPieces);
+
+	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
+
 	gamefileutility.deleteUnusedMovesets(this);
 
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
@@ -254,8 +256,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;
 	else gamefileutility.doGameOverChecks(this);
-
-	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
 
 	clock.set(this, clockValues);
 

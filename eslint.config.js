@@ -55,6 +55,7 @@ export default [
 				translations: "readonly", // Injected into the html through ejs
 				header: "readonly",
 				htmlscript: "readonly",
+				EventListener: "readonly",
 			}
 		}
 	},
@@ -63,6 +64,7 @@ export default [
 		rules: {
 			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
 			'dot-notation': 'off', 
+			'no-undef': 'off' // Prevent ESLint from flagging TypeScript types as undefined
 		},
 	},
 ];

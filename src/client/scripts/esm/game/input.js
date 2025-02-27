@@ -84,6 +84,10 @@ const mouseOuterWidth = 6.5;
 const mouseOpacity = 0.5;
 
 
+function getTouchDowns() {
+	return touchDowns;
+}
+
 function getTouchHelds() {
 	return touchHelds;
 }
@@ -258,6 +262,7 @@ function convertCoords_CenterOrigin(object) { // object is the event, or touch o
 // Events call this when a touch point is lifted or cancelled
 function callback_TouchPointEnd(event) {
 	event = event || window.event;
+	frametracker.onVisualChange();
 	const touches = event.changedTouches;
 	for (let i = 0; i < touches.length; i++) {
 		touchHelds_DeleteTouch(touches[i].identifier);
@@ -352,10 +357,12 @@ function initListeners_Mouse() {
 	document.addEventListener('wheel', (event) => {
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
+		frametracker.onVisualChange();
 		addMouseWheel(event);
 	});
 
 	overlayElement.addEventListener("mousedown", (event) => {
+		frametracker.onVisualChange();
 		// We clicked with the mouse, so make the simulated touch click undefined.
 		// This makes things work with devices that have both a mouse and touch.
 		touchClicked = false;
@@ -401,6 +408,7 @@ function initListeners_Mouse() {
 		event = event || window.event;
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
+		frametracker.onVisualChange();
 		removeMouseHeld(event);
 
 		executeMouseSimulatedClick();
@@ -530,7 +538,8 @@ function removeMouseHeld(event) {
 function initListeners_Keyboard() {
 
 	document.addEventListener("keydown", (event) => {
-		event = event || window.event;
+		// console.log("Key down event active element: ", document.activeElement);
+		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const key = event.key.toLowerCase();
 		keyDowns.push(key);
 		if (keyHelds.indexOf(key) === -1) keyHelds.push(key);
@@ -539,7 +548,7 @@ function initListeners_Keyboard() {
 	});
 
 	document.addEventListener("keyup", (event) => {
-		event = event || window.event;
+		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const index = keyHelds.indexOf(event.key.toLowerCase());
 		if (index !== -1) keyHelds.splice(index, 1); // Removes the key
 	});
@@ -639,6 +648,12 @@ function isMouseDown_Right() {
 function removeMouseDown_Left() {
 	jsutil.removeObjectFromArray(mouseDowns, leftMouseKey);
 }
+
+function removePointerDown() {
+	if (pointerIsTouch) touchDowns.length = 0;
+	else jsutil.removeObjectFromArray(mouseDowns, leftMouseKey);
+}
+
 
 function isMouseHeld_Left() {
 	return mouseHelds.includes(leftMouseKey);
@@ -744,12 +759,14 @@ function setTouchesChangeInXYTo0(touch) {
 }
 
 export default {
+	getTouchDowns,
 	getTouchHelds,
 	atleast1TouchDown,
 	getTouchClicked,
 	isMouseDown_Left,
 	isMouseDown_Right,
 	removeMouseDown_Left,
+	removePointerDown,
 	getTouchClickedWorld,
 	isMouseHeld_Left,
 	isKeyDown,

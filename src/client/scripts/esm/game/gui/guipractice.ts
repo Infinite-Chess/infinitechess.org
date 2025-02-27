@@ -14,6 +14,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import style from './style.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
+import svgcache from '../../chess/rendering/svgcache.js';
 
 
 // Variables ----------------------------------------------------------------------------
@@ -24,18 +25,36 @@ const element_menuExternalLinks: HTMLElement = document.getElementById('menu-ext
 const element_practiceSelection: HTMLElement = document.getElementById('practice-selection')!;
 const element_practiceName: HTMLElement = document.getElementById('practice-name')!;
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
-const element_checkmatePractice: HTMLElement = document.getElementById('checkmate-practice')!;
-const element_tacticsPractice: HTMLElement = document.getElementById('tactics-practice')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
+const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
-let modeSelected: 'checkmate-practice' | 'tactics-practice';
-let checkmateSelectedID: string = checkmatepractice.validCheckmates[0]!; // id of selected checkmate
+let checkmateSelectedID: string = checkmatepractice.validCheckmates.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedHTML: boolean = false;
 let generatedIcons: boolean = false;
 
+/** Variables for controlling the scrolling of the checkmate list */
+const SCROLL: {
+	mouseIsDown: boolean;
+	mouseMovedAfterClick: boolean;
+	scrollTop: number;
+	startY: number;
+	lastY: number;
+	velocity: number;
+	momentumInterval: ReturnType<typeof setInterval> | undefined;
+	friction: number;
+} = {
+	mouseIsDown: false,
+	mouseMovedAfterClick: true,
+	scrollTop: 0,
+	startY: 0,
+	lastY: 0,
+	velocity: 0,
+	momentumInterval: undefined,
+	friction: 0.9
+};
 
 // Functions ------------------------------------------------------------------------
 
@@ -52,7 +71,6 @@ function open() {
 	element_practiceSelection.classList.remove("hidden");
 	element_menuExternalLinks.classList.remove("hidden");
 	if (!generatedHTML) createPracticeHTML();
-	changePracticeMode('checkmate-practice');
 	changeCheckmateSelected(checkmateSelectedID);
 	updateCheckmatesBeaten();
 	if (!generatedIcons) addPieceIcons();
@@ -60,6 +78,7 @@ function open() {
 }
 
 function close() {
+	clearScrollMomentumInterval();
 	element_practiceSelection.classList.add("hidden");
 	element_menuExternalLinks.classList.add("hidden");
 	closeListeners();
@@ -69,68 +88,63 @@ function close() {
  * On first practice page load, generate list of checkmate HTML elements to be shown on page
  */
 function createPracticeHTML() {
-	const difficultyLabels: string[] = [];
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[0]).fill("easy"));
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[1]).fill("medium"));
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[2]).fill("hard"));
-	difficultyLabels.push(...Array(checkmatepractice.difficultyListCheckmates[3]).fill("insane"));
+	for (const [difficulty, checkmates] of Object.entries(checkmatepractice.validCheckmates)) {
+		checkmates.forEach((checkmateID: string) => {
+			const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
+			if (!piecelist) return;
 
-	for (let i = 0; i < checkmatepractice.validCheckmates.length; i++) {
-		const checkmateID: string = checkmatepractice.validCheckmates[i]!;
-		const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
-		if (!piecelist) continue;
+			const checkmatePuzzle = document.createElement('div');
+			checkmatePuzzle.className = 'checkmate unselectable';
+			checkmatePuzzle.id = checkmateID;
 
-		const checkmatePuzzle = document.createElement('div');
-		checkmatePuzzle.className = 'checkmate unselectable';
-    	checkmatePuzzle.id = checkmateID;
+			const completionMark = document.createElement('div');
+			completionMark.className = 'completion-mark';
 
-		const completionMark = document.createElement('div');
-		completionMark.className = 'completion-mark';
+			const piecelistW = document.createElement('div');
+			piecelistW.className = 'piecelistW';
 
-		const piecelistW = document.createElement('div');
-		piecelistW.className = 'piecelistW';
+			const versusText = document.createElement('div');
+			versusText.className = 'checkmate-child versus';
+			versusText.textContent = translations['versus'];
 
-		const versusText = document.createElement('div');
-		versusText.className = 'checkmate-child versus';
-		versusText.textContent = translations['versus'];
+			const piecelistB = document.createElement('div');
+			piecelistB.className = 'piecelistB';
 
-		const piecelistB = document.createElement('div');
-		piecelistB.className = 'piecelistB';
+			const checkmateDifficulty = document.createElement('div');
+			checkmateDifficulty.className = 'checkmate-difficulty';
+			checkmateDifficulty.textContent = translations[difficulty];
 
-		const checkmateDifficulty = document.createElement('div');
-		checkmateDifficulty.className = 'checkmate-difficulty';
-		checkmateDifficulty.textContent = translations[difficultyLabels[i]!];
+			for (const entry of piecelist) {
+				const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
+				const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
+				const longPiece = formatconverter.ShortToLong_Piece(shortPiece);
 
-		for (const entry of piecelist) {
-			const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-			const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-			const longPiece = formatconverter.ShortToLong_Piece(shortPiece);
+				for (let j = 0; j < amount; j++) {
+					const pieceDiv = document.createElement('div');
+					pieceDiv.className = `checkmatepiece ${longPiece}`;
 
-			for (let j = 0; j < amount; j++) {
-				const pieceDiv = document.createElement('div');
-				pieceDiv.className = `checkmatepiece ${longPiece}`;
+					const containerDiv = document.createElement('div');
+					const collation = (j === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
+					containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
+					containerDiv.appendChild(pieceDiv);
 
-				const containerDiv = document.createElement('div');
-				const collation = (j === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
-				containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
-				containerDiv.appendChild(pieceDiv);
-			
-				if (colorutil.getPieceColorFromType(longPiece) === "white") piecelistW.appendChild(containerDiv);
-				else piecelistB.appendChild(containerDiv);
+					if (colorutil.getPieceColorFromType(longPiece) === "white") piecelistW.appendChild(containerDiv);
+					else piecelistB.appendChild(containerDiv);
+				}
 			}
-		}
-		checkmatePuzzle.appendChild(completionMark);
-		checkmatePuzzle.appendChild(piecelistW);
-		checkmatePuzzle.appendChild(versusText);
-		checkmatePuzzle.appendChild(piecelistB);
-		checkmatePuzzle.appendChild(checkmateDifficulty);
-		element_checkmates.appendChild(checkmatePuzzle);
+			checkmatePuzzle.appendChild(completionMark);
+			checkmatePuzzle.appendChild(piecelistW);
+			checkmatePuzzle.appendChild(versusText);
+			checkmatePuzzle.appendChild(piecelistB);
+			checkmatePuzzle.appendChild(checkmateDifficulty);
+			element_checkmates.appendChild(checkmatePuzzle);
+		});
 	}
 	generatedHTML = true;
 }
 
 async function addPieceIcons() {
-	// let sprites = await spritesheet.getSVGElementsByIds();
+	// let sprites = await svgcache.getSVGElements();
 	const spritenames = new Set<string>;
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of element_checkmates.children) {
@@ -142,7 +156,7 @@ async function addPieceIcons() {
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
 		spritenames.add(actualpieceBlack.className.split(' ')[1]!);
 	}
-	const spriteSVGs = await spritesheet.getSVGElementsByIds([...spritenames]);
+	const spriteSVGs = await svgcache.getSVGElements([...spritenames]);
 	for (const svg of spriteSVGs) {
 		sprites[svg.id] = svg;
 	}
@@ -161,39 +175,88 @@ async function addPieceIcons() {
 
 function initListeners() {
 	element_practiceBack.addEventListener('click', callback_practiceBack);
-	element_checkmatePractice.addEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.addEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
+
+	document.addEventListener('mouseup', callback_mouseUp);
+	document.addEventListener('mousemove', callback_mouseMove);
+	element_checkmateList.addEventListener('mousedown', callback_mouseDown);
 	for (const element of element_checkmates.children) {
-		element.addEventListener('click', callback_checkmateList);
+		(element as HTMLElement).addEventListener('mouseup', callback_mouseUp);
 		element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
 	}
 }
 
 function closeListeners() {
 	element_practiceBack.removeEventListener('click', callback_practiceBack);
-	element_checkmatePractice.removeEventListener('click', callback_checkmatePractice);
-	element_tacticsPractice.removeEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
+
+	document.removeEventListener('mouseup', callback_mouseUp);
+	document.removeEventListener('mousemove', callback_mouseMove);
+	element_checkmateList.removeEventListener('mousedown', callback_mouseDown);
 	for (const element of element_checkmates.children) {
-		element.removeEventListener('click', callback_checkmateList);
+		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp);
 		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
 	}
 }
 
-function changePracticeMode(mode: 'checkmate-practice' | 'tactics-practice') {
-	modeSelected = mode;
-	if (mode === 'checkmate-practice') {
-		element_practiceName.textContent = translations['menu_checkmate'];
-		element_checkmatePractice.classList.add('selected');
-		element_tacticsPractice.classList.remove('selected');
-		// callback_updateOptions()
-	} else if (mode === 'tactics-practice') {
-		// nothing yet
-	}
+
+// Scrolling list with the left mouse button ------------------------------------------------
+
+
+function callback_mouseDown(event: MouseEvent) {
+	SCROLL.mouseIsDown = true;
+	SCROLL.mouseMovedAfterClick = false;
+	SCROLL.startY = event.pageY - element_checkmateList.offsetTop;
+	SCROLL.scrollTop = element_checkmateList.scrollTop;
+
+	SCROLL.velocity = 0;
+	clearScrollMomentumInterval();
 }
+
+function callback_mouseUp(event: MouseEvent) {
+	SCROLL.mouseIsDown = false;
+	if (!(event.currentTarget as HTMLElement).id) return; // mouse not on checkmate target
+	if (SCROLL.mouseMovedAfterClick) {
+		applyMomentum();
+		return;
+	}
+	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
+	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
+}
+
+function callback_mouseMove(event: MouseEvent) {
+	SCROLL.mouseMovedAfterClick = true;
+	if (!SCROLL.mouseIsDown) return;
+	event.preventDefault();
+	const y = event.pageY - element_checkmateList.offsetTop;
+	const walkY = y - SCROLL.startY;
+	element_checkmateList.scrollTop = SCROLL.scrollTop - walkY;
+
+	SCROLL.velocity = event.pageY - SCROLL.lastY;
+	SCROLL.lastY = event.pageY;
+}
+
+function applyMomentum() {
+	SCROLL.momentumInterval = setInterval(() => {
+		if (Math.abs(SCROLL.velocity) < 0.5) {
+			clearScrollMomentumInterval();
+			return;
+		}
+		element_checkmateList.scrollTop -= SCROLL.velocity;
+		SCROLL.velocity *= SCROLL.friction;
+	}, 16); // Approx. 60fps
+}
+
+function clearScrollMomentumInterval() {
+	clearInterval(SCROLL.momentumInterval);
+	SCROLL.momentumInterval = undefined;
+}
+
+
+// End of scrolling ---------------------------------------------------------------------
+
 
 function changeCheckmateSelected(checkmateid: string) {
 	for (const element of element_checkmates.children) {
@@ -234,22 +297,9 @@ function callback_practiceBack(event: Event) {
 	guititle.open();
 }
 
-function callback_checkmatePractice(event: Event) {
-	changePracticeMode('checkmate-practice');
-}
-
-function callback_checkmateList(event: Event) {
-	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
-	indexSelected = style.getElementIndexWithinItsParent((event.currentTarget as HTMLElement));
-}
-
 function callback_practicePlay() {
-	if (modeSelected === 'checkmate-practice') {
-		close();
-		checkmatepractice.startCheckmatePractice(checkmateSelectedID);
-	} else if (modeSelected === 'tactics-practice') {
-		throw Error("Can't play tactics practice yet.");
-	}
+	close();
+	checkmatepractice.startCheckmatePractice(checkmateSelectedID);
 }
 
 /** If enter is pressed, click Play. Or if arrow keys are pressed, move up and down selection */
@@ -262,6 +312,7 @@ function callback_keyPress(event: KeyboardEvent) {
 function moveDownSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected >= element_checkmates.children.length - 1) return;
+	clearScrollMomentumInterval();
 	indexSelected++;
 	const newSelectionElement = element_checkmates.children[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);
@@ -270,6 +321,7 @@ function moveDownSelection(event: Event) {
 function moveUpSelection(event: Event) {
 	event.preventDefault();
 	if (indexSelected <= 0) return;
+	clearScrollMomentumInterval();
 	indexSelected--;
 	const newSelectionElement = element_checkmates.children[indexSelected]!;
 	changeCheckmateSelected(newSelectionElement.id);

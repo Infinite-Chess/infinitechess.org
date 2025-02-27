@@ -10,6 +10,7 @@ import type { Piece } from '../../chess/util/boardutil.js';
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
+import type { MoveDraft } from '../../chess/logic/movepiece.js';
 
 
 import gameslot from './gameslot.js';
@@ -26,6 +27,12 @@ import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
 import moveutil from '../../chess/util/moveutil.js';
 import space from '../misc/space.js';
+import draganimation from '../rendering/dragging/draganimation.js';
+import animation from '../rendering/animation.js';
+import gameloader from './gameloader.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import preferences from '../../components/header/preferences.js';
+import spritesheet from '../rendering/spritesheet.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -45,20 +52,7 @@ import transition from '../rendering/transition.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
 // @ts-ignore
-import options from '../rendering/options.js';
-// @ts-ignore
 import statustext from '../gui/statustext.js';
-// @ts-ignore
-import preferences from '../../components/header/preferences.js';
-// @ts-ignore
-import sound from '../misc/sound.js';
-import draganimation from '../rendering/dragging/draganimation.js';
-import { MoveDraft } from '../../chess/logic/movepiece.js';
-import math from '../../util/math.js';
-import boardchanges from '../../chess/logic/boardchanges.js';
-import animation from '../rendering/animation.js';
-import gameloader from './gameloader.js';
-import typeutil from '../../chess/util/typeutil.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -85,6 +79,12 @@ let hoverSquareLegal: boolean = false;
 let pawnIsPromotingOn: CoordsSpecial | undefined;
 /** When a promotion UI piece is selected, this is set to the promotion you selected. */
 let promoteTo: string | undefined;
+
+/**
+ * When enabled, allows moving pieces anywhere else on the board, disregarding whether it's legal.
+ * Special flags however will still only be transferred if the destination is legal.
+ */
+let editMode = false; // editMode, allows moving pieces anywhere else on the board!
 
 
 // Getters ---------------------------------------------------------------------------------------
@@ -114,6 +114,20 @@ function getSquarePawnIsCurrentlyPromotingOn() { return pawnIsPromotingOn; }
  */
 function promoteToType(type: string) { promoteTo = type; }
 
+// Toggles EDIT MODE! editMode
+// Called when '1' is pressed!
+function toggleEditMode() {
+	// Make sure it's legal
+	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
+	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
+	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
+
+	editMode = !editMode;
+	statustext.showStatus(`Toggled Edit Mode: ${editMode}`);
+}
+
+function disableEditMode() { editMode = false; }
+
 
 // Updating ---------------------------------------------------------------------------------------------
 
@@ -128,7 +142,12 @@ function update() {
 		if (promoteTo) makePromotionMove(gamefile);
 		return;
 	}
-	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) return;
+	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) {
+		// We might be zoomed way out.
+		// If we are still dragging a piece, we still want to be able to drop it.
+		if (!input.getPointerHeld()) draganimation.dropPiece(); // Drop it without moving it.
+		return;
+	}
 
 	// Update the hover square
 	hoverSquare = space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
@@ -165,7 +184,7 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(legalMoves!, pieceSelected!.coords, hoverSquare);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, hoverSquare);
-	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || options.getEM() && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
+	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
 }
 
 
@@ -211,7 +230,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 function testIfPieceDropped(gamefile: gamefile): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
-	// if (pawnIsPromotingOn) return; // Can't drop a piece while promoting
+	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
 	if (input.getTouchHelds().length > 1) { // Prevent accidental dragging when trying to zoom.
 		if (draganimation.getDragParity()) return unselectPiece();
 		return draganimation.dropPiece();
@@ -219,6 +238,10 @@ function testIfPieceDropped(gamefile: gamefile): void {
 	if (input.getPointerHeld()) return; // Not dropped yet
 
 	// The pointer has released, drop the piece.
+
+	// If it was dropped an an arrow indicator pointing to a legal piece to capture, capture that!
+	const dropArrowsCaptureCoords = droparrows.getCaptureCoords();
+	if (dropArrowsCaptureCoords) return moveGamefilePiece(gamefile, dropArrowsCaptureCoords);
 
 	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.
 
@@ -263,9 +286,8 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
  */
 function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
-
-	if (type === 'voidsN') return 0; // Can't select voids
-	if (options.getEM()) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
+	if (type.startsWith('voids')) return 0; // Can't select voids
+	if (editMode) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
 	const color = colorutil.getPieceColorFromType(type);
 	if (color === colorutil.colorOfNeutrals) return 0; // Can't select neutrals, period.
 	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
@@ -277,8 +299,8 @@ function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1
 /**
  * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
  */
-function canMovePieceType(pieceType: number): boolean {
-	if (options.getEM()) return true; // Edit mode allows pieces to be moved on any turn.
+function canMovePieceType(pieceType: string): boolean {
+	if (editMode) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
@@ -320,7 +342,7 @@ function selectPiece(gamefile: gamefile, piece: Piece, drag: boolean) {
 
 	if (drag) { // Pick up anyway, don't unselect it if it was already selected.
 		if (alreadySelected) {
-			draganimation.pickUpPiece(piece, false); // Reset parity since it's the same piece being picked up.
+			draganimation.pickUpPiece(piece, false); // Toggle the parity since it's the same piece being picked up.
 			return; // Already selected, don't have to recalculate legal moves.
 		} draganimation.pickUpPiece(piece, true); // Reset parity since it's a new piece being picked up.
 	} else { // Not being dragged. If this piece is already selected, unselect it.
@@ -438,6 +460,8 @@ function makePromotionMove(gamefile: gamefile) {
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
+	if (spritesheet.typesWithoutSVG.some(type => pieceSelected!.type.startsWith(type))) return; // No svg/texture for this piece (void), don't render the ghost image.
+
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }
 
@@ -452,6 +476,8 @@ export default {
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,
 	getSquarePawnIsCurrentlyPromotingOn,
+	toggleEditMode,
+	disableEditMode,
 	promoteToType,
 	update,
 	renderGhostPiece,

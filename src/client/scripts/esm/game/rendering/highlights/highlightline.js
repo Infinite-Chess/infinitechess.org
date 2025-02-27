@@ -11,7 +11,6 @@ import perspective from '../perspective.js';
 import miniimage from '../miniimage.js';
 import board from '../board.js';
 import transition from '../transition.js';
-import options from '../options.js';
 import selection from '../../chess/selection.js';
 import camera from '../camera.js';
 import math from '../../../util/math.js';
@@ -21,6 +20,7 @@ import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
+import preferences from '../../../components/header/preferences.js';
 // Import End
 
 /**
@@ -54,10 +54,11 @@ function genModel() {
 	const pieceCoords = selection.getPieceSelected().coords;
 	const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
 
-	const color = jsutil.deepCopyObject(options.getLegalMoveHighlightColor());
+	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
+	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor(color_options));
 	color[3] = 1;
 
-	const snapDist = miniimage.gwidthWorld() / 2;
+	const snapDist = miniimage.getWidthWorld() / 2;
     
 	const a = perspective.distToRenderBoard;
 	/** @type {BoundingBox} */
@@ -116,14 +117,14 @@ function genModel() {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
-	const halfWidth = miniimage.gwidthWorld() / 2;
+	const halfWidth = miniimage.getWidthWorld() / 2;
 
 	const startX = closestPoint.coords[0] - halfWidth;
 	const startY = closestPoint.coords[1] - halfWidth;
-	const endX = startX + miniimage.gwidthWorld();
-	const endY = startY + miniimage.gwidthWorld();
+	const endX = startX + miniimage.getWidthWorld();
+	const endY = startY + miniimage.getWidthWorld();
 
-	const { r, g, b } = options.getColorOfType(type);
+	const { r, g, b } = preferences.getTintColorOfType(type);
 
 	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, opacityOfGhostImage);
 
@@ -134,7 +135,8 @@ function genModel() {
 	// If we clicked, teleport to the point on the line closest to the click location.
 	// BUT we have to recalculate it in coords format instead of world-space
 
-	if (!input.isMouseDown_Left() && !input.getTouchClicked()) return;
+	if (input.isMouseDown_Left()) input.removeMouseDown_Left(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+	if (!input.getPointerClicked()) return; // Pointer did not click, we will not teleport down to this linee
 
 	const moveset = closestPoint.moveset;
 

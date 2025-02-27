@@ -115,7 +115,7 @@ async function startLocalGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(metadata);
+	openGameinfoBarAndConcludeGameIfOver(metadata, false);
 }
 
 /** Starts an online game according to the options provided by the server. */
@@ -143,7 +143,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(options.metadata);
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
 }
 
 /** Starts an engine game according to the options provided. */
@@ -175,14 +175,18 @@ async function startEngineGame(options: {
 	typeOfGameWeAreIn = 'engine';
 	enginegame.initEngineGame(options);
 
-	openGameinfoBarAndConcludeGameIfOver(metadata);
+	openGameinfoBarAndConcludeGameIfOver(metadata, true);
 }
 
 
 
-/** These items must be done after the logical parts of the gamefile are fully loaded. */
-function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData) {
-	guigameinfo.open(metadata);
+/**
+ * These items must be done after the logical parts of the gamefile are fully loaded
+ * @param metadata - The metadata of the gamefile
+ * @param showGameControlButtons - Whether to show the practice game control buttons "Undo Move" and "Retry"
+ */
+function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
+	guigameinfo.open(metadata, showGameControlButtons);
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 

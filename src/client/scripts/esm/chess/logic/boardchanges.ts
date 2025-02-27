@@ -47,6 +47,7 @@ type Change = {
 	action: 'capture',
 	endCoords: Coords,
 	capturedPiece: number,
+	/** A custom path the moving piece took to make the capture. (e.g. Rose piece) */
 	path?: Coords[],
 } | {
 	action: 'move',
@@ -163,9 +164,9 @@ function queueMovePiece(changes: Array<Change>, main: boolean, coords: Coords, t
  * either modifying the piece lists, or modifying the mesh,
  * depending on what changeFuncs are passed in.
  */
-function runMove(gamefile: gamefile, move: Move, changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
+function runChanges(gamefile: gamefile, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
-	applyChanges(gamefile, move.changes, funcs, forward);
+	applyChanges(gamefile, changes, funcs, forward);
 }
 
 /**
@@ -316,16 +317,15 @@ export type {
 };
 
 export default {
+	changeFuncs,
+	queueCapture,
 	queueAddPiece,
 	queueDeletePiece,
 	queueMovePiece,
-	queueCapture,
+	runChanges,
 
 	getCapturedPieceTypes,
 	wasACapture,
 	oneWayActions,
-
-	runMove,
 	applyChanges,
-	changeFuncs,
 };

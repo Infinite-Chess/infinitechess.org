@@ -6,15 +6,21 @@
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Position } from '../../chess/variants/variant.js';
+import type { VariantOptions } from './gameslot.js';
 
 
 import localstorage from '../../util/localstorage.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
-import gameslot, { VariantOptions } from './gameslot.js';
+import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
 import variant from '../../chess/variants/variant.js';
 import gameloader from './gameloader.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
+import movesequence from "../chess/movesequence.js";
+import selection from '../chess/selection.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import animation from '../rendering/animation.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -25,44 +31,71 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 
 // Variables ----------------------------------------------------------------------------
 
+const validCheckmates = {
+	easy: [
+		"2Q-1k",
+		"3R-1k",
+		"1Q1R1B-1k",
+		"1Q1R1N-1k",
+		"1K2R-1k",
+		"1Q1CH-1k",
+		"2CH-1k",
+		"3B3B-1k",
+		"1K2B2B-1k",
+		"3AR-1k",
+		"1K1AM-1k"
+	],
+	medium: [
+		"1K1Q1B-1k",
+		"1K1Q1N-1k",
+		"1Q1B1B-1k",
+		"1Q1N1B-1k",
+		"1Q2N-1k",
+		"1K1N2B1B-1k",
+		"1K2N1B1B-1k",
+		"1K1R1B1B-1k",
+		"1K1R1N1B-1k",
+		"1K1AR1R-1k",
+		"1K2AR-1k",
+		"2AM-1rc"
+	],
+	hard: [
+		"2R1N1P-1k",
+		"1K1R2N-1k",
+		"2K1R-1k",
+		"1K2N6B-1k",
+		"1K2HA1B-1k",
+		"1K1CH1N-1k",
+		"5HU-1k",
+	],
+	insane: [
+		"1K1Q1P-1k",
+		"1K3HA-1k",
+		"1K3NR-1k",
+	]
 
-const validCheckmates: string[] = [
-	// easy
-	"2Q-1k",
-	"3R-1k",
-	"2CH-1k",
-	"1Q1CH-1k",
-	"1K2R-1k",
-	"1K2B2B-1k",
-	"3B3B-1k",
-	"1K1AM-1k",
+	// superhuman (way too hard):
+	// "1K1AR1HA1P-1k" (the white pawn only exists in order to mitigate zugzwang for white)
+	// "2B60N-1k" (fewer knights suffice but exact amount unknown, see proof in https://chess.stackexchange.com/q/45998/35006 )
+};
 
-	// medium
-	"1K1Q1B-1k",
+/** These checkmates we may place the black king nearer to the white pieces. */
+const checkmatesWithBlackRoyalNearer = [
 	"1K1Q1N-1k",
-	"1Q1B1B-1k",
+	"1Q1R1N-1k",
 	"1Q2N-1k",
-	"2R1N1P-1k",
-	"1K1R1B1B-1k",
-	"1K1AR1R-1k",
-	"2AM-1rc",
-
-	// hard
+	"1Q1N1B-1k",
 	"1K1N2B1B-1k",
 	"1K2N1B1B-1k",
 	"1K1R1N1B-1k",
+	"1K1AR1R-1k",
+	"1K1CH1N-1k",
 	"1K1R2N-1k",
 	"2K1R-1k",
-	"1K2AR-1k",
-	"1K2N7B-1k",
-
-	// insane
-	"1K1Q1P-1k",
-	"1K3NR-1k",
-	"1K3HA-1k",
+	"1K2N6B-1k",
+	"1K2HA1B-1k",
+	"1K3HA-1k"
 ];
-
-const difficultyListCheckmates: number[] = [8, 8, 7, 3]; // amount of easy, medium, hard and insane checkmates - for GUI purposes only
 
 const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
 /**
@@ -81,9 +114,20 @@ const expiryOfCompletedCheckmatesMillis: number = 1000 * 60 * 60 * 24 * 365; // 
 /** Whether we are in a checkmate practice engine game. */
 let inCheckmatePractice: boolean = false;
 
+/** Whether the player is allowed to undo a move in the current position. */
+let undoingIsLegal : boolean = false;
+
 
 // Functions ----------------------------------------------------------------------------
 
+function setUndoingIsLegal(value: boolean) {
+	undoingIsLegal = value;
+	guigameinfo.update_GameControlButtons(value);
+}
+
+function areInCheckmatePractice(): boolean {
+	return inCheckmatePractice;
+}
 
 /**
  * Starts a checkmate practice game
@@ -91,6 +135,8 @@ let inCheckmatePractice: boolean = false;
 function startCheckmatePractice(checkmateSelectedID: string): void {
 	console.log("Loading practice checkmate game.");
 	inCheckmatePractice = true;
+	setUndoingIsLegal(false);
+	initListeners();
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
 	const specialRights = {};
@@ -107,7 +153,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		Event: 'Infinite chess checkmate practice',
 		youAreColor: 'white' as 'white',
 		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
-		engineConfig: { checkmateSelectedID: checkmateSelectedID },
+		engineConfig: { checkmateSelectedID: checkmateSelectedID, engineTimeLimitPerMoveMillis: 500 },
 		variantOptions
 	};
 
@@ -115,7 +161,19 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 }
 
 function onGameUnload(): void {
+	closeListeners();
 	inCheckmatePractice = false;
+	setUndoingIsLegal(false);
+}
+
+function initListeners() {
+	document.addEventListener("guigameinfo-undoMove", undoMove);
+	document.addEventListener("guigameinfo-restart", restartGame);
+}
+
+function closeListeners() {
+	document.removeEventListener("guigameinfo-undoMove", undoMove);
+	document.removeEventListener("guigameinfo-restart", restartGame);
 }
 
 function getCompletedCheckmates(): string[] {
@@ -130,7 +188,10 @@ function getCompletedCheckmates(): string[] {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// error if user somehow submitted invalid checkmate ID
-	if (!validCheckmates.includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+	if (!Object.values(validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+
+	// place the black king not so far away for specific variants
+	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
 
 	const startingPosition: { [key: string]: string } = {}; // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
@@ -150,9 +211,9 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 			if (colorutil.getPieceColorFromType(piece) === "white") {
 				if (blackpieceplaced) throw Error("Must place all white pieces before placing black pieces.");
 
-				// randomly generate white piece coordinates near origin in square from -5 to 5
-				const x: number = Math.floor(Math.random() * 11) - 5;
-				const y: number = Math.floor(Math.random() * 11) - 5;
+				// randomly generate white piece coordinates in square around origin
+				const x: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
+				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
 				const key: string = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
@@ -162,8 +223,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				}
 			} else {
 				// randomly generate black piece coordinates at a distance
-				const x: number = Math.floor(Math.random() * 3) + 12;
-				const y: number = Math.floor(Math.random() * 35) - 17;
+				const x: number = Math.floor(Math.random() * 3) + (blackroyalnearer ? 8 : 12);
+				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 17 : 35)) - (blackroyalnearer ? 9 : 17);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 				// check if square is occupied or potentially threatened
 				if (!(key in startingPosition) && squareNotInSight(key, startingPosition)) {
@@ -246,16 +307,73 @@ function onEngineGameConclude(): void {
 	markCheckmateBeaten(checkmatePracticeID);
 }
 
+/**
+ * This function gets called by enginegame.ts whenever a human player submitted a move
+ */
+function registerHumanMove() {
+	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+
+	const gamefile = gameslot.getGamefile()!;
+	if (!undoingIsLegal && gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 0) {
+		// allow player to undo move if it ended the game
+		setUndoingIsLegal(true);
+	} else if (undoingIsLegal && !gamefileutility.isGameOver(gamefile)) {
+		// don't allow player to undo move while engine thinks
+		setUndoingIsLegal(false);
+	}
+}
+
+/**
+ * This function gets called by enginegame.ts whenever an engine player submitted a move
+ */
+function registerEngineMove() {
+	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+
+	const gamefile = gameslot.getGamefile()!;
+	if (!undoingIsLegal && gamefile.moves.length > 1) {
+		// allow player to undo move after engine has moved
+		setUndoingIsLegal(true);
+	}
+}
+
+function undoMove() {
+	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
+	const gamefile = gameslot.getGamefile()!;
+	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
+		setUndoingIsLegal(false);
+
+		// Terminate all current animations to avoid a crash when undoing moves
+		animation.clearAnimations();
+
+		// go to latest move before undoing moves
+		movesequence.viewFront(gamefile);
+
+		// If it's their turn, only rewind one move.
+		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
+		movesequence.rewindMove(gamefile);
+		selection.reselectPiece();
+	}
+}
+
+function restartGame() {
+	if (!inCheckmatePractice) return console.error("Restarting games is currently not supported for non-practice mode games");
+	
+	gameloader.unloadGame(); // Unload current game
+	startCheckmatePractice(guipractice.getCheckmateSelectedID());
+}
+
 
 // Exports ------------------------------------------------------------------------------
 
 
 export default {
 	validCheckmates,
-	difficultyListCheckmates,
+	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,
 	getCompletedCheckmates,
 	onEngineGameConclude,
-	eraseCheckmatePracticeProgress
+	eraseCheckmatePracticeProgress,
+	registerHumanMove,
+	registerEngineMove
 };

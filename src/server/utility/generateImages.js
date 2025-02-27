@@ -8,7 +8,7 @@
  * They will be compressed to the same directory within src/client/img/
 
  * 2. Run the command:
- * npm run generate-dependancy-graph
+ * npm run build-images
  */
 
 import sharp from "sharp";
@@ -67,6 +67,7 @@ const optimised_images = {
 	"/game/guide/fairy/knightrider.png": {},
 	"/game/guide/fairy/obstacle.png": {},
 	"/game/guide/fairy/void.png": {},
+	"/game/guide/fairy/huygen.png": {},
 };
 
 // Destination folder

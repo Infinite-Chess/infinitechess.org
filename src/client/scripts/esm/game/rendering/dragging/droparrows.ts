@@ -22,15 +22,13 @@ import legalmoves from "../../../chess/logic/legalmoves.js";
 let capturedPieceThisFrame: Piece | undefined;
 
 
-
 /**
  * Update the piece that would be captured if we were to let
- * go of the dragged piece right now.
+ * go of the dragged piece right now and return those coordinates if so.
  * 
- * DO BEFORE update()'ing!!! This is so selection.ts can make any capture
- * needed before the move is made, dragging disabled, and arrows shifted.
+ * CALL BEFORE shiftArrows()
  */
-function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
+function updateCapturedPiece(): void {
 	if (!draganimation.areDraggingPiece()) throw Error('Should not be updating droparrows when not dragging a piece!');
 
 	capturedPieceThisFrame = undefined;
@@ -55,13 +53,16 @@ function updateCapturedPiece_ReturnCapturedCoords(): Coords | undefined {
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));
 
 	if (legalCaptureHoveredArrows.length === 1) capturedPieceThisFrame = legalCaptureHoveredArrows[0]!.piece;
+}
+
+function getCaptureCoords(): Coords | undefined {
 	return capturedPieceThisFrame?.coords;
 }
 
 /**
  * Shifts an arrow indicator if we are hovering the dragged piece over a capturable arrow.
  * 
- * DO AFTER selection.ts has updated!!! Because making a move changes the board position.
+ * DO AFTER selection.update(). Because making a move changes the board.
  */
 function shiftArrows(): void {
 	if (!draganimation.areDraggingPiece()) return;
@@ -91,8 +92,10 @@ function onDragTermination() {
 }
 
 
+
 export default {
-	updateCapturedPiece_ReturnCapturedCoords,
+	updateCapturedPiece,
+	getCaptureCoords,
 	shiftArrows,
 	onDragTermination,
 };

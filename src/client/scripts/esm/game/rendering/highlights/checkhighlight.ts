@@ -7,12 +7,11 @@
 import space from '../../misc/space.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 import { BufferModel, createModel } from '../buffermodel.js';
+import preferences from '../../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
 import movement from '../movement.js';
-// @ts-ignore
-import options from '../options.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -41,7 +40,7 @@ function render(gamefile: gamefile) {
  * Generates the buffer model of the red-glow around each royal piece currently in check.
  */
 function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
-	const color = options.getDefaultCheckHighlightColor(); // [r,g,b,a]
+	const color = preferences.getCheckHighlightColor(); // [r,g,b,a]
 	const colorOfPerimeter: number[] = [color[0],color[1],color[2], 0]; // Same color, but zero opacity
 
 	const outRad = 0.65 * movement.getBoardScale();

@@ -152,7 +152,7 @@ function doesSpecialAttackSquare(gamefile, coords, color, attackers) {
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
 
-			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) return false; // This special piece can't make the capture THIS time... oof
+			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) continue; // This special piece can't make the capture THIS time... oof
 
 			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
 
@@ -436,7 +436,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 
 	// Delete the piece, and add it back when we're done!
 	const deleteChange = boardchanges.queueDeletePiece([], pieceSelected, true);
-	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.forward, true);
+	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, true);
     
 	// let checklines = []; // For Idon's code below
 	// For every line direction we share with the king...
@@ -511,7 +511,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 	// }
 
 	// Add the piece back with the EXACT SAME index it had before!!
-	boardchanges.applyChanges(gamefile, deleteChange, boardchanges.changeFuncs.backward, false);
+	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false);
 }
 
 // Appends moves to  moves.individual  if the selected pieces is able to get between squares 1 & 2

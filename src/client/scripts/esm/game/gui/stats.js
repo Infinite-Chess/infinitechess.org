@@ -1,7 +1,6 @@
 
 // Import Start
 import moveutil from '../../chess/util/moveutil.js';
-import options from '../rendering/options.js';
 import config from '../config.js';
 import gameslot from '../chess/gameslot.js';
 import guinavigation from './guinavigation.js';
@@ -28,6 +27,8 @@ const elementStatusMoves = document.getElementById('status-moves');
 // If it's zero, it ACTUALLY hides the stat.
 // This makes it so we can keep using setTimeout even if we refresh it's visibility!
 let visibilityWeight = 0;
+
+let fps = false;
 
 /**
  * Temporarily displays the move number in the corner of the screen.
@@ -75,6 +76,12 @@ function hidePiecesMesh() {
 	elementStatusPiecesMesh.classList.add('hidden');
 }
 
+function toggleFPS() {
+	fps = !fps;
+	if (fps) showFPS();
+	else hideFPS();
+}
+
 function showFPS() {
 	if (config.VIDEO_MODE) return;
 	elementStatusFPS.classList.remove('hidden');
@@ -85,7 +92,7 @@ function hideFPS() {
 }
 
 function updateFPS(fps) {
-	if (!options.isFPSOn()) return;
+	if (!fps) return;
 	const truncated = fps | 0; // Bitwise operation that quickly rounds towards zero
 	elementStatusFPS.textContent = `FPS: ${truncated}`;
 }
@@ -120,8 +127,7 @@ export default {
 	showPiecesMesh,
 	updatePiecesMesh,
 	hidePiecesMesh,
-	showFPS,
-	hideFPS,
+	toggleFPS,
 	updateFPS,
 	showRotateMesh,
 	updateRotateMesh,

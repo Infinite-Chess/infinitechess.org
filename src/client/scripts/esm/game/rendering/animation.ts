@@ -15,14 +15,13 @@ import spritesheet from './spritesheet.js';
 import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
+import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
 import sound from '../misc/sound.js';
 // @ts-ignore
 import movement from './movement.js';
-// @ts-ignore
-import options from './options.js';
 // @ts-ignore
 import board from './board.js';
 // @ts-ignore
@@ -105,11 +104,11 @@ const MOVE_ANIMATION_DURATION = {
 	multiplierMillis: 6,
 	/** The multiplierMillis when there's atleast 3+ waypoints */
 	multiplierMillis_Curved: 12, // Default: 12
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
 	baseMillis_Debug: 2000,
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis} when {@link DEBUG} is true. */
 	multiplierMillis_Debug: 30,
-
+	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link DEBUG} is true. */
 	multiplierMillis_Curved_Debug: 60,
 };
 
@@ -144,6 +143,11 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: 
 	const segments = createAnimationSegments(path_HighResolution);
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
+
+	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
+	if (spritesheet.typesWithoutSVG.some(typeNoSVG => {
+		return type.startsWith(typeNoSVG) || (captured !== undefined && captured.type.startsWith(typeNoSVG));
+	})) instant = true; // But, still instant animate it so that the sound plays
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
 	if (instant) return playSoundOfDistance(totalDistance, captured !== undefined);
@@ -307,8 +311,7 @@ function renderAnimations() {
 		return piecesData;
 	});
 
-	createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet())
-		.render();
+	createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet()).render();
 }
 
 /**
@@ -321,7 +324,7 @@ function generatePieceData(type: string, coords: Coords): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { startX, startY, endX, endY } = calculateBoardPosition(coords);
-	const { r, g, b, a } = options.getColorOfType(type);
+	const { r, g, b, a } = preferences.getTintColorOfType(type);
     
 	return bufferdata.getDataQuad_ColorTexture(
 		startX, startY, endX, endY,
@@ -349,30 +352,34 @@ function calculateBoardPosition(coords: Coords) {
 // Animation Calculations -----------------------------------------------------
 
 
-/** Returns the coordinate the animation's piece should be rendered this frame. */
-function getCurrentAnimationPosition(animation: Animation): Coords {
+/**
+ * Returns the coordinate the animation's piece should be rendered this frame.
+ * @param animation - The animation to calculate the position for.
+ * @param maxDistB4Teleport - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
+ */
+function getCurrentAnimationPosition(animation: Animation, maxDistB4Teleport = MAX_DISTANCE_BEFORE_TELEPORT): Coords {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
 	const t = Math.min(elapsed / animation.durationMillis, 1);
 	/** The eased progress of the animation. */
 	const easedT = math.easeInOut(t);
 
-	return calculateInterpolatedPosition(animation, easedT);
+	return calculateInterpolatedPosition(animation, easedT, maxDistB4Teleport);
 }
 
 /** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
-function calculateInterpolatedPosition(animation: Animation, easedProgress: number): Coords {
-	const targetDistance = animation.totalDistance <= MAX_DISTANCE_BEFORE_TELEPORT ? easedProgress * animation.totalDistance : calculateTeleportDistance(animation.totalDistance, easedProgress);
+function calculateInterpolatedPosition(animation: Animation, easedProgress: number, MAX_DISTANCE: number): Coords {
+	const targetDistance = animation.totalDistance <= MAX_DISTANCE ? easedProgress * animation.totalDistance : calculateTeleportDistance(animation.totalDistance, easedProgress, MAX_DISTANCE);
 	return findPositionInSegments(animation.segments, targetDistance);
 }
 
 /** Calculates the distance the piece animation should be rendered along the path, when the total distance is great enough to merit teleporting. */
-function calculateTeleportDistance(totalDistance: number, easedProgress: number): number {
+function calculateTeleportDistance(totalDistance: number, easedProgress: number, MAX_DISTANCE: number): number {
 	// First half
-	if (easedProgress < 0.5) return easedProgress * 2 * (MAX_DISTANCE_BEFORE_TELEPORT / 2);
+	if (easedProgress < 0.5) return easedProgress * 2 * (MAX_DISTANCE / 2);
 	// Second half: animate final portion of path
-	const portionFromEnd = (easedProgress - 0.5) * 2 * (MAX_DISTANCE_BEFORE_TELEPORT / 2);
-	return (totalDistance - MAX_DISTANCE_BEFORE_TELEPORT / 2) + portionFromEnd;
+	const portionFromEnd = (easedProgress - 0.5) * 2 * (MAX_DISTANCE / 2);
+	return (totalDistance - MAX_DISTANCE / 2) + portionFromEnd;
 }
 
 /** Finds the position of the piece at a certain distance along the path. */
@@ -393,10 +400,12 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 
 
 export default {
+	animations,
 	animatePiece,
 	clearAnimations,
 	toggleDebug,
 	update,
 	renderTransparentSquares,
 	renderAnimations,
+	getCurrentAnimationPosition,
 };

@@ -10,6 +10,7 @@ import selection from '../chess/selection.js';
 import style from './style.js';
 // @ts-ignore
 import colorutil from '../../chess/util/colorutil.js';
+import svgcache from '../../chess/rendering/svgcache.js';
 
 "use strict";
 
@@ -17,14 +18,18 @@ import colorutil from '../../chess/util/colorutil.js';
 // Variables --------------------------------------------------------------------
 
 
-const element_Promote = document.getElementById('promote');
-const element_PromoteWhite = document.getElementById('promotewhite');
-const element_PromoteBlack = document.getElementById('promoteblack');
+const element_Promote = document.getElementById('promote')!;
+const element_PromoteWhite = document.getElementById('promotewhite')!;
+const element_PromoteBlack = document.getElementById('promoteblack')!;
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
 
 // Functions --------------------------------------------------------------------
+
+
+// Prevent right-clicking on the promotion UI
+element_Promote.addEventListener('contextmenu', (event) => event.preventDefault());
 
 
 function isUIOpen() { return selectionOpen; }
@@ -50,7 +55,7 @@ function close() {
  * @param {Object} promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
+async function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	if (promotionsAllowed === undefined) return;
 	const white = promotionsAllowed['white']!; // ['queens','bishops']
 	const black = promotionsAllowed['black']!;
@@ -62,8 +67,8 @@ function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 
-	const whiteSVGs = spritesheet.getCachedSVGElements(white.map(promotion => promotion + whiteExt));
-	const blackSVGs = spritesheet.getCachedSVGElements(black.map(promotion => promotion + blackExt));
+	const whiteSVGs = await svgcache.getSVGElements(white.map(promotion => promotion + whiteExt));
+	const blackSVGs = await svgcache.getSVGElements(black.map(promotion => promotion + blackExt));
 
 	// Create and append allowed promotion options for white
 	whiteSVGs.forEach(svg => {
