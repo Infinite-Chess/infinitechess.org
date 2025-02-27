@@ -545,6 +545,8 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
 		if (coordutil.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
 
+		if (moves.individual.some(move => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue; // move already added to list
+
 		// Can our piece legally move there?
 		if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
 	}
