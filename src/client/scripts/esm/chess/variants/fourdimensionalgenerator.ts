@@ -3,7 +3,10 @@
 /**
  * This script dynamically generates the positions of 4 dimensional variants
  * with varying number of boards, board sizes, and positions on each board.
+ * 
+ * Also generates their moveset, and specialVicinity, overrides.
  */
+
 
 import type { Movesets } from "../logic/movesets.js";
 import type { Position } from "./variant.js";
@@ -14,6 +17,10 @@ import coordutil from "../util/coordutil.js";
 import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
+
+
+// Variables ------------------------------------------------------------------------------------------------
+
 
 /** Contains all relevant quantities for the size of the 4D chess board. */
 const dim = {
@@ -39,11 +46,16 @@ const dim = {
 const mov = {
 	/** true: allow quadragonal and triagonal king and queen movement. false: do not allow it. */
 	STRONG_KINGS_AND_QUEENS: false,
-	/** true: pawns can capture along any forward-sideways diagonal, like brawns in  5D chess.
-	 *  false: pawns can only capture along strictly spacelike or timelike diagonals, like pawns in 5D chess.
-	*/
+	/** 
+	 * true: pawns can capture along any forward-sideways diagonal, like brawns in  5D chess.
+	 * false: pawns can only capture along strictly spacelike or timelike diagonals, like pawns in 5D chess.
+	 */
 	STRONG_PAWNS: true,
 };
+
+
+// Utility ---------------------------------------------------------------------------------------------------------
+
 
 function set4DBoardDimensions(boards_x: number, boards_y: number, board_spacing: number) {
 	dim.BOARDS_X = boards_x;
@@ -64,9 +76,17 @@ function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean
 	mov.STRONG_PAWNS = strong_pawns;
 }
 
+/**
+ * Returns the type of queen, king, and pawn movements in the last loaded 4 dimension variant.
+ * Triagonal? Quadragonal? Brawn?
+ */
 function getMovementType() {
 	return mov;
 }
+
+
+// Generation ---------------------------------------------------------------------------------------------------------
+
 
 /**
  * Generate 4D chess position
@@ -89,8 +109,7 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
 			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
 				// Only the edges of boards should be voids
-				if ((i % dim.BOARD_SPACING === 0 || i % dim.BOARD_SPACING === 9)
-					|| (j % dim.BOARD_SPACING === 0 || j % dim.BOARD_SPACING === 9)) {
+				if ((i % dim.BOARD_SPACING === 0) || (j % dim.BOARD_SPACING === 0)) {
 					resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
 					// Add input_position_long to the board
 					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
@@ -130,6 +149,10 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 
 	return resultPos;
 }
+
+
+// Moveset Overrides --------------------------------------------------------------------------------------------------
+
 
 /**
  * Generates the moveset for the sliding pieces
@@ -212,6 +235,9 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 
 	return movesets;
 }
+
+
+// Special Vicinity Overrides -----------------------------------------------------------------------------------------
 
 
 /**
@@ -308,6 +334,10 @@ function getKingVicinity(board_spacing: number, strong_kings_and_queens: boolean
 	}
 	return individualMoves;
 }
+
+
+// Exports ------------------------------------------------------------------------------------------------------------
+
 
 export default {
 	get4DBoardDimensions,
