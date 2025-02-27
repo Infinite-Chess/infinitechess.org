@@ -1,7 +1,8 @@
 /* eslint-disable max-depth */
 
 /**
- * This script generates the position and piece movesets for the 5D Chess variant.
+ * This script dynamically generates the positions of 4 dimensional variants
+ * with varying number of boards, board sizes, and positions on each board.
  */
 
 import type { Movesets } from "../logic/movesets.js";
@@ -228,11 +229,11 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 /**
  * Sets the specialVicinity object for the pawn
  * @param board_spacing - The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
- * @param strong_pawns - true: pawns can capture along any forward-sideways diagonal.
+ * @param brawns - true: pawns can capture along any forward-sideways diagonal.
  * 						 false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
  * @returns 
  */
-function getPawnVicinity(board_spacing: number, strong_pawns: boolean): Coords[] {
+function getPawnVicinity(board_spacing: number, brawns: boolean): Coords[] {
 	const individualMoves: Coords[] = [];
 
 	for (let baseH = 1; baseH >= -1; baseH--) {
@@ -249,7 +250,7 @@ function getPawnVicinity(board_spacing: number, strong_pawns: boolean): Coords[]
 					if (baseV * baseV + offsetV * offsetV === 2) continue;
 
 					// disallow strong captures if pawns are weak
-					if (!strong_pawns && (Math.abs(baseH) !== Math.abs(baseV) || Math.abs(offsetH) !== Math.abs(offsetV))) continue;
+					if (!brawns && (Math.abs(baseH) !== Math.abs(baseV) || Math.abs(offsetH) !== Math.abs(offsetV))) continue;
 					
 					const x = board_spacing * baseH + offsetH;
 					const y = board_spacing * baseV + offsetV;

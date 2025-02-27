@@ -28,6 +28,7 @@ import movement from './movement.js';
 const STRIDE_PER_PIECE = 2; // Instance data contains a stride of 2 (x,y)
 
 const color: Color = [0, 0, 0, 1];
+// const color: Color = [0, 0, 1, 0.3]; // Transparent blue
 
 
 // Generating and Shifting the Mesh -------------------------------------------------------------------
