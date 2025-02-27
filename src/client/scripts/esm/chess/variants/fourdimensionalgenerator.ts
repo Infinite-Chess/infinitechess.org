@@ -34,17 +34,15 @@ const dim = {
 };
 
 /**
- * mov: contains all relevant information for movement logic
- * @param strong_kings_and_queens - true: allow quadragonal and triagonal king and queen movement. false: do not allow it
- * @param strong_pawns - true: pawns can capture along any forward-sideways diagonal.
- * 						 false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
+ * mov: Contains all relevant parameters for movement logic on the 4D board
  */
-const mov: {
-	STRONG_KINGS_AND_QUEENS: boolean;
-	STRONG_PAWNS: boolean;
-} = {
+const mov = {
+	/** true: allow quadragonal and triagonal king and queen movement. false: do not allow it. */
 	STRONG_KINGS_AND_QUEENS: false,
-	STRONG_PAWNS: true
+	/** true: pawns can capture along any forward-sideways diagonal, like brawns in  5D chess.
+	 *  false: pawns can only capture along strictly spacelike or timelike diagonals, like pawns in 5D chess.
+	*/
+	STRONG_PAWNS: true,
 };
 
 function set4DBoardDimensions(boards_x: number, boards_y: number, board_spacing: number) {
