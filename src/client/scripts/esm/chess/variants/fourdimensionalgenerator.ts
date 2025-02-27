@@ -309,6 +309,7 @@ function getKingVicinity(board_spacing: number, strong_kings_and_queens: boolean
 					
 					const x = board_spacing * baseH + offsetH;
 					const y = board_spacing * baseV + offsetV;
+					if (x === 0 && y === 0) continue;
 					const endCoords = [x, y] as Coords;
 
 					individualMoves.push(endCoords);

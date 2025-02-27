@@ -267,7 +267,8 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coor
 				for (let offsetV = 1; offsetV >= -1; offsetV--) {
 					// only allow moves that change one or two dimensions if triagonals and diagonals are disabled
 					if (!fourdimensionalgenerator.getMovementType().STRONG_KINGS_AND_QUEENS && baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2) continue;
-					
+					if (baseH === 0 && baseV === 0 && offsetH === 0 && offsetV === 0) continue;
+
 					const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
 					const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
 
