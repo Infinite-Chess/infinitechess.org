@@ -151,7 +151,7 @@ function doesSpecialAttackSquare(gamefile, coords, color, attackers) {
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
 
-			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) return false; // This special piece can't make the capture THIS time... oof
+			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) continue; // This special piece can't make the capture THIS time... oof
 
 			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
 
