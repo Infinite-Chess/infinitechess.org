@@ -219,11 +219,11 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 /**
  * Sets the specialVicinity object for the pawn
  * @param board_spacing - The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
- * @param brawns - true: pawns can capture along any forward-sideways diagonal.
+ * @param strong_pawns - true: pawns can capture along any forward-sideways diagonal.
  * 						 false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
  * @returns 
  */
-function getPawnVicinity(board_spacing: number, brawns: boolean): Coords[] {
+function getPawnVicinity(board_spacing: number, strong_pawns: boolean): Coords[] {
 	const individualMoves: Coords[] = [];
 
 	for (let baseH = 1; baseH >= -1; baseH--) {
@@ -240,7 +240,7 @@ function getPawnVicinity(board_spacing: number, brawns: boolean): Coords[] {
 					if (baseV * baseV + offsetV * offsetV === 2) continue;
 
 					// disallow strong captures if pawns are weak
-					if (!brawns && (Math.abs(baseH) !== Math.abs(baseV) || Math.abs(offsetH) !== Math.abs(offsetV))) continue;
+					if (!strong_pawns && (Math.abs(baseH) !== Math.abs(baseV) || Math.abs(offsetH) !== Math.abs(offsetV))) continue;
 					
 					const x = board_spacing * baseH + offsetH;
 					const y = board_spacing * baseV + offsetV;
