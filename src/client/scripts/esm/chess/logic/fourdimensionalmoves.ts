@@ -48,6 +48,7 @@ function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
 function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movetype: "spacelike" | "timelike"): Coords[] {
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 	const distance = (movetype === "spacelike" ? 1 : dim.BOARD_SPACING);
+	const distance_complement = (movetype === "spacelike" ? dim.BOARD_SPACING : 1);
 	
 	// White and black pawns move and capture in opposite directions.
 	const yDistanceParity = color === 'white' ? distance : -distance;
@@ -78,8 +79,8 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 	const coordsToCapture: Coords[] = [
 		[coords[0] - distance, coords[1] + yDistanceParity],
 		[coords[0] + distance, coords[1] + yDistanceParity],
-		[coords[0] - 1, coords[1] + yDistanceParity],
-		[coords[0] + 1, coords[1] + yDistanceParity]
+		[coords[0] - distance_complement, coords[1] + yDistanceParity],
+		[coords[0] + distance_complement, coords[1] + yDistanceParity]
 	];
 	for (let i = 0; i < (strong_pawns ? 4 : 2); i++) {
 		const thisCoordsToCapture = coordsToCapture[i]!;
@@ -100,10 +101,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
 	addPossibleEnPassant(gamefile, individualMoves, coords, color, distance, distance);
-	if (strong_pawns) {
-		addPossibleEnPassant(gamefile, individualMoves, coords, color, 1, distance);
-		addPossibleEnPassant(gamefile, individualMoves, coords, color, distance, 1);
-	}
+	if (strong_pawns) addPossibleEnPassant(gamefile, individualMoves, coords, color, distance_complement, distance);
 	return individualMoves;
 }
 
