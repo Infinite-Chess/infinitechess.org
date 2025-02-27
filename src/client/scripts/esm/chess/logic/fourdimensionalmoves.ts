@@ -227,20 +227,6 @@ function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Co
 	return individualMoves;
 }
 
-/** Executes a four dimensional knight move.  */
-function doFourDimensionalKnightMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
-	const moveChanges = move.changes;
-
-	const captureCoords = move.endCoords;
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
-
-	if (capturedPiece) boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece); // Delete the piece captured
-	else boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Move the knight
-
-	return true; // Special move was executed!
-}
-
-
 // King Legal Move Calculation and Execution -----------------------------------------------------------------
 
 /** Calculates the legal king moves in the four dimensional variant. */
@@ -292,14 +278,21 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coor
 
 /** Executes a four dimensional king move.  */
 function doFourDimensionalKingMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
+	const specialTag = move.castle; // { dir: -1/1, coord }
+	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
+
+	// Move the king to new square
 	const moveChanges = move.changes;
+	boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Make normal move
 
-	const captureCoords = move.endCoords;
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+	// Move the rook to new square
+	const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
+	if (!pieceToCastleWith) return false; // No rook to castle with!
+	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]] as Coords;
+	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, false, landSquare); // Make normal move
 
-	if (capturedPiece) boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece); // Delete the piece captured
-	else boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Move the king
-
+	// Special move was executed!
+	// There is no captured piece with castling
 	return true; // Special move was executed!
 }
 
@@ -311,7 +304,6 @@ export default {
 	fourDimensionalPawnMove,
 	doFourDimensionalPawnMove,
 	fourDimensionalKnightMove,
-	doFourDimensionalKnightMove,
 	fourDimensionalKingMove,
 	doFourDimensionalKingMove
 };
