@@ -1,8 +1,11 @@
 /* eslint-disable max-depth */
 
 /**
- * This script both calculates the legal moves of
- * pieces in the four dimensional variant and executes them.
+ * This script contains overrides for calculating the legal moves
+ * of pieces in four dimensional variants, and for executing those moves.
+ * 
+ * Pieces cannot jump to other timelike boards using spacelike movements,
+ * nor can they jump out of bounds.
  */
 
 
@@ -25,17 +28,13 @@ import specialdetect from "./specialdetect.js";
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 
+
 /** Calculates the legal pawn moves in the four dimensional variant. */
 function fourDimensionalPawnMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
 	const legalMoves: Coords[] = [];
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "spacelike")); // Spacelike
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "timelike")); // Timelike
 	return legalMoves;
-}
-
-function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
-	const key = coordutil.getKeyFromCoords(coords);
-	return gamefile.specialRights[key];
 }
 
 /**
@@ -59,8 +58,10 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 
 	// Is there a piece in front of it? And do not allow pawn to leave the 4D board
 	const coordsInFront = [coords[0], coords[1] + yDistanceParity] as Coords;
-	if (gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront) === undefined &&
-		coordsInFront[0] > dim.MIN_X && coordsInFront[0] < dim.MAX_X && coordsInFront[1] > dim.MIN_Y && coordsInFront[1] < dim.MAX_Y) {
+	if (
+		!gamefileutility.isPieceOnCoords(gamefile, coordsInFront)
+		&& coordsInFront[0] > dim.MIN_X && coordsInFront[0] < dim.MAX_X && coordsInFront[1] > dim.MIN_Y && coordsInFront[1] < dim.MAX_Y // Pawn within boundaries
+	) {
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 		// Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as CoordsSpecial;
@@ -75,14 +76,15 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 	// 2. It can capture diagonally if there are opponent pieces there
 	const strong_pawns = fourdimensionalgenerator.getMovementType().STRONG_PAWNS;
 
-	// latter two capture coordinates are only enabled for strong pawns
 	const coordsToCapture: Coords[] = [
 		[coords[0] - distance, coords[1] + yDistanceParity],
 		[coords[0] + distance, coords[1] + yDistanceParity],
+	];
+	if (strong_pawns) coordsToCapture.push( // Add the brawn-like captures
 		[coords[0] - distance_complement, coords[1] + yDistanceParity],
 		[coords[0] + distance_complement, coords[1] + yDistanceParity]
-	];
-	for (let i = 0; i < (strong_pawns ? 4 : 2); i++) {
+	);
+	for (let i = 0; i < coordsToCapture.length; i++) {
 		const thisCoordsToCapture = coordsToCapture[i]!;
 
 		// Is there an enemy piece at this coords?
@@ -150,6 +152,11 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves:
 	individualMoves.push(landCoords);
 }
 
+function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
+	const key = coordutil.getKeyFromCoords(coords);
+	return gamefile.specialRights[key];
+}
+
 /** Executes a four dimensional pawn move.  */
 function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move): boolean {
 	const moveChanges = move.changes;
@@ -174,23 +181,17 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 }
 
 
-// Knight Legal Move Calculation and Execution -----------------------------------------------------------------
+// Knight Legal Move Calculation --------------------------------------------------------------------------------
 
-
-/** Calculates the legal knight moves in the four dimensional variant. */
-function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
-	const legalMoves: Coords[] = [];
-	legalMoves.push(...knightLegalMoves(gamefile, coords, color));
-	return legalMoves;
-}
 
 /**
- * Calculates legal knight moves for the spacelike and timelike dimensions.
+ * Calculates the legal knight moves in the current four dimensional variant
+ * for both spacelike and timelike dimensions.
  * @param gamefile
  * @param coords - The coordinates of the knight
  * @param color - The color of the knight
  */
-function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
 	const individualMoves: Coords[] = [];
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
@@ -225,13 +226,14 @@ function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Co
 	return individualMoves;
 }
 
-// King Legal Move Calculation and Execution -----------------------------------------------------------------
+
+// King Legal Move Calculation ------------------------------------------------------------------------------
+
 
 /** Calculates the legal king moves in the four dimensional variant. */
 function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
-	const legalMoves: Coords[] = [];
-	legalMoves.push(...kingLegalMoves(gamefile, coords, color));
-	legalMoves.push(...specialdetect.kings(gamefile, coords, color));
+	const legalMoves: Coords[] = kingLegalMoves(gamefile, coords, color);
+	legalMoves.push(...specialdetect.kings(gamefile, coords, color)); // Adds legal castling
 	return legalMoves;
 }
 
