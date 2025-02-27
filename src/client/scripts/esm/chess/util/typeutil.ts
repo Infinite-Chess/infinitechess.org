@@ -7,7 +7,7 @@ import { rawTypes, colors } from "../config";
  * They are arranged in this order for faster checkmate/draw detection,
  * as we should check if the kings have a legal move first.
  */
-const types = ['kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'roses', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'];
+const strtypes = ['voids', 'obstacle', 'kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'roses', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'];
 
 const jumpingroyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
 
@@ -61,14 +61,16 @@ function invertType(type: number): number {
 	return buildType(r, newc);
 }
 
+function getRawTypeStr(type: RawType): string {
+	return strtypes[type];
+}
+
 export type {
 	RawType,
 	TeamColor
 };
 
 export default {
-	rawTypes,
-	colors,
 	jumpingroyals,
 	royals,
 
@@ -79,4 +81,5 @@ export default {
 	splitType,
 	invertType,
 	forEachPieceType,
+	getRawTypeStr,
 };

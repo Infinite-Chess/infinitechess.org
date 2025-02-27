@@ -1,15 +1,17 @@
 
 
 import themes from "./themes.js";
+import pieceThemes from "./pieceThemes.js";
 import localstorage from "../../util/localstorage.js";
 import timeutil from "../../util/timeutil.js";
 import validatorama from "../../util/validatorama.js";
 import jsutil from "../../util/jsutil.js";
 import docutil from "../../util/docutil.js";
-import colorutil from "../../chess/util/colorutil.js";
+import typeutil from "../../chess/util/typeutil.js";
 
 
 import type { Color } from "../../chess/util/colorutil.js";
+import type { RawType } from "../../chess/util/typeutil.js";
 
 
 
@@ -250,13 +252,30 @@ function getBoxOutlineColor(): Color {
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
-/** Returns { r, g, b, a } depending on our current theme! */
-function getTintColorOfType(type: string): { r: number, g: number, b: number, a: number } {
-	const colorArgs: { white: Color, black: Color, neutral: Color } | undefined = getPieceRegenColorArgs(); // { white, black, neutral }
-	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
+/**
+ * Returns the color arrays for the pieces, according to our theme.
+ * @returns {Object} An object containing the properties "white", "black", and "neutral".
+ */
+function getPieceRegenColorArgs(gamefile) {
+	const themeName: string = getTheme();
+	const types = gamefile.ourPieces.typeRanges.keys();
 
-	const pieceColor = colorutil.getPieceColorFromType(type) as 'white' | 'black' | 'neutral';
-	const color: Color = colorArgs[pieceColor];
+	const piecetheme = themes.getPropertyOfTheme(themeName, "pieceTheme");
+	const colorArgs = pieceThemes.generateThemeColorArgs(types, piecetheme);
+	if (colorArgs === false) return;
+
+	return colorArgs;
+}
+
+// Returns { r, g, b, a } depending on our current theme!
+function getTintColorOfType(type: number) {
+	const themeName: string = getTheme();
+
+	const [raw, c] = typeutil.splitType(type);
+	const piecetheme = themes.getPropertyOfTheme(themeName, "pieceTheme");
+	const colorArgs = pieceThemes.getPieceDataForTheme(raw, pieceThemes.pieceDefaultColors, piecetheme); // { white, black, neutral }
+	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
+	const color = colorArgs[c];
 
 	return {
 		r: color[0],
@@ -266,20 +285,23 @@ function getTintColorOfType(type: string): { r: number, g: number, b: number, a:
 	};
 }
 
-/**
- * Returns the color arrays for the pieces, according to our theme.
- * @returns {Object | undefined} An object containing the properties "white", "black", and "neutral".
- */
-function getPieceRegenColorArgs(): { white: Color, black: Color, neutral: Color } | undefined {
+function getSVGLocations(types: Iterable<RawType>): Set<string> {
 	const themeName: string = getTheme();
-	const themeProperties: any = themes.themes[themeName];
-	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
 
-	return {
-		white: themes.getPropertyOfTheme(themeName, 'whitePiecesColor'),
-		black: themes.getPropertyOfTheme(themeName, 'blackPiecesColor'),
-		neutral: themes.getPropertyOfTheme(themeName, 'neutralPiecesColor'),
-	};
+	const piecetheme = themes.getPropertyOfTheme(themeName, "svgTheme");
+	const locations: Set<string> = new Set();
+	for (const raw of types) {
+		const svg = pieceThemes.getPieceDataForTheme(raw, pieceThemes.pieceDefaultSVGs, piecetheme);
+		if (svg === undefined) continue;
+		locations.add(svg);
+	}
+	return locations;
+}
+
+function getLocationForType(type: RawType): string | undefined {
+	const themeName: string = getTheme();
+	const piecetheme = themes.getPropertyOfTheme(themeName, "svgTheme");
+	return pieceThemes.getPieceDataForTheme(type, pieceThemes.pieceDefaultSVGs, piecetheme);
 }
 
 // /**
@@ -410,4 +432,6 @@ export default {
 	getBoxOutlineColor,
 	getTintColorOfType,
 	getPieceRegenColorArgs,
+	getSVGLocations,
+	getLocationForType
 };

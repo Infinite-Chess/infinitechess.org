@@ -26,6 +26,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('./events.js').GameEvents} GameEvents*/
 /** @typedef {import('../util/typeutil.js').TeamColor} TeamColor*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
+/** @typedef {import('../util/typeutil.js').RawType} RawType*/
 
 'use strict'; 
 
@@ -66,7 +67,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		 * For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }`
          * @type {BoundingBox} */
 		box: undefined,
-		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {number[]} */
+		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {RawType[]} */
 		existingTypes: undefined,
 	};
     

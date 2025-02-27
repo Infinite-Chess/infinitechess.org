@@ -8,11 +8,11 @@
 
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
+import typeutil from '../../chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
-import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import texture from './texture.js';
-
+import { rawTypes } from '../../chess/config.js';
 
 // Type Definitions ----------------------------------------------------------
 
@@ -44,11 +44,12 @@ let spritesheetData: {
 	 * where (0,0) is the bottom-left corner of the spritesheet,
 	 * and the coordinates provided are the bottom-left corner of the corresponding type.
 	 */
-	texLocs: { [type: string]: Coords }
+	texLocs: { [type: number]: Coords
+	 }
 } | undefined;
 
 /** Piece types that don't have an SVG */
-const typesWithoutSVG = ['voids'];
+const typesWithoutSVG = [rawTypes.VOID];
 
 
 // Functions ---------------------------------------------------------------------------
@@ -64,7 +65,7 @@ function getSpritesheetDataPieceWidth() {
 	return spritesheetData!.pieceWidth;
 }
 
-function getSpritesheetDataTexLocation(type: string): Coords {
+function getSpritesheetDataTexLocation(type: number): Coords {
 	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
 	return spritesheetData!.texLocs[type]!;
 }
@@ -72,26 +73,20 @@ function getSpritesheetDataTexLocation(type: string): Coords {
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
 
-	/** All piece types in the game. */
-	let existingTypes: string[] = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes); // ['pawns','obstacles','voids', ...]
-	// Remove the pieces that don't need/have an SVG, such as VOIDS
-	existingTypes = existingTypes.filter(type => !typesWithoutSVG.includes(type)); // ['pawns','obstacles', ...]
-
-	/** Makes all the types in the game singular instead of plural */
-	const typesNeeded = existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end => ['pawn','obstacle', ...]
+	const types = [...gamefile.ourPieces.typeRanges.keys()].filter(t => {return typeutil.getRawType(t) in typesWithoutSVG;});
 
 	/**
 	 * The SVG elements we will use in the game to construct our spritesheet
 	 * This is what may take a while, waiting for the fetch requests to return.
 	 */
-	const svgElements = await svgcache.getSVGElementsFromSingularTypes(typesNeeded);
+	const [idMap, svgElements] = await svgcache.getSVGElements(types);
 
 	// console.log("Finished acquiring all piece SVGs!");
 
 	// Convert each SVG element to an Image
 	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
 
-	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
+	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages, idMap);
 	// console.log(spritesheetAndSpritesheetData.spritesheetData);
 
 	// Optional: Append the spritesheet to the document for debugging
