@@ -72,6 +72,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** Whether hippogonal lines, or greater, are present in the gamefile.
 		 * True if there are knightriders, or greater, riders. @type {boolean} */
 		hippogonalsPresent: undefined,
+		/** Whether colinear lines are present in the gamefile.
+		 * (e.g. [1,0] and [2,0] are colinear) @type {boolean} */
+		colinearsPresent: undefined,
 	};
     
 	/** @type {GameRules} */

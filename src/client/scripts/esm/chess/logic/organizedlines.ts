@@ -334,20 +334,18 @@ function getCFromKey(lineKey: LineKey): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(gamefile: gamefile): boolean {
-	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
-
+function areColinearSlidesPresentInGame(slidingPossible: Vec2[]): boolean { // [[1,1], [1,0], ...]
 	// How to know if 2 lines are colinear?
 	// They will have the exact same slope!
 
 	// Iterate through each line, comparing its slope with every other line
 	for (let a = 0; a < slidingPossible.length - 1; a++) {
-		const line1 = slidingPossible[a]; // [dx,dy]
+		const line1 = slidingPossible[a]!; // [dx,dy]
 		const slope1 = line1[1] / line1[0]; // Rise/Run
 		const line1IsVertical = isNaN(slope1);
         
 		for (let b = a + 1; b < slidingPossible.length; b++) {
-			const line2 = slidingPossible[b]; // [dx,dy]
+			const line2 = slidingPossible[b]!; // [dx,dy]
 			const slope2 = line2[1] / line2[0]; // Rise/Run
 			const line2IsVertical = isNaN(slope2);
 

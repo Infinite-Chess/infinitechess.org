@@ -1,4 +1,8 @@
 {
+	"41": {
+		"note": "Replaced play.play-menu.5D_Chess on line 245 with 4x4x4x4_Chess and 8x8x8x8_Chess",
+		"changes": []
+	},
 	"40": {
 		"note": "Deleted toggled_edit, line 356",
 		"changes": []

@@ -396,6 +396,7 @@ function initSelectedPieceInfo(gamefile: gamefile, piece: Piece) {
 	pieceSelected = piece;
 	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
 	legalMoves = legalmoves.calculate(gamefile, pieceSelected);
+	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile, piece.type);
 	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(gamefile, piece.type);
