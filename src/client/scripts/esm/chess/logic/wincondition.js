@@ -160,6 +160,7 @@ function wasLastMoveARoyalCapture(gamefile) {
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
 function isCheckmateCompatibleWithGame(gamefile) {
+	if (gamefile.metadata.Variant === '4x4x4x4_Chess') return true; // specific variant for which to circumvent further checks and allow checkmate
 	if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (organizedlines.areColinearSlidesPresentInGame(gamefile)) return false; // Logic surrounding making opening discovered attacks illegal is a nightmare.
 	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
