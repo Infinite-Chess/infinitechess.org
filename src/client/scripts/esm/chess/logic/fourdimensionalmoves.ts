@@ -86,7 +86,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 
 		// Is there an enemy piece at this coords?
 		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, thisCoordsToCapture);
-		if (!pieceAtCoords || pieceAtCoords === "voidsN") continue; // No piece, skip
+		if (!pieceAtCoords || pieceAtCoords === "voidsN") continue; // No piece or void, skip
 
 		// There is a piece. Make sure it's a different color
 		const colorOfPiece = colorutil.getPieceColorFromType(pieceAtCoords);
@@ -207,7 +207,7 @@ function knightLegalMoves(gamefile: gamefile, coords: Coords, color: string): Co
 						const endCoords = [x, y] as Coords;
 						const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
 
-						// do not allow capturing friendly pieces
+						// do not allow capturing friendly pieces or voids
 						if (endPiece && (color === colorutil.getPieceColorFromType(endPiece) || endPiece === "voidsN")) continue;
 
 						// do not allow knight to leave the 4D board
@@ -275,7 +275,7 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coor
 					const endCoords = [x, y] as Coords;
 					const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
 
-					// do not allow capturing friendly pieces
+					// do not allow capturing friendly pieces or voids
 					if (endPiece && (color === colorutil.getPieceColorFromType(endPiece) || endPiece === "voidsN")) continue;
 
 					// do not allow king to leave the 4D board
