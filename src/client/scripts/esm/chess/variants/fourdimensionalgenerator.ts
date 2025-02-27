@@ -15,32 +15,22 @@ import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
 
-/**
- * dim: contains all relevant quantities for the size of the 4D chess board.
- * @param BOARD_SPACING: The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
- * @param BOARDS_X: number of 2D boards in x-direction.
- * @param BOARDS_Y: number of 2D boards in y-direction.
- * @param MIN_X Board edges on the real chessboard.
- * @param MAX_X Board edges on the real chessboard.
- * @param MAX_X Board edges on the real chessboard.
- * @param MAX_Y Board edges on the real chessboard.
- */
-const dim: {
-	BOARD_SPACING: number;
-	BOARDS_X: number;
-	BOARDS_Y: number;
-	MIN_X: number;
-	MAX_X: number;
-	MIN_Y: number;
-	MAX_Y: number;
-} = {
+/** Contains all relevant quantities for the size of the 4D chess board. */
+const dim = {
+	/** The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1 */
 	BOARD_SPACING: NaN,
+	/** Number of 2D boards in x direction */
 	BOARDS_X: NaN,
+	/** Number of 2D boards in y direction */
 	BOARDS_Y: NaN,
+	/** Board edges on the real chessboard */
 	MIN_X: NaN,
+	/** Board edges on the real chessboard */
 	MAX_X: NaN,
+	/** Board edges on the real chessboard */
 	MIN_Y: NaN,
-	MAX_Y: NaN
+	/** Board edges on the real chessboard */
+	MAX_Y: NaN,
 };
 
 /**
