@@ -249,7 +249,7 @@ function getPawnVicinity(board_spacing: number, strong_pawns: boolean): Coords[]
 					if (baseV * baseV + offsetV * offsetV === 2) continue;
 
 					// disallow strong captures if pawns are weak
-					if (!strong_pawns && Math.abs(baseH) !== Math.abs(baseV) && Math.abs(offsetH) !== Math.abs(offsetV)) continue;
+					if (!strong_pawns && (Math.abs(baseH) !== Math.abs(baseV) || Math.abs(offsetH) !== Math.abs(offsetV))) continue;
 					
 					const x = board_spacing * baseH + offsetH;
 					const y = board_spacing * baseV + offsetV;
