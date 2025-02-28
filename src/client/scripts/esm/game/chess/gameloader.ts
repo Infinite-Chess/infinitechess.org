@@ -175,7 +175,7 @@ async function startEngineGame(options: {
 	typeOfGameWeAreIn = 'engine';
 	enginegame.initEngineGame(options);
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, showGameControlButtons);
+	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
 
 
