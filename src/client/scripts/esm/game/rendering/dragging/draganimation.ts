@@ -123,9 +123,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
-	if (animation.animations.some(a => coordutil.areCoordsEqual_noValidate(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations();
-	// No longer needed since input.js will render a frame whenever receiving an input? Test!
-	// frametracker.onVisualChange();
+	if (animation.animations.some(a => coordutil.areCoordsEqual_noValidate(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
 }
 
 /**
