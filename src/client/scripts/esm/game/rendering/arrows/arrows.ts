@@ -161,7 +161,7 @@ const paddingBetwAdjacentPictures: number = 0.35;
 /** Opacity of the mini images of the pieces and arrows. */
 const opacity: number = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
-const renderZoomLimitVirtualPixels: number = 20; // virtual pixels. Default: 20
+const renderZoomLimitVirtualPixels: number = 12; // virtual pixels. Default: 20
 
 /** The distance in perspective mode to render the arrow indicators from the camera.
  * We need this because there is no normal edge of the screen like in 2D mode. */
@@ -873,7 +873,7 @@ function render() {
 }
 
 function regenerateModelAndRender() {
-	if (Object.keys(slideArrows).length === 0) throw Error("No arrows visible. Replace this line with a return statement."); // No visible arrows, don't generate the model
+	if (Object.keys(slideArrows).length === 0) return; // No visible arrows, don't generate the model
 
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const halfWorldWidth = worldWidth / 2;
