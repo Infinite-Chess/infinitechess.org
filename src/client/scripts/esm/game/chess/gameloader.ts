@@ -107,7 +107,11 @@ async function startLocalGame(options: {
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
-		// additional: { editor: true } // Enable to dev test undefineds behavior in board editor mode.
+		/**
+		 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
+		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
+		 */
+		// additional: { editor: true }
 	});
 	typeOfGameWeAreIn = 'local';
 
