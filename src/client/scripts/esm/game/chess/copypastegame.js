@@ -224,7 +224,8 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	// Create a new gamefile from the longformat...
 
 	// Retain most of the existing metadata on the currently loaded gamefile
-	const currentGameMetadata = gameslot.getGamefile().metadata;
+	const currentGamefile = gameslot.getGamefile();
+	const currentGameMetadata = currentGamefile.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformat.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
@@ -290,6 +291,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		additional: {
 			moves: longformat.moves,
 			variantOptions,
+			editor: currentGamefile.editor
 		}
 	});
 	const gamefile = gameslot.getGamefile();
