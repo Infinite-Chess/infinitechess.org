@@ -207,22 +207,19 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
  * organizes the piece in the organized lists
  */
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
-	const piece = change['piece'];
-
-	const list = gamefile.ourPieces[piece.type];
-
-	// If no index specified, make the default the first undefined in the list!
-	if (piece.index === undefined) {
-		if (list.undefineds.length === 0) throw Error(`No undefined placeholders remaining for new piece! ${piece.type}`);
-		change['piece'].index = list.undefineds[0];
-	}
+	const piece = change.piece;
 
 	// Safety net
 	const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, piece.coords);
 	if (isPieceOnCoords) throw new Error("Can't add a piece on top of another piece!");
 
-	// Remove the undefined from the undefineds list
-	jsutil.deleteElementFromOrganizedArray(gamefile.ourPieces[piece.type].undefineds, piece.index);
+	const list = gamefile.ourPieces[piece.type];
+	
+	// If no index specified, make the default the first undefined in the list!
+	if (piece.index === undefined) {
+		if (list.undefineds.length === 0) throw Error(`No undefined placeholders remaining for piece being added! ${piece.type}`);
+		change.piece.index = list.undefineds.shift()!;
+	} else jsutil.deleteElementFromOrganizedArray(gamefile.ourPieces[piece.type].undefineds, piece.index); // Remove the undefined from the undefineds list
 
 	// Add the piece
 	list[piece.index] = piece.coords;

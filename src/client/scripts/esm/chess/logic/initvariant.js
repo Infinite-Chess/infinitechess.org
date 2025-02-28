@@ -9,6 +9,7 @@ import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
 import organizedlines from './organizedlines.js';
+import typeutil from '../util/typeutil.js';
 
 /** 
  * Type Definitions 
@@ -45,6 +46,8 @@ function setupVariant(gamefile, metadata, options) {
  * @param {gamefile} gamefile
  */
 function initExistingTypes(gamefile) {
+	if (gamefile.editor) return gamefile.startSnapshot.existingTypes = [...typeutil.types, ...typeutil.neutralTypes]; // Editor mode may add any available piece type to the board
+
 	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
     
 	// Makes sure all possible pieces are accounted for. even when they dont start with them

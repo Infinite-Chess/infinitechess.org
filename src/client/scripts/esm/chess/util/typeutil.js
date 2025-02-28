@@ -9,7 +9,8 @@ import colorutil from "./colorutil.js";
  */
 
 /**
- * All piece types the game is currently compatible with (excluding neutrals).
+ * All piece types the game is currently compatible with (excluding neutrals),
+ * without their color information appended.
  * 
  * They are arranged in this order for faster checkmate/draw detection,
  * as we should check if the kings have a legal move first.
@@ -55,6 +56,7 @@ function forEachPieceType(callback, { ignoreNeutrals, ignoreVoids } = {}) { // C
 }
 
 export default {
+	types,
 	neutralTypes,
 	colorsTypes,
 	royals,
