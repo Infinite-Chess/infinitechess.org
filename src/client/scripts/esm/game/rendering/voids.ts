@@ -2,8 +2,6 @@
 /**
  * This generates and renders the mesh of the void squares
  * in the game.
- * It combines as many voids as possible to reduce
- * the mesh complexity.
  */
 
 
@@ -27,6 +25,7 @@ import movement from './movement.js';
 
 const STRIDE_PER_PIECE = 2; // Instance data contains a stride of 2 (x,y)
 
+/** The color of all voids */
 const color: Color = [0, 0, 0, 1];
 // const color: Color = [0, 0, 1, 0.3]; // Transparent blue
 
@@ -34,6 +33,11 @@ const color: Color = [0, 0, 0, 1];
 // Generating and Shifting the Mesh -------------------------------------------------------------------
 
 
+/**
+ * Completely regenerates the model of the voids in the game.
+ * SLOWEST. Minimize calling.
+ * Must be called whenever we add more undefineds placeholders to the voids piece list.
+ */
 function regenModel(gamefile: gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
 	const voidList = gameslot.getGamefile()!.ourPieces.voidsN;
@@ -45,11 +49,11 @@ function regenModel(gamefile: gamefile) {
 	let currIndex: number = 0;
 	voidList.forEach((coords: Coords | undefined) => {
 		if (coords === undefined) {
-			// Undefined placeholders, this one should not be visible.
+			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there's a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
 			instanceData64[currIndex + 1] = Infinity;
 		} else {
-			// Apply the offset to the coordinates
+			// Apply the piece mesh offset to the coordinates
 			instanceData64[currIndex] = coords[0] - gamefile.mesh.offset[0];
 			instanceData64[currIndex + 1] = coords[1] - gamefile.mesh.offset[1];
 		}
@@ -62,6 +66,7 @@ function regenModel(gamefile: gamefile) {
 
 /**
  * Shifts the vertex data of the voids model and reinits it on the gpu.
+ * Faster than {@link regenModel}
  * @param gamefile - The gamefile
  * @param diffXOffset - The x-amount to shift the voids vertex data
  * @param diffYOffset - The y-amount to shift the voids vertex data
@@ -74,6 +79,7 @@ function shiftModel(gamefile: gamefile, diffXOffset: number, diffYOffset: number
 	for (let i = 0; i < instanceData32.length; i += STRIDE_PER_PIECE) {
 		instanceData64[i] += diffXOffset;
 		instanceData64[i + 1] += diffYOffset;
+		// Copy the float32 values from the float64 array so as to gain the most precision
 		instanceData32[i] = instanceData64[i];
 		instanceData32[i + 1] = instanceData64[i + 1];
 	}
@@ -86,18 +92,18 @@ function shiftModel(gamefile: gamefile, diffXOffset: number, diffYOffset: number
 // Modifying the Mesh Data ----------------------------------------------------------------------
 
 
+
 /**
- * Modifies the vertex data of the specified piece within the game's mesh data
- * to the destination coordinates. Then sends that change off to the gpu.
- * FAST, much faster than regenerating the entire mesh!
- * @param gamefile - The gamefile the piece belongs to
- * @param piece - The piece: `{ type, index }`
- * @param newCoords - The destination coordinates
+ * Overwrites the instance data of the specified void within the
+ * void mesh with the new coordinates of the instance.
+ * Then sends that change off to the gpu.
+ * 
+ * FAST, much faster than regenerating or shifting the entire mesh!
  */
-function movebufferdata(gamefile: gamefile, piece: { type: string, index: number }, newCoords: Coords) {
+function overwritebufferdata(gamefile: gamefile, piece: { index: number, coords: Coords }) {
 	const i = piece.index * STRIDE_PER_PIECE;
 
-	const offsetCoord = coordutil.subtractCoordinates(newCoords, gamefile.mesh.offset);
+	const offsetCoord = coordutil.subtractCoordinates(piece.coords, gamefile.mesh.offset);
 
 	gamefile.voidMesh.instanceData64[i] = offsetCoord[0];
 	gamefile.voidMesh.instanceData64[i + 1] = offsetCoord[1];
@@ -109,13 +115,11 @@ function movebufferdata(gamefile: gamefile, piece: { type: string, index: number
 }
 
 /**
- * Overwrites the vertex data of the specified piece with Infinity's within the void's mesh data,
- * then sends that change off to the gpu.
- * FAST, much faster than regenerating the entire mesh!
- * @param gamefile - The gamefile the piece belongs to
- * @param piece - The piece: `{ type, index }`
+ * Deletes the instance data of the specified void within the void mesh
+ * by overwriting it with Infinity's, then sends that change off to the gpu.
+ * FAST, much faster than regenerating or shifting the entire mesh!
  */
-function deletebufferdata(gamefile: gamefile, piece: Piece) {
+function deletebufferdata(gamefile: gamefile, piece: { index: number }) {
 	const i = piece.index * STRIDE_PER_PIECE;
 
 	gamefile.voidMesh.instanceData64[i] = Infinity; // Unfortunately we can't set them to 0 to hide it, as an actual void instance would be visible at [0,0]
@@ -127,38 +131,12 @@ function deletebufferdata(gamefile: gamefile, piece: Piece) {
 	gamefile.voidMesh.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE);
 }
 
-/**
- * Overwrites the instance data of the specified void within the
- * void mesh with the new coordinates of the instance.
- * Then sends that change off to the gpu.
- * 
- * Call this to add new voids to the mesh, such as when using a board editor.
- * FAST, much faster than regenerating the entire mesh!
- * @param gamefile - The gamefile the piece belongs to
- * @param undefinedPiece - The undefined piece placeholder: `{ type, index }`
- * @param coords - The destination coordinate
- */
-function overwritebufferdata(gamefile: gamefile, undefinedPiece: { type: string, index: number }, coords: Coords) {
-	const i = undefinedPiece.index * STRIDE_PER_PIECE;
-
-
-	const offsetCoord = coordutil.subtractCoordinates(coords, gamefile.mesh.offset);
-
-	gamefile.voidMesh.instanceData64[i] = offsetCoord[0];
-	gamefile.voidMesh.instanceData64[i + 1] = offsetCoord[1];
-	gamefile.voidMesh.model.instanceData[i] = offsetCoord[0];
-	gamefile.voidMesh.model.instanceData[i + 1] = offsetCoord[1];
-
-	// Update the buffer on the gpu!
-	gamefile.voidMesh.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE);
-}
-
 
 // Rendering ----------------------------------------------------------------------------------------
 
 
 /**
- * Called from pieces.renderPiecesInGame()
+ * Renders the void mesh of the game, translating and scaling into position.
  */
 function render(gamefile: gamefile) {
 	if (gamefile.voidMesh.model === undefined) return;
@@ -182,8 +160,7 @@ function render(gamefile: gamefile) {
 export default {
 	regenModel,
 	shiftModel,
-	movebufferdata,
-	deletebufferdata,
 	overwritebufferdata,
+	deletebufferdata,
 	render,
 };

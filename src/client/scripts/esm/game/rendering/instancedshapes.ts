@@ -5,6 +5,9 @@
  * 
  * Many are used for rendering legal moves, like the square, dot, or corner triangles.
  * The plus sign is used for special rights highlighting.
+ * 
+ * The vertex data returned from any shape in this script
+ * ALWAYS has a stride length of 6 (x,y, r,g,b,a)
  */
 
 

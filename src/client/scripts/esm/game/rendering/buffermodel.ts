@@ -445,7 +445,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		// Update the transformMatrix on the gpu, EVERY render call!!
 		// This contains our camera, perspective projection, and the
 		// positional and scale transformations of the mesh we're rendering!
-		// If we do not update this every frame, the uniform value from
+		// If we do not update this draw call, the uniform value from
 		// the previous draw call will bleed through.
 	
 		const { projMatrix, viewMatrix } = camera.getProjAndViewMatrixes();
