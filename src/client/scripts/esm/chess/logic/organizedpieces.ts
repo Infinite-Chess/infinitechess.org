@@ -1,6 +1,7 @@
 import typeutil from "../util/typeutil";
 import coordutil from "../util/coordutil";
 import math from "../../util/math";
+import { listExtras, colors } from "../config";
 
 import type gamefile from "./gamefile";
 import type { RawType } from "../util/typeutil";
@@ -76,10 +77,6 @@ function getArrayType<C extends SizedArray>(a: C) {
 function constuctNewArray<C extends SizedArray>(a: C, i: number): C {
 	const constructor = getArrayType(a);
 	return new constructor(a.length + i) as C;
-}
-
-function regenerateLines(o: Partial<OrganizedPieces>) {
-
 }
 
 function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
@@ -194,7 +191,7 @@ function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
 			end: -1,
 			undefineds: []
 		});
-	}, [typeutil.colors.NEUTRAL, typeutil.colors.WHITE, typeutil.colors.BLACK],
+	}, [colors.NEUTRAL, colors.WHITE, colors.BLACK],
 	gamefile.startSnapshot.existingTypes as RawType[]);
 
 	return state;

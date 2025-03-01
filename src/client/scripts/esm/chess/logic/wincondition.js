@@ -3,18 +3,20 @@
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
+import { pieceCountToDisableCheckmate } from '../config.js';
 // Import End
 
 // Type Definitions...
 
 /** @typedef {import('./gamefile.js').gamefile} gamefile */
-/** @typedef {import('../variants/gamerules.js'.GameRules) GameRules*/
+/** @typedef {import('../variants/gamerules.js'.GameRules)} GameRules*/
 
 "use strict";
 
@@ -67,7 +69,7 @@ function detectAllroyalscaptured(gamefile) {
 
 	// Are there any royal pieces remaining?
 	// Remember that whosTurn has already been flipped since the last move.
-	const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, typeutil.royals, gamefile.whosTurn);
+	const royalCount = boardutil.getRoyalCoordsOfColor(gamefile.ourPieces, gamefile.whosTurn);
 
 	if (royalCount === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -81,7 +83,7 @@ function detectAllpiecescaptured(gamefile) {
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
-	const count = gamefileutility.getPieceCountOfColor(gamefile, gamefile.whosTurn);
+	const count = boardutil.getPieceCountOfColor(gamefile.ourPieces, gamefile.whosTurn);
 
 	if (count === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -103,7 +105,7 @@ function detectKoth(gamefile) {
 	for (let i = 0; i < kothCenterSquares.length; i++) {
 		const thisCenterSquare = kothCenterSquares[i];
 
-		const typeAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisCenterSquare);
+		const typeAtSquare = boardutil.getTypeFromCoords(gamefile.ourPieces, thisCenterSquare);
 		if (!typeAtSquare) continue;
 		if (typeAtSquare.startsWith('kings')) {
 			kingInCenter = true;
@@ -159,7 +161,7 @@ function wasLastMoveARoyalCapture(gamefile) {
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
 function isCheckmateCompatibleWithGame(gamefile) {
-	if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
+	if (gamefile.startSnapshot.pieceCount >= pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (organizedlines.areColinearSlidesPresentInGame(gamefile)) return false; // Logic surrounding making opening discovered attacks illegal is a nightmare.
 	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.

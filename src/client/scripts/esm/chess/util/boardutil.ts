@@ -149,7 +149,6 @@ function getTypeFromCoords(o: OrganizedPieces, coords: Coords): number | undefin
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
-	if (isIdxUndefinedPiece(o, idx)) return undefined;
 	return o.types[idx];
 }
 
@@ -157,7 +156,6 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
-	if (isIdxUndefinedPiece(o, idx)) return undefined;
 	return {
 		type: o.types[idx],
 		coords: coords,
@@ -170,6 +168,13 @@ function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
 		type: o.types[idx],
 		coords: getCoordsFromIdx(o, idx),
 	};
+}
+
+/**
+ * Whether a piece is on the provided coords
+ */
+function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
+	return o.coords.has(coordutil.getKeyFromCoords(coords));
 }
 
 export type {
@@ -187,6 +192,7 @@ export default {
 	getRoyalCoordsOfColor,
 
 	isIdxUndefinedPiece,
+	isPieceOnCoords,
 	getTypeFromCoords,
 	getPieceFromCoords,
 	getPieceFromIdx,

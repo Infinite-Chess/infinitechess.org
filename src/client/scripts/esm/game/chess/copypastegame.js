@@ -10,7 +10,6 @@ import localstorage from '../../util/localstorage.js';
 import enginegame from '../misc/enginegame.js';
 import formatconverter from '../../chess/logic/formatconverter.js';
 import backcompatible from '../../chess/logic/backcompatible.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
 import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
@@ -18,6 +17,7 @@ import winconutil from '../../chess/util/winconutil.js';
 import guinavigation from '../gui/guinavigation.js';
 import gameslot from './gameslot.js';
 import gameloader from './gameloader.js';
+import { pieceCountToDisableCheckmate } from '../../chess/config.js';
 // Import End
 
 "use strict";
@@ -296,9 +296,9 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	gameloader.openGameinfoBarAndConcludeGameIfOver(gamefile.metadata);
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;
+	const tooManyPieces = gamefile.startSnapshot.pieceCount >= pieceCountToDisableCheckmate;
 	if (tooManyPieces) { // TOO MANY pieces!
-		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${gamefileutility.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
+		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
 	} else { // Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
 		statustext.showStatus(`${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`);
 	}

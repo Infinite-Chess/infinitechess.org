@@ -20,6 +20,7 @@ import state from "./state.js";
 import gamefile from "./gamefile.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
+import { colors, rawTypes } from "../config.js";
 
 
 // Legal Move Calculation -----------------------------------------------------------------
@@ -48,7 +49,7 @@ function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
 function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: TeamColor, distance: 1 | 10): Coords[] {
 
 	// White and black pawns move and capture in opposite directions.
-	const yDistanceParity = color === typeutil.colors.WHITE ? distance : -distance;
+	const yDistanceParity = color === colors.WHITE ? distance : -distance;
 	const individualMoves: Coords[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -85,7 +86,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: TeamColor, di
 		if (color === colorOfPiece) continue; // Same color, don't add the capture
 
 		// Make sure it isn't a void
-		if (pieceAtCoords.type === typeutil.rawTypes.VOID) continue;
+		if (typeutil.getRawType(pieceAtCoords.type) === rawTypes.VOID) continue;
 
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Add the capture
 	}
@@ -106,12 +107,12 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: TeamColor, di
 function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: TeamColor, distance: number): void {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = gamefileutility.getPieceTypeAtCoords(gamefile, gamefile.enpassant.pawn)!;
-	if (colorutil.getPieceColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
+	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.ourPieces, gamefile.enpassant.pawn)!;
+	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== distance) return; // Not immediately left or right of us
-	const yDistanceParity = color === typeutil.colors.WHITE ? distance : -distance;
+	const yDistanceParity = color === colors.WHITE ? distance : -distance;
 	if (coords[1] + yDistanceParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!

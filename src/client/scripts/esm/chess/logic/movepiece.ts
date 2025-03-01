@@ -141,7 +141,7 @@ interface Move extends MoveDraft {
  * and queueing its gamefile StateChanges.
  */
 function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
-	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.ourPieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
 	// Construct the full Move object
@@ -353,7 +353,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
-	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.ourPieces, moveDraft.startCoords);
 	if (!piece) {
 		console.error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
 		return; // No piece on start coordinates, can't calculate Move, because it's illegal

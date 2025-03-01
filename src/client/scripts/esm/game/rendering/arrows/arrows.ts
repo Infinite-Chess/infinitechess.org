@@ -12,7 +12,7 @@
 import type { Coords } from '../../../chess/util/coordutil.js';
 import type { Change, Piece } from '../../../chess/logic/boardchanges.js';
 import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math.js';
-import type { LineKey } from '../../../chess/logic/organizedlines.js';
+import type { LineKey } from '../../../chess/logic/organizedpieces.js';
 import type { AttributeInfoInstanced } from '../buffermodel.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
@@ -30,7 +30,7 @@ import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
+import boardutil from '../../../chess/util/boardutil.js';
 import preferences from '../../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
@@ -759,7 +759,7 @@ function executeArrowShifts() {
 		// Delete the piece from the start location, and add it at the end location
 
 		// This may be defined if the animations haven't been reset and we're viewing different moves.
-		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start) : undefined;
+		const originalPiece: Piece | undefined = shift.start !== undefined ? boardutil.getPieceFromCoords(gamefile.ourPieces, shift.start) : undefined;
 
 		// This matches the original piece's index, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
 		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end } as Piece : undefined;
@@ -781,7 +781,7 @@ function executeArrowShifts() {
 		 * AND an arrow hasn't deleted it,
 		 * DON'T queue adding the piece.
 		 */
-		if (gamefileutility.isPieceOnCoords(gamefile, piece.coords)
+	if (boardutil.isPieceOnCoords(gamefile.ourPieces, piece.coords)
 			&& !changes.some(change => change.action === 'delete' && coordutil.areCoordsEqual_noValidate(change.piece.coords, piece.coords))) return;
 		// Also, if another arrow is adding a piece on these exact coords, leave it be.
 		// An example where this can happen is castling, when the animated rook and king are right on top of each other.

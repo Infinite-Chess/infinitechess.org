@@ -13,6 +13,7 @@ import pingManager from '../../util/pingManager.js';
 import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';
+import { TeamColor } from '../util/typeutil.js';
 
 
 // Type Definitions ---------------------------------------------------------------
@@ -74,7 +75,7 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 	// Edit the closk if we're re-loading an online game
 	if (currentTimes) edit(gamefile, currentTimes);
 	else { // No current time specified, start both players with the default.
-		gamefile.gameRules.turnOrder.forEach((color: string) => {
+		gamefile.gameRules.turnOrder.forEach((color: TeamColor) => {
 			clocks.currentTime[color] = clocks.startTime.millis;
 		});
 	}

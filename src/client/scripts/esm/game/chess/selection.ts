@@ -362,7 +362,7 @@ function reselectPiece() {
 	const gamefile = gameslot.getGamefile()!;
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
-	const pieceTypeOnCoords = gamefileutility.getPieceTypeAtCoords(gamefile, pieceSelected.coords);
+	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, pieceSelected.coords);
 	if (pieceTypeOnCoords !== pieceSelected.type) { // It either moved, or was captured
 		unselectPiece(); // Can't be reselected, unselect it instead.
 		return;
@@ -371,7 +371,7 @@ function reselectPiece() {
 	if (gamefileutility.isGameOver(gamefile)) return; // Don't reselect, game is over
 
 	// Reselect! Recalc its legal moves, and recolor.
-	const pieceToReselect = gamefileutility.getPieceFromTypeAndCoords(gamefile, pieceSelected.type, pieceSelected.coords);
+	const pieceToReselect = boardutil.getPieceFromCoords(gamefile.ourPieces, pieceSelected.coords)!;
 	initSelectedPieceInfo(gamefile, pieceToReselect);
 }
 

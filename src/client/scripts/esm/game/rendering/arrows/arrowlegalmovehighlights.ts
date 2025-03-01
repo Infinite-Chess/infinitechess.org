@@ -16,7 +16,6 @@ import arrows from "./arrows.js";
 import colorutil from "../../../chess/util/colorutil.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
-import gamefileutility from "../../../chess/util/gamefileutility.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
@@ -106,7 +105,7 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
-	const thisRider = gamefileutility.getPieceAtCoords(gamefile, piece.coords)!;
+	const thisRider = boardutil.getPieceFromCoords(gamefile.ourPieces, piece.coords)!;
 	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
 
 	// Calculate the mesh...

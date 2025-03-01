@@ -69,7 +69,7 @@ import perspective from "../rendering/perspective.js";
 import animation from "../rendering/animation.js";
 
 import events from "../../chess/logic/events.js";
-
+import { pieceCountToDisableCheckmate } from "../../chess/config.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -259,7 +259,7 @@ function loadLogical(loadOptions: LoadOptions) {
 	const lineCountToDisableArrows = 16;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
+	if (newGamefile.startSnapshot.pieceCount >= pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
 	} else if (newGamefile.ourPieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)

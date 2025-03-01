@@ -1,7 +1,7 @@
 
 /** This script stores the default methods for EXECUTING special moves */
 
-import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import state from './state.js';
 
@@ -47,9 +47,9 @@ function kings(gamefile, piece, move) {
 
 	// Move the rook to new square
 
-	const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
+	const pieceToCastleWith = boardutil.getPieceFromCoords(gamefile.ourPieces, specialTag.coord);
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
-	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, false, landSquare); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith.coords, pieceToCastleWith.type, landSquare); // Make normal move
 
 	// Special move was executed!
 	// There is no captured piece with castling
@@ -68,7 +68,7 @@ function pawns(gamefile, piece, move) {
 
 	const captureCoords = enpassantTag ? gamefile.enpassant.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+	const capturedPiece = boardchanges.getPieceAtCoords(gamefile, captureCoords);
 
 	// Delete the piece captured
 
@@ -81,9 +81,9 @@ function pawns(gamefile, piece, move) {
 
 	if (promotionTag) {
 		// Delete original pawn
-		boardchanges.queueDeletePiece(moveChanges, { type: piece.type, coords: move.endCoords, index: piece.index }, true);
+		boardchanges.queueDeletePiece(moveChanges, true, move.endCoords, piece.type);
 
-		boardchanges.queueAddPiece(moveChanges, { type: promotionTag, coords: move.endCoords, index: undefined });
+		boardchanges.queueAddPiece(moveChanges, move.endCoords, promotionTag);
 	}
 
 	// Special move was executed!
@@ -92,7 +92,7 @@ function pawns(gamefile, piece, move) {
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
 function roses(gamefile, piece, move) {
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, move.endCoords);
 
 	// Delete the piece captured
 	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece, move.path);

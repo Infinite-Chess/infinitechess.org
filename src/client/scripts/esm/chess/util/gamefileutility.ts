@@ -22,16 +22,6 @@ import math from '../../util/math.js';
 import wincondition from '../logic/wincondition.js'; 
 // Import End
 
-
-
-
-/**
- * Whether a piece is on the provided coords
- */
-function isPieceOnCoords(gamefile: gamefile, coords: Coords): boolean {
-	return gamefile.ourPieces.coords.has(coordutil.getKeyFromCoords(coords));
-}
-
 /**
  * Returns true if the game is over (gameConclusion is truthy).
  * If the game is over, it will be a string. If not, it will be false.
@@ -125,8 +115,6 @@ function initStartingAreaBox(gamefile: gamefile) {
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 export default {
-	pieceCountToDisableCheckmate, // Move to config file?
-	isPieceOnCoords,
 	isGameOver,
 	isCurrentViewedPositionInCheck,
 	getCheckCoordsOfCurrentViewedPosition,
