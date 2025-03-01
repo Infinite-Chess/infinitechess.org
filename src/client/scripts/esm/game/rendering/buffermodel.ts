@@ -27,7 +27,7 @@ import camera from './camera.js';
 
 /** Any kind of array, whether number[], or typed array, that may be passed to use as vertex data for a model. */
 type InputArray =
-	number[] // Converted to Float32Array
+	number[] // Converted to Float32Array, coming from float64s, with max safe integer: 9,007,199,254,740,991    Max value: 1.8e+308
 	| TypedArray
 
 /** All signed type arrays compatible with WebGL, that can be used as vertex data. */
