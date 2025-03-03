@@ -34,6 +34,9 @@ function closeListeners() {
 
 function callback_ChangeTool(e: Event) {
 	const tool = (e.target as HTMLElement).dataset['tool']!;
+	if (tool === "save") return boardeditor.save();
+	if (tool === "color") return boardeditor.toggleColor();
+	if (tool === "clear") return boardeditor.clearAll();
 	boardeditor.setTool(tool);
 }
 

@@ -9,6 +9,7 @@ import colorutil from '../util/colorutil.js';
 import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
 import organizedlines from './organizedlines.js';
+import typeutil from '../util/typeutil.js';
 
 /** 
  * Type Definitions 
@@ -34,7 +35,8 @@ function setupVariant(gamefile, metadata, options) {
 
 	gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
 
-	initExistingTypes(gamefile);
+	if (gamefile.initAllTypes) initAllTypes(gamefile);
+	else initExistingTypes(gamefile);
 	initPieceMovesets(gamefile, metadata);
 	initSlidingMoves(gamefile);
 }
@@ -57,6 +59,10 @@ function initExistingTypes(gamefile) {
 	}
 
 	gamefile.startSnapshot.existingTypes = [...rawtypes];
+}
+
+function initAllTypes(gamefile) {
+	gamefile.startSnapshot.existingTypes = [].concat(typeutil.types, typeutil.neutralTypes);
 }
 
 /**

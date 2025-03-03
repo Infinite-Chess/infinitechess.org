@@ -225,6 +225,7 @@ function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
 function isTypeATypeWereAppendingUndefineds(gamefile: gamefile, type: string): boolean {
+	if (gamefile.initAllTypes) return true; // When using board editor any type may be added.
 	if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
 	const color = colorutil.getPieceColorFromType(type);

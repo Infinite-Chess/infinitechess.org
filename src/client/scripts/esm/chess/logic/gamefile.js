@@ -36,9 +36,10 @@ import movesets from './movesets.js';
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
  * @param {ClockValues} [options.clockValues] - Any already existing clock values for the gamefile
+ * @param {boolean} [options.initAllTypes] - Initializes all piece types so they can be added later
  * @returns {Object} The gamefile
  */
-function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues } = {}) {
+function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues, initAllTypes } = {}) {
 
 	// Everything for JSDoc stuff...
 
@@ -216,7 +217,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		untimed: undefined,
 	};
 	// JSDoc stuff over...
-
+	
+	/** Initialize all piece types regardless of whether they are in the starting position.
+	 * This allows arbitrary pieces to be added.  @type {boolean}*/
+	this.initAllTypes = initAllTypes;
+	
 	// Init things related to the variant, and the startSnapshot of the position
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
 	/** The number of half-moves played since the last capture or pawn push. */

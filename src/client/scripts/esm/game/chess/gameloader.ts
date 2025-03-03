@@ -181,7 +181,7 @@ async function startEngineGame(options: {
 
 async function startEditor() {
 	const metadata : MetaData = {
-		Variant: "EditMode",
+		Variant: "CoaIP",
 		TimeControl: '-',
 		Event: `Position created using ingame board editor!`,
 		Site: 'https://www.infinitechess.org/',
@@ -194,6 +194,7 @@ async function startEditor() {
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
+		additional: { initAllTypes: true },
 	});
 	typeOfGameWeAreIn = 'editor';
 	boardeditor.initBoardEditor();

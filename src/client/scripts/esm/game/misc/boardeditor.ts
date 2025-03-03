@@ -1,3 +1,8 @@
+/**
+ * Currently this script contains all the non-gui logic for the board editor.
+ * It will probably need to be split into multiple files as it is already large
+ * and isn't finished yet.
+ */
 
 import boardchanges from '../../chess/logic/boardchanges.js';
 import { meshChanges } from '../chess/graphicalchanges.js';
@@ -35,6 +40,8 @@ type Edit = {
 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
+
+const validTools = [...typeutil.types, ...typeutil.neutralTypes, 'eraser', 'special']
 
 let currentColor = "white";
 let currentTool: string = "queens";
@@ -161,11 +168,13 @@ function update() {
 	thisEdit!.stateChanges.push(...edit.stateChanges);
 }
 
+/**
+ * Change the tool being used.
+ * `tool` is a piece type without color extension, 'special' or 'eraser'.
+ */
 function setTool(tool: string) {
 	if (!inBoardEditor) return;
-	if (tool === "save") return save();
-	if (tool === "color") return toggleColor();
-	if (tool === "clear") return clearAll();
+	if (!validTools.includes(tool)) throw Error(`Invalid editor tool: ${tool}`);
 	currentTool = tool;
 }
 
@@ -174,7 +183,7 @@ function toggleColor() {
 }
 
 function clearAll() {
-	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.")
+	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.");
 	const gamefile = gameslot.getGamefile()!;
 	const edit: Edit = { changes: [], stateChanges: [] }
 	gamefileutility.forEachPieceInGame(gamefile, (type, coords, gamefile) => {
@@ -254,4 +263,5 @@ export default {
 	undo,
 	redo,
 	save,
+	clearAll,
 }

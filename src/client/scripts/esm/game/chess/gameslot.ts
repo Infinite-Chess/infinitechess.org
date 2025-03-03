@@ -94,6 +94,8 @@ interface Additional {
 	gameConclusion?: string | false,
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues,
+	/** If true all piece types will be initialized even if they aren't in the position. This allows types not present in the position to be added by the board editor. */
+	initAllTypes?: boolean,
 }
 
 /**
