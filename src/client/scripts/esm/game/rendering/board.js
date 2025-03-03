@@ -200,8 +200,8 @@ function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
 	const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
 	const boardPos = movement.getBoardPos();
-	const tileXFloat = n * x / tileWidthPixels_Physical + boardPos[0];
-	const tileYFloat = n * y / tileWidthPixels_Physical + boardPos[1];
+	const tileXFloat = n * x / tileWidthPixels_Virtual + boardPos[0];
+	const tileYFloat = n * y / tileWidthPixels_Virtual + boardPos[1];
 
 	const tile_Float = [tileXFloat, tileYFloat];
 	const tile_Int = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
