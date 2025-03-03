@@ -201,7 +201,7 @@ async function startEditor() {
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
-		additional: { initAllTypes: true },
+		additional: { editor: true },
 	});
 	typeOfGameWeAreIn = 'editor';
 	boardeditor.initBoardEditor();

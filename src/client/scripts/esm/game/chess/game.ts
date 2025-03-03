@@ -29,6 +29,7 @@ import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import voids from '../rendering/voids.js';
+import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -65,9 +66,6 @@ import camera from '../rendering/camera.js';
 import copypastegame from './copypastegame.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
-
-import boardeditor from '../misc/boardeditor.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -119,7 +117,6 @@ function testInGameDebugToggles(gamefile: gamefile) {
 	if (input.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (input.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
-	if (input.isKeyDown('7')) specialrighthighlights.toggleDebug();
 }
 
 function updateSelectionScreen() {

@@ -18,7 +18,6 @@ import specialrighthighlights from "./specialrighthighlights.js";
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
-import specialrighthighlights from "./specialrighthighlights.js";
 
 
 /**
