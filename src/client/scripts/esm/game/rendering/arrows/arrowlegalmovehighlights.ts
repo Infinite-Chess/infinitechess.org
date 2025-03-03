@@ -21,10 +21,9 @@ import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
 import legalmovehighlights from "../highlights/legalmovehighlights.js";
 import moveutil from "../../../chess/util/moveutil.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import movement from "../movement.js";
-// @ts-ignore
-import options from "../options.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 
@@ -115,7 +114,7 @@ function onPieceIndicatorHover(piece: Piece) {
 	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
-	const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
+	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 
 	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, color);
 	// Store both these objects inside piecesHoveredOver

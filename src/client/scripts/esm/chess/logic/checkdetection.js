@@ -23,6 +23,7 @@ import moveutil from '../util/moveutil.js';
  * @typedef {import('../util/coordutil.js').Coords} Coords
  * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
  * @typedef {import('./movepiece.js').path} path
+ * @typedef {import('./gamefile.js').gamefile} gamefile
  */
 
 "use strict";
@@ -151,7 +152,7 @@ function doesSpecialAttackSquare(gamefile, coords, color, attackers) {
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
 
-			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) return false; // This special piece can't make the capture THIS time... oof
+			if (!legalmoves.checkIfMoveLegal(specialPiecesLegalMoves, actualSquare, coords)) continue; // This special piece can't make the capture THIS time... oof
 
 			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
 
@@ -385,7 +386,7 @@ function addressExistingChecks(gamefile, legalMoves, royalCoords, selectedPieceC
 	 * 2. Individual check, with 3+ path length
 	 */
     
-	if (attacker.slidingCheck) appendBlockingMoves(royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
+	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
 	else appendPathBlockingMoves(attacker.path, legalMoves, selectedPieceCoords);
 
 	delete legalMoves.sliding; // Erase all sliding moves
@@ -517,12 +518,13 @@ function removeSlidingMovesThatOpenDiscovered(gamefile, moves, kingCoords, piece
 /**
  * Appends legal blocking moves to the provided moves object if the piece
  * is able to get between squares 1 & 2.
+ * @param {gamefile} gamefile
  * @param {Coords} square1 - `[x,y]`
  * @param {Coords} square2 - `[x,y]`
  * @param {LegalMoves} moves - The legal moves object of the piece selected, to see if it is able to block between squares 1 & 2
  * @param {Coords} coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  */
-function appendBlockingMoves(square1, square2, moves, coords) { // coords is of the selected piece
+function appendBlockingMoves(gamefile, square1, square2, moves, coords) { // coords is of the selected piece
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. @type {BoundingBox} */
 	const box = {
 		left: Math.min(square1[0],square2[0]),
@@ -544,6 +546,8 @@ function appendBlockingMoves(square1, square2, moves, coords) { // coords is of 
 		if (!coordutil.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
 		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
 		if (coordutil.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
+		// Don't add the move if it's already in the list. This can happen with colinear lines, since different slide direction can have the same exact vector, and thus blocking point.
+		if (gamefile.startSnapshot.colinearsPresent && moves.individual.some(move => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
 
 		// Can our piece legally move there?
 		if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!

@@ -171,7 +171,6 @@ export default {
 	closeEngineGame,
 	areWeColor,
 	submitMove,
-	makeEngineMove,
 	onGameConclude
 };
 

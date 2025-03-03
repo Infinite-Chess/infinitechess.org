@@ -89,9 +89,7 @@ function selectTheme(event) {
 	updateThemeSelectedStyling();
 	
 	// Dispatch a custom event for theme change so that any game code present can pick it up.
-	const detail = selectedTheme;
-	const themeChangeEvent = new CustomEvent('theme-change', { detail });
-	document.dispatchEvent(themeChangeEvent);
+	document.dispatchEvent(new Event('theme-change'));
 }
 /** Outlines in black the current theme selection */
 function updateThemeSelectedStyling() {

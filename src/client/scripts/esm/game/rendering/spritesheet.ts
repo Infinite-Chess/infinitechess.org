@@ -47,8 +47,8 @@ let spritesheetData: {
 	texLocs: { [type: string]: Coords }
 } | undefined;
 
-/** Piece types that don't need, nor have, an SVG */
-const typesThatDontNeedAnSVG = ['voids'];
+/** Piece types that don't have an SVG */
+const typesWithoutSVG = ['voids'];
 
 
 // Functions ---------------------------------------------------------------------------
@@ -66,6 +66,7 @@ function getSpritesheetDataPieceWidth() {
 
 function getSpritesheetDataTexLocation(type: string): Coords {
 	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
+	if (!spritesheetData!.texLocs[type]) throw Error("No texture location for piece type: " + type);
 	return spritesheetData!.texLocs[type]!;
 }
 
@@ -75,7 +76,8 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	/** All piece types in the game. */
 	let existingTypes: string[] = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes); // ['pawns','obstacles','voids', ...]
 	// Remove the pieces that don't need/have an SVG, such as VOIDS
-	existingTypes = existingTypes.filter(type => !typesThatDontNeedAnSVG.includes(type)); // ['pawns','obstacles', ...]
+	existingTypes = existingTypes.filter(type => !typesWithoutSVG.includes(type)); // ['pawns','obstacles', ...]
+	// console.log('Existing types in game to construct spritesheet:', existingTypes);
 
 	/** Makes all the types in the game singular instead of plural */
 	const typesNeeded = existingTypes.map(type => type.slice(0, -1)); // Remove the "s" at the end => ['pawn','obstacle', ...]
@@ -112,6 +114,7 @@ function deleteSpritesheet() {
 
 
 export default {
+	typesWithoutSVG,
 	initSpritesheetForGame,
 	getSpritesheet,
 	getSpritesheetDataPieceWidth,

@@ -12,8 +12,6 @@ import gamefileutility from '../util/gamefileutility.js';
 import pingManager from '../../util/pingManager.js';
 import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 // @ts-ignore
-import options from '../../game/rendering/options.js';
-// @ts-ignore
 import clockutil from '../util/clockutil.js';
 
 

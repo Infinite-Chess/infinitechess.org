@@ -30,6 +30,8 @@ import frametracker from '../frametracker.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
+import gamefileutility from '../../../chess/util/gamefileutility.js';
+import preferences from '../../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -43,12 +45,9 @@ import transition from '../transition.js';
 // @ts-ignore
 import movement from '../movement.js';
 // @ts-ignore
-import options from '../options.js';
-// @ts-ignore
 import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -162,7 +161,7 @@ const paddingBetwAdjacentPictures: number = 0.35;
 /** Opacity of the mini images of the pieces and arrows. */
 const opacity: number = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
-const renderZoomLimitVirtualPixels: number = 10; // virtual pixels. Default: 14
+const renderZoomLimitVirtualPixels: number = 12; // virtual pixels. Default: 20
 
 /** The distance in perspective mode to render the arrow indicators from the camera.
  * We need this because there is no normal edge of the screen like in 2D mode. */
@@ -745,13 +744,14 @@ function executeArrowShifts() {
 
 		// Delete the piece from the start location, and add it at the end location
 
-		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start)! : undefined;
+		// This may be defined if the animations haven't been reset and we're viewing different moves.
+		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start) : undefined;
 
 		// This matches the original piece's index, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
 		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end } as Piece : undefined;
 
 		// Do the delete action first, so that organized piece lists have an undefined placeholder for the proceeding addition
-		if (shift.start !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
+		if (originalPiece !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
 		// Add a safety net to prevent adding a piece that is already on the board.
 		// This can happen when the current animation position of a piece is EXACTLY over an existing piece.
 		if (shift.end !== undefined) queueAddPieceIfNoneAddedOnCoords(addedPiece!);
@@ -957,7 +957,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
-	const { r, g, b } = options.getColorOfType(arrow.piece.type);
+	const { r, g, b } = preferences.getTintColorOfType(arrow.piece.type);
 	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
 
 	// Opacity changing with distance

@@ -14,11 +14,6 @@ import type gamefile from "../../chess/logic/gamefile.js";
 import animation from "../rendering/animation.js";
 // @ts-ignore
 import piecesmodel from "../rendering/piecesmodel.js";
-// @ts-ignore
-import organizedlines from "../../chess/logic/organizedlines.js";
-// @ts-ignore
-import options from "../rendering/options.js";
-// @ts-ignore
 import voids from "../rendering/voids.js";
 
 
@@ -75,40 +70,41 @@ const animatableChanges: ChangeApplication<animationFunc> = {
 function addMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.piece.type === 'voidsN') return voids.regenModel(gamefile);
 	if (gamefile.mesh.model === undefined) return; // Mesh isn't generated yet. Don't make this graphical change.
-	piecesmodel.overwritebufferdata(gamefile, change['piece'], change['piece'].coords, change['piece'].type);
 
-	// Do we need to add more undefineds?
-	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-	if (organizedlines.areWeShortOnUndefineds(gamefile)) {
-		organizedlines.addMoreUndefineds(gamefile, { log: true });
-		piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
-	}
+	if (change.piece.type.startsWith('voids')) voids.overwritebufferdata(gamefile, change.piece);
+	else piecesmodel.overwritebufferdata(gamefile, change.piece, change.piece.coords, change.piece.type);
 }
 
 function deleteMeshPiece(gamefile: gamefile, change: Change) {
-	if (change.piece.type === 'voidsN') return voids.regenModel(gamefile);
-	piecesmodel.deletebufferdata(gamefile, change.piece);
+	if (change.piece.type.startsWith('voids')) voids.deletebufferdata(gamefile, change.piece);
+	else piecesmodel.deletebufferdata(gamefile, change.piece);
 }
 
 function moveMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
-	piecesmodel.movebufferdata(gamefile, change['piece'], change.endCoords);
+
+	if (change.piece.type.startsWith('voids')) voids.overwritebufferdata(gamefile, { index: change.piece.index, coords: change.endCoords });
+	else piecesmodel.movebufferdata(gamefile, change.piece, change.endCoords);
 }
 
 function returnMeshPiece(gamefile: gamefile, change: Change) {
-	piecesmodel.movebufferdata(gamefile, change['piece'], change.piece.coords);
+	if (change.piece.type.startsWith('voids')) voids.overwritebufferdata(gamefile, change.piece);
+	else piecesmodel.movebufferdata(gamefile, change.piece, change.piece.coords);
 }
 
 function captureMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw Error(`captureMeshPiece called with non-capture action: ${change.action}`);
-	piecesmodel.deletebufferdata(gamefile, change.capturedPiece);
+
+	if (change.capturedPiece.type.startsWith('voids')) voids.deletebufferdata(gamefile, change.capturedPiece);
+	else piecesmodel.deletebufferdata(gamefile, change.capturedPiece);
 	moveMeshPiece(gamefile, change);
 }
 
 function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw Error(`uncaptureMeshPiece called with non-capture action: ${change.action}`);
+
 	returnMeshPiece(gamefile, change);
-	addMeshPiece(gamefile, { action: "add", main: change.main, piece: change.capturedPiece });
+	addMeshPiece(gamefile, { action: 'add', main: change.main, piece: change.capturedPiece });
 }
 
 
@@ -118,13 +114,13 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 function animateMove(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move') throw Error(`animateMove called with non-move action: ${change.action}`);
 	const waypoints = change.path ?? [change.piece.coords, change.endCoords];
-	animation.animatePiece(change['piece'].type, waypoints, undefined, instant, clearanimations);
+	animation.animatePiece(change.piece.type, waypoints, undefined, instant, clearanimations);
 }
 
 function animateReturn(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`animateReturn called with non-move action: ${change.action}`);
-	const waypoints = change.path?.slice().reverse() ?? [change['endCoords'], change['piece'].coords]; // slice() required because reverse() is mutating
-	animation.animatePiece(change['piece'].type, waypoints, undefined, instant, clearanimations);
+	const waypoints = change.path?.slice().reverse() ?? [change['endCoords'], change.piece.coords]; // slice() required because reverse() is mutating
+	animation.animatePiece(change.piece.type, waypoints, undefined, instant, clearanimations);
 }
 
 function animateCapture(change: Change, instant: boolean, clearanimations: boolean) {

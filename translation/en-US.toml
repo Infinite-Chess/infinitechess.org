@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "36"
+version = "41"
 maintainer = "Naviary"
 
 [header]
@@ -242,7 +242,8 @@ Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
 Omega_Fourth = "Showcase: Omega^4"
-5D_Chess = "5D Chess"
+4x4x4x4_Chess = "4×4×4×4 Chess"
+8x8x8x8_Chess = "8×8×8×8 Chess"
 no_clock = "No Clock"
 clock = "Clock"
 minutes = "m"
@@ -353,7 +354,6 @@ on = "On"
 off = "Off"
 icon_rendering_off = "Toggled off icon rendering."
 icon_rendering_on = "Toggled on icon rendering."
-toggled_edit = "Toggled Edit Mode:"
 perspective = "Perspective"
 perspective_mode_on_desktop = "Perspective mode is available on desktop!"
 movement_tutorial = "WASD to move. Space & shift to zoom."

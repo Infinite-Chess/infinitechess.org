@@ -9,13 +9,13 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
-import movesets from './movesets.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
 /** @typedef {import('./movepiece.js').Move} Move */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
+/** @typedef {import('../../game/rendering/buffermodel.js').BufferModelInstanced} BufferModelInstanced */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
@@ -36,10 +36,10 @@ import movesets from './movesets.js';
  * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
  * @param {ClockValues} [options.clockValues] - Any already existing clock values for the gamefile
- * @param {boolean} [options.initAllTypes] - Initializes all piece types so they can be added later
+ * @param {true} [options.editor] - Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that!
  * @returns {Object} The gamefile
  */
-function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues, initAllTypes } = {}) {
+function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockValues, editor } = {}) {
 
 	// Everything for JSDoc stuff...
 
@@ -73,6 +73,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** Whether hippogonal lines, or greater, are present in the gamefile.
 		 * True if there are knightriders, or greater, riders. @type {boolean} */
 		hippogonalsPresent: undefined,
+		/** Whether colinear lines are present in the gamefile.
+		 * (e.g. [1,0] and [2,0] are colinear) @type {boolean} */
+		colinearsPresent: undefined,
 	};
     
 	/** @type {GameRules} */
@@ -160,12 +163,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** The object that contains the buffer model to render the voids */
 	this.voidMesh = {
 		/** High precision Float64Array for performing arithmetic. @type {Float64Array} */
-		data64: undefined,
-		/** Low precision Float32Array for passing into gpu. @type {Float32Array} */
-		data32: undefined,
+		instanceData64: undefined,
 		/** The buffer model of the void squares. These are rendered separately
-         * from the pieces because we can simplify the mesh greatly.
-         * @type {BufferModel} */
+         * from the pieces because if they used a texture they would form gridlines.
+         * @type {BufferModelInstanced} */
 		model: undefined,
 	};
 
@@ -216,11 +217,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** True if the game is not timed. @type {Boolean}*/
 		untimed: undefined,
 	};
+	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
+	this.editor = editor;
+
 	// JSDoc stuff over...
-	
-	/** Initialize all piece types regardless of whether they are in the starting position.
-	 * This allows arbitrary pieces to be added.  @type {boolean}*/
-	this.initAllTypes = initAllTypes;
 	
 	// Init things related to the variant, and the startSnapshot of the position
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
@@ -254,6 +254,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.gameConclusion = false;
 
 	this.ourPieces = organizedlines.buildStateFromKeyList(this);
+	organizedlines.addMoreUndefineds(this); // Add several undefined placeholders in the lists, for when pieces are added (promotion, arrow addition, etc.)
+
 	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
 	gamefileutility.deleteUnusedMovesets(this);
 
@@ -267,8 +269,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;
 	else gamefileutility.doGameOverChecks(this);
-
-	organizedlines.addMoreUndefineds(this, { regenModel: false });
 
 	clock.set(this, clockValues);
 };

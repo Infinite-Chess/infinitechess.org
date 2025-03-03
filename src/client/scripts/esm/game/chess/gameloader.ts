@@ -110,6 +110,11 @@ async function startLocalGame(options: {
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
+		/**
+		 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
+		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
+		 */
+		// additional: { editor: true }
 	});
 	typeOfGameWeAreIn = 'local';
 
@@ -154,7 +159,9 @@ async function startEngineGame(options: {
 	youAreColor: 'white' | 'black',
 	currentEngine: 'engineCheckmatePractice', // Expand to a union type when more engines are added
 	engineConfig: EngineConfig,
-	variantOptions: VariantOptions
+	variantOptions: VariantOptions,
+	/** Whether the show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
+	showGameControlButtons?: true
 }) {
 	const metadata: MetaData = {
 		Event: options.Event,
@@ -176,7 +183,7 @@ async function startEngineGame(options: {
 	typeOfGameWeAreIn = 'engine';
 	enginegame.initEngineGame(options);
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, true);
+	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
 
 async function startEditor() {

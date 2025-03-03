@@ -13,6 +13,7 @@ import type { gamefile } from '../../chess/logic/gamefile.js';
 import spritesheet from './spritesheet.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import { createModel } from './buffermodel.js';
+import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -25,8 +26,6 @@ import piecesmodel from './piecesmodel.js';
 import voids from './voids.js';
 // @ts-ignore
 import board from './board.js';
-// @ts-ignore
-import options from './options.js';
 // @ts-ignore
 import shapes from './shapes.js';
 
@@ -90,7 +89,7 @@ function renderPieces(gamefile: gamefile) {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: string, coords: Coords) {
-	const color = options.getColorOfType(type); color.a *= ghostOpacity;
+	const color = preferences.getTintColorOfType(type); color.a *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();

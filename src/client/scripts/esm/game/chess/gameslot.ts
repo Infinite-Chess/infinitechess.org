@@ -9,7 +9,8 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
-import type { Coords, CoordsKey } from "../../chess/util/coordutil.js";
+import type { CoordsKey } from "../../chess/util/coordutil.js";
+import type { EnPassant } from "../../chess/logic/state.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
@@ -24,6 +25,8 @@ import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
+import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
+import clientEventDispatcher from "../../util/clientEventDispatcher.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -38,8 +41,6 @@ import copypastegame from "./copypastegame.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import piecesmodel from "../rendering/piecesmodel.js";
-// @ts-ignore
-import options from "../rendering/options.js";
 // @ts-ignore
 import selection from "./selection.js";
 // @ts-ignore
@@ -66,7 +67,6 @@ import guipause from "../gui/guipause.js";
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
-import { EnPassant } from "../../chess/logic/state.js";
 
 
 // Type Definitions ----------------------------------------------------------
@@ -94,8 +94,8 @@ interface Additional {
 	gameConclusion?: string | false,
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues,
-	/** If true all piece types will be initialized even if they aren't in the position. This allows types not present in the position to be added by the board editor. */
-	initAllTypes?: boolean,
+	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
+	editor?: true
 }
 
 /**
@@ -265,6 +265,8 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	// Immediately conclude the game if we loaded a game that's over already
 	loadedGamefile = newGamefile;
+
+	specialrighthighlights.regenModel();
 }
 
 /** Loads all of the graphical components of a game */
@@ -298,7 +300,17 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	}
 
 	// Regenerate the mesh of all the pieces.
-	await piecesmodel.regenModel(loadedGamefile!, options.getPieceRegenColorArgs());
+	await regenModel();
+
+	/**
+	 * Listen for the event that inserts more undefineds into the piece lists.
+	 * When that occurs, we need to regenerate the model.
+	 */
+	clientEventDispatcher.listen('inserted-undefineds', regenModel);
+}
+
+async function regenModel() {
+	await piecesmodel.regenModel(loadedGamefile!);
 }
 
 /** The canvas will no longer render the current game */
@@ -313,7 +325,7 @@ function unloadGame() {
 	selection.unselectPiece();
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
-	closeCopyPasteGameListeners();
+	removeCopyPasteGameListeners();
 
 	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
 	guiclock.resetClocks();
@@ -323,14 +335,18 @@ function unloadGame() {
 	// Re-enable them if the previous game turned them off due to too many pieces.
 	miniimage.enable();
 
-	// Stop the timer that animates the latest-played move when rejoining a game, after a short delay
+	// Stop the timer that (animates the latest-played move when rejoining a game after a short delay)
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
 	// Clear all animations from the last game
 	animation.clearAnimations();
 	
-	options.disableEM();
+	selection.disableEditMode();
+	specialrighthighlights.onGameClose();
+
+	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.
+	clientEventDispatcher.removeListener('inserted-undefineds', regenModel);
 }
 
 /**
@@ -351,7 +367,7 @@ function initCopyPastGameListeners() {
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
-function closeCopyPasteGameListeners() {
+function removeCopyPasteGameListeners() {
 	document.removeEventListener('copy', callbackCopy);
 	document.removeEventListener('paste', copypastegame.callbackPaste);
 }

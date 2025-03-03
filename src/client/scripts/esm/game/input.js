@@ -538,6 +538,7 @@ function removeMouseHeld(event) {
 function initListeners_Keyboard() {
 
 	document.addEventListener("keydown", (event) => {
+		// console.log("Key down event active element: ", document.activeElement);
 		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const key = event.key.toLowerCase();
 		keyDowns.push(key);

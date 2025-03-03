@@ -14,6 +14,7 @@ import highlightline from "./highlightline.js";
 import checkhighlight from "./checkhighlight.js";
 import { highlightLastMove } from "./lastmovehighlight.js";
 import legalmovehighlights from "./legalmovehighlights.js";
+import specialrighthighlights from "./specialrighthighlights.js";
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
@@ -36,7 +37,7 @@ function render(gamefile: gamefile) {
 	highlightLastMove(gamefile);
 	checkhighlight.render(gamefile);
 	legalmovehighlights.render();
-	specialrighthighlights.render();
+	specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
 }
 
 export default {

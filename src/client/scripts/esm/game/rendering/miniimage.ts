@@ -15,6 +15,7 @@ import gameslot from '../chess/gameslot.js';
 import { createModel, BufferModel } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
+import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -27,8 +28,6 @@ import bufferdata from './bufferdata.js';
 import transition from './transition.js';
 // @ts-ignore
 import movement from './movement.js';
-// @ts-ignore
-import options from './options.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
@@ -140,7 +139,7 @@ function genModel() {
 		const thesePieces = gamefile.ourPieces[pieceType];
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-		const { r, g, b } = options.getColorOfType(pieceType);
+		const { r, g, b } = preferences.getTintColorOfType(pieceType);
 
 		thesePieces.forEach((coords: Coords | undefined) => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
 	}, { ignoreVoids: true });
@@ -184,13 +183,13 @@ function genModel() {
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		let { r, g, b } = options.getColorOfType(a.type);
+		let { r, g, b } = preferences.getTintColorOfType(a.type);
 		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
 
 		// Animate the captured piece too, if there is one
 		if (!a.captured) return;
 		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
-		({ r, g, b } = options.getColorOfType(a.type));
+		({ r, g, b } = preferences.getTintColorOfType(a.type));
 		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
 	});
 

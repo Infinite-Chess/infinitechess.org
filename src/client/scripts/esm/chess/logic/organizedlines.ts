@@ -19,12 +19,15 @@ import type gamefile from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Piece } from './boardchanges.js';
 import type { Vec2 } from '../../util/math.js';
+import clientEventDispatcher from '../../util/clientEventDispatcher.js';
 
 
 
 // Amount of extra undefined pieces to store with each type array!
 // These placeholders are utilized when pieces are added or pawns promote!
 const extraUndefineds = 5; // After this many promotions, need to add more undefineds and recalc the model!
+/** {@link extraUndefineds}, but when in the board editor. */
+const extraUndefineds_Editor = 100;
 
 
 // Type Definitions ---------------------------------------------------------------------------------------
@@ -102,8 +105,6 @@ function initOrganizedPieceLists(gamefile: gamefile) {
 	gamefileutility.forEachPieceInGame(gamefile, organizePiece);
     
 	// console.log("Finished organizing lists!")
-
-	// We no longer initUndefineds() since that is done in the PooledArray contructor
 }
 
 function resetOrganizedLists(gamefile: gamefile) {
@@ -175,19 +176,11 @@ function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 }
 
 function areWeShortOnUndefineds(gamefile: gamefile) {
-
-	let weShort = false;
-	typeutil.forEachPieceType(areWeShort);
-
-	function areWeShort(listType: string) {
-		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
-
-		const list = gamefile.ourPieces[listType];
-		const undefinedCount = list.undefineds.length;
-		if (undefinedCount === 0) weShort = true;
+	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
+		if (getTypeUndefinedsBehavior(gamefile, key) === 0) continue;
+		if ((value as PooledArray<Coords>).undefineds.length === 0) return true;
 	}
-
-	return weShort;
+	return false;
 }
 
 /**
@@ -204,36 +197,41 @@ function areWeShortOnUndefineds(gamefile: gamefile) {
 function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 	if (log) console.log('Adding more placeholder undefined pieces.');
     
-	typeutil.forEachPieceType(add);
-
-	function add(listType: string) {
-		if (!isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
-
-		const list = gamefile.ourPieces[listType];
-		const undefinedCount = list.undefineds.length;
-		for (let i = undefinedCount; i < extraUndefineds; i++) list.addUndefineds();
+	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
+		const undefinedsBehavior = getTypeUndefinedsBehavior(gamefile, key);
+		if (undefinedsBehavior === 0) continue; // This piece does not need undefineds
+		const list = value as PooledArray<Coords>;
+		// In the board editor, the length of the list should be doubled every time we run out of undefined slots, with a minimum of 100.
+		const expectedUndefinedCount = gamefile.editor ? Math.max(extraUndefineds_Editor, (list.length - list.undefineds.length)) : extraUndefineds;
+		for (let i = list.undefineds.length; i < expectedUndefinedCount; i++) list.addUndefineds();
 	}
+
+	// piecesmodel.regenModel(gamefile);
+	/**
+	 * DISPATCH an event instead of calling piecesmodel.regenModel directly,
+	 * that way we don't tie up the game code as a dependancy.
+	 */
+	// console.log("Fired 'inserted-undefineds' event.");
+	clientEventDispatcher.dispatch('inserted-undefineds');
 }
 
 /**
- * Sees if the provided type is a type we need to append undefined
- * placeholders to the piece list of this type.
- * The mesh of all the pieces needs placeholders in case we
- * promote to a new piece.
- * @param {gamefile} gamefile - The gamefile
- * @param {string} type - The type of piece (e.g. "pawnsW")
- * @returns {boolean} *true* if we need to append placeholders for this type.
+ * Returns a number signifying the importance of this piece type needing undefineds placeholders in its type list.
+ * 
+ * 0 => Pieces of this type can not increase in count in this gamefile
+ * 1 => Can increase in count, but slowly (promotion)
+ * 2 => Can increase in count rapidly (board editor)
  */
-function isTypeATypeWereAppendingUndefineds(gamefile: gamefile, type: string): boolean {
-	if (gamefile.initAllTypes) return true; // When using board editor any type may be added.
-	if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
+function getTypeUndefinedsBehavior(gamefile: gamefile, type: string): 0 | 1 | 2 {
+	if (gamefile.editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
 
+	if (!gamefile.gameRules.promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const color = colorutil.getPieceColorFromType(type);
-
-	if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
-    
+	if (!gamefile.gameRules.promotionsAllowed[color]) return 0; // Eliminates neutral pieces.
 	const trimmedType = colorutil.trimColorExtensionFromType(type);
-	return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
+	if (!gamefile.gameRules.promotionsAllowed[color].includes(trimmedType)) return 0; // Eliminates all pieces that can't be promoted to
+
+	return 1; // Pieces of this type CAN be added to the game, but rarely (promotion).
 }
 
 /**
@@ -271,8 +269,10 @@ function getEmptyTypeState(gamefile: gamefile) {
 	const whiteExt = colorutil.getColorExtensionFromColor('white');
 	const blackExt = colorutil.getColorExtensionFromColor('black');
 	const neutralExt = colorutil.getColorExtensionFromColor('neutral');
-
-	for (const type of typesInGame) {
+	
+	// If in the board editor, EVERY type of piece can commonly be added, so we need both a list of, and undefineds, for every type of piece.
+	if (gamefile.editor) typeutil.forEachPieceType((type: string) => state[type] = new PooledArray());
+	else for (const type of typesInGame) {
 		if (neutralTypes.includes(type)) { 
 			state[type + neutralExt] = new PooledArray();
 		} else {
@@ -340,20 +340,18 @@ function getCFromKey(lineKey: LineKey): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(gamefile: gamefile): boolean {
-	const slidingPossible = gamefile.startSnapshot.slidingPossible; // [[1,1],[1,0]]
-
+function areColinearSlidesPresentInGame(slidingPossible: Vec2[]): boolean { // [[1,1], [1,0], ...]
 	// How to know if 2 lines are colinear?
 	// They will have the exact same slope!
 
 	// Iterate through each line, comparing its slope with every other line
 	for (let a = 0; a < slidingPossible.length - 1; a++) {
-		const line1 = slidingPossible[a]; // [dx,dy]
+		const line1 = slidingPossible[a]!; // [dx,dy]
 		const slope1 = line1[1] / line1[0]; // Rise/Run
 		const line1IsVertical = isNaN(slope1);
         
 		for (let b = a + 1; b < slidingPossible.length; b++) {
-			const line2 = slidingPossible[b]; // [dx,dy]
+			const line2 = slidingPossible[b]!; // [dx,dy]
 			const slope2 = line2[1] / line2[0]; // Rise/Run
 			const line2IsVertical = isNaN(slope2);
 

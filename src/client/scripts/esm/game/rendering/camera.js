@@ -24,7 +24,6 @@ import movement from './movement.js';
 import statustext from '../gui/statustext.js';
 import piecesmodel from './piecesmodel.js';
 import gameslot from '../chess/gameslot.js';
-import options from './options.js';
 // Import End
 
 /**
@@ -105,7 +104,6 @@ function toggleDebug() {
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	onPositionChange();
 	perspective.initCrosshairModel();
-	piecesmodel.regenModel(gameslot.getGamefile(), options.getPieceRegenColorArgs()); // This will regenerate the voids model as wireframe
 	statustext.showStatus(`Toggled camera debug: ${DEBUG}`);
 }
 

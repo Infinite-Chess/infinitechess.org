@@ -47,6 +47,8 @@ function setupVariant(gamefile, metadata, options) {
  * @param {gamefile} gamefile
  */
 function initExistingTypes(gamefile) {
+	if (gamefile.editor) return gamefile.startSnapshot.existingTypes = [...typeutil.types, ...typeutil.neutralTypes]; // Editor mode may add any available piece type to the board
+
 	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
     
 	// Makes sure all possible pieces are accounted for. even when they dont start with them
@@ -74,6 +76,7 @@ function initAllTypes(gamefile) {
 function initSlidingMoves(gamefile) {
 	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
 	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
+	gamefile.startSnapshot.colinearsPresent = organizedlines.areColinearSlidesPresentInGame(gamefile.startSnapshot.slidingPossible);
 }
 
 /**
