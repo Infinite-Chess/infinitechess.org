@@ -15,6 +15,7 @@ import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
 import math from '../../util/math.js';
 import variant from '../variants/variant.js';
+import checkresolver from './checkresolver.js';
 
 /** 
  * Type Definitions 
@@ -178,7 +179,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
-	if (!ignoreCheck) checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
+	if (!ignoreCheck) checkresolver.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
 
 	return moves;
 }
