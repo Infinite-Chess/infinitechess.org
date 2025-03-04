@@ -21,16 +21,16 @@ import draganimation from './dragging/draganimation.js';
 
 /** This script stores our board position and scale and controls our panning and zooming. */
 
-const panAccel_3D = 75; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 50
-const panAccel_2D = 145; // 2D mode: Deccelleration rate of panning.   Default: 100
-const panVelCap_2D = 22.0; // Hyptenuse cap of x & y speeds   Default: 11
-const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 11
+const panAccel_3D = 75; // Perspective mode: Acceleration/decceleartion rate of board velocity.   Default: 75
+const panAccel_2D = 145; // 2D mode: Deccelleration rate of panning.   Default: 145
+const panVelCap_2D = 22.0; // Hyptenuse cap of x & y speeds   Default: 22
+const panVelCap_3D = 16.0; // Hyptenuse cap of x & y speeds   Default: 16
 
 const scaleAccel_Desktop = 6.0; // Acceleration of board scaling   Default: 6
-const scaleAccel_Mobile = 14.0; // Acceleration of board scaling   Default: 6
-const scaleVelCap = 1.0; // Default: 1.0
-const maximumScale = 5.0;
-const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.03
+const scaleAccel_Mobile = 14.0; // Acceleration of board scaling   Default: 14
+const scaleVelCap = 1.0; // Default: 1
+const maximumScale = 5.0; // Default: 5
+const scrollScaleVel = 0.015; // Dampener multiplied to amount scroll-wheel has scrolled every frame.   Default: 0.015
 const scrollScaleVelCap = 2.5;
 
 // Camera position does not change, only the board position
@@ -195,7 +195,15 @@ function checkIfBoardDropped() {
 	const touchHeldsLength = input.getTouchHelds().length;
 	
 	const now = Date.now();
-	if (touchHeldsLength < 2 && boardPosFingerTwoGrabbed !== undefined) throwScale(now); // One finger has been released.
+	if (touchHeldsLength < 2 && boardPosFingerTwoGrabbed !== undefined) {
+		// Atleast 1 finger has been released.
+		throwScale(now);
+		if (touchHeldsLength === 1) {
+			// Only 1 finger has been released, drop to 1 finger
+			recalcPositionFingerGrabbedBoard(1);
+			boardPosFingerTwoGrabbed = undefined;
+		}
+	}
 	if (touchHeldsLength > 0) return;
 	throwBoard(now); //Both fingers have been released.
 	
@@ -319,17 +327,13 @@ function updateBoardPinch() {
 			initBoardPinch();
 		}
 	} else { // 2 grabbed fingers
-		if (touchHeldsLength === 1) { // Drop to 1 finger
-			recalcPositionFingerGrabbedBoard(1);
-			boardPosFingerTwoGrabbed = undefined;
-		} else if (touchHeldsLength > 1) { // Check if any or both fingers changed, update
-			const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id);
-			const touchHeldsIncludesTouch2 = input.touchHeldsIncludesID(boardPosFingerTwoGrabbed.id);
-			if (!touchHeldsIncludesTouch1 || !touchHeldsIncludesTouch2) { // 1+ changed
-				const fingerOneOrTwo = 1;
-				recalcPositionFingerGrabbedBoard(fingerOneOrTwo);
-				initBoardPinch();
-			}
+		// Check if any or both fingers changed, update
+		const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id);
+		const touchHeldsIncludesTouch2 = input.touchHeldsIncludesID(boardPosFingerTwoGrabbed.id);
+		if (!touchHeldsIncludesTouch1 || !touchHeldsIncludesTouch2) { // 1+ changed
+			const fingerOneOrTwo = 1;
+			recalcPositionFingerGrabbedBoard(fingerOneOrTwo);
+			initBoardPinch();
 		}
 	}
 }

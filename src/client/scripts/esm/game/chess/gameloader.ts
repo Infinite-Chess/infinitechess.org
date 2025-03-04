@@ -32,6 +32,10 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
+// @ts-ignore
+import movement from "../rendering/movement.js";
+// @ts-ignore
+import transition from "../rendering/transition.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -107,6 +111,11 @@ async function startLocalGame(options: {
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
+		/**
+		 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
+		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
+		 */
+		// additional: { editor: true }
 	});
 	typeOfGameWeAreIn = 'local';
 
@@ -151,6 +160,8 @@ async function startEngineGame(options: {
 	youAreColor: 'white' | 'black',
 	currentEngine: 'engineCheckmatePractice'|'classicEngine', // add more union types when more engines are added
 	engineConfig: EngineConfig,
+	/** Whether the show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
+	showGameControlButtons?: true
 } & (
   | { variant: string; variantOptions?: never }
   | { variant?: never; variantOptions: VariantOptions }
@@ -199,14 +210,14 @@ async function startEngineGame(options: {
 	typeOfGameWeAreIn = 'engine';
 	enginegame.initEngineGame(options);
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, true);
+	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
 
 
 
 /**
  * These items must be done after the logical parts of the gamefile are fully loaded
- * @param metadata - The metadata of the gamefile
+ * @param metadata - The metadata of the gamefile 
  * @param showGameControlButtons - Whether to show the practice game control buttons "Undo Move" and "Retry"
  */
 function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
@@ -222,8 +233,11 @@ function unloadGame() {
 	guigameinfo.close();
 	gameslot.unloadGame();
 	perspective.disable();
-	gui.prepareForOpen();
 	typeOfGameWeAreIn = undefined;
+	movement.eraseMomentum();
+	transition.terminate();
+
+	gui.prepareForOpen();
 }
 
 

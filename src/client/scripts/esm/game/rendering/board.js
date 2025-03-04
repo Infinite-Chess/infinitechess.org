@@ -7,7 +7,6 @@ import bufferdata from './bufferdata.js';
 import input from '../input.js';
 import perspective from './perspective.js';
 import movement from './movement.js';
-import options from './options.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
@@ -18,6 +17,8 @@ import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.j
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
+import preferences from '../../components/header/preferences.js';
+import piecesmodel from './piecesmodel.js';
 // Import End
 
 /** 
@@ -77,6 +78,16 @@ const limitToDampScale = 0.000_01; // We need to soft limit the scale so the gam
 let lightTiles; // [r,g,b,a]
 let darkTiles;
 
+
+(function() {
+	document.addEventListener('theme-change', (event) => { // Custom Event listener.
+		console.log(`Theme change event detected: ${preferences.getTheme()}`);
+		updateTheme();
+		piecesmodel.regenModel(gameslot.getGamefile());
+	});
+})();
+
+
 async function initTextures() {
 	const lightTilesCssColor = style.arrayToCssColor(lightTiles);
 	const darkTilesCssColor = style.arrayToCssColor(darkTiles);
@@ -95,8 +106,8 @@ function gsquareCenter() {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels(virtual) {
-	return virtual ? tileWidthPixels_Virtual : tileWidthPixels_Physical;
+function gtileWidth_Pixels() {
+	return tileWidthPixels_Virtual;
 }
 
 function gtile_MouseOver_Float() {
@@ -144,8 +155,8 @@ function recalcTile_MouseCrosshairOver() {
 function recalcTileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox();
-	tileWidthPixels_Virtual = (camera.canvas.height * 0.5 / screenBoundingBox.top) * movement.getBoardScale(); // Greater for retina displays
-	tileWidthPixels_Physical = tileWidthPixels_Virtual / window.devicePixelRatio;
+	tileWidthPixels_Physical = (camera.canvas.height * 0.5 / screenBoundingBox.top) * movement.getBoardScale(); // Greater for retina displays
+	tileWidthPixels_Virtual = tileWidthPixels_Physical / window.devicePixelRatio;
 }
 
 function recalcTile_MouseOver() {
@@ -189,8 +200,8 @@ function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
 	const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
 	const boardPos = movement.getBoardPos();
-	const tileXFloat = n * x / tileWidthPixels_Physical + boardPos[0];
-	const tileYFloat = n * y / tileWidthPixels_Physical + boardPos[1];
+	const tileXFloat = n * x / tileWidthPixels_Virtual + boardPos[0];
+	const tileYFloat = n * y / tileWidthPixels_Virtual + boardPos[1];
 
 	const tile_Float = [tileXFloat, tileYFloat];
 	const tile_Int = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
@@ -329,7 +340,7 @@ function updateNavColor() {
 	let navG = 255;
 	let navB = 255;
 
-	if (options.getTheme() !== 'white') {
+	if (preferences.getTheme() !== 'white') {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;
@@ -348,7 +359,7 @@ function updateNavColor() {
     `);
 }
 
-function resetColor(newLightTiles = options.getDefaultTiles(true), newDarkTiles = options.getDefaultTiles(false)) {
+function resetColor(newLightTiles = preferences.getColorOfLightTiles(), newDarkTiles = preferences.getColorOfDarkTiles()) {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
 	initTextures();
@@ -356,8 +367,8 @@ function resetColor(newLightTiles = options.getDefaultTiles(true), newDarkTiles 
 }
 
 function darkenColor() {
-	const defaultLightTiles = options.getDefaultTiles(true);
-	const defaultDarkTiles = options.getDefaultTiles(false);
+	const defaultLightTiles = preferences.getColorOfLightTiles();
+	const defaultDarkTiles = preferences.getColorOfDarkTiles();
 
 	const darkenBy = 0.09;
 	const darkWR = Math.max(defaultLightTiles[0] - darkenBy, 0);

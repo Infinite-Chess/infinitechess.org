@@ -10,7 +10,6 @@ import statustext from '../gui/statustext.js';
 import movement from './movement.js';
 import perspective from './perspective.js';
 import { createModel } from './buffermodel.js';
-import options from './options.js';
 import colorutil from '../../chess/util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
@@ -19,6 +18,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import shapes from './shapes.js';
 import gameslot from '../chess/gameslot.js';
+import preferences from '../../components/header/preferences.js';
 // Import End
 
 /** 
@@ -54,10 +54,9 @@ const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrilli
  * This is expensive. This is ~200 times slower than just rendering. Minimize calling this.
  * When drawing, we'll need to specify the uniform transformations according to our camera position.
  * @param {gamefile} gamefile - The gamefile of which to regenerate the mesh of the pieces
- * @param {Object} [colorArgs] - Optional. The color arguments to dye the pieces a custom tint. Example: `{ white: [r,g,b,a], black: [r,g,b,a] }`
  * @param {boolean} [giveStatus] Optional. If true, displays a message when the model is complete. Default: false
  */
-async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can be undefined
+async function regenModel(gamefile, giveStatus) { // giveStatus can be undefined
 	if (!gamefile) return;
 	if (gamefile.mesh.isGenerating) return;
 	gamefile.mesh.locked++;
@@ -69,6 +68,7 @@ async function regenModel(gamefile, colorArgs, giveStatus) { // giveStatus can b
 	// Do we need an offset? Calculate the nearest 10,000
 
 	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
+	const colorArgs = preferences.getPieceRegenColorArgs();
 
 	// How many indeces will we need?
 	const totalPieceCount = gamefileutility.getPieceCount_IncludingUndefineds(gamefile);
@@ -331,7 +331,7 @@ function overwritebufferdata(gamefile, undefinedPiece, coords, type) {
 
 	let data;
 	if (gamefile.mesh.usingColoredTextures) {
-		const colorArgs = options.getPieceRegenColorArgs();
+		const colorArgs = preferences.getPieceRegenColorArgs();
 		const pieceColor = colorutil.getPieceColorFromType(type);
 		const colorArray = colorArgs[pieceColor]; // [r,g,b,a]
 		const [r,g,b,a] = colorArray;
@@ -420,7 +420,7 @@ function shiftPiecesModel(gamefile) {
 	const chebyshevDistance = math.chebyshevDistance(gamefile.mesh.offset, newOffset);
 	if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
 		console.log(`REGENERATING the model instead of shifting. It was translated by ${chebyshevDistance} tiles!`);
-		regenModel(gamefile, options.getPieceRegenColorArgs());
+		regenModel(gamefile);
 		return;
 	}
 

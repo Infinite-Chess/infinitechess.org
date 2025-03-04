@@ -538,7 +538,8 @@ function removeMouseHeld(event) {
 function initListeners_Keyboard() {
 
 	document.addEventListener("keydown", (event) => {
-		event = event || window.event;
+		// console.log("Key down event active element: ", document.activeElement);
+		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const key = event.key.toLowerCase();
 		keyDowns.push(key);
 		if (keyHelds.indexOf(key) === -1) keyHelds.push(key);
@@ -547,7 +548,7 @@ function initListeners_Keyboard() {
 	});
 
 	document.addEventListener("keyup", (event) => {
-		event = event || window.event;
+		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const index = keyHelds.indexOf(event.key.toLowerCase());
 		if (index !== -1) keyHelds.splice(index, 1); // Removes the key
 	});
@@ -625,7 +626,7 @@ function getTouchHeldByID(touchID) {
 	for (let i = 0; i < touchHelds.length; i++) {
 		if (touchHelds[i].id === touchID) return touchHelds[i];
 	}
-	console.log('touchHelds does not contain desired touch object!');
+	console.log('touchHelds does not contain desired touch of id: ', touchID);
 }
 
 function atleast1TouchDown() {

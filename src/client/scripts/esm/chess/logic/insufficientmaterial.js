@@ -27,6 +27,7 @@ const insuffmatScenarios_1K1k = [
     {'bishopsW': [Infinity, 1]},
     {'knightsW': 3},
     {'hawksW': 2},
+	{'hawksW': 1, 'bishopsW': [1, 0]},
     {'rooksW': 1, 'knightsW': 1},
     {'rooksW': 1, 'bishopsW': [1, 0]},
     {'rooksW': 1, 'rooksB': 1},

@@ -18,6 +18,8 @@ import winconutil from '../../chess/util/winconutil.js';
 import guinavigation from '../gui/guinavigation.js';
 import gameslot from './gameslot.js';
 import gameloader from './gameloader.js';
+import colorutil from '../../chess/util/colorutil.js';
+import coordutil from '../../chess/util/coordutil.js';
 // Import End
 
 "use strict";
@@ -38,8 +40,6 @@ const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeCont
  * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
 function copyGame(copySinglePosition) {
-	if (guinavigation.isCoordinateActive()) return;
-
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
@@ -86,13 +86,15 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
 	if (gameRulesCopy.moveRule) primedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState}/${gameRulesCopy.moveRule}`; delete gameRulesCopy.moveRule;
 	primedGamefile.fullMove = gamefile.startSnapshot.fullMove;
 	primedGamefile.startingPosition = gamefile.startSnapshot.positionString;
-	primedGamefile.moves = gamefile.moves;
 	primedGamefile.gameRules = gameRulesCopy;
 
 	if (copySinglePosition) {
 		primedGamefile.startingPosition = gamefile.startSnapshot.position;
 		primedGamefile.specialRights = gamefile.startSnapshot.specialRights;
+		primedGamefile.moves = gamefile.moves.slice(0, gamefile.moveIndex + 1); // Only copy the moves up to the current move
 		primedGamefile = formatconverter.GameToPosition(primedGamefile, Infinity);
+	} else {
+		primedGamefile.moves = gamefile.moves;
 	}
 
 	return primedGamefile;
@@ -104,7 +106,7 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
  * @param {event} event - The event fired from the event listener
  */
 async function callbackPaste(event) {
-	if (guinavigation.isCoordinateActive()) return;
+	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
 	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
 	
@@ -142,7 +144,7 @@ async function callbackPaste(event) {
 
 	if (!verifyLongformat(longformat)) return;
 
-	console.log(longformat);
+	// console.log(longformat);
     
 	pasteGame(longformat);
 }
@@ -224,7 +226,8 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	// Create a new gamefile from the longformat...
 
 	// Retain most of the existing metadata on the currently loaded gamefile
-	const currentGameMetadata = gameslot.getGamefile().metadata;
+	const currentGamefile = gameslot.getGamefile();
+	const currentGameMetadata = currentGamefile.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformat.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
@@ -266,9 +269,18 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		// longformat.enpassant is in the form: Coords
 		// need to convert it to: { square: Coords, pawn: Coords }
 		const firstTurn = longformat.gameRules.turnOrder[0];
-		const oneOrNegOne = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error("Invalid turn order when pasting a game! Can't parse enpassant option."); })();
-		const newEnPassant = { square: longformat.enpassant, pawn: [longformat.enpassant[0], longformat.enpassant[1] - oneOrNegOne] };
-		variantOptions.enpassant = newEnPassant;
+		const yParity = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when pasting a game! Can't parse enpassant option.`); })();
+		const pawnExpectedSquare = [longformat.enpassant[0], longformat.enpassant[1] - yParity];
+		/**
+		 * First make sure there IS a pawn on the square!
+		 * If not, the ICN was likely tampered.
+		 * Erase the enpassant property! (or just don't transfer it over)
+		 */
+		const pieceOnExpectedSquare = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+		if (pieceOnExpectedSquare && pieceOnExpectedSquare.startsWith('pawns') && colorutil.getPieceColorFromType(pieceOnExpectedSquare) !== firstTurn) {
+			// Valid pawn to capture via enpassant is present
+			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
+		}
 	}
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
@@ -290,6 +302,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		additional: {
 			moves: longformat.moves,
 			variantOptions,
+			editor: currentGamefile.editor
 		}
 	});
 	const gamefile = gameslot.getGamefile();

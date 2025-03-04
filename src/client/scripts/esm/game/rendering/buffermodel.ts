@@ -1,7 +1,11 @@
 
 /**
  * This script contains all the functions used to generate renderable buffer models of the
- * game objects that the shader programs can use. It receives the object's vertex data to do so.
+ * game objects that the shader programs can use. It receives the object's vertex data to do so,
+ * and the attribute information, if applicable, such as how many components of the vertex data
+ * are dedicated to position, color, texture coordinates, etc.
+ * 
+ * It is also capable of instanced rendering.
  */
 
 
@@ -17,11 +21,21 @@ import mat4 from './gl-matrix.js';
 // @ts-ignore
 import camera from './camera.js';
 
-"use strict";
-
 
 // Type Definitions -----------------------------------------------------------------------
 
+
+/** Any kind of array, whether number[], or typed array, that may be passed to use as vertex data for a model. */
+type InputArray =
+	number[] // Converted to Float32Array, coming from float64s, with max safe integer: 9,007,199,254,740,991    Max value: 1.8e+308
+	| TypedArray
+
+/** All signed type arrays compatible with WebGL, that can be used as vertex data. */
+type TypedArray =
+	Float32Array // Max safe integer: 16,777,215    Max value: 3.4e+38
+	| Int8Array // Max integer: 127
+	| Int16Array // Max integer: 32,767
+	| Int32Array; // Max integer: 2,147,483,647
 
 /** All valid primitive shapes we can render with */
 type PrimitiveType = 'TRIANGLES' | 'TRIANGLE_STRIP' | 'TRIANGLE_FAN' | 'POINTS' | 'LINE_LOOP' | 'LINE_STRIP' | 'LINES';
@@ -74,7 +88,7 @@ interface BufferModel extends BaseBufferModel {
 	/** A reference to the vertex data, stored in a Float32Array, that went into this model's buffer.
      * If this is modified, we can use updateBufferIndices() to pass those changes
      * on to the gpu, without having to create a new buffer model! */
-	data: Float32Array,
+	data: TypedArray,
 	updateBufferIndices: UpdateBufferIndicesFunc,
 }
 
@@ -83,11 +97,11 @@ interface BufferModelInstanced extends BaseBufferModel {
 	/** A reference to the vertex data of a SINGLE INSTANCE, stored in a Float32Array, that went into this model's buffer.
      * If this is modified, we can use updateBufferIndices() to pass those changes
      * on to the gpu, without having to create a new buffer model! */
-	vertexData: Float32Array,
+	vertexData: TypedArray,
 	/** A reference to the vertex data OF EACH INSTANCE, stored in a Float32Array, that went into this model's buffer.
      * If this is modified, we can use updateBufferIndices() to pass those changes
      * on to the gpu, without having to create a new buffer model! */
-	instanceData: Float32Array,
+	instanceData: TypedArray,
 	updateBufferIndices_VertexBuffer: UpdateBufferIndicesFunc,
 	updateBufferIndices_InstanceBuffer: UpdateBufferIndicesFunc,
 }
@@ -107,7 +121,7 @@ interface BufferModelInstanced extends BaseBufferModel {
  */
 function createModel(
 	/** The array of vertex data of the mesh to be rendered. */
-	data: number[] | Float32Array,
+	data: InputArray,
 	/** The number of position components for a single vertex: x,y,z */
 	numPositionComponents: 2 | 3,
 	/** What drawing primitive to use. */
@@ -126,11 +140,11 @@ function createModel(
  * The universal function for creating a renderable model THAT USES INSTANCED RENDERING,
  * given the vertex data and instance data, both attribute informations, primitive rendering mode, and texture!
  */
-function createModel_Instanced(
+function createModel_Instanced( 
 	/** The array of vertex data of a single instance of the mesh. */
-	vertexData: number[] | Float32Array,
+	vertexData: InputArray,
 	/** The instance-specific vertex data of the mesh. */
-	instanceData: number[] | Float32Array,
+	instanceData: InputArray,
 	/** What drawing primitive to use. */
 	mode: PrimitiveType,
 	/** Whether the vertex data of a single instance contains color attributes, NOT THE INSTANCE-SPECIFIC DATA. */
@@ -186,7 +200,7 @@ function getAttribInfo_Instanced(usingColor: boolean, usingTexture: boolean): At
  * Creates a renderable model, given the AttributeInfo object.
  */
 function createModel_GivenAttribInfo(
-	data: number[] | Float32Array,
+	data: InputArray,
 	attribInfo: AttributeInfo,
 	mode: PrimitiveType,
 	texture?: WebGLTexture
@@ -194,8 +208,8 @@ function createModel_GivenAttribInfo(
 	const stride = getStrideFromAttributeInfo(attribInfo);
 	if (data.length % stride !== 0) throw new Error("Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.");
 
-	data = ensureFloat32Array(data); // Ensure the data is a Float32Array
-	const BYTES_PER_ELEMENT = Float32Array.BYTES_PER_ELEMENT;
+	data = ensureTypedArray(data); // Ensure the data is a Float32Array
+	const BYTES_PER_ELEMENT = data.BYTES_PER_ELEMENT;
 
 	const vertexCount = data.length / stride;
 
@@ -220,8 +234,8 @@ function createModel_GivenAttribInfo(
  * given the AttributeInfo objects of both the vertex data and instance data arrays.
  */
 function createModel_Instanced_GivenAttribInfo(
-	vertexData: number[] | Float32Array,
-	instanceData: number[] | Float32Array,
+	vertexData: InputArray,
+	instanceData: InputArray,
 	attribInfoInstanced: AttributeInfoInstanced,
 	mode: PrimitiveType,
 	texture?: WebGLTexture
@@ -231,9 +245,11 @@ function createModel_Instanced_GivenAttribInfo(
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
 	if (instanceData.length % instanceDataStride !== 0) throw new Error("Instance data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
 
-	vertexData = ensureFloat32Array(vertexData); // Ensure the data is a Float32Array
-	instanceData = ensureFloat32Array(instanceData); // Ensure the data is a Float32Array
-	const BYTES_PER_ELEMENT = Float32Array.BYTES_PER_ELEMENT;
+	vertexData = ensureTypedArray(vertexData);
+	instanceData = ensureTypedArray(instanceData);
+	const BYTES_PER_ELEMENT_VData = vertexData.BYTES_PER_ELEMENT;
+	const BYTES_PER_ELEMENT_IData = instanceData.BYTES_PER_ELEMENT;
+	
 
 	const instanceVertexCount = vertexData.length / vertexDataStride;
 	const instanceCount = instanceData.length / instanceDataStride;
@@ -256,7 +272,7 @@ function createModel_Instanced_GivenAttribInfo(
 			position: [number, number, number] = [0, 0, 0],
 			scale: [number, number, number] = [1, 1, 1],
 			uniforms: { [uniform: string]: any } = {}
-		) => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT, uniforms, instanceVertexCount, instanceCount, mode, texture),		
+		) => render_Instanced(vertexBuffer, instanceBuffer, attribInfoInstanced, position, scale, vertexDataStride, instanceDataStride, BYTES_PER_ELEMENT_VData, BYTES_PER_ELEMENT_IData, uniforms, instanceVertexCount, instanceCount, mode, texture),		
 	};
 }
 
@@ -268,15 +284,18 @@ function getStrideFromAttributeInfo(attribInfo: AttributeInfo) {
 	return attribInfo.reduce((totalElements, currentAttrib) => { return totalElements + currentAttrib.numComponents; }, 0);
 }
 
-/**
- * Ensures the input is a Float32Array. If the input is already a Float32Array,
+/** 
+ * Ensures the input is a Float32Array. If the input is already a typed array,
  * it is returned as-is. If it's a number array, a new Float32Array is created.
- * @param data - The input data, which can be either a number array or a Float32Array.
+ * @param data - The input data, which can be either a number array or a typed array.
  * @returns A Float32Array representation of the input data.
  */
-function ensureFloat32Array(data: number[] | Float32Array): Float32Array {
-	if (data instanceof Float32Array) return data;
-	if (data.length > 1_000_000) console.warn("Performance Warning: Float32Array generated from a very large number array (over 1 million in length). It is suggested to start with a Float32Array when computing your data!");
+function ensureTypedArray(data: InputArray): TypedArray {
+	if (!Array.isArray(data)) return data; // If it's already a TypedArray, return it.
+
+	if (data.length > 1_000_000) {
+		console.warn("Performance Warning: Float32Array generated from a very large number array (over 1 million in length). It is suggested to start with a Float32Array when computing your data!");
+	}
 	return new Float32Array(data);
 }
 
@@ -357,7 +376,8 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	scale: Vec3,
 	vertexDataStride: number,
 	instanceDataStride: number,
-	BYTES_PER_ELEMENT: number,
+	BYTES_PER_ELEMENT_VData: number,
+	BYTES_PER_ELEMENT_IData: number,
 	uniforms: { [uniform: string]: any },
 	instanceVertexCount: number,
 	instanceCount: number,
@@ -375,8 +395,8 @@ function render_Instanced( // vertexBuffer, instanceBuffer, vertexDataAttribInfo
 	gl.useProgram(shader.program);
 
 	// Prepare the attributes...
-	enableAttributes(shader, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT, false); // The attributes of a single instance are NOT instance-specific
-	enableAttributes(shader, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT, true); // Instance-specific
+	enableAttributes(shader, vertexBuffer, attribInfoInstanced.vertexDataAttribInfo, vertexDataStride, BYTES_PER_ELEMENT_VData, false); // The attributes of a single instance are NOT instance-specific
+	enableAttributes(shader, instanceBuffer, attribInfoInstanced.instanceDataAttribInfo, instanceDataStride, BYTES_PER_ELEMENT_IData, true); // Instance-specific
 
 	// Prepare the uniforms...
 	setUniforms(shader, position, scale, uniforms, texture);
@@ -445,7 +465,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 		// Update the transformMatrix on the gpu, EVERY render call!!
 		// This contains our camera, perspective projection, and the
 		// positional and scale transformations of the mesh we're rendering!
-		// If we do not update this every frame, the uniform value from
+		// If we do not update this draw call, the uniform value from
 		// the previous draw call will bleed through.
 	
 		const { projMatrix, viewMatrix } = camera.getProjAndViewMatrixes();
@@ -507,5 +527,6 @@ export {
 };
 
 export type {
-	AttributeInfoInstanced
+	AttributeInfoInstanced,
+	TypedArray,
 };

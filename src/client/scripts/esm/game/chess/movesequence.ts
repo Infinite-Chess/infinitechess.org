@@ -36,6 +36,7 @@ import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import frametracker from "../rendering/frametracker.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
+import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -70,6 +71,7 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	// of the hovered arrows often changes.
 	// Erase the list so they can be regenerated next frame with the correct color.
 	arrowlegalmovehighlights.reset();
+	specialrighthighlights.onMove();
 
 	return move;
 }

@@ -56,6 +56,7 @@ type Change = {
 	action: 'capture',
 	endCoords: Coords,
 	capturedPiece: Piece,
+	/** A custom path the moving piece took to make the capture. (e.g. Rose piece) */
 	path?: Coords[],
 } | {
 	action: 'move',
@@ -206,32 +207,27 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
  * organizes the piece in the organized lists
  */
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
-	const piece = change['piece'];
+	const piece = change.piece;
+
+	// Safety net
+	const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, piece.coords);
+	if (isPieceOnCoords) throw new Error("Can't add a piece on top of another piece!");
 
 	const list = gamefile.ourPieces[piece.type];
-
+	
 	// If no index specified, make the default the first undefined in the list!
-	if (piece.index === undefined) change['piece'].index = list.undefineds[0];
-
 	if (piece.index === undefined) {
-		// Piece index still undefined, this must mean there are zero undefined placeholders.
-		// The only scenario this is okay is when the gamefile is initiating, and
-		// the undefined arrays haven't been generated yet.
-		piece.index = list.length;
-		list.push(piece.coords);
-	} else { // desiredIndex specified
+		if (list.undefineds.length === 0) throw Error(`No undefined placeholders remaining for piece being added! ${piece.type}`);
+		change.piece.index = list.undefineds.shift()!;
+	} else jsutil.deleteElementFromOrganizedArray(gamefile.ourPieces[piece.type].undefineds, piece.index); // Remove the undefined from the undefineds list
 
-		const isPieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, piece.coords) !== undefined;
-		if (isPieceAtCoords) throw new Error("Can't add a piece on top of another piece!");
-
-		// Remove the undefined from the undefineds list
-		const deleteSuccussful = jsutil.deleteElementFromOrganizedArray(gamefile.ourPieces[piece.type].undefineds, piece.index) !== undefined;
-		if (!deleteSuccussful) throw new Error("Index to add a piece has an existing piece on it!");
-
-		list[piece.index] = piece.coords;
-	}
-
+	// Add the piece
+	list[piece.index] = piece.coords;
 	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
+	
+	// Do we need to add more undefineds?
+	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
+	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
 }
 
 /**
@@ -349,14 +345,13 @@ export type {
 };
 
 export default {
+	changeFuncs,
+	queueCapture,
 	queueAddPiece,
 	queueDeletePiece,
 	queueMovePiece,
-	queueCapture,
+	runChanges,
 	getCapturedPieces,
 	oneWayActions,
 	wasACapture,
-	runChanges,
-	applyChanges,
-	changeFuncs,
 };

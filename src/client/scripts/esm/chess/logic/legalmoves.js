@@ -142,8 +142,6 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 	const trimmedType = colorutil.trimColorExtensionFromType(type);
 	const color = colorutil.getPieceColorFromType(type); // Color of piece calculating legal moves of
 
-	// if (color !== gamefile.whosTurn && !options.getEM()) return { individual: [] } // No legal moves if its not their turn!!
-
 	const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
 	
 	let legalIndividualMoves = [];
@@ -235,8 +233,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
 
 		// If they match colors, move is illegal because we cannot capture friendly pieces. Remove the move.
 		// ALSO remove if it's a void!
-		if (color === pieceAtSquareColor
-            || pieceAtSquare === 'voidsN') individualMoves.splice(i, 1);
+		if (color === pieceAtSquareColor || pieceAtSquare.startsWith('voids')) individualMoves.splice(i, 1);
 	}
 
 	return individualMoves;
@@ -331,7 +328,7 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 
 		const selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
-		if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
+		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
 
 		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue;
 		return true;
