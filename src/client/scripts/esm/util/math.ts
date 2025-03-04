@@ -442,12 +442,13 @@ function calculateVectorComponents(vector: Vec2, length: number): Coords {
 
 
 /**
- * Calculates the greatest common divisor between two numbers.
+ * Computes the greatest common divisor (GCD) of two numbers using the Euclidean algorithm.
  */
-function GCD(a: number, b: number) {
-	// Copied from https://www.geeksforgeeks.org/gcd-greatest-common-divisor-practice-problems-for-competitive-programming/
-	if (b === 0) return a;
-	else return GCD(b, a % b);
+function GCD(a: number, b: number): number {
+	while (b !== 0) {
+		[a, b] = [b, a % b];
+	}
+	return Math.abs(a); // Ensure it's always non-negative
 }
 
 /**

@@ -28,7 +28,6 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import voids from '../rendering/voids.js';
 import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
@@ -73,6 +72,7 @@ import stats from '../gui/stats.js';
 
 function init() {
 	board.updateTheme();
+	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	gui.prepareForOpen();
 
@@ -142,8 +142,6 @@ function updateBoard(gamefile: gamefile) {
 	}
 	guiclock.update(gamefile);
 	miniimage.testIfToggled();
-	
-	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	guinavigation.update();
 	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
@@ -167,6 +165,8 @@ function updateBoard(gamefile: gamefile) {
 	transition.update();
 
 	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
+
+	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER movement.dragBoard() or picking up the board has a spring back effect to it
 
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.

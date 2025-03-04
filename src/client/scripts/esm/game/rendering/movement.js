@@ -195,7 +195,15 @@ function checkIfBoardDropped() {
 	const touchHeldsLength = input.getTouchHelds().length;
 	
 	const now = Date.now();
-	if (touchHeldsLength < 2 && boardPosFingerTwoGrabbed !== undefined) throwScale(now); // One finger has been released.
+	if (touchHeldsLength < 2 && boardPosFingerTwoGrabbed !== undefined) {
+		// Atleast 1 finger has been released.
+		throwScale(now);
+		if (touchHeldsLength === 1) {
+			// Only 1 finger has been released, drop to 1 finger
+			recalcPositionFingerGrabbedBoard(1);
+			boardPosFingerTwoGrabbed = undefined;
+		}
+	}
 	if (touchHeldsLength > 0) return;
 	throwBoard(now); //Both fingers have been released.
 	
@@ -319,17 +327,13 @@ function updateBoardPinch() {
 			initBoardPinch();
 		}
 	} else { // 2 grabbed fingers
-		if (touchHeldsLength === 1) { // Drop to 1 finger
-			recalcPositionFingerGrabbedBoard(1);
-			boardPosFingerTwoGrabbed = undefined;
-		} else if (touchHeldsLength > 1) { // Check if any or both fingers changed, update
-			const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id);
-			const touchHeldsIncludesTouch2 = input.touchHeldsIncludesID(boardPosFingerTwoGrabbed.id);
-			if (!touchHeldsIncludesTouch1 || !touchHeldsIncludesTouch2) { // 1+ changed
-				const fingerOneOrTwo = 1;
-				recalcPositionFingerGrabbedBoard(fingerOneOrTwo);
-				initBoardPinch();
-			}
+		// Check if any or both fingers changed, update
+		const touchHeldsIncludesTouch1 = input.touchHeldsIncludesID(boardPosFingerOneGrabbed.id);
+		const touchHeldsIncludesTouch2 = input.touchHeldsIncludesID(boardPosFingerTwoGrabbed.id);
+		if (!touchHeldsIncludesTouch1 || !touchHeldsIncludesTouch2) { // 1+ changed
+			const fingerOneOrTwo = 1;
+			recalcPositionFingerGrabbedBoard(fingerOneOrTwo);
+			initBoardPinch();
 		}
 	}
 }

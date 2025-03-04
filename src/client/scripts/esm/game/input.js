@@ -626,7 +626,7 @@ function getTouchHeldByID(touchID) {
 	for (let i = 0; i < touchHelds.length; i++) {
 		if (touchHelds[i].id === touchID) return touchHelds[i];
 	}
-	console.log('touchHelds does not contain desired touch object!');
+	console.log('touchHelds does not contain desired touch of id: ', touchID);
 }
 
 function atleast1TouchDown() {

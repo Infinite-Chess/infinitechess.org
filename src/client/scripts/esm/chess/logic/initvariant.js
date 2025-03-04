@@ -76,7 +76,7 @@ function initAllTypes(gamefile) {
 function initSlidingMoves(gamefile) {
 	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
 	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
-	gamefile.startSnapshot.colinearsPresent = organizedlines.areColinearSlidesPresentInGame(gamefile.startSnapshot.slidingPossible);
+	gamefile.startSnapshot.colinearsPresent = organizedlines.areColinearSlidesPresentInGame(gamefile);
 }
 
 /**

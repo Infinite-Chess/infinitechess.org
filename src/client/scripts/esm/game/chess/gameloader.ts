@@ -22,6 +22,8 @@ import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
+import boardeditor from "../misc/boardeditor.js";
+import guiedit from "../gui/guiedit.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
@@ -32,8 +34,10 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-import guiedit from "../gui/guiedit.js";
-import boardeditor from "../misc/boardeditor.js";
+// @ts-ignore
+import movement from "../rendering/movement.js";
+// @ts-ignore
+import transition from "../rendering/transition.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -211,7 +215,7 @@ async function startEditor() {
 
 /**
  * These items must be done after the logical parts of the gamefile are fully loaded
- * @param metadata - The metadata of the gamefile
+ * @param metadata - The metadata of the gamefile 
  * @param showGameControlButtons - Whether to show the practice game control buttons "Undo Move" and "Retry"
  */
 function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
@@ -229,8 +233,11 @@ function unloadGame() {
 	guiedit.close();
 	gameslot.unloadGame();
 	perspective.disable();
-	gui.prepareForOpen();
 	typeOfGameWeAreIn = undefined;
+	movement.eraseMomentum();
+	transition.terminate();
+
+	gui.prepareForOpen();
 }
 
 
