@@ -32,6 +32,10 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
+// @ts-ignore
+import movement from "../rendering/movement.js";
+// @ts-ignore
+import transition from "../rendering/transition.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -187,7 +191,7 @@ async function startEngineGame(options: {
 
 /**
  * These items must be done after the logical parts of the gamefile are fully loaded
- * @param metadata - The metadata of the gamefile
+ * @param metadata - The metadata of the gamefile 
  * @param showGameControlButtons - Whether to show the practice game control buttons "Undo Move" and "Retry"
  */
 function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
@@ -203,8 +207,11 @@ function unloadGame() {
 	guigameinfo.close();
 	gameslot.unloadGame();
 	perspective.disable();
-	gui.prepareForOpen();
 	typeOfGameWeAreIn = undefined;
+	movement.eraseMomentum();
+	transition.terminate();
+
+	gui.prepareForOpen();
 }
 
 
