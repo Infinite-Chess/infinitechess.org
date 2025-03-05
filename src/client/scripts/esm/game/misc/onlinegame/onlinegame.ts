@@ -1,4 +1,3 @@
-
 /**
  * This module keeps trap of the data of the onlinegame we are currently in.
  * */
@@ -211,6 +210,9 @@ function initEventListeners() {
 	document.querySelectorAll('a').forEach((link) => {
 		link.addEventListener('click', confirmNavigationAwayFromGame);
 	});
+
+	// Add a call to afk.updateAFK() in the initListeners function to reset the AFK timer on touch-start events
+	document.addEventListener('touchstart', afk.updateAFK);
 }
 
 function closeEventListeners() {
@@ -219,6 +221,9 @@ function closeEventListeners() {
 	document.querySelectorAll('a').forEach((link) => {
 		link.removeEventListener('click', confirmNavigationAwayFromGame);
 	});
+
+	// Remove the call to afk.updateAFK() in the initListeners function to reset the AFK timer on touch-start events
+	document.removeEventListener('touchstart', afk.updateAFK);
 }
 
 /**

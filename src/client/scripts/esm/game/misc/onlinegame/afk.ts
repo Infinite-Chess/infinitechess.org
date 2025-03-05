@@ -1,4 +1,3 @@
-
 /**
  * This script keeps track of how long we have been afk in the current online game,
  * and if it's for too long, it informs the server that fact,
@@ -101,6 +100,10 @@ function updateAFK() {
 	if (!input.atleast1InputThisFrame() || gamefileutility.isGameOver(gameslot.getGamefile()!)) return; // No input this frame, don't reset the timer to tell the server we are afk.
 	// There has been mouse movement, restart the afk auto-resign timer.
 	if (isOurAFKAutoResignTimerRunning()) tellServerWeBackFromAFK(); // Also tell the server we are back, IF it had started an auto-resign timer!
+	rescheduleAlertServerWeAFK();
+}
+
+function resetAFKTimer() {
 	rescheduleAlertServerWeAFK();
 }
 
@@ -213,4 +216,5 @@ export default {
 	onGameClose,
 	startOpponentAFKCountdown,
 	stopOpponentAFKCountdown,
+	resetAFKTimer,
 };
