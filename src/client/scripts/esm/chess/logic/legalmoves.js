@@ -179,7 +179,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
-	if (!ignoreCheck) checkresolver.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
+	if (!ignoreCheck) checkresolver.removeCheckInvalidMoves(gamefile, moves, piece, color);
 
 	return moves;
 }

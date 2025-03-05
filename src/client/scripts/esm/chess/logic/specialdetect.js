@@ -94,10 +94,10 @@ function kings(gamefile, coords, color, ) {
 		const king = gamefileutility.getPieceAtCoords(gamefile, coords); // { type, index, coords }
 		if (leftLegal) {
 			const middleSquare = [x - 1, y];
-			if (checkresolver.doesMovePutInCheck(gamefile, king, middleSquare, color)) leftLegal = false;
+			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) leftLegal = false;
 		} if (rightLegal) {
 			const middleSquare = [x + 1, y];
-			if (checkresolver.doesMovePutInCheck(gamefile, king, middleSquare, color)) rightLegal = false;
+			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) rightLegal = false;
 		}
 	}
 

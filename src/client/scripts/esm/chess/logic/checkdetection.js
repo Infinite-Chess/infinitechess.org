@@ -261,8 +261,25 @@ function appendAttackerToList(attackers, attacker) {
 	attackers.push(attacker);
 }
 
+/**
+ * Detects if a player of a provided color has one of the registered checks in gamefile this turn.
+ * @param {gamefile} gamefile 
+ * @param {string} color 
+ * @returns {boolean} true if atleast one of our royals is included in the gamefile's list of royals in check this turn
+ */
+function isColorInCheck(gamefile: gamefile, color: 'white' | 'black'): boolean {
+	const royals = gamefileutility.getRoyalCoordsOfColor(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	if (royalsInCheck.length === 0) return false;
+
+	const checkedRoyals = royalsInCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	// If the set is the same length as our royals + checkedRoyals, in means none of them has matching coordinates.
+	return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length);
+}
+
 
 
 export default {
 	detectCheck,
+	isColorInCheck,
 };
