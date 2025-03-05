@@ -8,26 +8,30 @@
  */
 
 
-import type { gamefile } from "../logic/gamefile";
-import type { Color } from "../util/colorutil";
-import type { Piece } from "./boardchanges";
-import type { LegalMoves } from "./checkdetection";
-import type { CoordsSpecial, MoveDraft, path } from "./movepiece";
+import type { Piece } from "./boardchanges.js";
+import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
+import type { Coords } from "./movesets.js";
+import type { BoundingBox, Vec2, Vec2Key } from "../../util/math.js";
+// @ts-ignore
+import type { LegalMoves } from './legalmoves.js'
+// @ts-ignore
+import type { gamefile } from "../logic/gamefile.js";
 
 
-import colorutil from "../util/colorutil";
-import gamefileutility from "../util/gamefileutility";
-import { Coords } from "./movesets";
-import math, { BoundingBox, Vec2, Vec2Key } from "../../util/math";
-import legalmoves from "./legalmoves";
-import organizedlines, { LineKey } from "./organizedlines";
-import boardchanges from "./boardchanges";
-import coordutil, { CoordsKey } from "../util/coordutil";
-import specialdetect from "./specialdetect";
-import movepiece from "./movepiece";
-import jsutil from "../../util/jsutil";
-import moveutil from "../util/moveutil";
-import checkdetection from "./checkdetection";
+import gamefileutility from "../util/gamefileutility.js";
+import math from "../../util/math.js";
+import organizedlines from "./organizedlines.js";
+import boardchanges from "./boardchanges.js";
+import coordutil from "../util/coordutil.js";
+import movepiece from "./movepiece.js";
+import jsutil from "../../util/jsutil.js";
+import moveutil from "../util/moveutil.js";
+// @ts-ignore
+import checkdetection from "./checkdetection.js";
+// @ts-ignore
+import specialdetect from "./specialdetect.js";
+// @ts-ignore
+import legalmoves from "./legalmoves.js";
 
 
 
