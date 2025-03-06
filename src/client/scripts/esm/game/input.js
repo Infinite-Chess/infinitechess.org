@@ -15,7 +15,6 @@ import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
 import gameslot from './chess/gameslot.js';
 import draganimation from './rendering/dragging/draganimation.js';
-import afk from './misc/onlinegame/afk.js';
 // Import End
 "use strict";
 
@@ -195,7 +194,6 @@ function initListeners_Touch() {
 		calcMouseWorldLocation();
 		board.recalcTiles_FingersOver();
 		initTouchSimulatedClick();
-		afk.updateAFK();
 	});
 
 	overlayElement.addEventListener('touchmove', (event) => {
@@ -383,7 +381,6 @@ function initListeners_Mouse() {
 		board.recalcTile_MouseCrosshairOver();
 
 		if (event.button === 0) initMouseSimulatedClick(); // Left mouse button
-		afk.updateAFK();
 	});
 
 	// This mousedown event is ONLY for perspective mode, and it attached to the document instead of overlay!
