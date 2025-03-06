@@ -27,7 +27,7 @@ const preferredImgSize = 512;
  * @param images - An array of HTMLImageElement objects to be merged into a spritesheet.
  * @returns A promise that resolves with the generated spritesheet as an HTMLImageElement.
  */
-async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]) {
+async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[], idMap: Map<string, number[]>) {
 	// Ensure there are images provided
 	if (images.length === 0) throw new Error('No images provided when generating spritesheet.');
   
@@ -86,7 +86,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
   
 	// Return a promise that resolves when the image is loaded
 	await spritesheetImage.decode();
-	const spritesheetData = generateSpriteSheetData(images, gridSize);
+	const spritesheetData = generateSpriteSheetData(images, gridSize, idMap);
 
 	return { spritesheet: spritesheetImage, spritesheetData };
 }
@@ -97,9 +97,9 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  * @param gridSize - How many images fit one-way.
  * @returns A sprite data object with texture coordinates for each image.
  */
-function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {  
+function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number, idMap: Map<string, number[]>) {  
 	const pieceWidth = 1 / gridSize;
-	const texLocs: { [key: string]: Coords } = {};
+	const texLocs: { [key: number]: Coords } = {};
 
 	// Positioning variables
 	let x = 0;
@@ -112,8 +112,10 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 
 		// Store the texture coordinates
 		// Use the image id as the key for the data object
-		texLocs[image.id] = [texX, texY];
-    
+		for (const type of idMap.get(image.id)!) {
+			texLocs[type] = [texX, texY];
+		}
+
 		// Update the position for the next image
 		x++;
 		if (x === gridSize) {

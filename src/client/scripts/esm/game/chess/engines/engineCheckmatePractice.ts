@@ -1102,10 +1102,10 @@ async function runEngine() {
 		for (const key in input_gamefile.piecesOrganizedByKey) {
 			const pieceType = input_gamefile.piecesOrganizedByKey[key]!;
 			if (pieceType.slice(-1) !== "W") continue; // ignore nonwhite pieces
-			const coords = key.split(',').map(Number);
+			const coords = key.split(',').map(Number) as Coords;
 			start_piecelist.push(pieceNameDictionary[pieceType]!);
 			// shift all white pieces, so that the black royal is at [0,0]
-			start_coordlist.push([coords[0]! - gamefile_royal_coords[0]!, coords[1]! - gamefile_royal_coords[1]!]);
+			start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
 		}
 
 		// run iteratively deepened move search

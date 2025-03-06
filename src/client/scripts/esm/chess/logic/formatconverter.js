@@ -848,7 +848,7 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 		for (const kingCoord in kingsFound) { // 'x,y':'white'
 			const kingCoords = getCoordsFromString(kingCoord); // [x,y]
 			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
-			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their colors don't match
+			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their players don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
 			if (xDist < 3) continue; // Not ateast 3 squares away
 			specialRights[coord] = true; // Same row and color as the king! This piece can castle.

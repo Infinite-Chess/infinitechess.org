@@ -28,7 +28,7 @@ import voids from './voids.js';
 import board from './board.js';
 // @ts-ignore
 import shapes from './shapes.js';
-
+import { players } from '../../chess/config.js';
 
 // Variables ---------------------------------------------------------------------
 
@@ -79,7 +79,7 @@ function renderPieces(gamefile: gamefile) {
 	const scale: [number, number, number] = [boardScale, boardScale, 1];
 
 	let modelToUse: BufferModel;
-	if (onlinegame.areWeColorInOnlineGame('black')) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
+	if (onlinegame.areWeColorInOnlineGame(players.BLACK)) modelToUse = perspective.getEnabled() && !perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 	else modelToUse = perspective.getEnabled() && perspective.getIsViewingBlackPerspective() && gamefile.mesh.rotatedModel !== undefined ? gamefile.mesh.rotatedModel : gamefile.mesh.model;
 
 	modelToUse.render(position, scale);
@@ -88,7 +88,7 @@ function renderPieces(gamefile: gamefile) {
 }
 
 /** Renders a semi-transparent piece at the specified coordinates. */
-function renderGhostPiece(type: string, coords: Coords) {
+function renderGhostPiece(type: number, coords: Coords) {
 	const color = preferences.getTintColorOfType(type); color.a *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());

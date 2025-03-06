@@ -6,7 +6,7 @@
  */
 
 
-import type { Piece } from "../../../chess/logic/boardchanges.js";
+import type { Piece } from "../../../chess/util/boardutil.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 
 

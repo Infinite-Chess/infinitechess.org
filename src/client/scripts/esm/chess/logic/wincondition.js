@@ -3,19 +3,20 @@
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
-import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
+import { pieceCountToDisableCheckmate } from '../config.js';
 // Import End
 
 // Type Definitions...
 
 /** @typedef {import('./gamefile.js').gamefile} gamefile */
-/** @typedef {import('../variants/gamerules.js'.GameRules) GameRules*/
+/** @typedef {import('../variants/gamerules.js'.GameRules)} GameRules*/
 
 "use strict";
 
@@ -68,7 +69,7 @@ function detectAllroyalscaptured(gamefile) {
 
 	// Are there any royal pieces remaining?
 	// Remember that whosTurn has already been flipped since the last move.
-	const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, typeutil.royals, gamefile.whosTurn);
+	const royalCount = boardutil.getRoyalCoordsOfColor(gamefile.ourPieces, gamefile.whosTurn);
 
 	if (royalCount === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -82,7 +83,7 @@ function detectAllpiecescaptured(gamefile) {
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
-	const count = gamefileutility.getPieceCountOfColor(gamefile, gamefile.whosTurn);
+	const count = boardutil.getPieceCountOfColor(gamefile.ourPieces, gamefile.whosTurn);
 
 	if (count === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -104,7 +105,7 @@ function detectKoth(gamefile) {
 	for (let i = 0; i < kothCenterSquares.length; i++) {
 		const thisCenterSquare = kothCenterSquares[i];
 
-		const typeAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisCenterSquare);
+		const typeAtSquare = boardutil.getTypeFromCoords(gamefile.ourPieces, thisCenterSquare);
 		if (!typeAtSquare) continue;
 		if (typeAtSquare.startsWith('kings')) {
 			kingInCenter = true;
@@ -138,8 +139,8 @@ function wasLastMoveARoyalCapture(gamefile) {
 
 	const capturedTypes = new Set();
 
-	boardchanges.getCapturedPieces(lastMove).forEach((piece) => {
-		capturedTypes.add(colorutil.trimColorExtensionFromType(piece.type));
+	boardchanges.getCapturedPieceTypes(lastMove).forEach((type) => {
+		capturedTypes.add(typeutil.getRawType(type));
 	});
 
 	if (!capturedTypes.size) return false; // Last move not a capture

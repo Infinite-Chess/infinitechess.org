@@ -7,7 +7,6 @@
 
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Color } from '../../chess/util/colorutil.js';
-import type { Piece } from '../../chess/logic/boardchanges.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
 
@@ -40,7 +39,7 @@ const color: Color = [0, 0, 0, 1];
  */
 function regenModel(gamefile: gamefile) {
 	/** A list of coordinates of all voids in the gamefile */
-	const voidList = gameslot.getGamefile()!.ourPieces.voidsN;
+	const voidList = gameslot.getGamefile()!.ourPieces;
 	if (!voidList) return; // No voids are present in this game
 
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
@@ -119,8 +118,8 @@ function overwritebufferdata(gamefile: gamefile, piece: { index: number, coords:
  * by overwriting it with Infinity's, then sends that change off to the gpu.
  * FAST, much faster than regenerating or shifting the entire mesh!
  */
-function deletebufferdata(gamefile: gamefile, piece: { index: number }) {
-	const i = piece.index * STRIDE_PER_PIECE;
+function deletebufferdata(gamefile: gamefile, relativeidx: number) {
+	const i = relativeidx * STRIDE_PER_PIECE;
 
 	gamefile.voidMesh.instanceData64[i] = Infinity; // Unfortunately we can't set them to 0 to hide it, as an actual void instance would be visible at [0,0]
 	gamefile.voidMesh.instanceData64[i + 1] = Infinity;

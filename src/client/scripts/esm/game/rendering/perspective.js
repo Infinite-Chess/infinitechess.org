@@ -44,7 +44,7 @@ const distToRenderBoard = 1500; // Default 1500. When changing this, also change
 // Crosshair
 const crosshairThickness = 2.5; // Default: 2.5
 const crosshairWidth = 18; // Default: 16.7
-const crosshairColor = [1, 1, 1, 1]; // RGBA. It will invert the colors. This is what color BLACKS will be dyed! Whites will appear black.
+const crosshairColor = [1, 1, 1, 1]; // RGBA. It will invert the players. This is what color BLACKS will be dyed! Whites will appear black.
 /** The buffer model of the mouse crosshair when in perspective mode.
  * @type {BufferModel} */
 let crosshairModel;

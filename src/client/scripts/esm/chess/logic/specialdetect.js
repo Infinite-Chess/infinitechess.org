@@ -1,13 +1,15 @@
 
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import organizedlines from './organizedlines.js';
+import boardutil from '../util/boardutil.js';
+import organizedpieces from './organizedpieces.js';
 import checkdetection from './checkdetection.js';
 import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
+import { players } from '../config.js';
 // Import End
 
 /** 
@@ -36,7 +38,7 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * Appends legal king special moves to the provided legal individual moves list. (castling)
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the king selected
- * @param {string} color - The color of the king selected
+ * @param {any} color - The color of the king selected
  * @returns {CoordsSpecial[]}
  */
 function kings(gamefile, coords, color, ) {
@@ -46,8 +48,8 @@ function kings(gamefile, coords, color, ) {
 
 	const x = coords[0];
 	const y = coords[1];
-	const key = organizedlines.getKeyFromLine([1,0],coords);
-	const row = gamefile.piecesOrganizedByLines['1,0'][key];
+	const key = organizedpieces.getKeyFromLine([1,0],coords);
+	const row = gamefile.ourPieces.lines.get('1,0').get(key);
 
 
 	// Castling. What makes a castle legal?
@@ -72,8 +74,8 @@ function kings(gamefile, coords, color, ) {
 	const rightDist = right - x;
 	const leftCoord = [left, y];
 	const rightCoord = [right, y];
-	const leftPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, leftCoord);
-	const rightPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, rightCoord);
+	const leftPieceType = boardutil.getTypeFromCoords(gamefile.ourPieces, leftCoord);
+	const rightPieceType = boardutil.getTypeFromCoords(gamefile.ourPieces, rightCoord);
 	const leftColor = leftPieceType ? colorutil.getPieceColorFromType(leftPieceType) : undefined;
 	const rightColor = rightPieceType ? colorutil.getPieceColorFromType(rightPieceType) : undefined;
 
@@ -91,7 +93,7 @@ function kings(gamefile, coords, color, ) {
 
 		// Simulate the space in-between
 
-		const king = gamefileutility.getPieceAtCoords(gamefile, coords); // { type, index, coords }
+		const king = boardutil.getPieceFromCoords(gamefile.ourPieces, coords); // { type, index, coords }
 		if (leftLegal) {
 			const middleSquare = [x - 1, y];
 			if (checkdetection.doesMovePutInCheck(gamefile, king, middleSquare, color)) leftLegal = false;
@@ -124,13 +126,13 @@ function kings(gamefile, coords, color, ) {
  * pawn moves, even though those don't need a special move flag.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the pawn selected
- * @param {string} color - The color of the pawn selected
+ * @param {any} color - The color of the pawn selected
  * @returns {CoordsSpecial[]}
  */
 function pawns(gamefile, coords, color) {
 
 	// White and black pawns move and capture in opposite directions.
-	const yOneorNegOne = color === 'white' ? 1 : -1; 
+	const yOneorNegOne = color === players.WHITE ? 1 : -1; 
 	const individualMoves = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -138,12 +140,12 @@ function pawns(gamefile, coords, color) {
 
 	// Is there a piece in front of it?
 	const coordsInFront = [coords[0], coords[1] + yOneorNegOne];
-	if (!gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront)) {
+	if (!boardutil.getTypeFromCoords(gamefile.ourPieces, coordsInFront)) {
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 
 		// Further... Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
-		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
+		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, doublePushCoord);
 		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
 			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); 
@@ -160,7 +162,7 @@ function pawns(gamefile, coords, color) {
 		const thisCoordsToCapture = coordsToCapture[i];
 
 		// Is there an enemy piece at this coords?
-		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, thisCoordsToCapture);
+		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, thisCoordsToCapture);
 		if (!pieceAtCoords) continue; // No piece, skip
 
 		// There is a piece. Make sure it's a different color
@@ -202,7 +204,7 @@ function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
 function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	if (gamefile.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = gamefileutility.getPieceTypeAtCoords(gamefile, gamefile.enpassant.pawn);
+	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.ourPieces, gamefile.enpassant.pawn);
 	if (colorutil.getPieceColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
@@ -238,7 +240,7 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, landCoord
  * Appends legal moves for the rose piece to the provided legal individual moves list.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the rose selected
- * @param {string} color - The color of the rose selected
+ * @param {number} color - The color of the rose selected
  * @returns {CoordsSpecial[]}
  */
 function roses(gamefile, coords, color) {
@@ -257,7 +259,7 @@ function roses(gamefile, coords, color) {
 				const movement = movements[math.posMod(b, movements.length)];
 				currentCoord = coordutil.addCoordinates(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
-				const pieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, currentCoord); // { type, index, coords }
+				const pieceOnSquare = boardutil.getPieceFromCoords(gamefile.ourPieces, currentCoord); // { type, index, coords }
 				if (pieceOnSquare) {
 					const colorOfPiece = colorutil.getPieceColorFromType(pieceOnSquare.type);
 					// eslint-disable-next-line max-depth

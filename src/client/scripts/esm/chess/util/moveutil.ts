@@ -11,7 +11,7 @@ import type { Coords } from './coordutil.js';
 import type { gamefile } from '../logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../variants/gamerules.js';
-
+import type { Player } from './typeutil.js';
 
 import coordutil from './coordutil.js';
 
@@ -121,7 +121,7 @@ function isIndexTheLastMove(moves: Move[], index: number): boolean {
  * Gets the color of whos turn it is currently, or at the front of the game.
  * Depends on the turn order.
  */
-function getWhosTurnAtFront(gamefile: gamefile): string {
+function getWhosTurnAtFront(gamefile: gamefile): Player {
 	return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
 }
 
@@ -132,9 +132,9 @@ function getWhosTurnAtFront(gamefile: gamefile): string {
  * 
  * You may need this if the gamefile hasn't actually been contructed yet.
  * @param numberOfMoves - The number of moves played in the game so far (length of the current moves list).
- * @param turnOrder - The order of colors turns in the game.
+ * @param turnOrder - The order of players turns in the game.
  */
-function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves: number, turnOrder: GameRules['turnOrder']): string {
+function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves: number, turnOrder: GameRules['turnOrder']): Player {
 	return turnOrder[numberOfMoves % turnOrder.length];
 }
 
@@ -211,7 +211,7 @@ function isGameResignable(gamefile: gamefile): boolean { return gamefile.moves.l
 /**
  * Returns the color of the player that played the provided index within the moves list.
  */
-function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): string {
+function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): Player {
 	if (index === -1) throw Error("Cannot get color that played move index when move index is -1.");
 	const turnOrder = gamefile.gameRules.turnOrder;
 	return turnOrder[index % turnOrder.length];
@@ -220,7 +220,7 @@ function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): string 
 /**
  * Returns the color whos turn it is after the specified move index was played.
  */
-function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): string {
+function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): Player {
 	return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
 }
 

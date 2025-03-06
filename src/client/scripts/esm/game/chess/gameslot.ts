@@ -68,6 +68,8 @@ import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
 
+import events from "../../chess/logic/events.js";
+import { pieceCountToDisableCheckmate } from "../../chess/config.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -241,6 +243,11 @@ async function loadGamefile(loadOptions: LoadOptions) {
 		loadingscreen.close();
 		startStartingTransition();
 	});
+
+	events.addEventListener(getGamefile()!.events, "regenerateLists", (gamefile: gamefile) => {
+		piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+		return false;
+	});
 }
 
 /** Loads all of the logical components of a game */
@@ -254,10 +261,10 @@ function loadLogical(loadOptions: LoadOptions) {
 	const lineCountToDisableArrows = 16;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
+	if (newGamefile.startSnapshot.pieceCount >= pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
-	} else if (newGamefile.startSnapshot.slidingPossible.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
+	} else if (newGamefile.ourPieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
 		arrows.setMode(0);
 	}
 
