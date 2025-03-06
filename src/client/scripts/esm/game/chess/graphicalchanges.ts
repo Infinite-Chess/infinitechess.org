@@ -69,8 +69,9 @@ const animatableChanges: ChangeApplication<animationFunc> = {
 
 function addMeshPiece(gamefile: gamefile, change: Change) {
 	if (gamefile.mesh.model === undefined) return; // Mesh isn't generated yet. Don't make this graphical change.
-	if (change.piece.type.startsWith('voids')) voids.overwritebufferdata(gamefile, change['piece'], change['piece'].coords);
-	else piecesmodel.overwritebufferdata(gamefile, change['piece'], change['piece'].coords, change['piece'].type);
+
+	if (change.piece.type.startsWith('voids')) voids.overwritebufferdata(gamefile, change.piece);
+	else piecesmodel.overwritebufferdata(gamefile, change.piece, change.piece.coords, change.piece.type);
 }
 
 function deleteMeshPiece(gamefile: gamefile, change: Change) {
@@ -81,13 +82,13 @@ function deleteMeshPiece(gamefile: gamefile, change: Change) {
 function moveMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
 
-	if (change.piece.type.startsWith('voids')) voids.movebufferdata(gamefile, change['piece'], change.endCoords);
-	else piecesmodel.movebufferdata(gamefile, change['piece'], change.endCoords);
+	if (change.piece.type.startsWith('voids')) voids.overwritebufferdata(gamefile, { index: change.piece.index, coords: change.endCoords });
+	else piecesmodel.movebufferdata(gamefile, change.piece, change.endCoords);
 }
 
 function returnMeshPiece(gamefile: gamefile, change: Change) {
-	if (change.piece.type.startsWith('voids')) voids.movebufferdata(gamefile, change['piece'], change.piece.coords);
-	else piecesmodel.movebufferdata(gamefile, change['piece'], change.piece.coords);
+	if (change.piece.type.startsWith('voids')) voids.overwritebufferdata(gamefile, change.piece);
+	else piecesmodel.movebufferdata(gamefile, change.piece, change.piece.coords);
 }
 
 function captureMeshPiece(gamefile: gamefile, change: Change) {
@@ -112,13 +113,13 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 function animateMove(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move') throw Error(`animateMove called with non-move action: ${change.action}`);
 	const waypoints = change.path ?? [change.piece.coords, change.endCoords];
-	animation.animatePiece(change['piece'].type, waypoints, undefined, instant, clearanimations);
+	animation.animatePiece(change.piece.type, waypoints, undefined, instant, clearanimations);
 }
 
 function animateReturn(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`animateReturn called with non-move action: ${change.action}`);
-	const waypoints = change.path?.slice().reverse() ?? [change['endCoords'], change['piece'].coords]; // slice() required because reverse() is mutating
-	animation.animatePiece(change['piece'].type, waypoints, undefined, instant, clearanimations);
+	const waypoints = change.path?.slice().reverse() ?? [change['endCoords'], change.piece.coords]; // slice() required because reverse() is mutating
+	animation.animatePiece(change.piece.type, waypoints, undefined, instant, clearanimations);
 }
 
 function animateCapture(change: Change, instant: boolean, clearanimations: boolean) {

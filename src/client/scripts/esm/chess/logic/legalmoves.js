@@ -326,7 +326,7 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 
 		const selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
-		if (!limits || selectedPieceLine !== clickedCoordsLine) continue;
+		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
 
 		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue;
 		return true;

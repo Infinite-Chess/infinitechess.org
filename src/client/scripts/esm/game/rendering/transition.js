@@ -265,11 +265,16 @@ function areWeTeleporting() {
 	return isTeleporting;
 }
 
+function terminate() {
+	isTeleporting = false;
+}
+
 export default {
 	areWeTeleporting,
 	teleport,
 	update,
 	telToPrevTel,
 	eraseTelHist,
-	panTel
+	panTel,
+	terminate,
 };

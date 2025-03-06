@@ -3,6 +3,9 @@
  * It won't request the same SVG twice.
  */
 
+
+import type { Color } from '../util/colorutil.js';
+
 import typeutil from '../util/typeutil.js';
 import preferences from '../../components/header/preferences.js';
 
@@ -135,6 +138,44 @@ async function fetchLocation(location: string) {
 
 	await processingCache[url];
 }
+
+/**
+ * Tints an SVG element by applying a multiplication filter using the specified color.
+ * The tint is applied by multiplying the original colors with the provided [r, g, b, a] values.
+ * For example, white (1,1,1) becomes the tint color and black (0,0,0) remains black.
+ * @param svgElement
+ * @param color
+ */
+function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
+	// Ensure a <defs> element exists in the SVG
+	const defs = svgElement.querySelector('defs') ?? svgElement.insertBefore(document.createElementNS('http://www.w3.org/2000/svg', 'defs'), svgElement.firstChild);
+
+	// Create a unique filter
+	const filterId = `tint-${crypto.randomUUID()}`;
+	const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+	filter.id = filterId;
+
+	// Create feColorMatrix with the tinting effect to multiply color channels.
+	const feColorMatrix = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
+	feColorMatrix.setAttribute('type', 'matrix');
+	// Construct the matrix values string, and multiply each color channel by them.
+	const matrixValues = [
+		color[0], 0, 0, 0, 0,
+		0, color[1], 0, 0, 0,
+		0, 0, color[2], 0, 0,
+		0, 0, 0, color[3], 0
+	].join(' ');
+	feColorMatrix.setAttribute('values', matrixValues);
+
+	// Append filter and apply it to the SVG
+	filter.appendChild(feColorMatrix);
+	defs.appendChild(filter);
+	// Apply the filter to the SVG element.
+	svgElement.setAttribute('filter', `url(#${filterId})`);
+
+	return svgElement;
+}
+
 
 // Exports -------------------------------------------------------------------
 

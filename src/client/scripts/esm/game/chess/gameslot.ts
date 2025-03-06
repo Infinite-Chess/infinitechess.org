@@ -96,6 +96,8 @@ interface Additional {
 	gameConclusion?: string | false,
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues,
+	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
+	editor?: true
 }
 
 /**
@@ -330,7 +332,7 @@ function unloadGame() {
 	selection.unselectPiece();
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
-	closeCopyPasteGameListeners();
+	removeCopyPasteGameListeners();
 
 	// Clock data is unloaded with gamefile now, just need to reset gui. Not our problem ¯\_(ツ)_/¯
 	guiclock.resetClocks();
@@ -340,7 +342,7 @@ function unloadGame() {
 	// Re-enable them if the previous game turned them off due to too many pieces.
 	miniimage.enable();
 
-	// Stop the timer that animates the latest-played move when rejoining a game, after a short delay
+	// Stop the timer that (animates the latest-played move when rejoining a game after a short delay)
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
@@ -372,7 +374,7 @@ function initCopyPastGameListeners() {
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
-function closeCopyPasteGameListeners() {
+function removeCopyPasteGameListeners() {
 	document.removeEventListener('copy', callbackCopy);
 	document.removeEventListener('paste', copypastegame.callbackPaste);
 }

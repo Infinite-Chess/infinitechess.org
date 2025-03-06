@@ -154,7 +154,8 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		youAreColor: players.WHITE,
 		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
 		engineConfig: { checkmateSelectedID: checkmateSelectedID, engineTimeLimitPerMoveMillis: 500 },
-		variantOptions
+		variantOptions,
+		showGameControlButtons: true as true,
 	};
 
 	gameloader.startEngineGame(options);

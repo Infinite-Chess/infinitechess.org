@@ -18,6 +18,7 @@ import guinavigation from '../gui/guinavigation.js';
 import gameslot from './gameslot.js';
 import gameloader from './gameloader.js';
 import { pieceCountToDisableCheckmate } from '../../chess/config.js';
+import coordutil from '../../chess/util/coordutil.js';
 // Import End
 
 "use strict";
@@ -224,7 +225,8 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	// Create a new gamefile from the longformat...
 
 	// Retain most of the existing metadata on the currently loaded gamefile
-	const currentGameMetadata = gameslot.getGamefile().metadata;
+	const currentGamefile = gameslot.getGamefile();
+	const currentGameMetadata = currentGamefile.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformat.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
@@ -266,9 +268,18 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		// longformat.enpassant is in the form: Coords
 		// need to convert it to: { square: Coords, pawn: Coords }
 		const firstTurn = longformat.gameRules.turnOrder[0];
-		const oneOrNegOne = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error("Invalid turn order when pasting a game! Can't parse enpassant option."); })();
-		const newEnPassant = { square: longformat.enpassant, pawn: [longformat.enpassant[0], longformat.enpassant[1] - oneOrNegOne] };
-		variantOptions.enpassant = newEnPassant;
+		const yParity = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when pasting a game! Can't parse enpassant option.`); })();
+		const pawnExpectedSquare = [longformat.enpassant[0], longformat.enpassant[1] - yParity];
+		/**
+		 * First make sure there IS a pawn on the square!
+		 * If not, the ICN was likely tampered.
+		 * Erase the enpassant property! (or just don't transfer it over)
+		 */
+		const pieceOnExpectedSquare = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+		if (pieceOnExpectedSquare && pieceOnExpectedSquare.startsWith('pawns') && colorutil.getPieceColorFromType(pieceOnExpectedSquare) !== firstTurn) {
+			// Valid pawn to capture via enpassant is present
+			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
+		}
 	}
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
@@ -290,6 +301,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		additional: {
 			moves: longformat.moves,
 			variantOptions,
+			editor: currentGamefile.editor
 		}
 	});
 	const gamefile = gameslot.getGamefile();

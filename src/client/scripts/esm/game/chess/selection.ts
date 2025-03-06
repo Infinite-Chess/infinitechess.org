@@ -398,6 +398,7 @@ function initSelectedPieceInfo(gamefile: gamefile, piece: Piece) {
 	pieceSelected = piece;
 	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
 	legalMoves = legalmoves.calculate(gamefile, pieceSelected);
+	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile, piece.type);
 	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(gamefile, piece.type);
@@ -430,11 +431,14 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
 
+	// Since making a move immediately cancels the current drag, we
+	// have to note whether it was being dragged BEFORE we move it!
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
 	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
-	if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
+	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
+	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	movesequence.animateMove(move, true, animateMain);
 

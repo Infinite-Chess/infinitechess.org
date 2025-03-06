@@ -67,6 +67,7 @@ function getSpritesheetDataPieceWidth() {
 
 function getSpritesheetDataTexLocation(type: number): Coords {
 	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
+	if (!spritesheetData!.texLocs[type]) throw Error("No texture location for piece type: " + type);
 	return spritesheetData!.texLocs[type]!;
 }
 
