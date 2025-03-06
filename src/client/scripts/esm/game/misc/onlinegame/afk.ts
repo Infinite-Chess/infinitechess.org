@@ -103,10 +103,6 @@ function updateAFK() {
 	rescheduleAlertServerWeAFK();
 }
 
-function resetAFKTimer() {
-	rescheduleAlertServerWeAFK();
-}
-
 /**
  * Restarts the timer that will inform the server we are afk,
  * the server thenafter starting an auto-resign timer.
@@ -216,5 +212,4 @@ export default {
 	onGameClose,
 	startOpponentAFKCountdown,
 	stopOpponentAFKCountdown,
-	resetAFKTimer,
 };
