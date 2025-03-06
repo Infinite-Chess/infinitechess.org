@@ -1,3 +1,4 @@
+
 /**
  * This script keeps track of how long we have been afk in the current online game,
  * and if it's for too long, it informs the server that fact,

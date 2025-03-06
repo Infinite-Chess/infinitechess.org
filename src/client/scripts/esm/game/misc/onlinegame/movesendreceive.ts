@@ -29,7 +29,6 @@ import guipause from "../../gui/guipause.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
 import movesequence from "../../chess/movesequence.js";
-import afk from "./afk.js"; // Import afk module
 
 
 // Functions -------------------------------------------------------------------
@@ -55,8 +54,6 @@ function sendMove() {
 	websocket.sendmessage('game', 'submitmove', data, true);
 
 	onlinegame.onMovePlayed({ isOpponents: false });
-
-	afk.updateAFK(); // Reset the AFK timer on move submission
 }
 
 /**
