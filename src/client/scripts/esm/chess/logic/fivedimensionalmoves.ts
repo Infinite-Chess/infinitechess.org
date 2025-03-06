@@ -6,7 +6,7 @@
 
 
 import type { Piece } from "../util/boardutil.js";
-import type { TeamColor } from "../util/typeutil.js";
+import type { Player } from "../util/typeutil.js";
 import type { CoordsSpecial, Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 
@@ -20,14 +20,14 @@ import state from "./state.js";
 import gamefile from "./gamefile.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
-import { colors, rawTypes } from "../config.js";
+import { players, rawTypes } from "../config.js";
 
 
 // Legal Move Calculation -----------------------------------------------------------------
 
 
 /** Calculates the legal pawn moves in the five dimensional variant. */
-function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: TeamColor): Coords[] {
+function fivedimensionalpawnmove(gamefile: gamefile, coords: Coords, color: Player): Coords[] {
 	const legalMoves: Coords[] = [];
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 1)); // Spacelike
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 10)); // Timelike
@@ -46,10 +46,10 @@ function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
  * @param color - The color of the pawn
  * @param distance - 1 for spacelike, 10 for timelike
  */
-function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: TeamColor, distance: 1 | 10): Coords[] {
+function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: Player, distance: 1 | 10): Coords[] {
 
 	// White and black pawns move and capture in opposite directions.
-	const yDistanceParity = color === colors.WHITE ? distance : -distance;
+	const yDistanceParity = color === players.WHITE ? distance : -distance;
 	const individualMoves: Coords[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -104,7 +104,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: TeamColor, di
  * @param color - The color of the pawn
  * @param distance - 1 for spacelike, 10 for timelike
  */
-function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: TeamColor, distance: number): void {
+function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: Player, distance: number): void {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.ourPieces, gamefile.enpassant.pawn)!;
@@ -112,7 +112,7 @@ function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coo
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== distance) return; // Not immediately left or right of us
-	const yDistanceParity = color === colors.WHITE ? distance : -distance;
+	const yDistanceParity = color === players.WHITE ? distance : -distance;
 	if (coords[1] + yDistanceParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
@@ -130,7 +130,7 @@ function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coo
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: TeamColor) {
+function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player) {
 	if (gamefile.gameRules.promotionRanks !== undefined) {
 		const teamPromotionRanks = gamefile.gameRules.promotionRanks[color];
 		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
@@ -155,12 +155,12 @@ function doFiveDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	const captureCoords = move.enpassant ? gamefile.enpassant!.pawn : move.endCoords;
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, captureCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(moveChanges, true, piece.coords, piece.type, move.endCoords, capturedPiece.type); // Delete the piece captured
-	else boardchanges.queueMovePiece(moveChanges, true, piece.coords, piece.type, move.endCoords); // Move the pawn
+	if (capturedPiece) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece.type); // Delete the piece captured
+	else boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Move the pawn
 
 	if (move.promotion) { // Handle promotion special move
-		boardchanges.queueDeletePiece(moveChanges, true, move.endCoords, piece.type); // Delete original pawn
-		boardchanges.queueAddPiece(moveChanges, move.endCoords,  move.promotion); // Add promoted piece
+		boardchanges.queueDeletePiece(moveChanges, true, {coords: move.endCoords, type: piece.type}); // Delete original pawn
+		boardchanges.queueAddPiece(moveChanges, {coords: move.endCoords,  type: move.promotion}); // Add promoted piece
 	}
 
 	return true; // Special move was executed!

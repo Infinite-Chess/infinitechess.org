@@ -55,7 +55,7 @@ function close() {
  * @param {Object} promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-async function initUI(promotionsAllowed: { [color: string]: string[]} | undefined) {
+async function initUI(promotionsAllowed: { [color: Player]: string[]} | undefined) {
 	if (promotionsAllowed === undefined) return;
 	const white = promotionsAllowed['white']!; // ['queens','bishops']
 	const black = promotionsAllowed['black']!;

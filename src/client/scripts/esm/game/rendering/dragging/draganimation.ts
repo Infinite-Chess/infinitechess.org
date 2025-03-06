@@ -10,7 +10,7 @@ import type { BufferModel } from "../buffermodel.js";
 import type { Color } from "../../../chess/util/colorutil.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { BoundingBox } from "../../../util/math.js";
-import type { Piece } from "../../../chess/logic/boardchanges.js";
+import type { Piece } from "../../../chess/util/boardutil.js";
 
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
@@ -21,6 +21,7 @@ import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";
 import preferences from "../../../components/header/preferences.js";
 import themes from "../../../components/header/themes.js";
+import typeutil from "../../../chess/util/typeutil.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
@@ -95,7 +96,7 @@ let worldLocation: Coords | undefined;
 /** The square that the piece would be moved to if dropped now. It will be outlined. */
 let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
-let pieceType: string | undefined;
+let pieceType: number | undefined;
 
 
 // Functions --------------------------------------------------------------------------------------
@@ -205,7 +206,7 @@ function renderPiece() {
  */
 function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
-	if (spritesheet.typesWithoutSVG.some(type => pieceType!.startsWith(type))) return; // No SVG/texture for this piece (void), can't render it.
+	if (spritesheet.typesWithoutSVG.some(type => typeutil.getRawType(pieceType!) === type)) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = input.getPointerIsTouch();

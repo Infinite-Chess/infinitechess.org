@@ -5,7 +5,7 @@
 
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
-
+import type { Player } from '../../chess/util/typeutil.js';
 
 import selection from '../chess/selection.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
@@ -31,7 +31,7 @@ interface EngineConfig {
 
 /** Whether we are currently in an engine game. */
 let inEngineGame: boolean = false;
-let ourColor: 'white' | 'black' | undefined;
+let ourColor: Player | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
@@ -44,7 +44,7 @@ function areInEngineGame(): boolean {
 	return inEngineGame;
 }
 
-function getOurColor(): 'white' | 'black' {
+function getOurColor(): Player {
 	if (!inEngineGame) throw Error("Cannot get our color if we are not in an engine game!");
 	return ourColor!;
 }
@@ -64,7 +64,7 @@ function getCurrentEngine() {
  * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
-	youAreColor: TeamColor,
+	youAreColor: Player,
 	currentEngine: string,
 	engineConfig: EngineConfig
 }) {
@@ -105,7 +105,7 @@ function closeEngineGame() {
  * @param color - "white" / "black"
  * @returns *true* if we are that color.
  */
-function areWeColor(color: string): boolean {
+function areWeColor(color: Player): boolean {
 	return color === ourColor;
 }
 

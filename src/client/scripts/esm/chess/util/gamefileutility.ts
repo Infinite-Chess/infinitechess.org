@@ -4,12 +4,13 @@
  */
 
 import type { Coords } from './coordutil.js';
+import type { Player } from './typeutil.js';
+import { RawType } from './typeutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 
 import boardutil from './boardutil.js';
-import coordutil from './coordutil.js';
-import colorutil from './colorutil.js';
+import typeutil from './typeutil.js';
 // @ts-ignore
 import winconutil from './winconutil.js';
 // @ts-ignore
@@ -76,9 +77,9 @@ function eraseTerminationMetadata(gamefile: gamefile) {
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.
  */
-function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: 'white' | 'black', winCondition: string): boolean {
+function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: Player, winCondition: string): boolean {
 	if (!winconutil.isWinConditionValid(winCondition)) throw new Error(`Cannot test if opponent of color "${friendlyColor}" is using invalid win condition "${winCondition}"!`);
-	const oppositeColor = colorutil.getOppositeColor(friendlyColor);
+	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
 	return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
 }
 
@@ -89,7 +90,7 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: 'white' 
 function deleteUnusedMovesets(gamefile: gamefile) {
 	const existingTypes = gamefile.startSnapshot.existingTypes;
 	for (const key of Object.keys(gamefile.pieceMovesets)) {
-		if (!existingTypes.includes(key)) delete gamefile.pieceMovesets[key];
+		if (!existingTypes.includes(Number(key) as RawType)) delete gamefile.pieceMovesets[key];
 	}
 }
 

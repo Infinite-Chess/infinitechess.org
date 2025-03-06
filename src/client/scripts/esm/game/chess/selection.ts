@@ -18,7 +18,7 @@ import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import boardutil from '../../chess/util/boardutil.js';
-import colorutil from '../../chess/util/colorutil.js';
+import typeutil from '../../chess/util/typeutil.js';
 import movesequence from './movesequence.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
 import frametracker from '../rendering/frametracker.js';
@@ -53,6 +53,7 @@ import transition from '../rendering/transition.js';
 import movement from '../rendering/movement.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
+import { rawTypes, players } from '../../chess/config.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -78,7 +79,7 @@ let hoverSquareLegal: boolean = false;
  * this will be set to the square it's moving to: `[x,y]`. */
 let pawnIsPromotingOn: CoordsSpecial | undefined;
 /** When a promotion UI piece is selected, this is set to the promotion you selected. */
-let promoteTo: string | undefined;
+let promoteTo: number | undefined;
 
 /**
  * When enabled, allows moving pieces anywhere else on the board, disregarding whether it's legal.
@@ -112,7 +113,7 @@ function getSquarePawnIsCurrentlyPromotingOn() { return pawnIsPromotingOn; }
  * Flags the currently selected pawn to be promoted next frame.
  * Call when a choice is made on the promotion UI.
  */
-function promoteToType(type: string) { promoteTo = type; }
+function promoteToType(type: number) { promoteTo = type; }
 
 // Toggles EDIT MODE! editMode
 // Called when '1' is pressed!
@@ -284,12 +285,12 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
  * A piece will not be considered draggable (level 2) if the user disabled dragging.
  * This means more information is needed to tell if the piece is moveable.
  */
-function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1 | 2 {
+function canSelectPieceType(gamefile: gamefile, type: number | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
-	if (type.startsWith('voids')) return 0; // Can't select voids
+	const [raw, color] = typeutil.splitType(type);
+	if (raw === rawTypes.VOID) return 0; // Can't select voids
 	if (editMode) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
-	const color = colorutil.getPieceColorFromType(type);
-	if (color === colorutil.colorOfNeutrals) return 0; // Can't select neutrals, period.
+	if (color === players.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
 	const isOurTurn = gameloader.isItOurTurn(color);
 	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
@@ -299,7 +300,7 @@ function canSelectPieceType(gamefile: gamefile, type: string | undefined): 0 | 1
 /**
  * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
  */
-function canMovePieceType(pieceType: string): boolean {
+function canMovePieceType(pieceType: number): boolean {
 	if (editMode) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
@@ -311,12 +312,12 @@ function canMovePieceType(pieceType: string): boolean {
  * Tests our selected piece can POSSIBLY be dropped on the provided type.
  * As if edit mode was on, ignoring legal moves.
  */
-function canDropOnPieceTypeInEditMode(type?: string) {
+function canDropOnPieceTypeInEditMode(type?: number) {
 	if (type === undefined) return true; // Can drop on empty squares.
-	const color = colorutil.getPieceColorFromType(type);
-	const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected!.type);
+	const [rawtype, color] = typeutil.splitType(type);
+	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
 	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
-	return !type.startsWith('voids') && (color !== selectedPieceColor);
+	return rawtype === rawTypes.VOID && (color !== selectedPieceColor);
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
@@ -412,7 +413,7 @@ function initSelectedPieceInfo(gamefile: gamefile, piece: Piece) {
 function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	// Check if the move is a pawn promotion
 	if (coords.promoteTrigger) {
-		const color = colorutil.getPieceColorFromType(pieceSelected!.type);
+		const color = typeutil.getColorFromType(pieceSelected!.type);
 		guipromotion.open(color);
 		perspective.unlockMouse();
 		pawnIsPromotingOn = coords;
@@ -460,7 +461,7 @@ function makePromotionMove(gamefile: gamefile) {
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
-	if (spritesheet.typesWithoutSVG.some(type => pieceSelected!.type.startsWith(type))) return; // No svg/texture for this piece (void), don't render the ghost image.
+	if (spritesheet.typesWithoutSVG.some(type => typeutil.getRawType(pieceSelected!.type) === type)) return; // No svg/texture for this piece (void), don't render the ghost image.
 
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }

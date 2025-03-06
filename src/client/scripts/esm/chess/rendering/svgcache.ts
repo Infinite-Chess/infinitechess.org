@@ -6,7 +6,7 @@
 import typeutil from '../util/typeutil.js';
 import preferences from '../../components/header/preferences.js';
 
-import type { RawType, TeamColor } from '../util/typeutil.js';
+import type { RawType, Player } from '../util/typeutil.js';
 
 // Variables -----------------------------------------------------------------
 
@@ -24,7 +24,7 @@ fetchLocation("classical").then();
 
 // Helper functions ---------------------------------------------------------
 
-function getPossibleExtensionsOfColor(color: TeamColor) {
+function getPossibleExtensionsOfColor(color: Player) {
 	switch (color) {
 		case 0:
 			return ["N", "W"];

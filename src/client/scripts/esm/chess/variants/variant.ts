@@ -7,7 +7,8 @@
 
 import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { Move } from '../logic/movepiece.js';
-import type { Piece } from '../logic/boardchanges.js';
+import type { Piece } from '../util/boardutil.js';
+import type { RawType } from '../util/typeutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 // @ts-ignore
@@ -30,7 +31,7 @@ import omega4generator from './omega4generator.js';
 import typeutil from '../util/typeutil.js';
 // @ts-ignore
 import specialmove from '../logic/specialmove.js';
-
+import { rawTypes, players } from '../config.js';
 
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
@@ -48,7 +49,7 @@ type TimeVariantProperty<T> = T | {
 	[timestamp: number]: T
 }
 
-/** Keys should be colors */
+/** Keys should be players */
 type ColorVariantProperty<T> = {
 	[color: string]: T
 }
@@ -468,27 +469,27 @@ function getBareMinimumGameRules(): GameRules {
  * @param promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
  * @returns The gamefile's `promotionsAllowed` gamerule.
  */
-function getPromotionsAllowed(position: { [coordKey: string]: string }, promotionRanks: GameRules['promotionRanks']): ColorVariantProperty<string[]> {
+function getPromotionsAllowed(position: { [coordKey: string]: string }, promotionRanks: GameRules['promotionRanks']): ColorVariantProperty<RawType[]> {
 	console.log("Parsing position to get the promotionsAllowed gamerule..");
 
 	// We can't promote to royals or pawns, whether we started the game with them.
-	const unallowedPromotes = jsutil.deepCopyObject(typeutil.royals); // ['kings', 'royalQueens', 'royalCentaurs']
-	unallowedPromotes.push('pawns'); // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
+	const unallowedPromotes: RawType[] = jsutil.deepCopyObject(typeutil.royals); // ['kings', 'royalQueens', 'royalCentaurs']
+	unallowedPromotes.push(rawTypes.PAWN); // ['kings', 'royalQueens', 'royalCentaurs', 'pawns']
 
-	const white: string[] = [];
-	const black: string[] = [];
+	const white: RawType[] = [];
+	const black: RawType[] = [];
 
 	if (!promotionRanks) return { white, black };
 
 	for (const key in position) {
-		const thisPieceType: string = position[key]!;
-		if (thisPieceType.endsWith('N')) continue; // Skip
-		const trimmedType = colorutil.trimColorExtensionFromType(thisPieceType); // Slices off W/B at the end
-		if (unallowedPromotes.includes(trimmedType)) continue; // Not allowed
-		if (white.includes(trimmedType)) continue; // Already added
+		const thisPieceType: number = position[key]!; // TODO: need to fight the format converter first
+		const [raw, c] = typeutil.splitType(thisPieceType);
+		if (c === players.NEUTRAL) continue; // Skip
+		if (unallowedPromotes.includes(raw)) continue; // Not allowed
+		if (white.includes(raw)) continue; // Already added
 		// Only add if the color's promotion ranks is not empty
-		if (promotionRanks.white.length > 0) white.push(trimmedType);
-		if (promotionRanks.black.length > 0) black.push(trimmedType);
+		if (promotionRanks.white.length > 0) white.push(raw);
+		if (promotionRanks.black.length > 0) black.push(raw);
 	}
 
 	return { white, black };
@@ -573,11 +574,12 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	// The running piece movesets property of the gamefile.
 	const pieceMovesets: {
-		[pieceType: string]: () => PieceMoveset
+		[_pieceType in RawType]?: () => PieceMoveset
 	} = {};
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
-		pieceMovesets[piece] = movesetModifications[piece] ? () => jsutil.deepCopyObject(movesetModifications[piece]!)
+		const intPiece = Number(piece) as RawType;
+		pieceMovesets[intPiece] = movesetModifications[intPiece] ? () => jsutil.deepCopyObject(movesetModifications[intPiece]!)
 														   : () => jsutil.deepCopyObject(moves);
 	}
 

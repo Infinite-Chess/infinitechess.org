@@ -226,10 +226,10 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
 		const pieceAtSquare = boardutil.getPieceFromCoords(gamefile.ourPieces, thisMove);
 		if (!pieceAtSquare) continue; // Next move if there is no square here
 
-		// Do the colors match?
+		// Do the players match?
 		const pieceAtSquareColor = colorutil.getPieceColorFromType(pieceAtSquare);
 
-		// If they match colors, move is illegal because we cannot capture friendly pieces. Remove the move.
+		// If they match players, move is illegal because we cannot capture friendly pieces. Remove the move.
 		// ALSO remove if it's a void!
 		if (color === pieceAtSquareColor || pieceAtSquare.startsWith('voids')) individualMoves.splice(i, 1);
 	}

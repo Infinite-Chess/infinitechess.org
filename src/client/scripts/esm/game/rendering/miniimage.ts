@@ -5,7 +5,6 @@
 
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { PooledArray } from '../../chess/logic/organizedlines.js';
 
 
 import space from '../misc/space.js';
@@ -36,6 +35,8 @@ import area from './area.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
+import { rawTypes } from '../../chess/config.js';
+import boardutil from '../../chess/util/boardutil.js';
 
 
 // Variables --------------------------------------------------------------
@@ -132,17 +133,19 @@ function genModel() {
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
 
-	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	typeutil.forEachPieceType((pieceType: string) => {
-		if (pieceType.startsWith('voids')) return; // Skip voids
-		if (!(pieceType in gamefile.ourPieces)) return; // Skip if we don't have any of this piece type
-		const thesePieces = gamefile.ourPieces[pieceType];
+	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;#
 
-		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-		const { r, g, b } = preferences.getTintColorOfType(pieceType);
+	const ourPieces = gamefile.ourPieces
+	for (const [type, range] of ourPieces.typeRanges) {
+		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
 
-		thesePieces.forEach((coords: Coords | undefined) => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
-	}, { ignoreVoids: true });
+		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+		const { r, g, b } = preferences.getTintColorOfType(type);
+
+		for (let i = range.start; i < range.end; i++) {
+			processPiece(boardutil.getCoordsFromIdx(ourPieces, i), texleft, texbottom, texright, textop, r, g, b);
+		}
+	};
 
 	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		if (!coords) return; // Skip undefined placeholders

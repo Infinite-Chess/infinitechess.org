@@ -13,10 +13,11 @@ import type gamefile from "./gamefile.js";
 
 import boardchanges from "./boardchanges.js";
 import { StateChange } from "./state.js";
-import jsutil from "../../util/jsutil.js";
+import typeutil from "../util/typeutil.js";
+import { rawTypes } from "../config.js";
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
-type Flux = `${string},${string},${string}`; // `x,y,type` | `x,y,enpassant`
+type Flux = `${string},${string},${string|number}`; // `x,y,type` | `x,y,enpassant`
 
 /**
  * Tests if the provided gamefile has had a repetition draw.
@@ -43,7 +44,7 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 		// Did this move include a one-way action? Pawn push, special right loss..
 		// If so, no further equal positions, terminate the loop.
 		// 'capture' move changes are handled lower down, they are one-way too.
-		if (move.type.startsWith('pawns')) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
+		if (typeutil.getRawType(move.type) === rawTypes.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
 		if (move.state.global.some((stateChange: StateChange) => stateChange.type === 'specialrights' && stateChange.future === undefined)) break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
 
 		// Iterate through all move changes, adding the fluxes.
@@ -54,12 +55,12 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 			// The remaining actions are two-way, so we need to create fluxes for them..
 			if (change.action === 'move') {
 				// If this change was undo'd, there would be a DEFICIT on its endCoords
-				addDeficit(`${change.endCoords[0]},${change.endCoords[1]},${change.type}`);
+				addDeficit(`${change.endCoords[0]},${change.endCoords[1]},${change.piece.type}`);
 				// There would also be a SURPLUS on its startCoords
-				addSurplus(`${change.coords[0]},${change.coords[1]},${change.type}`);
+				addSurplus(`${change.piece.coords[0]},${change.piece.coords[1]},${change.piece.type}`);
 			} else if (change.action === 'add') {
 				// If this change was undo'd, there would be a DEFICIT on its coords
-				addDeficit(`${change.coords[0]},${change.coords[1]},${change.type}`);
+				addDeficit(`${change.piece.coords[0]},${change.piece.coords[1]},${change.piece.type}`);
 			}
 		}
 

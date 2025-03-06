@@ -10,6 +10,7 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
+import { players } from '../config.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
@@ -24,7 +25,7 @@ import gamerules from '../variants/gamerules.js';
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
 /** @typedef {import('./events.js').GameEvents} GameEvents*/
-/** @typedef {import('../util/typeutil.js').TeamColor} TeamColor*/
+/** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
 
@@ -59,7 +60,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		moveRuleState: undefined,
 		/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
 		fullMove: undefined,
-		/** The number of players in this game (the number of unique colors in the turn order) */
+		/** The number of players in this game (the number of unique players in the turn order) */
 		playerCount: undefined,
 		/** The count of pieces the game started with. @type {number} */
 		pieceCount: undefined,
@@ -77,9 +78,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		promotionRanks: undefined,
 		promotionsAllowed: {
 			/** An array of types white can promote to, with the W/B removed from the end: `['queens','rooks']` @type {Array} */
-			white: undefined,
+			[players.WHITE]: undefined,
 			/** An array of types black can promote to, with the W/B removed from the end: `['queens','rooks']` @type {Array} */
-			black: undefined,
+			[players.BLACK]: undefined,
 		},
 		slideLimit: undefined,
 

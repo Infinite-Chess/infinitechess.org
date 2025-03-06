@@ -5,7 +5,7 @@ import coordutil from "./coordutil";
 
 import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces";
 import type { Coords } from "./coordutil";
-import type { RawType, TeamColor } from "./typeutil";
+import type { RawType, Player } from "./typeutil";
 
 interface Piece {
 	type: number,
@@ -22,7 +22,7 @@ interface Piece {
  * @param [options.ignoreObstacles] - Whether to ignore obstacle pieces.
  * @returns The number of pieces in the gamefile.
  */
-function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreTypes }: { ignoreColors?: TeamColor[], ignoreTypes?: RawType[] } = {}): number {
+function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreTypes }: { ignoreColors?: Player[], ignoreTypes?: RawType[] } = {}): number {
 	let count = 0; // Running count list
 
 	for (const [type, range] of o.typeRanges) {
@@ -39,7 +39,7 @@ function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreTypes }: 
  * Returns the number of pieces of a SPECIFIC color in a game,
  * EXCLUDING undefined placeholders
  */
-function getPieceCountOfColor(o: OrganizedPieces, color: TeamColor): number {
+function getPieceCountOfColor(o: OrganizedPieces, color: Player): number {
 	let pieceCount = 0;
 
 	for (const [type, range] of o.typeRanges) {
@@ -58,7 +58,7 @@ function getPieceCountOfColor(o: OrganizedPieces, color: TeamColor): number {
  * @param typeList - An array of coordinates where you can find all the pieces of that given type
  */
 function getPieceCountOfType(o: OrganizedPieces, type: number): number {
-	const typeList = o.typeRanges[type];
+	const typeList = o.typeRanges.get(type);
 	if (typeList === undefined) return 0;
 	return getPieceCountOfTypeRange(typeList);
 }
@@ -96,11 +96,11 @@ function getCoordsOfAllPieces(o: OrganizedPieces): Coords[] {
  * @param color - The color of the royals to look for.
  * @returns A list of coordinates where all the royals of the provided color are at.
  */
-function getRoyalCoordsOfColor(o: OrganizedPieces, color: TeamColor): Coords[] {
+function getRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 	const royalCoordsList: Coords[] = [];
 
 	typeutil.forEachPieceType(t => {
-		const range = o.typeRanges[t];
+		const range = o.typeRanges.get(t);
 		if (range === undefined) return;
 
 		getCoordsOfTypeRange(o, royalCoordsList, range);
@@ -115,11 +115,11 @@ function getRoyalCoordsOfColor(o: OrganizedPieces, color: TeamColor): Coords[] {
  * @param color - The color of the jumping royals to look for.
  * @returns A list of coordinates where all the jumping royals of the provided color are at.
  */
-function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: TeamColor): Coords[] {
+function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 	const royalCoordsList: Coords[] = []; // A running list of all the jumping royals of this color
 
 	typeutil.forEachPieceType(t => {
-		const range = o.typeRanges[t];
+		const range = o.typeRanges.get(t);
 		if (range === undefined) return;
 
 		getCoordsOfTypeRange(o, royalCoordsList, range);
@@ -131,25 +131,25 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: TeamColor): Coo
 function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange) {
 	for (let idx = range.start; idx < range.end; idx++) {
 		if (idx in range.undefineds) continue;
-		coords.push([o.XPositions[idx], o.YPositions[idx]]);
+		coords.push([o.XPositions[idx]!, o.YPositions[idx]!]);
 	}
 }
 
 // Getting A Single Piece -------------------------------------------------------------------------------------------------
 
 function getCoordsFromIdx(o: OrganizedPieces, idx: number): Coords {
-	return [o.XPositions[idx], o.YPositions[idx]];
+	return [o.XPositions[idx]!, o.YPositions[idx]!];
 }
 
 function isIdxUndefinedPiece(o: OrganizedPieces, idx: number): boolean {
-	return idx in o.typeRanges[o.types[idx]]!.undefineds;
+	return idx in o.typeRanges.get(o.types[idx]!)!.undefineds;
 }
 
 function getTypeFromCoords(o: OrganizedPieces, coords: Coords): number | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
-	return o.types[idx];
+	return o.types[idx]!;
 }
 
 function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefined {
@@ -157,7 +157,7 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
 	return {
-		type: o.types[idx],
+		type: o.types[idx]!,
 		coords: coords,
 	};
 }
@@ -165,7 +165,7 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
 	if (isIdxUndefinedPiece(o, idx)) return undefined;
 	return {
-		type: o.types[idx],
+		type: o.types[idx]!,
 		coords: getCoordsFromIdx(o, idx),
 	};
 }

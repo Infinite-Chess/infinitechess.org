@@ -9,6 +9,7 @@ import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
+import { players } from '../config.js';
 // Import End
 
 /** 
@@ -37,7 +38,7 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * Appends legal king special moves to the provided legal individual moves list. (castling)
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the king selected
- * @param {string} color - The color of the king selected
+ * @param {any} color - The color of the king selected
  * @returns {CoordsSpecial[]}
  */
 function kings(gamefile, coords, color, ) {
@@ -125,13 +126,13 @@ function kings(gamefile, coords, color, ) {
  * pawn moves, even though those don't need a special move flag.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the pawn selected
- * @param {string} color - The color of the pawn selected
+ * @param {any} color - The color of the pawn selected
  * @returns {CoordsSpecial[]}
  */
 function pawns(gamefile, coords, color) {
 
 	// White and black pawns move and capture in opposite directions.
-	const yOneorNegOne = color === 'white' ? 1 : -1; 
+	const yOneorNegOne = color === players.WHITE ? 1 : -1; 
 	const individualMoves = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -239,7 +240,7 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, landCoord
  * Appends legal moves for the rose piece to the provided legal individual moves list.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the rose selected
- * @param {string} color - The color of the rose selected
+ * @param {number} color - The color of the rose selected
  * @returns {CoordsSpecial[]}
  */
 function roses(gamefile, coords, color) {

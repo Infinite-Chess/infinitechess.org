@@ -318,7 +318,7 @@ function getLocationForType(type: RawType): string | undefined {
 
 /*
  * The commented stuff below was ONLY used for fast
- * modifying of theme colors using the keyboard keys!!!
+ * modifying of theme players using the keyboard keys!!!
  */
 
 // const allProperties = Object.keys(themes.themes[themes.defaultTheme]);

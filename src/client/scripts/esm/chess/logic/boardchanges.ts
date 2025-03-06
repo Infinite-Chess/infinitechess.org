@@ -29,6 +29,7 @@ import type { gamefile } from "./gamefile.js";
 // @ts-ignore
 import type { Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
+import type { Piece } from "../util/boardutil.js";
 
 /**
  * Generic type to describe any changes to the board
@@ -38,8 +39,7 @@ type Change = {
 	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
 	main: boolean,
 	/** The main piece affected by the move. If this is a move/capture action, it's the piece moved. If it's an add/delete action, it's the piece added/deleted. */
-	coords: Coords,
-	type: number
+	piece: Piece,
 } & ({
 	/** The type of action this change performs. */
 	action: 'add' | 'delete',
@@ -112,8 +112,8 @@ const changeFuncs: ChangeApplication<genericChangeFunc> = {
  * @param endCoords 
  * @param capturedPiece The piece captured
  */
-function queueCapture(changes: Array<Change>, main: boolean, coords: Coords, type: number, endCoords: Coords, capturedPiece: number, path?: Coords[]) {
-	const change: Change = { action: 'capture', main, type, coords, endCoords, capturedPiece };
+function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, capturedPiece: number, path?: Coords[]) {
+	const change: Change = { action: 'capture', main, piece, endCoords, capturedPiece };
 	if (path !== undefined) change.path = path;
 	changes.push(change);
 	return changes;
@@ -125,8 +125,8 @@ function queueCapture(changes: Array<Change>, main: boolean, coords: Coords, typ
  * @param piece the piece to add
  * the pieces index is optional and will get assigned one if none is present
  */
-function queueAddPiece(changes: Array<Change>, coords: Coords, type: number) {
-	changes.push({ action: 'add', main: false, coords, type }); // It's impossible for an 'add' change to affect the main piece moved, because before this move this piece didn't exist.
+function queueAddPiece(changes: Array<Change>, piece: Piece) {
+	changes.push({ action: 'add', main: false, piece }); // It's impossible for an 'add' change to affect the main piece moved, because before this move this piece didn't exist.
 	return changes;
 };
 
@@ -136,8 +136,8 @@ function queueAddPiece(changes: Array<Change>, coords: Coords, type: number) {
  * @param piece - The piece this change affects
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  */
-function queueDeletePiece(changes: Array<Change>, main: boolean, coords: Coords, type: number) {
-	changes.push({ action: 'delete', main, coords, type });
+function queueDeletePiece(changes: Array<Change>, main: boolean, piece: Piece) {
+	changes.push({ action: 'delete', main, piece });
 	return changes;
 }
 
@@ -148,8 +148,8 @@ function queueDeletePiece(changes: Array<Change>, main: boolean, coords: Coords,
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  * @param endCoords 
  */
-function queueMovePiece(changes: Array<Change>, main: boolean, coords: Coords, type: number, endCoords: Coords, path?: Coords[]) {
-	const change: Change = { action: 'move', main, type, coords, endCoords };
+function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, path?: Coords[]) {
+	const change: Change = { action: 'move', main, piece, endCoords };
 	if (path !== undefined) change.path = path;
 	changes.push(change);
 	return changes;
@@ -199,17 +199,17 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
  */
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const pieces = gamefile.ourPieces;
-	const typedata = pieces.typeRanges[change['type']];
-	if (typedata === undefined) throw Error(`Type: "${change.type}" is not expected to be in the game`);
-	if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.type)) throw Error(`Type: ${change.type} is not expected to be added after initial position`);
+	const typedata = pieces.typeRanges[change.piece.type];
+	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 
 	if (typedata.undefineds.length === 0) {
+		if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.piece.type)) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position`);
 		events.runEvent(gamefile.events, "regenerateLists", gamefile);
 	}
 
 	const idx = typedata.undefineds.pop()!;
-	pieces.XPositions[idx] = change.coords[0];
-	pieces.XPositions[idx] = change.coords[1];
+	pieces.XPositions[idx] = change.piece.coords[0];
+	pieces.XPositions[idx] = change.piece.coords[1];
 
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
@@ -220,9 +220,9 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
  */
 function deletePiece(gamefile: gamefile, change: Change) {
 	const pieces = gamefile.ourPieces;
-	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change['coords']))!;
+	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.piece.coords))!;
 	organizedpieces.removePieceFromSpace(idx, pieces);
-	pieces.typeRanges[change['type']].undefineds.push(idx);
+	pieces.typeRanges[change.piece.type].undefineds.push(idx);
 }
 
 
@@ -238,7 +238,7 @@ function movePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
 	const pieces = gamefile.ourPieces;
-	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.coords))!;
+	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.piece.coords))!;
 
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
@@ -260,8 +260,8 @@ function returnPiece(gamefile: gamefile, change: Change) {
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
 
-	pieces.XPositions[idx] = change.coords[0];
-	pieces.YPositions[idx] = change.coords[1];
+	pieces.XPositions[idx] = change.piece.coords[0];
+	pieces.YPositions[idx] = change.piece.coords[1];
 
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
@@ -274,7 +274,7 @@ function returnPiece(gamefile: gamefile, change: Change) {
 function capturePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw new Error(`capturePiece called with a non-capture change: ${change.action}`);
 
-	deletePiece(gamefile, { type: change.capturedPiece, coords: change.endCoords, main: change.main, action: "add" });
+	deletePiece(gamefile, { piece: {type: change.capturedPiece, coords: change.endCoords}, main: change.main, action: "add" });
 	movePiece(gamefile, change);
 }
 
@@ -285,7 +285,7 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw new Error(`uncapturePiece called with a non-capture change: ${change.action}`);
 
 	returnPiece(gamefile, change);
-	addPiece(gamefile, { type: change.capturedPiece, coords: change.endCoords, main: change.main, action: "add" });
+	addPiece(gamefile, { piece: {type: change.capturedPiece, coords: change.endCoords}, main: change.main, action: "add" });
 }
 
 /**

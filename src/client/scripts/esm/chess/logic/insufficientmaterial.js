@@ -171,20 +171,20 @@ function detectInsufficientMaterial(gamefile) {
 	for (const idx of gamefile.ourPieces.coords.values()) {
 		const piece = boardutil.getPieceFromIdx(gamefile.ourPieces, idx);
 		const [raw, color] = typeutil.splitType(piece.type);
-		if (raw === typeutil.rawTypes.OBSTACLE && color === typeutil.colors.NEUTRAL) continue;
+		if (raw === typeutil.rawTypes.OBSTACLE && color === typeutil.players.NEUTRAL) continue;
 		
 		else if (raw === typeutil.rawTypes.BISHOP) {
 			const parity = Math.abs(sum_tuple_coords(piece.coords)) % 2;
-			if (color === typeutil.colors.WHITE) bishopsW_count[parity] += 1;
-			else if (color === typeutil.colors.BLACK) bishopsB_count[parity] += 1;
+			if (color === typeutil.players.WHITE) bishopsW_count[parity] += 1;
+			else if (color === typeutil.players.BLACK) bishopsB_count[parity] += 1;
 		}
 		else if (piece.type in scenario) scenario[piece.type] += 1;
 		else scenario[piece.type] = 1;
 	}
 
 	// add bishop tuples to scenario, and make sure the first entry of the bishop lists is the largest one
-	if (sum_tuple_coords(bishopsW_count) !== 0) scenario[typeutil.buildType(typeutil.rawTypes.BISHOP, typeutil.colors.WHITE)] = ordered_tuple_descending(bishopsW_count);
-	if (sum_tuple_coords(bishopsB_count) !== 0) scenario[typeutil.buildType(typeutil.rawTypes.BISHOP, typeutil.colors.BLACK)] = ordered_tuple_descending(bishopsB_count);
+	if (sum_tuple_coords(bishopsW_count) !== 0) scenario[typeutil.buildType(typeutil.rawTypes.BISHOP, typeutil.players.WHITE)] = ordered_tuple_descending(bishopsW_count);
+	if (sum_tuple_coords(bishopsB_count) !== 0) scenario[typeutil.buildType(typeutil.rawTypes.BISHOP, typeutil.players.BLACK)] = ordered_tuple_descending(bishopsB_count);
 
 	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
 	// This is fully enough for the checkmate practice mode, for now
@@ -196,7 +196,7 @@ function detectInsufficientMaterial(gamefile) {
 		if ("pawnsB" in scenario && promotionListBlack.length !== 0) return false;
 	}
 
-	// Create scenario object with inverted colors
+	// Create scenario object with inverted players
 	const invertedScenario = {};
 	for (const piece in scenario) {
 		const pieceInverted = typeutil.invertType(piece);

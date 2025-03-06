@@ -1,11 +1,13 @@
 import typeutil from "../util/typeutil";
 import coordutil from "../util/coordutil";
 import math from "../../util/math";
-import { listExtras, colors } from "../config";
+import { listExtras, players } from "../config";
 
+// @ts-ignore
 import type gamefile from "./gamefile";
 import type { RawType } from "../util/typeutil";
 import type { Coords, CoordsKey } from "../util/coordutil";
+// @ts-ignore
 import type { GameRules } from "../variants/gamerules";
 
 const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
@@ -44,7 +46,7 @@ type TypeRanges = Map<number, TypeRange>
 interface OrganizedPieces {
 	XPositions: PositionArray
 	YPositions: PositionArray
-	types: Uint8Array // Range 0-255. There are 22 total types currently, potentially 4 unique colors/players in a game ==> 88 posible types.
+	types: Uint8Array // Range 0-255. There are 22 total types currently, potentially 4 unique players/players in a game ==> 88 posible types.
 	typeRanges: TypeRanges
 	// Maybe not needed? Since typeRanges above contains undefineds arrays. Correct me if wrong
 	// undefineds: Array<number>
@@ -80,8 +82,8 @@ function constuctNewArray<C extends SizedArray>(a: C, i: number): C {
 }
 
 function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
-	const typeOrder = Object.keys(o.typeRanges).map(Number);
-	typeOrder.sort((a,b) => {return o.typeRanges[a].start - o.typeRanges[b].start;});
+	const typeOrder = [...o.typeRanges.keys()];
+	typeOrder.sort((a,b) => {return o.typeRanges.get(a)!.start - o.typeRanges.get(b)!.start;});
 
 	let totalUndefinedsNeeded = 0;
 	let currentOffset = 0;
@@ -91,7 +93,7 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
 		offsetByType[t] = currentOffset;
 		let undefinedsNeeded = 0;
 		if (isTypeATypeWereAppendingUndefineds(gamerule.promotionsAllowed!, t)) {
-			undefinedsNeeded = Math.min(listExtras - o.typeRanges[t].undefineds.length, undefinedsNeeded);
+			undefinedsNeeded = Math.min(listExtras - o.typeRanges.get(t)!.undefineds.length, undefinedsNeeded);
 		}
 		extraUndefinedsByType[t] = undefinedsNeeded;
 		totalUndefinedsNeeded += undefinedsNeeded;
@@ -102,26 +104,24 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
 	const newYpos = constuctNewArray(o.YPositions, totalUndefinedsNeeded);
 	const newTypes = constuctNewArray(o.types, totalUndefinedsNeeded);
 
-	for (const nt in o.typeRanges) {
-		const t = Number(nt);
-		const rangeData = o.typeRanges[t];
-		const extraNeeded = extraUndefinedsByType[t];
-		const currentOffset = offsetByType[t];
+	for (const [t, rangeData] of o.typeRanges) {
+		const extraNeeded = extraUndefinedsByType[t]!;
+		const currentOffset = offsetByType[t]!;
 		// Copy all data
 		for (let i = rangeData.start; i < rangeData.end; i++) {
-			newXpos[i + currentOffset] = o.XPositions[i];
-			newYpos[i + currentOffset] = o.YPositions[i];
-			newTypes[i + currentOffset] = o.types[i];
+			newXpos[i + currentOffset] = o.XPositions[i]!;
+			newYpos[i + currentOffset] = o.YPositions[i]!;
+			newTypes[i + currentOffset] = o.types[i]!;
 		}
 		// Move undefineds
 		for (const i in rangeData.undefineds) {
-			rangeData.undefineds[i] = rangeData.undefineds[i] + currentOffset;
+			rangeData.undefineds[i]! += currentOffset;
 		}
 		// Move ranges
 		rangeData.start += currentOffset;
 		rangeData.end += currentOffset;
 		// Add new undefineds
-		for (let i = rangeData.end + 1; i < rangeData.end + extraNeeded; i++) {
+		for (let i = rangeData.end; i < rangeData.end + extraNeeded; i++) {
 			rangeData.undefineds.push(i);
 		}
 
@@ -133,15 +133,15 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
 		for (const linekey in l) {
 			const line: number[] = l.get(linekey as LineKey)!;
 			for (const i in line) {
-				const idx = line[i];
-				line[i] = offsetByType[o.types[idx]] + idx;
+				const idx = line[i]!;
+				line[i] = offsetByType[o.types[idx]!]! + idx;
 			}
 		}
 	}
 
 	for (const pos in o.coords ) {
 		const idx = o.coords.get(pos as CoordsKey)!;
-		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]]);
+		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]!]!);
 	}
 
 	o.XPositions = newXpos;
@@ -150,10 +150,9 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
 }
 
 function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boolean {
-	for (const nt in o.typeRanges) {
-		const t = Number(nt);
+	for (const [t, range] of o.typeRanges) {
 		if (!isTypeATypeWereAppendingUndefineds(gamerules.promotionsAllowed!, t)) return false;
-		if (o.typeRanges[t].undefineds.length === 0) return true;
+		if (range.undefineds.length === 0) return true;
 	}
 	return false;
 }
@@ -191,7 +190,7 @@ function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
 			end: -1,
 			undefineds: []
 		});
-	}, [colors.NEUTRAL, colors.WHITE, colors.BLACK],
+	}, [players.NEUTRAL, players.WHITE, players.BLACK],
 	gamefile.startSnapshot.existingTypes as RawType[]);
 
 	return state;
@@ -199,7 +198,7 @@ function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
 
 function toSizedArray<T extends SizedArray>(arr: number[], sizedArray: T): T {
 	for (let i = 0; i < sizedArray.length; i++) {
-		sizedArray[i] = arr[i];
+		sizedArray[i] = arr[i]!;
 	}
 	return sizedArray;
 }
@@ -222,9 +221,9 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
 		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
 		// Does the type parameter exist?
 		// if (!state[type]) state[type] = []
-		if (!ranges[type]) throw Error(`Error when building state from key list. Type ${type} is undefined!`);
+		if (!ranges.has(type)) throw Error(`Error when building state from key list. Type ${type} has no range!`);
 		// Push the coords
-		piecesByType[type].push(coords);
+		piecesByType[type]!.push(coords);
 	}
 
 	const typeOrder: number[] = Object.keys(piecesByType).map(Number).sort();
@@ -233,10 +232,12 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
 	const y: number[] = [];
 	const t: number[] = [];
 	for (const rt of typeOrder) {
-		ranges[rt].start = currentOffset;
-		currentOffset += piecesByType[rt].length;
-		ranges[rt].end = currentOffset; 
-		for (const c of piecesByType[rt]) {
+		const pieces = piecesByType[rt]!;
+		const range = ranges.get(rt)!;
+		range.start = currentOffset;
+		currentOffset += pieces.length;
+		range.end = currentOffset; 
+		for (const c of pieces) {
 			x.push(c[0]);
 			y.push(c[1]);
 			t.push(rt);
@@ -302,13 +303,13 @@ function registerPieceInSpace(idx: number, organizedPieces: Partial<OrganizedPie
 	const y = organizedPieces.YPositions![idx];
 	const coords = [x,y] as Coords;
 	const key = coordutil.getKeyFromCoords(coords);
-	if (organizedPieces.coords![key] !== undefined) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
+	if (!organizedPieces.coords!.has(key)) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
 	organizedPieces.coords!.set(key, idx);
 	const lines = organizedPieces.lines!;
 	for (const [strline, linegroup] of lines) {
 		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
 		// Is line initialized
-		if (linegroup.get(lkey) === undefined) lines[strline].set(lkey, []);
+		if (linegroup.get(lkey) === undefined) lines.get(strline)!.set(lkey, []);
 		linegroup.get(lkey)!.push(idx);
 	}
 }
@@ -407,12 +408,12 @@ function areColinearSlidesPresentInGame(o: OrganizedPieces): boolean {
 
 	// Iterate through each line, comparing its slope with every other line
 	for (let a = 0; a < slidingPossible.length - 1; a++) {
-		const line1 = slidingPossible[a]; // [dx,dy]
+		const line1 = slidingPossible[a]!; // [dx,dy]
 		const slope1 = line1[1] / line1[0]; // Rise/Run
 		const line1IsVertical = isNaN(slope1);
         
 		for (let b = a + 1; b < slidingPossible.length; b++) {
-			const line2 = slidingPossible[b]; // [dx,dy]
+			const line2 = slidingPossible[b]!; // [dx,dy]
 			const slope2 = line2[1] / line2[0]; // Rise/Run
 			const line2IsVertical = isNaN(slope2);
 
@@ -441,9 +442,15 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 export type {
 	OrganizedPieces,
 	TypeRange,
+
+	LineKey,
+	Vec2Key,
+	Vec2
 };
 
 export default {
+	MaxTypedArrayValues,
+
 	areHippogonalsPresentInGame,
 	areColinearSlidesPresentInGame,
 	buildStateFromKeyList,

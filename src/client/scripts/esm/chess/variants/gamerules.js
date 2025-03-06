@@ -1,4 +1,5 @@
 import jsutil from "../../util/jsutil.js";
+import { players } from "../config.js";
 
 /**
  * This script contains the gameRules constructor,
@@ -6,14 +7,14 @@ import jsutil from "../../util/jsutil.js";
  */
 
 /**
- * @typedef {import('../util/typeutil.js').TeamColor} TeamColor
+ * @typedef {import('../util/typeutil.js').Player} Player
  * @typedef {import('../util/typeutil.js').RawType} RawType
  */
 
 /**
  * Checks if a specified color has a given win condition.
  * @param {GameRules} gameRules
- * @param {string} color - The color to check (e.g., 'white', 'black').
+ * @param {number} color - The color to check (e.g., 'white', 'black').
  * @param {string} winCondition - The win condition for.
  * @returns {boolean} True if the specified color has the given win condition, otherwise false.
  */
@@ -64,7 +65,7 @@ function GameRules() {
 		/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
 		black: undefined,
 	};
-	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. @type {TeamColor[]} */
+	/** A list of players that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. @type {Player[]} */
 	this.turnOrder = undefined;
 
 	// Gamerules that also have dedicated slots in ICN notation...
@@ -80,13 +81,13 @@ function GameRules() {
      * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
      * If one color can't promote, their list should be left undefined.
      * If no color can promote, this should be left undefined.
-	 * @type {Object<string, RawType[]> | undefined}
+	 * @type {Object<Player, RawType[]> | undefined}
      */
 	this.promotionsAllowed = {
 		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {RawType[]} */
-		white: undefined,
+		[players.WHITE]: undefined,
 		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {RawType[]} */
-		black: undefined,
+		[players.BLACK]: undefined,
 	};
 	/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. @type {number | undefined} */
 	this.moveRule = undefined;

@@ -1,5 +1,6 @@
 
-import { rawTypes, colors } from "../config";
+import { rawTypes, players } from "../config";
+import type { Piece } from "./boardutil";
 
 /**
  * All piece types the game is currently compatible with (excluding neutrals).
@@ -15,10 +16,11 @@ const slidingroyals = [rawTypes.ROYALQUEEN];
 
 const royals = [...jumpingroyals, ...slidingroyals];
 
-const strcolors = ["neutral", "white", "black"];
+const strcolors = ["neutral", "white", "black"] as const;
 
+type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
-type TeamColor = typeof colors[keyof typeof colors]
+type Player = typeof players[keyof typeof players]
 
 const numTypes = Object.keys(rawTypes).length;
 
@@ -26,27 +28,27 @@ function getRawType(type: number): RawType {
 	return type % numTypes as RawType;
 }
 
-function getColorFromType(type: number): TeamColor {
-	return Math.floor(type / numTypes) as TeamColor;
+function getColorFromType(type: number): Player {
+	return Math.floor(type / numTypes) as Player;
 }
 
 function getColorStringFromType(type: number): string {
 	return strcolors[getColorFromType(type)];
 }
 
-function buildType(type: RawType, color: TeamColor): number {
+function buildType(type: RawType, color: Player): number {
 	return color * numTypes + type;
 }
 
-function splitType(type: number): [RawType, TeamColor] {
+function splitType(type: number): [RawType, Player] {
 	return [getRawType(type), getColorFromType(type)];
 }
 
 // eslint-disable-next-line no-unused-vars
-function forEachPieceType(callback: (pieceType: number) => void, colors: TeamColor[], includePieces: RawType[]) {
-	for (let i = colors.length - 1; i >= 0; i--) {
+function forEachPieceType(callback: (pieceType: number) => void, players: Player[], includePieces: RawType[]) {
+	for (let i = players.length - 1; i >= 0; i--) {
 		for (const r of includePieces) {
-			callback(buildType(r, colors[i]));
+			callback(buildType(r, players[i]!));
 		}
 	}
 }
@@ -54,20 +56,34 @@ function forEachPieceType(callback: (pieceType: number) => void, colors: TeamCol
 function invertType(type: number): number {
 	const c = getColorFromType(type);
 	const r = getRawType(type);
-	const newc = c === colors.WHITE ? colors.BLACK :
-				 c === colors.BLACK ? colors.WHITE :
+	const newc = c === players.WHITE ? players.BLACK :
+				 c === players.BLACK ? players.WHITE :
 				 undefined;
 	if ( newc === undefined ) return type;
 	return buildType(r, newc);
+}
+
+function invertPlayer(player: Player) {
+	return player === players.WHITE ? players.BLACK :
+				 player === players.BLACK ? players.WHITE :
+				 undefined;
 }
 
 function getRawTypeStr(type: RawType): string {
 	return strtypes[type];
 }
 
+function isRawType(piece: Piece, type: RawType) {
+	return piece.type === type;
+}
+
+function getPlayerFromString(string: StrPlayer): Player {
+	return strcolors.indexOf(string) as Player;
+}
+
 export type {
 	RawType,
-	TeamColor
+	Player
 };
 
 export default {
@@ -82,4 +98,7 @@ export default {
 	invertType,
 	forEachPieceType,
 	getRawTypeStr,
+	invertPlayer,
+	isRawType,
+	getPlayerFromString
 };

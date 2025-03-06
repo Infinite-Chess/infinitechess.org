@@ -5,7 +5,7 @@
  */
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { Piece } from '../../chess/logic/boardchanges.js';
+import type { Piece } from '../../chess/util/boardutil.js';
 import type { Color } from '../../chess/util/colorutil.js';
 
 import arrows from './arrows/arrows.js';
@@ -30,7 +30,7 @@ import perspective from './perspective.js';
 import shapes from './shapes.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-
+import typeutil from '../../chess/util/typeutil.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ interface AnimationSegment {
 /** Represents an animation of a piece. */
 interface Animation {
 	/** The type of piece to animate. */
-	type: string;
+	type: number;
 	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
 	path: Coords[];
 	/** The segments between each waypoint */
@@ -134,7 +134,7 @@ let DEBUG = false;
  * @param instant - If true, the piece was dropped and should not be animated. The SOUND will still be played.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: boolean, resetAnimations: boolean = true): void {
+function animatePiece(type: number, path: Coords[], captured?: Piece, instant?: boolean, resetAnimations: boolean = true): void {
 	if (path.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
@@ -146,7 +146,7 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: 
 
 	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
 	if (spritesheet.typesWithoutSVG.some(typeNoSVG => {
-		return type.startsWith(typeNoSVG) || (captured !== undefined && captured.type.startsWith(typeNoSVG));
+		return typeutil.getRawType(type) === typeNoSVG || (captured !== undefined && typeutil.getRawType(captured.type) === typeNoSVG);
 	})) instant = true; // But, still instant animate it so that the sound plays
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
@@ -320,7 +320,7 @@ function renderAnimations() {
  * @param type - The type of piece the data and animation is for.
  * @param coords - The coordinates of the piece of the animation.
 */
-function generatePieceData(type: string, coords: Coords): number[] {
+function generatePieceData(type: number, coords: Coords): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { startX, startY, endX, endY } = calculateBoardPosition(coords);

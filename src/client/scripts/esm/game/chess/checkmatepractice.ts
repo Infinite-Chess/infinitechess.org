@@ -7,7 +7,7 @@
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Position } from '../../chess/variants/variant.js';
 import type { VariantOptions } from './gameslot.js';
-
+import type { Player } from '../../chess/util/typeutil.js';
 
 import localstorage from '../../util/localstorage.js';
 import colorutil from '../../chess/util/colorutil.js';
@@ -27,7 +27,7 @@ import winconutil from '../../chess/util/winconutil.js';
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
-
+import { players } from '../../chess/config.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -151,7 +151,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 
 	const options = {
 		Event: 'Infinite chess checkmate practice',
-		youAreColor: 'white' as 'white',
+		youAreColor: players.WHITE,
 		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
 		engineConfig: { checkmateSelectedID: checkmateSelectedID, engineTimeLimitPerMoveMillis: 500 },
 		variantOptions
@@ -296,7 +296,7 @@ function onEngineGameConclude(): void {
 	if (gameConclusion === false) throw Error('Game conclusion is false, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
-	const victor: string | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
 	if (victor === undefined) throw Error('Victor should never be undefined when concluding an engine game.');
 	if (!enginegame.areWeColor(victor)) return; // Lost
 

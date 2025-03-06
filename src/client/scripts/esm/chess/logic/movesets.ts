@@ -19,14 +19,15 @@ import type { gamefile } from './gamefile.js';
 // @ts-ignore
 import type { Piece } from './boardchanges.js';
 import { CoordsSpecial } from './movepiece.js';
+import type { RawType, Player } from '../util/typeutil.js';
 
 
 /**
  * A Movesets object containing the movesets for every piece type in a game
  */
-interface Movesets {
-	[pieceType: string]: PieceMoveset
-};
+type Movesets = {
+	[_ in RawType]?: PieceMoveset
+}
 
 /**
  * A moveset for an single piece type in a game
@@ -105,7 +106,7 @@ type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Co
  * each of the coords will have a special property attached to it. castle/promote/enpassant
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: gamefile, coords: Coords, color: string) => CoordsSpecial[]
+type SpecialFunction = (gamefile: gamefile, coords: Coords, color: Player) => CoordsSpecial[]
 
 
 

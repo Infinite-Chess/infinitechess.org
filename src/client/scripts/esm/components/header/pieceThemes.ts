@@ -1,12 +1,12 @@
-import { rawTypes, colors } from "../../chess/config.js";
+import { rawTypes, players } from "../../chess/config.js";
 import typeutil from "../../chess/util/typeutil.js";
 import jsutil from "../../util/jsutil.js";
 
-import type { RawType, TeamColor } from "../../chess/util/typeutil.js";
+import type { RawType, Player } from "../../chess/util/typeutil.js";
 import type { Color } from "../../chess/util/colorutil.js";
 
 type PieceColorGroup = {
-	[team in TeamColor]: Color
+	[team in Player]: Color
 }
 
 type PieceData<T> = {
@@ -21,15 +21,15 @@ interface ColorArgs {
 }
 
 const dualColors: PieceColorGroup = {
-	[colors.WHITE]: [1, 1, 1, 1],
-	[colors.BLACK]: [1, 1, 1, 1],
-	[colors.NEUTRAL]: [0.5, 0.5, 0.5, 1]
+	[players.WHITE]: [1, 1, 1, 1],
+	[players.BLACK]: [1, 1, 1, 1],
+	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1]
 };
 
 const neutralColors: PieceColorGroup = {
-	[colors.WHITE]: [1, 1, 1, 1],
-	[colors.BLACK]: [0.1, 0.1, 0.1, 1],
-	[colors.NEUTRAL]: [0.5, 0.5, 0.5, 1]
+	[players.WHITE]: [1, 1, 1, 1],
+	[players.BLACK]: [0.1, 0.1, 0.1, 1],
+	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1]
 };
 
 const pieceDefaultColors: PieceColorTheme = {

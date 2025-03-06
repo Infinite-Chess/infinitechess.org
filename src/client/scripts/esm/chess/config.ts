@@ -26,7 +26,7 @@ const rawTypes = {
 	PAWN: 21
 } as const;
 
-const colors = {
+const players = {
 	NEUTRAL: 0,
 	WHITE: 1,
 	BLACK: 2,
@@ -38,5 +38,5 @@ export {
 	rawTypes,
 	listExtras,
 	pieceCountToDisableCheckmate,
-	colors,
+	players,
 };
