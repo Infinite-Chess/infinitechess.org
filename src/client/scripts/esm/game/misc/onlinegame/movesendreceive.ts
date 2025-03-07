@@ -11,7 +11,7 @@ import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 
 import onlinegame from "./onlinegame.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
-import clock from "../../../chess/logic/clock.js";
+import offlineclockstuff from "../../../chess/logic/offlineclockstuff.js";
 import jsutil from "../../../util/jsutil.js";
 import selection from "../../chess/selection.js";
 import gameslot from "../../chess/gameslot.js";
@@ -29,6 +29,8 @@ import guipause from "../../gui/guipause.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
 import movesequence from "../../chess/movesequence.js";
+// @ts-ignore
+import clock from "../../../chess/logic/clock.js";
 
 
 // Functions -------------------------------------------------------------------
@@ -104,7 +106,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
-	clock.edit(gamefile, message.clockValues);
+	offlineclockstuff.edit(gamefile, message.clockValues);
 	guiclock.edit(gamefile);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.

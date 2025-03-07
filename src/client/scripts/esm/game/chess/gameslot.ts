@@ -8,7 +8,7 @@
 
 
 import type { MetaData } from "../../chess/util/metadata.js";
-import type { ClockValues } from "../../chess/logic/clock.js";
+import type { ClockValues } from "../../chess/logic/offlineclockstuff.js";
 import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
 // @ts-ignore

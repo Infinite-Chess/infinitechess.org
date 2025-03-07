@@ -36,7 +36,7 @@ import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 /**
  * @typedef {import('../TypeDefinitions.js').Game} Game
  * @typedef {import('../../../client/scripts/esm/chess/variants/gamerules.js').GameRules} GameRules
- * @typedef {import('../../../client/scripts/esm/chess/logic/clock.js').ClockValues} ClockValues
+ * @typedef {import('../../../client/scripts/esm/chess/logic/offlineclockstuff.js').ClockValues} ClockValues
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
