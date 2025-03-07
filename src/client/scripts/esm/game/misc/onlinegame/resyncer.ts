@@ -20,7 +20,7 @@ import type gamefile from "../../../chess/logic/gamefile.js";
 
 import movesendreceive from "./movesendreceive.js";
 import onlinegame from "./onlinegame.js";
-import clock from "../../../chess/logic/clock.js";
+import offlineclockstuff from "../../../chess/logic/offlineclockstuff.js";
 import selection from "../../chess/selection.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
@@ -30,6 +30,8 @@ import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import formatconverter from "../../../chess/logic/formatconverter.js";
 import movesequence from "../../chess/movesequence.js";
+//@ts-ignore
+import clock from "../../../chess/logic/clock.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -60,7 +62,7 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
-	clock.edit(gamefile, message.clockValues);
+	offlineclockstuff.edit(gamefile, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
