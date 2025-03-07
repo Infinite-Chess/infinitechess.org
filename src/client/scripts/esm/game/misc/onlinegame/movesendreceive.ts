@@ -1,4 +1,3 @@
-
 /**
  * This script handles sending our move in online games to the server,
  * and receiving moves from our opponent.
