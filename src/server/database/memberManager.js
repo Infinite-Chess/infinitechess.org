@@ -8,6 +8,7 @@ import { ensureJSONString } from '../utility/JSONUtils.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
+import validcheckmates from '../../client/scripts/esm/chess/util/validcheckmates.js';
 
 
 // Variables ----------------------------------------------------------
@@ -399,6 +400,11 @@ function updateCheckmatesBeaten(userId, checkmateID) {
 		// Check if checkmateID is already in checkmates_beaten
 		if (currentCheckmates.includes(checkmateID)) {
 			return true; // No update needed
+		}
+
+		// Check if checkmateID is valid
+		if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmateID)) {
+			return true; // No update done if checkmateID is invalid
 		}
         
 		// Append the new string, ensuring proper formatting (e.g., comma-separated values)
