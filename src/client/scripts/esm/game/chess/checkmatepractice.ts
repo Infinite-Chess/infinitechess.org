@@ -233,7 +233,7 @@ function eraseCheckmatePracticeProgressFromLocalStorage(): void {
 function updateCompletedCheckmates() {
 	// Update completedCheckmates according to checkmates_beaten cookie, if it exists, and if we are logged in
 	const cookieCheckmates: string | undefined = docutil.getCookieValue('checkmates_beaten');
-	if (validatorama.areWeLoggedIn() && cookieCheckmates) {
+	if (validatorama.areWeLoggedIn() && cookieCheckmates !== undefined) {
 		console.log("checkmates_beaten cookie was present!");
 		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || [];
 		guipractice.updateCheckmatesBeaten(completedCheckmates);
