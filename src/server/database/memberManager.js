@@ -376,10 +376,10 @@ function updateLastSeen(userId) {
 }
 
 /**
- * Appends a short string to the checkmates_beaten field if it is not already present.
+ * Appends a short string to the checkmates_beaten field of a member, if it is not already present and if it is valid.
  * @param {number} userId - The user ID of the member.
  * @param {string} checkmateID - The checkmateID of a beaten checkmate
- * @returns {Boolean} whether everything went ok
+ * @returns {Boolean | string} whether everything went ok
  */
 function updateCheckmatesBeaten(userId, checkmateID) {
 	// SQL query to retrieve the current checkmates_beaten value
@@ -399,12 +399,12 @@ function updateCheckmatesBeaten(userId, checkmateID) {
         
 		// Check if checkmateID is already in checkmates_beaten
 		if (currentCheckmates.includes(checkmateID)) {
-			return true; // No update needed
+			return currentCheckmates; // No update needed
 		}
 
 		// Check if checkmateID is valid
 		if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmateID)) {
-			return true; // No update done if checkmateID is invalid
+			return currentCheckmates; // No update done if checkmateID is invalid
 		}
         
 		// Append the new string, ensuring proper formatting (e.g., comma-separated values)
@@ -423,7 +423,7 @@ function updateCheckmatesBeaten(userId, checkmateID) {
 			logEvents(`No changes made when updating checkmates_beaten for member of id "${userId}"!`, 'errLog.txt', { print: true });
 			return false;
 		} else {
-			return true;
+			return updatedCheckmates;
 		}
 	} catch (error) {
 		logEvents(`Error updating checkmates_beaten for member of id "${userId}": ${error.message}`, 'errLog.txt', { print: true });

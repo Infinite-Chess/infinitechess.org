@@ -1,5 +1,5 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
-import { deletePracticeProgressCookie } from "../../api/PracticeProgress.js";
+import { getCheckmatesBeaten, createPracticeProgressCookie, deletePracticeProgressCookie } from "../../api/PracticeProgress.js";
 import { logEvents } from "../../middleware/logEvents.js";
 import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, deleteRefreshTokensOfUser, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
@@ -116,7 +116,7 @@ function createNewSession(req, res, user_id, username, roles) {
 function revokeSession(res) {
 	deleteSessionCookies(res);
 	deletePreferencesCookie(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
-	deletePracticeProgressCookie(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
+	deletePracticeProgressCookie(res);
 }
 
 
@@ -127,6 +127,7 @@ function revokeSession(res) {
  * Creates and sets the cookies:
  * * memberInfo containing user info (user ID and username),
  * * jwt containing our refresh token.
+ * * checkmates_beaten, storing practice mode progress
  * @param {Object} res - The response object.
  * @param {string} userId - The ID of the user.
  * @param {string} username - The username of the user.
@@ -135,6 +136,7 @@ function revokeSession(res) {
 function createSessionCookies(res, userId, username, refreshToken) {
 	createRefreshTokenCookie(res, refreshToken);
 	createMemberInfoCookie(res, userId, username);
+	createPracticeProgressCookie(res, getCheckmatesBeaten(userId));
 }
 
 /**
@@ -144,6 +146,7 @@ function createSessionCookies(res, userId, username, refreshToken) {
 function deleteSessionCookies(res) {
 	deleteRefreshTokenCookie(res);
 	deleteMemberInfoCookie(res);
+	deletePracticeProgressCookie(res);
 }
 
 /**

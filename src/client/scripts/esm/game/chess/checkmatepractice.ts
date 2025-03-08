@@ -23,6 +23,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
 import validatorama from "../../util/validatorama.js";
 import validcheckmates from '../../chess/util/validcheckmates.js';
+import docutil from '../../util/docutil.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -214,14 +215,6 @@ function squareNotInSight(square: CoordsKey, startingPosition: Position): boolea
 }
 
 /** 
- * Sets the completedCheckmates variable according to local storage, if it is uninitialized and calls an update on the GUI
-*/
-function updateCompletedCheckmatesFromLocalStorage() {
-	if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
-	guipractice.updateCheckmatesBeaten(completedCheckmates);
-}
-
-/** 
  * Only for dev testing
  * Erases checkmate practice progress in local storage
  * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
@@ -235,48 +228,20 @@ function eraseCheckmatePracticeProgressFromLocalStorage(): void {
 }
 
 /**
- * Tries to fetch checkmates_beaten list from server, if member is logged in.
- * If successfull, updates completedCheckmates variable according and calls an update on the GUI
+ * Updates completedCheckmates list and redraws the GUI by calling guipractice.updateCheckmatesBeaten()
  */
-async function updateCompletedCheckmatesFromServer() {
-	// We have to wait for validatorama here because it might be attempting
-	// to refresh our session in which case our session cookies will change
-	// so our refresh token in this here fetch request here would then be invalid
-	await validatorama.waitUntilInitialRequestBack();
-
-	const config = {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
-		},
-	};
-	// Add the access token if we don't want to verify using the refresh token
-	// const token = await validatorama.getAccessToken();
-	// if (token) {
-	// 	config.headers.Authorization = `Bearer ${token}`;
-	// }
-
-	// If we're logged in, include authorization
-	// if (token) config.headers.Authorization = `Bearer ${token}`; // DON'T NEED, server reads our refresh token cookie
-
-	if (!validatorama.areWeLoggedIn()) return;
-	const loggedInAs = validatorama.getOurUsername();
-
-	fetch(`/member/${loggedInAs}/data`, config)
-		.then((response) => {
-			if (response.status === 404) return false;
-			if (response.status === 500) return false;
-			return response.json();
-		})
-		.then(async(result) => { // result.verified = true/false
-			console.log(result); // { joined, seen, username, email, verified, checkmates_beaten }
-			if (!result) return;
-
-			completedCheckmates = result.checkmates_beaten.match(/[^,]+/g) || [];
-			localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
-			guipractice.updateCheckmatesBeaten(completedCheckmates);
-		});
+function updateCompletedCheckmates() {
+	// Update completedCheckmates according to checkmates_beaten cookie, if it exists, and if we are logged in
+	const cookieCheckmates: string | undefined = docutil.getCookieValue('checkmates_beaten');
+	if (validatorama.areWeLoggedIn() && cookieCheckmates) {
+		console.log("checkmates_beaten cookie was present!");
+		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || [];
+		guipractice.updateCheckmatesBeaten(completedCheckmates);
+	} else {
+		// Else, use localstorage as a fallback
+		completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
+		guipractice.updateCheckmatesBeaten(completedCheckmates);
+	}
 }
 
 /**
@@ -289,10 +254,13 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 
 	// Add the checkmate ID to the beaten list
 	if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
-	localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
 	console.log("Marked checkmate practice as completed!");
 
-	if (!validatorama.areWeLoggedIn()) return;
+	// Update localstorage and exit, if we are not logged in
+	if (!validatorama.areWeLoggedIn()) {
+		localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
+		return;
+	}
 
 	// Configure the POST request
 	const config = {
@@ -407,8 +375,7 @@ export default {
 	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,
-	updateCompletedCheckmatesFromLocalStorage,
-	updateCompletedCheckmatesFromServer,
+	updateCompletedCheckmates,
 	eraseCheckmatePracticeProgressFromLocalStorage,
 	onEngineGameConclude,
 	registerHumanMove,
