@@ -955,7 +955,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		if (mayEnterTrapFleeMode && depth === start_depth && isBlackInTrap(piecelist, coordlist)) inTrapFleeMode = true;
 
 		// Black is in protected rider flee mode and considers no white rider candidate moves no piece captures from here on out:
-		if (mayEnterProtectedRiderFleeMode && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
+		if (mayEnterProtectedRiderFleeMode && depth === start_depth && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
