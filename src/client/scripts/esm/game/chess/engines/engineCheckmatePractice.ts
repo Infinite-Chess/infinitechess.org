@@ -183,7 +183,7 @@ let trapFleeDictionary: { [key: string]: [number, number, number] };
 let mayEnterProtectedRiderFleeMode: boolean;
 let riderTypeToFleeFrom: number;
 let maxDistanceForRider: number;
-let maxDistanceForRoyal_protectedRider: number;
+let maxDistanceForProtector: number;
 let protectedRiderFleeDictionary: { [key: string]: [number, number, number] };
 
 /**
@@ -346,15 +346,15 @@ function initEvalWeightsAndSearchProperties() {
 
 
 	// whether to enter "protected rider flee mode" whenever the black royal is near the specified protected white rider
-	// riderTypeToFleeFrom, maxDistanceForRider, maxDistanceForRoyal_protectedRider
+	// riderTypeToFleeFrom, maxDistanceForRider, maxDistanceForProtector
 	protectedRiderFleeDictionary = {
-		"1K1R2N-1k": [2, Infinity, 0], // rook
-		"1K1CH1N-1k": [9, Infinity, 0], // chancellor
+		"1K1R2N-1k": [2, Infinity, 10], // rook
+		"1K1CH1N-1k": [9, Infinity, 10], // chancellor
 	};
 
 	if (checkmateSelectedID in protectedRiderFleeDictionary) {
 		mayEnterProtectedRiderFleeMode = true;
-		[riderTypeToFleeFrom, maxDistanceForRider, maxDistanceForRoyal_protectedRider] = protectedRiderFleeDictionary[checkmateSelectedID]!;
+		[riderTypeToFleeFrom, maxDistanceForRider, maxDistanceForProtector] = protectedRiderFleeDictionary[checkmateSelectedID]!;
 	}
 
 	switch (checkmateSelectedID) {
@@ -645,17 +645,22 @@ function isBlackInTrap(piecelist: number[], coordlist: Coords[]) {
 	return (nearbyNonroyalWhites >= numOfPiecesForTrap);
 }
 
-// determine if black is near specified protected rider and away from white royal
+// determine if black is near specified protected rider
 function isBlackNearProtectedRider(piecelist: number[], coordlist: Coords[]) {
-	let blackNearProtectedRider = false;
 	for (let i = 0; i < piecelist.length; i++) {
-		if (piecelist[i] === riderTypeToFleeFrom && manhattanNorm(coordlist[i]!) <= maxDistanceForRider && square_is_threatened(coordlist[i]!, piecelist, coordlist)) {
-			blackNearProtectedRider = true;
+		if (piecelist[i] === riderTypeToFleeFrom) {
+			if (manhattanNorm(coordlist[i]!) <= maxDistanceForRider) {
+				for (let j = 0; j < piecelist.length; j++) {
+					if (j !== i && piecelist[j] !== 0 && manhattanDistance(coordlist[i]!, coordlist[j]!) <= maxDistanceForProtector) {
+						return true;
+					}
+				}
+			}
+			// single rider that matters is not protected or too far away
+			return false;
 		}
-		else if (pieceTypeDictionary[piecelist[i]!]!.is_royal && manhattanNorm(coordlist[i]!) <= maxDistanceForRoyal_protectedRider) return false;
 	}
-	// black is surrounded by at least numOfPiecesForTrap nonroyal white pieces
-	return blackNearProtectedRider;
+	return false;
 }
 
 // calculate a list of interesting squares to move to for a white piece with a certain piece index
