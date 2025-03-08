@@ -208,7 +208,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: CustomReque
 	// Valid Syntax
 	logCommand(command, req);
 	const username = commandAndArgs[1];
-	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history"], "username", username, { skipErrorLogging: true });
+	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history", "checkmates_beaten"], "username", username, { skipErrorLogging: true });
 	if (Object.keys(memberData).length === 0) { // Empty (member not found)
 		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}

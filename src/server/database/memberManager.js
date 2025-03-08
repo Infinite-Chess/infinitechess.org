@@ -55,7 +55,8 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// 	preferences TEXT,
 	// 	refresh_tokens TEXT,                          
 	// 	verification TEXT, 
-	// 	username_history TEXT
+	// 	username_history TEXT,
+	//  checkmates_beaten TEXT
 	// );
 
 	if (roles !== undefined && typeof roles !== 'string') throw new Error('Roles must be a string.');
@@ -373,6 +374,52 @@ function updateLastSeen(userId) {
 	}
 }
 
+/**
+ * Appends a short string to the checkmates_beaten field if it is not already present.
+ * @param {number} userId - The user ID of the member.
+ * @param {string} checkmateID - The checkmateID of a beaten checkmate
+ */
+function updateCheckmatesBeaten(userId, checkmateID) {
+	// SQL query to retrieve the current checkmates_beaten value
+	const selectQuery = `
+		SELECT checkmates_beaten FROM members
+		WHERE user_id = ?
+	`;
+    
+	try {
+		const row = db.get(selectQuery, [userId]);
+		if (!row) {
+			logEvents(`No member found with id ${userId} when updating checkmates_beaten!`, 'errLog.txt', { print: true });
+			return;
+		}
+        
+		const currentCheckmates = row.checkmates_beaten || "";
+        
+		// Check if checkmateID is already in checkmates_beaten
+		if (currentCheckmates.includes(checkmateID)) {
+			return; // No update needed
+		}
+        
+		// Append the new string, ensuring proper formatting (e.g., comma-separated values)
+		const updatedCheckmates = currentCheckmates ? `${currentCheckmates},${checkmateID}` : checkmateID;
+        
+		// SQL query to update the checkmates_beaten field
+		const updateQuery = `
+			UPDATE members
+			SET checkmates_beaten = ?
+			WHERE user_id = ?
+		`;
+        
+		const result = db.run(updateQuery, [updatedCheckmates, userId]);
+        
+		if (result.changes === 0) {
+			logEvents(`No changes made when updating checkmates_beaten for member of id "${userId}"!`, 'errLog.txt', { print: true });
+		}
+	} catch (error) {
+		logEvents(`Error updating checkmates_beaten for member of id "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+	}
+}
+
 
 
 // Utility -----------------------------------------------------------------------------------
@@ -499,6 +546,7 @@ export {
 	updateMemberColumns,
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
+	updateCheckmatesBeaten,
 	doesMemberOfIDExist,
 	getUserIdByUsername,
 	doesMemberOfUsernameExist,
