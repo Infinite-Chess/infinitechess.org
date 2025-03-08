@@ -1,7 +1,6 @@
 
 /**
- * This script sets the preferences cookie on any request to an HTML file.
- * And it has an API for setting your preferences in the database.
+ * This script updates the checkmates_beaten list in the database when a user submits a newly completed checkmate
  */
 
 
