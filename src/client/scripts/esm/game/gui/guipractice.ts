@@ -72,7 +72,8 @@ function open() {
 	element_menuExternalLinks.classList.remove("hidden");
 	if (!generatedHTML) createPracticeHTML();
 	changeCheckmateSelected(checkmateSelectedID);
-	updateCheckmatesBeaten();
+	updateCheckmatesBeaten(checkmatepractice.getCompletedCheckmatesFromLocalStorage());
+	checkmatepractice.updateCompletedCheckmatesFromServer();
 	if (!generatedIcons) addPieceIcons();
 	initListeners();
 }
@@ -274,9 +275,8 @@ function changeCheckmateSelected(checkmateid: string) {
  * Updates each checkmate practice element's 'beaten' class, along with the progress bar on top.
  * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
-function updateCheckmatesBeaten() {
+function updateCheckmatesBeaten(completedCheckmates : string[]) {
 	let amountBeaten = 0;
-	const completedCheckmates = checkmatepractice.getCompletedCheckmates();
 	for (const element of element_checkmates.children) {
 		// What is the id string of this checkmate?
 		const id_string = element.id; // "2Q-1k"
