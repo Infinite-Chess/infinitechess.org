@@ -3,10 +3,11 @@
  * This script updates the checkmates_beaten list in the database when a user submits a newly completed checkmate
  */
 
+import validcheckmates from "../../client/scripts/esm/chess/util/validcheckmates.js";
 // @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 // @ts-ignore
-import { getMemberDataByCriteria, updateCheckmatesBeaten } from '../database/memberManager.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 
 import type { CustomRequest } from "../../types.js";
@@ -68,20 +69,26 @@ async function postCheckmateBeaten(req: CustomRequest, res: Response) {
 	}
 
 	const { user_id, username } = req.memberInfo;
-
 	const new_checkmate_beaten = req.body.new_checkmate_beaten;
 
-	// This method updates the checkmates_beaten entry in the database, if applicable, and returns the new checkmates_beaten string:
-	const checkmates_beaten = updateCheckmatesBeaten(user_id, new_checkmate_beaten);
+	let checkmates_beaten = getCheckmatesBeaten(user_id);
+	let updateSuccess = true;
+
+	// Check if checkmateID is valid and not already in checkmates_beaten
+	// If both hold, then checkmates_beaten is updated
+	if (!checkmates_beaten.includes(new_checkmate_beaten) && Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) {
+		checkmates_beaten = checkmates_beaten ? `${checkmates_beaten},${new_checkmate_beaten}` : new_checkmate_beaten;
+		updateSuccess = updateMemberColumns(user_id, { checkmates_beaten });
+	}
 
 	// Send appropriate response
-	if (checkmates_beaten) {
+	if (updateSuccess) {
 		console.log(`Successfully interacted with checkmate list of "${username}" of id "${user_id}".`);
-		// Create a new cookie with an updated checkmate list for the user
+		// Create a new cookie with the updated checkmate list for the user
 		createPracticeProgressCookie(res, checkmates_beaten as string);
 		return res.status(200).json({ message: 'Serverside practice checkmate list interaction successful' });
 	} else {
-		logEvents(`Failed to save practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
+		logEvents(`Failed to save new practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
 		return res.status(500).json({ message: 'Failed to update serverside practice checkmate: user_id not found' });
 	}
 }

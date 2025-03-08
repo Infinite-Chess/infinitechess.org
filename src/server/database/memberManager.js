@@ -8,7 +8,6 @@ import { ensureJSONString } from '../utility/JSONUtils.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
-import validcheckmates from '../../client/scripts/esm/chess/util/validcheckmates.js';
 
 
 // Variables ----------------------------------------------------------
@@ -375,63 +374,6 @@ function updateLastSeen(userId) {
 	}
 }
 
-/**
- * Appends a short string to the checkmates_beaten field of a member, if it is not already present and if it is valid.
- * @param {number} userId - The user ID of the member.
- * @param {string} checkmateID - The checkmateID of a beaten checkmate
- * @returns {Boolean | string} whether everything went ok. Returns the new checkmates_beaten string, if yes
- */
-function updateCheckmatesBeaten(userId, checkmateID) {
-	// SQL query to retrieve the current checkmates_beaten value
-	const selectQuery = `
-		SELECT checkmates_beaten FROM members
-		WHERE user_id = ?
-	`;
-    
-	try {
-		const row = db.get(selectQuery, [userId]);
-		if (!row) {
-			logEvents(`No member found with id ${userId} when updating checkmates_beaten!`, 'errLog.txt', { print: true });
-			return false;
-		}
-        
-		const currentCheckmates = row.checkmates_beaten || "";
-        
-		// Check if checkmateID is already in checkmates_beaten
-		if (currentCheckmates.includes(checkmateID)) {
-			return currentCheckmates; // No update needed
-		}
-
-		// Check if checkmateID is valid
-		if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmateID)) {
-			return currentCheckmates; // No update done if checkmateID is invalid
-		}
-        
-		// Append the new string, ensuring proper formatting (e.g., comma-separated values)
-		const updatedCheckmates = currentCheckmates ? `${currentCheckmates},${checkmateID}` : checkmateID;
-        
-		// SQL query to update the checkmates_beaten field
-		const updateQuery = `
-			UPDATE members
-			SET checkmates_beaten = ?
-			WHERE user_id = ?
-		`;
-        
-		const result = db.run(updateQuery, [updatedCheckmates, userId]);
-        
-		if (result.changes === 0) {
-			logEvents(`No changes made when updating checkmates_beaten for member of id "${userId}"!`, 'errLog.txt', { print: true });
-			return false;
-		} else {
-			return updatedCheckmates;
-		}
-	} catch (error) {
-		logEvents(`Error updating checkmates_beaten for member of id "${userId}": ${error.message}`, 'errLog.txt', { print: true });
-		return false;
-	}
-}
-
-
 
 // Utility -----------------------------------------------------------------------------------
 
@@ -557,7 +499,6 @@ export {
 	updateMemberColumns,
 	updateLoginCountAndLastSeen,
 	updateLastSeen,
-	updateCheckmatesBeaten,
 	doesMemberOfIDExist,
 	getUserIdByUsername,
 	doesMemberOfUsernameExist,
