@@ -57,7 +57,7 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * A list of checkmate strings we have beaten
  * [ "2Q-1k", "3R-1k", "2CH-1k"]
  * 
- * This will be initialized when guipractice calls {@link getCompletedCheckmates} for the first time!
+ * This will be initialized when guipractice calls {@link updateCompletedCheckmates} for the first time!
  * If we initialize it right here, we crash in production, because localstorage is not defined yet in app.js
  * @type {string[]}
  */
@@ -239,7 +239,7 @@ function updateCompletedCheckmates() {
 		guipractice.updateCheckmatesBeaten(completedCheckmates);
 	} else {
 		// Else, use localstorage as a fallback
-		completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
+		completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
 		guipractice.updateCheckmatesBeaten(completedCheckmates);
 	}
 }
