@@ -379,7 +379,7 @@ function updateLastSeen(userId) {
  * Appends a short string to the checkmates_beaten field of a member, if it is not already present and if it is valid.
  * @param {number} userId - The user ID of the member.
  * @param {string} checkmateID - The checkmateID of a beaten checkmate
- * @returns {Boolean | string} whether everything went ok
+ * @returns {Boolean | string} whether everything went ok. Returns the new checkmates_beaten string, if yes
  */
 function updateCheckmatesBeaten(userId, checkmateID) {
 	// SQL query to retrieve the current checkmates_beaten value

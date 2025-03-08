@@ -83,7 +83,7 @@ const member = docutil.getLastSegmentOfURL();
 			for (const checkmateID of Object.values(validcheckmates.validCheckmates).flat()) {
 				if (completedCheckmates.includes(checkmateID)) amountBeaten++;
 			}
-			practiceProgressElement.textContent = `${amountBeaten} / ${Object.values(validcheckmates.validCheckmates).flat().length}`; // What is the best way to get the total number of checkmates?
+			practiceProgressElement.textContent = `${amountBeaten} / ${Object.values(validcheckmates.validCheckmates).flat().length}`;
 
 			const loggedInAs = validatorama.getOurUsername();
 

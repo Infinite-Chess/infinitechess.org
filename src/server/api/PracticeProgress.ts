@@ -71,7 +71,7 @@ async function postCheckmateBeaten(req: CustomRequest, res: Response) {
 
 	const new_checkmate_beaten = req.body.new_checkmate_beaten;
 
-	// This method updates the checkmates_beaten entry in the database, if applicable:
+	// This method updates the checkmates_beaten entry in the database, if applicable, and returns the new checkmates_beaten string:
 	const checkmates_beaten = updateCheckmatesBeaten(user_id, new_checkmate_beaten);
 
 	// Send appropriate response
