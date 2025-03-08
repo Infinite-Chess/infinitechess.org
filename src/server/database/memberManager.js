@@ -378,6 +378,7 @@ function updateLastSeen(userId) {
  * Appends a short string to the checkmates_beaten field if it is not already present.
  * @param {number} userId - The user ID of the member.
  * @param {string} checkmateID - The checkmateID of a beaten checkmate
+ * @returns {Boolean} whether everything went ok
  */
 function updateCheckmatesBeaten(userId, checkmateID) {
 	// SQL query to retrieve the current checkmates_beaten value
@@ -397,7 +398,7 @@ function updateCheckmatesBeaten(userId, checkmateID) {
         
 		// Check if checkmateID is already in checkmates_beaten
 		if (currentCheckmates.includes(checkmateID)) {
-			return false; // No update needed
+			return true; // No update needed
 		}
         
 		// Append the new string, ensuring proper formatting (e.g., comma-separated values)

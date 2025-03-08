@@ -36,8 +36,8 @@ async function postCheckmateBeaten(req, res) {
 
 	// Send appropriate response
 	if (updateSuccess) {
-		console.log(`Successfully saved member "${username}" of id "${user_id}"s newly completed practice checkmate.`);
-		res.status(200).json({ message: 'Serverside practice checkmate list updated successfully' });
+		console.log(`Successfully interacted with checkmate list of "${username}" of id "${user_id}".`);
+		res.status(200).json({ message: 'Serverside practice checkmate list interaction successful' });
 	} else {
 		logEvents(`Failed to save practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
 		res.status(500).json({ message: 'Failed to update serverside practice checkmate: user_id not found' });
