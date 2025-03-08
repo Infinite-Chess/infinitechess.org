@@ -260,9 +260,29 @@ function squareNotInSight(square: CoordsKey, startingPosition: Position): boolea
 	return true;
 }
 
+/** 
+ * Sets the completedCheckmates variable according to local storage, if it is uninitialized and calls an update on the GUI
+*/
+function updateCompletedCheckmatesFromLocalStorage() {
+	if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
+	guipractice.updateCheckmatesBeaten(completedCheckmates);
+}
+
+/** 
+ * Erases checkmate practice progress in local storage
+ * For dev testing: Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
+*/
+function eraseCheckmatePracticeProgressFromLocalStorage(): void {
+	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
+	console.log("DELETED all checkmate practice progress.");
+	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
+	completedCheckmates.length = 0;
+	guipractice.updateCheckmatesBeaten([]); // Delete the 'beaten' class from all
+}
+
 /**
  * Tries to fetch checkmates_beaten list from server, if member is logged in.
- * If successfull, updates localstorage and checkmatelist, and calls guipractice.updateCheckmatesBeaten()
+ * If successfull, updates completedCheckmates variable according and calls an update on the GUI
  */
 async function updateCompletedCheckmatesFromServer() {
 	// We have to wait for validatorama here because it might be attempting
@@ -288,7 +308,6 @@ async function updateCompletedCheckmatesFromServer() {
 
 	if (!validatorama.areWeLoggedIn()) return;
 	const loggedInAs = validatorama.getOurUsername();
-	if (loggedInAs === undefined) return;
 
 	fetch(`/member/${loggedInAs}/data`, config)
 		.then((response) => {
@@ -306,24 +325,10 @@ async function updateCompletedCheckmatesFromServer() {
 		});
 }
 
-function getCompletedCheckmatesFromLocalStorage(): string[] {
-	if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
-	return completedCheckmates;
-}
-
-/** 
- * Purely for dev testing
- * Erase checkmate practice progress in local storage
- * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
-*/
-function eraseCheckmatePracticeProgressFromLocalStorage(): void {
-	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
-	console.log("DELETED all checkmate practice progress.");
-	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
-	completedCheckmates.length = 0;
-	guipractice.updateCheckmatesBeaten([]); // Delete the 'beaten' class from all
-}
-
+/**
+ * Updates the completedCheckmates variable with the beaten checkmatePracticeID,
+ * and sends a message to the server if the player is logged in
+ */
 async function markCheckmateBeaten(checkmatePracticeID: string) {
 	if (!completedCheckmates) throw Error("Cannot mark checkmate beaten when it was never initialized!");
 	if (!Object.values(validCheckmates).flat().includes(checkmatePracticeID)) throw Error("User completed invalid checkmate practice.");
@@ -332,6 +337,8 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 	if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
 	localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
 	console.log("Marked checkmate practice as completed!");
+
+	if (!validatorama.areWeLoggedIn()) return;
 
 	// Configure the POST request
 	const config = {
@@ -447,7 +454,7 @@ export default {
 	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,
-	getCompletedCheckmatesFromLocalStorage,
+	updateCompletedCheckmatesFromLocalStorage,
 	updateCompletedCheckmatesFromServer,
 	onEngineGameConclude,
 	registerHumanMove,
