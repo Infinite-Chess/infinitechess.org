@@ -282,6 +282,7 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 		// Check if the response status code indicates success (e.g., 200-299 range)
 		if (response.ok) {
 			console.log('Checkmate list communication with server successful.');
+			guipractice.updateCheckmatesBeaten(completedCheckmates);
 		} else {
 			// Handle unsuccessful response
 			const errorData: any = await response.json();
