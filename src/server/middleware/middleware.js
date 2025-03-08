@@ -33,7 +33,7 @@ import { requestConfirmEmail } from '../controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
-import { postCheckmateBeaten } from '../api/PracticeProgress.js';
+import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.ts';
 import { handleLogin } from '../controllers/loginController.js';
 import { checkEmailValidity, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
@@ -105,6 +105,8 @@ function configureMiddleware(app) {
 	app.use(assignOrRenewBrowserID);
 	// This sets the user 'preferences' cookie on every request for an HTML file
 	app.use(setPrefsCookie);
+	// This sets the user 'checkmates_beaten' cookie on every request for an HTML file
+	app.use(setPracticeProgressCookie);
 
 	// Provide a route
 

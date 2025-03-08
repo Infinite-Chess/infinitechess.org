@@ -222,8 +222,9 @@ function updateCompletedCheckmatesFromLocalStorage() {
 }
 
 /** 
+ * Only for dev testing
  * Erases checkmate practice progress in local storage
- * For dev testing: Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
+ * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
 */
 function eraseCheckmatePracticeProgressFromLocalStorage(): void {
 	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
@@ -408,6 +409,7 @@ export default {
 	onGameUnload,
 	updateCompletedCheckmatesFromLocalStorage,
 	updateCompletedCheckmatesFromServer,
+	eraseCheckmatePracticeProgressFromLocalStorage,
 	onEngineGameConclude,
 	registerHumanMove,
 	registerEngineMove

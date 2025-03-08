@@ -1,4 +1,5 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
+import { deletePracticeProgressCookie } from "../../api/PracticeProgress.js";
 import { logEvents } from "../../middleware/logEvents.js";
 import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, deleteRefreshTokensOfUser, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
@@ -115,6 +116,7 @@ function createNewSession(req, res, user_id, username, roles) {
 function revokeSession(res) {
 	deleteSessionCookies(res);
 	deletePreferencesCookie(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
+	deletePracticeProgressCookie(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
 }
 
 
