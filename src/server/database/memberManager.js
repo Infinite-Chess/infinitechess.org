@@ -390,14 +390,14 @@ function updateCheckmatesBeaten(userId, checkmateID) {
 		const row = db.get(selectQuery, [userId]);
 		if (!row) {
 			logEvents(`No member found with id ${userId} when updating checkmates_beaten!`, 'errLog.txt', { print: true });
-			return;
+			return false;
 		}
         
 		const currentCheckmates = row.checkmates_beaten || "";
         
 		// Check if checkmateID is already in checkmates_beaten
 		if (currentCheckmates.includes(checkmateID)) {
-			return; // No update needed
+			return false; // No update needed
 		}
         
 		// Append the new string, ensuring proper formatting (e.g., comma-separated values)
@@ -414,9 +414,13 @@ function updateCheckmatesBeaten(userId, checkmateID) {
         
 		if (result.changes === 0) {
 			logEvents(`No changes made when updating checkmates_beaten for member of id "${userId}"!`, 'errLog.txt', { print: true });
+			return false;
+		} else {
+			return true;
 		}
 	} catch (error) {
 		logEvents(`Error updating checkmates_beaten for member of id "${userId}": ${error.message}`, 'errLog.txt', { print: true });
+		return false;
 	}
 }
 

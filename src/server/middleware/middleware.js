@@ -33,6 +33,7 @@ import { requestConfirmEmail } from '../controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
+import { postCheckmateBeaten } from '../api/PracticeProgress.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { checkEmailValidity, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
@@ -150,6 +151,8 @@ function configureMiddleware(app) {
 	app.post("/api/get-access-token", accessTokenIssuer);
 
 	app.post('/api/set-preferences', postPrefs);
+
+	app.post('/api/update-checkmatelist', postCheckmateBeaten);
 
 	app.get("/logout", handleLogout);
 

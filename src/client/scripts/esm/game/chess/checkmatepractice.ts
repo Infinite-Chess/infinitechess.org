@@ -311,13 +311,43 @@ function getCompletedCheckmatesFromLocalStorage(): string[] {
 	return completedCheckmates;
 }
 
-function markCheckmateBeaten(checkmatePracticeID: string): void {
+async function markCheckmateBeaten(checkmatePracticeID: string) {
 	if (!completedCheckmates) throw Error("Cannot mark checkmate beaten when it was never initialized!");
+	if (!Object.values(validCheckmates).flat().includes(checkmatePracticeID)) throw Error("User completed invalid checkmate practice.");
 
 	// Add the checkmate ID to the beaten list
 	if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
 	localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
 	console.log("Marked checkmate practice as completed!");
+
+	// Configure the POST request
+	const config = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			"is-fetch-request": "true" // Custom header
+		} as Record<string, string>,
+		body: JSON.stringify({ new_checkmate_beaten: checkmatePracticeID }),  // Send the preferences as JSON
+	};
+	
+	// Get the access token and add it to the Authorization header
+	const token: string | undefined = await validatorama.getAccessToken();
+	if (token) config.headers['Authorization'] = `Bearer ${token}`;  // If you use tokens for authentication
+	
+	try {
+		const response: Response = await fetch('/api/update-checkmatelist', config);
+			
+		// Check if the response status code indicates success (e.g., 200-299 range)
+		if (response.ok) {
+			console.log('Checkmate list updated successfully on the server.');
+		} else {
+			// Handle unsuccessful response
+			const errorData: any = await response.json();
+			console.error('Failed to update checkmate list on the server:', errorData.message || errorData);
+		}
+	} catch (error) {
+		console.error('Error sending checkmate list to the server:', error);
+	}
 }
 
 /** DEPREACTED * Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! 
