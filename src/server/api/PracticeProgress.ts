@@ -44,12 +44,19 @@ function deletePracticeProgressCookie(res: Response) {
 
 /**
  * Fetches the checkmates_beaten for a given user from the database.
- * @param {number} userId - The ID of the user whose checkmates_beaten are to be fetched.
- * @returns {string} - Returns the checkmates_beaten object if found, otherwise undefined.
+ * @param userId - The ID of the user whose checkmates_beaten are to be fetched.
+ * @returns - Returns the checkmates_beaten object if found, otherwise undefined.
  */
 function getCheckmatesBeaten(userId: number): string {
 	const { checkmates_beaten } = getMemberDataByCriteria(['checkmates_beaten'], 'user_id', userId, { skipErrorLogging: true });
-	return checkmates_beaten;
+	return checkmates_beaten ?? ''; // Could be undefined if no match is found
+}
+
+/**
+ * Converts a string of checkmates_beaten delimited by commas into an array of strings.
+ */
+function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
+	return checkmates_beaten.match(/[^,]+/g) || []; // match() returns null if no matches
 }
 
 /**
@@ -69,27 +76,37 @@ async function postCheckmateBeaten(req: CustomRequest, res: Response) {
 	}
 
 	const { user_id, username } = req.memberInfo;
-	const new_checkmate_beaten = req.body.new_checkmate_beaten;
+	const new_checkmate_beaten: string = req.body.new_checkmate_beaten;
 
-	let checkmates_beaten = getCheckmatesBeaten(user_id);
-	let updateSuccess = true;
+	// Validate the new checkmate ID
+	if (typeof new_checkmate_beaten !== 'string') return res.status(400).json({ message: 'Invalid checkmate ID' });
+	if (!Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) return res.status(400).json({ message: 'Invalid checkmate ID' });
 
-	// Check if checkmateID is valid and not already in checkmates_beaten
-	// If both hold, then checkmates_beaten is updated
-	if (!checkmates_beaten.includes(new_checkmate_beaten) && Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) {
-		checkmates_beaten = checkmates_beaten ? `${checkmates_beaten},${new_checkmate_beaten}` : new_checkmate_beaten;
-		updateSuccess = updateMemberColumns(user_id, { checkmates_beaten });
-	}
+	// Checkmate is valid...
+
+	let checkmates_beaten: string = getCheckmatesBeaten(user_id);
+	const checkmates_beaten_array: string[] = checkmatesBeatenToStringArray(checkmates_beaten);
+
+	if (!checkmates_beaten_array.includes(new_checkmate_beaten)) return res.status(200).json({ message: 'Checkmate already beaten' });
+
+	// Checkmate not already beaten...
+
+	// Update the new list
+	checkmates_beaten_array.push(new_checkmate_beaten);
+	checkmates_beaten = checkmates_beaten_array.join(',');
+
+	// Save the new list to the database
+	const updateSuccess: boolean = updateMemberColumns(user_id, { checkmates_beaten });
 
 	// Send appropriate response
 	if (updateSuccess) {
-		console.log(`Successfully interacted with checkmate list of "${username}" of id "${user_id}".`);
+		console.log(`Successfully interacted with checkmate list of member "${username}" of id "${user_id}".`);
+		res.status(200).json({ message: 'Checkmate recorded successfully' });
 		// Create a new cookie with the updated checkmate list for the user
-		createPracticeProgressCookie(res, checkmates_beaten as string);
-		return res.status(200).json({ message: 'Serverside practice checkmate list interaction successful' });
+		createPracticeProgressCookie(res, checkmates_beaten);
 	} else {
 		logEvents(`Failed to save new practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
-		return res.status(500).json({ message: 'Failed to update serverside practice checkmate: user_id not found' });
+		res.status(500).json({ message: 'Failed to update serverside practice checkmate: user_id not found' });
 	}
 }
 
