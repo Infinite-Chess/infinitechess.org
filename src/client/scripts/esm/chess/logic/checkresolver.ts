@@ -362,7 +362,7 @@ function appendPathBlockingMoves(path: path, legalMoves: LegalMoves, selectedPie
 function isMoveCheckInvalid(gamefile: gamefile, piece: Piece, destCoords: CoordsSpecial, color: string) { // pieceSelected: { type, index, coords }
 	const moveDraft: MoveDraft = { startCoords: jsutil.deepCopyObject(piece.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
-	return movepiece.getSimulatedCheck(gamefile, moveDraft, color);
+	return movepiece.getSimulatedCheck(gamefile, moveDraft, color).check;
 }
 
 
