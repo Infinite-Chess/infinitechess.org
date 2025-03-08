@@ -64,32 +64,44 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
  * @param {CustomRequest} req - Express request object
  * @param {Response} res - Express response object
  */
-async function postCheckmateBeaten(req: CustomRequest, res: Response) {
+function postCheckmateBeaten(req: CustomRequest, res: Response): void {
 	if (!req.memberInfo) { // { user_id, username, roles }
 		logEvents("Can't save user checkmates_beaten when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt', { print: true });
-		return res.status(500).json({ message: "Server Error: No Authorization"});
+		res.status(500).json({ message: "Server Error: No Authorization"});
+		return;
 	}
 
 	if (!req.memberInfo.signedIn) {
 		logEvents("User tried to save checkmates_beaten when they weren't signed in!", 'errLog.txt', { print: true });
-		return res.status(401).json({ message: "Can't save checkmates_beaten, not signed in."});
+		res.status(401).json({ message: "Can't save checkmates_beaten, not signed in."});
+		return;
 	}
 
 	const { user_id, username } = req.memberInfo;
 	const new_checkmate_beaten: string = req.body.new_checkmate_beaten;
 
 	// Validate the new checkmate ID
-	if (typeof new_checkmate_beaten !== 'string') return res.status(400).json({ message: 'Invalid checkmate ID' });
-	if (!Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) return res.status(400).json({ message: 'Invalid checkmate ID' });
+	if (typeof new_checkmate_beaten !== 'string') { // Not a string
+		res.status(400).json({ message: 'Invalid checkmate ID' });
+		return;
+	}
+	if (!Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) { // Not a valid checkmate
+		res.status(400).json({ message: 'Invalid checkmate ID' });
+		return;
+	}
+
 
 	// Checkmate is valid...
 
 	let checkmates_beaten: string = getCheckmatesBeaten(user_id);
 	const checkmates_beaten_array: string[] = checkmatesBeatenToStringArray(checkmates_beaten);
 
-	if (!checkmates_beaten_array.includes(new_checkmate_beaten)) return res.status(200).json({ message: 'Checkmate already beaten' });
+	if (checkmates_beaten_array.includes(new_checkmate_beaten)) { // Already beaten
+		res.status(200).json({ message: 'Checkmate already beaten' });
+		return;
+	}
 
-	// Checkmate not already beaten...
+	// Checkmate not already beaten (until now)...
 
 	// Update the new list
 	checkmates_beaten_array.push(new_checkmate_beaten);
@@ -100,13 +112,13 @@ async function postCheckmateBeaten(req: CustomRequest, res: Response) {
 
 	// Send appropriate response
 	if (updateSuccess) {
-		console.log(`Successfully interacted with checkmate list of member "${username}" of id "${user_id}".`);
-		res.status(200).json({ message: 'Checkmate recorded successfully' });
+		logEvents(`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. New checkmates_beaten: ${checkmates_beaten}`, 'checkmates_beaten.txt', { print: true });
 		// Create a new cookie with the updated checkmate list for the user
 		createPracticeProgressCookie(res, checkmates_beaten);
+		res.status(200).json({ message: 'Checkmate recorded successfully' });
 	} else {
 		logEvents(`Failed to save new practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
-		res.status(500).json({ message: 'Failed to update serverside practice checkmate: user_id not found' });
+		res.status(500).json({ message: 'Failed to update serverside practice checkmate' });
 	}
 }
 
