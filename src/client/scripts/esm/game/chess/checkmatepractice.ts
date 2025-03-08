@@ -311,6 +311,19 @@ function getCompletedCheckmatesFromLocalStorage(): string[] {
 	return completedCheckmates;
 }
 
+/** 
+ * Purely for dev testing
+ * Erase checkmate practice progress in local storage
+ * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
+*/
+function eraseCheckmatePracticeProgressFromLocalStorage(): void {
+	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
+	console.log("DELETED all checkmate practice progress.");
+	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
+	completedCheckmates.length = 0;
+	guipractice.updateCheckmatesBeaten([]); // Delete the 'beaten' class from all
+}
+
 async function markCheckmateBeaten(checkmatePracticeID: string) {
 	if (!completedCheckmates) throw Error("Cannot mark checkmate beaten when it was never initialized!");
 	if (!Object.values(validCheckmates).flat().includes(checkmatePracticeID)) throw Error("User completed invalid checkmate practice.");
@@ -349,16 +362,6 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 		console.error('Error sending checkmate list to the server:', error);
 	}
 }
-
-/** DEPREACTED * Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! 
-function eraseCheckmatePracticeProgress(): void {
-	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
-	console.log("DELETED all checkmate practice progress.");
-	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
-	completedCheckmates.length = 0;
-	guipractice.updateCheckmatesBeaten(); // Delete the 'beaten' class from all
-}
-*/
 
 /** Called when an engine game ends */
 function onEngineGameConclude(): void {
