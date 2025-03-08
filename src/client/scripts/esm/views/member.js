@@ -68,7 +68,7 @@ const member = docutil.getLastSegmentOfURL();
 			return response.json();
 		})
 		.then(async(result) => { // result.verified = true/false
-			console.log(result); // { joined, seen, username, email, verified }
+			console.log(result); // { joined, seen, username, email, verified, checkmates_beaten }
 
 			// Change on-screen data of the member
 			element_memberName.textContent = result.username;
@@ -76,6 +76,8 @@ const member = docutil.getLastSegmentOfURL();
 			joinedElement.textContent = result.joined;
 			const seenElement = document.getElementById('seen');
 			seenElement.textContent = result.seen;
+			const practiceProgressElement = document.getElementById('practice_progress');
+			practiceProgressElement.textContent = `${(result.checkmates_beaten.match(/[^,]+/g) || []).length} / 33`; // What is the best way to get the total number of checkmates?
 
 			const loggedInAs = validatorama.getOurUsername();
 

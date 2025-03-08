@@ -18,7 +18,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	const claimedUsername = req.params.member;
 
 	// eslint-disable-next-line prefer-const
-	let { user_id, username, email, joined, verification, last_seen } = getMemberDataByCriteria(['user_id','username','email','joined','verification','last_seen'], 'username', claimedUsername, { skipErrorLogging: true });
+	let { user_id, username, email, joined, verification, last_seen, checkmates_beaten } = getMemberDataByCriteria(['user_id','username','email','joined','verification','last_seen','checkmates_beaten'], 'username', claimedUsername, { skipErrorLogging: true });
 	if (user_id === undefined) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) }); // Member not found
 	verification = JSON.parse(verification);
 
@@ -37,6 +37,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		username,
 		joined: joinedPhrase,
 		seen: seenPhrase,
+		checkmates_beaten: checkmates_beaten,
 	};
 
 	// If they are the same person as who their requesting data, also include these.
