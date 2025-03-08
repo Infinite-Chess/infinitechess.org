@@ -73,14 +73,13 @@ function open() {
 	if (!generatedHTML) createPracticeHTML();
 	if (!generatedIcons) addPieceIcons();
 	changeCheckmateSelected(checkmateSelectedID);
+	initListeners();
 
 	// First immediately update the GUI according to the completedCheckmates list in localstorage
 	checkmatepractice.updateCompletedCheckmatesFromLocalStorage();
 
 	// Then asynchronously ask the server for the completedCheckmates list, if the member is logged in, and update the GUI again, after receiving a response
 	checkmatepractice.updateCompletedCheckmatesFromServer();
-
-	initListeners();
 }
 
 function close() {
