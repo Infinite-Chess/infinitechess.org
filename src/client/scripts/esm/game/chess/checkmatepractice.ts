@@ -224,7 +224,7 @@ function eraseCheckmatePracticeProgressFromLocalStorage(): void {
 	console.log("DELETED all checkmate practice progress.");
 	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
 	completedCheckmates.length = 0;
-	guipractice.updateCheckmatesBeaten([]); // Delete the 'beaten' class from all
+	guipractice.updateCheckmatesBeaten(completedCheckmates); // Delete the 'beaten' class from all
 }
 
 /**
@@ -235,13 +235,12 @@ function updateCompletedCheckmates() {
 	const cookieCheckmates: string | undefined = docutil.getCookieValue('checkmates_beaten');
 	if (validatorama.areWeLoggedIn() && cookieCheckmates !== undefined) {
 		console.log("checkmates_beaten cookie was present!");
-		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || [];
-		guipractice.updateCheckmatesBeaten(completedCheckmates);
+		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || []; // match() returns null if no matches
 	} else {
 		// Else, use localstorage as a fallback
 		completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
-		guipractice.updateCheckmatesBeaten(completedCheckmates);
 	}
+	guipractice.updateCheckmatesBeaten(completedCheckmates);
 }
 
 /**
@@ -261,6 +260,8 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 		localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
 		return;
 	}
+
+	// We ARE logged in. Send a POST request to tell the server we have beaten a new checkmate!
 
 	// Configure the POST request
 	const config = {
@@ -285,7 +286,7 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 			guipractice.updateCheckmatesBeaten(completedCheckmates);
 		} else {
 			// Handle unsuccessful response
-			const errorData: any = await response.json();
+			const errorData = await response.json();
 			console.error('Failed to update checkmate list on the server:', errorData.message || errorData);
 		}
 	} catch (error) {
