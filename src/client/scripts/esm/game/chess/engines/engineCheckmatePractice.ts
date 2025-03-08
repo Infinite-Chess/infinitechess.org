@@ -123,7 +123,7 @@ const invertedPieceNameDictionaty = invertPieceNameDictionary(pieceNameDictionar
 
 // legal move storage for pieces in piecelist
 const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is_royal?: boolean, is_pawn?: boolean, is_huygen?: boolean } } = {
-	// 0 corresponds to a captured piece
+	0: {}, // 0 corresponds to a captured piece
 	1: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]}, // queen
 	2: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]]}, // rook
 	3: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]]}, // bishop
@@ -348,8 +348,8 @@ function initEvalWeightsAndSearchProperties() {
 	// whether to enter "protected rider flee mode" whenever the black royal is near the specified protected white rider
 	// riderTypeToFleeFrom, maxDistanceForRider, maxDistanceForRoyal_protectedRider
 	protectedRiderFleeDictionary = {
-		"1K1R2N-1k": [2, Infinity, 10], // rook
-		"1K1CH1N-1k": [9, Infinity, 10], // chancellor
+		"1K1R2N-1k": [2, Infinity, 0], // rook
+		"1K1CH1N-1k": [9, Infinity, 0], // chancellor
 	};
 
 	if (checkmateSelectedID in protectedRiderFleeDictionary) {
@@ -894,7 +894,7 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 		// add score based on distance of black royal to white shortrange pieces
 		if (piecelist[i]! in distancesEvalDictionary) {
 			const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]!]![black_to_move_num]!;
-			if (inProtectedRiderFleeMode && riderTypeToFleeFrom === piecelist[i]) score += 5 * weight * distancefunction(coordlist[i]!);
+			if (inProtectedRiderFleeMode && riderTypeToFleeFrom === piecelist[i]) score += 50 * weight * distancefunction(coordlist[i]!);
 			else score += weight * distancefunction(coordlist[i]!);
 		}
 	}
@@ -949,8 +949,8 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
 		if (mayEnterTrapFleeMode && depth === start_depth && isBlackInTrap(piecelist, coordlist)) inTrapFleeMode = true;
 
-		// Black is in protected trap flee mode and considers no white rider candidate moves no piece captures from here on out:
-		if (mayEnterProtectedRiderFleeMode && depth === start_depth && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
+		// Black is in protected rider flee mode and considers no white rider candidate moves no piece captures from here on out:
+		if (mayEnterProtectedRiderFleeMode && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
