@@ -3,9 +3,11 @@
  * This script updates the checkmates_beaten list in the database when a user submits a newly completed checkmate
  */
 
-
+// @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
+// @ts-ignore
 import { getMemberDataByCriteria, updateCheckmatesBeaten } from '../database/memberManager.js';
+// @ts-ignore
 import { ensureJSONString } from "../utility/JSONUtils.js";
 
 
@@ -49,7 +51,7 @@ function setPracticeProgressCookie(req: CustomRequest, res: Response, next: Func
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as any).stack}`, 'errLog.txt', { print: true });
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 
@@ -137,10 +139,10 @@ async function postCheckmateBeaten(req: CustomRequest, res: Response) {
 	// Send appropriate response
 	if (updateSuccess) {
 		console.log(`Successfully interacted with checkmate list of "${username}" of id "${user_id}".`);
-		res.status(200).json({ message: 'Serverside practice checkmate list interaction successful' });
+		return res.status(200).json({ message: 'Serverside practice checkmate list interaction successful' });
 	} else {
 		logEvents(`Failed to save practice checkmate for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
-		res.status(500).json({ message: 'Failed to update serverside practice checkmate: user_id not found' });
+		return res.status(500).json({ message: 'Failed to update serverside practice checkmate: user_id not found' });
 	}
 }
 
