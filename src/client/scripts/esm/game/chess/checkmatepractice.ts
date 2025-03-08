@@ -22,6 +22,7 @@ import selection from '../chess/selection.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
 import validatorama from "../../util/validatorama.js";
+import validcheckmates from '../../chess/util/validcheckmates.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -31,54 +32,6 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 
 
 // Variables ----------------------------------------------------------------------------
-
-const validCheckmates = {
-	easy: [
-		"2Q-1k",
-		"3R-1k",
-		"1Q1R1B-1k",
-		"1Q1R1N-1k",
-		"1K2R-1k",
-		"1Q1CH-1k",
-		"2CH-1k",
-		"3B3B-1k",
-		"1K2B2B-1k",
-		"3AR-1k",
-		"1K1AM-1k"
-	],
-	medium: [
-		"1K1Q1B-1k",
-		"1K1Q1N-1k",
-		"1Q1B1B-1k",
-		"1Q1N1B-1k",
-		"1Q2N-1k",
-		"1K1N2B1B-1k",
-		"1K2N1B1B-1k",
-		"1K1R1B1B-1k",
-		"1K1R1N1B-1k",
-		"1K1AR1R-1k",
-		"1K2AR-1k",
-		"2AM-1rc"
-	],
-	hard: [
-		"2R1N1P-1k",
-		"1K1R2N-1k",
-		"2K1R-1k",
-		"1K2N6B-1k",
-		"1K2HA1B-1k",
-		"1K1CH1N-1k",
-		"5HU-1k",
-	],
-	insane: [
-		"1K1Q1P-1k",
-		"1K3HA-1k",
-		"1K3NR-1k",
-	]
-
-	// superhuman (way too hard):
-	// "1K1AR1HA1P-1k" (the white pawn only exists in order to mitigate zugzwang for white)
-	// "2B60N-1k" (fewer knights suffice but exact amount unknown, see proof in https://chess.stackexchange.com/q/45998/35006 )
-};
 
 /** These checkmates we may place the black king nearer to the white pieces. */
 const checkmatesWithBlackRoyalNearer = [
@@ -185,7 +138,7 @@ function closeListeners() {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// error if user somehow submitted invalid checkmate ID
-	if (!Object.values(validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
 
 	// place the black king not so far away for specific variants
 	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
@@ -331,7 +284,7 @@ async function updateCompletedCheckmatesFromServer() {
  */
 async function markCheckmateBeaten(checkmatePracticeID: string) {
 	if (!completedCheckmates) throw Error("Cannot mark checkmate beaten when it was never initialized!");
-	if (!Object.values(validCheckmates).flat().includes(checkmatePracticeID)) throw Error("User completed invalid checkmate practice.");
+	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmatePracticeID)) throw Error("User completed invalid checkmate practice.");
 
 	// Add the checkmate ID to the beaten list
 	if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
@@ -450,7 +403,6 @@ function restartGame() {
 
 
 export default {
-	validCheckmates,
 	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,

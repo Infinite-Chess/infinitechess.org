@@ -13,6 +13,7 @@
 
 import docutil from "../util/docutil.js";
 import validatorama from "../util/validatorama.js";
+import validcheckmates from "../chess/util/validcheckmates.js";
 
 
 const element_verifyErrorElement = document.getElementById('verifyerror');
@@ -77,7 +78,12 @@ const member = docutil.getLastSegmentOfURL();
 			const seenElement = document.getElementById('seen');
 			seenElement.textContent = result.seen;
 			const practiceProgressElement = document.getElementById('practice_progress');
-			practiceProgressElement.textContent = `${(result.checkmates_beaten.match(/[^,]+/g) || []).length} / 33`; // What is the best way to get the total number of checkmates?
+			const completedCheckmates = ( result.checkmates_beaten.match(/[^,]+/g) || [] );
+			let amountBeaten = 0;
+			for (const checkmateID of Object.values(validcheckmates.validCheckmates).flat()) {
+				if (completedCheckmates.includes(checkmateID)) amountBeaten++;
+			}
+			practiceProgressElement.textContent = `${amountBeaten} / ${Object.values(validcheckmates.validCheckmates).flat().length}`; // What is the best way to get the total number of checkmates?
 
 			const loggedInAs = validatorama.getOurUsername();
 
