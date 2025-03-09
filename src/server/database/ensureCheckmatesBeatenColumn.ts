@@ -18,7 +18,7 @@ if (!columnExists) {
 		database.run(`ALTER TABLE members ADD COLUMN checkmates_beaten TEXT NOT NULL DEFAULT '';`);
 		console.log('Column checkmates_beaten added successfully.');
 	} catch (err: any) {
-		console.error('Error adding checkmates_beaten column:', err.message);
+		// console.error('Error adding checkmates_beaten column:', err.message);
 	}
 } else {
 	// console.log('Column checkmates_beaten already exists.');

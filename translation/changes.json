@@ -1,4 +1,8 @@
 {
+	"43": {
+		"note": "Added three entries about badges to member in lines 121-123",
+		"changes": []
+	},
 	"42": {
 		"note": "Added member.practice_progress to line 115",
 		"changes": []

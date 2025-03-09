@@ -32,7 +32,26 @@
                         <source srcset="/img/member_default.avif" type="image/avif" />
                         <img src="/img/member_default.png" alt="Blank profile image">
                     </picture>
-                    <h1 id="membername"></h1>
+                    <div class="membername-container">
+                        <h1 id="membername"></h1>
+                        <div id="badgelist">
+                            <picture id="checkmate-badge-bronze" class="hidden">
+                                <source srcset="/img/badges/checkmate-badge-bronze.webp" type="image/webp" />
+                                <source srcset="/img/badges/checkmate-badge-bronze.avif" type="image/avif" />
+                                <img loading="lazy" src="/img/badges/checkmate-badge-bronze.png" alt="<%=t('member.bronze_checkmate_badge')%>" title="<%=t('member.bronze_checkmate_badge')%>">
+                            </picture>
+                            <picture id="checkmate-badge-silver" class="hidden">
+                                <source srcset="/img/badges/checkmate-badge-silver.webp" type="image/webp" />
+                                <source srcset="/img/badges/checkmate-badge-silver.avif" type="image/avif" />
+                                <img loading="lazy" src="/img/badges/checkmate-badge-silver.png" alt="<%=t('member.silver_checkmate_badge')%>" title="<%=t('member.silver_checkmate_badge')%>">
+                            </picture>
+                            <picture id="checkmate-badge-gold" class="hidden">
+                                <source srcset="/img/badges/checkmate-badge-gold.webp" type="image/webp" />
+                                <source srcset="/img/badges/checkmate-badge-gold.avif" type="image/avif" />
+                                <img loading="lazy" src="/img/badges/checkmate-badge-gold.png" alt="<%=t('member.gold_checkmate_badge')%>" title="<%=t('member.gold_checkmate_badge')%>">
+                            </picture>
+                        </div>
+                    </div>
                 </div>
                 <section id="stats" class="center">
                     <p><strong><%=t('member.joined')%> </strong><spam id="joined"></spam></p>
