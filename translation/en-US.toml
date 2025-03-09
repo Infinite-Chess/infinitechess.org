@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "42"
+version = "43"
 maintainer = "Naviary"
 
 [header]
@@ -118,6 +118,9 @@ account_info_heading = "Account Info"
 email = "Email:"
 delete_account = "Delete account"
 password_reset_message = ["To change your username, email or password, ", "contact us."]
+bronze_checkmate_badge = "Bronze Checkmate Badge"
+silver_checkmate_badge = "Silver Checkmate Badge"
+gold_checkmate_badge = "Gold Checkmate Badge"
 
 [create-account]
 title = "Create Account" # The tab name
