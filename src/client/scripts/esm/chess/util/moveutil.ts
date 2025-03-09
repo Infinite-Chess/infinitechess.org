@@ -211,7 +211,7 @@ function isGameResignable(gamefile: gamefile): boolean { return gamefile.moves.l
 /**
  * Returns the color of the player that played the provided index within the moves list.
  */
-function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): string {
+function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): 'white' | 'black' {
 	if (index === -1) throw Error("Cannot get color that played move index when move index is -1.");
 	const turnOrder = gamefile.gameRules.turnOrder;
 	return turnOrder[index % turnOrder.length];
@@ -220,7 +220,7 @@ function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): string 
 /**
  * Returns the color whos turn it is after the specified move index was played.
  */
-function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): string {
+function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): 'white' | 'black' {
 	return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
 }
 

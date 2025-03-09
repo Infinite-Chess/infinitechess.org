@@ -48,7 +48,7 @@ interface Attacker {
  * @param trackAttackers - If true, the results object will contain a list of attackers checking the player's royals. This is useful for calculating blocking moves that may resolve the check. Should should be true if we're using checkmate, and left out if we're using royal capture, to save compute.
  * @returns An object containing information such as whether the given color is in check in the current position, which royals are in check, and if applicable, where the attacking/checking pieces are.
  */
-function detectCheck(gamefile: gamefile, color: 'white' | 'black', trackAttackers?: true): { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] } {
+function detectCheck(gamefile: gamefile, color: 'white' | 'black', trackAttackers?: boolean): { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] } {
 	// Coordinates of ALL royals of this color!
 	const royalCoords: Coords[] = gamefileutility.getRoyalCoordsOfColor(gamefile, color);
 	// Array of coordinates of royal pieces that are in check
@@ -123,7 +123,7 @@ function doesVicinityAttackSquare(gamefile: gamefile, square: Coords, friendlyCo
 		const trimmedTypeOnSquare = colorutil.trimColorExtensionFromType(typeOnSquare);
 
 		// Is that a match with any piece type on this vicinity square?
-		if (thisVicinity.includes(trimmedTypeOnSquare)) { // This square can be captured
+		if ((thisVicinity as string[]).includes(trimmedTypeOnSquare)) { // This square can be captured
 			if (attackers) appendAttackerToList(attackers, { coords: actualSquare, slidingCheck: false });
 			return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so attackers won't be specified
 		};
@@ -156,7 +156,7 @@ function doesSpecialAttackSquare(gamefile: gamefile, square: CoordsSpecial, frie
 		const trimmedTypeOnSquare = colorutil.trimColorExtensionFromType(typeOnSquare);
 
 		// Is that a match with any piece type on this vicinity square?
-		if (thisVicinity.includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured via special move...
+		if ((thisVicinity as string[]).includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured via special move...
 			// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
 			const pieceOnSquare = gamefileutility.getPieceFromTypeAndCoords(gamefile, typeOnSquare, actualSquare);
 			const specialPiecesLegalMoves = legalmoves.calculate(gamefile, pieceOnSquare, { onlyCalcSpecials: true, ignoreCheck: true });
@@ -263,7 +263,7 @@ function doesLineAttackSquare(gamefile: gamefile, line: Piece[], direction: Vec2
  */
 function appendAttackerToList(attackers: Attacker[], attacker: Attacker): void {
 	for (let i = 0; i < attackers.length; i++) {
-		const thisAttacker = attackers[i]; // { coords, slidingCheck }
+		const thisAttacker: Attacker = attackers[i]!; // { coords, slidingCheck }
 		if (!coordutil.areCoordsEqual(thisAttacker.coords, attacker.coords)) continue; // Not the same piece
 		// The same piece...
 		// Upgrade the slidingCheck to true, if applicable.

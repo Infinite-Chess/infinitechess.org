@@ -75,10 +75,10 @@ function removeCheckInvalidMoves(gamefile: gamefile, moves: LegalMoves, pieceSel
  * @param piece - The piece of which the legal individual moves are for.
  * @param color - The color of the player the piece belongs to.
  */
-function removeCheckInvalidMoves_Individual(gamefile: gamefile, individualMoves: CoordsSpecial[], piece: Piece, color: string): void { // [ [x,y], [x,y] ]
+function removeCheckInvalidMoves_Individual(gamefile: gamefile, individualMoves: CoordsSpecial[], piece: Piece, color: 'white' | 'black'): void { // [ [x,y], [x,y] ]
 	// Simulate the move, then check the game state for check
 	for (let i = individualMoves.length - 1; i >= 0; i--) { // Iterate backwards so we don't run into issues as we delete indices while iterating
-		const thisMove: CoordsSpecial = individualMoves[i]; // [x,y]
+		const thisMove: CoordsSpecial = individualMoves[i]!; // [x,y]
 		if (isMoveCheckInvalid(gamefile, piece, thisMove, color)) individualMoves.splice(i, 1); // Remove the move
 	}
 }
@@ -160,7 +160,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	 * 
 	 * then it's impossible to block.
 	 */
-	const dist = math.chebyshevDistance(royalCoords[0], attacker.coords);
+	const dist = math.chebyshevDistance(royalCoords[0]!, attacker.coords);
 	if (!attacker.slidingCheck && (attacker.path?.length ?? 2) < 3
 		|| attacker.slidingCheck && dist === 1) {
 		// Impossible to block
@@ -174,7 +174,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	 * 2. Individual check, with 3+ path length
 	 */
 	
-	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
+	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0]!, attacker.coords, legalMoves, selectedPieceCoords);
 	else appendPathBlockingMoves(attacker.path!, legalMoves, selectedPieceCoords);
 
 	delete legalMoves.sliding; // Erase all sliding moves
@@ -344,7 +344,7 @@ function appendPathBlockingMoves(path: path, legalMoves: LegalMoves, selectedPie
 	 */
 
 	for (let i = 1; i < path.length - 1; i++) { // Iterate through all path points, EXCLUDING start and end.
-		const blockPoint = path[i];
+		const blockPoint = path[i]!;
 		// Can our selected piece move to this square?
 		if (legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, blockPoint, { ignoreIndividualMoves: true })) legalMoves.individual.push(coordutil.copyCoords(blockPoint)); // Can block!
 	}
@@ -359,7 +359,7 @@ function appendPathBlockingMoves(path: path, legalMoves: LegalMoves, selectedPie
  * @param color - The color of the player the piece belongs to.
  * @returns Whether the move would result in the player owning the piece being in check.
  */
-function isMoveCheckInvalid(gamefile: gamefile, piece: Piece, destCoords: CoordsSpecial, color: string) { // pieceSelected: { type, index, coords }
+function isMoveCheckInvalid(gamefile: gamefile, piece: Piece, destCoords: CoordsSpecial, color: 'white' | 'black') { // pieceSelected: { type, index, coords }
 	const moveDraft: MoveDraft = { startCoords: jsutil.deepCopyObject(piece.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
 	return movepiece.getSimulatedCheck(gamefile, moveDraft, color).check;
