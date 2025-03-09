@@ -75,6 +75,11 @@ let undoingIsLegal : boolean = false;
 
 // Functions ----------------------------------------------------------------------------
 
+
+// Set a listener for the logout event, to refresh the checkmates list
+document.addEventListener('logout', updateCompletedCheckmates);
+
+
 function setUndoingIsLegal(value: boolean) {
 	undoingIsLegal = value;
 	guigameinfo.update_GameControlButtons(value);
