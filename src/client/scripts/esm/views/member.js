@@ -77,13 +77,7 @@ const member = docutil.getLastSegmentOfURL();
 			joinedElement.textContent = result.joined;
 			const seenElement = document.getElementById('seen');
 			seenElement.textContent = result.seen;
-			const practiceProgressElement = document.getElementById('practice_progress');
-			const completedCheckmates = ( result.checkmates_beaten.match(/[^,]+/g) || [] );
-			let amountBeaten = 0;
-			for (const checkmateID of Object.values(validcheckmates.validCheckmates).flat()) {
-				if (completedCheckmates.includes(checkmateID)) amountBeaten++;
-			}
-			practiceProgressElement.textContent = `${amountBeaten} / ${Object.values(validcheckmates.validCheckmates).flat().length}`;
+			updateCompletedCheckmatesCounter(result.checkmates_beaten);
 
 			const loggedInAs = validatorama.getOurUsername();
 
@@ -110,6 +104,16 @@ const member = docutil.getLastSegmentOfURL();
 			recalcUsernameSize();
 		});
 })();
+
+/**
+ * Updates the counter on your profile telling you how many total checkmate practices you have beaten.
+ * "Practice Mode Progress: 3 / 33"
+ */
+function updateCompletedCheckmatesCounter(checkmates_beaten) {
+	const practiceProgressElement = document.getElementById('practice_progress');
+	const completedCheckmates = checkmates_beaten.match(/[^,]+/g) || [];
+	practiceProgressElement.textContent = `${completedCheckmates.length} / ${Object.values(validcheckmates.validCheckmates).flat().length}`;
+}
 
 function showAccountInfo() { // Called from inside the html
 	element_showAccountInfo.classList.add("hidden");
