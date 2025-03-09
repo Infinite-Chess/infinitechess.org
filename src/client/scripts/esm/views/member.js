@@ -24,6 +24,9 @@ element_sendEmail.addEventListener('click', resendConfirmEmail);
 
 const element_member = document.getElementsByClassName('member')[0];
 const element_memberName = document.getElementById('membername');
+
+const element_badgeList = document.getElementById('badgelist');
+const elements_badges = document.querySelectorAll('#badgelist img');
 const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
 const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
 const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
@@ -104,7 +107,7 @@ const member = docutil.getLastSegmentOfURL();
 			}
 
 			// Change username text size depending on character count
-			recalcUsernameSize();
+			recalcUsernameAndBadgeSize();
 		});
 })();
 
@@ -187,7 +190,7 @@ function resendConfirmEmail() {
 		});
 }
 
-function recalcUsernameSize() {
+function recalcUsernameAndBadgeSize() {
 	// Change username text size depending on character count
 	// const memberElementPadding = parseInt((window.getComputedStyle(element_member, null).getPropertyValue('padding-left')), 10) // parseInt() converts px to number
 	const targetWidth = (window.innerWidth - 185) * 0.52;
@@ -196,6 +199,15 @@ function recalcUsernameSize() {
 	const cap = 50;
 	if (fontSize > cap) fontSize = cap;
 	element_memberName.style["font-size"] = `${fontSize}px`;
+
+	// Change badge size and position depending on element_member.clientHeight
+	const badgeHeight = Math.min(60, 0.3 * element_member.clientHeight);
+	const badgeListMarigin = Math.min(50, 0.25 * element_member.clientHeight);
+	elements_badges.forEach(badge => {
+		badge.style.height = `${badgeHeight}px`;
+		badge.style.width = `${badgeHeight}px`;
+		element_badgeList.style["margin-top"] = `-${badgeListMarigin}px`;
+	});
 }
 
-window.addEventListener("resize", recalcUsernameSize);
+window.addEventListener("resize", recalcUsernameAndBadgeSize);
