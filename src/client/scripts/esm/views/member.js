@@ -123,15 +123,16 @@ function updateCompletedCheckmatesInformation(checkmates_beaten) {
 	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
 
 	practiceProgressElement.textContent = `${numCompleted} / ${numTotal}`;
+	
+	let shownBadge;
+	if (numCompleted >= 1.0 * numTotal) shownBadge = element_checkmateBadgeGold;
+	else if (numCompleted >= 0.75 * numTotal) shownBadge = element_checkmateBadgeSilver;
+	else if (numCompleted >= 0.5 * numTotal) shownBadge = element_checkmateBadgeBronze;
 
-	if (numCompleted >= 0.5 * numTotal) element_checkmateBadgeBronze.classList.remove("hidden");
-	else element_checkmateBadgeBronze.classList.add("hidden");
-
-	if (numCompleted >= 0.75 * numTotal) element_checkmateBadgeSilver.classList.remove("hidden");
-	else element_checkmateBadgeSilver.classList.add("hidden");
-
-	if (numCompleted >= 1.0 * numTotal) element_checkmateBadgeGold.classList.remove("hidden");
-	else element_checkmateBadgeGold.classList.add("hidden");
+	for (const badge of [element_checkmateBadgeBronze, element_checkmateBadgeSilver, element_checkmateBadgeGold]) {
+		if (badge === shownBadge) badge.classList.remove("hidden");
+		else badge.classList.add("hidden");
+	}
 }
 
 function showAccountInfo() { // Called from inside the html
