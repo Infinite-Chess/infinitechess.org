@@ -282,7 +282,8 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 			
 		// Check if the response status code indicates success (e.g., 200-299 range)
 		if (response.ok) {
-			console.log('Checkmate list communication with server successful.');
+			console.log('Server recorded checkmate completion successfully.');
+			// Do this now, since the server will have updated the cookie containing the completed checkmates
 			guipractice.updateCheckmatesBeaten(completedCheckmates);
 		} else {
 			// Handle unsuccessful response

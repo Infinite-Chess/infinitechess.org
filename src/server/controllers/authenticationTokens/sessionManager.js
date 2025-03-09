@@ -104,12 +104,13 @@ function createNewSession(req, res, user_id, username, roles) {
 	createSessionCookies(res, user_id, username, refreshToken);
 }
 
-/** Terminates the session of a client by deleting their session & preferences cookies.
+/**
+ * Terminates the session of a client by deleting their session,  preferences, and checkmates cookies.
  * 
  * DOES NOT delete/invalidate their session token from the database!!!
  * To do that too, use {@link deleteRefreshTokenFromMemberData}.
  * But you DON'T have to do that if the account is being deleted,
- * OR if they're being logged out of all session at one,
+ * OR if they're being logged out of all sessions at once,
  * because their refresh tokens are being deleted anyway.
  * Only use that when they're logging out a SINGLE session.
  */

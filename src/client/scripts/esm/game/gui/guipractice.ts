@@ -34,6 +34,7 @@ const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 let checkmateSelectedID: string = validcheckmates.validCheckmates.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedHTML: boolean = false;
+/** Whether the svgs of all the pieces in the checkmates list have been appended to the doc */
 let generatedIcons: boolean = false;
 
 /** Variables for controlling the scrolling of the checkmate list */
@@ -273,6 +274,7 @@ function changeCheckmateSelected(checkmateid: string) {
 
 /**
  * Updates each checkmate practice element's 'beaten' class, along with the progress bar on top.
+ * Checkmates that have the 'beaten' class are green with a checkmark on the left.
  * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
 function updateCheckmatesBeaten(completedCheckmates : string[]) {

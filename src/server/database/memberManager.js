@@ -56,7 +56,7 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// 	refresh_tokens TEXT,                          
 	// 	verification TEXT, 
 	// 	username_history TEXT,
-	//  checkmates_beaten TEXT
+	//  checkmates_beaten TEXT NOT NULL DEFAULT ''
 	// );
 
 	if (roles !== undefined && typeof roles !== 'string') throw new Error('Roles must be a string.');
@@ -373,6 +373,7 @@ function updateLastSeen(userId) {
 		logEvents(`Error updating last_seen for member of id "${userId}": ${error.message}`, 'errLog.txt', { print: true });
 	}
 }
+
 
 
 // Utility -----------------------------------------------------------------------------------

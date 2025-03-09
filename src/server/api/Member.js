@@ -37,7 +37,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		username,
 		joined: joinedPhrase,
 		seen: seenPhrase,
-		checkmates_beaten: checkmates_beaten,
+		checkmates_beaten,
 	};
 
 	// If they are the same person as who their requesting data, also include these.

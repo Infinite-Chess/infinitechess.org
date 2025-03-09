@@ -16,10 +16,11 @@ import type { Response } from "express";
 
 // Functions -------------------------------------------------------------
 
+
 /**
  * Sets the checkmates_beaten cookie for the user.
- * @param {Object} res - The Express response object.
- * @param {Object} checkmates_beaten - The checkmates_beaten object to be saved in the cookie.
+ * @param res - The Express response object.
+ * @param checkmates_beaten - The checkmates_beaten object to be saved in the cookie.
  */
 function createPracticeProgressCookie(res: Response, checkmates_beaten: string) {
 	// Set or update the checkmates_beaten cookie
@@ -43,9 +44,9 @@ function deletePracticeProgressCookie(res: Response) {
 }
 
 /**
- * Fetches the checkmates_beaten for a given user from the database.
+ * Fetches the checkmates_beaten for a given user from the database, as a delimited string.
  * @param userId - The ID of the user whose checkmates_beaten are to be fetched.
- * @returns - Returns the checkmates_beaten object if found, otherwise undefined.
+ * @returns - Returns the checkmates_beaten string if found, otherwise undefined. (e.g. "2Q-1k,3R-1k,1Q1R1B-1k")
  */
 function getCheckmatesBeaten(userId: number): string {
 	const { checkmates_beaten } = getMemberDataByCriteria(['checkmates_beaten'], 'user_id', userId, { skipErrorLogging: true });
@@ -61,8 +62,8 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
 
 /**
  * Route that Handles a POST request to update user checkmates_beaten in the database.
- * @param {CustomRequest} req - Express request object
- * @param {Response} res - Express response object
+ * @param req - Express request object
+ * @param res - Express response object
  */
 function postCheckmateBeaten(req: CustomRequest, res: Response): void {
 	if (!req.memberInfo) { // { user_id, username, roles }
