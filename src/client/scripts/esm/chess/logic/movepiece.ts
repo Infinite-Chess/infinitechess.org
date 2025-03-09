@@ -293,16 +293,16 @@ function updateTurn(gamefile: gamefile) {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(gamefile: gamefile, move: Move) {
-	let attackers: [] | undefined;
-	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
-	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
+	// Only track attackers if we're using checkmate win condition.
+	const trackAttackers = gamefile.gameRules.winConditions[oppositeColor].includes('checkmate');
 
-	const futureInCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
+	const checkResults = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
 	state.createCheckState(move, gamefile.inCheck, futureInCheck, gamefile); // Passes in the gamefile as an argument
-	state.createAttackersState(move, gamefile.attackers, attackers ?? [], gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.createAttackersState(move, gamefile.attackers, checkResults.attackers ?? [], gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 /**
@@ -439,18 +439,6 @@ function simulateMoveWrapper<R>(gamefile: gamefile, moveDraft: MoveDraft, callba
 }
 
 /**
- * Simulates a move to get the check
- * @returns false if the move does not result in check, otherwise a list of the coords of all the royals in check.
- */
-function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTestInCheck: string): false | Coords[] {
-	return simulateMoveWrapper(
-		gamefile,
-		moveDraft,
-		() => checkdetection.detectCheck(gamefile, colorToTestInCheck),
-	);	
-}
-
-/**
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
@@ -487,6 +475,5 @@ export default {
 	applyMove,
 	rewindMove,
 	simulateMoveWrapper,
-	getSimulatedCheck,
 	getSimulatedConclusion,
 };
