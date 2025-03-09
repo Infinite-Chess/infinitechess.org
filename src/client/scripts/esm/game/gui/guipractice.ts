@@ -10,6 +10,7 @@ import gui from './gui.js';
 import guititle from './guititle.js';
 import spritesheet from '../rendering/spritesheet.js';
 import colorutil from '../../chess/util/colorutil.js';
+import validcheckmates from '../../chess/util/validcheckmates.js';
 // @ts-ignore
 import style from './style.js';
 // @ts-ignore
@@ -30,9 +31,10 @@ const element_progressBar: HTMLElement = document.querySelector('.checkmate-prog
 const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
-let checkmateSelectedID: string = checkmatepractice.validCheckmates.easy[0]!; // id of selected checkmate
+let checkmateSelectedID: string = validcheckmates.validCheckmates.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedHTML: boolean = false;
+/** Whether the svgs of all the pieces in the checkmates list have been appended to the doc */
 let generatedIcons: boolean = false;
 
 /** Variables for controlling the scrolling of the checkmate list */
@@ -71,9 +73,9 @@ function open() {
 	element_practiceSelection.classList.remove("hidden");
 	element_menuExternalLinks.classList.remove("hidden");
 	if (!generatedHTML) createPracticeHTML();
-	changeCheckmateSelected(checkmateSelectedID);
-	updateCheckmatesBeaten();
 	if (!generatedIcons) addPieceIcons();
+	changeCheckmateSelected(checkmateSelectedID);
+	checkmatepractice.updateCompletedCheckmates();
 	initListeners();
 }
 
@@ -88,7 +90,7 @@ function close() {
  * On first practice page load, generate list of checkmate HTML elements to be shown on page
  */
 function createPracticeHTML() {
-	for (const [difficulty, checkmates] of Object.entries(checkmatepractice.validCheckmates)) {
+	for (const [difficulty, checkmates] of Object.entries(validcheckmates.validCheckmates)) {
 		checkmates.forEach((checkmateID: string) => {
 			const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
 			if (!piecelist) return;
@@ -272,11 +274,11 @@ function changeCheckmateSelected(checkmateid: string) {
 
 /**
  * Updates each checkmate practice element's 'beaten' class, along with the progress bar on top.
+ * Checkmates that have the 'beaten' class are green with a checkmark on the left.
  * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
-function updateCheckmatesBeaten() {
+function updateCheckmatesBeaten(completedCheckmates : string[]) {
 	let amountBeaten = 0;
-	const completedCheckmates = checkmatepractice.getCompletedCheckmates();
 	for (const element of element_checkmates.children) {
 		// What is the id string of this checkmate?
 		const id_string = element.id; // "2Q-1k"

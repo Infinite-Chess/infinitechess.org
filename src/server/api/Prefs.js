@@ -124,7 +124,7 @@ function getPrefs(userId) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function postPrefs(req, res) {
+function postPrefs(req, res) {
 	if (!req.memberInfo) { // { user_id, username, roles }
 		logEvents("Can't save user preferences when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt', { print: true });
 		return res.status(500).json({ message: "Server Error: No Authorization"});
