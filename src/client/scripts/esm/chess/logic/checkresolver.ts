@@ -13,7 +13,7 @@ import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { BoundingBox, Vec2, Vec2Key } from "../../util/math.js";
 // @ts-ignore
-import type { LegalMoves } from './legalmoves.js'
+import type { LegalMoves } from './legalmoves.js';
 // @ts-ignore
 import type { gamefile } from "../logic/gamefile.js";
 
@@ -127,7 +127,7 @@ function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, 
  */
 function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royalCoords: Coords[], selectedPieceCoords: Coords, color: 'white' | 'black'): boolean {
 	if (royalCoords.length === 0) return false; // Exit if nothing in check
-	if (!checkdetection.isColorInCheck(gamefile, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
+	if (!checkdetection.isPlayerInCheck(gamefile, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
 	const attackerCount = gamefile.attackers.length;
 	if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!");
@@ -175,7 +175,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	 */
 	
 	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0], attacker.coords, legalMoves, selectedPieceCoords);
-	else appendPathBlockingMoves(attacker.path, legalMoves, selectedPieceCoords);
+	else appendPathBlockingMoves(attacker.path!, legalMoves, selectedPieceCoords);
 
 	delete legalMoves.sliding; // Erase all sliding moves
 	

@@ -1,34 +1,30 @@
 
-
-
 /**
- * This script is used to test if given gamefiles are in check,
- * also for simulating which moves would lead to check and removed from the list of legal moves.
- * We also detect checkmate, stalemate, and repetition here.
+ * This script is used to detect check,
+ * or detect if a specific square is being attacked by any
+ * other piece, be it individual, special, or sliding move.
  */
 
 
-import legalmoves from './legalmoves.js';
-import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
-import specialdetect from './specialdetect.js';
 import organizedlines from './organizedlines.js';
 import math from '../../util/math.js';
 import colorutil from '../util/colorutil.js';
-import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
-import boardchanges from './boardchanges.js';
-import moveutil from '../util/moveutil.js';
+// @ts-ignore
+import legalmoves from './legalmoves.js';
 
 
-import type { gamefile } from './gamefile.js';
-import type { MoveDraft } from './movepiece.js';
-import type { LegalMoves } from './legalmoves.js';
 import type { Piece } from './boardchanges.js';
-import type { BoundingBox } from '../../util/math.js';
+import type { Vec2 } from '../../util/math.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { path } from './movepiece.js';
+// @ts-ignore
+import type { gamefile } from './gamefile.js';
+
+
+// Types -------------------------------------------------------------------
 
 
 /** A single piece attacking/checking a royal */
@@ -41,6 +37,8 @@ interface Attacker {
 	path?: path
 }
 
+
+// Functions ----------------------------------------------------------------
 
 
 /**
@@ -100,10 +98,6 @@ function isSquareBeingAttacked(gamefile: gamefile, coord: Coords, colorOfFriendl
 
 	return atleast1Attacker; // Being attacked if true
 }
-
-//  piece within a 3-block radius can capture. Ignores sliding movesets.
-// If there is, appends to "attackers".
-// DOES NOT account for pawns. For that use  doesPawnAttackSquare()
 
 /**
  * Checks to see if any opponent jumper within the immediate vicinity of the coordinates can attack them with an individual move (discounting special movers).
@@ -204,30 +198,32 @@ function doesSlideAttackSquare(gamefile: gamefile, square: Coords, friendlyColor
 
 	for (const direction of gamefile.startSnapshot.slidingPossible) { // [dx,dy]
 		const directionKey = coordutil.getKeyFromCoords(direction);
-		const key = organizedlines.getKeyFromLine(direction, coords);
-		if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[directionKey][key], direction, coords, color, attackers)) atleast1Attacker = true;
+		const key = organizedlines.getKeyFromLine(direction, square);
+		if (doesLineAttackSquare(gamefile, gamefile.piecesOrganizedByLines[directionKey][key], direction, square, friendlyColor, attackers)) {
+			if (!attackers) return true; // Not keeping track of attackers, exit early
+			atleast1Attacker = true;
+		}
 	}
 
 	return atleast1Attacker;
 }
 
 /**
- * Returns true if a piece on the specified line can capture on that square.
- * THIS REQUIRES `coords` be already on the line!!!
- * Appends any attackeres to the provided `attackers` array.
- * @param {gamefile} gamefile 
- * @param {Piece[]} line - The line of pieces
- * @param {Coords} direction - Step of the line: [dx,dy]
- * @param {number} coords - The coordinates of the square to test if any piece on the line can move to.
- * @param {string} color - The color of friendlies. We will exclude pieces of the same color, because they cannot capture friendlies.
- * @param {Object[]} [attackers] - The running list of attackers threatening these coordinates. Any attackers found will be appended to this list. LEAVE BLANK to save compute not adding them to this list!
- * @returns {boolean} true if the square is under threat
+ * Tests if a piece on the specified organized line can capture on the specified square via a sliding move.
+ * REQUIRES the square be on the line!!!
+ * @param gamefile 
+ * @param line - The organized line of pieces
+ * @param direction - The step of the line: [dx,dy]
+ * @param coords - The coordinates of the square to test if any piece on the line can slide to. MUST be on the line!!!
+ * @param color - The player color of friendlies. Friendlies can't capture us.
+ * @param [attackers] - If provided, any opponent slider attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one slider attacker is discovered.
+ * @returns true if the square is under threat
  */
-function doesLineAttackSquare(gamefile: gamefile, line: Piece[], direction: Coords, coords: Coords, color: 'white' | 'black', attackers?: Attacker[]): boolean {
+function doesLineAttackSquare(gamefile: gamefile, line: Piece[], direction: Vec2, coords: Coords, color: 'white' | 'black', attackers?: Attacker[]): boolean {
 	if (!line) return false; // This line doesn't exist, then obviously no pieces can attack our square
 
-	const directionKey = coordutil.getKeyFromCoords(direction); // 'dx,dy'
-	let foundCheckersCount = 0;
+	const directionKey = math.getKeyFromVec2(direction); // 'dx,dy'
+	let atleast1Attacker = false;
 
 	// Iterate through every piece on the line, and test if they can attack our square
 	for (const thisPiece of line) { // { coords, type }
@@ -251,19 +247,19 @@ function doesLineAttackSquare(gamefile: gamefile, line: Piece[], direction: Coor
 		// This piece is attacking this square!
 
 		if (!attackers) return true; // Attackers array isn't being tracked, just insta-return to save compute not finding other attackers!
-		foundCheckersCount++;
-		appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true });
+		else appendAttackerToList(attackers, { coords: thisPiece.coords, slidingCheck: true });
+		atleast1Attacker = true;
 	}
 
-	return foundCheckersCount > 0;
+	return atleast1Attacker;
 }
 
 /**
  * Only appends the attacker giving us check if they aren't already in our list.
  * This can happen if the same piece is checking multiple royals.
- * However, we do want to upgrade them to `slidingCheck` if this one is.
- * @param {Object[]} attackers - The current attackers list, of pieces that are checking us.
- * @param {Object} attacker - The current attacker we want to append, with the properties `coords` and `slidingCheck`.
+ * However, we do want to upgrade them to `slidingCheck` if they are in the list.
+ * @param attackers - The running attackers list of pieces that are checking us.
+ * @param attacker - The new attacker we want to append
  */
 function appendAttackerToList(attackers: Attacker[], attacker: Attacker): void {
 	for (let i = 0; i < attackers.length; i++) {
@@ -280,11 +276,8 @@ function appendAttackerToList(attackers: Attacker[], attacker: Attacker): void {
 
 /**
  * Detects if a player of a provided color has one of the registered checks in gamefile this turn.
- * @param {gamefile} gamefile 
- * @param {string} color 
- * @returns {boolean} true if atleast one of our royals is included in the gamefile's list of royals in check this turn
  */
-function isColorInCheck(gamefile: gamefile, color: 'white' | 'black'): boolean {
+function isPlayerInCheck(gamefile: gamefile, color: 'white' | 'black'): boolean {
 	const royals = gamefileutility.getRoyalCoordsOfColor(gamefile, color).map(coordutil.getKeyFromCoords); // ['x,y','x,y']
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
 	if (royalsInCheck.length === 0) return false;
@@ -294,9 +287,13 @@ function isColorInCheck(gamefile: gamefile, color: 'white' | 'black'): boolean {
 	return new Set([...royals, ...checkedRoyals]).size !== (royals.length + checkedRoyals.length);
 }
 
+
+// Exports ----------------------------------------------------------------
+
+
 export default {
 	detectCheck,
-	isColorInCheck,
+	isPlayerInCheck,
 };
 
 export type {
