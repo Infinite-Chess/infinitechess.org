@@ -24,6 +24,9 @@ element_sendEmail.addEventListener('click', resendConfirmEmail);
 
 const element_member = document.getElementsByClassName('member')[0];
 const element_memberName = document.getElementById('membername');
+const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
+const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
+const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
 
 const element_showAccountInfo = document.getElementById('show-account-info'); // Button
 const element_deleteAccount = document.getElementById('delete-account');
@@ -77,7 +80,7 @@ const member = docutil.getLastSegmentOfURL();
 			joinedElement.textContent = result.joined;
 			const seenElement = document.getElementById('seen');
 			seenElement.textContent = result.seen;
-			updateCompletedCheckmatesCounter(result.checkmates_beaten);
+			updateCompletedCheckmatesInformation(result.checkmates_beaten);
 
 			const loggedInAs = validatorama.getOurUsername();
 
@@ -107,12 +110,25 @@ const member = docutil.getLastSegmentOfURL();
 
 /**
  * Updates the counter on your profile telling you how many total checkmate practices you have beaten.
+ * Also updates the badges
  * "Practice Mode Progress: 3 / 33"
  */
-function updateCompletedCheckmatesCounter(checkmates_beaten) {
+function updateCompletedCheckmatesInformation(checkmates_beaten) {
 	const practiceProgressElement = document.getElementById('practice_progress');
 	const completedCheckmates = checkmates_beaten.match(/[^,]+/g) || [];
-	practiceProgressElement.textContent = `${completedCheckmates.length} / ${Object.values(validcheckmates.validCheckmates).flat().length}`;
+	const numCompleted = completedCheckmates.length;
+	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
+
+	practiceProgressElement.textContent = `${numCompleted} / ${numTotal}`;
+
+	if (numCompleted >= 0.5 * numTotal) element_checkmateBadgeBronze.classList.remove("hidden");
+	else element_checkmateBadgeBronze.classList.add("hidden");
+
+	if (numCompleted >= 0.75 * numTotal) element_checkmateBadgeSilver.classList.remove("hidden");
+	else element_checkmateBadgeSilver.classList.add("hidden");
+
+	if (numCompleted >= 1.0 * numTotal) element_checkmateBadgeGold.classList.remove("hidden");
+	else element_checkmateBadgeGold.classList.add("hidden");
 }
 
 function showAccountInfo() { // Called from inside the html
