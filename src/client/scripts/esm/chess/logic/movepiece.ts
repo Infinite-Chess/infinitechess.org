@@ -439,18 +439,6 @@ function simulateMoveWrapper<R>(gamefile: gamefile, moveDraft: MoveDraft, callba
 }
 
 /**
- * Simulates a move to get the check
- * @returns false if the move does not result in check, otherwise a list of the coords of all the royals in check.
- */
-function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTestInCheck: 'white' | 'black'): ReturnType<typeof checkdetection.detectCheck> {
-	return simulateMoveWrapper(
-		gamefile,
-		moveDraft,
-		() => checkdetection.detectCheck(gamefile, colorToTestInCheck),
-	);	
-}
-
-/**
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
@@ -487,6 +475,5 @@ export default {
 	applyMove,
 	rewindMove,
 	simulateMoveWrapper,
-	getSimulatedCheck,
 	getSimulatedConclusion,
 };

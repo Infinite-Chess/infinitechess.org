@@ -293,6 +293,7 @@ function isPlayerInCheck(gamefile: gamefile, color: 'white' | 'black'): boolean 
 
 export default {
 	detectCheck,
+	doesLineAttackSquare,
 	isPlayerInCheck,
 };
 

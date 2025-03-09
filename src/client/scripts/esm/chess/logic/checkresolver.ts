@@ -34,6 +34,8 @@ import specialdetect from "./specialdetect.js";
 import legalmoves from "./legalmoves.js";
 
 
+// Functions ------------------------------------------------------------------------------
+
 
 /**
  * Deletes individual and sliding moves from the provided LegalMoves object that,
@@ -194,7 +196,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
  * @param pieceSelected - The piece with the provided running legal moves
  * @param color - The color of friendlies
  */
-function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMoves, kingCoords: Coords, pieceSelected: Piece, color: string): void {
+function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMoves, kingCoords: Coords, pieceSelected: Piece, color: 'white' | 'black'): void {
 	const selectedPieceCoords = pieceSelected.coords;
 	/** A list of line directions that we're sharing with the king! */
 	const sameLines: Vec2[] = []; // [ [dx,dy], [dx,dy] ]
@@ -218,7 +220,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 		const strline = coordutil.getKeyFromCoords(direction1); // 'dx,dy'
 		const key = organizedlines.getKeyFromLine(direction1,kingCoords); // 'C|X'
 		const line = gamefile.piecesOrganizedByLines[strline][key];
-		const opensDiscovered = legalmoves.doesLineAttackSquare(gamefile, line, direction1, kingCoords, color);
+		const opensDiscovered = checkdetection.doesLineAttackSquare(gamefile, line, direction1, kingCoords, color);
 		if (!opensDiscovered) continue;
 		// The piece opens a discovered if it were to be gone!
 		// checklines.push(line); // For Idon's code below
@@ -229,60 +231,6 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 			delete moves.sliding[direction2]; // Not same line, delete it because it would open a discovered.
 		}
 	}
-
-	// Idon us's code that handles the situation where moving off a line could expose multiple checks
-	// ON THE same line!! It's so tricky to know what squares would keep the discovered closed.
-	// See the discussion on discord: https://discord.com/channels/1114425729569017918/1260357580845224138/1263583566563119165
-	// const tempslides = {}
-	// r : {
-	//     if (checklines.length > 1) {
-	//         if (math.areLinesCollinear(checklines)) {
-	//             // FIXME: this is a problem as (2,0) (1,0) if (1,0) is added it can slide into (2,0) gaps opening check
-	//             // Another case (3,0) (2,0) correct blocks are along (6,0) but thats not an organized line
-
-	//             // Please can someone optimize this
-
-	//             let fline = checklines[0];
-	//             let fGcd = math.GCD(fline[0],fline[1]);
-
-	//             const baseLine = [fline[0]/fGcd, fline[1]/fGcd];
-
-	//             let mult = [];
-	//             checklines.forEach((line) => {mult.push(math.GCD(line[0],line[1]))});
-	//             const lcm = math.LCM(Object.values(mult));
-
-	//             const steps = [0,0]
-	//             for (const strline in moves.sliding) {
-	//                 const line = coordutil.getCoordsFromKey(strline);
-	//                 if (!math.areLinesCollinear([line, baseLine])) continue;
-	//                 const gcd = math.GCD(line[0], line[1]);
-	//                 let rslides = [Math.floor(moves.sliding[strline][0]/lcm*gcd),Math.floor(moves.sliding[strline][1]/lcm*gcd)];
-	//                 if (rslides[0]<steps[0]) steps[0] = rslides[0];
-	//                 if (rslides[1]>steps[1]) steps[1] = rslides[1];
-	//             }
-
-	//             const line = [baseLine[0]*lcm,baseLine[1]*lcm]
-
-	//             if (!gamefile.startSnapshot.slidingPossible.includes(line)) {
-	//                 const strline = coordutil.getKeyFromCoords(line) 
-	//                 tempslides[strline] = steps
-	//             } else {
-	//                 for (i=steps[0]; i<=steps[1]; i++) {
-	//                     if (i==0) continue;
-	//                     moves.individual.push([line[0]*i,line[1]*i])
-	//                 }
-	//             }
-
-	//             } else {
-	//             // Cannot slide to block all attack lines so blank the sliding
-	//             // Could probably blank regular attacks too
-	//         }
-	//     } else if (checklines.length === 1) {
-	//         const strline = coordutil.getKeyFromCoords(checklines[0])
-	//         if (!moves.sliding[strline]) break r;
-	//         tempslides[strline] = moves.sliding[strline] 
-	//     }
-	// }
 
 	// Add the piece back with the EXACT SAME index it had before!!
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false);
@@ -362,9 +310,23 @@ function appendPathBlockingMoves(path: path, legalMoves: LegalMoves, selectedPie
 function isMoveCheckInvalid(gamefile: gamefile, piece: Piece, destCoords: CoordsSpecial, color: 'white' | 'black') { // pieceSelected: { type, index, coords }
 	const moveDraft: MoveDraft = { startCoords: jsutil.deepCopyObject(piece.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
-	return movepiece.getSimulatedCheck(gamefile, moveDraft, color).check;
+	return getSimulatedCheck(gamefile, moveDraft, color).check;
 }
 
+/**
+ * Simulates a move to get the check
+ * @returns false if the move does not result in check, otherwise a list of the coords of all the royals in check.
+ */
+function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTestInCheck: 'white' | 'black'): ReturnType<typeof checkdetection.detectCheck> {
+	return movepiece.simulateMoveWrapper(
+		gamefile,
+		moveDraft,
+		() => checkdetection.detectCheck(gamefile, colorToTestInCheck),
+	);	
+}
+
+
+// Exports --------------------------------------------------------------------------------
 
 
 export default {
