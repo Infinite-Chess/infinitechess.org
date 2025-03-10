@@ -10,6 +10,8 @@ import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
+import { ClockValues } from './offlineclockstuff.js';
+import pingManager from '../../util/pingManager.js';
 
 
 // Type Definitions ---------------------------------------------------------------
