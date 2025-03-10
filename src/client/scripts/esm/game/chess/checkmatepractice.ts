@@ -21,6 +21,9 @@ import movesequence from "../chess/movesequence.js";
 import selection from '../chess/selection.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
+import validatorama from "../../util/validatorama.js";
+import validcheckmates from '../../chess/util/validcheckmates.js';
+import docutil from '../../util/docutil.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -30,54 +33,6 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 
 
 // Variables ----------------------------------------------------------------------------
-
-const validCheckmates = {
-	easy: [
-		"2Q-1k",
-		"3R-1k",
-		"1Q1R1B-1k",
-		"1Q1R1N-1k",
-		"1K2R-1k",
-		"1Q1CH-1k",
-		"2CH-1k",
-		"3B3B-1k",
-		"1K2B2B-1k",
-		"3AR-1k",
-		"1K1AM-1k"
-	],
-	medium: [
-		"1K1Q1B-1k",
-		"1K1Q1N-1k",
-		"1Q1B1B-1k",
-		"1Q1N1B-1k",
-		"1Q2N-1k",
-		"1K1N2B1B-1k",
-		"1K2N1B1B-1k",
-		"1K1R1B1B-1k",
-		"1K1R1N1B-1k",
-		"1K1AR1R-1k",
-		"1K2AR-1k",
-		"2AM-1rc"
-	],
-	hard: [
-		"2R1N1P-1k",
-		"1K1R2N-1k",
-		"2K1R-1k",
-		"1K2N6B-1k",
-		"1K2HA1B-1k",
-		"1K1CH1N-1k",
-		"5HU-1k",
-	],
-	insane: [
-		"1K1Q1P-1k",
-		"1K3HA-1k",
-		"1K3NR-1k",
-	]
-
-	// superhuman (way too hard):
-	// "1K1AR1HA1P-1k" (the white pawn only exists in order to mitigate zugzwang for white)
-	// "2B60N-1k" (fewer knights suffice but exact amount unknown, see proof in https://chess.stackexchange.com/q/45998/35006 )
-};
 
 /** These checkmates we may place the black king nearer to the white pieces. */
 const checkmatesWithBlackRoyalNearer = [
@@ -102,7 +57,7 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * A list of checkmate strings we have beaten
  * [ "2Q-1k", "3R-1k", "2CH-1k"]
  * 
- * This will be initialized when guipractice calls {@link getCompletedCheckmates} for the first time!
+ * This will be initialized when guipractice calls {@link updateCompletedCheckmates} for the first time!
  * If we initialize it right here, we crash in production, because localstorage is not defined yet in app.js
  * @type {string[]}
  */
@@ -119,6 +74,11 @@ let undoingIsLegal : boolean = false;
 
 
 // Functions ----------------------------------------------------------------------------
+
+
+// Set a listener for the logout event, to refresh the checkmates list
+document.addEventListener('logout', updateCompletedCheckmates);
+
 
 function setUndoingIsLegal(value: boolean) {
 	undoingIsLegal = value;
@@ -177,11 +137,6 @@ function closeListeners() {
 	document.removeEventListener("guigameinfo-restart", restartGame);
 }
 
-function getCompletedCheckmates(): string[] {
-	if (!completedCheckmates) completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || []; // Initialize
-	return completedCheckmates;
-}
-
 /**
  * This method generates a random starting position object for a given checkmate practice ID
  * @param checkmateID - a string containing the ID of the selected checkmate practice problem
@@ -189,7 +144,7 @@ function getCompletedCheckmates(): string[] {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// error if user somehow submitted invalid checkmate ID
-	if (!Object.values(validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
+	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
 
 	// place the black king not so far away for specific variants
 	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
@@ -264,28 +219,85 @@ function squareNotInSight(square: CoordsKey, startingPosition: Position): boolea
 	return true;
 }
 
-/** Saves the list of beaten checkmates into browser storages. */
-function saveCheckmatesBeaten(): void {
-	if (!completedCheckmates) throw Error("Cannot save checkmates beaten when it was never initialized!");
-	localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
-}
-
-function markCheckmateBeaten(checkmatePracticeID: string): void {
-	if (!completedCheckmates) throw Error("Cannot mark checkmate beaten when it was never initialized!");
-
-	// Add the checkmate ID to the beaten list
-	if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
-	saveCheckmatesBeaten();
-	console.log("Marked checkmate practice as completed!");
-}
-
-/** Completely for dev testing, call {@link checkmatepractice.eraseCheckmatePracticeProgress} in developer tools! */
-function eraseCheckmatePracticeProgress(): void {
+/** 
+ * Only for dev testing
+ * Erases checkmate practice progress in local storage
+ * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
+*/
+function eraseCheckmatePracticeProgressFromLocalStorage(): void {
 	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
 	console.log("DELETED all checkmate practice progress.");
 	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
 	completedCheckmates.length = 0;
-	guipractice.updateCheckmatesBeaten(); // Delete the 'beaten' class from all
+	guipractice.updateCheckmatesBeaten(completedCheckmates); // Delete the 'beaten' class from all
+}
+
+/**
+ * Updates completedCheckmates list and redraws the GUI by calling guipractice.updateCheckmatesBeaten()
+ */
+function updateCompletedCheckmates() {
+	// Update completedCheckmates according to checkmates_beaten cookie, if it exists, and if we are logged in
+	const cookieCheckmates: string | undefined = docutil.getCookieValue('checkmates_beaten');
+	if (validatorama.areWeLoggedIn() && cookieCheckmates !== undefined) {
+		console.log("checkmates_beaten cookie was present!");
+		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || []; // match() returns null if no matches
+	} else {
+		// Else, use localstorage as a fallback
+		completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
+	}
+	guipractice.updateCheckmatesBeaten(completedCheckmates);
+}
+
+/**
+ * Updates the completedCheckmates variable with the beaten checkmatePracticeID,
+ * and sends a message to the server if the player is logged in
+ */
+async function markCheckmateBeaten(checkmatePracticeID: string) {
+	if (!completedCheckmates) throw Error("Cannot mark checkmate beaten when it was never initialized!");
+	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmatePracticeID)) throw Error("User completed invalid checkmate practice.");
+
+	// Add the checkmate ID to the beaten list
+	if (!completedCheckmates.includes(checkmatePracticeID)) completedCheckmates.push(checkmatePracticeID);
+	console.log("Marked checkmate practice as completed!");
+
+	// Update localstorage and exit, if we are not logged in
+	if (!validatorama.areWeLoggedIn()) {
+		localstorage.saveItem(nameOfCompletedCheckmatesInStorage, completedCheckmates, expiryOfCompletedCheckmatesMillis);
+		return;
+	}
+
+	// We ARE logged in. Send a POST request to tell the server we have beaten a new checkmate!
+
+	// Configure the POST request
+	const config = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			"is-fetch-request": "true" // Custom header
+		} as Record<string, string>,
+		body: JSON.stringify({ new_checkmate_beaten: checkmatePracticeID }),  // Send the preferences as JSON
+	};
+	
+	// Get the access token and add it to the Authorization header
+	const token: string | undefined = await validatorama.getAccessToken();
+	if (token) config.headers['Authorization'] = `Bearer ${token}`;  // If you use tokens for authentication
+	
+	try {
+		const response: Response = await fetch('/api/update-checkmatelist', config);
+			
+		// Check if the response status code indicates success (e.g., 200-299 range)
+		if (response.ok) {
+			console.log('Server recorded checkmate completion successfully.');
+			// Do this now, since the server will have updated the cookie containing the completed checkmates
+			guipractice.updateCheckmatesBeaten(completedCheckmates);
+		} else {
+			// Handle unsuccessful response
+			const errorData = await response.json();
+			console.error('Failed to update checkmate list on the server:', errorData.message || errorData);
+		}
+	} catch (error) {
+		console.error('Error sending checkmate list to the server:', error);
+	}
 }
 
 /** Called when an engine game ends */
@@ -368,13 +380,12 @@ function restartGame() {
 
 
 export default {
-	validCheckmates,
 	areInCheckmatePractice,
 	startCheckmatePractice,
 	onGameUnload,
-	getCompletedCheckmates,
+	updateCompletedCheckmates,
+	eraseCheckmatePracticeProgressFromLocalStorage,
 	onEngineGameConclude,
-	eraseCheckmatePracticeProgress,
 	registerHumanMove,
 	registerEngineMove
 };

@@ -55,7 +55,8 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// 	preferences TEXT,
 	// 	refresh_tokens TEXT,                          
 	// 	verification TEXT, 
-	// 	username_history TEXT
+	// 	username_history TEXT,
+	//  checkmates_beaten TEXT NOT NULL DEFAULT ''
 	// );
 
 	if (roles !== undefined && typeof roles !== 'string') throw new Error('Roles must be a string.');

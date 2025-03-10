@@ -59,7 +59,7 @@ function GameRules() {
 		/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
 		black: undefined,
 	};
-	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. @type {string[]} */
+	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. @type {('white' | 'black')[]} */
 	this.turnOrder = undefined;
 
 	// Gamerules that also have dedicated slots in ICN notation...

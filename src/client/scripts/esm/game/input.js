@@ -541,6 +541,7 @@ function removeMouseHeld(event) {
 function initListeners_Keyboard() {
 
 	document.addEventListener("keydown", (event) => {
+		frametracker.onVisualChange();
 		atleastOneInputThisFrame = true;
 		// console.log("Key down event active element: ", document.activeElement);
 		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
@@ -552,6 +553,7 @@ function initListeners_Keyboard() {
 	});
 
 	document.addEventListener("keyup", (event) => {
+		frametracker.onVisualChange();
 		atleastOneInputThisFrame = true;
 		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const index = keyHelds.indexOf(event.key.toLowerCase());

@@ -28,6 +28,7 @@ const allMemberColumns = [
 	'preferences',
 	'verification', 
 	'login_count',
+	'checkmates_beaten'
 ];
 
 
@@ -50,7 +51,8 @@ function generateTables() {
 			preferences TEXT,
 			refresh_tokens TEXT,                          
 			verification TEXT, 
-			username_history TEXT
+			username_history TEXT,
+			checkmates_beaten TEXT NOT NULL DEFAULT ''
 		);
 	`;
 	db.run(createTableSQLQuery);

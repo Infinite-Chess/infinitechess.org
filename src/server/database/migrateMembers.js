@@ -101,8 +101,9 @@ function migrateUsers() {
 			last_seen,
 			login_count,
 			refresh_tokens,
-			verification
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			verification,
+			checkmates_beaten
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
 		try {
