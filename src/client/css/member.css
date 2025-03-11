@@ -111,8 +111,7 @@ main {
 }
 
 .badge {
-  position: relative; /* So that the ::before is positioned correctly */
-  /* display: inline-block; */
+  position: relative;
   transition: transform 0.4s ease;
   user-select: none;
 }
@@ -122,7 +121,6 @@ main {
 }
 
 #checkmate-badge-bronze {
-    /* Copilot, multiply these numbers by 0.8 below: */
     --shine-color: rgba(229, 203, 180, 0.3);
 }
 
