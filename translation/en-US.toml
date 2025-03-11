@@ -118,9 +118,11 @@ account_info_heading = "Account Info"
 email = "Email:"
 delete_account = "Delete account"
 password_reset_message = ["To change your username, email or password, ", "contact us."]
-bronze_checkmate_badge = "Bronze Checkmate Badge"
-silver_checkmate_badge = "Silver Checkmate Badge"
-gold_checkmate_badge = "Gold Checkmate Badge"
+
+[member.badge-tooltips]
+checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
+checkmate_silver = "Checkmate Pro: Complete 75% of all practice checkmates."
+checkmate_gold = "Checkmate Master: Complete 100% of all practice checkmates."
 
 [create-account]
 title = "Create Account" # The tab name
