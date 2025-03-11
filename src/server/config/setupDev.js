@@ -21,7 +21,15 @@ async function createDevelopmentAccounts() {
 		giveRole(user_id, "owner");
 		giveRole(user_id, "admin");
 
-		// Give Owner 100% checkmate progression for debugging purposes
+		// Give Owner checkmate progression for debugging purposes
+		// Bronze
+		// const checkmates_beaten = Object.values(validcheckmates.validCheckmates.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.validCheckmates.medium).toString();
+		// Silver
+		// const checkmates_beaten = Object.values(validcheckmates.validCheckmates.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.validCheckmates.medium).toString()
+		// 	+ "," + Object.values(validcheckmates.validCheckmates.hard).toString();
+		// Gold
 		const checkmates_beaten = Object.values(validcheckmates.validCheckmates).flat().toString();
 		updateMemberColumns(user_id, { checkmates_beaten });
 	}
