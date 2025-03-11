@@ -32,10 +32,20 @@ const players = {
 	BLACK: 2,
 } as const;
 
+const numTypes = Object.keys(rawTypes).length;
+
+const ext = {
+	N: players.NEUTRAL * numTypes,
+	W: players.WHITE * numTypes,
+	B: players.BLACK * numTypes
+} as const;
+
 const listExtras = 20 as const;
 
 export {
 	rawTypes,
+	ext,
+	numTypes,
 	listExtras,
 	pieceCountToDisableCheckmate,
 	players,

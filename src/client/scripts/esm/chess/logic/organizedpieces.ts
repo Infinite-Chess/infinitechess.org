@@ -66,6 +66,9 @@ interface OrganizedPieces {
 	lines: Map<Vec2Key, Map<LineKey,number[]>>
 	slides: Vec2[]
 	hippogonalsPresent: boolean
+	/** Whether colinear lines are present in the gamefile.
+	* (e.g. [1,0] and [2,0] are colinear) @type {boolean} */
+	colinearsPresent: undefined,
 }
 
 

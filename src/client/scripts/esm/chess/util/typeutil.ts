@@ -1,5 +1,5 @@
 
-import { rawTypes, players } from "../config";
+import { rawTypes, players, numTypes } from "../config";
 import type { Piece } from "./boardutil";
 
 /**
@@ -21,8 +21,6 @@ const strcolors = ["neutral", "white", "black"] as const;
 type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
 type Player = typeof players[keyof typeof players]
-
-const numTypes = Object.keys(rawTypes).length;
 
 function getRawType(type: number): RawType {
 	return type % numTypes as RawType;
