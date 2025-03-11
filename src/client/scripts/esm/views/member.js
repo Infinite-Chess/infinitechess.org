@@ -25,6 +25,12 @@ element_sendEmail.addEventListener('click', resendConfirmEmail);
 const element_member = document.getElementsByClassName('member')[0];
 const element_memberName = document.getElementById('membername');
 
+const element_badgeList = document.getElementById('badgelist');
+const elements_badges = document.querySelectorAll('#badgelist img');
+const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
+const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
+const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
+
 const element_showAccountInfo = document.getElementById('show-account-info'); // Button
 const element_deleteAccount = document.getElementById('delete-account');
 const element_accountInfo = document.getElementById('accountinfo');
@@ -77,7 +83,7 @@ const member = docutil.getLastSegmentOfURL();
 			joinedElement.textContent = result.joined;
 			const seenElement = document.getElementById('seen');
 			seenElement.textContent = result.seen;
-			updateCompletedCheckmatesCounter(result.checkmates_beaten);
+			updateCompletedCheckmatesInformation(result.checkmates_beaten);
 
 			const loggedInAs = validatorama.getOurUsername();
 
@@ -101,18 +107,32 @@ const member = docutil.getLastSegmentOfURL();
 			}
 
 			// Change username text size depending on character count
-			recalcUsernameSize();
+			recalcUsernameAndBadgeSize();
 		});
 })();
 
 /**
  * Updates the counter on your profile telling you how many total checkmate practices you have beaten.
+ * Also updates the badges
  * "Practice Mode Progress: 3 / 33"
  */
-function updateCompletedCheckmatesCounter(checkmates_beaten) {
+function updateCompletedCheckmatesInformation(checkmates_beaten) {
 	const practiceProgressElement = document.getElementById('practice_progress');
 	const completedCheckmates = checkmates_beaten.match(/[^,]+/g) || [];
-	practiceProgressElement.textContent = `${completedCheckmates.length} / ${Object.values(validcheckmates.validCheckmates).flat().length}`;
+	const numCompleted = completedCheckmates.length;
+	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
+
+	practiceProgressElement.textContent = `${numCompleted} / ${numTotal}`;
+	
+	let shownBadge;
+	if (numCompleted >= 1.0 * numTotal) shownBadge = element_checkmateBadgeGold;
+	else if (numCompleted >= 0.75 * numTotal) shownBadge = element_checkmateBadgeSilver;
+	else if (numCompleted >= 0.5 * numTotal) shownBadge = element_checkmateBadgeBronze;
+
+	for (const badge of [element_checkmateBadgeBronze, element_checkmateBadgeSilver, element_checkmateBadgeGold]) {
+		if (badge === shownBadge) badge.classList.remove("hidden");
+		else badge.classList.add("hidden");
+	}
 }
 
 function showAccountInfo() { // Called from inside the html
@@ -171,7 +191,7 @@ function resendConfirmEmail() {
 		});
 }
 
-function recalcUsernameSize() {
+function recalcUsernameAndBadgeSize() {
 	// Change username text size depending on character count
 	// const memberElementPadding = parseInt((window.getComputedStyle(element_member, null).getPropertyValue('padding-left')), 10) // parseInt() converts px to number
 	const targetWidth = (window.innerWidth - 185) * 0.52;
@@ -182,4 +202,4 @@ function recalcUsernameSize() {
 	element_memberName.style["font-size"] = `${fontSize}px`;
 }
 
-window.addEventListener("resize", recalcUsernameSize);
+window.addEventListener("resize", recalcUsernameAndBadgeSize);

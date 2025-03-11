@@ -1,4 +1,8 @@
 {
+	"43": {
+		"note": "Added all of member.badge-tooltips, lines 122-125",
+		"changes": []
+	},
 	"42": {
 		"note": "Added member.practice_progress to line 115",
 		"changes": []
