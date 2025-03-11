@@ -107,7 +107,7 @@ const member = docutil.getLastSegmentOfURL();
 			}
 
 			// Change username text size depending on character count
-			recalcUsernameAndBadgeSize();
+			recalcUsernameSize();
 		});
 })();
 
@@ -191,7 +191,7 @@ function resendConfirmEmail() {
 		});
 }
 
-function recalcUsernameAndBadgeSize() {
+function recalcUsernameSize() {
 	// Change username text size depending on character count
 	// const memberElementPadding = parseInt((window.getComputedStyle(element_member, null).getPropertyValue('padding-left')), 10) // parseInt() converts px to number
 	const targetWidth = (window.innerWidth - 185) * 0.52;
@@ -202,4 +202,4 @@ function recalcUsernameAndBadgeSize() {
 	element_memberName.style["font-size"] = `${fontSize}px`;
 }
 
-window.addEventListener("resize", recalcUsernameAndBadgeSize);
+window.addEventListener("resize", recalcUsernameSize);
