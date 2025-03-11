@@ -74,19 +74,20 @@ main {
 }
 
 .member {
-    white-space: nowrap;
-    text-align: left;
+    display: flex;
+    gap: 4%;
 }
 
 .member img {
     display: inline-block;
     height: 100px;
     vertical-align: top;
-    margin-right: 12px;
 }
 
 .membername-container {
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
 }
 
 .member h1 {
@@ -95,15 +96,12 @@ main {
 }
 
 #badgelist {
-    float: left;
-    height: 10px;
-    margin-top: -50px;
+    display: flex;
+    height: 60px;
 }
 
 #badgelist img {
-    width: 60px;
-    height: 60px;
-    margin-right: 0;
+    height: 100%;
 }
 
 #stats {
@@ -215,11 +213,6 @@ a {
 
     .member img {
         height: calc(100px + (100vw - 450px) * 0.165);
-        margin-right: calc(12px + (100vw - 450px) * 0.05);
-    }
-
-    .member h1 {
-        line-height: calc(100px + (100vw - 450px) * 0.165);
     }
 }
 
@@ -248,10 +241,5 @@ a {
 
     .member img {
         height: 160px;
-        margin-right: 30px;
-    }
-
-    .member h1 {
-        line-height: 160px;
     }
 }

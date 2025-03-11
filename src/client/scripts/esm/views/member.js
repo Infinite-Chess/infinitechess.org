@@ -200,15 +200,6 @@ function recalcUsernameAndBadgeSize() {
 	const cap = 50;
 	if (fontSize > cap) fontSize = cap;
 	element_memberName.style["font-size"] = `${fontSize}px`;
-
-	// Change badge size and position depending on element_member.clientHeight
-	const badgeSize = Math.min(60, 0.3 * element_member.clientHeight);
-	const badgeListMarigin = Math.min(50, 0.25 * element_member.clientHeight);
-	elements_badges.forEach(badge => {
-		badge.style.height = `${badgeSize}px`;
-		badge.style.width = `${badgeSize}px`;
-	});
-	element_badgeList.style["margin-top"] = `-${badgeListMarigin}px`;
 }
 
 window.addEventListener("resize", recalcUsernameAndBadgeSize);
