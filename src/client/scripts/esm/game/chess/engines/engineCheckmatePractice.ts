@@ -443,6 +443,8 @@ function initEvalWeightsAndSearchProperties() {
 			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
 			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
 			break;
+		case "1K3NR-1k":
+			distancesEvalDictionary[5] = [[20, manhattanNorm], [20, manhattanNorm]]; // king
 	}
 }
 
