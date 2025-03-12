@@ -445,6 +445,7 @@ function initEvalWeightsAndSearchProperties() {
 			break;
 		case "1K3NR-1k":
 			distancesEvalDictionary[5] = [[20, manhattanNorm], [20, manhattanNorm]]; // king
+			break;
 	}
 }
 
