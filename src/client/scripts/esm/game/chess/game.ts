@@ -28,6 +28,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import piecemodels from '../rendering/piecemodels.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -52,8 +53,6 @@ import highlightline from '../rendering/highlights/highlightline.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
-// @ts-ignore
-import piecesmodel from '../rendering/piecesmodel.js';
 // @ts-ignore
 import loadbalancer from '../misc/loadbalancer.js';
 // @ts-ignore
@@ -128,7 +127,7 @@ function updateBoard(gamefile: gamefile) {
 	if (input.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
 	if (input.isKeyDown('escape')) guipause.toggle();
 	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, true);
+	if (input.isKeyDown('r')) piecemodels.regenAll(gamefile);
 	if (input.isKeyDown('n')) {
 		guinavigation.toggle();
 		guigameinfo.toggle();

@@ -26,6 +26,7 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import clientEventDispatcher from "../../util/clientEventDispatcher.js";
+import piecemodels from "../rendering/piecemodels.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -256,18 +257,23 @@ async function loadGraphical(loadOptions: LoadOptions) {
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 	}
 
-	// Regenerate the mesh of all the pieces.
-	await regenModel();
+	// Generate the mesh of every piece type
+	await piecemodels.regenAll(loadedGamefile!);
 
 	/**
 	 * Listen for the event that inserts more undefineds into the piece lists.
 	 * When that occurs, we need to regenerate the model.
 	 */
-	clientEventDispatcher.listen('inserted-undefineds', regenModel);
+	clientEventDispatcher.listen('inserted-undefineds', regenModelOfType);
 }
 
-async function regenModel() {
-	await piecesmodel.regenModel(loadedGamefile!);
+/**
+ * Call when any one piece type list has increased in undefined placeholders.
+ * The length of the array has changed, so we should regenerate its mesh.
+ */
+function regenModelOfType(event: CustomEvent) {
+	const type = event.detail;
+	piecemodels.regenType(loadedGamefile!, type);
 }
 
 /** The canvas will no longer render the current game */
@@ -302,7 +308,7 @@ function unloadGame() {
 	specialrighthighlights.onGameClose();
 
 	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.
-	clientEventDispatcher.removeListener('inserted-undefineds', regenModel);
+	clientEventDispatcher.removeListener('inserted-undefineds', regenModelOfType);
 }
 
 /**

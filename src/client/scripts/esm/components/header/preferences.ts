@@ -34,6 +34,13 @@ interface ServerSidePreferences {
 /** Both client and server side preferences */
 type Preferences = ServerSidePreferences & ClientSidePreferences;
 
+/** A theme's color arguments as to what color to tint each player's pieces. */
+interface ColorArgs {
+	white: Color,
+	black: Color,
+	neutral: Color
+}
+
 
 // Variables ------------------------------------------------------------
 
@@ -255,7 +262,7 @@ function getTintColorOfType(type: string): { r: number, g: number, b: number, a:
 	const colorArgs: { white: Color, black: Color, neutral: Color } | undefined = getPieceRegenColorArgs(); // { white, black, neutral }
 	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-	const pieceColor = colorutil.getPieceColorFromType(type) as 'white' | 'black' | 'neutral';
+	const pieceColor = colorutil.getPieceColorFromType(type);
 	const color: Color = colorArgs[pieceColor];
 
 	return {
@@ -410,4 +417,8 @@ export default {
 	getBoxOutlineColor,
 	getTintColorOfType,
 	getPieceRegenColorArgs,
+};
+
+export type {
+	ColorArgs,
 };
