@@ -9,8 +9,8 @@ import type { Position } from '../../chess/variants/variant.js';
 import type { VariantOptions } from './gameslot.js';
 import type { Player } from '../../chess/util/typeutil.js';
 
+import typeutil from '../../chess/util/typeutil.js';
 import localstorage from '../../util/localstorage.js';
-import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
@@ -27,7 +27,7 @@ import winconutil from '../../chess/util/winconutil.js';
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
-import { players } from '../../chess/config.js';
+import { players, ext as e, rawTypes as r } from '../../chess/config.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -194,22 +194,23 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// place the black king not so far away for specific variants
 	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
 
-	const startingPosition: { [key: string]: string } = {}; // the position to be generated
+	const startingPosition: Position = {}; // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
 	let whitebishopparity: number = Math.floor(Math.random() * 2); // square color of first white bishop batch
 	
 	// read the elementID and convert it to a position
-	const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
+	const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+|[0-9]*[a-zA-Z]+/g);
 	if (!piecelist) return startingPosition;
 
 	for (const entry of piecelist) {
+		entry.match(/[0-9]+(|[0-9])?/);
 		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-		let piece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-		piece = formatconverter.ShortToLong_Piece(piece);
+		const strpiece: string = entry.match(/|[0-9]*[a-zA-Z]+/)![0]; // piecetype to be placed
+		const piece: number = formatconverter.ShortToInt_Piece(strpiece);
 
 		// place amount many pieces of type piece
 		while (amount !== 0) {
-			if (colorutil.getPieceColorFromType(piece) === "white") {
+			if (typeutil.getColorFromType(piece) === players.WHITE) {
 				if (blackpieceplaced) throw Error("Must place all white pieces before placing black pieces.");
 
 				// randomly generate white piece coordinates in square around origin
@@ -218,7 +219,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				const key: string = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
-				if (!(key in startingPosition) && !(piece === "bishopsW" && (x + y) % 2 !== whitebishopparity)) {
+				if (!(key in startingPosition) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
 					startingPosition[key] = piece;
 					amount -= 1;
 				}
@@ -255,7 +256,7 @@ function squareNotInSight(square: CoordsKey, startingPosition: Position): boolea
 	for (const key in startingPosition) {
 		const [x, y]: number[] = coordutil.getCoordsFromKey(key as CoordsKey);
 		if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
-		if (startingPosition[key] === "knightridersW") {
+		if (startingPosition[key] === r.KNIGHTRIDER + e.W) {
 			if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
 				return false;
 			}

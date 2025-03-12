@@ -6,6 +6,7 @@ import { listExtras, players } from "../config";
 // @ts-ignore
 import type gamefile from "./gamefile";
 import type { RawType } from "../util/typeutil";
+import type { Vec2, LineKey, Vec2Key } from "../util/boardutil";
 import type { Coords, CoordsKey } from "../util/coordutil";
 // @ts-ignore
 import type { GameRules } from "../variants/gamerules";
@@ -21,18 +22,6 @@ const MaxTypedArrayValues: Record<string, bigint> = {
 	Int32Array: 2147483647n,
 	BigInt64Array: 9223372036854775807n,
 };
-
-
-
-/** A length-2 number array. Commonly used for storing directions. */
-type Vec2 = [number,number]
-
-/** The string-key of a line's step value, or a 2-dimensional vector. */
-// Separated from CoordsKey so that it's clear this is meant for directions, not coordinates
-type Vec2Key = `${number},${number}`;
-
-/** A unique identifier for a single line of pieces. `C|X` */
-type LineKey = `${number}|${number}`
 
 interface TypeRange {
 	start: number,
@@ -445,10 +434,6 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 export type {
 	OrganizedPieces,
 	TypeRange,
-
-	LineKey,
-	Vec2Key,
-	Vec2
 };
 
 export default {

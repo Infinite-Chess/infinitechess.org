@@ -13,11 +13,10 @@ import type { RawType } from '../util/typeutil.js';
 import type gamefile from '../logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from './gamerules.js';
-
+import type { Position } from '../util/boardutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
-import colorutil from '../util/colorutil.js';
 import fourdimensionalgenerator from './fourdimensionalgenerator.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
@@ -103,15 +102,6 @@ interface SpecialVicinity {
 	 * The value is a list of coordinates that it may be possible for that piece type to make a special capture from that distance.
 	 */
 	[piece: string]: Coords[]
-}
-
-/**
- * A position in keys format. Entries look like: `"5,2": "pawnsW"`
- * 
- * TODO: Move to organizedlines.ts
- */
-interface Position {
-	[coordKey: string]: string
 }
 
 "use strict";
@@ -354,7 +344,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	let positionString: string;
-	let startingPosition: { [coordKey: string]: string };
+	let startingPosition: Position;
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString) {
@@ -388,7 +378,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
  */
 function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
 	positionString?: string,
-	startingPosition?: { [coordKey: string]: string },
+	startingPosition?: Position,
 	specialRights?: { [coordKey: string]: boolean }
 	pawnDoublePush?: boolean,
 	castleWith?: string
@@ -421,7 +411,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	Variant: string,
 	UTCDate: string,
 	UTCTime: string
-}, position: { [coordKey: string]: string }): GameRules {
+}, position: Position): GameRules {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 
 	const gameruleModifications: GameRuleModifications = getVariantGameRuleModifications({ Variant, UTCDate, UTCTime });
@@ -453,7 +443,7 @@ function getVariantGameRuleModifications({ Variant, UTCDate = timeutil.getCurren
  * @param modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
  * @returns The gamerules
  */
-function getGameRules(modifications: GameRuleModifications = {}, position?: { [coordKey: string]: string }): GameRules { // { slideLimit, promotionRanks, position }
+function getGameRules(modifications: GameRuleModifications = {}, position?: Position): GameRules { // { slideLimit, promotionRanks, position }
 	const gameRules: any = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
@@ -504,7 +494,7 @@ function getBareMinimumGameRules(): GameRules {
  * @param promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
  * @returns The gamefile's `promotionsAllowed` gamerule.
  */
-function getPromotionsAllowed(position: { [coordKey: string]: string }, promotionRanks: GameRules['promotionRanks']): ColorVariantProperty<RawType[]> {
+function getPromotionsAllowed(position: Position, promotionRanks: GameRules['promotionRanks']): ColorVariantProperty<RawType[]> {
 	console.log("Parsing position to get the promotionsAllowed gamerule..");
 
 	// We can't promote to royals or pawns, whether we started the game with them.

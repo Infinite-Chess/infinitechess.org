@@ -481,7 +481,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// position
-		if (!longformat.startingPosition && /^([a-zA-z]+-?[0-9]+,-?[0-9]+\+?($|\|))/.test(string)) {
+		if (!longformat.startingPosition && /^([0-9]*[a-zA-z]+-?[0-9]+,-?[0-9]+\+?($|\|))/.test(string)) {
 			const { startingPosition, specialRights } = getStartingPositionAndSpecialRightsFromShortPosition(string);
 			longformat.specialRights = specialRights;
 			longformat.startingPosition = startingPosition;

@@ -13,7 +13,7 @@ import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
-
+import type { Position } from "../../chess/variants/variant.js";
 
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
@@ -122,7 +122,7 @@ interface VariantOptions {
 	 * The key of the object is the coordinates of the piece as a string,
 	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
 	 */
-	startingPosition: { [key: CoordsKey]: string }
+	startingPosition: Position
 	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
 	specialRights: { [key: CoordsKey]: true },
 }
@@ -245,7 +245,7 @@ async function loadGamefile(loadOptions: LoadOptions) {
 	});
 
 	events.addEventListener(getGamefile()!.events, "regenerateLists", (gamefile: gamefile) => {
-		piecesmodel.regenModel(gamefile, options.getPieceRegenColorArgs());
+		piecesmodel.regenModel(gamefile);
 		return false;
 	});
 }

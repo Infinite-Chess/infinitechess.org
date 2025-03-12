@@ -12,6 +12,23 @@ interface Piece {
 	coords: Coords,
 }
 
+/**
+ * A position in keys format. Entries look like: `"5,2": r.PAWN + e.W`
+ */
+interface Position {
+	[coordKey: string]: number
+}
+
+/** A length-2 number array. Commonly used for storing directions. */
+type Vec2 = [number,number]
+
+/** The string-key of a line's step value, or a 2-dimensional vector. */
+// Separated from CoordsKey so that it's clear this is meant for directions, not coordinates
+type Vec2Key = `${number},${number}`;
+
+/** A unique identifier for a single line of pieces. `C|X` */
+type LineKey = `${number}|${number}`
+
 // Counting Pieces ----------------------------------------------------------------------------------------------
 
 /**
@@ -178,7 +195,11 @@ function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
 }
 
 export type {
-	Piece
+	Piece,
+	Vec2,
+	Vec2Key,
+	LineKey,
+	Position
 };
 
 export default {
