@@ -157,9 +157,9 @@ function detectInsufficientMaterial(gamefile) {
 	if (!gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'white', 'checkmate') || !gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'black', 'checkmate')) return false;
 	if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'white') !== 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'black') !== 1) return false;
 
-	// Only make the draw check if the last move was a capture or if there is no last move
+	// Only make the draw check if the last move was a capture or promotion or if there is no last move
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (lastMove && !lastMove.flags.capture) return false;
+	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion)) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle pieces
 	if (gamefileutility.getPieceCountOfGame(gamefile, { ignoreObstacles: true }) >= 11) return false;
