@@ -108,7 +108,7 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
 async function callbackPaste(event) {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
-	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
+	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);

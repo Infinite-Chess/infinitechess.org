@@ -8,14 +8,12 @@ import movement from './rendering/movement.js';
 import selection from './chess/selection.js';
 import camera from './rendering/camera.js';
 import board from './rendering/board.js';
-import arrows from './rendering/arrows/arrows.js';
 import { createModel } from './rendering/buffermodel.js';
 import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
-import gameslot from './chess/gameslot.js';
-import draganimation from './rendering/dragging/draganimation.js';
+import gameloader from './chess/gameloader.js';
 // Import End
 
 "use strict";
@@ -454,7 +452,7 @@ function initMouseSimulatedClick() {
 function executeMouseSimulatedClick() {
 	if (!timeMouseDownSeconds || !mouseIsSupported) return;
 	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
-	if (gameslot.areWeLoadingGraphics()) return;
+	if (gameloader.areWeLoadingGame()) return;
 
 	// See if the mouse was released fast enough to simulate a click!
 	const nowSeconds = new Date().getTime() / 1000;
