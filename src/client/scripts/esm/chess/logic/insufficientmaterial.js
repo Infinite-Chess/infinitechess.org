@@ -1,4 +1,10 @@
 
+/**
+ * This script detects draws by insufficient material
+ * 
+ * @maintainer tsevasa
+ */
+
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
 import moveutil from '../util/moveutil.js';
@@ -13,8 +19,6 @@ import gamerules from '../variants/gamerules.js';
  */
 
 "use strict";
-
-/** This script detects draws by insufficient material. */
 
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
