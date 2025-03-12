@@ -27,6 +27,7 @@ const element_practiceSelection: HTMLElement = document.getElementById('practice
 const element_practiceName: HTMLElement = document.getElementById('practice-name')!;
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
+const element_progress: HTMLElement = document.querySelector('.checkmate-progress')!;
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
 const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
@@ -288,9 +289,10 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
 			amountBeaten++;
 		} else element.classList.remove('beaten');
 	}
-	// Update the progress bar
-	element_progressBar.textContent = `${translations['progress_checkmate']}: ${amountBeaten} / ${element_checkmates.children.length}`;
-	const percentageBeaten = 100 * amountBeaten / element_checkmates.children.length;
+	// Update the progress and progress bar
+	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
+	element_progress.textContent = `${amountBeaten} / ${numTotal}`;
+	const percentageBeaten = 100 * amountBeaten / numTotal;
 	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
 }
 

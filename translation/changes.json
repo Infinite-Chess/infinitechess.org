@@ -1,4 +1,8 @@
 {
+	"44": {
+		"note": "Removed progress_checkmate from line 333",
+		"changes": []
+	},
 	"43": {
 		"note": "Added all of member.badge-tooltips, lines 122-125",
 		"changes": []

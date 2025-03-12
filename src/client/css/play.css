@@ -682,18 +682,57 @@ canvas {
     width: 20%;
 }
 
+.checkmate-progress {
+    width: 15%;
+    font-size: 1em;
+}
+
 .checkmate-progress-bar {
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    align-content: center;
-    width: 75%;
+    position: relative;
+    width: 60%;
     height: 1.4em;
     outline-style: solid;
     outline-width: 0.1em;
     border-radius: 0.25em;
     font-size: 0.8em;
 }
+
+/* Badges */
+
+.badge {
+    position: absolute;
+    height: 2.6em;
+}
+
+.badge img {
+    height: 100%;
+}
+
+.badge img:hover {
+    transition: transform 0.4s ease;
+    user-select: none;
+    transform: scale(1.1);
+}
+
+#checkmate-badge-bronze {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#checkmate-badge-silver {
+    left: 75%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#checkmate-badge-gold {
+    left: 100%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Badge shine properties are in header.css since they are shared with badges on play page */
 
 .checkmatepiececontainer {
     align-self: center;
