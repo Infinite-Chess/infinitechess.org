@@ -177,11 +177,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * the names of pieces that could capture you from the distance.
      * This is used for efficient calculating if a king move would put you in check.
      * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
-     * DOES NOT include pawn moves. @type {Record<CoordsKey, string[]>} */
+     * DOES NOT include pawn moves. @type {Record<CoordsKey, RawType[]>} */
 	this.vicinity = undefined;
 	/** A variant of `vicinity`, except this only contains squares that
 	 * a special piece MIGHT be able to capture using a special move.
-	 * To find out for sure we'll have to calculate its legal moves. @type {Record<CoordsKey, string[]>} */
+	 * To find out for sure we'll have to calculate its legal moves. @type {Record<CoordsKey, RawType[]>} */
 	this.specialVicinity = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;

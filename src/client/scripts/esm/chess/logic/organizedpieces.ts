@@ -10,6 +10,7 @@ import type { Vec2, LineKey, Vec2Key } from "../util/boardutil";
 import type { Coords, CoordsKey } from "../util/coordutil";
 // @ts-ignore
 import type { GameRules } from "../variants/gamerules";
+import type { PieceMoveset } from "./movesets";
 
 const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
 type PositionArray = Int8Array | Int16Array | Int32Array; //| BigInt64Array;
@@ -392,28 +393,37 @@ function getCFromKey(lineKey: LineKey): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(o: OrganizedPieces): boolean {
-	const slidingPossible = o.slides; // [[1,1],[1,0]]
+function areColinearSlidesPresentInGame(gamefile: gamefile): boolean { // [[1,1], [1,0], ...]
 
-	// How to know if 2 lines are colinear?
-	// They will have the exact same slope!
+	/**
+	 * 1. Colinears are present if any vector is NOT a primitive vector.
+	 * 
+	 * This is because if a vector is not primitive, multiple simpler vectors can be combined to make it.
+	 * For example, [2,0] can be made by combining [1,0] and [1,0].
+	 * In a real game, you could have two [2,0] sliders, offset by 1 tile, and their lines would be colinear, yet not intersecting.
+	 * 
+	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
+	 */
 
-	// Iterate through each line, comparing its slope with every other line
-	for (let a = 0; a < slidingPossible.length - 1; a++) {
-		const line1 = slidingPossible[a]!; // [dx,dy]
-		const slope1 = line1[1] / line1[0]; // Rise/Run
-		const line1IsVertical = isNaN(slope1);
-        
-		for (let b = a + 1; b < slidingPossible.length; b++) {
-			const line2 = slidingPossible[b]!; // [dx,dy]
-			const slope2 = line2[1] / line2[0]; // Rise/Run
-			const line2IsVertical = isNaN(slope2);
+	if (gamefile.startSnapshot.slidingPossible.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
 
-			if (line1IsVertical && line2IsVertical) return true; // Colinear!
-			if (slope1 === slope2) return true; // Colinear!
-		}
-	}
-	return false;
+	/**
+	 * 2. Colinears are present if there's at least one custom ignore function.
+	 * 
+	 * This is because a custom ignore function can be used to simulate a non-primitive vector.
+	 * Or another vector for that matter.
+	 * We cannot predict if the piece will not cause colinears.
+	 */
+
+	if (gamefile.startSnapshot.existingTypes.some((type: number) => {
+		const movesetFunc = gamefile.pieceMovesets[type];
+		if (!movesetFunc) return false;
+		const thisTypeMoveset: PieceMoveset = movesetFunc();
+		// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
+		return 'ignore' in thisTypeMoveset || 'blocking' in thisTypeMoveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
+	})) return true; // Colinears are present
+
+	return false; // Colinears are not present
 }
 
 /**

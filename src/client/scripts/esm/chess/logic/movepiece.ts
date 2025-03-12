@@ -13,9 +13,6 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-import type { Player } from '../util/typeutil.js';
-
-import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
