@@ -66,7 +66,7 @@ async function close() {
 	await thread.sleep(0);
 }
 
-async function onError(event: Event) {
+async function onError() {
 	// const type = event.type; // Event type: "error"/"abort"
 	// const target = event.target; // Element that triggered the event
 	// const elementType = target?.tagName.toLowerCase();
