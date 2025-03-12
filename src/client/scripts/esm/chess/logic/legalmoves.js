@@ -306,9 +306,9 @@ function slide_CalcLegalLimit(blockingFunc, line, direction, slideMoveset, coord
  * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
  * @returns {boolean} *true* if the provided legalMoves object contains the provided endCoords.
  */
-function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividualMoves } = {}) {
+function checkIfMoveLegal(gamefile, legalMoves, piece, colorOfFriendly, endCoords, { ignoreIndividualMoves, ignoreCheck } = {}) {
 	// Return if it's the same exact square
-	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
+	if (coordutil.areCoordsEqual(piece.coords, endCoords)) return false;
 
 	// Do one of the individual moves match?
 	if (!ignoreIndividualMoves) {
@@ -327,12 +327,18 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 		const line = coordutil.getCoordsFromKey(strline); // 'dx,dy'
 		const limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
-		const selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
+		const selectedPieceLine = organizedlines.getKeyFromLine(line,piece.coords);
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
 		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
 
-		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue;
-		return true;
+		if (!doesSlidingMovesetContainSquare(limits, line, piece.coords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
+		const moveDraft = { startCoords: piece.coords, endCoords };
+		if (!ignoreCheck) { // Don't allow royal sliders to slide into check.
+			const trimmedType = colorutil.trimColorExtensionFromType(piece.type);
+			const respectCheck = typeutil.slidingRoyals.includes(trimmedType);
+			if (respectCheck && movepiece.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly) !== false) return false; // The move results in check => not legal
+		}
+		return true; // Move is legal
 	}
 	return false;
 }
@@ -400,7 +406,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	// Test if that piece's legal moves contain the destinationCoords.
 	const legalMoves = calculate(gamefile, piecemoved);
 	// This should pass on any special moves tags at the same time.
-	if (!checkIfMoveLegal(legalMoves, moveDraftCopy.startCoords, moveDraftCopy.endCoords)) { // Illegal move
+	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved, colorOfPieceMoved, moveDraftCopy.endCoords)) { // Illegal move
 		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}
