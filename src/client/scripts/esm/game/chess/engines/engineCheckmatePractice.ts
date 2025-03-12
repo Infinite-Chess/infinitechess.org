@@ -199,8 +199,8 @@ let protectedRiderFleeDictionary: { [key: string]: [number, number, number] };
  */
 function initEvalWeightsAndSearchProperties() {
 
-	// default: ignoring white pawns moves as candidate moves makes engine much stronger at low depths
-	ignorepawnmoves = true;
+	// default
+	ignorepawnmoves = false;
 
 	// default
 	ignoreroyalmoves = false;
@@ -410,6 +410,9 @@ function initEvalWeightsAndSearchProperties() {
 		case "1K2AR-1k":
 			distancesEvalDictionary[10] = [[15, vincinityNorm], [15, vincinityNorm]]; // archbishop
 			distancesEvalDictionary[5] = [[15, manhattanNorm], [15, manhattanNorm]]; // king
+			break;
+		case "2R1N1P-1k":
+			ignorepawnmoves = true;
 			break;
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, vincinityNorm], [30, vincinityNorm]]; // knight
@@ -732,7 +735,7 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 			}
 		}
 		// if no jump move has been added and piece has no ride moves or is a huygens, add single best jump move as candidate
-		if (candidate_squares.length === 0 && ( !piece_properties.rides || piece_properties.is_huygen )) candidate_squares.push(best_target_square!);
+		if (candidate_squares.length === 0 && best_target_square! !== undefined && ( !piece_properties.rides || piece_properties.is_huygen )) candidate_squares.push(best_target_square!);
 	}
 
 	// ride moves
