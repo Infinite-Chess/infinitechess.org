@@ -10,6 +10,7 @@ import gui from './gui.js';
 import guititle from './guititle.js';
 import spritesheet from '../rendering/spritesheet.js';
 import colorutil from '../../chess/util/colorutil.js';
+import validatorama from '../../util/validatorama.js';
 import validcheckmates from '../../chess/util/validcheckmates.js';
 // @ts-ignore
 import style from './style.js';
@@ -31,6 +32,13 @@ const element_progress: HTMLElement = document.querySelector('.checkmate-progres
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
 const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
+
+const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
+const elements_checkmateBadgeBronzeShine = document.querySelectorAll('#checkmate-badge-bronze .shine-clockwise, #checkmate-badge-bronze .shine-anticlockwise');
+const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
+const elements_checkmateBadgeSilverShine = document.querySelectorAll('#checkmate-badge-silver .shine-clockwise, #checkmate-badge-silver .shine-anticlockwise');
+const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
+const elements_checkmateBadgeGoldShine = document.querySelectorAll('#checkmate-badge-gold .shine-clockwise, #checkmate-badge-gold .shine-anticlockwise');
 
 let checkmateSelectedID: string = validcheckmates.validCheckmates.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
@@ -279,21 +287,74 @@ function changeCheckmateSelected(checkmateid: string) {
  * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
 function updateCheckmatesBeaten(completedCheckmates : string[]) {
-	let amountBeaten = 0;
+	let numCompleted = 0;
 	for (const element of element_checkmates.children) {
 		// What is the id string of this checkmate?
 		const id_string = element.id; // "2Q-1k"
 		// If this id is inside our list of beaten checkmates, add the beaten class
 		if (completedCheckmates.includes(id_string)) {
 			element.classList.add('beaten');
-			amountBeaten++;
+			numCompleted++;
 		} else element.classList.remove('beaten');
 	}
 	// Update the progress and progress bar
 	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
-	element_progress.textContent = `${amountBeaten} / ${numTotal}`;
-	const percentageBeaten = 100 * amountBeaten / numTotal;
+	element_progress.textContent = `${numCompleted} / ${numTotal}`;
+	const percentageBeaten = 100 * numCompleted / numTotal;
 	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
+
+	const areLoggedIn = validatorama.areWeLoggedIn();
+
+	// Update the badges
+	if (element_checkmateBadgeBronze) {
+		if (numCompleted >= 0.5 * numTotal && areLoggedIn) {
+			element_checkmateBadgeBronze.setAttribute('data-tooltip', "Bla");
+			element_checkmateBadgeBronze.style.opacity = "1";
+			for (const element_shine of elements_checkmateBadgeBronzeShine) {
+				element_shine.classList.remove("hidden");
+			}
+		} else {
+			if (areLoggedIn) element_checkmateBadgeBronze.setAttribute('data-tooltip', "Bla2");
+			else element_checkmateBadgeBronze.setAttribute('data-tooltip', "Bla3");
+			element_checkmateBadgeBronze.style.opacity = "0.5";
+			for (const element_shine of elements_checkmateBadgeBronzeShine) {
+				element_shine.classList.add("hidden");
+			}
+		}
+	}
+	if (element_checkmateBadgeSilver) {
+		if (numCompleted >= 0.75 * numTotal && areLoggedIn) {
+			element_checkmateBadgeSilver.setAttribute('data-tooltip', "Bla");
+			element_checkmateBadgeSilver.style.opacity = "1";
+			for (const element_shine of elements_checkmateBadgeSilverShine) {
+				element_shine.classList.remove("hidden");
+			}
+		} else {
+			if (areLoggedIn) element_checkmateBadgeSilver.setAttribute('data-tooltip', "Bla2");
+			else element_checkmateBadgeSilver.setAttribute('data-tooltip', "Bla3");
+			element_checkmateBadgeSilver.style.opacity = "0.5";
+			for (const element_shine of elements_checkmateBadgeSilverShine) {
+				element_shine.classList.add("hidden");
+			}
+		}
+	}
+	if (element_checkmateBadgeGold) {
+		if (numCompleted >= numTotal && areLoggedIn) {
+			element_checkmateBadgeGold.setAttribute('data-tooltip', "Bla");
+			element_checkmateBadgeGold.style.opacity = "1";
+			for (const element_shine of elements_checkmateBadgeGoldShine) {
+				element_shine.classList.remove("hidden");
+			}
+		} else {
+			if (areLoggedIn) element_checkmateBadgeGold.setAttribute('data-tooltip', "Bla2");
+			else element_checkmateBadgeGold.setAttribute('data-tooltip', "Bla3");
+			element_checkmateBadgeGold.style.opacity = "0.5";
+			for (const element_shine of elements_checkmateBadgeGoldShine) {
+				element_shine.classList.add("hidden");
+			}
+		}
+	}
+	
 }
 
 function callback_practiceBack(event: Event) {
