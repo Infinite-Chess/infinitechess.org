@@ -43,7 +43,7 @@ import transition from "../rendering/transition.js";
 
 
 /** The type of game we are in, whether local or online, if we are in a game. */
-let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine';
+let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine' | 'editor';
 
 /**
  * True when the gamefile is currently loading either the graphical
@@ -118,6 +118,7 @@ async function startLocalGame(options: {
 	TimeControl: MetaData['TimeControl'],
 }) {
 	typeOfGameWeAreIn = 'local';
+	gameLoading = true;
 
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
@@ -156,6 +157,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// console.log(jsutil.deepCopyObject(options));
 
 	typeOfGameWeAreIn = 'online';
+	gameLoading = true;
 	
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
@@ -197,6 +199,7 @@ async function startEngineGame(options: {
 	showGameControlButtons?: true
 }) {
 	typeOfGameWeAreIn = 'engine';
+	gameLoading = true;
 
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
@@ -235,11 +238,53 @@ async function startEngineGame(options: {
 }
 
 /**
+ * Reloads the current local, online, or editor game from the provided metadata, existing moves, and variant options.
+ */
+async function pasteGame(options: {
+	metadata: MetaData,
+	additional: {
+		/** If we're in the board editor, this must be empty. */
+		moves?: string[],
+		variantOptions: VariantOptions,
+	}
+}) {
+	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online' && typeOfGameWeAreIn !== 'editor') throw Error("Can't paste a game when we're not in a local, online, or editor game.");
+	if (typeOfGameWeAreIn === 'editor' && options.additional.moves && options.additional.moves.length > 0) throw Error("Can't paste a game with moves played while in the editor.");
+
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
+	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
+	const additionalToUse: Additional = {
+		...options.additional,
+		editor: gameslot.getGamefile()!.editor, // Retain the same option as the current loaded game.
+	};
+
+	gameslot.unloadGame();
+
+	gameslot.loadGamefile({
+		metadata: options.metadata,
+		viewWhitePerspective,
+		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
+		additional: additionalToUse,
+	})
+		.then((result: any) => onFinishedLoading())
+		.catch((err: Error) => loadingscreen.onError());
+	
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+}
+
+/**
  * A function that is executed when a game is FULLY loaded (graphical, spritesheet, engine, etc.)
  * This hides the spinny pawn loading animation that covers the board.
  */
 function onFinishedLoading() {
-	console.log('COMPLETELY finished loading game!');
+	// console.log('COMPLETELY finished loading game!');
 	gameLoading = false;
 
 	// We can now close the loading screen.
@@ -290,6 +335,7 @@ export default {
 	startLocalGame,
 	startOnlineGame,
 	startEngineGame,
+	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
 };
