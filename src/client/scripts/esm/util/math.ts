@@ -90,6 +90,22 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): [numbe
 }
 
 /**
+ * Compares two lines in general form to see if they are equal.
+ * Two lines are considered equal if their coefficients are proportional.
+ * @param line1 - The first line in general form [A1, B1, C1]
+ * @param line2 - The second line in general form [A2, B2, C2]
+ * @returns true if the lines are equal, false otherwise
+ */
+function areLinesInGeneralFormEqual(line1: [number, number, number], line2: [number, number, number]): boolean {
+	const [A1, B1, C1] = line1;
+	const [A2, B2, C2] = line2;
+
+	// Check if the ratios of the coefficients are equal (proportional)
+	// Avoid division by zero by checking the relationship with multiplication
+	return (A1 * B2 === A2 * B1) && (A1 * C2 === A2 * C1) && (B1 * C2 === B2 * C1);
+}
+
+/**
  * Calculates the vector between 2 points.
  */
 function calculateVectorFromPoints(start: Coords, end: Coords): Vec2 {
@@ -616,6 +632,7 @@ export default {
 	calcIntersectionPointOfLines,
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFrom2Coords,
+	areLinesInGeneralFormEqual,
 	calculateVectorFromPoints,
 	getLineCFromCoordsAndVec,
 	getXYComponents_FromAngle,
