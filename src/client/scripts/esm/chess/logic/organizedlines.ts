@@ -367,7 +367,8 @@ function areColinearSlidesPresentInGame(gamefile: gamefile): boolean { // [[1,1]
 		const movesetFunc = gamefile.pieceMovesets[type];
 		if (!movesetFunc) return false;
 		const thisTypeMoveset: PieceMoveset = movesetFunc();
-		return 'ignore' in thisTypeMoveset; // True if this type has a custom ignore function being used (colinears may be present).
+		// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
+		return 'ignore' in thisTypeMoveset || 'blocking' in thisTypeMoveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
 	})) return true; // Colinears are present
 
 	return false; // Colinears are not present

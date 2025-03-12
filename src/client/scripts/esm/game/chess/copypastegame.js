@@ -108,7 +108,7 @@ function primeGamefileForCopying(gamefile, copySinglePosition) { // Compress the
 async function callbackPaste(event) {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
-	if (gameslot.areWeLoadingGraphics()) return statustext.pleaseWaitForTask();
+	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
 	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
@@ -292,21 +292,16 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 
 	// What is the warning message if pasting in a private match?
 	const privateMatchWarning = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
-	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective();
 
-	gameslot.unloadGame();
-	await gameslot.loadGamefile({
+	gameloader.pasteGame({
 		metadata: longformat.metadata,
-		viewWhitePerspective,
-		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
 		additional: {
 			moves: longformat.moves,
 			variantOptions,
-			editor: currentGamefile.editor
 		}
 	});
+
 	const gamefile = gameslot.getGamefile();
-	gameloader.openGameinfoBarAndConcludeGameIfOver(gamefile.metadata);
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 	const tooManyPieces = gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate;
