@@ -34,10 +34,13 @@ const element_checkmateList: HTMLElement = document.querySelector('.checkmate-li
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
 const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
+const element_checkmateBadgeBronzeImage = document.querySelector('#checkmate-badge-bronze img') as HTMLElement;
 const elements_checkmateBadgeBronzeShine = document.querySelectorAll('#checkmate-badge-bronze .shine-clockwise, #checkmate-badge-bronze .shine-anticlockwise');
 const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
+const element_checkmateBadgeSilverImage = document.querySelector('#checkmate-badge-silver img') as HTMLElement;
 const elements_checkmateBadgeSilverShine = document.querySelectorAll('#checkmate-badge-silver .shine-clockwise, #checkmate-badge-silver .shine-anticlockwise');
 const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
+const element_checkmateBadgeGoldImage = document.querySelector('#checkmate-badge-gold img') as HTMLElement;
 const elements_checkmateBadgeGoldShine = document.querySelectorAll('#checkmate-badge-gold .shine-clockwise, #checkmate-badge-gold .shine-anticlockwise');
 
 let checkmateSelectedID: string = validcheckmates.validCheckmates.easy[0]!; // id of selected checkmate
@@ -306,49 +309,49 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
 	const areLoggedIn = validatorama.areWeLoggedIn();
 
 	// Update the badges
-	if (element_checkmateBadgeBronze) {
+	if (element_checkmateBadgeBronze && element_checkmateBadgeBronzeImage) {
 		if (numCompleted >= 0.5 * numTotal && areLoggedIn) {
 			element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze"]);
-			element_checkmateBadgeBronze.style.opacity = "1";
+			element_checkmateBadgeBronzeImage.style.filter = "contrast(1) brightness(1)";
 			for (const element_shine of elements_checkmateBadgeBronzeShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
 			if (areLoggedIn) element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze_unearned"]);
 			else element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeBronze.style.opacity = "0.5";
+			element_checkmateBadgeBronzeImage.style.filter = "contrast(calc(1/3)) brightness(1.5)";
 			for (const element_shine of elements_checkmateBadgeBronzeShine) {
 				element_shine.classList.add("hidden");
 			}
 		}
 	}
-	if (element_checkmateBadgeSilver) {
+	if (element_checkmateBadgeSilver && element_checkmateBadgeSilverImage) {
 		if (numCompleted >= 0.75 * numTotal && areLoggedIn) {
 			element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver"]);
-			element_checkmateBadgeSilver.style.opacity = "1";
+			element_checkmateBadgeSilverImage.style.filter = "contrast(1) brightness(1)";
 			for (const element_shine of elements_checkmateBadgeSilverShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
 			if (areLoggedIn) element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver_unearned"]);
 			else element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeSilver.style.opacity = "0.5";
+			element_checkmateBadgeSilverImage.style.filter = "contrast(calc(1/3)) brightness(1.5)";
 			for (const element_shine of elements_checkmateBadgeSilverShine) {
 				element_shine.classList.add("hidden");
 			}
 		}
 	}
-	if (element_checkmateBadgeGold) {
+	if (element_checkmateBadgeGold && element_checkmateBadgeGoldImage) {
 		if (numCompleted >= numTotal && areLoggedIn) {
 			element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold"]);
-			element_checkmateBadgeGold.style.opacity = "1";
+			element_checkmateBadgeGoldImage.style.filter = "contrast(1) brightness(1)";
 			for (const element_shine of elements_checkmateBadgeGoldShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
 			if (areLoggedIn) element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold_unearned"]);
 			else element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeGold.style.opacity = "0.5";
+			element_checkmateBadgeGoldImage.style.filter = "contrast(calc(1/3)) brightness(1.5)";
 			for (const element_shine of elements_checkmateBadgeGoldShine) {
 				element_shine.classList.add("hidden");
 			}
