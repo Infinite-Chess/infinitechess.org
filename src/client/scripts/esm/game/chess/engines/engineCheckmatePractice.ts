@@ -408,7 +408,8 @@ function initEvalWeightsAndSearchProperties() {
 			distancesEvalDictionary[5] = [[40, specialNorm], [40, specialNorm]]; // king
 			break;
 		case "1K2AR-1k":
-			distancesEvalDictionary[10] = [[25, manhattanNorm], [25, manhattanNorm]]; // archbishop
+			distancesEvalDictionary[10] = [[15, vincinityNorm], [15, vincinityNorm]]; // archbishop
+			distancesEvalDictionary[5] = [[15, manhattanNorm], [15, manhattanNorm]]; // king
 			break;
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, vincinityNorm], [30, vincinityNorm]]; // knight
