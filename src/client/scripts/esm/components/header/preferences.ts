@@ -30,7 +30,7 @@ interface ClientSidePreferences {
 
 interface ServerSidePreferences {
 	theme: string;
-	legal_moves: string;
+	legal_moves: 'dots' | 'squares';
 }
 
 /** Both client and server side preferences */
@@ -164,7 +164,7 @@ function getLegalMovesShape(): string {
 	return preferences.legal_moves || default_legal_moves;
 }
 
-function setLegalMovesShape(legal_moves: string): void {
+function setLegalMovesShape(legal_moves: 'dots' | 'squares'): void {
 	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
 	onChangeMade();

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "41"
+version = "43"
 maintainer = "Naviary"
 
 [header]
@@ -112,11 +112,17 @@ resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it aga
 verify_confirm = "Thank you! Your account has been verified."
 joined = "Joined:"
 seen = ["Seen:", " ago"]
+practice_progress = "Practice Mode Progress:"
 reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"
 delete_account = "Delete account"
 password_reset_message = ["To change your username, email or password, ", "contact us."]
+
+[member.badge-tooltips]
+checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
+checkmate_silver = "Checkmate Pro: Complete 75% of all practice checkmates."
+checkmate_gold = "Checkmate Master: Complete 100% of all practice checkmates."
 
 [create-account]
 title = "Create Account" # The tab name

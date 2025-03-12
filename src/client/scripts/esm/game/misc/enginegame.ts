@@ -67,23 +67,38 @@ function initEngineGame(options: {
 	youAreColor: Player,
 	currentEngine: string,
 	engineConfig: EngineConfig
-}) {
+}): Promise<void> {
+	console.log(`Starting engine game with engine "${options.currentEngine}".`);
+
 	inEngineGame = true;
 	ourColor = options.youAreColor;
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
 
 	// Initialize the engine as a webworker
-	if (!window.Worker) return alert("Your browser doesn't support web workers. Cannot play against an engine.");
-	// TODO: What happens if the engine fails / takes too long to load? =============================== !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	if (!window.Worker) {
+		alert("Your browser doesn't support web workers. Cannot play against an engine.");
+		// Reject the promise returned by this function
+		return Promise.reject(new Error("Cannot finish loading engine game because web workers aren't supported."));
+	}
 	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
-	engineWorker.onmessage = function(e: MessageEvent) { 
-		// Messages from the engine mean it has submitted a move
-		const engineMove = e.data;
-		makeEngineMove(engineMove);
-	};
 
-	console.log(`Started engine game with engine "${currentEngine}".`);
+	// Return a promise that resolves when the ENGINE WORKER has finished fetching/loading.
+	return new Promise<void>((resolve, reject) => {
+		// Set up a handler for the first message that indicates the worker is ready
+		// We have to manually send this message at the top of our engines. The message contents is blank.
+		engineWorker!.onmessage = (e: MessageEvent) => resolve(); // The first message we receive (undefined), we know the engine is ready!
+		engineWorker!.onerror = (e: ErrorEvent) => {
+			console.error("Worker failed to load:", e);
+			reject(new Error("Worker failed to load."));
+		};
+	}).then((result: any) => {
+		// After the promise resolves, we know the worker is ready
+		// Overwrite the onmessage listener to listen for move submissions
+		engineWorker!.onmessage = (e: MessageEvent) => makeEngineMove(e.data);
+		// Remove the error handler (no longer needed after worker is ready)
+		engineWorker!.onerror = null;
+	});
 }
 
 // Call when we leave an engine game

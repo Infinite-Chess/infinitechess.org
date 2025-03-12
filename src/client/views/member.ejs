@@ -32,11 +32,37 @@
                         <source srcset="/img/member_default.avif" type="image/avif" />
                         <img src="/img/member_default.png" alt="Blank profile image">
                     </picture>
-                    <h1 id="membername"></h1>
+                    <div class="membername-container">
+                        <h1 id="membername"></h1>
+                        <div id="badgelist">
+                            <picture id="checkmate-badge-bronze" class="badge hidden tooltip-u" data-tooltip="<%=t('member.badge-tooltips.checkmate_bronze')%>">
+                                <div class="shine-clockwise"></div>
+                                <div class="shine-anticlockwise"></div>
+                                <source srcset="/img/badges/checkmate-badge-bronze.webp" type="image/webp" />
+                                <source srcset="/img/badges/checkmate-badge-bronze.avif" type="image/avif" />
+                                <img loading="lazy" src="/img/badges/checkmate-badge-bronze.png">
+                            </picture>
+                            <picture id="checkmate-badge-silver" class="badge hidden tooltip-u" data-tooltip="<%=t('member.badge-tooltips.checkmate_silver')%>">
+                                <div class="shine-clockwise"></div>
+                                <div class="shine-anticlockwise"></div>
+                                <source srcset="/img/badges/checkmate-badge-silver.webp" type="image/webp" />
+                                <source srcset="/img/badges/checkmate-badge-silver.avif" type="image/avif" />
+                                <img loading="lazy" src="/img/badges/checkmate-badge-silver.png">
+                            </picture>
+                            <picture id="checkmate-badge-gold" class="badge hidden tooltip-u" data-tooltip="<%=t('member.badge-tooltips.checkmate_gold')%>">
+                                <div class="shine-clockwise"></div>
+                                <div class="shine-anticlockwise"></div>
+                                <source srcset="/img/badges/checkmate-badge-gold.webp" type="image/webp" />
+                                <source srcset="/img/badges/checkmate-badge-gold.avif" type="image/avif" />
+                                <img loading="lazy" src="/img/badges/checkmate-badge-gold.png">
+                            </picture>
+                        </div>
+                    </div>
                 </div>
                 <section id="stats" class="center">
                     <p><strong><%=t('member.joined')%> </strong><spam id="joined"></spam></p>
                     <p><strong><%=t('member.seen.0')%> </strong><spam id="seen"></spam><%=t('member.seen.1')%></p>
+                    <p><strong><%=t('member.practice_progress')%> </strong><spam id="practice_progress"></spam></p>
                 </section>
                 <div id="content-container">
                     <div style="flex-grow: 1;">

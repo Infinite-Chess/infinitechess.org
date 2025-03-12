@@ -55,10 +55,10 @@ const engineManualEval = (function() {
         gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
 
         // detect checks and update gamefile accordingly
-        const attackers = [];
         const whosTurnItWasAtMoveIndex = gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-        gamefile.inCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers); // Passes in the gamefile as an argument
-        gamefile.attackers = attackers;
+        const checkResults = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, true); // { check: boolean, royalsInCheck: Coords[], attackers: Attacker[] }
+        gamefile.inCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
+        gamefile.attackers = checkResults.attackers;
         if (gamefile.inCheck) movesscript.flagLastMoveAsCheck(gamefile);
         gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
     }

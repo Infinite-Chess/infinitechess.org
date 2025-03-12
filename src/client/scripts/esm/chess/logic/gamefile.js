@@ -19,6 +19,7 @@ import { players } from '../config.js';
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModelInstanced} BufferModelInstanced */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
+/** @typedef {import('../util/coordutil.js').CoordsKey} CoordsKey */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
@@ -28,6 +29,7 @@ import { players } from '../config.js';
 /** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
+/** @typedef {import('./checkdetection.js').Attacker} Attacker */
 
 'use strict'; 
 
@@ -175,11 +177,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * the names of pieces that could capture you from the distance.
      * This is used for efficient calculating if a king move would put you in check.
      * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
-     * DOES NOT include pawn moves. */
+     * DOES NOT include pawn moves. @type {Record<CoordsKey, string[]>} */
 	this.vicinity = undefined;
 	/** A variant of `vicinity`, except this only contains squares that
 	 * a special piece MIGHT be able to capture using a special move.
-	 * To find out for sure we'll have to calculate its legal moves. */
+	 * To find out for sure we'll have to calculate its legal moves. @type {Record<CoordsKey, string[]>} */
 	this.specialVicinity = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
@@ -239,7 +241,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.inCheck = false;
 	/** List of maximum 2 pieces currently checking whoever's turn is next,
      * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!
-     * Only used to calculate legal moves, and checkmate. */
+     * Only used to calculate legal moves, and checkmate. @type {Attacker[]}*/
 	this.attackers = undefined;
 	/** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
 	this.checksGiven = undefined;

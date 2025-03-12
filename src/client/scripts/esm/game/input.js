@@ -8,14 +8,12 @@ import movement from './rendering/movement.js';
 import selection from './chess/selection.js';
 import camera from './rendering/camera.js';
 import board from './rendering/board.js';
-import arrows from './rendering/arrows/arrows.js';
 import { createModel } from './rendering/buffermodel.js';
 import jsutil from '../util/jsutil.js';
 import space from './misc/space.js';
 import frametracker from './rendering/frametracker.js';
 import docutil from '../util/docutil.js';
-import gameslot from './chess/gameslot.js';
-import draganimation from './rendering/dragging/draganimation.js';
+import gameloader from './chess/gameloader.js';
 // Import End
 
 "use strict";
@@ -58,7 +56,7 @@ const pixelDistToCancelClick = 10; // Default: 12   If the mouse moves more than
 let mousePos = [0,0]; // Current mouse position in pixels relative to the center of the screen.
 const mousePosHistory = []; // Mouse position last few frames. Required for mouse velocity calculation.
 const mousePosHIstoryWindowMillis = 80; // The amount of seconds to look back into for mouse velocity calculation.
-let mouseMoved = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
+let atleastOneInputThisFrame = true; // Did the mouse move this frame? Helps us detect if the user is afk. (If they are we can save computation)
 let mouseVel = [0,0]; // The amount of pixels the mouse moved relative to the last few frames.
 
 let mouseWorldLocation = [0,0]; // Current mouse position in world-space
@@ -110,10 +108,6 @@ function getMouseClicked() {
 
 function getMousePos() {
 	return [mousePos[0], mousePos[1]];
-}
-
-function getMouseMoved() {
-	return mouseMoved;
 }
 
 function getMouseWorldLocation() {
@@ -173,6 +167,7 @@ function checkIfMouseNotSupported() {
 function initListeners_Touch() {
 
 	overlayElement.addEventListener('touchstart', (event) => {
+		atleastOneInputThisFrame = true;
 		if (perspective.getEnabled()) return;
 		event = event || window.event;
 
@@ -199,6 +194,7 @@ function initListeners_Touch() {
 	});
 
 	overlayElement.addEventListener('touchmove', (event) => {
+		atleastOneInputThisFrame = true;
 		if (perspective.getEnabled()) return;
 		frametracker.onVisualChange();
 
@@ -261,6 +257,7 @@ function convertCoords_CenterOrigin(object) { // object is the event, or touch o
 
 // Events call this when a touch point is lifted or cancelled
 function callback_TouchPointEnd(event) {
+	atleastOneInputThisFrame = true;
 	event = event || window.event;
 	frametracker.onVisualChange();
 	const touches = event.changedTouches;
@@ -324,14 +321,13 @@ function initListeners_Mouse() {
 	// While the mouse is moving, this is called ~250 times per second O.O
 	// AND SAFARI calls this 600 TIMES! This increases the sensitivity of the mouse in perspective
 	window.addEventListener('mousemove', (event) => {
-		event = event || window.event;
+		atleastOneInputThisFrame = true;
 		frametracker.onVisualChange();
 		
 		pointerIsTouch = false;
 		
 		const mouseCoords = convertCoords_CenterOrigin(event);
 		mousePos = mouseCoords;
-		mouseMoved = true;
 		const now = Date.now();
 		pushMousePosToHistory(now, mousePos);
 		recalcMouseVel(now, mousePos);
@@ -350,11 +346,13 @@ function initListeners_Mouse() {
 	});
 
 	overlayElement.addEventListener('wheel', (event) => {
+		atleastOneInputThisFrame = true;
 		addMouseWheel(event);
 	});
 
 	// This wheel event is ONLY for perspective mode, and it attached to the document instead of overlay, because that is what the mouse is locked to.
 	document.addEventListener('wheel', (event) => {
+		atleastOneInputThisFrame = true;
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
 		frametracker.onVisualChange();
@@ -362,6 +360,7 @@ function initListeners_Mouse() {
 	});
 
 	overlayElement.addEventListener("mousedown", (event) => {
+		atleastOneInputThisFrame = true;
 		frametracker.onVisualChange();
 		// We clicked with the mouse, so make the simulated touch click undefined.
 		// This makes things work with devices that have both a mouse and touch.
@@ -387,6 +386,7 @@ function initListeners_Mouse() {
 
 	// This mousedown event is ONLY for perspective mode, and it attached to the document instead of overlay!
 	document.addEventListener("mousedown", (event) => {
+		atleastOneInputThisFrame = true;
 		frametracker.onVisualChange();
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
@@ -396,6 +396,7 @@ function initListeners_Mouse() {
 	});
 
 	overlayElement.addEventListener("mouseup", (event) => {
+		atleastOneInputThisFrame = true;
 		frametracker.onVisualChange();
 		removeMouseHeld(event);
 		setTimeout(perspective.relockMouse, 1); // 1 millisecond, to give time for pause listener to fire
@@ -405,7 +406,7 @@ function initListeners_Mouse() {
 
 	// This mouseup event is ONLY for perspective mode, and it attached to the document instead of overlay!
 	document.addEventListener("mouseup", (event) => {
-		event = event || window.event;
+		atleastOneInputThisFrame = true;
 		if (!perspective.getEnabled()) return;
 		if (!perspective.isMouseLocked()) return;
 		frametracker.onVisualChange();
@@ -451,7 +452,7 @@ function initMouseSimulatedClick() {
 function executeMouseSimulatedClick() {
 	if (!timeMouseDownSeconds || !mouseIsSupported) return;
 	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
-	if (gameslot.areWeLoadingGraphics()) return;
+	if (gameloader.areWeLoadingGame()) return;
 
 	// See if the mouse was released fast enough to simulate a click!
 	const nowSeconds = new Date().getTime() / 1000;
@@ -538,6 +539,8 @@ function removeMouseHeld(event) {
 function initListeners_Keyboard() {
 
 	document.addEventListener("keydown", (event) => {
+		frametracker.onVisualChange();
+		atleastOneInputThisFrame = true;
 		// console.log("Key down event active element: ", document.activeElement);
 		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const key = event.key.toLowerCase();
@@ -548,6 +551,8 @@ function initListeners_Keyboard() {
 	});
 
 	document.addEventListener("keyup", (event) => {
+		frametracker.onVisualChange();
+		atleastOneInputThisFrame = true;
 		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		const index = keyHelds.indexOf(event.key.toLowerCase());
 		if (index !== -1) keyHelds.splice(index, 1); // Removes the key
@@ -576,7 +581,7 @@ function resetKeyEvents() {
 	mouseWheel = 0; // Amount scrolled this frame
 	mouseClicked = false; // Amount scrolled this frame
 	keyDowns = []; // Key presses this frame
-	mouseMoved = false; // Has the mouse moved this frame?
+	atleastOneInputThisFrame = false; // Has there been atleast one input this frame?
 
 	ignoreMouseDown = false;
 }
@@ -629,14 +634,6 @@ function getTouchHeldByID(touchID) {
 	console.log('touchHelds does not contain desired touch of id: ', touchID);
 }
 
-function atleast1TouchDown() {
-	return touchDowns.length > 0;
-}
-
-function atleast1TouchHeld() {
-	return touchHelds.length > 0;
-}
-
 function isMouseDown_Left() {
 	return mouseDowns.includes(leftMouseKey);
 }
@@ -663,10 +660,6 @@ function isKeyDown(keyName) {
 	return keyDowns.includes(keyName);
 }
 
-function atleast1KeyDown() {
-	return keyDowns.length > 0;
-}
-
 function atleast1KeyHeld() {
 	return keyHelds.length > 0;
 }
@@ -676,11 +669,11 @@ function isKeyHeld(keyName) {
 }
 
 function atleast1InputThisFrame() {
-	// This is annoying when we accidentally hold a key and unfocus the page, then it remains holding down
-	// and I have no clue what key is preventing us from entering AFK mode!
-	//return gmouseMoved() || atleast1TouchDown() || atleast1KeyHeld();
-	// return getMouseMoved() || atleast1KeyDown();
-	return getMouseMoved() || atleast1TouchDown() || atleast1TouchHeld() || atleast1KeyDown();
+	/**
+	 * {@link atleastOneInputThisFrame} won't be true if a key/mouse/touch is being HELD,
+	 * because no event listeners fire when the only thing you're doing is holding a key.
+	 */
+	return atleastOneInputThisFrame || keyHelds.length > 0 || mouseHelds.length > 0 || touchHelds.length > 0;
 }
 
 function doIgnoreMouseDown(event) {
@@ -761,7 +754,6 @@ function setTouchesChangeInXYTo0(touch) {
 export default {
 	getTouchDowns,
 	getTouchHelds,
-	atleast1TouchDown,
 	getTouchClicked,
 	isMouseDown_Left,
 	isMouseDown_Right,
@@ -775,7 +767,6 @@ export default {
 	getMouseWheel,
 	getMouseClicked,
 	getMousePos,
-	getMouseMoved,
 	doIgnoreMouseDown,
 	isMouseSupported,
 	initListeners,

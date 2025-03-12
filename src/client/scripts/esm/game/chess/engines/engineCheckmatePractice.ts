@@ -31,6 +31,14 @@ import type { Vec2 } from "../../../util/math";
 
 /* eslint-disable max-depth */
 
+/**
+ * Let the main thread know that the Worker has finished fetching and
+ * its code is now executing! We may now hide the spinny pawn loading animation.
+ * 
+ * An empty message is enough.
+ */
+postMessage(undefined);
+
 // Here, the engine webworker received messages from the outside
 self.onmessage = function(e: MessageEvent) {
 	const message = e.data;
@@ -123,7 +131,7 @@ const invertedPieceNameDictionaty = invertPieceNameDictionary(pieceNameDictionar
 
 // legal move storage for pieces in piecelist
 const pieceTypeDictionary: { [key: number]: { rides?: Vec2[], jumps?: Vec2[], is_royal?: boolean, is_pawn?: boolean, is_huygen?: boolean } } = {
-	// 0 corresponds to a captured piece
+	0: {}, // 0 corresponds to a captured piece
 	1: {rides: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]}, // queen
 	2: {rides: [[1, 0], [0, 1], [-1, 0], [0, -1]]}, // rook
 	3: {rides: [[1, 1], [-1, -1], [1, -1], [-1, 1]]}, // bishop
@@ -176,8 +184,15 @@ let ignoreroyalmoves: boolean;
 let mayEnterTrapFleeMode: boolean;
 let numOfPiecesForTrap: number;
 let maxDistanceForTrap: number;
-let maxDistanceForRoyal: number;
+let maxDistanceForRoyal_Flee: number;
 let trapFleeDictionary: { [key: string]: [number, number, number] };
+
+// whether to enter "protected rider flee mode" whenever the black royal is near the specified protected white rider
+let mayEnterProtectedRiderFleeMode: boolean;
+let riderTypeToFleeFrom: number;
+let maxDistanceForRider: number;
+let maxDistanceForProtector: number;
+let protectedRiderFleeDictionary: { [key: string]: [number, number, number] };
 
 /**
  * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
@@ -192,6 +207,9 @@ function initEvalWeightsAndSearchProperties() {
 
 	// default
 	mayEnterTrapFleeMode = false;
+
+	// default
+	mayEnterProtectedRiderFleeMode = false;
 
 	// weights for piece values of white pieces
 	pieceExistenceEvalDictionary = {
@@ -324,14 +342,27 @@ function initEvalWeightsAndSearchProperties() {
 	};
 
 	// whether to enter "trap flee mode" whenever the black royal is surrounded by white pieces
-	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal
+	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal_Flee
 	trapFleeDictionary = {
 		"1K2HA1B-1k": [3, 6, 10],
 	};
 
 	if (checkmateSelectedID in trapFleeDictionary) {
 		mayEnterTrapFleeMode = true;
-		[numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal] = trapFleeDictionary[checkmateSelectedID]!;
+		[numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal_Flee] = trapFleeDictionary[checkmateSelectedID]!;
+	}
+
+
+	// whether to enter "protected rider flee mode" whenever the black royal is near the specified protected white rider
+	// riderTypeToFleeFrom, maxDistanceForRider, maxDistanceForProtector
+	protectedRiderFleeDictionary = {
+		"1K1R2N-1k": [2, Infinity, 10], // rook
+		"1K1CH1N-1k": [9, Infinity, 10], // chancellor
+	};
+
+	if (checkmateSelectedID in protectedRiderFleeDictionary) {
+		mayEnterProtectedRiderFleeMode = true;
+		[riderTypeToFleeFrom, maxDistanceForRider, maxDistanceForProtector] = protectedRiderFleeDictionary[checkmateSelectedID]!;
 	}
 
 	switch (checkmateSelectedID) {
@@ -615,11 +646,29 @@ function isBlackInTrap(piecelist: number[], coordlist: Coords[]) {
 		if (piecelist[i]! !== 0 && manhattanNorm(coordlist[i]!) <= maxDistanceForTrap) {
 			if (!pieceTypeDictionary[piecelist[i]!]!.is_royal) nearbyNonroyalWhites++;
 			// black is not in trap if white royal is nearby
-			else if (manhattanNorm(coordlist[i]!) <= maxDistanceForRoyal) return false;
+			else if (manhattanNorm(coordlist[i]!) <= maxDistanceForRoyal_Flee) return false;
 		}
 	}
 	// black is surrounded by at least numOfPiecesForTrap nonroyal white pieces
 	return (nearbyNonroyalWhites >= numOfPiecesForTrap);
+}
+
+// determine if black is near specified protected rider
+function isBlackNearProtectedRider(piecelist: number[], coordlist: Coords[]) {
+	for (let i = 0; i < piecelist.length; i++) {
+		if (piecelist[i] === riderTypeToFleeFrom) {
+			if (manhattanNorm(coordlist[i]!) <= maxDistanceForRider) {
+				for (let j = 0; j < piecelist.length; j++) {
+					if (j !== i && piecelist[j] !== 0 && manhattanDistance(coordlist[i]!, coordlist[j]!) <= maxDistanceForProtector) {
+						return true;
+					}
+				}
+			}
+			// single rider that matters is not protected or too far away
+			return false;
+		}
+	}
+	return false;
 }
 
 // calculate a list of interesting squares to move to for a white piece with a certain piece index
@@ -792,10 +841,12 @@ function add_suitable_squares_to_candidate_list(
 }
 
 // calculate a list of interesting moves for the white pieces in the position given by piecelist&coordlist
-function get_white_candidate_moves(piecelist: number[], coordlist: Coords[]): Coords[][] {
+// if inProtectedRiderFleeMode, then moves by pieces with type riderTypeToFleeFrom are not considered
+function get_white_candidate_moves(inProtectedRiderFleeMode: boolean, piecelist: number[], coordlist: Coords[]): Coords[][] {
 	const candidate_moves: Coords[][] = [];
 	for (let piece_index = 0; piece_index < piecelist.length; piece_index++) {
-		candidate_moves.push(get_white_piece_candidate_squares(piece_index, piecelist, coordlist));
+		if (inProtectedRiderFleeMode && riderTypeToFleeFrom === piecelist[piece_index]) candidate_moves.push([]);
+		else candidate_moves.push(get_white_piece_candidate_squares(piece_index, piecelist, coordlist));
 	}
 	return candidate_moves;
 }
@@ -838,9 +889,10 @@ function make_black_move(move: Coords, piecelist: number[], coordlist: Coords[])
  * @param {Array} piecelist 
  * @param {Array} coordlist 
  * @param {Boolean} black_to_move - false on white's turns, true on black's turns
+ * @param {Boolean} inProtectedRiderFleeMode - whether black is in protected rider flee mode -> leads to higher scores, if true
  * @returns {Number}
  */
-function get_position_evaluation(piecelist: number[], coordlist: Coords[], black_to_move: boolean): number {
+function get_position_evaluation(piecelist: number[], coordlist: Coords[], black_to_move: boolean, inProtectedRiderFleeMode: boolean): number {
 	let score = 0;
 
 	// add penalty based on number of legal moves of black royal
@@ -855,7 +907,8 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
 		// add score based on distance of black royal to white shortrange pieces
 		if (piecelist[i]! in distancesEvalDictionary) {
 			const [weight, distancefunction] = distancesEvalDictionary[piecelist[i]!]![black_to_move_num]!;
-			score += weight * distancefunction(coordlist[i]!);
+			if (inProtectedRiderFleeMode && riderTypeToFleeFrom === piecelist[i]) score += 50 * weight * distancefunction(coordlist[i]!);
+			else score += weight * distancefunction(coordlist[i]!);
 		}
 	}
 
@@ -878,23 +931,24 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Boolean} black_to_move 
  * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
  * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search
+ * @param {Boolean} inProtectedRiderFleeMode - whether one should neglect all white candidate moves by rider in deeper search and reward distance from him
  * @param {Number} alpha 
  * @param {Number} beta 
  * @param {Number} alphaPlies - alpha beta for remaining plies in the game: tiebreak in case of early game over: the more plies the game lasts the better for black
  * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
 		return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 	// If game over, return position evaluation
 	} else if ( black_to_move && get_black_legal_move_amount(false, piecelist, coordlist) === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
 	// At max depth, return position evaluation
 	} else if (depth === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
 	}
 
 	let bestVariation: { [key: number]: [number, Coords] } = {};
@@ -907,6 +961,9 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 
 		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
 		if (mayEnterTrapFleeMode && depth === start_depth && isBlackInTrap(piecelist, coordlist)) inTrapFleeMode = true;
+
+		// Black is in protected rider flee mode and considers no white rider candidate moves no piece captures from here on out:
+		if (mayEnterProtectedRiderFleeMode && depth === start_depth && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
@@ -926,7 +983,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
 		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, alpha, beta, alphaPlies, betaPlies);
+			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 			followingPrincipal = false;
 
@@ -960,7 +1017,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		let candidate_moves: Coords[][];
 
 		if (inTrapFleeMode) candidate_moves = [[coordlist[0]], ...Array(piecelist.length - 1).fill([])];
-		else candidate_moves = get_white_candidate_moves(piecelist, coordlist);
+		else candidate_moves = get_white_candidate_moves(inProtectedRiderFleeMode, piecelist, coordlist);
 
 		// go through pieces for in increasing order of what piece has how many candidate moves
 		const indices = [...Array(piecelist.length).keys()];
@@ -994,7 +1051,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, alpha, beta, alphaPlies, betaPlies);
+				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, alpha, beta, alphaPlies, betaPlies);
 				if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 				followingPrincipal = false;
 
@@ -1027,12 +1084,12 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	const black_moves = get_black_legal_moves(false, piecelist, coordlist);
 	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
 	const [dummy_piecelist, dummy_coordlist] = make_black_move(globallyBestVariation[0]![1]!, piecelist, coordlist);
-	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false);
+	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false);
 	globalSurvivalPlies = 1;
 
 	// iteratively deeper and deeper search
 	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, -Infinity, Infinity, 0, Infinity);
+		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, -Infinity, Infinity, 0, Infinity);
 		if (evaluation.terminate_now) { 
 			// console.log("Search interrupted at depth " + depth);
 			break;

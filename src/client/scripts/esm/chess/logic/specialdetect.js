@@ -3,13 +3,12 @@
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
-import checkdetection from './checkdetection.js';
 import colorutil from '../util/colorutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
-import { players } from '../config.js';
+import checkresolver from './checkresolver.js';
 // Import End
 
 /** 
@@ -96,10 +95,10 @@ function kings(gamefile, coords, color, ) {
 		const king = boardutil.getPieceFromCoords(gamefile.ourPieces, coords); // { type, index, coords }
 		if (leftLegal) {
 			const middleSquare = [x - 1, y];
-			if (checkdetection.doesMovePutInCheck(gamefile, king, middleSquare, color)) leftLegal = false;
+			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) leftLegal = false;
 		} if (rightLegal) {
 			const middleSquare = [x + 1, y];
-			if (checkdetection.doesMovePutInCheck(gamefile, king, middleSquare, color)) rightLegal = false;
+			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) rightLegal = false;
 		}
 	}
 

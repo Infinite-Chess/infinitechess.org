@@ -14,6 +14,7 @@ import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
 import variant from '../variants/variant.js';
+import checkresolver from './checkresolver.js';
 
 /** 
  * Type Definitions 
@@ -176,7 +177,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
-	if (!ignoreCheck) checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
+	if (!ignoreCheck) checkresolver.removeCheckInvalidMoves(gamefile, moves, piece, color);
 
 	return moves;
 }
@@ -243,7 +244,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
  * @param {BlockingFunction} blockingFunc - The function that will check if each piece on the same line needs to block the piece
  * @param {Piece[]} line - The list of pieces on this line 
  * @param {number[]} direction - The direction of the line: `[dx,dy]` 
- * @param {number[]} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
+ * @param {number[] | undefined} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
  * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
  * @param {string} color - The color of friendlies
  */
