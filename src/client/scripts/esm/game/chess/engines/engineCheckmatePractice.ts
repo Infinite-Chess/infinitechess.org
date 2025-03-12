@@ -1091,43 +1091,51 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false);
 	globalSurvivalPlies = 1;
 
-	// iteratively deeper and deeper search
-	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, -Infinity, Infinity, 0, Infinity);
-		if (evaluation.terminate_now) { 
-			// console.log("Search interrupted at depth " + depth);
-			break;
-		}
-		globallyBestVariation = evaluation.bestVariation;
-		globallyBestScore = evaluation.score;
-		globalSurvivalPlies = evaluation.survivalPlies;
-		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
+	try {
+		// iteratively deeper and deeper search
+		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
+			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, -Infinity, Infinity, 0, Infinity);
+			if (evaluation.terminate_now) { 
+				// console.log("Search interrupted at depth " + depth);
+				break;
+			}
+			globallyBestVariation = evaluation.bestVariation;
+			globallyBestScore = evaluation.score;
+			globalSurvivalPlies = evaluation.survivalPlies;
+			// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
 
-		// early exit condition
-		if (depth === 1) {
-			const black_move = globallyBestVariation[0]![1]!;
-			const [new_piecelist, new_coordlist] = make_black_move(black_move, piecelist, coordlist);
+			// early exit condition
+			if (depth === 1) {
+				const black_move = globallyBestVariation[0]![1]!;
+				const [new_piecelist, new_coordlist] = make_black_move(black_move, piecelist, coordlist);
 
-			// If a piece is captured, immediately check for insuffmat
-			// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
-			// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
-			if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
-				const piecesOrganizedByKey: { [key: string]: string } = {};
-				piecesOrganizedByKey["0,0"] = (royal_type === "k" ? "kingsB" : "royalCentaursB");
-				for (let i = 0; i < piecelist.length; i++) {
-					if (new_piecelist[i] !== 0) {
-						piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
+				// If a piece is captured, immediately check for insuffmat
+				// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
+				// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
+				if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
+					const piecesOrganizedByKey: { [key: string]: string } = {};
+					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? "kingsB" : "royalCentaursB");
+					for (let i = 0; i < piecelist.length; i++) {
+						if (new_piecelist[i] !== 0) {
+							piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
+						}
 					}
+					const dummy_gamefile = { 
+						piecesOrganizedByKey: piecesOrganizedByKey,
+						ourPieces: {},
+						moves: [],
+						gameRules: input_gamefile.gameRules
+					} as unknown as gamefile;
+					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
 				}
-				const dummy_gamefile = { 
-					piecesOrganizedByKey: piecesOrganizedByKey,
-					ourPieces: {},
-					moves: [],
-					gameRules: input_gamefile.gameRules
-				} as unknown as gamefile;
-				if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
 			}
 		}
+	}
+	catch (error) {
+		// If engine suggests illegal move for black, choose it randomly, else abort with currently best move
+		if (!tuplelist_contains_tuple(black_moves, globallyBestVariation[0]![1]!)) globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+		console.error("Something went wrong with the iterative deepening calculation, aborting early...");
+		console.error(error);
 	}
 }
 
