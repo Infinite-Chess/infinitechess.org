@@ -131,15 +131,6 @@ main {
 #checkmate-badge-gold {
     --shine-color: rgba(255, 215, 0, 0.24);
 }
-
-.badge img {
-    position: relative;
-    height: 100%;
-    width: 100%; /* Ensure image fills the badge container */
-    display: block;
-    position: relative;
-    z-index: 1;
-}
   
 .badge .shine-clockwise, .badge .shine-anticlockwise {
     position: absolute;
@@ -175,6 +166,7 @@ main {
     transition: opacity 0.4s ease;
     animation: rotateShine linear infinite;
     pointer-events: none;  /* This prevents the shine from being part of the hover area */
+    z-index: -1;
 }
 
 .badge .shine-clockwise {
