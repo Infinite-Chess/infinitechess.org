@@ -308,14 +308,14 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
 	// Update the badges
 	if (element_checkmateBadgeBronze) {
 		if (numCompleted >= 0.5 * numTotal && areLoggedIn) {
-			element_checkmateBadgeBronze.setAttribute('data-tooltip', "Bla");
+			element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze"]);
 			element_checkmateBadgeBronze.style.opacity = "1";
 			for (const element_shine of elements_checkmateBadgeBronzeShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
-			if (areLoggedIn) element_checkmateBadgeBronze.setAttribute('data-tooltip', "Bla2");
-			else element_checkmateBadgeBronze.setAttribute('data-tooltip', "Bla3");
+			if (areLoggedIn) element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze_unearned"]);
+			else element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
 			element_checkmateBadgeBronze.style.opacity = "0.5";
 			for (const element_shine of elements_checkmateBadgeBronzeShine) {
 				element_shine.classList.add("hidden");
@@ -324,14 +324,14 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
 	}
 	if (element_checkmateBadgeSilver) {
 		if (numCompleted >= 0.75 * numTotal && areLoggedIn) {
-			element_checkmateBadgeSilver.setAttribute('data-tooltip', "Bla");
+			element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver"]);
 			element_checkmateBadgeSilver.style.opacity = "1";
 			for (const element_shine of elements_checkmateBadgeSilverShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
-			if (areLoggedIn) element_checkmateBadgeSilver.setAttribute('data-tooltip', "Bla2");
-			else element_checkmateBadgeSilver.setAttribute('data-tooltip', "Bla3");
+			if (areLoggedIn) element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver_unearned"]);
+			else element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
 			element_checkmateBadgeSilver.style.opacity = "0.5";
 			for (const element_shine of elements_checkmateBadgeSilverShine) {
 				element_shine.classList.add("hidden");
@@ -340,14 +340,14 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
 	}
 	if (element_checkmateBadgeGold) {
 		if (numCompleted >= numTotal && areLoggedIn) {
-			element_checkmateBadgeGold.setAttribute('data-tooltip', "Bla");
+			element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold"]);
 			element_checkmateBadgeGold.style.opacity = "1";
 			for (const element_shine of elements_checkmateBadgeGoldShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
-			if (areLoggedIn) element_checkmateBadgeGold.setAttribute('data-tooltip', "Bla2");
-			else element_checkmateBadgeGold.setAttribute('data-tooltip', "Bla3");
+			if (areLoggedIn) element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold_unearned"]);
+			else element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
 			element_checkmateBadgeGold.style.opacity = "0.5";
 			for (const element_shine of elements_checkmateBadgeGoldShine) {
 				element_shine.classList.add("hidden");
