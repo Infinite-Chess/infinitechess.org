@@ -42,7 +42,8 @@ function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
 
 	return new Promise((resolve, reject) => {
 		img.onload = () => {
-			// console.log(`Image ${svgID} converted successfully from a provided SVG.`);
+			// Append the image to the document for debugging
+			// document.body.appendChild(img);
 			resolve(img);
 		};
 		img.onerror = (err) => {

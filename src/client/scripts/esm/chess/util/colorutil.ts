@@ -70,9 +70,9 @@ function isValidColorExtension_NoNeutral(colorExtension: string): boolean {
 /**
  * Returns the color of the provided piece type
  * @param {string} type - The type of the piece (e.g., "pawnsW")
- * @returns {string | undefined} The color of the piece, "white", "black", or "neutral", or undefined if not valid
+ * @returns {string | undefined} The color of the piece, "white", "black", or "neutral"
  */
-function getPieceColorFromType(type: string): string {
+function getPieceColorFromType(type: string): 'white' | 'black' | 'neutral' {
 	const colorExtension = getColorExtensionFromType(type);
 	return getColorFromExtension(colorExtension);
 }
@@ -82,10 +82,10 @@ function getPieceColorFromType(type: string): string {
  * @param {string} colorExtention - The color extension: "W" / "B" / "N"
  * @returns {string} - The color (e.g. "white"/"black"/"neutral")
  */
-function getColorFromExtension(colorExtention: string): string {
+function getColorFromExtension(colorExtention: string): 'white' | 'black' | 'neutral' {
 	const index = validColorExtensions.indexOf(colorExtention);
 	if (index === -1) throw new Error(`Cannot get the color of invalid color extension "${colorExtention}"!`);
-	return validColors[index]!;
+	return validColors[index]! as 'white' | 'black' | 'neutral';
 }
 
 /**

@@ -28,6 +28,7 @@ import checkdetection from './checkdetection.js';
 /** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 /** @typedef {import('./checkdetection.js').Attacker} Attacker */
+/** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
 
 'use strict'; 
 
@@ -106,61 +107,17 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.piecesOrganizedByKey = undefined;
 	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` @type {LinesByStep} */
 	this.piecesOrganizedByLines = undefined;
-
+	
 	/** The object that contains the buffer model to render the pieces */
 	this.mesh = {
-		/** A Float64Array for retaining higher precision arithmetic, but these values
-         * need to be transferred into `data32` before contructing/updating the model. */
-		data64: undefined,
-		/** The Float32Array of vertex data that goes into the contruction of the model. */
-		data32: undefined,
-		/** A Float64Array for retaining higher precision of the pieces, rotated 180°, but these values
-         * need to be transferred into `data32` before contructing/updating the model. */
-		rotatedData64: undefined,
-		/** The Float32Array of vertex data, that goes into the contruction of the model, rotated 180°. */
-		rotatedData32: undefined,
-		/** The buffer model of the pieces (excluding voids).
-         * @type {BufferModel} */
-		model: undefined,
-		/** The buffer model of the pieces, rotated 180°.
-         * @type {BufferModel} */
-		rotatedModel: undefined,
-		/** *true* if the model is using the coloredTextureProgram instead of the textureProgram. */
-		usingColoredTextures: undefined,
-		/** The stride-length of the vertex data within the Float32Array making up the model.
-         * This is effected by how many floats each point uses for position, texture coords, and color. */
-		stride: undefined,
 		/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
-         * This helps require less severe uniform translations upon rendering when traveling massive distances.
-         * The amount it is shifted depends on the nearest `REGEN_RANGE`. @type {Coords} */
+		 * This helps require less severe uniform translations upon rendering when traveling massive distances.
+		 * The amount it is shifted depends on the nearest `REGEN_RANGE`. @type {Coords} */
 		offset: undefined,
-		/** A number for whether the mesh of the pieces is currently being generated.
-         * @type {number} 0+. When > 0, is it generating. */
-		isGenerating: 0,
-		/** A number representing whether the mesh of the pieces is currently locked or not.
-         * Don't perform actions that would otherwise modify the piece list,
-         * such as rewinding/forwarding the game, moving a piece, etc..
-         * It can lock when we are generating the mesh, or looking for legal moves.
-         * @type {number} 0+. When > 0, the mesh is locked. */
-		locked: 0,
-		/** Call when unloading the game, as we don't need to finish the mesh generation, this immediately terminates it. */
-		terminateIfGenerating: () => { if (this.mesh.isGenerating) this.mesh.terminate = true; },
-		/** A flag the mesh generation reads to know whether to terminate or not.
-         * Do ***NOT*** set manually, call `terminateIfGenerating()` instead. */
-		terminate: false,
-		/** A list of functions to execute as soon as the mesh is unlocked. @type {(gamefile => {})[]} */
-		callbacksOnUnlock: [],
-		/**
-		 * Releases a single lock off of the mesh.
-		 * If there are zero locks, we execute all functions in callbacksOnUnlock
-		 */
-		releaseLock: () => {
-			this.mesh.locked--;
-			if (this.mesh.locked > 0) return; // Still Locked
-			// Fully Unlocked
-			this.mesh.callbacksOnUnlock.forEach(callback => callback(this));
-			this.mesh.callbacksOnUnlock.length = 0;
-		}
+		/** Whether the position data of each piece mesh is inverted. This will be true if we're viewing black's perspective. @type {boolean} */
+		inverted: undefined,
+		/** An object containing the mesh data for each type of piece in the game. One for every type in `ourPieces` @type {{ [type: string]: MeshData }} */
+		types: {},
 	};
 
 	/** The object that contains the buffer model to render the voids */

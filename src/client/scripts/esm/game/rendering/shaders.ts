@@ -50,6 +50,8 @@ function initPrograms() {
 		createColorProgram_Instanced_Plus(),
 		createTextureProgram(),
 		createColoredTextureProgram(),
+		createTextureProgram_Instanced(),
+		createTintedInstancedTextureProgram(),
 		createColoredTextureProgram_Instanced(),
 		createTintedTextureProgram()
 	);
@@ -333,6 +335,123 @@ function createColoredTextureProgram(): ShaderProgram  {
 
 /**
  * Creates and returns a shader program that uses INSTANCED RENDERING
+ * to render instances with positional data and texture coordinates,
+ * using instance-specific position offsets only.
+ */
+function createTextureProgram_Instanced(): ShaderProgram {
+	const vsSource = `#version 300 es
+        in vec4 aVertexPosition;        // Per-vertex position (vec4 for homogeneous coordinates)
+        in vec2 aTextureCoord;          // Per-vertex texture coordinates
+        in vec3 aInstancePosition;      // Per-instance position offset (vec3: xyz)
+
+        uniform mat4 uTransformMatrix;  // Transformation matrix
+
+        out vec2 vTextureCoord;         // To fragment shader
+
+        void main() {
+            // Apply instance position offset
+            vec4 offsetPosition = aVertexPosition + vec4(aInstancePosition, 0.0);
+            
+            // Transform position and pass through texture coords
+            gl_Position = uTransformMatrix * offsetPosition;
+            
+            // Pass texture coordinates directly to fragment shader
+            vTextureCoord = aTextureCoord;
+        }
+    `;
+
+	const fsSource = `#version 300 es
+        precision lowp float;
+
+        in vec2 vTextureCoord;          // From vertex shader
+        uniform sampler2D uSampler;     // Texture sampler
+
+        out vec4 fragColor;             // Output color
+
+        void main() {
+            // Sample texture with LOD bias for sharpness
+            vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
+            fragColor = texColor;
+        }
+    `;
+
+	const program = createShaderProgram(vsSource, fsSource);
+
+	return {
+		program,
+		attribLocations: {
+			position: gl.getAttribLocation(program, 'aVertexPosition'),
+			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
+			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+		},
+		uniformLocations: {
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
+			uSampler: gl.getUniformLocation(program, 'uSampler')!
+		},
+	};
+}
+
+/**
+ * Creates and returns a shader program that uses INSTANCED RENDERING
+ * with a universal tint color applied to all instances.
+ */
+function createTintedInstancedTextureProgram(): ShaderProgram {
+	const vsSource = `#version 300 es
+        in vec4 aVertexPosition;        // Per-vertex position
+        in vec2 aTextureCoord;          // Per-vertex texture coordinates
+        in vec3 aInstancePosition;      // Per-instance position offset
+
+        uniform mat4 uTransformMatrix;  // Transformation matrix
+
+        out vec2 vTextureCoord;         // To fragment shader
+
+        void main() {
+            // Apply instance position offset
+            vec4 offsetPosition = aVertexPosition + vec4(aInstancePosition, 0.0);
+            
+            // Transform position and pass through texture coords
+            gl_Position = uTransformMatrix * offsetPosition;
+            
+            // Pass texture coordinates to fragment shader
+            vTextureCoord = aTextureCoord;
+        }
+    `;
+
+	const fsSource = `#version 300 es
+        precision lowp float;
+
+        in vec2 vTextureCoord;          // From vertex shader
+        uniform sampler2D uSampler;     // Texture sampler
+        uniform vec4 uTintColor;        // Universal tint color
+
+        out vec4 fragColor;             // Output color
+
+        void main() {
+            // Sample texture with LOD bias and apply universal tint
+            vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
+            fragColor = texColor * uTintColor;
+        }
+    `;
+
+	const program = createShaderProgram(vsSource, fsSource);
+
+	return {
+		program,
+		attribLocations: {
+			position: gl.getAttribLocation(program, 'aVertexPosition'),
+			texcoord: gl.getAttribLocation(program, 'aTextureCoord'),
+			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+		},
+		uniformLocations: {
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
+			tintColor: gl.getUniformLocation(program, 'uTintColor')!,
+			uSampler: gl.getUniformLocation(program, 'uSampler')!
+		},
+	};
+}
+
+/**
+ * Creates and returns a shader program that uses INSTANCED RENDERING
  * to render instances with positional data, texture coordinates, and instance-specific
  * position offsets, texture coordinate offsets, and color tinting.
  */
@@ -375,7 +494,7 @@ function createColoredTextureProgram_Instanced(): ShaderProgram {
         out vec4 fragColor;             // Output color
 
         void main() {
-            // Sample texture with LOD bias for sharpness and apply color tint
+            // Sample texture with LOD bias for sharpness
             vec4 texColor = texture(uSampler, vTextureCoord, -0.5);
             fragColor = texColor * vInstanceColor;
         }
@@ -457,6 +576,7 @@ function createTintedTextureProgram(): ShaderProgram  {
 		},
 	};
 }
+
 /**
  * Creates an actual program from the provided vertex shader and fragment shader source codes
  * in which our webgl context can switch to via gl.useProgram() before rendering.

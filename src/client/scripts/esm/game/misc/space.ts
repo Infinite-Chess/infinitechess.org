@@ -74,6 +74,18 @@ function convertWorldSpaceToGrid(value: number): number {
 	return value / movement.getBoardScale();
 }
 
+/**
+ * Returns the coordinates of the center of the provided square.
+ * Dependant on squareCenter.
+ */
+function getVisualCenterOfSquare(coords: Coords): Coords {
+	const squareCenter = board.gsquareCenter();
+	return [
+		coords[0] - squareCenter + 0.5,
+		coords[1] - squareCenter + 0.5
+	];
+}
+
 export default {
 	convertWorldSpaceToCoords,
 	convertWorldSpaceToCoords_Rounded,
@@ -82,4 +94,5 @@ export default {
 	convertPixelsToWorldSpace_Virtual,
 	convertWorldSpaceToPixels_Virtual,
 	convertWorldSpaceToGrid,
+	getVisualCenterOfSquare,
 };
