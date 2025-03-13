@@ -224,7 +224,7 @@ function addMoreUndefinedsToType(gamefile: gamefile, type: string) {
 	 * DISPATCH an event instead of regenerating the piece type mesh directly,
 	 * that way we don't tie up the game code as a dependancy.
 	 */
-	console.log(`Firing 'inserted-undefineds' event for type ${type}.`);
+	// console.log(`Firing 'inserted-undefineds' event for type ${type}.`);
 	clientEventDispatcher.dispatch('inserted-undefineds', type);
 }
 

@@ -136,7 +136,7 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
 	const instanceData64: Float64Array = getInstanceDataForTypeList(gamefile, gamefile.ourPieces[type]);
 
 	const svg: SVGElement = (await svgcache.getSVGElements([type], IMG_SIZE, IMG_SIZE))[0]!;
-	console.log("Converting svg to image again..");
+	// console.log("Converting svg to image again..");
 	const image: HTMLImageElement = await svgToImage(svg);
 	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
 
@@ -246,7 +246,6 @@ function shiftModel(meshData: MeshData, diffXOffset: number, diffYOffset: number
 // Rotating Models ------------------------------------------------------------------------------
 
 
-
 /**
  * Rotates each piece model (except voids) by updating its vertex data of
  * a single instance with the updated rotation, then reinits them on the gpu.
@@ -254,7 +253,7 @@ function shiftModel(meshData: MeshData, diffXOffset: number, diffYOffset: number
  * FAST, as this only needs to modify the vertex data of a single instance per piece type.
  */
 function rotateAll(gamefile: gamefile, newInverted: boolean) {
-	console.log("Rotating position data of all type meshes!");
+	// console.log("Rotating position data of all type meshes!");
 
 	gamefile.mesh.inverted = newInverted;
 	const newVertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
@@ -270,7 +269,7 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
 }
 
 
-// Modifying the Mesh Data ----------------------------------------------------------------------
+// Modifying Mesh Data --------------------------------------------------------------------------
 
 
 /**
