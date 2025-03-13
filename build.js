@@ -30,6 +30,7 @@ const entryPoints = [
 	'dist/client/scripts/esm/components/header/header.js',
 	'dist/client/scripts/esm/views/index.js',
 	'dist/client/scripts/esm/views/member.js',
+	'dist/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
 
 // Targetted browsers for CSS transpilation

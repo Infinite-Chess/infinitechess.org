@@ -31,6 +31,14 @@ import type { Vec2 } from "../../../util/math";
 
 /* eslint-disable max-depth */
 
+/**
+ * Let the main thread know that the Worker has finished fetching and
+ * its code is now executing! We may now hide the spinny pawn loading animation.
+ * 
+ * An empty message is enough.
+ */
+postMessage(undefined);
+
 // Here, the engine webworker received messages from the outside
 self.onmessage = function(e: MessageEvent) {
 	const message = e.data;

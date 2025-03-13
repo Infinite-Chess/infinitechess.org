@@ -20,7 +20,6 @@ import enginegame from '../misc/enginegame.js';
 
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
-import loadingscreen from "../gui/loadingscreen.js";
 import spritesheet from "../rendering/spritesheet.js";
 import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
@@ -129,15 +128,6 @@ interface VariantOptions {
 // Variables ---------------------------------------------------------------
 
 
-/** True when the gamefile is currently loading the logical stuff (ignores graphics such as the spritesheet). */
-let logicLoading: boolean = false;
-
-/**
- * True when the gamefile is currently loading the graphical stuff,
- * such as the SVG requests and spritesheet generation.
- */
-let graphicsLoading: boolean = false;
-
 /** The currently loaded game. */
 let loadedGamefile: gamefile | undefined;
 
@@ -171,20 +161,6 @@ function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-/** Returns true if the gamefile is currently loading logically (doesn't care about graphics). */
-function areWeLoadingLogical(): boolean {
-	return logicLoading;
-}
-
-/**
- * Returns true if the graphics of the gamefile are currently being loaded (spritesheet generating).
- * 
- * We know the gamefile is finished loading once the graphics are done, because they are last.
- */
-function areWeLoadingGraphics(): boolean {
-	return graphicsLoading;
-}
-
 /** Returns what color we are viewing the current loaded game by default. */
 function getOurColor(): string {
 	return youAreColor;
@@ -197,17 +173,14 @@ function isLoadedGameViewingWhitePerspective() {
 
 /**
  * Loads a gamefile onto the board.
- * This returns a promise that resolves when the game is loaded LOGICALLY.
- * The loading animation will close when the game is loaded GRAPHICALLY.
+ * 
+ * This loads the logical stuff first, then returns a PROMISE that resolves
+ * when the GRAPHICAL stuff is finished loading (such as the spritesheet).
  */
-async function loadGamefile(loadOptions: LoadOptions) {
+function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
 
 	// console.log('Started loading game...');
-	logicLoading = true;
-	graphicsLoading = true;
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
 	
 	// The game should be considered loaded once the LOGICAL stuff is finished,
 	// but the loading animation should only be closed when
@@ -216,7 +189,7 @@ async function loadGamefile(loadOptions: LoadOptions) {
 	// First load the LOGICAL stuff...
 	loadLogical(loadOptions);
 	// console.log('Finished loading LOGICAL game stuff.');
-	logicLoading = false;
+	
 	// Play the start game sound once LOGICAL stuff is finished loading,
 	// so that the sound will still play in chrome, with the tab hidden, and
 	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
@@ -225,22 +198,10 @@ async function loadGamefile(loadOptions: LoadOptions) {
 	/**
 	 * Next start loading the GRAPHICAL stuff...
 	 * 
-	 * The reason we attach a .then() to this instead of just 'await'ing,
-	 * is because we need loadGamefile() to return as soon as the logical
-	 * stuff has finished loading. The graphics may finish on its own time.
+	 * This returns a promise that resolves when it's fully loaded,
+	 * since the graphics loading is asynchronious.
 	 */
-	loadGraphical(loadOptions).then(async() => {
-		// console.log('Finished loading GRAPHICAL game stuff.');
-		graphicsLoading = false;
-	
-		// Logical and Graphical loadings are done!
-		// We can now close the loading screen.
-	
-		// I don't think this one has to be awaited since we're pretty much
-		// done with loading, there's not gonna be another lag spike..
-		loadingscreen.close();
-		startStartingTransition();
-	});
+	return loadGraphical(loadOptions);
 }
 
 /** Loads all of the logical components of a game */
@@ -276,11 +237,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	guiclock.set(loadedGamefile);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
-	try {
-		await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
-	} catch (e) { // An error ocurred during the fetching of piece svgs and spritesheet gen
-		await loadingscreen.onError(e as Event);
-	}
+	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
 	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
@@ -315,7 +272,6 @@ async function regenModel() {
 
 /** The canvas will no longer render the current game */
 function unloadGame() {
-	if (graphicsLoading) throw Error("Cannot unload current gamefile when the previous one hasn't loaded all the way yet.");
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	
 	// Terminate the mesh algorithm.
@@ -421,12 +377,11 @@ function unConcludeGame() {
 export default {
 	getGamefile,
 	areInGame,
-	areWeLoadingLogical,
-	areWeLoadingGraphics,
 	getOurColor,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,
 	unloadGame,
+	startStartingTransition,
 	concludeGame,
 	unConcludeGame,
 };
