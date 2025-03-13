@@ -46,6 +46,9 @@ interface MeshData {
 // Variables ----------------------------------------------------------------------------------------
 
 
+/** The preferred image width each piece type's image should be. */
+const IMG_SIZE = 512;
+
 /**
  * The interval at which to modify the mesh's linear offset once you travel this distance.
  * 10,000 was arbitrarily chosen because once you reach uniform translations much bigger
@@ -123,7 +126,7 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 	const instanceData64: Float64Array = getInstanceDataForTypeList(gamefile, gamefile.ourPieces[type]);
 
-	const svg: SVGElement = (await svgcache.getSVGElements([type], 32, 32))[0]!;
+	const svg: SVGElement = (await svgcache.getSVGElements([type], IMG_SIZE, IMG_SIZE))[0]!;
 	console.log("Converting svg to image again..");
 	const image: HTMLImageElement = await svgToImage(svg);
 	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
