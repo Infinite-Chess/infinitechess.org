@@ -117,7 +117,7 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 	const instanceData64: Float64Array = getInstanceDataForTypeList(gamefile, gamefile.ourPieces[type]);
 
-	const svg = (await svgcache.getSVGElements([type]))[0]!;
+	const svg = (await svgcache.getSVGElements([type], 64, 64))[0]!;
 	console.log("Converting svg to image again..");
 	const image = await svgToImage(svg);
 	const tex = texture.loadTexture(gl, image, { useMipmaps: true });
