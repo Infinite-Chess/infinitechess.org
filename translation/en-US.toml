@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "43"
+version = "44"
 maintainer = "Naviary"
 
 [header]
@@ -330,12 +330,19 @@ webgl_unsupported = "Please upgrade your browser! It does not support WebGL2."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
-progress_checkmate = "Progress"
+# Checkmate Practice
 versus = "vs"
 easy = "Easy"
 medium = "Medium"
 hard = "Hard"
 insane = "Insane"
+checkmate_logged_out = "You must be logged in to earn badges."
+checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
+checkmate_silver = "Checkmate Pro: Complete 75% of all practice checkmates."
+checkmate_gold = "Checkmate Master: Complete 100% of all practice checkmates."
+checkmate_bronze_unearned = "Complete 50% of all practice checkmates to earn this badge."
+checkmate_silver_unearned = "Complete 75% of all practice checkmates to earn this badge."
+checkmate_gold_unearned = "Complete 100% of all practice checkmates to earn this badge."
 
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
