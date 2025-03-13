@@ -310,9 +310,9 @@ function onEngineGameConclude(): void {
 	if (gameConclusion === false) throw Error('Game conclusion is false, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
+	const victor: string | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
 	if (victor === undefined) throw Error('Victor should never be undefined when concluding an engine game.');
-	if (!enginegame.areWeColor(victor)) return; // Lost
+	if (!(typeutil.getColorStringFromType(enginegame.getOurColor()) === victor)) return; // Lost
 
 	// WON!!! 🎉
 

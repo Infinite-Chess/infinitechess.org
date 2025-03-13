@@ -36,7 +36,6 @@ interface ServerSidePreferences {
 /** Both client and server side preferences */
 type Preferences = ServerSidePreferences & ClientSidePreferences;
 
-
 // Variables ------------------------------------------------------------
 
 
@@ -252,37 +251,17 @@ function getBoxOutlineColor(): Color {
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
-/**
- * Returns the color arrays for the pieces, according to our theme.
- * @returns {Object} An object containing the properties "white", "black", and "neutral".
- */
-function getPieceRegenColorArgs(gamefile) {
-	const themeName: string = getTheme();
-	const types = gamefile.ourPieces.typeRanges.keys();
-
-	const piecetheme = themes.getPropertyOfTheme(themeName, "pieceTheme");
-	const colorArgs = pieceThemes.generateThemeColorArgs(types, piecetheme);
-	if (colorArgs === false) return;
-
-	return colorArgs;
-}
-
 // Returns { r, g, b, a } depending on our current theme!
-function getTintColorOfType(type: number) {
+function getTintColorOfType(type: number): Color {
 	const themeName: string = getTheme();
 
 	const [raw, c] = typeutil.splitType(type);
 	const piecetheme = themes.getPropertyOfTheme(themeName, "pieceTheme");
 	const colorArgs = pieceThemes.getPieceDataForTheme(raw, pieceThemes.pieceDefaultColors, piecetheme); // { white, black, neutral }
-	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
+	if (!colorArgs) return [1, 1, 1, 1]; // No theme, return default white.
 	const color = colorArgs[c];
 
-	return {
-		r: color[0],
-		g: color[1],
-		b: color[2],
-		a: color[3]
-	};
+	return color;
 }
 
 function getSVGLocations(types: Iterable<RawType>): Set<string> {
@@ -431,7 +410,6 @@ export default {
 	getCheckHighlightColor,
 	getBoxOutlineColor,
 	getTintColorOfType,
-	getPieceRegenColorArgs,
 	getSVGLocations,
 	getLocationForType
 };

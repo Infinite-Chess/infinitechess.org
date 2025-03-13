@@ -1,6 +1,6 @@
 
-import { rawTypes, players, numTypes } from "../config";
-import type { Piece } from "./boardutil";
+import { rawTypes, players, numTypes } from "../config.js";
+import type { Piece } from "./boardutil.js";
 
 /**
  * All piece types the game is currently compatible with (excluding neutrals).
@@ -17,6 +17,9 @@ const slidingroyals = [rawTypes.ROYALQUEEN];
 const royals = [...jumpingroyals, ...slidingroyals];
 
 const strcolors = ["neutral", "white", "black"] as const;
+
+/** Piece types that don't have an SVG */
+const SVGLESS_TYPES = [rawTypes.VOID];
 
 type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
@@ -87,6 +90,7 @@ export type {
 export default {
 	jumpingroyals,
 	royals,
+	SVGLESS_TYPES,
 
 	getRawType,
 	getColorFromType,

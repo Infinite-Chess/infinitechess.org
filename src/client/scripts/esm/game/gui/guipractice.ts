@@ -6,17 +6,15 @@
 
 
 import checkmatepractice from '../chess/checkmatepractice.js';
-import gui from './gui.js';
 import guititle from './guititle.js';
-import spritesheet from '../rendering/spritesheet.js';
-import colorutil from '../../chess/util/colorutil.js';
 import validcheckmates from '../../chess/util/validcheckmates.js';
 // @ts-ignore
 import style from './style.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
 import svgcache from '../../chess/rendering/svgcache.js';
-
+import { players } from '../../chess/config.js';
+import typeutil from '../../chess/util/typeutil.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -130,7 +128,7 @@ function createPracticeHTML() {
 					containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
 					containerDiv.appendChild(pieceDiv);
 
-					if (colorutil.getPieceColorFromType(longPiece) === "white") piecelistW.appendChild(containerDiv);
+					if (typeutil.getColorFromType(longPiece) === players.WHITE) piecelistW.appendChild(containerDiv);
 					else piecelistB.appendChild(containerDiv);
 				}
 			}
@@ -147,16 +145,16 @@ function createPracticeHTML() {
 
 async function addPieceIcons() {
 	// let sprites = await svgcache.getSVGElements();
-	const spritenames = new Set<string>;
+	const spritenames = new Set<number>;
 	const sprites: { [pieceType: string]: SVGElement } = {};
 	for (const checkmate of element_checkmates.children) {
 		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
 			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			spritenames.add(actualpiece.className.split(' ')[1]!);
+			spritenames.add(Number(actualpiece.className.split(' ')[1]!));
 		}
 		const pieceBlack = checkmate.getElementsByClassName('piecelistB')[0]!.getElementsByClassName('checkmatepiececontainer')[0]!;
 		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		spritenames.add(actualpieceBlack.className.split(' ')[1]!);
+		spritenames.add(Number(actualpieceBlack.className.split(' ')[1]!));
 	}
 	const spriteSVGs = await svgcache.getSVGElements([...spritenames]);
 	for (const svg of spriteSVGs) {

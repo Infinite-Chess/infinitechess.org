@@ -5,7 +5,7 @@
  */
 
 
-import type { Piece } from "../../../chess/logic/boardchanges.js";
+import type { Piece } from "../../../chess/util/boardutil.js";
 import type { Color } from "../../../chess/util/colorutil.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
 // @ts-ignore
@@ -13,7 +13,6 @@ import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 
 
 import arrows from "./arrows.js";
-import colorutil from "../../../chess/util/colorutil.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import boardutil from "../../../chess/util/boardutil.js";
@@ -112,7 +111,7 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
+	const opponentColor = onlinegame.areInOnlineGame() ? typeutil.invertPlayer(onlinegame.getOurColor()) : typeutil.invertPlayer(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });

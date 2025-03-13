@@ -7,15 +7,18 @@
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Color } from '../../chess/util/colorutil.js';
+import type { RawType } from '../../chess/util/typeutil.js';
 
 import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
-import spritesheet from './spritesheet.js';
 import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import preferences from '../../components/header/preferences.js';
+import spritesheet from './spritesheet.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -30,7 +33,6 @@ import perspective from './perspective.js';
 import shapes from './shapes.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-import typeutil from '../../chess/util/typeutil.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
@@ -145,7 +147,7 @@ function animatePiece(type: number, path: Coords[], captured?: Piece, instant?: 
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
 	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
-	if (spritesheet.typesWithoutSVG.some(typeNoSVG => {
+	if (typeutil.SVGLESS_TYPES.some((typeNoSVG: RawType) => {
 		return typeutil.getRawType(type) === typeNoSVG || (captured !== undefined && typeutil.getRawType(captured.type) === typeNoSVG);
 	})) instant = true; // But, still instant animate it so that the sound plays
 
@@ -324,7 +326,7 @@ function generatePieceData(type: number, coords: Coords): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { startX, startY, endX, endY } = calculateBoardPosition(coords);
-	const { r, g, b, a } = preferences.getTintColorOfType(type);
+	const [ r, g, b, a ] = preferences.getTintColorOfType(type);
     
 	return bufferdata.getDataQuad_ColorTexture(
 		startX, startY, endX, endY,

@@ -11,7 +11,7 @@ import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
-
+import type { RawType } from '../../chess/util/typeutil.js';
 
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
@@ -28,11 +28,9 @@ import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js'
 import moveutil from '../../chess/util/moveutil.js';
 import space from '../misc/space.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
-import spritesheet from '../rendering/spritesheet.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -420,12 +418,6 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 		pawnIsPromotingOn = coords;
 		return;
 	}
-	// Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
-	if (gamefile.mesh.locked) {
-		statustext.pleaseWaitForTask();
-		unselectPiece();
-		return;
-	}
 
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
@@ -465,7 +457,7 @@ function makePromotionMove(gamefile: gamefile) {
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
-	if (spritesheet.typesWithoutSVG.some(type => typeutil.getRawType(pieceSelected!.type) === type)) return; // No svg/texture for this piece (void), don't render the ghost image.
+	if (typeutil.SVGLESS_TYPES.some((type: RawType) => typeutil.getRawType(pieceSelected!.type) === type)) return; // No svg/texture for this piece (void), don't render the ghost image.
 
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }

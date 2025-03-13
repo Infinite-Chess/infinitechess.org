@@ -1,16 +1,16 @@
-import typeutil from "../util/typeutil";
-import coordutil from "../util/coordutil";
-import math from "../../util/math";
-import { listExtras, players } from "../config";
+import typeutil from "../util/typeutil.js";
+import coordutil from "../util/coordutil.js";
+import math from "../../util/math.js";
+import { listExtras, players } from "../config.js";
 
 // @ts-ignore
-import type gamefile from "./gamefile";
-import type { RawType } from "../util/typeutil";
-import type { Vec2, LineKey, Vec2Key } from "../util/boardutil";
-import type { Coords, CoordsKey } from "../util/coordutil";
+import type gamefile from "./gamefile.js";
+import type { RawType } from "../util/typeutil.js";
+import type { Vec2, LineKey, Vec2Key } from "../util/boardutil.js";
+import type { Coords, CoordsKey } from "../util/coordutil.js";
 // @ts-ignore
-import type { GameRules } from "../variants/gamerules";
-import type { PieceMoveset } from "./movesets";
+import type { GameRules } from "../variants/gamerules.js";
+import type { PieceMoveset } from "./movesets.js";
 
 const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
 type PositionArray = Int8Array | Int16Array | Int32Array; //| BigInt64Array;

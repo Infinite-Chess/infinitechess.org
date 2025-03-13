@@ -6,20 +6,19 @@
  * If no game is loaded, no spritesheet is loaded.
  */
 
+
+// @ts-ignore
+import type gamefile from '../../chess/logic/gamefile.js';
+import type { Coords } from '../../chess/logic/movesets.js';
+
+
+
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
 import typeutil from '../../chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 // @ts-ignore
 import texture from './texture.js';
-import { rawTypes } from '../../chess/config.js';
-
-// Type Definitions ----------------------------------------------------------
-
-
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
-import type { Coords } from '../../chess/logic/movesets.js';
 
 
 // Variables ---------------------------------------------------------------------------
@@ -48,9 +47,6 @@ let spritesheetData: {
 	 }
 } | undefined;
 
-/** Piece types that don't have an SVG */
-const typesWithoutSVG = [rawTypes.VOID];
-
 
 // Functions ---------------------------------------------------------------------------
 
@@ -74,20 +70,20 @@ function getSpritesheetDataTexLocation(type: number): Coords {
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
 
-	const types = [...gamefile.ourPieces.typeRanges.keys()].filter(t => {return typeutil.getRawType(t) in typesWithoutSVG;});
+	const types = [...gamefile.ourPieces.typeRanges.keys()].filter(t => {return typeutil.getRawType(t) in typeutil.SVGLESS_TYPES;});
 
 	/**
 	 * The SVG elements we will use in the game to construct our spritesheet
 	 * This is what may take a while, waiting for the fetch requests to return.
 	 */
-	const [idMap, svgElements] = await svgcache.getSVGElements(types);
+	const svgElements = await svgcache.getSVGElements(types);
 
 	// console.log("Finished acquiring all piece SVGs!");
 
 	// Convert each SVG element to an Image
 	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
 
-	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages, idMap);
+	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
 	// console.log(spritesheetAndSpritesheetData.spritesheetData);
 
 	// Optional: Append the spritesheet to the document for debugging
@@ -100,6 +96,10 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	spritesheetData = spritesheetAndSpritesheetData.spritesheetData;
 }
 
+/**
+ * Call when the gameslot unloads the gamefile.
+ * The spritesheet and data is no longer needed.
+ */
 function deleteSpritesheet() {
 	spritesheet = undefined;
 	spritesheetData = undefined;
@@ -108,7 +108,6 @@ function deleteSpritesheet() {
 
 
 export default {
-	typesWithoutSVG,
 	initSpritesheetForGame,
 	getSpritesheet,
 	getSpritesheetDataPieceWidth,

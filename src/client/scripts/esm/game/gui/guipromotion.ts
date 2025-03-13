@@ -3,24 +3,31 @@
  * This script handles our promotion menu, when
  * pawns reach the promotion line.
  */
+import { Player, RawType } from '../../chess/util/typeutil.js';
 
-import spritesheet from '../rendering/spritesheet.js';
+import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
-// @ts-ignore
-import style from './style.js';
-// @ts-ignore
-import colorutil from '../../chess/util/colorutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
+import { players } from '../../chess/config.js';
 
 "use strict";
 
 
 // Variables --------------------------------------------------------------------
+interface PromotionGUI {
+	base: HTMLElement
+	players: {
+		[p in Player]?: HTMLElement
+	}
+}
 
-
-const element_Promote = document.getElementById('promote')!;
-const element_PromoteWhite = document.getElementById('promotewhite')!;
-const element_PromoteBlack = document.getElementById('promoteblack')!;
+const promoteElements: PromotionGUI = {
+	base: document.getElementById('promote')!,
+	players: {
+		[players.WHITE]: document.getElementById('promotewhite')!,
+		[players.BLACK]: document.getElementById('promoteblack')!
+	}
+};
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
@@ -29,25 +36,25 @@ let selectionOpen = false; // True when promotion GUI visible. Do not listen to 
 
 
 // Prevent right-clicking on the promotion UI
-element_Promote.addEventListener('contextmenu', (event) => event.preventDefault());
+promoteElements.base.addEventListener('contextmenu', (event) => event.preventDefault());
 
 
 function isUIOpen() { return selectionOpen; }
 
-function open(color: string) {
+function open(color: Player) {
 	selectionOpen = true;
-	element_Promote?.classList.remove('hidden');
-	if (color === 'white') element_PromoteWhite?.classList.remove('hidden');
-	else if (color === 'black') element_PromoteBlack?.classList.remove('hidden');
-	else throw new Error(`Promotion UI does not support color "${color}"`);
+	promoteElements.base?.classList.remove('hidden');
+	if (!(color in promoteElements.players)) throw new Error(`Promotion UI does not support color "${color}"`);
+	promoteElements.players[color]!.classList.remove('hidden');
 }
 
 /** Closes the promotion UI */
 function close() {
 	selectionOpen = false;
-	element_PromoteWhite?.classList.add('hidden');
-	element_PromoteBlack?.classList.add('hidden');
-	element_Promote?.classList.add('hidden');
+	for (const element of Object.values(promoteElements.players)) {
+		element.classList.add('hidden');
+	}
+	promoteElements.base?.classList.add('hidden');
 }
 
 /**
@@ -55,56 +62,43 @@ function close() {
  * @param {Object} promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-async function initUI(promotionsAllowed: { [color: Player]: string[]} | undefined) {
+async function initUI(promotionsAllowed: { [color in Player]?: RawType[]} | undefined) {
 	if (promotionsAllowed === undefined) return;
-	const white = promotionsAllowed['white']!; // ['queens','bishops']
-	const black = promotionsAllowed['black']!;
 
-	if (element_PromoteWhite!.childElementCount > 0 || element_PromoteBlack!.childElementCount > 0) {
+	if (Object.values(promoteElements.players).some(element => element.childElementCount > 0)) {
 		throw new Error("Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.");
 	}
 
-	const whiteExt = colorutil.getColorExtensionFromColor('white');
-	const blackExt = colorutil.getColorExtensionFromColor('black');
-
-	const whiteSVGs = await svgcache.getSVGElements(white.map(promotion => promotion + whiteExt));
-	const blackSVGs = await svgcache.getSVGElements(black.map(promotion => promotion + blackExt));
-
-	// Create and append allowed promotion options for white
-	whiteSVGs.forEach(svg => {
-		// TODO: Make a copy instead of modifying the cached piece
-		svg.classList.add('promotepiece');
-		svg.addEventListener('click', callback_promote);
-        element_PromoteWhite!.appendChild(svg);
-	});
-
-	// Create and append allowed promotion options for black
-	blackSVGs.forEach(svg => {
-		// TODO: Make a copy instead of modifying the cached piece
-		svg.classList.add('promotepiece');
-		svg.addEventListener('click', callback_promote);
-        element_PromoteBlack!.appendChild(svg);
-	});
+	for (const [splayer, types] of Object.entries(promotionsAllowed)) {
+		const player = Number(splayer) as Player;
+		if (!(player in promoteElements.players)) {
+			console.warn(`Player ${player} has a promotion but not promotion UI`);
+			continue;
+		}
+		const svgs = await svgcache.getSVGElements(types.map(promotion => typeutil.buildType(promotion, Number(player) as Player)));
+		svgs.forEach(svg => {
+			svg.classList.add('promotepiece');
+			svg.addEventListener('click', callback_promote);
+			promoteElements.players[player]!.appendChild(svg);
+		});
+	}
 }
 
 /**
  * Resets the promotion UI by clearing all promotion options.
  */
 function resetUI() {
-	while (element_PromoteWhite!.firstChild) {
-		const svg = element_PromoteWhite!.firstChild;
-		element_PromoteWhite!.removeChild(svg);
-		svg.removeEventListener('click', callback_promote);
-	}
-	while (element_PromoteBlack!.firstChild) {
-		const svg = element_PromoteBlack!.firstChild;
-		element_PromoteBlack!.removeChild(svg);
-		svg.removeEventListener('click', callback_promote);
+	for (const playerPromo of Object.values(promoteElements.players)) {
+		while (playerPromo!.firstChild) {
+			const svg = playerPromo!.firstChild;
+			playerPromo!.removeChild(svg);
+			svg.removeEventListener('click', callback_promote);
+		}
 	}
 }
 
 function callback_promote(event: Event) {
-	const type = (event.currentTarget as HTMLElement).id;
+	const type = Number((event.currentTarget as HTMLElement).id);
 	// TODO: Dispatch a custom 'promote-selected' event!
 	// That way this script doesn't depend on selection.js
 	selection.promoteToType(type);

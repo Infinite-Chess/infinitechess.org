@@ -1,6 +1,7 @@
 // Disabling this  cause will be using func types lots
 /* eslint-disable no-unused-vars */
 
+// @ts-ignore
 import type gamefile from "./gamefile";
 
 type ExtractArr<T extends any[]> = T extends (infer U)[] ? U : never

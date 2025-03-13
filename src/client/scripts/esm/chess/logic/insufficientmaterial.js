@@ -1,4 +1,10 @@
 
+/**
+ * This script detects draws by insufficient material
+ * 
+ * @maintainer tsevasa
+ */
+
 // Import Start
 import moveutil from '../util/moveutil.js';
 import typeutil from '../util/typeutil.js';
@@ -13,8 +19,6 @@ import { rawTypes as r, ext as e, players } from '../config.js';
  */
 
 "use strict";
-
-/** This script detects draws by insufficient material. */
 
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
@@ -157,9 +161,9 @@ function detectInsufficientMaterial(gamefile) {
 	if (!gamerules.doesColorHaveWinCondition(gamefile.gameRules, players.WHITE, 'checkmate') || !gamerules.doesColorHaveWinCondition(gamefile.gameRules, players.BLACK, 'checkmate')) return false;
 	if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, players.WHITE) !== 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, players.BLACK) !== 1) return false;
 
-	// Only make the draw check if the last move was a capture or if there is no last move
+	// Only make the draw check if the last move was a capture or promotion or if there is no last move
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (lastMove && !lastMove.flags.capture) return false;
+	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion)) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle pieces
 	if (boardutil.getPieceCountOfGame(gamefile, { ignoreTypes: [r.OBSTACLE] }) >= 11) return false;

@@ -56,31 +56,36 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 	return preferences.getSVGLocations(locations);
 } 
 
-function getSVGIDs(types: number[]): [Map<string, number[]>, SVGElement[]] {
+function getSVGIDs(types: number[], width?: number, height?: number): SVGElement[] {
 	let failed: boolean = false;
-	const typeIdMap: Map<string, number[]> = new Map();
 	const svgs: SVGElement[] = [];
 	l: for (const type of types) {
+		const tint = preferences.getTintColorOfType(type);
 		const [raw, c] = typeutil.splitType(type);
 		const baseId = `${typeutil.getRawTypeStr(raw)}s`;
 		const checks: string[] = getPossibleExtensionsOfColor(c);
 		for (const c of checks) {
 			const id = baseId + c;
-			if (id in cachedPieceSVGs) {
-				if (!typeIdMap.has(id)) {
-					typeIdMap.set(id, []);
-					svgs.push(cachedPieceSVGs[id].cloneNode(true) as SVGElement);
-				}
+			if (!(id in cachedPieceSVGs)) continue;
+			// Clone the SVG element
+			const cloned = cachedPieceSVGs[id]!.cloneNode(true) as SVGElement;
 
-				typeIdMap.get(id)!.push(type);
-				continue l;
-			}
+			cloned.id = String(type);
+
+			// Set width and height if specified
+			if (width !== undefined) cloned.setAttribute('width', width.toString());
+			if (height !== undefined) cloned.setAttribute('height', height.toString());
+			
+			tintSVG(cloned, tint);
+
+			svgs.push(cloned);
+			continue l;
 		}
 		console.error(`${preferences.getLocationForType(raw)} does not contain an svg with extensions ${checks} for ${baseId}`);
 		failed = true;
 	}
 	if (failed) throw Error("SVG theme is missing ids for pieces");
-	return [typeIdMap, svgs];
+	return svgs;
 }
 
 // Core functionality --------------------------------------------------------
@@ -89,15 +94,17 @@ function getSVGIDs(types: number[]): [Map<string, number[]>, SVGElement[]] {
  * Returns all the SVG elements for the given piece IDs.
  * Piece IDs are in plural form.
  * @param ids - ['pawnsW', 'queensB']
+ * @param [width] Optional width to set for each SVG.
+ * @param [height] Optional height to set for each SVG.
  */
-async function getSVGElements(ids: number[]): Promise<[Map<string, number[]>, SVGElement[]]> {
+async function getSVGElements(ids: number[], width?: number, height?: number): Promise<SVGElement[]> {
 	const locations = getNeededSVGLocations(ids);
   
 	if (locations.size > 0) {
 		await fetchMissingTypes(locations);
 	}
 
-	return getSVGIDs(ids);
+	return getSVGIDs(ids, width, height);
 }
 
 /**

@@ -11,6 +11,7 @@ import type { Color } from "../../../chess/util/colorutil.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { BoundingBox } from "../../../util/math.js";
 import type { Piece } from "../../../chess/util/boardutil.js";
+import type { RawType } from "../../../chess/util/typeutil.js";
 
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
@@ -208,7 +209,7 @@ function renderPiece() {
  */
 function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
-	if (spritesheet.typesWithoutSVG.some(type => typeutil.getRawType(pieceType!) === type)) return; // No SVG/texture for this piece (void), can't render it.
+	if (typeutil.SVGLESS_TYPES.some((type: RawType) => typeutil.getRawType(pieceType!) === type)) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = input.getPointerIsTouch();
@@ -216,7 +217,7 @@ function genPieceModel(): BufferModel | undefined {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-	const { r, g, b, a } = preferences.getTintColorOfType(pieceType!);
+	const [ r, g, b, a ] = preferences.getTintColorOfType(pieceType!);
 	
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;

@@ -18,7 +18,6 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
-import piecesmodel from './piecesmodel.js';
 // Import End
 
 /** 
@@ -83,7 +82,6 @@ let darkTiles;
 	document.addEventListener('theme-change', (event) => { // Custom Event listener.
 		console.log(`Theme change event detected: ${preferences.getTheme()}`);
 		updateTheme();
-		piecesmodel.regenModel(gameslot.getGamefile());
 	});
 })();
 
@@ -293,15 +291,6 @@ function renderMainBoard() {
 	const model = regenBoardModel();
 	if (!model) return; // Model not defined because the texture was not fully loaded yet
 	model.render();
-}
-
-// Checks if the board position is atleast regenRange-distance away from specified offset
-function isOffsetOutOfRangeOfRegenRange(offset, regenRange) { // offset: [x,y]
-	const boardPos = movement.getBoardPos();
-	const xDiff = Math.abs(boardPos[0] - offset[0]);
-	const yDiff = Math.abs(boardPos[1] - offset[1]);
-	if (xDiff > regenRange || yDiff > regenRange) return true;
-	return false;
 }
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
@@ -529,7 +518,6 @@ export default {
 	gtileWidth_Pixels,
 	recalcVariables,
 	gtile_MouseOver_Float,
-	isOffsetOutOfRangeOfRegenRange,
 	gpositionFingerOver,
 	gtile_MouseOver_Int,
 	recalcTileWidth_Pixels,

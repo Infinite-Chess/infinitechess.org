@@ -12,7 +12,7 @@
 import type { Coords } from '../../../chess/util/coordutil.js';
 import type { Change } from '../../../chess/logic/boardchanges.js';
 import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math.js';
-import type { LineKey } from '../../../chess/logic/organizedpieces.js';
+import type { LineKey } from '../../../chess/util/boardutil.js';
 import type { Piece } from '../../../chess/util/boardutil.js';
 import type { AttributeInfoInstanced } from '../buffermodel.js';
 // @ts-ignore
@@ -388,7 +388,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 			const C = organizedpieces.getCFromKey(lineKey as LineKey);
 			if (C < containingPointsLineC[0] || C > containingPointsLineC[1]) continue; // Next line, this one is off-screen, so no piece arrows are visible
 
-			const pieceLine = organizedLine.map(idx => boardutil.getPieceFromIdx(gamefile.ourPieces, idx)!);
+			const pieceLine = organizedLine.map((idx: number) => boardutil.getPieceFromIdx(gamefile.ourPieces, idx)!);
 
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
 			const arrowsLine = calcArrowsLineDraft(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, pieceLine);
@@ -838,7 +838,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 		const organizedLine = linegroup.get(lineKey);
 		if (organizedLine === undefined) continue; // No pieces on line, empty
 
-		const pieceLine = organizedLine.map(idx => boardutil.getPieceFromIdx(gamefile.ourPieces, idx)!);
+		const pieceLine = organizedLine.map((idx: number) => boardutil.getPieceFromIdx(gamefile.ourPieces, idx)!);
 
 		const arrowsLineDraft = calcArrowsLineDraft(gamefile, boundingBoxInt!, boundingBoxFloat!, slide, slideKey, pieceLine);
 		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
@@ -978,7 +978,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
-	const { r, g, b } = preferences.getTintColorOfType(arrow.piece.type);
+	const [ r, g, b ] = preferences.getTintColorOfType(arrow.piece.type);
 	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
 
 	// Opacity changing with distance

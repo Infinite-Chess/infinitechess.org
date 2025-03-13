@@ -1,11 +1,11 @@
-import typeutil from "./typeutil";
-import coordutil from "./coordutil";
+import typeutil from "./typeutil.js";
+import coordutil from "./coordutil.js";
 
 // Type Definitions -----------------------------------------------------------------------------------------
 
-import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces";
-import type { Coords } from "./coordutil";
-import type { RawType, Player } from "./typeutil";
+import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces.js";
+import type { Coords } from "./coordutil.js";
+import type { RawType, Player } from "./typeutil.js";
 
 interface Piece {
 	type: number,
@@ -169,6 +169,13 @@ function getTypeFromCoords(o: OrganizedPieces, coords: Coords): number | undefin
 	return o.types[idx]!;
 }
 
+function getIdxFromCoords(o: OrganizedPieces, coords: Coords): number | undefined {
+	const key = coordutil.getKeyFromCoords(coords);
+	if (!o.coords.has(key)) return undefined;
+	const idx = o.coords.get(key)!;
+	return idx;
+}
+
 function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
@@ -185,6 +192,14 @@ function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
 		type: o.types[idx]!,
 		coords: getCoordsFromIdx(o, idx),
 	};
+}
+
+function getTypeRangeFromIdx(o: OrganizedPieces, idx: number): TypeRange {
+	const type = o.types[idx];
+	if (type === undefined) throw Error("Index is out of piece lists");
+	if (!o.typeRanges.has(idx)) throw Error("Typerange is not initialized");
+
+	return o.typeRanges.get(type)!;
 }
 
 /**
@@ -218,4 +233,6 @@ export default {
 	getPieceFromCoords,
 	getPieceFromIdx,
 	getCoordsFromIdx,
+	getTypeRangeFromIdx,
+	getIdxFromCoords,
 };

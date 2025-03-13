@@ -25,7 +25,8 @@ import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
-import clientEventDispatcher from "../../util/clientEventDispatcher.js";
+import typeutil from "../../chess/util/typeutil.js";
+import piecemodels from "../rendering/piecemodels.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -38,8 +39,6 @@ import sound from "../misc/sound.js";
 import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
-import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
 import selection from "./selection.js";
 // @ts-ignore
@@ -258,29 +257,26 @@ async function loadGraphical(loadOptions: LoadOptions) {
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 	}
 
-	// Regenerate the mesh of all the pieces.
-	await regenModel();
+	// Generate the mesh of every piece type
+	await piecemodels.regenAll(loadedGamefile!);
 
 	/**
 	 * Listen for the event that inserts more undefineds into the piece lists.
 	 * When that occurs, we need to regenerate the model.
 	 */
-	events.addEventListener(getGamefile()!.events, "regenerateLists", (gamefile: gamefile) => {
-		piecesmodel.regenModel(gamefile);
+	events.addEventListener(getGamefile()!.events, "regenerateRanges", (gamefile: gamefile, types: number[]) => {
+		for (const type of types) {
+			piecemodels.regenType(gamefile, type);
+		}
 		return false;
 	});
 }
 
-async function regenModel() {
-	await piecesmodel.regenModel(loadedGamefile!);
-}
 
 /** The canvas will no longer render the current game */
 function unloadGame() {
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	
-	// Terminate the mesh algorithm.
-	loadedGamefile.mesh.terminateIfGenerating();
 	loadedGamefile = undefined;
 
 	selection.unselectPiece();
@@ -305,9 +301,6 @@ function unloadGame() {
 	
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
-
-	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.
-	clientEventDispatcher.removeListener('inserted-undefineds', regenModel);
 }
 
 /**
@@ -358,7 +351,7 @@ function concludeGame() {
 		if (!loadedGamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (loadedGamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		if (loadedGamefile.gameConclusion.includes(typeutil.getColorStringFromType(onlinegame.getOurColor()))) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else if (loadedGamefile.gameConclusion.includes('draw') || loadedGamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
 		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
 	}

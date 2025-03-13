@@ -17,7 +17,7 @@ import math from "../../util/math.js";
  * This may be a little higher, in order to make the spritesheet's total width a POWER OF 2.
  * BUT, the spritesheet's width will NEVER exceed WebGL's capacity!
  */
-const preferredImgSize = 512;
+const PREFERRED_IMG_SIZE = 512;
 
 /**
  * Generates a spritesheet from an array of HTMLImageElement objects.
@@ -27,7 +27,7 @@ const preferredImgSize = 512;
  * @param images - An array of HTMLImageElement objects to be merged into a spritesheet.
  * @returns A promise that resolves with the generated spritesheet as an HTMLImageElement.
  */
-async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[], idMap: Map<string, number[]>) {
+async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImageElement[]) {
 	// Ensure there are images provided
 	if (images.length === 0) throw new Error('No images provided when generating spritesheet.');
   
@@ -43,7 +43,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	 */
 	const maxImgSizePerMaxTextureSize = maxTextureSize / gridSize;
 
-	const spritesheetSizeIfPreferredImgSizeUsed = math.roundUpToNextPowerOf2(preferredImgSize * gridSize); // Round up to nearest power of 2
+	const spritesheetSizeIfPreferredImgSizeUsed = math.roundUpToNextPowerOf2(PREFERRED_IMG_SIZE * gridSize); // Round up to nearest power of 2
 	const actualImgSizeIfUsingPreferredImgSize = spritesheetSizeIfPreferredImgSizeUsed / gridSize; 
 
 	/** Whichever is smaller of the two */
@@ -86,7 +86,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
   
 	// Return a promise that resolves when the image is loaded
 	await spritesheetImage.decode();
-	const spritesheetData = generateSpriteSheetData(images, gridSize, idMap);
+	const spritesheetData = generateSpriteSheetData(images, gridSize);
 
 	return { spritesheet: spritesheetImage, spritesheetData };
 }
@@ -97,7 +97,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  * @param gridSize - How many images fit one-way.
  * @returns A sprite data object with texture coordinates for each image.
  */
-function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number, idMap: Map<string, number[]>) {  
+function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {  
 	const pieceWidth = 1 / gridSize;
 	const texLocs: { [key: number]: Coords } = {};
 
@@ -112,9 +112,7 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number, i
 
 		// Store the texture coordinates
 		// Use the image id as the key for the data object
-		for (const type of idMap.get(image.id)!) {
-			texLocs[type] = [texX, texY];
-		}
+		texLocs[Number(image.id)] = [texX, texY];
 
 		// Update the position for the next image
 		x++;

@@ -133,14 +133,14 @@ function genModel() {
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
 
-	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;#
+	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
-	const ourPieces = gamefile.ourPieces
+	const ourPieces = gamefile.ourPieces;
 	for (const [type, range] of ourPieces.typeRanges) {
 		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
-		const { r, g, b } = preferences.getTintColorOfType(type);
+		const [ r, g, b ] = preferences.getTintColorOfType(type);
 
 		for (let i = range.start; i < range.end; i++) {
 			processPiece(boardutil.getCoordsFromIdx(ourPieces, i), texleft, texbottom, texright, textop, r, g, b);
@@ -186,13 +186,13 @@ function genModel() {
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		let { r, g, b } = preferences.getTintColorOfType(a.type);
+		let [ r, g, b ] = preferences.getTintColorOfType(a.type);
 		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
 
 		// Animate the captured piece too, if there is one
 		if (!a.captured) return;
 		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
-		({ r, g, b } = preferences.getTintColorOfType(a.type));
+		([ r, g, b ] = preferences.getTintColorOfType(a.type));
 		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
 	});
 

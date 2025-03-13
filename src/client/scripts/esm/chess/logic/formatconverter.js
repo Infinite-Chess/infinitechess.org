@@ -1,8 +1,8 @@
 
 'use strict';
 // 
-import { rawTypes as r, ext as e, players } from "../config";
-import typeutil from "../util/typeutil";
+import { rawTypes as r, ext as e, players } from "../config.js";
+import typeutil from "../util/typeutil.js";
 
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
