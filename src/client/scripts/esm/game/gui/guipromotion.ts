@@ -4,13 +4,10 @@
  * pawns reach the promotion line.
  */
 
-import spritesheet from '../rendering/spritesheet.js';
 import selection from '../chess/selection.js';
-// @ts-ignore
-import style from './style.js';
+import svgcache from '../../chess/rendering/svgcache.js';
 // @ts-ignore
 import colorutil from '../../chess/util/colorutil.js';
-import svgcache from '../../chess/rendering/svgcache.js';
 
 "use strict";
 

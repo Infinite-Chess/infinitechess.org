@@ -6,9 +6,7 @@
 
 
 import checkmatepractice from '../chess/checkmatepractice.js';
-import gui from './gui.js';
 import guititle from './guititle.js';
-import spritesheet from '../rendering/spritesheet.js';
 import colorutil from '../../chess/util/colorutil.js';
 import validcheckmates from '../../chess/util/validcheckmates.js';
 // @ts-ignore

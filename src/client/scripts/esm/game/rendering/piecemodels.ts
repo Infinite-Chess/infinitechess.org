@@ -55,7 +55,7 @@ interface MeshData {
  */
 const Z: number = 0.001;
 
-/** The preferred image width each piece type's image should be. */
+/** The image width each piece type's image should be. */
 const IMG_SIZE = 512;
 
 /**
@@ -372,7 +372,6 @@ function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
 
 
 export default {
-	REGEN_RANGE,
 	regenAll,
 	regenType,
 	overwritebufferdata,

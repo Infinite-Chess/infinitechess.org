@@ -11,11 +11,13 @@ import type { Color } from '../../chess/util/colorutil.js';
 import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
-import spritesheet from './spritesheet.js';
 import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import preferences from '../../components/header/preferences.js';
+import spritesheet from './spritesheet.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -145,7 +147,7 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: 
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
 	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
-	if (spritesheet.typesWithoutSVG.some(typeNoSVG => {
+	if (typeutil.SVGLESS_TYPES.some((typeNoSVG: string) => {
 		return type.startsWith(typeNoSVG) || (captured !== undefined && captured.type.startsWith(typeNoSVG));
 	})) instant = true; // But, still instant animate it so that the sound plays
 
