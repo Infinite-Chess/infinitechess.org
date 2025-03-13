@@ -325,14 +325,14 @@ function updateBadges(numCompleted: number, numTotal: number) {
 	if (element_checkmateBadgeBronze && element_checkmateBadgeBronzeImage) {
 		if (numCompleted >= 0.5 * numTotal && areLoggedIn) {
 			element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze"]);
-			element_checkmateBadgeBronzeImage.style.filter = "contrast(1) brightness(1)";
+			element_checkmateBadgeBronzeImage.classList.remove("unearned");
 			for (const element_shine of elements_checkmateBadgeBronzeShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
 			if (areLoggedIn) element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze_unearned"]);
 			else element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeBronzeImage.style.filter = "contrast(calc(1/3)) brightness(1.5)";
+			element_checkmateBadgeBronzeImage.classList.add("unearned");
 			for (const element_shine of elements_checkmateBadgeBronzeShine) {
 				element_shine.classList.add("hidden");
 			}
@@ -341,14 +341,14 @@ function updateBadges(numCompleted: number, numTotal: number) {
 	if (element_checkmateBadgeSilver && element_checkmateBadgeSilverImage) {
 		if (numCompleted >= 0.75 * numTotal && areLoggedIn) {
 			element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver"]);
-			element_checkmateBadgeSilverImage.style.filter = "contrast(1) brightness(1)";
+			element_checkmateBadgeSilverImage.classList.remove("unearned");
 			for (const element_shine of elements_checkmateBadgeSilverShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
 			if (areLoggedIn) element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver_unearned"]);
 			else element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeSilverImage.style.filter = "contrast(calc(1/3)) brightness(1.5)";
+			element_checkmateBadgeSilverImage.classList.add("unearned");
 			for (const element_shine of elements_checkmateBadgeSilverShine) {
 				element_shine.classList.add("hidden");
 			}
@@ -357,14 +357,14 @@ function updateBadges(numCompleted: number, numTotal: number) {
 	if (element_checkmateBadgeGold && element_checkmateBadgeGoldImage) {
 		if (numCompleted >= numTotal && areLoggedIn) {
 			element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold"]);
-			element_checkmateBadgeGoldImage.style.filter = "contrast(1) brightness(1)";
+			element_checkmateBadgeGoldImage.classList.remove("unearned");
 			for (const element_shine of elements_checkmateBadgeGoldShine) {
 				element_shine.classList.remove("hidden");
 			}
 		} else {
 			if (areLoggedIn) element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold_unearned"]);
 			else element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeGoldImage.style.filter = "contrast(calc(1/3)) brightness(1.5)";
+			element_checkmateBadgeGoldImage.classList.add("unearned");
 			for (const element_shine of elements_checkmateBadgeGoldShine) {
 				element_shine.classList.add("hidden");
 			}

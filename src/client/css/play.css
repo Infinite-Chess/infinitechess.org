@@ -714,6 +714,10 @@ canvas {
     transform: scale(1.1);
 }
 
+.unearned {
+    filter: contrast(calc(1/3)) brightness(1.5);
+}
+
 #checkmate-badge-bronze {
     left: 50%;
     top: 50%;
