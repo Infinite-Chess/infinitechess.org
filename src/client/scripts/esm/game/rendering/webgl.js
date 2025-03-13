@@ -107,7 +107,31 @@ function clearScreen() {
  * Toggles normal blending mode. Transparent objects will correctly have
  * their color shaded onto the color behind them.
  */
-function toggleNormalBlending() { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); }
+function toggleNormalBlending() {
+	enableBlending_NonPremultipliedAlpha();
+}
+
+/**
+ * Toggles non-premultiplied alpha blending mode.
+ * 
+ * Used in most use cases.
+ */
+function enableBlending_NonPremultipliedAlpha() { 
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
+}
+
+/**
+ * Toggles pre-multiplied alpha blending mode.
+ * 
+ * This is useful for rendering textures where the image themselves have transparency
+ * in them, vs just the vertex data contains custom color to multiply by.
+ * 
+ * Patches a Firefox bug where rendering transparent images severely darkens
+ * the other RGB channels, which probably is a result of double-multiplying the alpha.
+ * 
+ * BUT CREATES a chrome bug where the RGB channels are too bright.
+ */
+function enableBlending_PremultipliedAlpha() { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
 
 /**
  * Toggles inverse blending mode, which will negate any color currently in the buffer.
@@ -115,7 +139,7 @@ function toggleNormalBlending() { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_AL
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function toggleInverseBlending() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZERO); }
+function enableBlending_Inverse() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZERO); }
 
 /**
  * Executes a function (typically a render function) while the depth function paramter
@@ -140,7 +164,13 @@ function executeWithDepthFunc_ALWAYS(func, ...args) {
  * @param {Function} func 
  */
 function executeWithInverseBlending(func) {
-	toggleInverseBlending();
+	enableBlending_Inverse();
+	func();
+	toggleNormalBlending();
+}
+
+function executeWithBlending_PremultipliedAlpha(func) {
+	enableBlending_PremultipliedAlpha();
 	func();
 	toggleNormalBlending();
 }
@@ -262,6 +292,7 @@ export default {
 	init,
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,
+	executeWithBlending_PremultipliedAlpha,
 	executeWithInverseBlending,
 	setClearColor,
 	queryWebGLContextInfo,

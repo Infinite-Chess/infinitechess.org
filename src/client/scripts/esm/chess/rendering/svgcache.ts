@@ -103,6 +103,7 @@ async function getSVGElements(ids: string[], width?: number, height?: number): P
 
 		// Clone the SVG element
 		const cloned = original.cloneNode(true) as SVGElement;
+		// const cloned = tintSVG(original.cloneNode(true) as SVGElement, [1,0.2,0.2, 0.5]); // Apply a tint for debugging
 
 		// Set width and height if specified
 		if (width !== undefined) cloned.setAttribute('width', width.toString());
