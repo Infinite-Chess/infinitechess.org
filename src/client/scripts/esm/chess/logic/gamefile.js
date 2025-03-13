@@ -212,7 +212,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
 
 	gamefileutility.deleteUnusedMovesets(this);
-
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);

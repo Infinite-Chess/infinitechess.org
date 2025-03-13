@@ -3,12 +3,13 @@
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
-import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
 import checkresolver from './checkresolver.js';
+import { players } from '../config.js';
 // Import End
 
 /** 
@@ -40,7 +41,7 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * @param {any} color - The color of the king selected
  * @returns {CoordsSpecial[]}
  */
-function kings(gamefile, coords, color, ) {
+function kings(gamefile, coords, color) {
 	const individualMoves = [];
 
 	if (!doesPieceHaveSpecialRight(gamefile, coords)) return individualMoves; // King doesn't have castling rights
@@ -62,7 +63,7 @@ function kings(gamefile, coords, color, ) {
 	let left = -Infinity; // Piece directly left of king. (Infinity if none)
 	let right = Infinity; // Piece directly right of king. (Infinity if none)
 	for (let i = 0; i < row.length; i++) {
-		const thisPiece = row[i]; // { type, coords }
+		const thisPiece = boardutil.getPieceFromIdx(gamefile.ourPieces, row[i]); // { type, coords }
 		const thisCoord = thisPiece.coords;
 
 		if (thisCoord[0] < x && thisCoord[0] > left) left = thisCoord[0];
@@ -75,8 +76,8 @@ function kings(gamefile, coords, color, ) {
 	const rightCoord = [right, y];
 	const leftPieceType = boardutil.getTypeFromCoords(gamefile.ourPieces, leftCoord);
 	const rightPieceType = boardutil.getTypeFromCoords(gamefile.ourPieces, rightCoord);
-	const leftColor = leftPieceType ? colorutil.getPieceColorFromType(leftPieceType) : undefined;
-	const rightColor = rightPieceType ? colorutil.getPieceColorFromType(rightPieceType) : undefined;
+	const leftColor = leftPieceType ? typeutil.getColorFromType(leftPieceType) : undefined;
+	const rightColor = rightPieceType ? typeutil.getColorFromType(rightPieceType) : undefined;
 
 	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns')) leftLegal = false;
 	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns')) rightLegal = false;
@@ -86,7 +87,7 @@ function kings(gamefile, coords, color, ) {
 	// AND The square the king passes through must not be a check.
 	// The square the king lands on will be tested later, within  legalmoves.calculate()
 
-	const oppositeColor = colorutil.getOppositeColor(color);
+	const oppositeColor = typeutil.invertPlayer(color);
 	if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, 'checkmate')) {
 		if (gamefileutility.isCurrentViewedPositionInCheck(gamefile)) return individualMoves; // Not legal if in check
 
@@ -165,7 +166,7 @@ function pawns(gamefile, coords, color) {
 		if (!pieceAtCoords) continue; // No piece, skip
 
 		// There is a piece. Make sure it's a different color
-		const colorOfPiece = colorutil.getPieceColorFromType(pieceAtCoords);
+		const colorOfPiece = typeutil.getColorFromType(pieceAtCoords);
 		if (color === colorOfPiece) continue; // Same color, don't add the capture
 
 		// Make sure it isn't a void
@@ -204,7 +205,7 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	if (gamefile.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.ourPieces, gamefile.enpassant.pawn);
-	if (colorutil.getPieceColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
+	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
@@ -260,7 +261,7 @@ function roses(gamefile, coords, color) {
 				path.push(coordutil.copyCoords(currentCoord));
 				const pieceOnSquare = boardutil.getPieceFromCoords(gamefile.ourPieces, currentCoord); // { type, index, coords }
 				if (pieceOnSquare) {
-					const colorOfPiece = colorutil.getPieceColorFromType(pieceOnSquare.type);
+					const colorOfPiece = typeutil.getColorFromType(pieceOnSquare.type);
 					// eslint-disable-next-line max-depth
 					if (color !== colorOfPiece) appendCoordToIndividuals(currentCoord, path); // Capture is legal
 					break; // Break the spiral
@@ -342,7 +343,7 @@ function isPawnPromotion(gamefile, type, coordsClicked) {
 	if (!type.startsWith('pawns')) return false;
 	if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
-	const color = colorutil.getPieceColorFromType(type);
+	const color = typeutil.getColorFromType(type);
 	const promotionRanks = gamefile.gameRules.promotionRanks[color];
 
 	return promotionRanks.includes(coordsClicked[1]);

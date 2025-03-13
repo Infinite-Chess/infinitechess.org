@@ -5,7 +5,7 @@
 
 // @ts-ignore
 import isprime from '../../util/isprime.js';
-import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
 import math from '../../util/math.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
@@ -100,7 +100,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
 // eslint-disable-next-line no-unused-vars
-type BlockingFunction = (friendlyColor: string, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
+type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => 0 | 1 | 2;
 /**
  * A function that returns an array of any legal special individual moves for the piece,
  * each of the coords will have a special property attached to it. castle/promote/enpassant
@@ -111,9 +111,9 @@ type SpecialFunction = (gamefile: gamefile, coords: Coords, color: Player) => Co
 
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
-function defaultBlockingFunction(friendlyColor: string, blockingPiece: Piece): 0 | 1 | 2 {
-	const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
-	const isVoid = blockingPiece.type.startsWith('voids');
+function defaultBlockingFunction(friendlyColor: Player, blockingPiece: Piece): 0 | 1 | 2 {
+	const colorOfBlockingPiece = typeutil.getColorFromType(blockingPiece.type);
+	const isVoid = typeutil.getRawType(blockingPiece.type) === rawTypes.VOID;
 	if (friendlyColor === colorOfBlockingPiece || isVoid) return 1; // Block where it is if it is a friendly OR a void square.
 	else return 2; // Allow the capture if enemy, but block afterward
 }
@@ -286,11 +286,11 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
 			},
-			blocking: (friendlyColor: string, blockingPiece: Piece, coords: Coords) => {
+			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => {
 				const distance = math.chebyshevDistance(coords, blockingPiece.coords);
 				const isPrime = isprime.primalityTest(distance, null);
 				if (!isPrime) return 0; // Doesn't block
-				const colorOfBlockingPiece = colorutil.getPieceColorFromType(blockingPiece.type);
+				const colorOfBlockingPiece = typeutil.getColorFromType(blockingPiece.type);
 				if (colorOfBlockingPiece === friendlyColor) return 1; // Friendly piece blocked
 				else return 2; // Enemy piece blocked
 			},

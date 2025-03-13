@@ -180,7 +180,7 @@ function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
 	typeutil.forEachPieceType(t => {
 		state.set(t, {
 			start: 0,
-			end: -1,
+			end: 0,
 			undefineds: []
 		});
 	}, [players.NEUTRAL, players.WHITE, players.BLACK],
@@ -210,11 +210,12 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
 
 	// For some reason, does not iterate through inherited properties?
 	for (const key in keyList) {
-		const type = keyList[key];
+		const stype = keyList[key];
+		const type = Number(stype);
 		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
-		// Does the type parameter exist?
-		// if (!state[type]) state[type] = []
-		if (!ranges.has(type)) throw Error(`Error when building state from key list. Type ${type} has no range!`);
+		
+		if (!piecesByType[type]) piecesByType[type] = [];
+		if (!ranges.has(type)) throw Error(`Error when building state from key list. Type ${typeutil.debugType(type)} has no range!`);
 		// Push the coords
 		piecesByType[type]!.push(coords);
 	}
@@ -296,7 +297,7 @@ function registerPieceInSpace(idx: number, organizedPieces: Partial<OrganizedPie
 	const y = organizedPieces.YPositions![idx];
 	const coords = [x,y] as Coords;
 	const key = coordutil.getKeyFromCoords(coords);
-	if (!organizedPieces.coords!.has(key)) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
+	if (organizedPieces.coords!.has(key)) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
 	organizedPieces.coords!.set(key, idx);
 	const lines = organizedPieces.lines!;
 	for (const [strline, linegroup] of lines) {

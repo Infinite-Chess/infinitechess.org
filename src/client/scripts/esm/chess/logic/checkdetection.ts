@@ -236,7 +236,7 @@ function doesLineAttackSquare(gamefile: gamefile, line: number[] | undefined, di
 		const moveset = thisPieceMoveset.sliding[directionKey];
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
 		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
-		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, line, direction, moveset, thisPiece.coords, thisPieceColor);
+		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(blockingFunc, gamefile.ourPieces, line, direction, moveset, thisPiece.coords, thisPieceColor);
 		if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
 		const ignoreFunc = legalmoves.getIgnoreFuncFromPieceMoveset(thisPieceMoveset);

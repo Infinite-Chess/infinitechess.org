@@ -154,13 +154,12 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 	let whitebishopparity: number = Math.floor(Math.random() * 2); // square color of first white bishop batch
 	
 	// read the elementID and convert it to a position
-	const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+|[0-9]*[a-zA-Z]+/g);
+	const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
 	if (!piecelist) return startingPosition;
 
 	for (const entry of piecelist) {
-		entry.match(/[0-9]+(|[0-9])?/);
 		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-		const strpiece: string = entry.match(/|[0-9]*[a-zA-Z]+/)![0]; // piecetype to be placed
+		const strpiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
 		const piece: number = formatconverter.ShortToInt_Piece(strpiece);
 
 		// place amount many pieces of type piece

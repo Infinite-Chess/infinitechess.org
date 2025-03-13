@@ -199,7 +199,7 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
  */
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const pieces = gamefile.ourPieces;
-	const typedata = pieces.typeRanges[change.piece.type];
+	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 
 	if (typedata.undefineds.length === 0) {
@@ -209,7 +209,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 
 	const idx = typedata.undefineds.pop()!;
 	pieces.XPositions[idx] = change.piece.coords[0];
-	pieces.XPositions[idx] = change.piece.coords[1];
+	pieces.YPositions[idx] = change.piece.coords[1];
 
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
@@ -222,7 +222,7 @@ function deletePiece(gamefile: gamefile, change: Change) {
 	const pieces = gamefile.ourPieces;
 	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.piece.coords))!;
 	organizedpieces.removePieceFromSpace(idx, pieces);
-	pieces.typeRanges[change.piece.type].undefineds.push(idx);
+	pieces.typeRanges.get(change.piece.type)!.undefineds.push(idx);
 }
 
 

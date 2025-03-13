@@ -82,6 +82,11 @@ function getPlayerFromString(string: StrPlayer): Player {
 	return strcolors.indexOf(string) as Player;
 }
 
+function debugType(type: number): string {
+	const [raw, c] = splitType(type);
+	return `[${type}]${getRawTypeStr(raw)}(${strcolors[c]})`;
+}
+
 export type {
 	RawType,
 	Player
@@ -102,5 +107,6 @@ export default {
 	getRawTypeStr,
 	invertPlayer,
 	isRawType,
-	getPlayerFromString
+	getPlayerFromString,
+	debugType
 };

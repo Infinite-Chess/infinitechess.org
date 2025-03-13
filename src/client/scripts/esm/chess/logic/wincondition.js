@@ -4,13 +4,11 @@
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
-import organizedlines from './organizedlines.js';
 import moveutil from '../util/moveutil.js';
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
-import { pieceCountToDisableCheckmate } from '../config.js';
 // Import End
 
 // Type Definitions...

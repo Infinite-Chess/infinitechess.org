@@ -1,7 +1,8 @@
+/* eslint-disable max-depth */
 
 'use strict';
 // 
-import { rawTypes as r, ext as e, players } from "../config.js";
+import { rawTypes as r, ext as e, players as p } from "../config.js";
 import typeutil from "../util/typeutil.js";
 
 /**
@@ -13,7 +14,13 @@ import typeutil from "../util/typeutil.js";
  * compact ICN (Infinite Chess Noation) and back, still human-readable,
  * but taking less space to describe positions.
  */
-    
+
+const playersDict = {
+	[p.WHITE]: "w",
+	[p.BLACK]: "b",
+	[p.NEUTRAL]: "n" // I dont think we need this, good to have in case
+};
+
 const pieceDictionary = {
 	[r.KING + e.W]: "K", [r.KING + e.B]: "k",
 	[r.PAWN + e.W]: "P", [r.PAWN + e.B]: "p",
@@ -89,6 +96,7 @@ function invertDictionary(json) {
 }
 
 const invertedpieceDictionary = invertDictionary(pieceDictionary);
+const invertedplayersDict = invertDictionary(playersDict)
 
 function IntToShort_Piece(intpiece) {
 	let short = pieceDictionary[intpiece];
@@ -106,9 +114,9 @@ function ShortToInt_Piece(shortpiece) {
 
 	const lowerType = results[2];
 
-	if (!pieceDictionary[lowerType]) throw UNKERR;
+	if (!invertedpieceDictionary[lowerType]) throw UNKERR;
 
-	let type = pieceDictionary[lowerType];
+	let type = invertedpieceDictionary[lowerType];
 	if (results[1] !== "") {
 		const player = Number(results[1]);
 		type = typeutil.buildType(typeutil.getRawType(type), player);
@@ -158,13 +166,11 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	if (longformat.metadata) shortformat += whitespace;
 
 	// Turn order
-	const turnOrderArray = []; // ['w','b']
 	if (!longformat.gameRules.turnOrder) throw new Error("turnOrder gamerule MUST be present when compressing a game.");
-	for (const color of longformat.gameRules.turnOrder) {
-		if (color === 'white') turnOrderArray.push('w');
-		else if (color === 'black') turnOrderArray.push('b');
-		else throw new Error(`Invalid color '${color}' when parsing turn order when copying game!`);
-	}
+	const turnOrderArray = longformat.gameRules.turnOrder.map(player => {
+		if (!(player in playersDict)) throw new Error(`Invalid color '${player}' when parsing turn order when copying game!`);
+		return playersDict[player];
+	});
 	let turn_order = turnOrderArray.join(':'); // 'w:b'
 	if (turn_order === 'w:b') turn_order = 'w'; // Short for 'w:b'
 	else if (turn_order === 'b:w') turn_order = 'b'; // Short for 'b:w'
@@ -397,13 +403,10 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			if (string === 'w') string = 'w:b'; // 'w' is short for 'w:b'
 			else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
 			const turnOrderArray = string.split(':'); // ['w','b']
-			const turnOrder = []; // ['white', 'black']
-			for (const colorAbbrev of turnOrderArray) {
-				if (colorAbbrev === 'w') turnOrder.push('white');
-				else if (colorAbbrev === 'b') turnOrder.push('black');
-				else throw new Error(`Unknown color abbreviation "${colorAbbrev}" when parsing turn order while pasting game!`);
-			}
-			longformat.gameRules.turnOrder = turnOrder;
+			longformat.gameRules.turnOrder = [...turnOrderArray.map(playerabbrev => {
+				if (!(playerabbrev in invertedplayersDict)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
+				return invertedplayersDict[playerabbrev];
+			})];
 			continue;
 		}
 
@@ -862,7 +865,7 @@ function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith
  * This can be manually used to compress the starting position of variants of InfiniteChess.org to shrink the size of the code
  * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
  * @param {boolean} pawnDoublePush - Whether pawns are allowed to double push
- * @param {string | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
+ * @param {RawType | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
  * @returns {Object} The specialRights gamefile property, in the form 'x,y':true, where true means the piece at that location has their special move ability (pawn double push, castling rights..)
  */
 function generateSpecialRights(position, pawnDoublePush, castleWith) {

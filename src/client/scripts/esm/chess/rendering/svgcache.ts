@@ -42,7 +42,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 	const locations: Set<RawType> = new Set();
 	typeloop: for (const type of types) {
 		const [raw, c] = typeutil.splitType(type);
-		const baseId = `${typeutil.getRawTypeStr(raw)}s`;
+		const baseId = `${typeutil.getRawTypeStr(raw)}`;
 		const checks: string[] = getPossibleExtensionsOfColor(c);
 		for (const c of checks) {
 			const id = baseId + c;
@@ -62,7 +62,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 	l: for (const type of types) {
 		const tint = preferences.getTintColorOfType(type);
 		const [raw, c] = typeutil.splitType(type);
-		const baseId = `${typeutil.getRawTypeStr(raw)}s`;
+		const baseId = `${typeutil.getRawTypeStr(raw)}`;
 		const checks: string[] = getPossibleExtensionsOfColor(c);
 		for (const c of checks) {
 			const id = baseId + c;

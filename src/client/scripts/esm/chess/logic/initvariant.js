@@ -5,11 +5,8 @@
 
 import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
-import colorutil from '../util/colorutil.js';
-import coordutil from '../util/coordutil.js';
-import variant from '../variants/variant.js';
-import organizedlines from './organizedlines.js';
 import typeutil from '../util/typeutil.js';
+import variant from '../variants/variant.js';
 
 /** 
  * Type Definitions 
@@ -55,7 +52,7 @@ function initExistingTypes(gamefile) {
 	// Promotion types already have teams stripped
 	const rawtypes = new Set(promotiontypes);
 	for (const tpiece of teamtypes) {
-		rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
+		rawtypes.add(typeutil.getRawType(tpiece)); // Make a set with the team color trimmed
 	}
 
 	gamefile.startSnapshot.existingTypes = [...rawtypes];
