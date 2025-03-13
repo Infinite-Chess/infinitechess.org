@@ -117,7 +117,8 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 	const instanceData64: Float64Array = getInstanceDataForTypeList(gamefile, gamefile.ourPieces[type]);
 
-	const svg = svgcache.getSVGElements([type])[0]!;
+	const svg = (await svgcache.getSVGElements([type]))[0]!;
+	console.log("Converting svg to image again..");
 	const image = await svgToImage(svg);
 	const tex = texture.loadTexture(gl, image, { useMipmaps: true });
 
@@ -196,7 +197,7 @@ function shiftAll(gamefile: gamefile) {
 
 	// Go ahead and shift each model
 	for (const meshData of Object.values(gamefile.mesh.types)) {
-		shiftModel(meshData, diffXOffset, diffYOffset);
+		shiftModel(meshData as MeshData, diffXOffset, diffYOffset);
 	}
 }
 
@@ -212,11 +213,11 @@ function shiftModel(meshData: MeshData, diffXOffset: number, diffYOffset: number
 	const instanceData64 = meshData.instanceData64; // High precision floats for performing calculations
 	const instanceData32 = meshData.model.instanceData; // Low precision floats for sending to the gpu
 	for (let i = 0; i < instanceData32.length; i += STRIDE_PER_PIECE) {
-		instanceData64[i] += diffXOffset;
-		instanceData64[i + 1] += diffYOffset;
+		instanceData64[i]! += diffXOffset;
+		instanceData64[i + 1]! += diffYOffset;
 		// Copy the float32 values from the float64 array so as to gain the most precision
-		instanceData32[i] = instanceData64[i];
-		instanceData32[i + 1] = instanceData64[i + 1];
+		instanceData32[i]! = instanceData64[i]!;
+		instanceData32[i + 1]! = instanceData64[i + 1]!;
 	}
 	
 	// Update the buffer on the gpu!
@@ -243,10 +244,10 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
 	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
 		if (type === 'voidsN') continue; // Voids don't need to be rotated, they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
-		const vertexData = meshData.model.vertexData;
+		const vertexData = (meshData as MeshData).model.vertexData;
 		if (vertexData.length !== newVertexData.length) throw Error("New vertex data must be the same length as the existing! Cannot update buffer indices."); // Safety net
 		vertexData.set(newVertexData); // Copies the values over without changing the memory location
-		meshData.model.updateBufferIndices_VertexBuffer(0, vertexData.length); // Send those changes off to the gpu
+		(meshData as MeshData).model.updateBufferIndices_VertexBuffer(0, vertexData.length); // Send those changes off to the gpu
 	}
 }
 
@@ -332,7 +333,7 @@ function renderAll(gamefile: gamefile) {
 	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
 		// Use a custom tint uniform if our theme has custom colors for the players pieces
 		const uniforms = colorArgs ? { tintColor: colorArgs[colorutil.getPieceColorFromType(type)]! } : undefined;
-		meshData.model.render(position, scale, uniforms);
+		(meshData as MeshData).model.render(position, scale, uniforms);
 	}
 }
 
