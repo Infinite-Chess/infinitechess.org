@@ -9,6 +9,7 @@ import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
+import checkdetection from './checkdetection.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
@@ -266,6 +267,14 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
     
 	organizedlines.initOrganizedPieceLists(this);
+
+	{ // Set the game's `inCheck` and `attackers` properties at the front of the game.
+		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(this, this.whosTurn, 'checkmate');
+		const checkResults = checkdetection.detectCheck(this, this.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		this.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
+		if (trackAttackers) this.attackers = checkResults.attackers;
+	}
+
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'white checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
