@@ -116,7 +116,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		/** Whether the position data of each piece mesh is inverted. This will be true if we're viewing black's perspective. @type {boolean} */
 		inverted: undefined,
 		/** An object containing the mesh data for each type of piece in the game. One for every type in `ourPieces` @type {{ [type: string]: MeshData }} */
-		types: undefined,
+		types: {},
 	};
 
 	/** The object that contains the buffer model to render the voids */

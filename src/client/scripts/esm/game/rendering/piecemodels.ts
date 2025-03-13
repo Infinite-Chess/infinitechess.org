@@ -12,7 +12,7 @@ import type { PooledArray } from '../../chess/logic/organizedlines.js';
 import type { gamefile } from '../../chess/logic/gamefile.js';
 
 
-import { BufferModelInstanced, createModel_Instanced } from './buffermodel.js';
+import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';
 import instancedshapes from './instancedshapes.js';
 import preferences from '../../components/header/preferences.js';
@@ -62,6 +62,12 @@ const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrilli
 /** The instance data array stride, per piece. */
 const STRIDE_PER_PIECE = 2; // instanceposition: (x,y)
 
+/** The attribute info of each of the piece type models, excluding voids. */
+const ATTRIBUTE_INFO: AttributeInfoInstanced = {
+	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'texcoord', numComponents: 2 }],
+	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+};
+
 /** The color of void squares */
 const VOID_COLOR: Color = [0, 0, 0, 1];
 // const VOID_COLOR: Color = [0, 0, 1, 0.3]; // Transparent blue for debugging
@@ -87,7 +93,7 @@ async function regenAll(gamefile: gamefile) {
 	// For each piece type in the game, generate its mesh
 	for (const type of Object.keys(gamefile.ourPieces)) { // pawnsW
 		if (type === 'voidsN') gamefile.mesh[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
-		else gamefile.mesh[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+		else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
 }
 
@@ -117,14 +123,14 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 	const instanceData64: Float64Array = getInstanceDataForTypeList(gamefile, gamefile.ourPieces[type]);
 
-	const svg = (await svgcache.getSVGElements([type], 64, 64))[0]!;
+	const svg: SVGElement = (await svgcache.getSVGElements([type], 32, 32))[0]!;
 	console.log("Converting svg to image again..");
-	const image = await svgToImage(svg);
-	const tex = texture.loadTexture(gl, image, { useMipmaps: true });
+	const image: HTMLImageElement = await svgToImage(svg);
+	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
 
 	return {
 		instanceData64,
-		model: createModel_Instanced(vertexData, new Float32Array(instanceData64), 'TRIANGLES', false, tex)
+		model: createModel_Instanced_GivenAttribInfo(vertexData, new Float32Array(instanceData64), ATTRIBUTE_INFO, 'TRIANGLES', tex)
 	};
 }
 

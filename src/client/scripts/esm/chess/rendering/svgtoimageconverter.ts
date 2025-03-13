@@ -41,7 +41,11 @@ function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
 	img.id = svgID; // Set its ID here so its easy to find it in the document later
 
 	return new Promise((resolve, reject) => {
-		img.onload = () => resolve(img);
+		img.onload = () => {
+			// Append the image to the document for debugging
+			// document.body.appendChild(img);
+			resolve(img);
+		};
 		img.onerror = (err) => {
 			console.error(`Error loading image with ID "${svgID}"`, err);
 			reject(new Error(`Failed to load image with ID "${svgID}"`));

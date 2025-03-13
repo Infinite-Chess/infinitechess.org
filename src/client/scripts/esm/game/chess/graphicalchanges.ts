@@ -66,8 +66,7 @@ const animatableChanges: ChangeApplication<animationFunc> = {
 
 
 function addMeshPiece(gamefile: gamefile, change: Change) {
-	if (gamefile.mesh.model === undefined) return; // Mesh isn't generated yet. Don't make this graphical change.
-	else piecemodels.overwritebufferdata(gamefile, change.piece);
+	piecemodels.overwritebufferdata(gamefile, change.piece);
 }
 
 function deleteMeshPiece(gamefile: gamefile, change: Change) {

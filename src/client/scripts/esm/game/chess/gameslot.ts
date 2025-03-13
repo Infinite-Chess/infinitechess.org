@@ -278,8 +278,6 @@ function regenModelOfType(event: CustomEvent) {
 function unloadGame() {
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	
-	// Terminate the mesh algorithm.
-	loadedGamefile.mesh.terminateIfGenerating();
 	loadedGamefile = undefined;
 
 	selection.unselectPiece();
