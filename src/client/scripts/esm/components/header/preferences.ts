@@ -277,7 +277,7 @@ function getTintColorOfType(type: string): { r: number, g: number, b: number, a:
  * Returns the color arrays for the pieces, according to our theme.
  * @returns {Object | undefined} An object containing the properties "white", "black", and "neutral".
  */
-function getPieceRegenColorArgs(): { white: Color, black: Color, neutral: Color } | undefined {
+function getPieceRegenColorArgs(): ColorArgs | undefined {
 	const themeName: string = getTheme();
 	const themeProperties: any = themes.themes[themeName];
 	if (!themeProperties.useColoredPieces) return; // Not using colored pieces

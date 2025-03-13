@@ -19,21 +19,22 @@ import preferences from '../../components/header/preferences.js';
 import colorutil from '../../chess/util/colorutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
+import math from '../../util/math.js';
+import miniimage from './miniimage.js';
+// @ts-ignore
+import perspective from './perspective.js';
+// @ts-ignore
 import texture from './texture.js';
+// @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import movement from './movement.js';
-import math from '../../util/math.js';
-import board from './board.js';
-import miniimage from './miniimage.js';
-import gameslot from '../chess/gameslot.js';
-import perspective from './perspective.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------------
 
 
-/** Mesh data of a single piece type in gamefile.mesh */
+/** Mesh data of a single piece type in gamefile.mesh.types */
 interface MeshData {
 	/** High precision instance data for performing arithmetic. */
 	instanceData64: Float64Array,
@@ -47,19 +48,21 @@ interface MeshData {
 
 /**
  * The interval at which to modify the mesh's linear offset once you travel this distance.
- * 10,000 was arbitrarily chose because once you reach uniform translations much bigger
- * than that, the rendering of the pieces start to get gittery.
+ * 10,000 was arbitrarily chosen because once you reach uniform translations much bigger
+ * than that, the rendering of the pieces start to get somewhat gittery.
  */
 const REGEN_RANGE = 10_000;
 
 /**
  * The distance of which panning will noticably distort the pieces mesh.
- * If we ever shift the piece models by more than this, we regenerate them instead.
+ * If we ever shift the piece models by more than this, we should regenerate them instead.
  */
 const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrillion
 
-const STRIDE_PER_PIECE = 2; // Instance data contains a stride of 2 (x,y)
+/** The instance data array stride, per piece. */
+const STRIDE_PER_PIECE = 2; // instanceposition: (x,y)
 
+/** The color of void squares */
 const VOID_COLOR: Color = [0, 0, 0, 1];
 // const VOID_COLOR: Color = [0, 0, 1, 0.3]; // Transparent blue for debugging
 
@@ -69,10 +72,12 @@ const VOID_COLOR: Color = [0, 0, 0, 1];
 
 /**
  * Regenerates every single piece mesh in the gamefile.
- * Call when starting a game.
+ * Call when first loading a game.
+ * 
+ * SLOWEST. Minimize calling.
  */
 async function regenAll(gamefile: gamefile) {
-	console.log("Regenerating all type meshes.");
+	console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
 	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
@@ -82,27 +87,28 @@ async function regenAll(gamefile: gamefile) {
 	// For each piece type in the game, generate its mesh
 	for (const type of Object.keys(gamefile.ourPieces)) { // pawnsW
 		if (type === 'voidsN') gamefile.mesh[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
-		else gamefile.mesh[type] = await genTypeModel(gamefile, type); // Normal generation logic
+		else gamefile.mesh[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
 }
 
 /**
  * Regenerates the single model of the provided type.
- * Call after adding more undefined placeholders to a type list.
+ * Call externally after adding more undefined placeholders to a type list.
  * @param gamefile
- * @param type - The type of piece to regen the model of (e.g. 'pawnsW')
+ * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
 async function regenType(gamefile: gamefile, type: string) {
-	console.log(`Regenerating mesh of type ${type}.`)
+	console.log(`Regenerating mesh of type ${type}.`);
 
 	if (type === 'voidsN') gamefile.mesh[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
-	else gamefile.mesh[type] = await genTypeModel(gamefile, type); // Normal generation logic
+	else gamefile.mesh[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 }
 
 /**
- * Generates the mesh data for a specific piece type in the gamefile.
- * SLOWEST. Minimize calling.
+ * Generates the mesh data for a specific piece type in the gamefile that has a texture. (not compatible with voids)
  * Must be called whenever we add more undefineds placeholders to the this piece list.
+ * 
+ * SLOWEST. Minimize calling.
  * @param gamefile
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
@@ -118,13 +124,14 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
 	return {
 		instanceData64,
 		model: createModel_Instanced(vertexData, new Float32Array(instanceData64), 'TRIANGLES', false, tex)
-	}
+	};
 }
 
 /**
  * Generates the model of the voids in the game.
- * SLOWEST. Minimize calling.
  * Must be called whenever we add more undefineds placeholders to the voids piece list.
+ * 
+ * SLOWEST. Minimize calling.
  */
 function genVoidModel(gamefile: gamefile): MeshData {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR);
@@ -133,12 +140,13 @@ function genVoidModel(gamefile: gamefile): MeshData {
 	return {
 		instanceData64,
 		model: createModel_Instanced(vertexData, new Float32Array(instanceData64), 'TRIANGLES', true)
-	}
+	};
 }
 
 /**
  * Calculates the instance data of a piece list that will go into its mesh constructor.
  * The instance data contains only the offset of each piece instance, with a stride of 2.
+ * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
 function getInstanceDataForTypeList(gamefile: gamefile, pieceList: PooledArray<Coords>): Float64Array {
 	const instanceData64: Float64Array = new Float64Array(pieceList.length * STRIDE_PER_PIECE); // Initialize with all 0's
@@ -146,7 +154,7 @@ function getInstanceDataForTypeList(gamefile: gamefile, pieceList: PooledArray<C
 	let currIndex: number = 0;
 	pieceList.forEach((coords: Coords | undefined) => {
 		if (coords === undefined) {
-			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there's a visible void at [0,0]
+			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
 			instanceData64[currIndex + 1] = Infinity;
 		} else {
@@ -165,12 +173,12 @@ function getInstanceDataForTypeList(gamefile: gamefile, pieceList: PooledArray<C
 
 
 /**
- * Shifts the vertex data of each piece mesh in the game to require less severe
+ * Shifts the instance data of each piece mesh in the game to require less severe
  * uniform translations upon rendering, and reinits them on the gpu.
- * Faster than {@link regenAll}
+ * Faster than {@link regenAll}.
  */
 function shiftAll(gamefile: gamefile) {
-	console.log("Shifting all piece meshes.")
+	console.log("Shifting all piece meshes.");
 
 	const newOffset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
 
@@ -194,10 +202,10 @@ function shiftAll(gamefile: gamefile) {
 
 /**
  * Shifts the vertex data of the piece model and reinits it on the gpu.
- * Faster than {@link genTypeModel}
+ * Faster than {@link regenType} or {@link genTypeModel}.
  * @param meshData - An object containing the instanceData64, and the actual model.
- * @param diffXOffset - The x-amount to shift the model's vertex data
- * @param diffYOffset - The y-amount to shift the model's vertex data
+ * @param diffXOffset - The x-amount to shift the model's vertex data.
+ * @param diffYOffset - The y-amount to shift the model's vertex data.
  */
 function shiftModel(meshData: MeshData, diffXOffset: number, diffYOffset: number): void {
 
@@ -233,7 +241,7 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
 	const newVertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 
 	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
-		if (type === 'voidsN') continue;
+		if (type === 'voidsN') continue; // Voids don't need to be rotated, they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
 		const vertexData = meshData.model.vertexData;
 		if (vertexData.length !== newVertexData.length) throw Error("New vertex data must be the same length as the existing! Cannot update buffer indices."); // Safety net
@@ -247,11 +255,12 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
 
 
 /**
- * Overwrites the instance data of the specified void within the
- * void mesh with the new coordinates of the instance.
+ * Overwrites the instance data of the specified piece within its
+ * piece type mesh with the new coordinates of the instance.
  * Then sends that change off to the gpu.
  * 
- * FAST, much faster than regenerating or shifting the entire mesh!
+ * FAST, much faster than regenerating the entire mesh
+ * whenever a piece moves or something is captured/generated!
  */
 function overwritebufferdata(gamefile: gamefile, piece: Piece) {
 	const meshData = gamefile.mesh.types[piece.type];
@@ -266,13 +275,15 @@ function overwritebufferdata(gamefile: gamefile, piece: Piece) {
 	meshData.model.instanceData[i + 1] = offsetCoord[1];
 
 	// Update the buffer on the gpu!
-	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE);
+	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE); // Update only the indices the piece is at
 }
 
 /**
- * Deletes the instance data of the specified void within the void mesh
+ * Deletes the instance data of the specified piece within its piece type mesh
  * by overwriting it with Infinity's, then sends that change off to the gpu.
- * FAST, much faster than regenerating or shifting the entire mesh!
+ * 
+ * FAST, much faster than regenerating the entire mesh
+ * whenever a piece moves or something is captured/generated!
  */
 function deletebufferdata(gamefile: gamefile, piece: { type: string, index: number }) {
 	const meshData = gamefile.mesh.types[piece.type];
@@ -285,7 +296,7 @@ function deletebufferdata(gamefile: gamefile, piece: { type: string, index: numb
 	meshData.model.instanceData[i + 1] = Infinity;
 
 	// Update the buffer on the gpu!
-	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE);
+	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE); // Update only the indices the piece was at
 }
 
 
@@ -293,7 +304,8 @@ function deletebufferdata(gamefile: gamefile, piece: { type: string, index: numb
 
 
 /**
- * Renders the void mesh of the game, translating and scaling into position.
+ * Renders ever piece type mesh of the game, including voids,
+ * translating and scaling them into position.
  */
 function renderAll(gamefile: gamefile) {
 	if (movement.isScaleLess1Pixel_Virtual() && !miniimage.isDisabled()) return;
@@ -320,12 +332,12 @@ function renderAll(gamefile: gamefile) {
 	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
 		// Use a custom tint uniform if our theme has custom colors for the players pieces
 		const uniforms = colorArgs ? { tintColor: colorArgs[colorutil.getPieceColorFromType(type)]! } : undefined;
-		meshData.model.render(position, scale, uniforms); // Specifies the tint uniform value before rendering
+		meshData.model.render(position, scale, uniforms);
 	}
 }
 
 /**
- * Tests if the board position is atleast regenRange-distance away from the current offset.
+ * Tests if the board position is atleast REGEN_RANGE-distance away from the current offset.
  * If so, each piece mesh data should be shifted to require less severe uniform translations when rendering.
  */
 function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
@@ -344,7 +356,6 @@ export default {
 	REGEN_RANGE,
 	regenAll,
 	regenType,
-	shiftAll,
 	overwritebufferdata,
 	deletebufferdata,
 	renderAll,
