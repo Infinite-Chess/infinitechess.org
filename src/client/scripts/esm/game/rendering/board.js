@@ -18,7 +18,6 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
-import piecemodels from './piecemodels.js';
 // Import End
 
 /** 

@@ -95,7 +95,7 @@ async function regenAll(gamefile: gamefile) {
 
 	// For each piece type in the game, generate its mesh
 	for (const type of Object.keys(gamefile.ourPieces)) { // pawnsW
-		if (type === 'voidsN') gamefile.mesh[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
+		if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
 		else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
 }
@@ -109,8 +109,8 @@ async function regenAll(gamefile: gamefile) {
 async function regenType(gamefile: gamefile, type: string) {
 	console.log(`Regenerating mesh of type ${type}.`);
 
-	if (type === 'voidsN') gamefile.mesh[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
-	else gamefile.mesh[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+	if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
+	else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 }
 
 /**

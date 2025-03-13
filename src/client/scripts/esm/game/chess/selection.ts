@@ -316,6 +316,7 @@ function canDropOnPieceTypeInEditMode(type?: string) {
 	const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected!.type);
 	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
 	return !type.startsWith('voids') && (color !== selectedPieceColor);
+	// return color !== selectedPieceColor; // Allow capturing voids for debugging
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
