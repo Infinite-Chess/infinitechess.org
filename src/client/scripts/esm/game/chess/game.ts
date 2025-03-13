@@ -54,8 +54,6 @@ import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
-import loadbalancer from '../misc/loadbalancer.js';
-// @ts-ignore
 import websocket from '../websocket.js';
 // @ts-ignore
 import camera from '../rendering/camera.js';
@@ -63,6 +61,8 @@ import camera from '../rendering/camera.js';
 import copypastegame from './copypastegame.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -126,7 +126,10 @@ function updateBoard(gamefile: gamefile) {
 	if (input.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
 	if (input.isKeyDown('escape')) guipause.toggle();
 	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (input.isKeyDown('r')) piecemodels.regenAll(gamefile);
+	if (input.isKeyDown('r')) {
+		piecemodels.regenAll(gamefile);
+		statustext.showStatus('Regenerated piece models.', false, 0.5);
+	}
 	if (input.isKeyDown('n')) {
 		guinavigation.toggle();
 		guigameinfo.toggle();
