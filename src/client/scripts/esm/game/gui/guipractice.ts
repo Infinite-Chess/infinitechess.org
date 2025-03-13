@@ -320,56 +320,49 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
  */
 function updateBadges(numCompleted: number, numTotal: number) {
 	const areLoggedIn = validatorama.areWeLoggedIn();
+    
+	// Configuration for each badge type
+	const badgeConfigs = [
+        {
+        	element: element_checkmateBadgeBronze,
+        	image: element_checkmateBadgeBronzeImage,
+        	shines: elements_checkmateBadgeBronzeShine,
+        	threshold: 0.5,
+        	earnedKey: "checkmate_bronze",
+        	unearnedKey: "checkmate_bronze_unearned"
+        },
+        {
+        	element: element_checkmateBadgeSilver,
+        	image: element_checkmateBadgeSilverImage,
+        	shines: elements_checkmateBadgeSilverShine,
+        	threshold: 0.75,
+        	earnedKey: "checkmate_silver",
+        	unearnedKey: "checkmate_silver_unearned"
+        },
+        {
+        	element: element_checkmateBadgeGold,
+        	image: element_checkmateBadgeGoldImage,
+        	shines: elements_checkmateBadgeGoldShine,
+        	threshold: 1,
+        	earnedKey: "checkmate_gold",
+        	unearnedKey: "checkmate_gold_unearned"
+        }
+    ];
 
-	// Update the badges
-	if (element_checkmateBadgeBronze && element_checkmateBadgeBronzeImage) {
-		if (numCompleted >= 0.5 * numTotal && areLoggedIn) {
-			element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze"]);
-			element_checkmateBadgeBronzeImage.classList.remove("unearned");
-			for (const element_shine of elements_checkmateBadgeBronzeShine) {
-				element_shine.classList.remove("hidden");
-			}
-		} else {
-			if (areLoggedIn) element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_bronze_unearned"]);
-			else element_checkmateBadgeBronze.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeBronzeImage.classList.add("unearned");
-			for (const element_shine of elements_checkmateBadgeBronzeShine) {
-				element_shine.classList.add("hidden");
-			}
-		}
-	}
-	if (element_checkmateBadgeSilver && element_checkmateBadgeSilverImage) {
-		if (numCompleted >= 0.75 * numTotal && areLoggedIn) {
-			element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver"]);
-			element_checkmateBadgeSilverImage.classList.remove("unearned");
-			for (const element_shine of elements_checkmateBadgeSilverShine) {
-				element_shine.classList.remove("hidden");
-			}
-		} else {
-			if (areLoggedIn) element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_silver_unearned"]);
-			else element_checkmateBadgeSilver.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeSilverImage.classList.add("unearned");
-			for (const element_shine of elements_checkmateBadgeSilverShine) {
-				element_shine.classList.add("hidden");
-			}
-		}
-	}
-	if (element_checkmateBadgeGold && element_checkmateBadgeGoldImage) {
-		if (numCompleted >= numTotal && areLoggedIn) {
-			element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold"]);
-			element_checkmateBadgeGoldImage.classList.remove("unearned");
-			for (const element_shine of elements_checkmateBadgeGoldShine) {
-				element_shine.classList.remove("hidden");
-			}
-		} else {
-			if (areLoggedIn) element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_gold_unearned"]);
-			else element_checkmateBadgeGold.setAttribute('data-tooltip', translations["checkmate_logged_out"]);
-			element_checkmateBadgeGoldImage.classList.add("unearned");
-			for (const element_shine of elements_checkmateBadgeGoldShine) {
-				element_shine.classList.add("hidden");
-			}
-		}
-	}
+	badgeConfigs.forEach(config => {
+		if (!config.element || !config.image) return;
+
+		const isEarned = numCompleted >= config.threshold * numTotal && areLoggedIn;
+		const tooltip = isEarned ? translations[config.earnedKey]
+            		  : areLoggedIn ? translations[config.unearnedKey]
+                	  : translations['checkmate_logged_out'];
+					  
+		config.element.setAttribute('data-tooltip', tooltip); // Update tooltip
+		config.image.classList.toggle("unearned", !isEarned); // Update badge appearance
+		config.shines?.forEach(shine => // Update shine elements
+			shine.classList.toggle("hidden", !isEarned)
+		);
+	});
 }
 
 function callback_practiceBack(event: Event) {
