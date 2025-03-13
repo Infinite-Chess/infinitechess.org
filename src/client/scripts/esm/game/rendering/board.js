@@ -82,11 +82,6 @@ let darkTiles;
 	document.addEventListener('theme-change', (event) => { // Custom Event listener.
 		console.log(`Theme change event detected: ${preferences.getTheme()}`);
 		updateTheme();
-		/**
-		 * WE DON'T even need to do this anymore, since the theme
-		 * color arguments are applied as a uniform tint every render!
-		 */
-		// piecemodels.regenAll(gameslot.getGamefile());
 	});
 })();
 

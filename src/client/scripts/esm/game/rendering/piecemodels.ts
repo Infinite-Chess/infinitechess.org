@@ -46,6 +46,15 @@ interface MeshData {
 // Variables ----------------------------------------------------------------------------------------
 
 
+/**
+ * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
+ * 
+ * We can't solve that problem by using blending mode ALWAYS because we need animations
+ * to be able to mask (block out) the currently-animated piece by rendering a transparent square
+ * on the animated piece's destination that is higher in the depth buffer.
+ */
+const Z: number = 0.001;
+
 /** The preferred image width each piece type's image should be. */
 const IMG_SIZE = 512;
 
@@ -333,7 +342,7 @@ function renderAll(gamefile: gamefile) {
 	const position: [number,number,number] = [ // Translate
         -boardPos[0] + gamefile.mesh.offset[0], // Add the model's offset. 
         -boardPos[1] + gamefile.mesh.offset[1],
-        0
+        Z
     ]; // While separate these may each be big decimals, TOGETHER they should be small! No graphical glitches.
 	const boardScale = movement.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];

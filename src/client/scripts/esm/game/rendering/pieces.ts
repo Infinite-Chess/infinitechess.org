@@ -25,15 +25,6 @@ import shapes from './shapes.js';
 /** Opacity of ghost piece over legal move highlights. Default: 0.4 */
 const ghostOpacity: number = 0.4;
 
-/**
- * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
- * 
- * We can't solve that problem by using blending mode ALWAYS because we need animations
- * to be able to block out the currently-animated piece by rendering a transparent square
- * on the animated piece's destination that is higher in the depth buffer.
- */
-const z: number = 0.001;
-
 
 // Functions -----------------------------------------------------------------------
 
