@@ -690,7 +690,7 @@ canvas {
 .checkmate-progress-bar {
     position: relative;
     width: 60%;
-    height: 1.4em;
+    height: 1.2em;
     outline-style: solid;
     outline-width: 0.1em;
     border-radius: 0.25em;
@@ -702,15 +702,15 @@ canvas {
 .badge {
     position: absolute;
     height: 2.6em;
+    user-select: none;
 }
 
 .badge img {
     height: 100%;
 }
 
-.badge img:hover {
+.badge:hover img {
     transition: transform 0.4s ease;
-    user-select: none;
     transform: scale(1.1);
 }
 
@@ -733,6 +733,8 @@ canvas {
 }
 
 /* Badge shine properties are in header.css since they are shared with badges on play page */
+
+
 
 .checkmatepiececontainer {
     align-self: center;

@@ -300,12 +300,25 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
 			numCompleted++;
 		} else element.classList.remove('beaten');
 	}
+
 	// Update the progress and progress bar
 	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
 	element_progress.textContent = `${numCompleted} / ${numTotal}`;
 	const percentageBeaten = 100 * numCompleted / numTotal;
 	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
 
+	// Update the badges
+	updateBadges(numCompleted, numTotal);
+}
+
+/**
+ * Updates the styling of the badges on the progress bar,
+ * to grey-out the unearned ones and shine the earned ones.
+ * And also update their tooltips.
+ * @param numCompleted - Number of checkmates completed
+ * @param numTotal - Total number of checkmates
+ */
+function updateBadges(numCompleted: number, numTotal: number) {
 	const areLoggedIn = validatorama.areWeLoggedIn();
 
 	// Update the badges
@@ -357,7 +370,6 @@ function updateCheckmatesBeaten(completedCheckmates : string[]) {
 			}
 		}
 	}
-	
 }
 
 function callback_practiceBack(event: Event) {

@@ -1,6 +1,6 @@
 {
 	"44": {
-		"note": "Removed progress_checkmate from line 333 and added 7 more translations in lines 338-344 in play.javascript",
+		"note": "Replaced progress_checkmate on line 333 with a comment, and added 7 more translations on lines 339-345 in play.javascript",
 		"changes": []
 	},
 	"43": {

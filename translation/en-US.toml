@@ -330,6 +330,7 @@ webgl_unsupported = "Please upgrade your browser! It does not support WebGL2."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 shaders_failed = "Unable to initialize the shader program:"
 failed_compiling_shaders = "An error occurred compiling the shaders:"
+# Checkmate Practice
 versus = "vs"
 easy = "Easy"
 medium = "Medium"
