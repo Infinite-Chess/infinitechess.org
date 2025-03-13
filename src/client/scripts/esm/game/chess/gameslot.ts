@@ -40,8 +40,6 @@ import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
-import piecesmodel from "../rendering/piecesmodel.js";
-// @ts-ignore
 import selection from "./selection.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";

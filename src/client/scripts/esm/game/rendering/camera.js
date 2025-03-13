@@ -22,8 +22,6 @@ import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import movement from './movement.js';
 import statustext from '../gui/statustext.js';
-import piecesmodel from './piecesmodel.js';
-import gameslot from '../chess/gameslot.js';
 // Import End
 
 /**
