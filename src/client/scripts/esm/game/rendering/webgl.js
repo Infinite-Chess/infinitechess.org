@@ -108,30 +108,9 @@ function clearScreen() {
  * their color shaded onto the color behind them.
  */
 function toggleNormalBlending() {
-	enableBlending_NonPremultipliedAlpha();
-}
-
-/**
- * Toggles non-premultiplied alpha blending mode.
- * 
- * Used in most use cases.
- */
-function enableBlending_NonPremultipliedAlpha() { 
+	// Non-premultiplied alpha blending mode. (Pre-multiplied would be gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
 }
-
-/**
- * Toggles pre-multiplied alpha blending mode.
- * 
- * This is useful for rendering textures where the image themselves have transparency
- * in them, vs just the vertex data contains custom color to multiply by.
- * 
- * Patches a Firefox bug where rendering transparent images severely darkens
- * the other RGB channels, which probably is a result of double-multiplying the alpha.
- * 
- * BUT CREATES a chrome bug where the RGB channels are too bright.
- */
-function enableBlending_PremultipliedAlpha() { gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
 
 /**
  * Toggles inverse blending mode, which will negate any color currently in the buffer.
@@ -165,12 +144,6 @@ function executeWithDepthFunc_ALWAYS(func, ...args) {
  */
 function executeWithInverseBlending(func) {
 	enableBlending_Inverse();
-	func();
-	toggleNormalBlending();
-}
-
-function executeWithBlending_PremultipliedAlpha(func) {
-	enableBlending_PremultipliedAlpha();
 	func();
 	toggleNormalBlending();
 }
@@ -292,7 +265,6 @@ export default {
 	init,
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,
-	executeWithBlending_PremultipliedAlpha,
 	executeWithInverseBlending,
 	setClearColor,
 	queryWebGLContextInfo,

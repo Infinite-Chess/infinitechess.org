@@ -1,4 +1,13 @@
 
+/**
+ * This script can convert SVG elements into HTMLImageElements.
+ * 
+ * It also can normalize the pixel data of an image by drawing it onto a canvas and re-serializing it.
+ */
+
+
+// Functions --------------------------------------------------------------------------
+
 
 /** Converts a list of SVGs into a list of HTMLImageElements */
 async function convertSVGsToImages(svgElements: SVGElement[]) {
@@ -10,12 +19,10 @@ async function convertSVGsToImages(svgElements: SVGElement[]) {
 			readyImages.push(img);
 		}
 	} catch (e) {
-		console.log("Error caught while converting SVGs to Images:");
-		console.log((e as Error).stack);
+		console.error("Error caught while converting SVGs to Images:", e);
 	}
 	return readyImages;
 }
-
 
 /**
  * Converts an SVG element to an Image element by serializing the SVG and creating a data URL.
@@ -53,9 +60,49 @@ function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
 	});
 }
 
+/**
+ * Normalizes the pixel data of an image by drawing it onto a canvas and re-serializing it.
+ * This used for patching a Firefox bug where it unintentionally darkens the image by double-multiplying the RGB channels by the alpha channel.
+ * 
+ * We don't have to do this for the spritesheet images, because the spritesheet generator ALREADY
+ * draws the images onto a large canvas and re-serializes them.
+ * @param img - The image to normalize.
+ * @returns A promise that resolves with the normalized image.
+ */
+async function normalizeImagePixelData(img: HTMLImageElement): Promise<HTMLImageElement> {
+	/** The image width each piece type's image should be. */
+	const IMG_SIZE = 512; // High to retain as much resolution as possible during the drawing and re-serialization.
+
+	// Proceed with canvas creation
+	const canvas = document.createElement('canvas');
+	canvas.width = IMG_SIZE;
+	canvas.height = IMG_SIZE;
+	const ctx = canvas.getContext('2d');
+	if (ctx === null) throw new Error('2D context null.');
+	
+	// Draw original image
+	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  
+	// Return as standardized image
+	const processedImg = new Image();
+	processedImg.src = canvas.toDataURL();
+	processedImg.id = img.id; // Give it the same ID as the original
+
+	// Wait for the image to load
+	await processedImg.decode();
+
+	// Append the image to the document for debugging
+	// document.body.appendChild(img);
+
+	return processedImg;
+}
 
 
-export {
+// Exports -------------------------------------------------------------------------
+
+
+export default {
 	convertSVGsToImages,
 	svgToImage,
+	normalizeImagePixelData,
 };
