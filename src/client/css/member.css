@@ -105,6 +105,8 @@ main {
 .badge {
     transition: transform 0.4s ease;
     user-select: none;
+    width: 60px;
+    height: 60px;
 }
   
 .badge:hover {
@@ -113,7 +115,6 @@ main {
 
 #badgelist {
     display: flex;
-    height: 60px;
 }
 
 #badgelist img {
