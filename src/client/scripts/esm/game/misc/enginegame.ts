@@ -88,7 +88,7 @@ function initEngineGame(options: {
 		// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
 		// We have to manually send this message at the top of our engines.
 		engineWorker!.onmessage = (e: MessageEvent) => {
-			if (e.data === 'isready') resolve(); // Engine is ready!
+			if (e.data === 'readyok') resolve(); // Engine is ready!
 		};
 		engineWorker!.onerror = (e: ErrorEvent) => {
 			console.error("Worker failed to load:", e);
