@@ -14,7 +14,7 @@ import type { Coords } from '../../chess/logic/movesets.js';
 
 
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import svgtoimageconverter from '../../chess/rendering/svgtoimageconverter.js';
+import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import jsutil from '../../util/jsutil.js';
 // @ts-ignore

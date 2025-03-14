@@ -20,7 +20,7 @@ import colorutil from '../../chess/util/colorutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import math from '../../util/math.js';
 import miniimage from './miniimage.js';
-import svgtoimageconverter from '../../chess/rendering/svgtoimageconverter.js';
+import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
