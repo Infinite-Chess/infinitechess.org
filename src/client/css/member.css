@@ -96,104 +96,32 @@ main {
 }
 
 
-
-
-
 /* Badges */
+
+.badge {
+    position: relative;
+}
+
+.badge {
+    transition: transform 0.4s ease;
+    user-select: none;
+    width: 60px;
+    height: 60px;
+}
+  
+.badge:hover {
+    transform: scale(1.1);
+}
 
 #badgelist {
     display: flex;
-    height: 60px;
 }
 
 #badgelist img {
     height: 100%;
 }
 
-.badge {
-  position: relative;
-  transition: transform 0.4s ease;
-  user-select: none;
-}
-
-.badge:hover {
-    transform: scale(1.1);
-}
-
-#checkmate-badge-bronze {
-    --shine-color: rgba(229, 203, 180, 0.3);
-}
-
-#checkmate-badge-silver {
-    --shine-color: rgba(192, 192, 192, 0.22);
-}
-
-#checkmate-badge-gold {
-    --shine-color: rgba(255, 215, 0, 0.24);
-}
-  
-.badge .shine-clockwise, .badge .shine-anticlockwise {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 200%;
-    height: 200%;
-    transform: translate(-50%, -50%);
-    /* Conic gradient produces the rays */
-    background: conic-gradient(from 0deg,
-    var(--shine-color) 0deg 15deg,
-    transparent 15deg 35deg,
-    var(--shine-color) 35deg 50deg,
-    transparent 50deg 80deg,
-    var(--shine-color) 80deg 95deg,
-    transparent 95deg 115deg,
-    var(--shine-color) 115deg 130deg,
-    transparent 130deg 160deg,
-    var(--shine-color) 160deg 175deg,
-    transparent 175deg 195deg,
-    var(--shine-color) 195deg 210deg,
-    transparent 210deg 240deg,
-    var(--shine-color) 240deg 255deg,
-    transparent 255deg 275deg,
-    var(--shine-color) 275deg 290deg,
-    transparent 290deg 320deg,
-    var(--shine-color) 320deg 335deg,
-    transparent 339deg 360deg);
-    /* Use a radial mask to fade the rays proportional to distance */
-    mask-image: radial-gradient(circle, black 30%, transparent 60%);
-    -webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    animation: rotateShine linear infinite;
-    pointer-events: none;  /* This prevents the shine from being part of the hover area */
-    z-index: -1;
-}
-
-.badge .shine-clockwise {
-    animation-direction: normal;
-    animation-duration: 13s;
-}
-
-.badge .shine-anticlockwise {
-    animation-direction: reverse;
-    animation-duration: 26s;
-}
-
-.badge:hover .shine-clockwise, .badge:hover .shine-anticlockwise {
-    opacity: 1;
-}
-
-@keyframes rotateShine {
-    from {
-        transform: translate(-50%, -50%) rotate(0deg);
-    }
-    to {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
-}
-
-
-
+/* Badge shine properties are in header.css since they are shared with badges on play page */
 
 
 #stats {

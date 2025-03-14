@@ -14,7 +14,7 @@ import type { Coords } from '../../chess/logic/movesets.js';
 
 
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
+import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 import typeutil from '../../chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 // @ts-ignore
@@ -69,7 +69,7 @@ function getSpritesheetDataTexLocation(type: number): Coords {
 
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
-	console.log(...gamefile.ourPieces.typeRanges.keys())
+	console.log(...gamefile.ourPieces.typeRanges.keys());
 	const types = [...gamefile.ourPieces.typeRanges.keys()].filter(t => {return !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES);});
 
 	/**
@@ -81,7 +81,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	// console.log("Finished acquiring all piece SVGs!");
 
 	// Convert each SVG element to an Image
-	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
+	const readyImages: HTMLImageElement[] = await svgtoimageconverter.convertSVGsToImages(svgElements);
 
 	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
 	// console.log(spritesheetAndSpritesheetData.spritesheetData);

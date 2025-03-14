@@ -177,8 +177,25 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	// Append filter and apply it to the SVG
 	filter.appendChild(feColorMatrix);
 	defs.appendChild(filter);
+
 	// Apply the filter to the SVG element.
-	svgElement.setAttribute('filter', `url(#${filterId})`);
+	// svgElement.setAttribute('filter', `url(#${filterId})`);
+	{ // FIREFOX PATCH. Without this block, in firefox when converting the svg to an image, the filter is not applied.
+		// Create a <g> element to wrap all children (except <defs>)
+		const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+		group.setAttribute('filter', `url(#${filterId})`);
+
+		// Move all children (except <defs>) into the <g> element
+		const children = Array.from(svgElement.childNodes);
+		for (const child of children) {
+			if (child !== defs) {
+				group.appendChild(child);
+			}
+		}
+
+		// Append the <g> element to the SVG
+		svgElement.appendChild(group);
+	}
 
 	return svgElement;
 }

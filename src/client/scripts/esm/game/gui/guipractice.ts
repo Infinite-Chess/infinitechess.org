@@ -7,6 +7,7 @@
 
 import checkmatepractice from '../chess/checkmatepractice.js';
 import guititle from './guititle.js';
+import validatorama from '../../util/validatorama.js';
 import validcheckmates from '../../chess/util/validcheckmates.js';
 // @ts-ignore
 import style from './style.js';
@@ -25,9 +26,20 @@ const element_practiceSelection: HTMLElement = document.getElementById('practice
 const element_practiceName: HTMLElement = document.getElementById('practice-name')!;
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
+const element_progress: HTMLElement = document.querySelector('.checkmate-progress')!;
 const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
 const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
+
+const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
+const element_checkmateBadgeBronzeImage = document.querySelector('#checkmate-badge-bronze img') as HTMLElement;
+const elements_checkmateBadgeBronzeShine = document.querySelectorAll('#checkmate-badge-bronze .shine-clockwise, #checkmate-badge-bronze .shine-anticlockwise');
+const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
+const element_checkmateBadgeSilverImage = document.querySelector('#checkmate-badge-silver img') as HTMLElement;
+const elements_checkmateBadgeSilverShine = document.querySelectorAll('#checkmate-badge-silver .shine-clockwise, #checkmate-badge-silver .shine-anticlockwise');
+const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
+const element_checkmateBadgeGoldImage = document.querySelector('#checkmate-badge-gold img') as HTMLElement;
+const elements_checkmateBadgeGoldShine = document.querySelectorAll('#checkmate-badge-gold .shine-clockwise, #checkmate-badge-gold .shine-anticlockwise');
 
 let checkmateSelectedID: string = validcheckmates.validCheckmates.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
@@ -56,7 +68,17 @@ const SCROLL: {
 	friction: 0.9
 };
 
+/** Whether the practice page is open */
+let isOpen: boolean = false;
+
 // Functions ------------------------------------------------------------------------
+
+
+// Set an event listener, for when the theme changes, to re-generate the icons, as their color may change
+document.addEventListener('theme-change', () => {
+	removePieceIcons(); // Remove the existing icons
+	if (isOpen) addPieceIcons(); // Regenerate the icons so they can update their color, if the new theme has different color arguments
+});
 
 
 /**
@@ -68,6 +90,7 @@ function getCheckmateSelectedID() {
 }
 
 function open() {
+	isOpen = true;
 	element_practiceSelection.classList.remove("hidden");
 	element_menuExternalLinks.classList.remove("hidden");
 	if (!generatedHTML) createPracticeHTML();
@@ -78,6 +101,7 @@ function open() {
 }
 
 function close() {
+	isOpen = false;
 	clearScrollMomentumInterval();
 	element_practiceSelection.classList.add("hidden");
 	element_menuExternalLinks.classList.add("hidden");
@@ -171,6 +195,27 @@ async function addPieceIcons() {
 		actualpieceBlack.appendChild(spriteBlack);
 	}
 	generatedIcons = true;
+}
+
+/**
+ * Removes the piece icons from the checkmate lists.
+ * Called when the theme changes.
+ */
+function removePieceIcons() {
+	for (const checkmate of element_checkmates.children) {
+		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
+			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
+			while (actualpiece.firstChild) {
+				actualpiece.removeChild(actualpiece.firstChild);
+			}
+		}
+		const pieceBlack = checkmate.getElementsByClassName('piecelistB')[0]!.getElementsByClassName('checkmatepiececontainer')[0]!;
+		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
+		while (actualpieceBlack.firstChild) {
+			actualpieceBlack.removeChild(actualpieceBlack.firstChild);
+		}
+	}
+	generatedIcons = false; // Reset the icon generation flag
 }
 
 function initListeners() {
@@ -276,20 +321,79 @@ function changeCheckmateSelected(checkmateid: string) {
  * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
  */
 function updateCheckmatesBeaten(completedCheckmates : string[]) {
-	let amountBeaten = 0;
+	let numCompleted = 0;
 	for (const element of element_checkmates.children) {
 		// What is the id string of this checkmate?
 		const id_string = element.id; // "2Q-1k"
 		// If this id is inside our list of beaten checkmates, add the beaten class
 		if (completedCheckmates.includes(id_string)) {
 			element.classList.add('beaten');
-			amountBeaten++;
+			numCompleted++;
 		} else element.classList.remove('beaten');
 	}
-	// Update the progress bar
-	element_progressBar.textContent = `${translations['progress_checkmate']}: ${amountBeaten} / ${element_checkmates.children.length}`;
-	const percentageBeaten = 100 * amountBeaten / element_checkmates.children.length;
+
+	// Update the progress and progress bar
+	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
+	element_progress.textContent = `${numCompleted} / ${numTotal}`;
+	const percentageBeaten = 100 * numCompleted / numTotal;
 	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
+
+	// Update the badges
+	updateBadges(numCompleted, numTotal);
+}
+
+/**
+ * Updates the styling of the badges on the progress bar,
+ * to grey-out the unearned ones and shine the earned ones.
+ * And also update their tooltips.
+ * @param numCompleted - Number of checkmates completed
+ * @param numTotal - Total number of checkmates
+ */
+function updateBadges(numCompleted: number, numTotal: number) {
+	const areLoggedIn = validatorama.areWeLoggedIn();
+    
+	// Configuration for each badge type
+	const badgeConfigs = [
+        {
+        	element: element_checkmateBadgeBronze,
+        	image: element_checkmateBadgeBronzeImage,
+        	shines: elements_checkmateBadgeBronzeShine,
+        	threshold: 0.5,
+        	earnedKey: "checkmate_bronze",
+        	unearnedKey: "checkmate_bronze_unearned"
+        },
+        {
+        	element: element_checkmateBadgeSilver,
+        	image: element_checkmateBadgeSilverImage,
+        	shines: elements_checkmateBadgeSilverShine,
+        	threshold: 0.75,
+        	earnedKey: "checkmate_silver",
+        	unearnedKey: "checkmate_silver_unearned"
+        },
+        {
+        	element: element_checkmateBadgeGold,
+        	image: element_checkmateBadgeGoldImage,
+        	shines: elements_checkmateBadgeGoldShine,
+        	threshold: 1,
+        	earnedKey: "checkmate_gold",
+        	unearnedKey: "checkmate_gold_unearned"
+        }
+    ];
+
+	badgeConfigs.forEach(config => {
+		if (!config.element || !config.image) return;
+
+		const isEarned = numCompleted >= config.threshold * numTotal && areLoggedIn;
+		const tooltip = isEarned ? translations[config.earnedKey]
+            		  : areLoggedIn ? translations[config.unearnedKey]
+                	  : translations['checkmate_logged_out'];
+					  
+		config.element.setAttribute('data-tooltip', tooltip); // Update tooltip
+		config.image.classList.toggle("unearned", !isEarned); // Update badge appearance
+		config.shines?.forEach(shine => // Update shine elements
+			shine.classList.toggle("hidden", !isEarned)
+		);
+	});
 }
 
 function callback_practiceBack(event: Event) {
