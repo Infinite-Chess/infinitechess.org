@@ -55,7 +55,12 @@ interface MeshData {
  */
 const Z: number = 0.001;
 
-/** The image width each piece type's image should be. */
+/**
+ * The image width each piece type's image should be.
+ * 
+ * ONLY HAS AN EFFECT if we don't use svgtoimageconverter.normalizeImagePixelData()
+ * If we do use that, then the images dimensions are decided by that script.
+ */
 const IMG_SIZE = 512;
 
 /**
