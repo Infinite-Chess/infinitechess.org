@@ -35,6 +35,7 @@ function updateCapturedPiece(): void {
 
 	const selectedPiece = selection.getPieceSelected()!;
 	const selectedPieceLegalMoves = selection.getLegalMovesOfSelectedPiece()!;
+	const selectedPieceColor = colorutil.getColorFromPieceType(selectedPiece.type);
 
 	// Test if the mouse is hovering over any arrow
 
@@ -47,7 +48,7 @@ function updateCapturedPiece(): void {
 	// For each of the hovered arrows, test if capturing is legal
 
 	const legalCaptureHoveredArrows = hoveredArrows.filter(arrow => {
-		return legalmoves.checkIfMoveLegal(selectedPieceLegalMoves, selectedPiece.coords, arrow.piece.coords);
+		return legalmoves.checkIfMoveLegal(gameslot.getGamefile(), selectedPieceLegalMoves, selectedPiece.coords, arrow.piece.coords, selectedPieceColor);
 	});
 
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));

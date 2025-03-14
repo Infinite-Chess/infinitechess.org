@@ -3,8 +3,8 @@
  * This script contains methods that reduce the legal moves of a piece
  * to only the ones that don't leave the player in check.
  * 
- * This could be pinned pieces opening a discovered,
- * or not dodging/blocking/capturing an existing check.
+ * This could be not dodging/blocking/capturing an existing check,
+ * or pinned pieces opening a discovered.
  */
 
 /* eslint-disable max-depth */
@@ -116,6 +116,10 @@ function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, 
 	 * as the few finitely many moves that resolve that check will have already been added.
 	 */
 	else removeSlidingMovesThatOpenDiscovered(gamefile, moves, piece, color);
+
+	// 3. The piece making the sliding move IS A ROYAL itself (royalqueen) and it moves into check.
+	const trimmedType = colorutil.trimColorExtensionFromType(piece.type);
+	if (typeutil.slidingRoyals.includes(trimmedType)) moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
 }
 
 /**
@@ -149,7 +153,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	const capturingNotPossible = attackerCount > 1; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
 
 	// Check if the piece has the ability to capture
-	if (!capturingNotPossible && legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, attacker.coords, { ignoreIndividualMoves: true })) {
+	if (!capturingNotPossible && legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, attacker.coords, color, { ignoreIndividualMoves: true })) {
 		legalMoves.individual.push(attacker.coords); // Can capture!
 	}
 
@@ -178,8 +182,8 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	 * 2. Individual check, with 3+ path length
 	 */
 	
-	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0]!, attacker.coords, legalMoves, selectedPieceCoords);
-	else appendPathBlockingMoves(attacker.path!, legalMoves, selectedPieceCoords);
+	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0]!, attacker.coords, legalMoves, selectedPieceCoords, color);
+	else appendPathBlockingMoves(gamefile, attacker.path!, legalMoves, selectedPieceCoords, color);
 
 	delete legalMoves.sliding; // Erase all sliding moves
 	
@@ -217,8 +221,6 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 	const checkResults = checkdetection.detectCheck(gamefile, color, true); // { check: boolean, royalsInCheck: Coords[], attackers: Attacker[] }
 
 	outer: if (checkResults.check) {
-		
-		if (gamefile.startSnapshot.colinearsPresent) throw Error("Don't know how to handle pins yet with colinears present.");
 
 		/**
 		 * Iterate through all attackers.
@@ -231,7 +233,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 
 				if (!attacker.slidingCheck) { // This attacker is giving a check via a special individual move with a `path` (such as the Rose piece).
 					// Delete all sliding moves and append legal blocking moves
-					appendPathBlockingMoves(attacker.path!, moves, pieceSelected.coords);
+					appendPathBlockingMoves(gamefile, attacker.path!, moves, pieceSelected.coords, color);
 					delete moves.sliding; // Erase all sliding moves
 					// We don't have to keep iterating through royals and attackers, since
 					// if none of these newly added path-blocking moves are legal, nothing else will be.
@@ -259,6 +261,8 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 		}
 
 		if (Object.keys(moves.sliding).length === 0) delete moves.sliding; // No sliding moves left
+		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
+		else if (gamefile.startSnapshot.colinearsPresent) moves.brute = true;
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
@@ -275,8 +279,9 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
  * @param square2 - `[x,y]`
  * @param moves - The legal moves object of the piece selected, to see if it is able to block between squares 1 & 2
  * @param coords - The coordinates of the piece with the provided legal moves: `[x,y]`
+ * @param color - The color of friendlies
  */
-function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coords, moves: LegalMoves, coords: Coords): void { // coords is of the selected piece
+function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coords, moves: LegalMoves, coords: Coords, color: 'white'|'black'): void { // coords is of the selected piece
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. */
 	const box: BoundingBox = {
 		left: Math.min(square1[0],square2[0]),
@@ -301,18 +306,20 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 		if (gamefile.startSnapshot.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
 
 		// Can our piece legally move there?
-		if (legalmoves.checkIfMoveLegal(moves, coords, blockPoint, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
+		if (legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPoint, color { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
 	}
 }
 
 /**
  * Takes a `path` special flag of a checking attacker piece, and appends any legal individual
  * blocking moves our selected piece can land on.
+ * @param gamefile
  * @param path - Individual move's `path` special move flag, with guaranteed atleast 3 waypoints within it.
  * @param legalMoves - The precalculated legal moves of the selected piece
  * @param selectedPieceCoords 
+ * @param color - The color of friendlies
  */
-function appendPathBlockingMoves(path: path, legalMoves: LegalMoves, selectedPieceCoords: Coords): void {
+function appendPathBlockingMoves(gamefile: gamefile, path: path, legalMoves: LegalMoves, selectedPieceCoords: Coords, color: 'white'|'black'): void {
 
 	/**
 	 * How do we tell if our selected piece can block an individual move with a path (Rose piece)?
@@ -325,7 +332,7 @@ function appendPathBlockingMoves(path: path, legalMoves: LegalMoves, selectedPie
 	for (let i = 1; i < path.length - 1; i++) { // Iterate through all path points, EXCLUDING start and end.
 		const blockPoint = path[i]!;
 		// Can our selected piece move to this square?
-		if (legalmoves.checkIfMoveLegal(legalMoves, selectedPieceCoords, blockPoint, { ignoreIndividualMoves: true })) legalMoves.individual.push(coordutil.copyCoords(blockPoint)); // Can block!
+		if (legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, blockPoint, color, { ignoreIndividualMoves: true })) legalMoves.individual.push(coordutil.copyCoords(blockPoint)); // Can block!
 	}
 }
 
