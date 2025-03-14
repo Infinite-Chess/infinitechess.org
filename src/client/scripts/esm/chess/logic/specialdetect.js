@@ -8,6 +8,7 @@ import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
 import checkresolver from './checkresolver.js';
+import typeutil from '../util/typeutil.js';
 // Import End
 
 /** 
@@ -77,8 +78,8 @@ function kings(gamefile, coords, color, ) {
 	const leftColor = leftPieceType ? colorutil.getPieceColorFromType(leftPieceType) : undefined;
 	const rightColor = rightPieceType ? colorutil.getPieceColorFromType(rightPieceType) : undefined;
 
-	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns')) leftLegal = false;
-	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns')) rightLegal = false;
+	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns') || typeutil.jumpingRoyals.some(type => leftPieceType.startsWith(type))) leftLegal = false;
+	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns') || typeutil.jumpingRoyals.some(type => rightPieceType.startsWith(type))) rightLegal = false;
 	if (!leftLegal && !rightLegal) return individualMoves;
 
 	// 2. IF USING CHECKMATE: The king must not currently be in check,
