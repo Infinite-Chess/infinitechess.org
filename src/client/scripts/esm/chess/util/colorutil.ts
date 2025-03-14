@@ -1,6 +1,6 @@
 
 /**
- * This scripts contains utility methods for working with colors,
+ * This scripts contains utility methods for working with players,
  * such as getting the opposite color, trimming the color from type, etc.
  * 
  * ZERO depancies.
@@ -17,14 +17,14 @@ type Color = [number,number,number,number];
 // Variables -----------------------------------------------------------------------------
 
 
-/** All colors that are compatible with the game, EXCLUDING 'neutral'. */
+/** All players that are compatible with the game, EXCLUDING 'neutral'. */
 const validColors_NoNeutral = ['white','black'];
 const colorOfNeutrals = 'neutral';
 /** All color-extensions that are compatible with the game, EXCLUDING neutrals. */
 const validColorExtensions_NoNeutral = ['W','B'];
 const colorExtensionOfNeutrals = 'N';
 
-/** All colors that are compatible with the game. */
+/** All players that are compatible with the game. */
 const validColors = [...validColors_NoNeutral, colorOfNeutrals];
 /** All color-extensions that are compatible with the game. */
 const validColorExtensions = [...validColorExtensions_NoNeutral, colorExtensionOfNeutrals];

@@ -5,18 +5,17 @@
 
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { Color } from '../../chess/util/colorutil.js';
-import type { Piece } from '../../chess/logic/boardchanges.js';
-import type { PooledArray } from '../../chess/logic/organizedlines.js';
+import type { Piece } from '../../chess/util/boardutil.js';
+import { TypeRange } from '../../chess/logic/organizedpieces.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
 
 
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';
+import typeutil from '../../chess/util/typeutil.js';
+import boardutil from '../../chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
-import preferences from '../../components/header/preferences.js';
-import colorutil from '../../chess/util/colorutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import math from '../../util/math.js';
 import miniimage from './miniimage.js';
@@ -26,10 +25,12 @@ import frametracker from './frametracker.js';
 import perspective from './perspective.js';
 // @ts-ignore
 import texture from './texture.js';
+import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import movement from './movement.js';
+import { rawTypes } from '../../chess/config.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------------
@@ -86,11 +87,6 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
 	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
 };
 
-/** The color of void squares */
-const VOID_COLOR: Color = [0, 0, 0, 1];
-// const VOID_COLOR: Color = [0, 0, 1, 0.3]; // Transparent blue for debugging
-
-
 // Generating Meshes ------------------------------------------------------------------------
 
 
@@ -109,8 +105,8 @@ async function regenAll(gamefile: gamefile) {
 	gamefile.mesh.inverted = perspective.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
-	for (const type of Object.keys(gamefile.ourPieces)) { // pawnsW
-		if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
+	for (const type of gamefile.ourPieces.typeRanges.keys()) { // pawnsW
+		if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
 		else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
 
@@ -123,10 +119,10 @@ async function regenAll(gamefile: gamefile) {
  * @param gamefile
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
-async function regenType(gamefile: gamefile, type: string) {
+async function regenType(gamefile: gamefile, type: number) {
 	console.log(`Regenerating mesh of type ${type}.`);
 
-	if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
+	if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
 	else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 
 	frametracker.onVisualChange();
@@ -140,10 +136,10 @@ async function regenType(gamefile: gamefile, type: string) {
  * @param gamefile
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
-async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData> {
+async function genTypeModel(gamefile: gamefile, type: number): Promise<MeshData> {
 	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
-	const instanceData64: Float64Array = getInstanceDataForTypeList(gamefile, gamefile.ourPieces[type]);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.ourPieces.typeRanges.get(type)!);
 
 	const svg: SVGElement = (await svgcache.getSVGElements([type], IMG_SIZE, IMG_SIZE))[0]!;
 	// console.log("Converting svg to image again..");
@@ -164,9 +160,9 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
  * 
  * SLOWEST. Minimize calling.
  */
-function genVoidModel(gamefile: gamefile): MeshData {
-	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR);
-	const instanceData64: Float64Array = getInstanceDataForTypeList(gamefile, gamefile.ourPieces.voidsN);
+function genVoidModel(gamefile: gamefile, type: number): MeshData {
+	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(preferences.getTintColorOfType(type));
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.ourPieces.typeRanges.get(type)!);
 
 	return {
 		instanceData64,
@@ -179,11 +175,12 @@ function genVoidModel(gamefile: gamefile): MeshData {
  * The instance data contains only the offset of each piece instance, with a stride of 2.
  * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
-function getInstanceDataForTypeList(gamefile: gamefile, pieceList: PooledArray<Coords>): Float64Array {
-	const instanceData64: Float64Array = new Float64Array(pieceList.length * STRIDE_PER_PIECE); // Initialize with all 0's
+function getInstanceDataForTypeRange(gamefile: gamefile, pieceList: TypeRange): Float64Array {
+	const instanceData64: Float64Array = new Float64Array((pieceList.end - pieceList.start) * STRIDE_PER_PIECE); // Initialize with all 0's
 
 	let currIndex: number = 0;
-	pieceList.forEach((coords: Coords | undefined) => {
+	for (let i = pieceList.start; i < pieceList.end; i++) {
+		const coords = boardutil.getCoordsFromIdx(gamefile.ourPieces, i);
 		if (coords === undefined) {
 			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
@@ -194,7 +191,7 @@ function getInstanceDataForTypeList(gamefile: gamefile, pieceList: PooledArray<C
 			instanceData64[currIndex + 1] = coords[1] - gamefile.mesh.offset[1];
 		}
 		currIndex += STRIDE_PER_PIECE;
-	});
+	};
 
 	return instanceData64;
 }
@@ -271,7 +268,7 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
 	const newVertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 
 	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
-		if (type === 'voidsN') continue; // Voids don't need to be rotated, they are symmetrical
+		if (typeutil.getRawType(Number(type)) === rawTypes.VOID) continue; // Voids don't need to be rotated, they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
 		const vertexData = (meshData as MeshData).model.vertexData;
 		if (vertexData.length !== newVertexData.length) throw Error("New vertex data must be the same length as the existing! Cannot update buffer indices."); // Safety net
@@ -293,9 +290,11 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
  * whenever a piece moves or something is captured/generated!
  */
 function overwritebufferdata(gamefile: gamefile, piece: Piece) {
+	const idx = boardutil.getIdxFromCoords(gamefile.ourPieces, piece.coords)!;
+	const range = boardutil.getTypeRangeFromIdx(gamefile.ourPieces, idx);
 	const meshData = gamefile.mesh.types[piece.type];
 
-	const i = piece.index * STRIDE_PER_PIECE;
+	const i = (idx - range.start) * STRIDE_PER_PIECE;
 
 	const offsetCoord = coordutil.subtractCoordinates(piece.coords, gamefile.mesh.offset);
 
@@ -315,10 +314,12 @@ function overwritebufferdata(gamefile: gamefile, piece: Piece) {
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!
  */
-function deletebufferdata(gamefile: gamefile, piece: { type: string, index: number }) {
+function deletebufferdata(gamefile: gamefile, piece: Piece) {
+	const idx = boardutil.getIdxFromCoords(gamefile.ourPieces, piece.coords)!;
+	const typeRange = boardutil.getTypeRangeFromIdx(gamefile.ourPieces, idx);
 	const meshData = gamefile.mesh.types[piece.type];
 
-	const i = piece.index * STRIDE_PER_PIECE;
+	const i = (idx - typeRange.start) * STRIDE_PER_PIECE;
 
 	meshData.instanceData64[i] = Infinity; // Unfortunately we can't set them to 0 to hide it, as an actual piece instance would be visible at [0,0]
 	meshData.instanceData64[i + 1] = Infinity;
@@ -357,12 +358,10 @@ function renderAll(gamefile: gamefile) {
     ]; // While separate these may each be big decimals, TOGETHER they should be small! No graphical glitches.
 	const boardScale = movement.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
-	const colorArgs = preferences.getPieceRegenColorArgs();
 
 	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
 		// Use a custom tint uniform if our theme has custom colors for the players pieces
-		const uniforms = colorArgs ? { tintColor: colorArgs[colorutil.getPieceColorFromType(type)]! } : undefined;
-		(meshData as MeshData).model.render(position, scale, uniforms);
+		(meshData as MeshData).model.render(position, scale, undefined);
 	}
 }
 

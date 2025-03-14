@@ -13,7 +13,7 @@ import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
-
+import type { Position } from "../../chess/variants/variant.js";
 
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
@@ -25,7 +25,7 @@ import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
-import clientEventDispatcher from "../../util/clientEventDispatcher.js";
+import typeutil from "../../chess/util/typeutil.js";
 import piecemodels from "../rendering/piecemodels.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
@@ -66,6 +66,8 @@ import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
 
+import events from "../../chess/logic/events.js";
+import { pieceCountToDisableCheckmate } from "../../chess/config.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -118,7 +120,7 @@ interface VariantOptions {
 	 * The key of the object is the coordinates of the piece as a string,
 	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
 	 */
-	startingPosition: { [key: CoordsKey]: string }
+	startingPosition: Position
 	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
 	specialRights: { [key: CoordsKey]: true },
 }
@@ -214,10 +216,10 @@ function loadLogical(loadOptions: LoadOptions) {
 	const lineCountToDisableArrows = 16;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
+	if (newGamefile.startSnapshot.pieceCount >= pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
-	} else if (newGamefile.startSnapshot.slidingPossible.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
+	} else if (newGamefile.ourPieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
 		arrows.setMode(0);
 	}
 
@@ -262,17 +264,14 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	 * Listen for the event that inserts more undefineds into the piece lists.
 	 * When that occurs, we need to regenerate the model.
 	 */
-	clientEventDispatcher.listen('inserted-undefineds', regenModelOfType);
+	events.addEventListener(getGamefile()!.events, "regenerateRanges", (gamefile: gamefile, types: number[]) => {
+		for (const type of types) {
+			piecemodels.regenType(gamefile, type);
+		}
+		return false;
+	});
 }
 
-/**
- * Call when any one piece type list has increased in undefined placeholders.
- * The length of the array has changed, so we should regenerate its mesh.
- */
-function regenModelOfType(event: CustomEvent) {
-	const type = event.detail;
-	piecemodels.regenType(loadedGamefile!, type);
-}
 
 /** The canvas will no longer render the current game */
 function unloadGame() {
@@ -302,9 +301,6 @@ function unloadGame() {
 	
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
-
-	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.
-	clientEventDispatcher.removeListener('inserted-undefineds', regenModelOfType);
 }
 
 /**
@@ -355,7 +351,7 @@ function concludeGame() {
 		if (!loadedGamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (loadedGamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		if (loadedGamefile.gameConclusion.includes(typeutil.getColorStringFromType(onlinegame.getOurColor()))) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else if (loadedGamefile.gameConclusion.includes('draw') || loadedGamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
 		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
 	}

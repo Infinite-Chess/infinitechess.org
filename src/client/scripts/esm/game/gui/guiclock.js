@@ -22,8 +22,8 @@ const element_timers = {
 
 /** All variables related to the lowtime tick notification at 1 minute remaining. */
 const lowtimeNotif = {
-	/** Contains the colors that have had the ticking sound play */
-	colorsNotified: new Set(),
+	/** Contains the players that have had the ticking sound play */
+	playersNotified: new Set(),
 	/** The timer that, when ends, will play the lowtime ticking audio cue. */
 	timeoutID: undefined,
 	/** The amount of milliseconds before losing on time at which the lowtime tick notification will be played. */

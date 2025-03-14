@@ -9,14 +9,14 @@
  */
 
 
-import type { Piece } from "./boardchanges.js";
+import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
+import type { Player } from "../util/typeutil.js";
 
-
-import colorutil from "../util/colorutil.js";
+import typeutil from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
-import gamefileutility from "../util/gamefileutility.js";
+import boardutil from "../util/boardutil.js";
 import boardchanges from "./boardchanges.js";
 import fourdimensionalgenerator from "../variants/fourdimensionalgenerator.js";
 import state from "./state.js";
@@ -25,12 +25,13 @@ import gamefile from "./gamefile.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
 
+import { players, rawTypes as r } from "../config.js";
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 
 
 /** Calculates the legal pawn moves in the four dimensional variant. */
-function fourDimensionalPawnMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+function fourDimensionalPawnMove(gamefile: gamefile, coords: Coords, color: Player): Coords[] {
 	const legalMoves: Coords[] = [];
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "spacelike")); // Spacelike
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "timelike")); // Timelike
@@ -44,13 +45,13 @@ function fourDimensionalPawnMove(gamefile: gamefile, coords: Coords, color: stri
  * @param color - The color of the pawn
  * @param movetype - spacelike move or timelike move
  */
-function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movetype: "spacelike" | "timelike"): Coords[] {
+function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: Player, movetype: "spacelike" | "timelike"): Coords[] {
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 	const distance = (movetype === "spacelike" ? 1 : dim.BOARD_SPACING);
 	const distance_complement = (movetype === "spacelike" ? dim.BOARD_SPACING : 1);
 	
 	// White and black pawns move and capture in opposite directions.
-	const yDistanceParity = color === 'white' ? distance : -distance;
+	const yDistanceParity = color === players.WHITE ? distance : -distance;
 	const individualMoves: Coords[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -59,13 +60,13 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 	// Is there a piece in front of it? And do not allow pawn to leave the 4D board
 	const coordsInFront = [coords[0], coords[1] + yDistanceParity] as Coords;
 	if (
-		!gamefileutility.isPieceOnCoords(gamefile, coordsInFront)
+		!boardutil.isPieceOnCoords(gamefile.ourPieces, coordsInFront)
 		&& coordsInFront[0] > dim.MIN_X && coordsInFront[0] < dim.MAX_X && coordsInFront[1] > dim.MIN_Y && coordsInFront[1] < dim.MAX_Y // Pawn within boundaries
 	) {
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 		// Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yDistanceParity] as CoordsSpecial;
-		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
+		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, doublePushCoord);
 		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords) &&
 		doublePushCoord[0] > dim.MIN_X && doublePushCoord[0] < dim.MAX_X && doublePushCoord[1] > dim.MIN_Y && doublePushCoord[1] < dim.MAX_Y) { // Add the double push!
 			doublePushCoord.enpassantCreate = specialdetect.getEnPassantGamefileProperty(coords, doublePushCoord);
@@ -88,15 +89,13 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
 		const thisCoordsToCapture = coordsToCapture[i]!;
 
 		// Is there an enemy piece at this coords?
-		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, thisCoordsToCapture);
-		if (!pieceAtCoords || pieceAtCoords.startsWith('voids')) continue; // No piece or void, skip
+		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, thisCoordsToCapture);
+		if (!pieceAtCoords) continue; // No piece
 
 		// There is a piece. Make sure it's a different color
-		const colorOfPiece = colorutil.getPieceColorFromType(pieceAtCoords);
-		if (color === colorOfPiece) continue; // Same color, don't add the capture
-
-		// Make sure it isn't a void
-		if (pieceAtCoords.startsWith('voids')) continue;
+		// Make sure its not a void
+		const [rawTypeOfPiece, colorOfPiece] = typeutil.splitType(pieceAtCoords);
+		if (rawTypeOfPiece === r.VOID || color === colorOfPiece) continue; // Same color, don't add the capture
 
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Add the capture
 	}
@@ -116,15 +115,16 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: string, movet
  * @param xdistance
  * @param ydistance
  */
-function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: string, xdistance: number, ydistance: number): void {
+function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: Player, xdistance: number, ydistance: number): void {
 	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = gamefileutility.getPieceTypeAtCoords(gamefile, gamefile.enpassant.pawn)!;
-	if (colorutil.getPieceColorFromType(enpassantCapturedPawn) === color || enpassantCapturedPawn.startsWith('voids')) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
+	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.ourPieces, gamefile.enpassant.pawn)!;
+	const [capturedType, capturedColor] = typeutil.splitType(enpassantCapturedPawn);
+	if (capturedColor === color || capturedType === r.VOID) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== xdistance) return; // Not immediately left or right of us
-	const yDistanceParity = (color === 'white' ? ydistance : -ydistance);
+	const yDistanceParity = (color === players.WHITE ? ydistance : -ydistance);
 
 	if (coords[1] + yDistanceParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
@@ -143,7 +143,7 @@ function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coo
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: string) {
+function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player) {
 	if (gamefile.gameRules.promotionRanks !== undefined) {
 		const teamPromotionRanks = gamefile.gameRules.promotionRanks[color];
 		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
@@ -167,14 +167,14 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	if (!move.enpassant && !move.promotion) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	const captureCoords = move.enpassant ? gamefile.enpassant!.pawn : move.endCoords;
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+	const capturedPiece = boardutil.getTypeFromCoords(gamefile.ourPieces, captureCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece); // Delete the piece captured
-	else boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Move the pawn
+	if (capturedPiece) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece); // Delete the piece captured
+	else boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Move the pawn
 
 	if (move.promotion) { // Handle promotion special move
-		boardchanges.queueDeletePiece(moveChanges, { type: piece.type, coords: move.endCoords, index: piece.index }, true); // Delete original pawn
-		boardchanges.queueAddPiece(moveChanges, { type: move.promotion, coords: move.endCoords } as Piece); // Add promoted piece
+		boardchanges.queueDeletePiece(moveChanges, true, { type: piece.type, coords: move.endCoords }); // Delete original pawn
+		boardchanges.queueAddPiece(moveChanges, { type: move.promotion, coords: move.endCoords }); // Add promoted piece
 	}
 
 	return true; // Special move was executed!
@@ -191,7 +191,7 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
  * @param coords - The coordinates of the knight
  * @param color - The color of the knight
  */
-function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: Player): Coords[] {
 	const individualMoves: Coords[] = [];
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
@@ -204,10 +204,10 @@ function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: st
 						const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
 						const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
 						const endCoords = [x, y] as Coords;
-						const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
+						const endPiece = boardutil.getTypeFromCoords(gamefile.ourPieces, endCoords);
 
 						// do not allow capturing friendly pieces or voids
-						if (endPiece && (color === colorutil.getPieceColorFromType(endPiece) || endPiece.startsWith('voids'))) continue;
+						if (endPiece && (color === typeutil.getColorFromType(endPiece) || typeutil.getRawType(endPiece) === r.VOID)) continue;
 
 						// do not allow knight to leave the 4D board
 						if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
@@ -231,7 +231,7 @@ function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: st
 
 
 /** Calculates the legal king moves in the four dimensional variant. */
-function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: Player): Coords[] {
 	const legalMoves: Coords[] = kingLegalMoves(gamefile, coords, color);
 	legalMoves.push(...specialdetect.kings(gamefile, coords, color)); // Adds legal castling
 	return legalMoves;
@@ -243,7 +243,7 @@ function fourDimensionalKingMove(gamefile: gamefile, coords: Coords, color: stri
  * @param coords - The coordinates of the king
  * @param color - The color of the king
  */
-function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coords[] {
+function kingLegalMoves(gamefile: gamefile, coords: Coords, color: Player): Coords[] {
 	const individualMoves: Coords[] = [];
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
@@ -259,10 +259,10 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: string): Coor
 					const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
 
 					const endCoords = [x, y] as Coords;
-					const endPiece = gamefileutility.getPieceTypeAtCoords(gamefile, endCoords);
+					const endPiece = boardutil.getTypeFromCoords(gamefile.ourPieces, endCoords);
 
 					// do not allow capturing friendly pieces or voids
-					if (endPiece && (color === colorutil.getPieceColorFromType(endPiece) || endPiece.startsWith('voids'))) continue;
+					if (endPiece && (color === typeutil.getColorFromType(endPiece) || typeutil.getRawType(endPiece) === r.VOID)) continue;
 
 					// do not allow king to leave the 4D board
 					if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;

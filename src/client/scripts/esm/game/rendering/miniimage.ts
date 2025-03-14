@@ -35,6 +35,8 @@ import area from './area.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
+import { rawTypes } from '../../chess/config.js';
+import boardutil from '../../chess/util/boardutil.js';
 
 
 // Variables --------------------------------------------------------------
@@ -132,16 +134,18 @@ function genModel() {
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
 
 	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	typeutil.forEachPieceType((pieceType: string) => {
-		if (pieceType.startsWith('voids')) return; // Skip voids
-		if (!(pieceType in gamefile.ourPieces)) return; // Skip if we don't have any of this piece type
-		const thesePieces = gamefile.ourPieces[pieceType];
 
-		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-		const { r, g, b } = preferences.getTintColorOfType(pieceType);
+	const ourPieces = gamefile.ourPieces;
+	for (const [type, range] of ourPieces.typeRanges) {
+		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
 
-		thesePieces.forEach((coords: Coords | undefined) => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
-	}, { ignoreVoids: true });
+		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+		const [ r, g, b ] = preferences.getTintColorOfType(type);
+
+		for (let i = range.start; i < range.end; i++) {
+			processPiece(boardutil.getCoordsFromIdx(ourPieces, i), texleft, texbottom, texright, textop, r, g, b);
+		}
+	};
 
 	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		if (!coords) return; // Skip undefined placeholders
@@ -182,13 +186,13 @@ function genModel() {
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		let { r, g, b } = preferences.getTintColorOfType(a.type);
+		let [ r, g, b ] = preferences.getTintColorOfType(a.type);
 		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
 
 		// Animate the captured piece too, if there is one
 		if (!a.captured) return;
 		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
-		({ r, g, b } = preferences.getTintColorOfType(a.type));
+		([ r, g, b ] = preferences.getTintColorOfType(a.type));
 		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
 	});
 

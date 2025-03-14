@@ -11,7 +11,7 @@ import gameslot from '../../chess/gameslot.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from './specialrighthighlights.js';
 import selection from '../../chess/selection.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
+import boardutil from '../../../chess/util/boardutil.js';
 import frametracker from '../frametracker.js';
 import preferences from '../../../components/header/preferences.js';
 // @ts-ignore
@@ -408,7 +408,7 @@ function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[
 
 	// For each of these squares, calculate it's buffer data
 	for (const coord of legalIndividuals) {
-		const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, coord);
+		const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.ourPieces, coord);
 		const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 		if (isPieceOnCoords) instanceData_Capture.push(...offsetCoord);
 		else instanceData_NonCapture.push(...offsetCoord);
@@ -534,7 +534,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
 		if (ignoreFunc(pieceCoords, thisCoord)) { // Ignore function PASSED. This move is LEGAL
 			// Should we add instance data to the capturing or non-capturing model?
-			const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, thisCoord);
+			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.ourPieces, thisCoord);
 			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);
 			else                 instanceData_NonCapture.push(...firstInstancePositionOffset);
 		}

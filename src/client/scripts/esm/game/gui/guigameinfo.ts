@@ -18,7 +18,8 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
-
+import typeutil from '../../chess/util/typeutil.js';
+import { players } from '../../chess/config.js';
 
 "use strict";
 
@@ -172,8 +173,8 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
 		return {
-			white: onlinegame.areWeColorInOnlineGame('white') && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'],
-			black: onlinegame.areWeColorInOnlineGame('black') && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black']
+			white: onlinegame.areWeColorInOnlineGame(players.WHITE) && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'],
+			black: onlinegame.areWeColorInOnlineGame(players.BLACK) && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black']
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
@@ -196,18 +197,18 @@ function updateWhosTurn() {
 
 	const color = gamefile.whosTurn;
 
-	if (color !== 'white' && color !== 'black') throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
+	if (color !== players.WHITE && color !== players.BLACK) throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
 
 	let textContent = "";
 	if (!gameloader.areInLocalGame()) {
 		const ourTurn = gameloader.isItOurTurn();
 		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
-	} else textContent = color === "white" ? translations['white_to_move'] : translations['black_to_move'];
+	} else textContent = color === players.BLACK ? translations['white_to_move'] : translations['black_to_move'];
 
 	element_whosturn.textContent = textContent;
 
 	element_dot.classList.remove('hidden');
-	if (color === 'white') {
+	if (color === players.WHITE) {
 		element_dot.classList.remove('dotblack');
 		element_dot.classList.add('dotwhite');
 	} else {
@@ -229,7 +230,7 @@ function gameEnd(conclusion: string | false) {
 
 	if (onlinegame.areInOnlineGame()) {	
 
-		if (victor !== undefined && onlinegame.areWeColorInOnlineGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
+		if (victor !== undefined && onlinegame.areInOnlineGame() && typeutil.getColorStringFromType(onlinegame.getOurColor()) === victor) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                             : condition === 'time' ? resultTranslations.you_time
                                                                             : condition === 'resignation' ? resultTranslations.you_resignation
                                                                             : condition === 'disconnect' ? resultTranslations.you_disconnect

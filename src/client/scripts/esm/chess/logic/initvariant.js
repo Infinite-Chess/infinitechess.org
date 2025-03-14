@@ -5,11 +5,8 @@
 
 import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
-import colorutil from '../util/colorutil.js';
-import coordutil from '../util/coordutil.js';
-import variant from '../variants/variant.js';
-import organizedlines from './organizedlines.js';
 import typeutil from '../util/typeutil.js';
+import variant from '../variants/variant.js';
 
 /** 
  * Type Definitions 
@@ -37,7 +34,6 @@ function setupVariant(gamefile, metadata, options) {
 
 	initExistingTypes(gamefile);
 	initPieceMovesets(gamefile, metadata);
-	initSlidingMoves(gamefile);
 }
 
 /**
@@ -56,43 +52,10 @@ function initExistingTypes(gamefile) {
 	// Promotion types already have teams stripped
 	const rawtypes = new Set(promotiontypes);
 	for (const tpiece of teamtypes) {
-		rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
+		rawtypes.add(typeutil.getRawType(tpiece)); // Make a set with the team color trimmed
 	}
 
 	gamefile.startSnapshot.existingTypes = [...rawtypes];
-}
-
-/**
- * Inits the `slidingMoves` property of the `startSnapshot` of the gamefile.
- * This contains the information of what slides are possible, according to
- * what piece types are in this game.
- * @param {gamefile} gamefile 
- */
-function initSlidingMoves(gamefile) {
-	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
-	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
-	gamefile.startSnapshot.colinearsPresent = organizedlines.areColinearSlidesPresentInGame(gamefile);
-}
-
-/**
- * Calculates all possible slides that should be possible in the provided game,
- * excluding pieces that aren't in the provided position.
- * @param {gamefile} gamefile
- */
-function getPossibleSlides(gamefile) {
-	const rawtypes = gamefile.startSnapshot.existingTypes;
-	const movesets = gamefile.pieceMovesets;
-	const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
-	for (const type of rawtypes) {
-		let moveset = movesets[type];
-		if (!moveset) continue;
-		moveset = moveset();
-		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach(slide => slides.add(slide));
-	}
-	const temp = [];
-	slides.forEach(slideline => temp.push(coordutil.getCoordsFromKey(slideline)));
-	return temp;
 }
 
 /**

@@ -4,13 +4,13 @@
 import jsutil from "../../util/jsutil.js";
 
 import type { Color } from "../../chess/util/colorutil.js";
-
+import type { PieceColorTheme, PieceSVGTheme } from "./pieceThemes.js";
 
 /*
  * Strings for computed property names.
  *
  * By using computed property names, we greatly compact this script,
- * as our bunder changes the symbols to a single letter.
+ * as our bundler changes the symbols to a single letter.
  */
 const lightTiles = "lightTiles";
 const darkTiles = "darkTiles";
@@ -20,6 +20,8 @@ const legalMovesHighlightColor_Premove = "legalMovesHighlightColor_Premove";
 const lastMoveHighlightColor = "lastMoveHighlightColor";
 const checkHighlightColor = "checkHighlightColor";
 const boxOutlineColor = "boxOutlineColor";
+const pieceTheme = "pieceTheme";
+const svgTheme = "svgTheme";
 
 
 interface ThemeProperties {
@@ -31,10 +33,8 @@ interface ThemeProperties {
 	[lastMoveHighlightColor]?: Color;
 	[checkHighlightColor]?: Color;
 	[boxOutlineColor]?: Color;
-	useColoredPieces?: boolean;
-	whitePiecesColor?: Color;
-	blackPiecesColor?: Color;
-	neutralPiecesColor?: Color;
+	[pieceTheme]?: Partial<PieceColorTheme>,
+	[svgTheme]?: PieceSVGTheme // For now
 }
 
 /**
@@ -45,12 +45,8 @@ const defaults: ThemeProperties = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
-	// If this is false, we will render them white,
-	// utilizing the more efficient color-less shader program!
-	useColoredPieces: false,
-	whitePiecesColor: [1, 1, 1, 1],
-	blackPiecesColor: [1, 1, 1, 1],
-	neutralPiecesColor: [1, 1, 1, 1],
+	[pieceTheme]: {},
+	[svgTheme]: {}
 };
 
 const defaultTheme = 'wood_light';

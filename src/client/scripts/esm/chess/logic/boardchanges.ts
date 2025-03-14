@@ -9,12 +9,9 @@
  * know how to change the mesh, or what to animate.
  */
 
-// @ts-ignore
-import organizedlines from "./organizedlines.js";
-// @ts-ignore
-import gamefileutility from "../util/gamefileutility.js";
-// @ts-ignore
-import jsutil from "../../util/jsutil.js";
+import organizedpieces from "./organizedpieces.js";
+import coordutil from "../util/coordutil.js";
+import events from "./events.js";
 
 
 // Variables -------------------------------------------------------------------------
@@ -32,12 +29,7 @@ import type { gamefile } from "./gamefile.js";
 // @ts-ignore
 import type { Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
-
-interface Piece {
-	type: string // - The type of the piece (e.g. `queensW`).
-	coords: Coords // - The coordinates of the piece: `[x,y]`
-	index: number // - The index of the piece within the gamefile's piece list.
-}
+import type { Piece } from "../util/boardutil.js";
 
 /**
  * Generic type to describe any changes to the board
@@ -47,15 +39,14 @@ type Change = {
 	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
 	main: boolean,
 	/** The main piece affected by the move. If this is a move/capture action, it's the piece moved. If it's an add/delete action, it's the piece added/deleted. */
-	piece: Piece
+	piece: Piece,
 } & ({
 	/** The type of action this change performs. */
 	action: 'add' | 'delete',
-	// No additional properties needed
 } | {
 	action: 'capture',
 	endCoords: Coords,
-	capturedPiece: Piece,
+	capturedPiece: number,
 	/** A custom path the moving piece took to make the capture. (e.g. Rose piece) */
 	path?: Coords[],
 } | {
@@ -121,8 +112,8 @@ const changeFuncs: ChangeApplication<genericChangeFunc> = {
  * @param endCoords 
  * @param capturedPiece The piece captured
  */
-function queueCapture(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, capturedPiece: Piece, path?: Coords[]) {
-	const change: Change = { action: 'capture', main, piece: piece, endCoords: endCoords, capturedPiece: capturedPiece };
+function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, capturedPiece: number, path?: Coords[]) {
+	const change: Change = { action: 'capture', main, piece, endCoords, capturedPiece };
 	if (path !== undefined) change.path = path;
 	changes.push(change);
 	return changes;
@@ -145,7 +136,7 @@ function queueAddPiece(changes: Array<Change>, piece: Piece) {
  * @param piece - The piece this change affects
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  */
-function queueDeletePiece(changes: Array<Change>, piece: Piece, main: boolean) {
+function queueDeletePiece(changes: Array<Change>, main: boolean, piece: Piece) {
 	changes.push({ action: 'delete', main, piece });
 	return changes;
 }
@@ -157,8 +148,8 @@ function queueDeletePiece(changes: Array<Change>, piece: Piece, main: boolean) {
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
  * @param endCoords 
  */
-function queueMovePiece(changes: Array<Change>, piece: Piece, main: boolean, endCoords: Coords, path?: Coords[]) {
-	const change: Change = { action: 'move', main, piece: piece, endCoords };
+function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, path?: Coords[]) {
+	const change: Change = { action: 'move', main, piece, endCoords };
 	if (path !== undefined) change.path = path;
 	changes.push(change);
 	return changes;
@@ -207,27 +198,20 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
  * organizes the piece in the organized lists
  */
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
-	const piece = change.piece;
+	const pieces = gamefile.ourPieces;
+	const typedata = pieces.typeRanges.get(change.piece.type);
+	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 
-	// Safety net
-	const isPieceOnCoords = gamefileutility.isPieceOnCoords(gamefile, piece.coords);
-	if (isPieceOnCoords) throw new Error("Can't add a piece on top of another piece!");
+	if (typedata.undefineds.length === 0) {
+		if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.piece.type)) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position`);
+		events.runEvent(gamefile.events, "regenerateLists", gamefile);
+	}
 
-	const list = gamefile.ourPieces[piece.type];
-	
-	// If no index specified, make the default the first undefined in the list!
-	if (piece.index === undefined) {
-		if (list.undefineds.length === 0) throw Error(`No undefined placeholders remaining for piece being added! ${piece.type}`);
-		change.piece.index = list.undefineds.shift()!;
-	} else jsutil.deleteElementFromOrganizedArray(gamefile.ourPieces[piece.type].undefineds, piece.index); // Remove the undefined from the undefineds list
+	const idx = typedata.undefineds.pop()!;
+	pieces.XPositions[idx] = change.piece.coords[0];
+	pieces.YPositions[idx] = change.piece.coords[1];
 
-	// Add the piece
-	list[piece.index] = piece.coords;
-	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
-	
-	// Do we need to add more undefineds?
-	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-	if (organizedlines.isTypeShortOnUndefineds(gamefile, piece.type)) organizedlines.addMoreUndefinedsToType(gamefile, piece.type);
+	organizedpieces.registerPieceInSpace(idx, pieces);
 }
 
 /**
@@ -235,18 +219,10 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
  * from the organized lists.
  */
 function deletePiece(gamefile: gamefile, change: Change) {
-	if (change.piece.index === undefined) {
-		console.warn("Deleted piece does not have index supplied! Attemping to get idx from other info");
-		console.log(change);
-		change.piece = gamefileutility.getPieceFromTypeAndCoords(gamefile, change.piece.type, change.piece.coords);
-	}
-	const piece = change.piece;
-
-	const list = gamefile.ourPieces[piece.type];
-	gamefileutility.deleteIndexFromPieceList(list, piece.index);
-
-	// Remove captured piece from organized piece lists
-	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
+	const pieces = gamefile.ourPieces;
+	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.piece.coords))!;
+	organizedpieces.removePieceFromSpace(idx, pieces);
+	pieces.typeRanges.get(change.piece.type)!.undefineds.push(idx);
 }
 
 
@@ -261,17 +237,16 @@ function deletePiece(gamefile: gamefile, change: Change) {
 function movePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
-	const piece = change.piece;
-	const endCoords = change.endCoords;
+	const pieces = gamefile.ourPieces;
+	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.piece.coords))!;
 
-	// Move the piece, change the coordinates
-	gamefile.ourPieces[piece.type][piece.index] = endCoords;
 
-	// Remove selected piece from all the organized piece lists (piecesOrganizedByKey, etc.)
-	organizedlines.removeOrganizedPiece(gamefile, piece.coords);
+	organizedpieces.removePieceFromSpace(idx, pieces);
 
-	// Add the piece to organized lists with new destination
-	organizedlines.organizePiece(piece.type, endCoords, gamefile);
+	pieces.XPositions[idx] = change.endCoords[0];
+	pieces.YPositions[idx] = change.endCoords[1];
+
+	organizedpieces.registerPieceInSpace(idx, pieces);
 }
 
 /**
@@ -280,17 +255,15 @@ function movePiece(gamefile: gamefile, change: Change) {
 function returnPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
-	const piece = change.piece;
-	const endCoords = change.endCoords;
+	const pieces = gamefile.ourPieces;
+	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.endCoords))!;
 
-	// Move the piece, change the coordinates
-	gamefile.ourPieces[piece.type][piece.index] = piece.coords;
+	organizedpieces.removePieceFromSpace(idx, pieces);
 
-	// Remove selected piece from all the organized piece lists (piecesOrganizedByKey, etc.)
-	organizedlines.removeOrganizedPiece(gamefile, endCoords);
+	pieces.XPositions[idx] = change.piece.coords[0];
+	pieces.YPositions[idx] = change.piece.coords[1];
 
-	// Add the piece to organized lists with old destination
-	organizedlines.organizePiece(piece.type, piece.coords, gamefile);
+	organizedpieces.registerPieceInSpace(idx, pieces);
 }
 
 /**
@@ -301,7 +274,7 @@ function returnPiece(gamefile: gamefile, change: Change) {
 function capturePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw new Error(`capturePiece called with a non-capture change: ${change.action}`);
 
-	deletePiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
+	deletePiece(gamefile, { piece: {type: change.capturedPiece, coords: change.endCoords}, main: change.main, action: "add" });
 	movePiece(gamefile, change);
 }
 
@@ -312,18 +285,18 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw new Error(`uncapturePiece called with a non-capture change: ${change.action}`);
 
 	returnPiece(gamefile, change);
-	addPiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
+	addPiece(gamefile, { piece: {type: change.capturedPiece, coords: change.endCoords}, main: change.main, action: "add" });
 }
 
 /**
  * Gets every captured piece in changes
  */
-function getCapturedPieces(move: Move): Piece[] {
-	const pieces: Piece[] = [];
+function getCapturedPieceTypes(move: Move): Set<number> {
+	const pieceTypes: Set<number> = new Set();
 	move.changes.forEach(change => {
-		if (change.action === 'capture') pieces.push(change.capturedPiece);
+		if (change.action === 'capture') pieceTypes.add(change.capturedPiece);
 	});
-	return pieces;
+	return pieceTypes;
 }
 
 /**
@@ -341,7 +314,6 @@ export type {
 	ActionList,
 	ChangeApplication,
 	Change,
-	Piece,
 };
 
 export default {
@@ -351,7 +323,9 @@ export default {
 	queueDeletePiece,
 	queueMovePiece,
 	runChanges,
-	getCapturedPieces,
-	oneWayActions,
+
+	getCapturedPieceTypes,
 	wasACapture,
+	oneWayActions,
+	applyChanges,
 };

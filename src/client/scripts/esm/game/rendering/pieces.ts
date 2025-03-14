@@ -18,7 +18,6 @@ import miniimage from './miniimage.js';
 // @ts-ignore
 import shapes from './shapes.js';
 
-
 // Variables ---------------------------------------------------------------------
 
 
@@ -39,8 +38,8 @@ function renderPiecesInGame(gamefile: gamefile) {
 }
 
 /** Renders a semi-transparent piece at the specified coordinates. */
-function renderGhostPiece(type: string, coords: Coords) {
-	const color = preferences.getTintColorOfType(type); color.a *= ghostOpacity;
+function renderGhostPiece(type: number, coords: Coords) {
+	const color = preferences.getTintColorOfType(type); color[3] *= ghostOpacity;
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
