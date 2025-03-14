@@ -21,6 +21,7 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import math from '../../util/math.js';
 import miniimage from './miniimage.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
+import frametracker from './frametracker.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -112,6 +113,8 @@ async function regenAll(gamefile: gamefile) {
 		if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
 		else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
+
+	frametracker.onVisualChange();
 }
 
 /**
@@ -125,6 +128,8 @@ async function regenType(gamefile: gamefile, type: string) {
 
 	if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
 	else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+
+	frametracker.onVisualChange();
 }
 
 /**
