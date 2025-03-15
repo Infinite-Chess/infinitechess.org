@@ -119,7 +119,10 @@ function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, 
 
 	// 3. The piece making the sliding move IS A ROYAL itself (royalqueen) and it moves into check.
 	const trimmedType = colorutil.trimColorExtensionFromType(piece.type);
-	if (typeutil.slidingRoyals.includes(trimmedType)) moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
+	if (typeutil.slidingRoyals.includes(trimmedType)) {
+		moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
+		console.log("Brute forcing all sliding moves.")
+	}
 }
 
 /**
@@ -262,7 +265,10 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 
 		if (Object.keys(moves.sliding).length === 0) delete moves.sliding; // No sliding moves left
 		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
-		else if (gamefile.startSnapshot.colinearsPresent) moves.brute = true;
+		else if (gamefile.startSnapshot.colinearsPresent) {
+			moves.brute = true;
+			console.log("Brute forcing PIN sliding moves.");
+		}
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
