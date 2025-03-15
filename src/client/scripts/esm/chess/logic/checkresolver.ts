@@ -370,4 +370,5 @@ function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTest
 export default {
 	removeCheckInvalidMoves,
 	isMoveCheckInvalid,
+	getSimulatedCheck,
 };

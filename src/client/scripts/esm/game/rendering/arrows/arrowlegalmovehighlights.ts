@@ -116,7 +116,7 @@ function onPieceIndicatorHover(piece: Piece) {
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 
-	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, color);
+	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);
 	// Store both these objects inside piecesHoveredOver
 	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
 }
@@ -159,7 +159,8 @@ function regenModelsOfHoveredPieces() {
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Calculate the mesh...
-		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, hoveredArrow.color);
+		const pieceColor = typeutil.getPieceColorFromType(hoveredArrow.piece.type);
+		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
 		hoveredArrow.model_Capture = CaptureModel;
