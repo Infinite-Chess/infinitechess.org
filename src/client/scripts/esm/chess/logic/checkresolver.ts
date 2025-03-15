@@ -322,9 +322,13 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 			// The piece lies on the same line from the attacker to the royal!
 			// Flag this slide direction to brute force check each move for legality.
 			moves.brute = true;
-			// Delete all other sliding moves
+			// Delete all other sliding moves that aren't also colinear with this one.
 			for (const slideDir in moves.sliding) { // 'dx,dy'
-				if (slideDir !== lineKey) delete moves.sliding[slideDir]; // Not the same line, delete it.
+				if (slideDir === lineKey) continue; // Same line, don't delete this one.
+				// Different line... but is it colinear? If so we also want to keep it.
+				const thisSlideDir = coordutil.getCoordsFromKey(slideDir as Vec2Key); // [dx,dy]
+				const thisLineGeneralForm = math.getLineGeneralFormFromCoordsAndVec(coords, thisSlideDir);
+				if (!math.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) delete moves.sliding[slideDir]; // Not colinear, delete it.
 			}
 			break; // All other slides were deleted, no point in continuing to iterate.
 		}
