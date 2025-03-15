@@ -323,7 +323,7 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 	// console.log("Regenerating legal moves model..");
 
 	// The model of the selected piece's legal moves
-	const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected) as 'white'|'black';
+	const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected.type) as 'white'|'black';
 	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
 	const color = preferences.getLegalMoveHighlightColor(color_options); // [r,g,b,a]
 	const { NonCaptureModel, CaptureModel } = generateModelsForPiecesLegalMoveHighlights(pieceSelected!.coords, selectedPieceLegalMoves!, selectedPieceColor, color);
@@ -550,7 +550,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 			if (brute) {
 				console.log("Brute forcing if slide stop square legal.");
 				const moveDraft: MoveDraft = { startCoords: pieceCoords, endCoords: thisCoord };
-				if (!checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor).check) break legal;
+				if (checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor).check) break legal;
 			}
 
 			// Should we add instance data to the capturing or non-capturing model?

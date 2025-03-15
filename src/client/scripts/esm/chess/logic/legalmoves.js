@@ -337,7 +337,7 @@ function checkIfMoveLegal(gamefile, legalMoves, startCoords, endCoords, colorOfF
 		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
 		if (legalMoves.brute) { // Don't allow the slide if it results in check
 			const moveDraft = { startCoords: startCoords, endCoords };
-			if (movepiece.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
+			if (checkresolver.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
 		}
 		return true; // Move is legal
 	}
