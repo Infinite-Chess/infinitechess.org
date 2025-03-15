@@ -5,6 +5,7 @@ import movement from './movement.js';
 import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
 import jsutil from '../../util/jsutil.js';
+import { players } from '../../chess/config.js';
 // Import End
 
 /**
@@ -59,8 +60,8 @@ function initModel() {
 
 	const vertexData = [];
 
-	addDataForSide(gamefile.gameRules.promotionRanks.white, 1);
-	addDataForSide(gamefile.gameRules.promotionRanks.black, 0);
+	addDataForSide(gamefile.gameRules.promotionRanks[players.WHITE], 1);
+	addDataForSide(gamefile.gameRules.promotionRanks[players.BLACK], 0);
 
 	function addDataForSide(ranks, zeroOrOne) {
 		ranks.forEach(rank => {

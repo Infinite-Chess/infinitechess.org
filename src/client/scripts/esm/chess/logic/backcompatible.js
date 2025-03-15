@@ -3,6 +3,7 @@
 import formatconverter from './formatconverter.js';
 import moveutil from '../util/moveutil.js';
 import jsutil from '../../util/jsutil.js';
+import { players } from '../config.js';
 // Import End
 
 'use script';
@@ -65,7 +66,7 @@ function getLongformatInNewNotation(longformat) {
 		converted.moves = shortmovessplit;
 	}
 	if (longformat.promotionRanks) {
-		const newRanks = { white: longformat.promotionRanks[1], black: longformat.promotionRanks[0] };
+		const newRanks = { [players.WHITE]: longformat.promotionRanks[1], [players.BLACK]: longformat.promotionRanks[0] };
 		if (!longformat.gameRules) longformat.gameRules = { promotionRanks: newRanks };
 		else longformat.gameRules.promotionRanks = newRanks;
 	}

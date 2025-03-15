@@ -46,11 +46,15 @@ function initExistingTypes(gamefile) {
 
 	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
     
+	const rawtypes = new Set();
+
 	// Makes sure all possible pieces are accounted for. even when they dont start with them
-	const promotiontypes = gamefile.gameRules.promotionsAllowed ? [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black] : [];
+	const promotiontypes = gamefile.gameRules.promotionsAllowed ? Object.values(gamefile.gameRules.promotionsAllowed) : [];
     
-	// Promotion types already have teams stripped
-	const rawtypes = new Set(promotiontypes);
+	for (const rawTypeList of promotiontypes) {
+		rawtypes.add(...rawTypeList);
+	}
+	
 	for (const tpiece of teamtypes) {
 		rawtypes.add(typeutil.getRawType(tpiece)); // Make a set with the team color trimmed
 	}

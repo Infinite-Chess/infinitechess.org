@@ -21,8 +21,8 @@ interface ColorArgs {
 }
 
 const dualColors: PieceColorGroup = {
-	[players.WHITE]: [1, 1, 1, 1],
-	[players.BLACK]: [1, 1, 1, 1],
+	[players.WHITE]: [1, 0, 0.5, 1],
+	[players.BLACK]: [0, 1, 0, 0.5],
 	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1]
 };
 

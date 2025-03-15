@@ -193,9 +193,9 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	if (longformat.gameRules) {
 		if (longformat.gameRules.promotionRanks) {
 			shortformat += "(";
-			if (longformat.gameRules.promotionRanks.white.length > 0) {
-				shortformat += longformat.gameRules.promotionRanks.white.join(',');
-				const promotionListWhite = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed.white : null);
+			if (longformat.gameRules.promotionRanks[p.WHITE].length > 0) {
+				shortformat += longformat.gameRules.promotionRanks[p.WHITE].join(',');
+				const promotionListWhite = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.WHITE] : null);
 				if (promotionListWhite) {
 					if (!(promotionListWhite.length == 4 && promotionListWhite.includes("rooks") && promotionListWhite.includes("queens") && promotionListWhite.includes("bishops") && promotionListWhite.includes("knights"))) {
 						shortformat += ";";
@@ -207,9 +207,9 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				}
 			}
 			shortformat += "|";
-			if (longformat.gameRules.promotionRanks.black.length > 0) {
-				shortformat += longformat.gameRules.promotionRanks.black.join(',');
-				const promotionListBlack = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed.black : null);
+			if (longformat.gameRules.promotionRanks[p.BLACK].length > 0) {
+				shortformat += longformat.gameRules.promotionRanks[p.BLACK].join(',');
+				const promotionListBlack = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.BLACK] : null);
 				if (promotionListBlack) {
 					if (!(promotionListBlack.length == 4 && promotionListBlack.includes("rooks") && promotionListBlack.includes("queens") && promotionListBlack.includes("bishops") && promotionListBlack.includes("knights"))) {
 						shortformat += ";";
@@ -452,8 +452,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const blackRanksArray = blackRanks.length === 0 ? [] : blackRanks.split(',');
 
 			longformat.gameRules.promotionRanks = {
-				white: whiteRanksArray.map(num => parseInt(num)), // [-3, 4]
-				black: blackRanksArray.map(num => parseInt(num))
+				[p.WHITE]: whiteRanksArray.map(num => parseInt(num)), // [-3, 4]
+				[p.BLACK]: blackRanksArray.map(num => parseInt(num))
 			};
 
 			const defaultPromotions =  ["queens","rooks","bishops","knights"];

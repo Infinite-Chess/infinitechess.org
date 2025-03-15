@@ -197,7 +197,7 @@ function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
 function getTypeRangeFromIdx(o: OrganizedPieces, idx: number): TypeRange {
 	const type = o.types[idx];
 	if (type === undefined) throw Error("Index is out of piece lists");
-	if (!o.typeRanges.has(idx)) throw Error("Typerange is not initialized");
+	if (!o.typeRanges.has(type)) throw Error("Typerange is not initialized");
 
 	return o.typeRanges.get(type)!;
 }

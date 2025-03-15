@@ -293,6 +293,7 @@ function placePieces(organizedPieces: Partial<OrganizedPieces>) {
 }
 
 function registerPieceInSpace(idx: number, organizedPieces: Partial<OrganizedPieces>) {
+	if (idx === undefined) throw Error("Undefined idx is trying");
 	const x = organizedPieces.XPositions![idx];
 	const y = organizedPieces.YPositions![idx];
 	const coords = [x,y] as Coords;

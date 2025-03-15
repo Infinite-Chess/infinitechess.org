@@ -160,8 +160,8 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 			for (const [linekey, limits] of Object.entries(thisPieceMoveset.sliding)) {
 				const lines = gamefile.ourPieces.lines.get(linekey);
 				if (lines === undefined) continue;
-				const key = organizedpieces.getKeyFromLine(line, coords);
 				const line = coordutil.getCoordsFromKey(linekey);
+				const key = organizedpieces.getKeyFromLine(line, coords);
 				legalSliding[linekey] = slide_CalcLegalLimit(blockingFunc, gamefile.ourPieces, lines.get(key), line, limits, coords, color);
 			};
 		};
