@@ -180,7 +180,7 @@ function update() {
  */
 function updateHoverSquareLegal(gamefile: gamefile): void {
 	if (!pieceSelected) return;
-	const colorOfSelectedPiece = colorutil.getPieceColorFromType(type);
+	const colorOfSelectedPiece = colorutil.getPieceColorFromType(pieceSelected.type) as 'white'|'black';
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);

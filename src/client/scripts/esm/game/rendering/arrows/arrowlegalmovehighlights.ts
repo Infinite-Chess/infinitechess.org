@@ -26,6 +26,8 @@ import preferences from "../../../components/header/preferences.js";
 import movement from "../movement.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
+// @ts-ignore
+import typeutil from "../../../chess/util/typeutil.js";
 
 
 // Type Definitions -------------------------------------------------------------------------------------------
@@ -110,7 +112,7 @@ function onPieceIndicatorHover(piece: Piece) {
 	// Calculate the mesh...
 
 	// Determine what color the legal move highlights should be...
-	const pieceColor = colorutil.getPieceColorFromType(piece.type);
+	const pieceColor = colorutil.getPieceColorFromType(piece.type) as 'white'|'black';
 	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;

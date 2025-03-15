@@ -27,6 +27,9 @@ import coordutil from "../util/coordutil.js";
 import movepiece from "./movepiece.js";
 import jsutil from "../../util/jsutil.js";
 import moveutil from "../util/moveutil.js";
+import colorutil from "../util/colorutil.js";
+// @ts-ignore
+import typeutil from "../util/typeutil.js";
 // @ts-ignore
 import checkdetection from "./checkdetection.js";
 // @ts-ignore
@@ -312,7 +315,7 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 		if (gamefile.startSnapshot.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
 
 		// Can our piece legally move there?
-		if (legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPoint, color { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
+		if (legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPoint, color, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
 	}
 }
 

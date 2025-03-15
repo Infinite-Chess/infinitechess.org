@@ -311,7 +311,7 @@ function slide_CalcLegalLimit(blockingFunc, line, direction, slideMoveset, coord
  */
 function checkIfMoveLegal(gamefile, legalMoves, startCoords, endCoords, colorOfFriendly, { ignoreIndividualMoves } = {}) {
 	// Return if it's the same exact square
-	if (coordutil.areCoordsEqual(piece.coords, endCoords)) return false;
+	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
 	// Do one of the individual moves match?
 	if (!ignoreIndividualMoves) {
@@ -330,13 +330,13 @@ function checkIfMoveLegal(gamefile, legalMoves, startCoords, endCoords, colorOfF
 		const line = coordutil.getCoordsFromKey(strline); // 'dx,dy'
 		const limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
-		const selectedPieceLine = organizedlines.getKeyFromLine(line,piece.coords);
+		const selectedPieceLine = organizedlines.getKeyFromLine(line, startCoords);
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
 		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
 
-		if (!doesSlidingMovesetContainSquare(limits, line, piece.coords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
+		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
 		if (legalMoves.brute) { // Don't allow the slide if it results in check
-			const moveDraft = { startCoords: piece.coords, endCoords };
+			const moveDraft = { startCoords: startCoords, endCoords };
 			if (movepiece.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
 		}
 		return true; // Move is legal
