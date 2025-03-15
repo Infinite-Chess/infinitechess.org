@@ -111,7 +111,14 @@ function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, 
 	const royalCoords: Coords[] = gamefileutility.getJumpingRoyalCoordsOfColor(gamefile, color);
 	if (royalCoords.length === 0) return; // No royals, no open discoveries, don't remove any sliding moves
 
-	// There are 2 ways a sliding move can put you in check...
+	// There are 3 ways a sliding move can put you in check...
+
+	// 1. The piece making the sliding move IS A ROYAL itself (royalqueen) and it moves into check.
+	const trimmedType = colorutil.trimColorExtensionFromType(piece.type);
+	if (typeutil.slidingRoyals.includes(trimmedType)) {
+		moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
+		return; // That's all we need. EVERY move is simulated, even if other pieces are in check.
+	}
 
 	// 1. By not blocking, or capturing an already-existing check.
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
@@ -122,13 +129,6 @@ function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, 
 	 * as the few finitely many moves that resolve that check will have already been added.
 	 */
 	else removeSlidingMovesThatOpenDiscovered(gamefile, moves, piece, color);
-
-	// 3. The piece making the sliding move IS A ROYAL itself (royalqueen) and it moves into check.
-	const trimmedType = colorutil.trimColorExtensionFromType(piece.type);
-	if (typeutil.slidingRoyals.includes(trimmedType)) {
-		moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
-		console.log("Brute forcing all sliding moves.")
-	}
 }
 
 /**
