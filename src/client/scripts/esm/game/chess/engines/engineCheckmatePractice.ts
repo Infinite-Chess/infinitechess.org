@@ -34,10 +34,8 @@ import type { Vec2 } from "../../../util/math";
 /**
  * Let the main thread know that the Worker has finished fetching and
  * its code is now executing! We may now hide the spinny pawn loading animation.
- * 
- * An empty message is enough.
  */
-postMessage(undefined);
+postMessage('readyok');
 
 // Here, the engine webworker received messages from the outside
 self.onmessage = function(e: MessageEvent) {
@@ -199,8 +197,8 @@ let protectedRiderFleeDictionary: { [key: string]: [number, number, number] };
  */
 function initEvalWeightsAndSearchProperties() {
 
-	// default: ignoring white pawns moves as candidate moves makes engine much stronger at low depths
-	ignorepawnmoves = true;
+	// default
+	ignorepawnmoves = false;
 
 	// default
 	ignoreroyalmoves = false;
@@ -408,7 +406,11 @@ function initEvalWeightsAndSearchProperties() {
 			distancesEvalDictionary[5] = [[40, specialNorm], [40, specialNorm]]; // king
 			break;
 		case "1K2AR-1k":
-			distancesEvalDictionary[10] = [[25, manhattanNorm], [25, manhattanNorm]]; // archbishop
+			distancesEvalDictionary[10] = [[15, vincinityNorm], [15, vincinityNorm]]; // archbishop
+			distancesEvalDictionary[5] = [[15, manhattanNorm], [15, manhattanNorm]]; // king
+			break;
+		case "2R1N1P-1k":
+			ignorepawnmoves = true;
 			break;
 		case "1K2N6B-1k":
 			distancesEvalDictionary[4] = [[30, vincinityNorm], [30, vincinityNorm]]; // knight
@@ -442,6 +444,9 @@ function initEvalWeightsAndSearchProperties() {
 		case "1K1Q1P-1k":
 			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
 			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
+			break;
+		case "1K3NR-1k":
+			distancesEvalDictionary[5] = [[20, manhattanNorm], [20, manhattanNorm]]; // king
 			break;
 	}
 }
@@ -728,7 +733,7 @@ function get_white_piece_candidate_squares(piece_index: number, piecelist: numbe
 			}
 		}
 		// if no jump move has been added and piece has no ride moves or is a huygens, add single best jump move as candidate
-		if (candidate_squares.length === 0 && ( !piece_properties.rides || piece_properties.is_huygen )) candidate_squares.push(best_target_square!);
+		if (candidate_squares.length === 0 && best_target_square! !== undefined && ( !piece_properties.rides || piece_properties.is_huygen )) candidate_squares.push(best_target_square!);
 	}
 
 	// ride moves
@@ -1087,43 +1092,51 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false);
 	globalSurvivalPlies = 1;
 
-	// iteratively deeper and deeper search
-	for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-		const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, -Infinity, Infinity, 0, Infinity);
-		if (evaluation.terminate_now) { 
-			// console.log("Search interrupted at depth " + depth);
-			break;
-		}
-		globallyBestVariation = evaluation.bestVariation;
-		globallyBestScore = evaluation.score;
-		globalSurvivalPlies = evaluation.survivalPlies;
-		// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
+	try {
+		// iteratively deeper and deeper search
+		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
+			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, -Infinity, Infinity, 0, Infinity);
+			if (evaluation.terminate_now) { 
+				// console.log("Search interrupted at depth " + depth);
+				break;
+			}
+			globallyBestVariation = evaluation.bestVariation;
+			globallyBestScore = evaluation.score;
+			globalSurvivalPlies = evaluation.survivalPlies;
+			// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
 
-		// early exit condition
-		if (depth === 1) {
-			const black_move = globallyBestVariation[0]![1]!;
-			const [new_piecelist, new_coordlist] = make_black_move(black_move, piecelist, coordlist);
+			// early exit condition
+			if (depth === 1) {
+				const black_move = globallyBestVariation[0]![1]!;
+				const [new_piecelist, new_coordlist] = make_black_move(black_move, piecelist, coordlist);
 
-			// If a piece is captured, immediately check for insuffmat
-			// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
-			// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
-			if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
-				const piecesOrganizedByKey: { [key: string]: string } = {};
-				piecesOrganizedByKey["0,0"] = (royal_type === "k" ? "kingsB" : "royalCentaursB");
-				for (let i = 0; i < piecelist.length; i++) {
-					if (new_piecelist[i] !== 0) {
-						piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
+				// If a piece is captured, immediately check for insuffmat
+				// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
+				// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
+				if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
+					const piecesOrganizedByKey: { [key: string]: string } = {};
+					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? "kingsB" : "royalCentaursB");
+					for (let i = 0; i < piecelist.length; i++) {
+						if (new_piecelist[i] !== 0) {
+							piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
+						}
 					}
+					const dummy_gamefile = { 
+						piecesOrganizedByKey: piecesOrganizedByKey,
+						ourPieces: {},
+						moves: [],
+						gameRules: input_gamefile.gameRules
+					} as unknown as gamefile;
+					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
 				}
-				const dummy_gamefile = { 
-					piecesOrganizedByKey: piecesOrganizedByKey,
-					ourPieces: {},
-					moves: [],
-					gameRules: input_gamefile.gameRules
-				} as unknown as gamefile;
-				if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
 			}
 		}
+	}
+	catch (error) {
+		// If engine suggests illegal move for black, choose it randomly, else abort with currently best move
+		if (!tuplelist_contains_tuple(black_moves, globallyBestVariation[0]![1]!)) globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+		console.error("Something went wrong with the iterative deepening calculation, aborting early...");
+		console.error(error);
 	}
 }
 

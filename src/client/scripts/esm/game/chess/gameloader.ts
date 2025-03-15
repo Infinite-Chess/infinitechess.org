@@ -143,7 +143,7 @@ async function startLocalGame(options: {
 		// additional: { editor: true }
 	})
 		.then((result: any) => onFinishedLoading())
-		.catch((err: Error) => loadingscreen.onError());
+		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -177,7 +177,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 		additional
 	})
 		.then((result: any) => onFinishedLoading())
-		.catch((err: Error) => loadingscreen.onError());
+		.catch((err: Error) => onCatchLoadingError(err));
 
 	onlinegame.initOnlineGame(options);
 	
@@ -232,7 +232,7 @@ async function startEngineGame(options: {
 	 */
 	Promise.all([graphicalPromise, enginePromise])
 		.then((results: any[]) => onFinishedLoading())
-		.catch((err: Error) => loadingscreen.onError());
+		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
@@ -271,7 +271,7 @@ async function pasteGame(options: {
 		additional: additionalToUse,
 	})
 		.then((result: any) => onFinishedLoading())
-		.catch((err: Error) => loadingscreen.onError());
+		.catch((err: Error) => onCatchLoadingError(err));
 	
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -293,6 +293,15 @@ function onFinishedLoading() {
 	// done with loading, there's not gonna be another lag spike..
 	loadingscreen.close();
 	gameslot.startStartingTransition(); // Play the zoom-in animation at the start of games.
+}
+
+/**
+ * Replaces the loading animation with the words
+ * "ERROR. One or more resources failed to load. Please refresh."
+ */
+function onCatchLoadingError(err: Error) {
+	console.error(err);
+	loadingscreen.onError();
 }
 
 /**

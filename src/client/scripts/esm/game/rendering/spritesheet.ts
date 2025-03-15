@@ -6,20 +6,22 @@
  * If no game is loaded, no spritesheet is loaded.
  */
 
-import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { convertSVGsToImages } from '../../chess/rendering/svgtoimageconverter.js';
-import svgcache from '../../chess/rendering/svgcache.js';
-import jsutil from '../../util/jsutil.js';
-// @ts-ignore
-import texture from './texture.js';
-
-
-// Type Definitions ----------------------------------------------------------
-
 
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 import type { Coords } from '../../chess/logic/movesets.js';
+
+
+
+import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
+import svgtoimageconverter from '../../util/svgtoimageconverter.js';
+import svgcache from '../../chess/rendering/svgcache.js';
+import jsutil from '../../util/jsutil.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
+// @ts-ignore
+import texture from './texture.js';
+
 
 
 // Variables ---------------------------------------------------------------------------
@@ -47,8 +49,6 @@ let spritesheetData: {
 	texLocs: { [type: string]: Coords }
 } | undefined;
 
-/** Piece types that don't have an SVG */
-const typesWithoutSVG = ['voids'];
 
 
 // Functions ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	/** All piece types in the game. */
 	let existingTypes: string[] = jsutil.deepCopyObject(gamefile.startSnapshot.existingTypes); // ['pawns','obstacles','voids', ...]
 	// Remove the pieces that don't need/have an SVG, such as VOIDS
-	existingTypes = existingTypes.filter(type => !typesWithoutSVG.includes(type)); // ['pawns','obstacles', ...]
+	existingTypes = existingTypes.filter(type => !typeutil.SVGLESS_TYPES.includes(type)); // ['pawns','obstacles', ...]
 	// console.log('Existing types in game to construct spritesheet:', existingTypes);
 
 	/** Makes all the types in the game singular instead of plural */
@@ -91,7 +91,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	// console.log("Finished acquiring all piece SVGs!");
 
 	// Convert each SVG element to an Image
-	const readyImages: HTMLImageElement[] = await convertSVGsToImages(svgElements);
+	const readyImages: HTMLImageElement[] = await svgtoimageconverter.convertSVGsToImages(svgElements);
 
 	const spritesheetAndSpritesheetData = await generateSpritesheet(gl, readyImages);
 	// console.log(spritesheetAndSpritesheetData.spritesheetData);
@@ -106,6 +106,10 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 	spritesheetData = spritesheetAndSpritesheetData.spritesheetData;
 }
 
+/**
+ * Call when the gameslot unloads the gamefile.
+ * The spritesheet and data is no longer needed.
+ */
 function deleteSpritesheet() {
 	spritesheet = undefined;
 	spritesheetData = undefined;
@@ -114,7 +118,6 @@ function deleteSpritesheet() {
 
 
 export default {
-	typesWithoutSVG,
 	initSpritesheetForGame,
 	getSpritesheet,
 	getSpritesheetDataPieceWidth,

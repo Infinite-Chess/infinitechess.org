@@ -107,7 +107,10 @@ function clearScreen() {
  * Toggles normal blending mode. Transparent objects will correctly have
  * their color shaded onto the color behind them.
  */
-function toggleNormalBlending() { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); }
+function toggleNormalBlending() {
+	// Non-premultiplied alpha blending mode. (Pre-multiplied would be gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
+}
 
 /**
  * Toggles inverse blending mode, which will negate any color currently in the buffer.
@@ -115,7 +118,7 @@ function toggleNormalBlending() { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_AL
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function toggleInverseBlending() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZERO); }
+function enableBlending_Inverse() { gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.GL_ZERO); }
 
 /**
  * Executes a function (typically a render function) while the depth function paramter
@@ -140,7 +143,7 @@ function executeWithDepthFunc_ALWAYS(func, ...args) {
  * @param {Function} func 
  */
 function executeWithInverseBlending(func) {
-	toggleInverseBlending();
+	enableBlending_Inverse();
 	func();
 	toggleNormalBlending();
 }

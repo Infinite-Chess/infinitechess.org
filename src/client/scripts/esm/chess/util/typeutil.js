@@ -46,6 +46,11 @@ colorutil.validColors_NoNeutral.forEach((color, index) => {
 });
 colorsTypes.neutral = neutralTypes.map(type => type + colorutil.colorExtensionOfNeutrals);
 
+/** Piece types that don't have an SVG */
+const SVGLESS_TYPES = ['voids'];
+
+
+
 /**
  * Iterates through every single piece TYPE in the game state, and performs specified function on the type.
  * @param {function} callback - The function to execute on each type of piece. Must have 1 parameter of "type".
@@ -71,5 +76,6 @@ export default {
 	royals,
 	jumpingRoyals,
 	slidingRoyals,
+	SVGLESS_TYPES,
 	forEachPieceType,
 };

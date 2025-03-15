@@ -5,7 +5,6 @@
 
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { PooledArray } from '../../chess/logic/organizedlines.js';
 
 
 import space from '../misc/space.js';

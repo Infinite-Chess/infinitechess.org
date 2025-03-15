@@ -28,6 +28,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import piecemodels from '../rendering/piecemodels.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -53,10 +54,6 @@ import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
-import piecesmodel from '../rendering/piecesmodel.js';
-// @ts-ignore
-import loadbalancer from '../misc/loadbalancer.js';
-// @ts-ignore
 import websocket from '../websocket.js';
 // @ts-ignore
 import camera from '../rendering/camera.js';
@@ -64,6 +61,8 @@ import camera from '../rendering/camera.js';
 import copypastegame from './copypastegame.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -115,7 +114,6 @@ function testInGameDebugToggles(gamefile: gamefile) {
 	if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
 	if (input.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (input.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
-	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 }
 
 function updateSelectionScreen() {
@@ -128,7 +126,10 @@ function updateBoard(gamefile: gamefile) {
 	if (input.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
 	if (input.isKeyDown('escape')) guipause.toggle();
 	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, true);
+	if (input.isKeyDown('r')) {
+		piecemodels.regenAll(gamefile);
+		statustext.showStatus('Regenerated piece models.', false, 0.5);
+	}
 	if (input.isKeyDown('n')) {
 		guinavigation.toggle();
 		guigameinfo.toggle();
