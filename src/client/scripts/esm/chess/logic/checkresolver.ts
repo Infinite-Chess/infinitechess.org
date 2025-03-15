@@ -68,6 +68,9 @@ function removeCheckInvalidMoves(gamefile: gamefile, moves: LegalMoves, pieceSel
 
 	// 2. Individual moves. We can iterate through these and use detectCheck() to test them.
 	removeCheckInvalidMoves_Individual(gamefile, moves.individual, pieceSelected, color);
+
+	// console.log("Legal moves after removing check invalid:");
+	// console.log(moves);
 }
 
 /**
@@ -156,17 +159,17 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 
 	// 1. Capture the checking piece
 
-	const capturingNotPossible = attackerCount > 1; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
-
+	let capturingMove: Coords | undefined; // We will ONLY add this move if all sliding moves are deleted, otherwise it may be a duplicate.
+	const capturingImpossible = attackerCount > 1 && !gamefile.startSnapshot.colinearsPresent; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
 	// Check if the piece has the ability to capture
-	if (!capturingNotPossible && legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, attacker.coords, color, { ignoreIndividualMoves: true })) {
-		legalMoves.individual.push(attacker.coords); // Can capture!
+	if (!capturingImpossible && legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, attacker.coords, color, { ignoreIndividualMoves: true })) {
+		capturingMove = attacker.coords;
 	}
 
 	// 2. Block the check
 
 	/**
-	 * If it's a jumping move (not sliding),
+	 * If it's a jumping check,
 	 * AND it doesn't have the `path` special flag with atleast 3 waypoints (blockable),
 	 * 
 	 * or its a sliding move,
@@ -179,6 +182,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 		|| attacker.slidingCheck && dist === 1) {
 		// Impossible to block
 		delete legalMoves.sliding; // Erase all sliding moves
+		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
 		return true;
 	}
 
@@ -188,10 +192,13 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	 * 2. Individual check, with 3+ path length
 	 */
 	
-	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0]!, attacker.coords, legalMoves, selectedPieceCoords, color);
+	if (attacker.slidingCheck) appendBlockingMoves(gamefile, royalCoords[0]!, attacker.coords, legalMoves, selectedPieceCoords, color); // Has a chance to delete all sliding moves except one, adding the `brute` flag.
 	else appendPathBlockingMoves(gamefile, attacker.path!, legalMoves, selectedPieceCoords, color);
 
-	delete legalMoves.sliding; // Erase all sliding moves
+	if (!legalMoves.brute) {
+		delete legalMoves.sliding; // Erase all sliding moves IF appendBlockingMoves() didn't flag any slide direction to brute force! It will have deleted all other sliding moves for us.
+		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
+	}
 	
 	return true;
 }
@@ -268,10 +275,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 
 		if (Object.keys(moves.sliding).length === 0) delete moves.sliding; // No sliding moves left
 		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
-		else if (gamefile.startSnapshot.colinearsPresent) {
-			moves.brute = true;
-			console.log("Brute forcing PIN sliding moves.");
-		}
+		else if (gamefile.startSnapshot.colinearsPresent) moves.brute = true;
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
@@ -283,6 +287,9 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 /**
  * Appends legal blocking moves to the provided moves object if the piece
  * is able to get between squares 1 & 2.
+ * 
+ * If colinears are present and the piece is on the same line as the line between
+ * the attacker and the royal, sliding moves may be deleted.
  * @param gamefile
  * @param square1 - `[x,y]`
  * @param square2 - `[x,y]`
@@ -305,6 +312,18 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 		const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(coords, line);
 		const line2GeneralForm = math.getLineGeneralFormFrom2Coords(square1, square2);
 		const blockPoint = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
+
+		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
+		if (blockPoint === undefined && gamefile.startSnapshot.colinearsPresent && math.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) {
+			// The piece lies on the same line from the attacker to the royal!
+			// Flag this slide direction to brute force check each move for legality.
+			moves.brute = true;
+			// Delete all other sliding moves
+			for (const slideDir in moves.sliding) { // 'dx,dy'
+				if (slideDir !== lineKey) delete moves.sliding[slideDir]; // Not the same line, delete it.
+			}
+			break; // All other slides were deleted, no point in continuing to iterate.
+		}
 
 		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
 		if (!math.boxContainsSquare(box, blockPoint)) continue; // Intersection point not between our 2 points, but outside of them.

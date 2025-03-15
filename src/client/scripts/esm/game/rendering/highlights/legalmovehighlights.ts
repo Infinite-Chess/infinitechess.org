@@ -548,7 +548,6 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 
 			// If we're brute force checking each move for check, do that here. (royal queen, or colinear pins)
 			if (brute) {
-				console.log("Brute forcing if slide stop square legal.");
 				const moveDraft: MoveDraft = { startCoords: pieceCoords, endCoords: thisCoord };
 				if (checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor).check) break legal;
 			}
