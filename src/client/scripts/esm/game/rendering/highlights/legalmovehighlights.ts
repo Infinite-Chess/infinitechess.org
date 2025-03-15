@@ -547,7 +547,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 			// If we're brute force checking each move for check, do that here. (royal queen, or colinear pins)
 			if (brute) {
 				const moveDraft: MoveDraft = { startCoords: pieceCoords, endCoords: thisCoord };
-				if (!checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor)) break legal;
+				if (!checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor).check) break legal;
 			}
 
 			// Should we add instance data to the capturing or non-capturing model?
