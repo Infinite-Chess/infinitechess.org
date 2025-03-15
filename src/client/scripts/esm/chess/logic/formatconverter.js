@@ -138,7 +138,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	let fullmove = 1;
 	if (longformat.fullMove) {
 		shortformat += `${longformat.fullMove.toString()} `;
-		fullmove = Number(longformat.fullMove);
+		fullmove = Math.floor(Number(longformat.fullMove));
 	}
 
 	// promotion lines, currently assumes that "promotionRanks" is always defined as a list of length 2, if it is defined
@@ -366,8 +366,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// en passant
-		if (!longformat.enpassant && /^(-?[0-9]+e?[0-9]*,-?[0-9]+e?[0-9]*)$/.test(string)) {
-			longformat.enpassant = [Number(string.split(",")[0]), Number(string.split(",")[1])];
+		if (!longformat.enpassant && /^(-?[0-9\.]+e?[0-9]*,-?[0-9\.]+e?[0-9]*)$/.test(string)) {
+			longformat.enpassant = [Math.floor(Number(string.split(",")[0])), Math.floor(Number(string.split(",")[1]))];
 			continue;
 		}
 
@@ -379,12 +379,12 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 		// full move counter
 		if (!longformat.fullMove && /^([0-9]+)$/.test(string)) {
-			longformat.fullMove = Number(string);
+			longformat.fullMove = Math.floor(Number(string));
 			continue;
 		}
 
 		// promotion lines
-		if (/^\(((()|([^\(\)\|]*\|)-?[0-9]+e?[0-9]*)|(\|\)$))/.test(string)) {
+		if (/^\(((()|([^\(\)\|]*\|)-?[0-9\.]+e?[0-9]*)|(\|\)$))/.test(string)) {
 			
 			/**
 			 * Possible cases the string could look like:
@@ -407,8 +407,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const blackRanksArray = blackRanks.length === 0 ? [] : blackRanks.split(',');
 
 			longformat.gameRules.promotionRanks = {
-				white: whiteRanksArray.map(num => Number(num)), // [-3, 4]
-				black: blackRanksArray.map(num => Number(num))
+				white: whiteRanksArray.map(num => Math.floor(Number(num))), // [-3, 4]
+				black: blackRanksArray.map(num => Math.floor(Number(num)))
 			};
 
 			const defaultPromotions =  ["queens","rooks","bishops","knights"];
@@ -439,7 +439,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// position
-		if (!longformat.startingPosition && /^([a-zA-z]+-?[0-9]+e?[0-9]*,-?[0-9]+e?[0-9]*\+?($|\|))/.test(string)) {
+		if (!longformat.startingPosition && /^([a-zA-z]+-?[0-9\.]+e?[0-9]*,-?[0-9\.]+e?[0-9]*\+?($|\|))/.test(string)) {
 			const { startingPosition, specialRights } = getStartingPositionAndSpecialRightsFromShortPosition(string);
 			longformat.specialRights = specialRights;
 			longformat.startingPosition = startingPosition;
@@ -448,7 +448,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		//moves - conversion stops here
-		if (/^(([0-9]+\.)|([a-zA-Z]*-?[0-9]+e?[0-9]*,-?[0-9]+e?[0-9]*[\s]*(x|>)+))/.test(string)) {
+		if (/^(([0-9]+\.)|([a-zA-Z]*-?[0-9\.]+e?[0-9]*,-?[0-9\.]+e?[0-9]*[\s]*(x|>)+))/.test(string)) {
 			const shortmoves = (string + "  " + shortformat).trimEnd();
 			const moves = convertShortMovesToLong(shortmoves);
 			if (moves.length > 0) longformat.moves = moves;
@@ -474,7 +474,7 @@ function convertShortMovesToLong(shortmoves) {
 		if (end_index == -1) throw new Error("Unclosed { found.");
 		shortmoves = shortmoves.slice(0,start_index) + "|" + shortmoves.slice(end_index + 1);
 	}
-	shortmoves = shortmoves.match(/[a-zA-Z]*-?[0-9]+e?[0-9]*,-?[0-9]+e?[0-9]*[\s]*(x|>)+[\s]*-?[0-9]+e?[0-9]*,-?[0-9]+e?[0-9]*[^\|\.0-9]*/g);
+	shortmoves = shortmoves.match(/[a-zA-Z]*-?[0-9\.]+e?[0-9]*,-?[0-9\.]+e?[0-9]*[\s]*(x|>)+[\s]*-?[0-9\.]+e?[0-9]*,-?[0-9\.]+e?[0-9]*[^\|\.0-9]*/g);
 
 	if (!shortmoves) return longmoves;
 
@@ -502,7 +502,7 @@ function convertShortMovesToLong(shortmoves) {
     */
 
 	for (let i = 0; i < shortmoves.length; i++) {
-		const coords = shortmoves[i].match(/-?[0-9]+e?[0-9]*,-?[0-9]+e?[0-9]*/g);
+		const coords = shortmoves[i].match(/-?[0-9\.]+e?[0-9]*,-?[0-9\.]+e?[0-9]*/g);
 		const startString = coords[0];
 		const endString = coords[1];
 
@@ -644,7 +644,7 @@ function convertShortMovesToLong(shortmoves) {
                         castle["coord"] = castleCandidate;
                         longmove["castle"] = castle;
                         let castleString = castleCandidate.toString();
-                        runningCoordinates[`${(Number(endCoords[0])-castle["dir"]).toString()},${endCoords[1].toString()}`] = `${longformat["startingPosition"][castleString]}`;
+                        runningCoordinates[`${(Math.floor(Number(endCoords[0]))-castle["dir"]).toString()},${endCoords[1].toString()}`] = `${longformat["startingPosition"][castleString]}`;
                         runningCoordinates[castleString] = undefined;
                     }
                 }
@@ -707,7 +707,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 			if (move.flags.capture || move.type.slice(0, -1) === "pawns") {
 				ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
 			} else {
-				ret.moveRule = `${(Number(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
+				ret.moveRule = `${(Math.floor(Number(ret.moveRule.slice(0,slashindex))) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
 			}
 		}
 
@@ -725,7 +725,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update coords of castled piece
 		if (move.castle) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
+			ret.startingPosition[`${(Math.floor(Number(move.endCoords[0])) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
 			delete ret.startingPosition[castleString];
 			if (ret.specialRights) delete ret.specialRights[castleString];
 		}
@@ -760,7 +760,7 @@ function LongToShort_CompactMove(longmove) {
  * @returns {Object} Output move as JSON: { startCoords, endCoords, promotion }
  */
 function ShortToLong_CompactMove(shortmove) {
-	let coords = shortmove.match(/-?[0-9]+e?[0-9]*,-?[0-9]+e?[0-9]*/g); // ['1,2','3,4']
+	let coords = shortmove.match(/-?[0-9\.]+e?[0-9]*,-?[0-9\.]+e?[0-9]*/g); // ['1,2','3,4']
 	// Make sure the move contains exactly 2 coordinates.
 	if (coords.length !== 2) throw new Error(`Short move does not contain 2 valid coordinates: ${JSON.stringify(coords)}`);
 	coords = coords.map((movestring) => { return getCoordsFromString(movestring); }); // [[1,2],[3,4]]
@@ -770,7 +770,7 @@ function ShortToLong_CompactMove(shortmove) {
 		if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
 	});
 	// ShortToLong_Piece() will already throw an error if the piece abbreviation is invalid.
-	const promotedPiece = (/[a-zA-Z]+/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+/)) : "");
+	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+$/)).trimEnd() : "");
 	const longmove = { compact: shortmove };
 	longmove.startCoords = coords[0];
 	longmove.endCoords = coords[1];
@@ -866,7 +866,7 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
  * @return {number[]} The coordinates of the piece, [x,y]
  */
 function getCoordsFromString(key) {
-	return key.split(',').map(Number);
+	return key.split(',').map(Number).map(Math.floor);
 }
 
 /**
