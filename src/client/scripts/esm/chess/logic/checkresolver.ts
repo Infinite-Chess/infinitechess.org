@@ -247,6 +247,10 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 				if (!attacker.slidingCheck) { // This attacker is giving a check via a special individual move with a `path` (such as the Rose piece).
 					// Delete all sliding moves and append legal blocking moves
 					appendPathBlockingMoves(gamefile, attacker.path!, moves, pieceSelected.coords, color);
+					// Also append the capturing move if it's legal
+					if (legalmoves.checkIfMoveLegal(gamefile, moves, pieceSelected.coords, attacker.coords, color, { ignoreIndividualMoves: true })) {
+						moves.individual.push(attacker.coords);
+					}
 					delete moves.sliding; // Erase all sliding moves
 					// We don't have to keep iterating through royals and attackers, since
 					// if none of these newly added path-blocking moves are legal, nothing else will be.
