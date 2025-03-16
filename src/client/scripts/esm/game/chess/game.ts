@@ -154,8 +154,6 @@ function updateBoard(gamefile: gamefile) {
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 
-	if (guipause.areWePaused()) return;
-
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
