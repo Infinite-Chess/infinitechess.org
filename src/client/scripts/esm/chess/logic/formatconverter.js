@@ -451,7 +451,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		//moves - conversion stops here
-		if (RegExp(`^(([0-9]+\\.)|([a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+))`).test(string)) {
+		if (RegExp(`^(([0-9]+\\.$)|([a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+))`).test(string)) {
 			const shortmoves = (string + "  " + shortformat).trimEnd();
 			const moves = convertShortMovesToLong(shortmoves);
 			if (moves.length > 0) longformat.moves = moves;
