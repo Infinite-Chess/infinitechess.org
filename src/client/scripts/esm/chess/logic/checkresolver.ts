@@ -216,6 +216,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
  * @param color - The color of the player the piece belongs to.
  */
 function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMoves, pieceSelected: Piece, color: 'white' | 'black'): void {
+	if (gamefile.inCheck) throw Error('We should not be in check when calling removeSlidingMovesThatOpenDiscovered!'); // Safety net
 	if (!moves.sliding) return; // No sliding moves to remove
 
 	/**
