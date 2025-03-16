@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "44"
+version = "45"
 maintainer = "Naviary"
 
 [header]
@@ -78,7 +78,10 @@ variants_credits = [
 "designed by Andreas Tsevas.",
 "designed by Cory Evans and Joel Hamkins.",
 "designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
-"Chess on an Infinite Plane - Huygens Options by V. Reinhart."
+"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
+"Confined Classical by Andreas Tsevas.",
+"4x4x4x4 Chess by Andreas Tsevas.",
+"8x8x8x8 Chess by Jace.",
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"

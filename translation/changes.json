@@ -1,4 +1,8 @@
 {
+	"45": {
+		"note": "Added credits for 3 new variants 'Confined Classical', '4x4x4x4 Chess', and '8x8x8x8 Chess' on lines 82-84.",
+		"changes": []
+	},
 	"44": {
 		"note": "Replaced progress_checkmate on line 333 with a comment, and added 7 more translations on lines 339-345 in play.javascript",
 		"changes": []
