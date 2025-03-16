@@ -12,6 +12,9 @@ import jsutil from "../../util/jsutil.js";
  * compact ICN (Infinite Chess Noation) and back, still human-readable,
  * but taking less space to describe positions.
  */
+
+// regex from https://stackoverflow.com/questions/638565/parsing-scientific-notation-sensibly for numbers in scientific notation
+const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
     
 const pieceDictionary = {
 	"kingsW": "K", "kingsB": "k",
@@ -366,7 +369,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// en passant
-		if (!longformat.enpassant && /^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)$/.test(string)) {
+		if (!longformat.enpassant && RegExp(`^(${scientificNumberRegex},${scientificNumberRegex})$`).test(string)) {
 			longformat.enpassant = [Math.floor(Number(string.split(",")[0])), Math.floor(Number(string.split(",")[1]))];
 			continue;
 		}
@@ -384,7 +387,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// promotion lines
-		if (/^\(((()|([^\(\)\|]*\|)[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)|(\|\)$))/.test(string)) {
+		if (RegExp(`^\\(((()|([^\\(\\)\\|]*\\|)${scientificNumberRegex})|(\\|\\)$))`).test(string)) {
 			
 			/**
 			 * Possible cases the string could look like:
@@ -439,7 +442,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// position
-		if (!longformat.startingPosition && /^([a-zA-z]+[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\+?($|\|))/.test(string)) {
+		if (!longformat.startingPosition && RegExp(`^([a-zA-z]+${scientificNumberRegex},${scientificNumberRegex}\\+?($|\\|))`).test(string)) {
 			const { startingPosition, specialRights } = getStartingPositionAndSpecialRightsFromShortPosition(string);
 			longformat.specialRights = specialRights;
 			longformat.startingPosition = startingPosition;
@@ -448,7 +451,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		//moves - conversion stops here
-		if (/^(([0-9]+\.)|([a-zA-Z]*[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?[\s]*(x|>)+))/.test(string)) {
+		if (RegExp(`^(([0-9]+\\.)|([a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+))`).test(string)) {
 			const shortmoves = (string + "  " + shortformat).trimEnd();
 			const moves = convertShortMovesToLong(shortmoves);
 			if (moves.length > 0) longformat.moves = moves;
@@ -474,7 +477,7 @@ function convertShortMovesToLong(shortmoves) {
 		if (end_index == -1) throw new Error("Unclosed { found.");
 		shortmoves = shortmoves.slice(0,start_index) + "|" + shortmoves.slice(end_index + 1);
 	}
-	shortmoves = shortmoves.match(/[a-zA-Z]*[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?[\s]*(x|>)+[\s]*[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?[^\|\.0-9]*/g);
+	shortmoves = shortmoves.match(RegExp(`[a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+[\\s]*${scientificNumberRegex},${scientificNumberRegex}[^\\|\\.0-9]*`, "g"));
 
 	if (!shortmoves) return longmoves;
 
@@ -502,7 +505,7 @@ function convertShortMovesToLong(shortmoves) {
     */
 
 	for (let i = 0; i < shortmoves.length; i++) {
-		const coords = shortmoves[i].match(/[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/g);
+		const coords = shortmoves[i].match(RegExp(`${scientificNumberRegex},${scientificNumberRegex}`, "g"));
 		const startString = coords[0];
 		const endString = coords[1];
 
@@ -760,7 +763,7 @@ function LongToShort_CompactMove(longmove) {
  * @returns {Object} Output move as JSON: { startCoords, endCoords, promotion }
  */
 function ShortToLong_CompactMove(shortmove) {
-	let coords = shortmove.match(/[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?,[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/g); // ['1,2','3,4']
+	let coords = shortmove.match(RegExp(`${scientificNumberRegex},${scientificNumberRegex}`, "g")); // ['1,2','3,4']
 	// Make sure the move contains exactly 2 coordinates.
 	if (coords.length !== 2) throw new Error(`Short move does not contain 2 valid coordinates: ${JSON.stringify(coords)}`);
 	coords = coords.map((movestring) => { return getCoordsFromString(movestring); }); // [[1,2],[3,4]]
