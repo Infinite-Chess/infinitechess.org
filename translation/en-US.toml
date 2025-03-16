@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "45"
+version = "46"
 maintainer = "Naviary"
 
 [header]
@@ -180,6 +180,7 @@ keybinds = [
 ["Space", " and ", "Shift", " to zoom in and out."],
 ["Escape", " to pause the game."],
 ["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which displays arrows pointing to all pieces that can move to your screen along their direction of movement. But ", "Tab", " can switch this mode to \"All\", or \"Off\"; \"All\" displays arrows for all pieces, regardless of if they can move to your screen. This setting can also be toggled in the pause menu. Clicking an arrow will teleport you to the piece it points to."],
+["Control", " will force-drag the board instead of dragging a piece, if dragging is enabled in the settings."],
 " will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
 ]
 controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
