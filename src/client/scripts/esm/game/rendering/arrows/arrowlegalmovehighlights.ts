@@ -161,7 +161,8 @@ function regenModelsOfHoveredPieces() {
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Calculate the mesh...
-		const pieceColor = typeutil.getPieceColorFromType(hoveredArrow.piece.type);
+		const pieceColor = colorutil.getPieceColorFromType(hoveredArrow.piece.type);
+		if (pieceColor === "neutral") return console.error("Arrows for neutral pieces not supported");
 		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
