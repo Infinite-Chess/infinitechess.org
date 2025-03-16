@@ -773,7 +773,7 @@ function ShortToLong_CompactMove(shortmove) {
 		if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
 	});
 	// ShortToLong_Piece() will already throw an error if the piece abbreviation is invalid.
-	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+$/)).trimEnd() : "");
+	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+$/).trimEnd()) : "");
 	const longmove = { compact: shortmove };
 	longmove.startCoords = coords[0];
 	longmove.endCoords = coords[1];
