@@ -98,6 +98,15 @@ main {
 
 /* Badges */
 
+#badgelist {
+    display: flex;
+    height: 60px;
+}
+
+#badgelist img {
+    height: 100%;
+}
+
 .badge {
     position: relative;
     transition: transform 0.4s ease;
@@ -108,14 +117,6 @@ main {
   
 .badge:hover {
     transform: scale(1.1);
-}
-
-#badgelist {
-    display: flex;
-}
-
-#badgelist img {
-    height: 100%;
 }
 
 /* Badge shine properties are in header.css since they are shared with badges on play page */
