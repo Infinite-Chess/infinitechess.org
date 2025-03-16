@@ -141,7 +141,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	let fullmove = 1;
 	if (longformat.fullMove) {
 		shortformat += `${longformat.fullMove.toString()} `;
-		fullmove = Math.floor(Number(longformat.fullMove));
+		fullmove = Number(longformat.fullMove);
 	}
 
 	// promotion lines, currently assumes that "promotionRanks" is always defined as a list of length 2, if it is defined
@@ -370,7 +370,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 		// en passant
 		if (!longformat.enpassant && RegExp(`^(${scientificNumberRegex},${scientificNumberRegex})$`).test(string)) {
-			longformat.enpassant = [Math.floor(Number(string.split(",")[0])), Math.floor(Number(string.split(",")[1]))];
+			longformat.enpassant = [Number(string.split(",")[0]), Number(string.split(",")[1])];
 			continue;
 		}
 
@@ -382,7 +382,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 		// full move counter
 		if (!longformat.fullMove && /^([0-9]+)$/.test(string)) {
-			longformat.fullMove = Math.floor(Number(string));
+			longformat.fullMove = Number(string);
 			continue;
 		}
 
@@ -410,8 +410,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const blackRanksArray = blackRanks.length === 0 ? [] : blackRanks.split(',');
 
 			longformat.gameRules.promotionRanks = {
-				white: whiteRanksArray.map(num => Math.floor(Number(num))), // [-3, 4]
-				black: blackRanksArray.map(num => Math.floor(Number(num)))
+				white: whiteRanksArray.map(num => Number(num)), // [-3, 4]
+				black: blackRanksArray.map(num => Number(num))
 			};
 
 			const defaultPromotions =  ["queens","rooks","bishops","knights"];
@@ -647,7 +647,7 @@ function convertShortMovesToLong(shortmoves) {
                         castle["coord"] = castleCandidate;
                         longmove["castle"] = castle;
                         let castleString = castleCandidate.toString();
-                        runningCoordinates[`${(Math.floor(Number(endCoords[0]))-castle["dir"]).toString()},${endCoords[1].toString()}`] = `${longformat["startingPosition"][castleString]}`;
+                        runningCoordinates[`${(Number(endCoords[0])-castle["dir"]).toString()},${endCoords[1].toString()}`] = `${longformat["startingPosition"][castleString]}`;
                         runningCoordinates[castleString] = undefined;
                     }
                 }
@@ -710,7 +710,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 			if (move.flags.capture || move.type.slice(0, -1) === "pawns") {
 				ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
 			} else {
-				ret.moveRule = `${(Math.floor(Number(ret.moveRule.slice(0,slashindex))) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
+				ret.moveRule = `${(Number(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
 			}
 		}
 
@@ -728,7 +728,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update coords of castled piece
 		if (move.castle) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition[`${(Math.floor(Number(move.endCoords[0])) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
+			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
 			delete ret.startingPosition[castleString];
 			if (ret.specialRights) delete ret.specialRights[castleString];
 		}
@@ -869,7 +869,7 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
  * @return {number[]} The coordinates of the piece, [x,y]
  */
 function getCoordsFromString(key) {
-	return key.split(',').map(Number).map(Math.floor);
+	return key.split(',').map(Number);
 }
 
 /**
