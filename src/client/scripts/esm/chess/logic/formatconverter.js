@@ -513,7 +513,7 @@ function convertShortMovesToLong(shortmoves) {
 		const suffix = shortmoves[i].slice(suffix_index).trimStart().trimEnd();
 
 		// simplified longmoves (comment out next 2 lines and uncomment block below to get back old behavior)
-		const promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/) : "");
+		const promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/)[0] : "");
 		longmoves.push(`${startString}>${endString}${promotedPiece}`);
 
 		/*
@@ -532,7 +532,7 @@ function convertShortMovesToLong(shortmoves) {
         }
 
         let isPromotion = false;
-        let promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/) : "");
+        let promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/)[0] : "");
         if (promotedPiece != ""){
             isPromotion = true;
             try{
@@ -773,7 +773,7 @@ function ShortToLong_CompactMove(shortmove) {
 		if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
 	});
 	// ShortToLong_Piece() will already throw an error if the piece abbreviation is invalid.
-	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+$/).trimEnd()) : "");
+	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToLong_Piece(shortmove.match(/[a-zA-Z]+$/)[0].trimEnd()) : "");
 	const longmove = { compact: shortmove };
 	longmove.startCoords = coords[0];
 	longmove.endCoords = coords[1];
