@@ -244,7 +244,8 @@ function loadTranslationsFolder(folder) {
 		fs.readFileSync(path.join(folder, "changes.json")).toString(),
 	);
 	const supportedLanguages = [];
-	const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).sort((a, b) => {
+	// Filtering out '.DS_Store' is required because sometimes on the machine running the website, that mac inserts a .DS_Store file in the news directory.
+	const newsFiles = fs.readdirSync(path.join(folder, 'news', getDefaultLanguage())).filter(n => n !== '.DS_Store').sort((a, b) => {
 		const dateA = new Date(a.replace('.md', ''));
 		const dateB = new Date(b.replace('.md', ''));
 		return dateB - dateA;
