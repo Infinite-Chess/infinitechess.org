@@ -30,7 +30,7 @@ async function createDevelopmentAccounts() {
 		// 	+ "," + Object.values(validcheckmates.validCheckmates.medium).toString()
 		// 	+ "," + Object.values(validcheckmates.validCheckmates.hard).toString();
 		// Gold
-		const checkmates_beaten = Object.values(validcheckmates.validCheckmates).flat().toString();
+		const checkmates_beaten = Object.values(validcheckmates.validCheckmates).flat().join(',');
 		updateMemberColumns(user_id, { checkmates_beaten });
 	}
 	if (!doesMemberOfUsernameExist("patron")) {

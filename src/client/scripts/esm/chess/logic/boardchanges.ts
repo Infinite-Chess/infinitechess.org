@@ -227,7 +227,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	
 	// Do we need to add more undefineds?
 	// Only adding pieces can ever reduce the number of undefineds we have, so we do that here!
-	if (organizedlines.areWeShortOnUndefineds(gamefile)) organizedlines.addMoreUndefineds(gamefile, { log: true });
+	if (organizedlines.isTypeShortOnUndefineds(gamefile, piece.type)) organizedlines.addMoreUndefinedsToType(gamefile, piece.type);
 }
 
 /**

@@ -5,7 +5,6 @@
 
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { PooledArray } from '../../chess/logic/organizedlines.js';
 
 
 import space from '../misc/space.js';
@@ -36,6 +35,8 @@ import area from './area.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
+// @ts-ignore
+import guipause from '../gui/guipause.js';
 
 
 // Variables --------------------------------------------------------------
@@ -110,6 +111,7 @@ function testIfToggled(): void {
  * and can start teleports.
  */
 function genModel() {
+	if (guipause.areWePaused()) return; // Exit if paused
 	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (disabled) return; // Too many pieces to render icons!
 

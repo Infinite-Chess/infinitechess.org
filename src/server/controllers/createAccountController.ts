@@ -41,7 +41,7 @@ import { Request, Response } from 'express';
 const reservedUsernames: string[] = [
     'infinitechess',
     'support', 'infinitechesssupport',
-    'admin', 'administrator',
+    'administrator',
     'amazon', 'amazonsupport', 'aws', 'awssupport',
     'apple', 'applesupport',
     'microsoft', 'microsoftsupport',

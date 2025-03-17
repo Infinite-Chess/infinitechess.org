@@ -774,3 +774,61 @@ span.arrow-head-left {
         z-index: 1;
     }
 }
+
+
+
+/* Badge shine properties - needed both for play and for member page */
+
+#checkmate-badge-bronze {
+    --shine-color: rgba(229, 203, 180, 0.3);
+}
+
+#checkmate-badge-silver {
+    --shine-color: rgba(192, 192, 192, 0.22);
+}
+
+#checkmate-badge-gold {
+    --shine-color: rgba(255, 215, 0, 0.24);
+}
+  
+.badge .shine-clockwise, .badge .shine-anticlockwise {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translate(-50%, -50%);
+    /* Conic gradient produces the rays */
+    background: repeating-conic-gradient(var(--shine-color) 0deg 15deg, transparent 15deg 40deg);
+    /* Use a radial mask to fade the rays proportional to distance */
+    mask-image: radial-gradient(circle, black 30%, transparent 55%);
+    -webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    animation: rotateShine linear infinite;
+    pointer-events: none;  /* This prevents the shine from being part of the hover area */
+    z-index: -1;
+}
+
+.badge .shine-clockwise {
+    animation-direction: normal;
+    animation-duration: 13s;
+}
+
+.badge .shine-anticlockwise {
+    animation-direction: reverse;
+    animation-duration: 26s;
+}
+
+.badge:hover .shine-clockwise, .badge:hover .shine-anticlockwise {
+    opacity: 1;
+}
+
+@keyframes rotateShine {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}

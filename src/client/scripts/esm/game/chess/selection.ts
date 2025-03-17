@@ -27,11 +27,11 @@ import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js'
 import moveutil from '../../chess/util/moveutil.js';
 import space from '../misc/space.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
-import spritesheet from '../rendering/spritesheet.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -180,8 +180,9 @@ function update() {
  */
 function updateHoverSquareLegal(gamefile: gamefile): void {
 	if (!pieceSelected) return;
+	const colorOfSelectedPiece = colorutil.getPieceColorFromType(pieceSelected.type) as 'white'|'black';
 	// Required to pass on the special flag
-	const legal = legalmoves.checkIfMoveLegal(legalMoves!, pieceSelected!.coords, hoverSquare);
+	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = gamefileutility.getPieceTypeAtCoords(gamefile, hoverSquare);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
 }
@@ -316,6 +317,7 @@ function canDropOnPieceTypeInEditMode(type?: string) {
 	const selectedPieceColor = colorutil.getPieceColorFromType(pieceSelected!.type);
 	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
 	return !type.startsWith('voids') && (color !== selectedPieceColor);
+	// return color !== selectedPieceColor; // Allow capturing voids for debugging
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
@@ -418,12 +420,6 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 		pawnIsPromotingOn = coords;
 		return;
 	}
-	// Don't move the piece if the mesh is locked, because it will mess up the mesh generation algorithm.
-	if (gamefile.mesh.locked) {
-		statustext.pleaseWaitForTask();
-		unselectPiece();
-		return;
-	}
 
 	const strippedCoords = moveutil.stripSpecialMoveTagsFromCoords(coords) as Coords;
 	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
@@ -463,7 +459,7 @@ function makePromotionMove(gamefile: gamefile) {
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
-	if (spritesheet.typesWithoutSVG.some(type => pieceSelected!.type.startsWith(type))) return; // No svg/texture for this piece (void), don't render the ghost image.
+	if (typeutil.SVGLESS_TYPES.some((type: string) => pieceSelected!.type.startsWith(type))) return; // No svg/texture for this piece (void), don't render the ghost image.
 
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }

@@ -57,10 +57,6 @@ const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 60 * 30; // 30 minutes
 // const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 10; // 10 seconds
 let timeToDeleteInviteTimeoutID;
 
-// Set to true when you need to force-calculate the mesh or legal move searching.
-// This will stop spreading it accross multiple frames and instead do it as fast as possible.
-let forceCalc = false;
-
 
 
 // Millis since the start of the program
@@ -254,14 +250,6 @@ function cancelTimerToDeleteInviteAfterLeavingPage() {
 	timeToDeleteInviteTimeoutID = undefined;
 }
 
-function getForceCalc() {
-	return forceCalc;
-}
-
-function setForceCalc(value) {
-	forceCalc = value;
-}
-
 export default {
 	getRunTime,
 	getDeltaTime,
@@ -274,6 +262,4 @@ export default {
 	gisAFK,
 	gisHibernating,
 	isPageHidden,
-	getForceCalc,
-	setForceCalc,
 };

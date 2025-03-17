@@ -11,13 +11,18 @@
  */
 
 
+
+import type { Coords } from "../../chess/util/coordutil.js";
+import type { Color } from "../../chess/util/colorutil.js";
+
+
+// @ts-ignore
+import bufferdata from "./bufferdata.js";
 // @ts-ignore
 import board from "./board.js";
 // @ts-ignore
 import shapes from "./shapes.js";
 
-
-import type { Coords } from "../../chess/util/coordutil.js";
 
 
 // Variables ------------------------------------------------------------------------------
@@ -145,9 +150,8 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 }
 /**
  * Generates vertex data for a plus sign using 5 non-overlapping rectangles
- * @param color - Color [r, g, b, a] from theme (opacity offset will be applied)
  */
-function getDataPlusSign(color: [number, number, number, number]): number[] {
+function getDataPlusSign(color: Color): number[] {
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
 	a = Math.min(a + PLUS_SIGN.OPACITY_OFFSET, 1);
@@ -209,9 +213,23 @@ function getDataPlusSign(color: [number, number, number, number]): number[] {
 	return vertices;
 }
 
+/**
+ * Generates the vertex data for a single square draw with a texture, centered on [0,0]
+ * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
+ */
+function getDataTexture(inverted: boolean): number[] {
+	let { left, right, bottom, top } = shapes.getBoundingBoxOfCoord([0,0]);
+	if (inverted) {
+		[left, right] = [right, left]; // Swap left and right
+		[bottom, top] = [top, bottom]; // Swap bottom and top
+	}
+	return bufferdata.getDataQuad_Texture(left, bottom, right, top, 0, 0, 1, 1);
+}
+
 export default {
 	getDataLegalMoveSquare,
 	getDataLegalMoveDot,
 	getDataLegalMoveCornerTris,
 	getDataPlusSign,
+	getDataTexture,
 };

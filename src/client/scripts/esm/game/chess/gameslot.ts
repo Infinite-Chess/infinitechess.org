@@ -26,6 +26,7 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import clientEventDispatcher from "../../util/clientEventDispatcher.js";
+import piecemodels from "../rendering/piecemodels.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -38,8 +39,6 @@ import sound from "../misc/sound.js";
 import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
-import piecesmodel from "../rendering/piecesmodel.js";
 // @ts-ignore
 import selection from "./selection.js";
 // @ts-ignore
@@ -244,38 +243,38 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
-	if (lastmove !== undefined) {
-		// Rewind one move
-		movepiece.applyMove(loadedGamefile!, lastmove, false);
-		
-		// A small delay to animate the most recently played move.
-		animateLastMoveTimeoutID = setTimeout(() => {
-			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
-			movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
-			movesequence.animateMove(lastmove, true);
-		}, delayOfLatestMoveAnimationOnRejoinMillis);
-	}
+	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
-	// Regenerate the mesh of all the pieces.
-	await regenModel();
+	// Generate the mesh of every piece type
+	await piecemodels.regenAll(loadedGamefile!);
+
+	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
+	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
+		if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
+		movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
+		movesequence.animateMove(lastmove, true);
+	}, delayOfLatestMoveAnimationOnRejoinMillis);
 
 	/**
 	 * Listen for the event that inserts more undefineds into the piece lists.
 	 * When that occurs, we need to regenerate the model.
 	 */
-	clientEventDispatcher.listen('inserted-undefineds', regenModel);
+	clientEventDispatcher.listen('inserted-undefineds', regenModelOfType);
 }
 
-async function regenModel() {
-	await piecesmodel.regenModel(loadedGamefile!);
+/**
+ * Call when any one piece type list has increased in undefined placeholders.
+ * The length of the array has changed, so we should regenerate its mesh.
+ */
+function regenModelOfType(event: CustomEvent) {
+	const type = event.detail;
+	piecemodels.regenType(loadedGamefile!, type);
 }
 
 /** The canvas will no longer render the current game */
 function unloadGame() {
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	
-	// Terminate the mesh algorithm.
-	loadedGamefile.mesh.terminateIfGenerating();
 	loadedGamefile = undefined;
 
 	selection.unselectPiece();
@@ -302,7 +301,7 @@ function unloadGame() {
 	specialrighthighlights.onGameClose();
 
 	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.
-	clientEventDispatcher.removeListener('inserted-undefineds', regenModel);
+	clientEventDispatcher.removeListener('inserted-undefineds', regenModelOfType);
 }
 
 /**

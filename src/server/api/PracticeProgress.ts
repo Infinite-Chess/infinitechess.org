@@ -113,7 +113,7 @@ function postCheckmateBeaten(req: CustomRequest, res: Response): void {
 
 	// Send appropriate response
 	if (updateSuccess) {
-		logEvents(`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. New checkmates_beaten: ${checkmates_beaten}`, 'checkmates_beaten.txt', { print: true });
+		logEvents(`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`, 'checkmates_beaten.txt', { print: true });
 		// Create a new cookie with the updated checkmate list for the user
 		createPracticeProgressCookie(res, checkmates_beaten);
 		res.status(200).json({ message: 'Checkmate recorded successfully' });

@@ -73,8 +73,8 @@
                 <div id="title" class="title hidden">
                     <h1>Infinite Chess</h1>
                     <button id="play" class="play titlebubble button"><%=t('play.main-menu.play')%></button>
-                    <button id="rules" class="rules titlebubble button"><%=t('play.main-menu.guide')%></button>
                     <button id="practice" class="practice titlebubble button"><%=t('play.main-menu.practice')%></button>
+                    <button id="rules" class="rules titlebubble button"><%=t('play.main-menu.guide')%></button>
                     <button id="board-editor" class="board-editor titlebubble button opacity-0_5"><%=t('play.main-menu.editor')%></button>
                 </div>
 
@@ -123,7 +123,8 @@
                                 <img loading="lazy" src="/img/game/guide/arrowindicators.png" class="img-arrowindicators">
                             </picture>
                             <li><strong><%=t('play.guide.keybinds.3.0')%></strong><%=t('play.guide.keybinds.3.1')%><strong><%=t('play.guide.keybinds.3.2')%></strong><%=t('play.guide.keybinds.3.3')%></li>
-                            <li><strong>1</strong><%=t('play.guide.keybinds.4')%></li>
+                            <li><strong><%=t('play.guide.keybinds.4.0')%></strong><%=t('play.guide.keybinds.4.1')%></li>
+                            <li><strong>1</strong><%=t('play.guide.keybinds.5')%></li>
                         </ul>
                         <p><%=t('play.guide.controls_paragraph2')%></p>
                         <ul>
@@ -287,7 +288,7 @@
                                         <!-- <option value="Classical_KOTH"><%=t('play.play-menu.Classical_KOTH')%></option>
                                         <option value="CoaIP_KOTH"><%=t('play.play-menu.CoaIP_KOTH')%></option> -->
                                         <option value="4x4x4x4_Chess"><%=t('play.play-menu.4x4x4x4_Chess')%></option>
-										<option value="8x8x8x8_Chess"><%=t('play.play-menu.8x8x8x8_Chess')%></option>
+										<option value="5D_Chess"><%=t('play.play-menu.5D_Chess')%></option>
                                         <option value="Omega"><%=t('play.play-menu.Omega')%></option>
                                         <option value="Omega_Squared"><%=t('play.play-menu.Omega_Squared')%></option>
                                         <option value="Omega_Cubed"><%=t('play.play-menu.Omega_Cubed')%></option>
@@ -380,7 +381,30 @@
                     <p id="practice-name" class="practice-name"><%=t('play.practice-menu.title')%></p>
                     <div class="practice-box titlebubble">
                         <div class="practice-head">
-                            <div class="checkmate-progress-bar"></div>
+                            <div class="checkmate-progress"></div>
+                            <div class="checkmate-progress-bar">
+                                <picture id="checkmate-badge-bronze" class="badge tooltip-u unselectable" data-tooltip="<%=t('member.badge-tooltips.checkmate_bronze')%>">
+                                    <div class="shine-clockwise hidden"></div>
+                                    <div class="shine-anticlockwise hidden"></div>
+                                    <source srcset="/img/badges/checkmate-badge-bronze.webp" type="image/webp" />
+                                    <source srcset="/img/badges/checkmate-badge-bronze.avif" type="image/avif" />
+                                    <img loading="lazy" src="/img/badges/checkmate-badge-bronze.png" class="unearned">
+                                </picture>
+                                <picture id="checkmate-badge-silver" class="badge tooltip-u unselectable" data-tooltip="<%=t('member.badge-tooltips.checkmate_silver')%>">
+                                    <div class="shine-clockwise hidden"></div>
+                                    <div class="shine-anticlockwise hidden"></div>
+                                    <source srcset="/img/badges/checkmate-badge-silver.webp" type="image/webp" />
+                                    <source srcset="/img/badges/checkmate-badge-silver.avif" type="image/avif" />
+                                    <img loading="lazy" src="/img/badges/checkmate-badge-silver.png" class="unearned">
+                                </picture>
+                                <picture id="checkmate-badge-gold" class="badge tooltip-u unselectable" data-tooltip="<%=t('member.badge-tooltips.checkmate_gold')%>">
+                                    <div class="shine-clockwise hidden"></div>
+                                    <div class="shine-anticlockwise hidden"></div>
+                                    <source srcset="/img/badges/checkmate-badge-gold.webp" type="image/webp" />
+                                    <source srcset="/img/badges/checkmate-badge-gold.avif" type="image/avif" />
+                                    <img loading="lazy" src="/img/badges/checkmate-badge-gold.png" class="unearned">
+                                </picture>
+                            </div>
                             <div class="checkmate-difficulty difficulty-title"><%=t('play.practice-menu.difficulty')%></div>
                         </div>
                         <div class="checkmate-list">
@@ -423,9 +447,6 @@
                 on the height of the navigation bar. -->
                 <div id="stats">
                     <p id="status-fps" class="status hidden"></p>
-                    <p id="status-pieces-mesh" class="status hidden"></p>
-                    <p id="status-rotate-mesh" class="status hidden"></p>
-                    <p id="status-coords" class="status hidden"></p>
                     <p id="status-moves" class="status hidden"></p>
                 </div>
 

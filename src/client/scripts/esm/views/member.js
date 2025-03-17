@@ -125,7 +125,7 @@ function updateCompletedCheckmatesInformation(checkmates_beaten) {
 	practiceProgressElement.textContent = `${numCompleted} / ${numTotal}`;
 	
 	let shownBadge;
-	if (numCompleted >= 1.0 * numTotal) shownBadge = element_checkmateBadgeGold;
+	if (numCompleted >= numTotal) shownBadge = element_checkmateBadgeGold;
 	else if (numCompleted >= 0.75 * numTotal) shownBadge = element_checkmateBadgeSilver;
 	else if (numCompleted >= 0.5 * numTotal) shownBadge = element_checkmateBadgeBronze;
 

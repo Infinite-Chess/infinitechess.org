@@ -87,9 +87,11 @@ function initEngineGame(options: {
 
 	// Return a promise that resolves when the ENGINE WORKER has finished fetching/loading.
 	return new Promise<void>((resolve, reject) => {
-		// Set up a handler for the first message that indicates the worker is ready
-		// We have to manually send this message at the top of our engines. The message contents is blank.
-		engineWorker!.onmessage = (e: MessageEvent) => resolve(); // The first message we receive (undefined), we know the engine is ready!
+		// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
+		// We have to manually send this message at the top of our engines.
+		engineWorker!.onmessage = (e: MessageEvent) => {
+			if (e.data === 'readyok') resolve(); // Engine is ready!
+		};
 		engineWorker!.onerror = (e: ErrorEvent) => {
 			console.error("Worker failed to load:", e);
 			reject(new Error("Worker failed to load."));

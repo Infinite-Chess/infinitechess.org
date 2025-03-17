@@ -1,4 +1,16 @@
 {
+	"46": {
+		"note": "On line 183 added a note that holding Control will force-drag the board.",
+		"changes": []
+	},
+	"45": {
+		"note": "Added credits for 3 new variants 'Confined Classical', '4x4x4x4 Chess', and '5D Chess' on lines 82-84.",
+		"changes": []
+	},
+	"44": {
+		"note": "Replaced progress_checkmate on line 333 with a comment, and added 7 more translations on lines 339-345 in play.javascript",
+		"changes": []
+	},
 	"43": {
 		"note": "Added all of member.badge-tooltips, lines 122-125",
 		"changes": []
@@ -8,7 +20,7 @@
 		"changes": []
 	},
 	"41": {
-		"note": "Replaced play.play-menu.5D_Chess on line 245 with 4x4x4x4_Chess and 8x8x8x8_Chess",
+		"note": "Replaced play.play-menu.5D_Chess on line 245 with 4x4x4x4_Chess and 5D_Chess",
 		"changes": []
 	},
 	"40": {

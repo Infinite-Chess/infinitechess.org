@@ -44,7 +44,7 @@ what_is_it_pargaraphs = [
 "Łatwo się domyślić, że istnieje nieskończona liczba możliwości dla otwarć szachowych, z których, wiele, jest w stanie zapewnić szybką przewagę w partii! Finalnie, cel jest then sam, dać mata przeciwnemu królowi. Ten warinat wymaga jednak nowych strategii, zważywszy na to, że plansza nie ma ścian, które mogą pomóc w złapaniu króla w pułapkę. Partie zazwyczaj trwają tyle co w oryginalnych szachach. Promocja pionów, również zachodzi na wierszach 1. oraz 8.",
 ]
 how_to_title = "Jak zagrać?"
-how_to_paragraph = ["Obecna wersja 1.4 jest dostępna na stronie ","Graj","!"]
+how_to_paragraph = ["Obecna wersja 1.6 jest dostępna na stronie ","Graj","!"]
 about_title = "O projekcie"
 about_paragraphs = [
 "Jestem Naviary. Gdy odkryłem Nieskończone Szachy (koncept istniał długo przed tą stroną), byłem bardzo zaintrygowany jego możliwościami. Granie w tą wersję było bardzo trudne, gdyż wymagało od graczy na chess.com wysyłania zdjęć planszy po każdym zagranym ruchu. Ze względu na to, niewiele osób było w stanie zagrać w Nieskończone Szachy, a sam wariant gry nie był popularny.",

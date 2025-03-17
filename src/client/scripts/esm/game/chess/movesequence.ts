@@ -50,7 +50,7 @@ import specialrighthighlights from "../rendering/highlights/specialrighthighligh
 function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	movepiece.makeMove(gamefile, move); // Logical changes
-	if (gamefile.mesh.model !== undefined) boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
+	boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes

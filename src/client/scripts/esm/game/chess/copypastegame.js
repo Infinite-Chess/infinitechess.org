@@ -19,6 +19,7 @@ import gameslot from './gameslot.js';
 import gameloader from './gameloader.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
+import guipause from '../gui/guipause.js';
 import { primeGamefileForCopying } from './primeGamefileForCopying.js';
 // Import End
 
@@ -58,7 +59,7 @@ function copyGame(copySinglePosition) {
  * @param {event} event - The event fired from the event listener
  */
 async function callbackPaste(event) {
-	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
+	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
 	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 	
