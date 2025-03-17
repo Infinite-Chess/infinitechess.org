@@ -120,13 +120,22 @@ function sciNotationToNumber_String(str) {
         const absExp = Math.abs(exponent);
         
         // Add leading zeros if necessary
+		let returnstring;
         if (absExp >= coefficient.length) {
             const zeros = "0".repeat(absExp - coefficient.length);
-            return `0.${zeros}${coefficient}`;
+            returnstring = `0.${zeros}${coefficient}`;
         } else {
             const index = coefficient.length - absExp;
-            return `${coefficient.slice(0, index)}.${coefficient.slice(index)}`;
+            returnstring = `${coefficient.slice(0, index)}.${coefficient.slice(index)}`;
         }
+
+		// Formatting cleanup
+		returnstring = returnstring.replace(/^0+/, ''); // trim unneeded zeroes at the start
+		if (returnstring[0] == ".") returnstring = "0" + returnstring; // add leading zero before . if needed
+		returnstring = returnstring.replace(/0+$/, ''); // trim unneeded zeroes at the end
+		returnstring = returnstring.replace(/\.$/, ''); // trim . at the end
+
+		return returnstring
     }
 }
 
