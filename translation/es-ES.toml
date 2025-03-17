@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "31"
+version = "46"
 maintainer = "xa31"
 
 [header]
@@ -79,7 +79,9 @@ variants_credits = [
 "diseñado por Cory Evans y Joel Hamkins.",
 "diseñado por Cory Evans, Joel Hamkins, y Norman Lewis Perlmutter.",
 "Ajedrez en un plano infinito - Opciones Huygens por V. Reinhart.",
-"Trappist-1 por V. Reinhart"
+"Trappist-1 por V. Reinhart",
+"Ajedrez 4x4x4x4 por Andreas Tsevas.",
+"Ajedrez 5D por Jace.",
 ]
 textures_heading = "Texturas"
 textures_licensed_under = "texturas bajo la licencia"
@@ -113,11 +115,17 @@ resend_message = ["¿El e-mail no ha llegado? Comprueba la carpeta de spam. Tamb
 verify_confirm = "¡Gracias! Tu cuenta ha sido verificada."
 joined = "Se unió:"
 seen = ["Visto hace:", ""]
+practice_progress = "Progreso del modo práctica"
 reveal_info = "Mostrar información de la Cuenta"
 account_info_heading = "Información de la Cuenta"
 email = "E-mail:"
 delete_account = "Eliminar cuenta"
 password_reset_message = ["Para cambiar tu nombre de usuario, e-mail o contraseña, ", "contacta con nosotros."]
+
+[member.badge-tooltips]
+checkmate_bronze = "Veterano del jaque mate: Completa el 50% de los mates de práctica."
+checkmate_silver = "Pro del jaque mate: Completa el 75% de los mates de práctica."
+checkmate_gold = "Maestro del jaque mate: Completa el 100% de los mates de práctica."
 
 [create-account]
 title = "Crear Cuenta" # The tab name
@@ -146,6 +154,7 @@ error = "ERROR"
 [play.main-menu]
 credits = "Créditos"
 play = "Jugar"
+practice = "Practicar"
 guide = "Guía"
 editor = "Editor de tablero"
 
@@ -171,6 +180,7 @@ keybinds = [
 ["Espacio", " y ", "Mayus Izq.", " para hacer zoom."],
 ["Esc", " para pausar el juego."],
 ["Tab", " activa o desactiva las flechas indicadoras en los bordes de la pantalla que apuntan a las piezas que están fuera de plano. Por defecto, están en modo \"Defensa\", que muestra una flecha para las piezas que pueden moverse a tu localización desde donde están. Pero ", "tab", " puede cambiar al modo \"Todos\", o \"Ninguno\", de los cuales \"Todos\" revela todas las piezas en estas ortogonales y diagonales, sin importar que puedan moverse de esa manera. Esta opción también puede cambiarse en el menú de pausa. Hacer clic en las flechas te lleva a la pieza que están apuntando."],
+["Control", " fuerza el arrastre del tablero en vez de las piezas, si el arrastre está activado en las opciones."],
 " activa o desactiva \"Modo Edición\" en partidas locales. ¡Esto te permite mover cualquier pieza a cualquier lugar del tablero! Muy útil para analizar posiciones."
 ]
 controls_paragraph2 = "Esos son los principales controles que necesitas saber."
@@ -199,8 +209,15 @@ guard = {name="Guardia", description="Se mueve como un rey, pero no es susceptib
 hawk = {name="Halcón", description="Salta exactamente 2 o 3 casillas en cualquier dirección."}
 centaur = {name="Centauro", description="Se mueve como un caballo y un guardia combinados."}
 knightrider = {name="Jinete", description="Se mueve como un caballo infinitamente en una dirección, hasta que esté bloqueado."}
+huygen = {name="Huygen", description="Salta infinitamente en una de las direcciones cardinales, visitando solo los cuadrados primos desde la casilla de salida, hasta que se vea obstruido."}
 obstacle = {name="Obstáculo", description="Una pieza neutral (Que no es controlada por ningún jugador) que bloquea el movimiento, pero puede ser capturada."}
 void = {name="Vacío", description="Una pieza neutral (Que no es controlada por ningún jugador) que representa la ausencia de tablero. Las demás piezas no pueden moverse a través o encima de él."}
+
+[play.practice-menu]
+title = "Práctica - Mates"
+play = "Jugar"
+back = "Atrás"
+difficulty = "Dificultad"
 
 [play.play-menu]
 title = "Jugar - Online"
@@ -223,7 +240,7 @@ Space_Classic = "Clásica Espacio"
 Space = "Espacio"
 Obstocean = "Obstocean"
 Abundance = "Abundancia"
-Amazon_Chandelier = "Amazona Canciller"
+Amazon_Chandelier = "Candelabro de Amazona"
 Containment = "Contención"
 Classical_Limit_7 = "Clásica - Límite 7"
 CoaIP_Limit_7 = "Aeupi - Límite 7"
@@ -231,11 +248,11 @@ Chess = "Ajedrez"
 Classical_KOTH = "Experimental: Clásica - KOTH"
 CoaIP_KOTH = "Experimental: Aeupi - KOTH"
 CoaIP_HO = "Ajedrez en un plano infinito - Opciones Huygens"
-Trappist_1 = "Trappist-1"
 Omega = "Demostración: Omega"
 Omega_Squared = "Demostración: Omega^2"
 Omega_Cubed = "Demostración: Omega^3"
 Omega_Fourth = "Demostración: Omega^4"
+4x4x4x4_Chess = "Ajedrez 4×4×4×4"
 5D_Chess = "Ajedrez 5D"
 no_clock = "Sin Reloj"
 clock = "Reloj"
@@ -265,6 +282,8 @@ recenter = "Recentrar"
 rewind_move = "Deshacer movimiento"
 forward_move = "Rehacer movimiento"
 pause = "Pausa"
+undo = "Deshacer movimiento" # Checkmate practice game
+restart = "Reiniciar posición" # Checkmate practice game
 
 [play.pause]
 title = "Pausa"
@@ -274,6 +293,7 @@ perspective = "Perspectiva: Apagada"
 copy = "Copiar Partida"
 paste = "Pegar Partida"
 offer_draw = "Ofrecer Tablas"
+practice_menu = "Menú de práctica"
 main_menu = "Menú principal"
 
 [play.drawoffer] # The draw offer UI that appears on the bottom bar
@@ -314,10 +334,24 @@ webgl_unsupported = "¡Por favor, actualiza tu navegador! No es compatible con W
 bigints_unsupported = "Las BigInts no tienen soporte. Por favor actualiza tu navegador.\nLas BigInts son necesarias para hacer que el tablero sea infinito."
 shaders_failed = "No ha sido posible inicializar el programa de sombreado"
 failed_compiling_shaders = "Ha ocurrido un error compilando los shaders:"
+# Checkmate Practice
+versus = "vs"
+easy = "Facil"
+medium = "Media"
+hard = "Dificil"
+insane = "Insana"
+checkmate_logged_out = "Debes iniciar sesión para conseguir insignias"
+checkmate_bronze = "Veterano del jaque mate: Completa el 50% de los mates de práctica."
+checkmate_silver = "Pro del jaque mate: Completa el 75% de los mates de práctica."
+checkmate_gold = "Maestro del jaque mate: Completa el 100% de los mates de práctica."
+checkmate_bronze_unearned = "Completa el 50% de los mates de práctica."
+checkmate_silver_unearned = "Completa el 75% de los mates de práctica."
+checkmate_gold_unearned = "Completa el 100% de los mates de práctica."
 
 [play.javascript.copypaste]
 copied_game = "¡Posición copiada en el portapapeles!"
 cannot_paste_in_public = "¡No se pueden pegar posiciones en una partida pública"
+cannot_paste_in_engine = "¡No se pueden pegar posiciones en una partida con el ordenador!"
 cannot_paste_after_moves = "¡No se pueden pegar posiciones si ya se han hecho movimientos!"
 clipboard_denied = "Permiso de portapapeles denegado. Esto puede ser tu navegador."
 clipboard_invalid = "El portapapeles no está en notación ICN valida."
@@ -337,7 +371,6 @@ on = "Activado"
 off = "Desactivado"
 icon_rendering_off = "Desactivado el renderizado de iconos."
 icon_rendering_on = "Activado el renderizado de iconos."
-toggled_edit = "Modo edición activado / desactivado:"
 perspective = "Perspectiva"
 perspective_mode_on_desktop = "¡El modo perspectiva está disponible en dispositivos de escritorio!"
 movement_tutorial = "WASD para moverse. Espacio y Mayus Izq. para hacer zoom."
