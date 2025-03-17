@@ -116,9 +116,17 @@ function sciNotationToNumber_String(str) {
     if (exponent >= 0) {
         return (BigInt(coefficient) * BigInt(10) ** BigInt(exponent)).toString();
     } else {
-        // If exponent is negative, add leading zeros
-        const zeros = exponent < -1 ? "0".repeat(Math.abs(exponent) - 2) : "";
-        return `0.${zeros}${coefficient}`;
+        // If exponent is negative, we need to move the decimal point to the left
+        const absExp = Math.abs(exponent);
+        
+        // Add leading zeros if necessary
+        if (absExp >= coefficient.length) {
+            const zeros = "0".repeat(absExp - coefficient.length);
+            return `0.${zeros}${coefficient}`;
+        } else {
+            const index = coefficient.length - absExp;
+            return `${coefficient.slice(0, index)}.${coefficient.slice(index)}`;
+        }
     }
 }
 
