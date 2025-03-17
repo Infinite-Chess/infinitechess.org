@@ -125,7 +125,7 @@ function sciNotationToNumber_String(str) {
 /**
  * 
  * @param {string} str - A string representing a coordinate, may be in scientific notation or not, e.g. "2.0e32,1e0"
- * @returns {string} - A string with the number expanded to not use scientific notation, e.g. "200000000000000000000000000000000,1"
+ * @returns {string} - A string with the coordinate expanded to not use scientific notation, e.g. "200000000000000000000000000000000,1"
  */
 function sciNotationToNumber_CoordString(str) {
 	if (str.includes(',')) {
