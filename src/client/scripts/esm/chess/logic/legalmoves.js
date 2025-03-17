@@ -141,7 +141,6 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 	if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
 	const coords = piece.coords;
 	const type = piece.type;
-	const trimmedType = colorutil.trimColorExtensionFromType(type);
 	const color = colorutil.getPieceColorFromType(type); // Color of piece calculating legal moves of
 
 	const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
