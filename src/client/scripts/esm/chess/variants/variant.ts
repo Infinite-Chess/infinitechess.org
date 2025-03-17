@@ -298,7 +298,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			kings: fourdimensionalgenerator.getKingVicinity(5, false)
 		}
 	},
-	'8x8x8x8_Chess': {
+	'5D_Chess': {
 		generator: {
 			algorithm: () => { return fourdimensionalgenerator.gen4DPosition(8, 8, 9, positionStringOfClassical); },
 			rules: { pawnDoublePush: true, castleWith: 'rooks' }

@@ -81,7 +81,7 @@ variants_credits = [
 "Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
 "Confined Classical by Andreas Tsevas.",
 "4x4x4x4 Chess by Andreas Tsevas.",
-"8x8x8x8 Chess by Jace.",
+"5D Chess by Jace.",
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"
@@ -253,7 +253,7 @@ Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
 Omega_Fourth = "Showcase: Omega^4"
 4x4x4x4_Chess = "4×4×4×4 Chess"
-8x8x8x8_Chess = "8×8×8×8 Chess"
+5D_Chess = "5D Chess"
 no_clock = "No Clock"
 clock = "Clock"
 minutes = "m"
