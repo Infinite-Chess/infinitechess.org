@@ -96,7 +96,7 @@ function isJson(str) {
  * @param {string} str - A string representing a number, may be in scientific notation or not, e.g. "2.0e32"
  * @returns {string} - A string with the number expanded to not use scientific notation, e.g. "200000000000000000000000000000000"
  */
-function sciNotationToNumber_String(str) {
+function standardizeNumberString(str) {
 	let coefficient;
 	let exponent;
 	if (!/e/i.test(str)) {
@@ -152,14 +152,14 @@ function sciNotationToNumber_String(str) {
 }
 
 /**
- * 
- * @param {string} str - A string representing a coordinate, may be in scientific notation or not, e.g. "2.0e32,1e0"
- * @returns {string} - A string with the coordinate expanded to not use scientific notation, e.g. "200000000000000000000000000000000,1"
+ * This function brings the input coordinate into a standard format that is not in scientific notation
+ * @param {string} str - A string representing a coordinate, may be in scientific notation or not, e.g. "2.0e32,-01.0e0"
+ * @returns {string} - A string with the coordinate expanded to not use scientific notation, e.g. "200000000000000000000000000000000,-1"
  */
-function sciNotationToNumber_CoordString(str) {
+function standardizeCoordString(str) {
 	if (str.includes(',')) {
         const [coord0, coord1] = str.split(',');
-        return `${sciNotationToNumber_String(coord0)},${sciNotationToNumber_String(coord1)}`;
+        return `${standardizeNumberString(coord0)},${standardizeNumberString(coord1)}`;
     } else {
 		throw Error("Expected ',' in coordinate string"); // If string does not contain ",", it is not a coordinate string
 	}
@@ -733,9 +733,9 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 
 	for (const key in position) {
 		const thisPiece = position[key]; // e.g. "pawnsW"
-		if (pawnDoublePush && thisPiece.startsWith('pawns')) specialRights[sciNotationToNumber_CoordString(key)] = true;
+		if (pawnDoublePush && thisPiece.startsWith('pawns')) specialRights[standardizeCoordString(key)] = true;
 		else if (castleWith && thisPiece.startsWith('kings')) {
-			specialRights[sciNotationToNumber_CoordString(key)] = true;
+			specialRights[standardizeCoordString(key)] = true;
 			kingsFound[key] = getPieceColorFromType(thisPiece);
 		}
 		else if (castleWith && thisPiece.startsWith(castleWith)) {
@@ -754,7 +754,7 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their colors don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
 			if (xDist < 3) continue; // Not ateast 3 squares away
-			specialRights[sciNotationToNumber_CoordString(coord.toString())] = true; // Same row and color as the king! This piece can castle.
+			specialRights[standardizeCoordString(coord.toString())] = true; // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
 			// need to see if it's on the same rank as any other king
 			continue outerFor;
@@ -813,21 +813,21 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 		if (end_index != -1) {
 			if (shortposition[index + end_index] == "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
-				startingPosition[sciNotationToNumber_CoordString(coordString)] = ShortToLong_Piece(shortpiece);
-				specialRights[sciNotationToNumber_CoordString(coordString)] = true;
+				startingPosition[standardizeCoordString(coordString)] = ShortToLong_Piece(shortpiece);
+				specialRights[standardizeCoordString(coordString)] = true;
 				index += end_index + 2;
 			} else {
-				startingPosition[sciNotationToNumber_CoordString(shortposition.slice(index + piecelength, index + end_index))] = ShortToLong_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = ShortToLong_Piece(shortpiece);
 				index += end_index + 1;
 			}
 		} else {
 			if (shortposition.slice(-1) == "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
-				startingPosition[sciNotationToNumber_CoordString(coordString)] = ShortToLong_Piece(shortpiece);
-				specialRights[sciNotationToNumber_CoordString(coordString)] = true;
+				startingPosition[standardizeCoordString(coordString)] = ShortToLong_Piece(shortpiece);
+				specialRights[standardizeCoordString(coordString)] = true;
 				index = MAX_INDEX;
 			} else {
-				startingPosition[sciNotationToNumber_CoordString(shortposition.slice(index + piecelength))] = ShortToLong_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = ShortToLong_Piece(shortpiece);
 				index = MAX_INDEX;
 			}
 		}
