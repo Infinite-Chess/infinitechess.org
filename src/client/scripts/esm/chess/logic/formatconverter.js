@@ -117,7 +117,7 @@ function sciNotationToNumber_String(str) {
         return (BigInt(coefficient) * BigInt(10) ** BigInt(exponent)).toString();
     } else {
         // If exponent is negative, add leading zeros
-        const zeros = "0".repeat(Math.abs(exponent) - 1);
+        const zeros = exponent < -1 ? "0".repeat(Math.abs(exponent) - 2) : "";
         return `0.${zeros}${coefficient}`;
     }
 }
