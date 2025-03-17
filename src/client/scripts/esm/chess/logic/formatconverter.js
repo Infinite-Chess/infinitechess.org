@@ -909,7 +909,7 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 				break;
 			}
 		}
-		end_index = shortposition.slice(index).search(/\+|\|/); // end of current piece coordinates, counted from index
+		end_index = shortposition.slice(index).search(/(\+($|\|))|\|/); // end of current piece coordinates, counted from index
 		if (end_index != -1) {
 			if (shortposition[index + end_index] == "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
