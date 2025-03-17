@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "44"
+version = "46"
 maintainer = "Naviary"
 
 [header]
@@ -47,7 +47,7 @@ what_is_it_pargaraphs = [
 "As you can imagine, there are infinite possibilities for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.5 on the ","Play"," page!"]
+how_to_paragraph = ["The current version release is 1.6 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring players to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
@@ -78,7 +78,10 @@ variants_credits = [
 "designed by Andreas Tsevas.",
 "designed by Cory Evans and Joel Hamkins.",
 "designed by Cory Evans, Joel Hamkins, and Norman Lewis Perlmutter.",
-"Chess on an Infinite Plane - Huygens Options by V. Reinhart."
+"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
+"Confined Classical by Andreas Tsevas.",
+"4x4x4x4 Chess by Andreas Tsevas.",
+"5D Chess by Jace.",
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"
@@ -177,6 +180,7 @@ keybinds = [
 ["Space", " and ", "Shift", " to zoom in and out."],
 ["Escape", " to pause the game."],
 ["Tab", " toggles the arrow indicators on the edges of the screen pointing to pieces off-screen. By default, this mode is set to \"Defense\", which displays arrows pointing to all pieces that can move to your screen along their direction of movement. But ", "Tab", " can switch this mode to \"All\", or \"Off\"; \"All\" displays arrows for all pieces, regardless of if they can move to your screen. This setting can also be toggled in the pause menu. Clicking an arrow will teleport you to the piece it points to."],
+["Control", " will force-drag the board instead of dragging a piece, if dragging is enabled in the settings."],
 " will toggle \"Edit Mode\" in local games. This allows you to move any piece anywhere else on the board! Very useful for analyzing."
 ]
 controls_paragraph2 = "Those are the major controls you need to know. But here are some extras if you ever find yourself needing them!"
@@ -249,7 +253,7 @@ Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
 Omega_Fourth = "Showcase: Omega^4"
 4x4x4x4_Chess = "4×4×4×4 Chess"
-8x8x8x8_Chess = "8×8×8×8 Chess"
+5D_Chess = "5D Chess"
 no_clock = "No Clock"
 clock = "Clock"
 minutes = "m"

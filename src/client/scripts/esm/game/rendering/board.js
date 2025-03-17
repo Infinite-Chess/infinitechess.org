@@ -18,6 +18,8 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
+import piecemodels from './piecemodels.js';
+import guipromotion from '../gui/guipromotion.js';
 // Import End
 
 /** 
@@ -82,6 +84,12 @@ let darkTiles;
 	document.addEventListener('theme-change', (event) => { // Custom Event listener.
 		console.log(`Theme change event detected: ${preferences.getTheme()}`);
 		updateTheme();
+		const gamefile = gameslot.getGamefile();
+		if (!gamefile) return;
+		piecemodels.regenAll(gamefile);
+		// Reinit the promotion UI
+		guipromotion.resetUI();
+		guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 	});
 })();
 

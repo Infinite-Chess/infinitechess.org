@@ -18,9 +18,10 @@ import instancedshapes from './instancedshapes.js';
 import preferences from '../../components/header/preferences.js';
 import colorutil from '../../chess/util/colorutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
-import { svgToImage } from '../../chess/rendering/svgtoimageconverter.js';
 import math from '../../util/math.js';
 import miniimage from './miniimage.js';
+import svgtoimageconverter from '../../util/svgtoimageconverter.js';
+import frametracker from './frametracker.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -55,7 +56,12 @@ interface MeshData {
  */
 const Z: number = 0.001;
 
-/** The image width each piece type's image should be. */
+/**
+ * The image width each piece type's image should be.
+ * 
+ * ONLY HAS AN EFFECT if we don't use svgtoimageconverter.normalizeImagePixelData()
+ * If we do use that, then the images dimensions are decided by that script.
+ */
 const IMG_SIZE = 512;
 
 /**
@@ -107,6 +113,8 @@ async function regenAll(gamefile: gamefile) {
 		if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
 		else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
+
+	frametracker.onVisualChange();
 }
 
 /**
@@ -120,6 +128,8 @@ async function regenType(gamefile: gamefile, type: string) {
 
 	if (type === 'voidsN') gamefile.mesh.types[type] = genVoidModel(gamefile); // Custom mesh generation logic for voids
 	else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+
+	frametracker.onVisualChange();
 }
 
 /**
@@ -137,7 +147,9 @@ async function genTypeModel(gamefile: gamefile, type: string): Promise<MeshData>
 
 	const svg: SVGElement = (await svgcache.getSVGElements([type], IMG_SIZE, IMG_SIZE))[0]!;
 	// console.log("Converting svg to image again..");
-	const image: HTMLImageElement = await svgToImage(svg);
+	let image: HTMLImageElement = await svgtoimageconverter.svgToImage(svg);
+	// Patches firefox bug that darkens the image (when it is partially transparent) caused by double-multiplying the RGB channels by the alpha channel
+	image = await svgtoimageconverter.normalizeImagePixelData(image);
 	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
 
 	return {

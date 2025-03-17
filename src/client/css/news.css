@@ -30,7 +30,7 @@ main {
     min-height: 400px;
 }
 
-#content {
+.content {
     background-color: rgba(255, 255, 255, 0.805);
     min-height: 450px;
     margin: auto;
@@ -38,36 +38,43 @@ main {
     padding: 30px 20px;
 }
 
-#content h1 {
+.content h1 {
     font-size: 40px;
     font-family: georgia;
     text-transform: uppercase;
     margin-bottom: 40px;
 }
 
-#content h2 {
+.news-posts .news-post h1 {
+    font-size: 1.7em;
+    margin-bottom: 1em;
+    font-family: inherit;
+    text-transform: none;
+}
+
+.content h2 {
     margin-bottom: 1em;
 }
 
-#content p {
+.content p {
     line-height: 1.5;
     font-size: 17px;
     margin-bottom: 1em;
 }
 
-#content p.status {
+.content p.status {
     font-style: italic;
     font-size: 16px;
     margin-bottom: 35px;
 }
 
-#content p.date {
+.content p.date {
     margin-top: 35px;
     font-weight: bold;
     font-size: 18px;
 }
 
-#content ul li {
+.content ul li {
     margin-bottom: 0.7em;
 }
 
@@ -120,20 +127,20 @@ iframe {
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    #content h1 {
+    .content h1 {
         font-size: calc(40px + 0.028 * (100vw - 450px));
     }
 }
 
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
-    #content {
+    .content {
         max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
         padding: 40px 30px;
         min-height: 800px;
     }
 
-    #content h1 {
+    .content h1 {
         font-size: 50px;
         margin-bottom: 50px;
     }

@@ -68,7 +68,17 @@ const SCROLL: {
 	friction: 0.9
 };
 
+/** Whether the practice page is open */
+let isOpen: boolean = false;
+
 // Functions ------------------------------------------------------------------------
+
+
+// Set an event listener, for when the theme changes, to re-generate the icons, as their color may change
+document.addEventListener('theme-change', () => {
+	removePieceIcons(); // Remove the existing icons
+	if (isOpen) addPieceIcons(); // Regenerate the icons so they can update their color, if the new theme has different color arguments
+});
 
 
 /**
@@ -80,6 +90,7 @@ function getCheckmateSelectedID() {
 }
 
 function open() {
+	isOpen = true;
 	element_practiceSelection.classList.remove("hidden");
 	element_menuExternalLinks.classList.remove("hidden");
 	if (!generatedHTML) createPracticeHTML();
@@ -90,6 +101,7 @@ function open() {
 }
 
 function close() {
+	isOpen = false;
 	clearScrollMomentumInterval();
 	element_practiceSelection.classList.add("hidden");
 	element_menuExternalLinks.classList.add("hidden");
@@ -183,6 +195,27 @@ async function addPieceIcons() {
 		actualpieceBlack.appendChild(spriteBlack);
 	}
 	generatedIcons = true;
+}
+
+/**
+ * Removes the piece icons from the checkmate lists.
+ * Called when the theme changes.
+ */
+function removePieceIcons() {
+	for (const checkmate of element_checkmates.children) {
+		for (const piece of checkmate.getElementsByClassName('piecelistW')[0]!.getElementsByClassName('checkmatepiececontainer')) {
+			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
+			while (actualpiece.firstChild) {
+				actualpiece.removeChild(actualpiece.firstChild);
+			}
+		}
+		const pieceBlack = checkmate.getElementsByClassName('piecelistB')[0]!.getElementsByClassName('checkmatepiececontainer')[0]!;
+		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
+		while (actualpieceBlack.firstChild) {
+			actualpieceBlack.removeChild(actualpieceBlack.firstChild);
+		}
+	}
+	generatedIcons = false; // Reset the icon generation flag
 }
 
 function initListeners() {
