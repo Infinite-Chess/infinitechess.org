@@ -118,6 +118,13 @@ function sciNotationToNumber_String(str) {
     } else {
         // If exponent is negative, we need to move the decimal point to the left
         const absExp = Math.abs(exponent);
+
+		let leadingsign = "";
+		if (coefficient[0] == '+') coefficient = coefficient.slice(1);
+		else if (coefficient[0] == '-') {
+			coefficient = coefficient.slice(1);
+			leadingsign = "-";
+		}
         
         // Add leading zeros if necessary
 		let returnstring;
@@ -135,7 +142,7 @@ function sciNotationToNumber_String(str) {
 		returnstring = returnstring.replace(/0+$/, ''); // trim unneeded zeroes at the end
 		returnstring = returnstring.replace(/\.$/, ''); // trim . at the end
 
-		return returnstring
+		return `${leadingsign}${returnstring}`
     }
 }
 
