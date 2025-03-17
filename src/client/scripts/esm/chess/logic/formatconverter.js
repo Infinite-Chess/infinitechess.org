@@ -92,15 +92,21 @@ function isJson(str) {
 }
 
 /**
- * 
+ * This function brings the input number into a standard format that is not in scientific notation
  * @param {string} str - A string representing a number, may be in scientific notation or not, e.g. "2.0e32"
  * @returns {string} - A string with the number expanded to not use scientific notation, e.g. "200000000000000000000000000000000"
  */
 function sciNotationToNumber_String(str) {
-	if (!/e/i.test(str)) return str; // If string does not contain "e" or "E", it is not in scientific notation and we are done
-
-	let [coefficient, exponent] = str.toLowerCase().split('e');
-    exponent = Number(exponent);
+	let coefficient;
+	let exponent;
+	if (!/e/i.test(str)) {
+		// If string does not contain "e" or "E", it is not in scientific notation and exponent = 0
+		coefficient = str;
+		exponent = 0;
+	} else {
+		[coefficient, exponent] = str.toLowerCase().split('e');
+    	exponent = Number(exponent);
+	}
 
     // Handle decimal in coefficient
     if (coefficient.includes('.')) {
@@ -116,17 +122,16 @@ function sciNotationToNumber_String(str) {
     if (exponent >= 0) {
         return (BigInt(coefficient) * BigInt(10) ** BigInt(exponent)).toString();
     } else {
-        // If exponent is negative, we need to move the decimal point to the left
-        const absExp = Math.abs(exponent);
-
+		// Cut off and remember leading sign
 		let leadingsign = "";
 		if (coefficient[0] == '+') coefficient = coefficient.slice(1);
 		else if (coefficient[0] == '-') {
 			coefficient = coefficient.slice(1);
 			leadingsign = "-";
 		}
-        
-        // Add leading zeros if necessary
+
+		// If exponent is negative, we need to move the decimal point to the left
+        const absExp = Math.abs(exponent);
 		let returnstring;
         if (absExp >= coefficient.length) {
             const zeros = "0".repeat(absExp - coefficient.length);
