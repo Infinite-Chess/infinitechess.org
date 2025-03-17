@@ -47,7 +47,7 @@ what_is_it_pargaraphs = [
 "As you can imagine, there are infinite possibilities for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.5 on the ","Play"," page!"]
+how_to_paragraph = ["The current version release is 1.6 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring players to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
