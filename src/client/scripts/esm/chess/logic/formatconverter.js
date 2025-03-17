@@ -733,9 +733,9 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 
 	for (const key in position) {
 		const thisPiece = position[key]; // e.g. "pawnsW"
-		if (pawnDoublePush && thisPiece.startsWith('pawns')) specialRights[standardizeCoordString(key)] = true;
+		if (pawnDoublePush && thisPiece.startsWith('pawns')) specialRights[key] = true;
 		else if (castleWith && thisPiece.startsWith('kings')) {
-			specialRights[standardizeCoordString(key)] = true;
+			specialRights[key] = true;
 			kingsFound[key] = getPieceColorFromType(thisPiece);
 		}
 		else if (castleWith && thisPiece.startsWith(castleWith)) {
@@ -754,7 +754,7 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their colors don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
 			if (xDist < 3) continue; // Not ateast 3 squares away
-			specialRights[standardizeCoordString(coord.toString())] = true; // Same row and color as the king! This piece can castle.
+			specialRights[coord] = true; // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
 			// need to see if it's on the same rank as any other king
 			continue outerFor;
