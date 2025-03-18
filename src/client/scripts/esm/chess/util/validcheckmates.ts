@@ -21,8 +21,6 @@ const validCheckmates = {
 		"1K1Q1B-1k",
 		"1K1Q1N-1k",
 		"1Q1B1B-1k",
-		"1Q1N1B-1k",
-		"1Q2N-1k",
 		"1K1N2B1B-1k",
 		"1K2N1B1B-1k",
 		"1K1R1B1B-1k",
@@ -32,6 +30,8 @@ const validCheckmates = {
 		"2AM-1rc"
 	],
 	hard: [
+		"1Q1N1B-1k",
+		"1Q2N-1k",
 		"2R1N1P-1k",
 		"1K1R2N-1k",
 		"2K1R-1k",
