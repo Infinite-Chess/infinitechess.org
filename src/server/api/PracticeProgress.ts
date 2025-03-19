@@ -20,10 +20,10 @@ import type { Request, Response } from "express";
 
 
 /**
- * Middleware to set the preferences cookie for logged-in users based on their memberInfo cookie.
- * Only sets the preferences cookie on HTML requests (requests without an origin header).
+ * Middleware to set the checkmates_beaten cookie for logged-in users based on their memberInfo cookie.
+ * Only sets the checkmates_beaten cookie on HTML requests (requests without an origin header).
  * 
- * It is possible for the memberInfo cookie to be tampered with, but preferences can be public information anyway.
+ * It is possible for the memberInfo cookie to be tampered with, but checkmates_beaten can be public information anyway.
  * We are reading the memberInfo cookie instead of verifying their session token
  * because that could take a little bit longer as it requires a database look up.
  * @param {Object} req - The Express request object.
@@ -32,7 +32,7 @@ import type { Request, Response } from "express";
  */
 function setPracticeProgressCookie(req: Request, res: Response, next: Function) {
 	if (!req.cookies) {
-		logEvents("req.cookies must be parsed before setting preferences cookie!", 'errLog.txt', { print: true });
+		logEvents("req.cookies must be parsed before setting checkmates_beaten cookie!", 'errLog.txt', { print: true });
 		return next();
 	}
 
