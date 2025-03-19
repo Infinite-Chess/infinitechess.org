@@ -42,7 +42,7 @@ function kings(gamefile, piece, move) {
 
 	// Move the king to new square
 	const moveChanges = move.changes;
-	boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
 
 	// Move the rook to new square
 
@@ -67,22 +67,22 @@ function pawns(gamefile, piece, move) {
 
 	const captureCoords = enpassantTag ? gamefile.enpassant.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-	const capturedPiece = boardchanges.getPieceAtCoords(gamefile, captureCoords);
+	const capturedPiece = boardchanges.getPieceFromCoords(gamefile, captureCoords);
 
 	// Delete the piece captured
 
 	if (capturedPiece) {
-		boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece);
+		boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece);
 	} else {
 		// Move the pawn
-		boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords);
+		boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
 	}
 
 	if (promotionTag) {
 		// Delete original pawn
-		boardchanges.queueDeletePiece(moveChanges, true, move.endCoords, piece.type);
+		boardchanges.queueDeletePiece(moveChanges, true, {coords: move.endCoords, type: piece.type, index: piece.index});
 
-		boardchanges.queueAddPiece(moveChanges, move.endCoords, promotionTag);
+		boardchanges.queueAddPiece(moveChanges, {coords: move.endCoords, type: promotionTag, index: -1});
 	}
 
 	// Special move was executed!
@@ -94,8 +94,8 @@ function roses(gamefile, piece, move) {
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, move.endCoords);
 
 	// Delete the piece captured
-	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece, move.path);
-	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords, move.path);
+	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece, move.path);
+	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords, move.path);
 
 	// Special move was executed!
 	return true;

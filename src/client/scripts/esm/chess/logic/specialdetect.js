@@ -9,7 +9,7 @@ import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
 import checkresolver from './checkresolver.js';
-import { players } from '../config.js';
+import { players, rawTypes } from '../config.js';
 // Import End
 
 /** 
@@ -170,7 +170,7 @@ function pawns(gamefile, coords, color) {
 		if (color === colorOfPiece) continue; // Same color, don't add the capture
 
 		// Make sure it isn't a void
-		if (pieceAtCoords.startsWith('voids')) continue;
+		if (typeutil.getRawType(pieceAtCoords) === rawTypes.VOID) continue;
 
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
 	}
@@ -209,7 +209,7 @@ function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
-	const yParity = color === 'white' ? 1 : -1;
+	const yParity = color === players.WHITE ? 1 : -1;
 	if (coords[1] + yParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
@@ -340,7 +340,7 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
  * @returns {boolean}
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
-	if (!type.startsWith('pawns')) return false;
+	if (!typeutil.getRawType(type) === rawTypes.PAWN) return false;
 	if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = typeutil.getColorFromType(type);

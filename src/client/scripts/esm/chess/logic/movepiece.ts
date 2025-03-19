@@ -196,7 +196,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
  */
 function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
-	const capturedPiece = boardutil.getTypeFromCoords(gamefile.ourPieces, move.endCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, move.endCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
 	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);

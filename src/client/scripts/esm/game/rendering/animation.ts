@@ -15,7 +15,6 @@ import frametracker from './frametracker.js';
 import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
-import preferences from '../../components/header/preferences.js';
 import spritesheet from './spritesheet.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
@@ -313,7 +312,7 @@ function renderAnimations() {
 		return piecesData;
 	});
 
-	createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet()).render();
+	createModel(data, 2, "TRIANGLES", false, spritesheet.getSpritesheet()).render();
 }
 
 /**
@@ -326,12 +325,10 @@ function generatePieceData(type: number, coords: Coords): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { startX, startY, endX, endY } = calculateBoardPosition(coords);
-	const [ r, g, b, a ] = preferences.getTintColorOfType(type);
     
-	return bufferdata.getDataQuad_ColorTexture(
+	return bufferdata.getDataQuad_Texture(
 		startX, startY, endX, endY,
 		texleft, texbottom, texright, textop,
-		r, g, b, a
 	);
 }
 

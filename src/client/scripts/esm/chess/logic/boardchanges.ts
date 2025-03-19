@@ -46,7 +46,7 @@ type Change = {
 } | {
 	action: 'capture',
 	endCoords: Coords,
-	capturedPiece: number,
+	capturedPiece: Piece,
 	/** A custom path the moving piece took to make the capture. (e.g. Rose piece) */
 	path?: Coords[],
 } | {
@@ -112,7 +112,7 @@ const changeFuncs: ChangeApplication<genericChangeFunc> = {
  * @param endCoords 
  * @param capturedPiece The piece captured
  */
-function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, capturedPiece: number, path?: Coords[]) {
+function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, capturedPiece: Piece, path?: Coords[]) {
 	const change: Change = { action: 'capture', main, piece, endCoords, capturedPiece };
 	if (path !== undefined) change.path = path;
 	changes.push(change);
@@ -181,17 +181,21 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 		// Iterate forwards through the changes array
 		for (const change of changes) {
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-            funcs[change.action]!(gamefile, change);
+            console.log(funcs[change.action]!, change);
+			funcs[change.action]!(gamefile, change);
 		}
 	} else {
 		// Iterate backwards through the changes array so the move's changes are reverted in the correct order
 		for (let i = changes.length - 1; i >= 0; i--) {
 			const change = changes[i]!;
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-            funcs[change.action]!(gamefile, change);
+            console.log(funcs[change.action]!, change);
+			funcs[change.action]!(gamefile, change);
 		}
 	}
 }
+
+
 
 /**
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
@@ -201,13 +205,21 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const pieces = gamefile.ourPieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
+	let idx;
+	if (change.piece.index === -1) {
+		if (typedata.undefineds.length === 0) {
+			if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.piece.type)) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position`);
+			events.runEvent(gamefile.events, "regenerateLists", gamefile);
+		}
 
-	if (typedata.undefineds.length === 0) {
-		if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.piece.type)) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position`);
-		events.runEvent(gamefile.events, "regenerateLists", gamefile);
+		idx = typedata.undefineds.pop()!;
+		change.piece.index = idx;
+	} else {
+		idx = typedata.start + change.piece.index;
+		const ri = typedata.undefineds.indexOf(idx);
+		if (ri === -1) throw Error(`Piece ${change.piece} attemped to overwrite an occupied index`);
+		typedata.undefineds.splice(ri);
 	}
-
-	const idx = typedata.undefineds.pop()!;
 	pieces.XPositions[idx] = change.piece.coords[0];
 	pieces.YPositions[idx] = change.piece.coords[1];
 
@@ -220,7 +232,10 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
  */
 function deletePiece(gamefile: gamefile, change: Change) {
 	const pieces = gamefile.ourPieces;
-	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.piece.coords))!;
+	const typedata = pieces.typeRanges.get(change.piece.type);
+	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
+	if (change.piece.index === -1) throw Error("Piece has not been allocated in organizedPieces");
+	const idx = change.piece.index! + typedata.start;
 	organizedpieces.removePieceFromSpace(idx, pieces);
 	pieces.typeRanges.get(change.piece.type)!.undefineds.push(idx);
 }
@@ -274,7 +289,7 @@ function returnPiece(gamefile: gamefile, change: Change) {
 function capturePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw new Error(`capturePiece called with a non-capture change: ${change.action}`);
 
-	deletePiece(gamefile, { piece: {type: change.capturedPiece, coords: change.endCoords}, main: change.main, action: "add" });
+	deletePiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
 	movePiece(gamefile, change);
 }
 
@@ -285,7 +300,7 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw new Error(`uncapturePiece called with a non-capture change: ${change.action}`);
 
 	returnPiece(gamefile, change);
-	addPiece(gamefile, { piece: {type: change.capturedPiece, coords: change.endCoords}, main: change.main, action: "add" });
+	addPiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
 }
 
 /**
@@ -294,7 +309,7 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 function getCapturedPieceTypes(move: Move): Set<number> {
 	const pieceTypes: Set<number> = new Set();
 	move.changes.forEach(change => {
-		if (change.action === 'capture') pieceTypes.add(change.capturedPiece);
+		if (change.action === 'capture') pieceTypes.add(change.capturedPiece.type);
 	});
 	return pieceTypes;
 }

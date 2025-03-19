@@ -290,11 +290,9 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
  * whenever a piece moves or something is captured/generated!
  */
 function overwritebufferdata(gamefile: gamefile, piece: Piece) {
-	const idx = boardutil.getIdxFromCoords(gamefile.ourPieces, piece.coords)!;
-	const range = boardutil.getTypeRangeFromIdx(gamefile.ourPieces, idx);
 	const meshData = gamefile.mesh.types[piece.type];
 
-	const i = (idx - range.start) * STRIDE_PER_PIECE;
+	const i = piece.index * STRIDE_PER_PIECE;
 
 	const offsetCoord = coordutil.subtractCoordinates(piece.coords, gamefile.mesh.offset);
 
@@ -315,11 +313,9 @@ function overwritebufferdata(gamefile: gamefile, piece: Piece) {
  * whenever a piece moves or something is captured/generated!
  */
 function deletebufferdata(gamefile: gamefile, piece: Piece) {
-	const idx = boardutil.getIdxFromCoords(gamefile.ourPieces, piece.coords)!;
-	const typeRange = boardutil.getTypeRangeFromIdx(gamefile.ourPieces, idx);
 	const meshData = gamefile.mesh.types[piece.type];
 
-	const i = (idx - typeRange.start) * STRIDE_PER_PIECE;
+	const i = piece.index * STRIDE_PER_PIECE;
 
 	meshData.instanceData64[i] = Infinity; // Unfortunately we can't set them to 0 to hide it, as an actual piece instance would be visible at [0,0]
 	meshData.instanceData64[i + 1] = Infinity;

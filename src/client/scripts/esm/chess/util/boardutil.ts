@@ -10,6 +10,8 @@ import type { RawType, Player } from "./typeutil.js";
 interface Piece {
 	type: number,
 	coords: Coords,
+	index: number, // relative to the type range
+	// to get the actual idx add the starting point of the type range
 }
 
 /**
@@ -180,17 +182,21 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
+	const type = o.types[idx]!;
 	return {
-		type: o.types[idx]!,
-		coords: coords,
+		type,
+		coords,
+		index: idx - o.typeRanges.get(type)!.start
 	};
 }
 
 function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
 	if (isIdxUndefinedPiece(o, idx)) return undefined;
+	const type = o.types[idx]!;
 	return {
-		type: o.types[idx]!,
+		type,
 		coords: getCoordsFromIdx(o, idx),
+		index: idx - o.typeRanges.get(type)!.start
 	};
 }
 

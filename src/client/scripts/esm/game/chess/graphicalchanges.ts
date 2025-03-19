@@ -75,7 +75,7 @@ function deleteMeshPiece(gamefile: gamefile, change: Change) {
 
 function moveMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
-	piecemodels.overwritebufferdata(gamefile, { type: change.piece.type, coords: change.endCoords });
+	piecemodels.overwritebufferdata(gamefile, { type: change.piece.type, coords: change.endCoords, index: change.piece.index });
 }
 
 function returnMeshPiece(gamefile: gamefile, change: Change) {
@@ -85,7 +85,7 @@ function returnMeshPiece(gamefile: gamefile, change: Change) {
 function captureMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw Error(`captureMeshPiece called with non-capture action: ${change.action}`);
 
-	piecemodels.deletebufferdata(gamefile, {coords: change.endCoords, type: change.capturedPiece});
+	piecemodels.deletebufferdata(gamefile, change.capturedPiece);
 	moveMeshPiece(gamefile, change);
 }
 
@@ -93,7 +93,7 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw Error(`uncaptureMeshPiece called with non-capture action: ${change.action}`);
 
 	returnMeshPiece(gamefile, change);
-	addMeshPiece(gamefile, { action: 'add', main: change.main, piece: {coords: change.endCoords, type: change.capturedPiece}});
+	addMeshPiece(gamefile, { action: 'add', main: change.main, piece: change.capturedPiece});
 }
 
 
@@ -115,7 +115,7 @@ function animateReturn(change: Change, instant: boolean, clearanimations: boolea
 function animateCapture(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'capture') throw Error(`animateCapture called with non-capture action: ${change.action}`);
 	const waypoints = change.path ?? [change.piece.coords, change.endCoords];
-	animation.animatePiece(change.piece.type, waypoints, {coords: change.endCoords, type: change.capturedPiece}, instant, clearanimations);
+	animation.animatePiece(change.piece.type, waypoints, change.capturedPiece, instant, clearanimations);
 }
 
 

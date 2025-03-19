@@ -167,14 +167,14 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	if (!move.enpassant && !move.promotion) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	const captureCoords = move.enpassant ? gamefile.enpassant!.pawn : move.endCoords;
-	const capturedPiece = boardutil.getTypeFromCoords(gamefile.ourPieces, captureCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, captureCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece); // Delete the piece captured
 	else boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Move the pawn
 
 	if (move.promotion) { // Handle promotion special move
-		boardchanges.queueDeletePiece(moveChanges, true, { type: piece.type, coords: move.endCoords }); // Delete original pawn
-		boardchanges.queueAddPiece(moveChanges, { type: move.promotion, coords: move.endCoords }); // Add promoted piece
+		boardchanges.queueDeletePiece(moveChanges, true, { type: piece.type, coords: move.endCoords, index: piece.index }); // Delete original pawn
+		boardchanges.queueAddPiece(moveChanges, { type: move.promotion, coords: move.endCoords, index: -1 }); // Add promoted piece
 	}
 
 	return true; // Special move was executed!
