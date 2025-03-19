@@ -11,6 +11,7 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 // @ts-ignore
 import type { GameRules } from "../variants/gamerules.js";
 import type { PieceMoveset } from "./movesets.js";
+import type { Player } from "../util/typeutil.js";
 
 const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
 type PositionArray = Int8Array | Int16Array | Int32Array; //| BigInt64Array;
@@ -23,6 +24,11 @@ const MaxTypedArrayValues: Record<string, bigint> = {
 	Int32Array: 2147483647n,
 	BigInt64Array: 9223372036854775807n,
 };
+
+type RegenerateData = {[type: number]: number};
+
+// eslint-disable-next-line no-unused-vars
+type RegenerateHook = (gamefile: gamefile, regenData: RegenerateData) => false
 
 interface TypeRange {
 	start: number,
@@ -74,19 +80,19 @@ function constuctNewArray<C extends SizedArray>(a: C, i: number): C {
 	return new constructor(a.length + i) as C;
 }
 
-function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
+function regenerateLists(o: OrganizedPieces, gamerule: GameRules): RegenerateData {
 	const typeOrder = [...o.typeRanges.keys()];
 	typeOrder.sort((a,b) => {return o.typeRanges.get(a)!.start - o.typeRanges.get(b)!.start;});
 
 	let totalUndefinedsNeeded = 0;
 	let currentOffset = 0;
 	const offsetByType: {[type: number]: number} = {};
-	const extraUndefinedsByType: {[type: number]: number} = {};
+	const extraUndefinedsByType: RegenerateData = {};
 	for (const t of typeOrder) {
 		offsetByType[t] = currentOffset;
 		let undefinedsNeeded = 0;
 		if (isTypeATypeWereAppendingUndefineds(gamerule.promotionsAllowed!, t)) {
-			undefinedsNeeded = Math.min(listExtras - o.typeRanges.get(t)!.undefineds.length, undefinedsNeeded);
+			undefinedsNeeded = Math.max(listExtras - o.typeRanges.get(t)!.undefineds.length, undefinedsNeeded);
 		}
 		extraUndefinedsByType[t] = undefinedsNeeded;
 		totalUndefinedsNeeded += undefinedsNeeded;
@@ -116,15 +122,14 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
 		// Add new undefineds
 		for (let i = rangeData.end; i < rangeData.end + extraNeeded; i++) {
 			rangeData.undefineds.push(i);
+			newTypes[i] = t;
 		}
 
 		rangeData.end += extraNeeded;
 	}
 
-	for (const dir in o.lines) {
-		const l = o.lines.get(dir as Vec2Key);
-		for (const linekey in l) {
-			const line: number[] = l.get(linekey as LineKey)!;
+	for (const l of o.lines.values()) {
+		for (const line of l.values()) {
 			for (const i in line) {
 				const idx = line[i]!;
 				line[i] = offsetByType[o.types[idx]!]! + idx;
@@ -132,14 +137,15 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules) {
 		}
 	}
 
-	for (const pos in o.coords ) {
-		const idx = o.coords.get(pos as CoordsKey)!;
+	for (const [pos, idx] of o.coords.entries()) {
 		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]!]!);
 	}
 
 	o.XPositions = newXpos;
 	o.YPositions = newYpos;
 	o.types = newTypes;
+
+	return extraUndefinedsByType;
 }
 
 function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boolean {
@@ -159,10 +165,10 @@ function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boole
  * @param {string} type - The type of piece (e.g. "pawnsW")
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
-function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color: string]: number[]} | undefined, type: number): boolean {
+function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player]?: number[]} | undefined, type: number): boolean {
 	if (!promotionGameRule) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
-	const color = typeutil.getColorStringFromType(type);
+	const color = typeutil.getColorFromType(type);
 
 	if (!promotionGameRule[color]) return false; // Eliminates neutral pieces.
     
@@ -446,6 +452,9 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 export type {
 	OrganizedPieces,
 	TypeRange,
+
+	RegenerateHook,
+	RegenerateData
 };
 
 export default {

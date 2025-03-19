@@ -200,10 +200,16 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	return svgElement;
 }
 
+function showCache() {
+	for (const svg of Object.values(cachedPieceSVGs)) {
+		document.body.appendChild(svg);
+	}
+}
 
 // Exports -------------------------------------------------------------------
 
 
 export default {
-	getSVGElements
+	getSVGElements,
+	showCache,
 };

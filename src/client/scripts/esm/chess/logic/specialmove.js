@@ -5,6 +5,8 @@ import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import state from './state.js';
 
+import { rawTypes } from '../config.js';
+
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 
 "use strict";
@@ -15,10 +17,10 @@ import state from './state.js';
 // In the future, parameters can be added if variants have
 // different special moves for pieces.
 const defaultSpecialMoves = {
-	"kings": kings,
-	"royalCentaurs": kings,
-	"pawns": pawns,
-	"roses": roses,
+	[rawTypes.KING]: kings,
+	[rawTypes.ROYALCENTAUR]: kings,
+	[rawTypes.PAWN]: pawns,
+	[rawTypes.ROSE]: roses,
 };
 
 // A custom special move needs to be able to:
@@ -67,7 +69,7 @@ function pawns(gamefile, piece, move) {
 
 	const captureCoords = enpassantTag ? gamefile.enpassant.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-	const capturedPiece = boardchanges.getPieceFromCoords(gamefile, captureCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, captureCoords);
 
 	// Delete the piece captured
 

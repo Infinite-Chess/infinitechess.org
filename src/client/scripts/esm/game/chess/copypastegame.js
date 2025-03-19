@@ -14,12 +14,12 @@ import statustext from '../gui/statustext.js';
 import jsutil from '../../util/jsutil.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
-import guinavigation from '../gui/guinavigation.js';
 import gameslot from './gameslot.js';
 import gameloader from './gameloader.js';
 import { pieceCountToDisableCheckmate } from '../../chess/config.js';
 import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
+import { players } from '../../chess/config.js';
 // Import End
 
 "use strict";
@@ -183,16 +183,16 @@ function verifyLongformat(longformat) {
 
 /** For now doesn't verify if the required royalty is present. */
 function verifyWinConditions(winConditions) {
-	for (let i = 0; i < winConditions.white.length; i++) {
-		const winCondition = winConditions.white[i];
+	for (let i = 0; i < winConditions[players.WHITE].length; i++) {
+		const winCondition = winConditions[players.WHITE][i];
 		if (winconutil.isWinConditionValid(winCondition)) continue;
 		// Not valid
 		statustext.showStatus(`${translations.copypaste.invalid_wincon_white} "${winCondition}".`, true);
 		return false;
 	}
 
-	for (let i = 0; i < winConditions.black.length; i++) {
-		const winCondition = winConditions.black[i];
+	for (let i = 0; i < winConditions[players.BLACK].length; i++) {
+		const winCondition = winConditions[players.BLACK][i];
 		if (winconutil.isWinConditionValid(winCondition)) continue;
 		// Not valid
 		statustext.showStatus(`${translations.copypaste.invalid_wincon_black} "${winCondition}".`, true);

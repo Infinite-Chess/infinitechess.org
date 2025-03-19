@@ -66,7 +66,6 @@ import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
 
-import events from "../../chess/logic/events.js";
 import { pieceCountToDisableCheckmate } from "../../chess/config.js";
 
 // Type Definitions ----------------------------------------------------------
@@ -264,12 +263,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	 * Listen for the event that inserts more undefineds into the piece lists.
 	 * When that occurs, we need to regenerate the model.
 	 */
-	events.addEventListener(getGamefile()!.events, "regenerateRanges", (gamefile: gamefile, types: number[]) => {
-		for (const type of types) {
-			piecemodels.regenType(gamefile, type);
-		}
-		return false;
-	});
+	piecemodels.addListeners(loadedGamefile!);
 }
 
 

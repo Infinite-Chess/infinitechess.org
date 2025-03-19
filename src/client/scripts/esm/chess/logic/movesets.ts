@@ -135,6 +135,8 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
+		[rawTypes.VOID]: {individual: []},
+		[rawTypes.OBSTACLE]: {individual: []},
 		// Finitely moving
 		[rawTypes.PAWN]: {
 			individual: [],

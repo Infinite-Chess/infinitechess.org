@@ -26,15 +26,17 @@ const dualColors: PieceColorGroup = {
 	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1]
 };
 
-const neutralColors: PieceColorGroup = {
-	[players.WHITE]: [1, 1, 1, 1],
-	[players.BLACK]: [0.1, 0.1, 0.1, 1],
-	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1]
-};
-
 const pieceDefaultColors: PieceColorTheme = {
-	[rawTypes.VOID]: neutralColors,
-	[rawTypes.OBSTACLE]: neutralColors,
+	[rawTypes.VOID]: {
+		[players.WHITE]: [1, 1, 1, 1],
+		[players.BLACK]: [0.3, 0.3, 0.3, 1],
+		[players.NEUTRAL]: [0, 0, 0, 1]
+	},
+	[rawTypes.OBSTACLE]: {
+		[players.WHITE]: [1, 1, 1, 1],
+		[players.BLACK]: [0.5, 0.5, 0.5, 1],
+		[players.NEUTRAL]: [1, 1, 1, 1]
+	},
 	[rawTypes.KING]: dualColors,
 	[rawTypes.GIRAFFE]: dualColors,
 	[rawTypes.CAMEL]: dualColors,

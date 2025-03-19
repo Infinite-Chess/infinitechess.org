@@ -96,7 +96,7 @@ function invertDictionary(json) {
 }
 
 const invertedpieceDictionary = invertDictionary(pieceDictionary);
-const invertedplayersDict = invertDictionary(playersDict)
+const invertedplayersDict = invertDictionary(playersDict);
 
 function IntToShort_Piece(intpiece) {
 	let short = pieceDictionary[intpiece];
@@ -116,7 +116,7 @@ function ShortToInt_Piece(shortpiece) {
 
 	if (!invertedpieceDictionary[lowerType]) throw UNKERR;
 
-	let type = invertedpieceDictionary[lowerType];
+	let type = Number(invertedpieceDictionary[lowerType]);
 	if (results[1] !== "") {
 		const player = Number(results[1]);
 		type = typeutil.buildType(typeutil.getRawType(type), player);
@@ -200,7 +200,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 					if (!(promotionListWhite.length == 4 && promotionListWhite.includes("rooks") && promotionListWhite.includes("queens") && promotionListWhite.includes("bishops") && promotionListWhite.includes("knights"))) {
 						shortformat += ";";
 						for (const longpiece of promotionListWhite) {
-							shortformat += `${IntToShort_Piece(longpiece + "W")},`;
+							shortformat += `${IntToShort_Piece(longpiece + e.W)},`;
 						}
 						shortformat = shortformat.slice(0, -1);
 					}
@@ -214,7 +214,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 					if (!(promotionListBlack.length == 4 && promotionListBlack.includes("rooks") && promotionListBlack.includes("queens") && promotionListBlack.includes("bishops") && promotionListBlack.includes("knights"))) {
 						shortformat += ";";
 						for (const longpiece of promotionListBlack) {
-							shortformat += `${IntToShort_Piece(longpiece + "B")},`;
+							shortformat += `${IntToShort_Piece(longpiece + e.B)},`;
 						}
 						shortformat = shortformat.slice(0, -1);
 					}
@@ -405,7 +405,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const turnOrderArray = string.split(':'); // ['w','b']
 			longformat.gameRules.turnOrder = [...turnOrderArray.map(playerabbrev => {
 				if (!(playerabbrev in invertedplayersDict)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
-				return invertedplayersDict[playerabbrev];
+				return Number(invertedplayersDict[playerabbrev]);
 			})];
 			continue;
 		}
@@ -456,11 +456,11 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 				[p.BLACK]: blackRanksArray.map(num => parseInt(num))
 			};
 
-			const defaultPromotions =  ["queens","rooks","bishops","knights"];
+			const defaultPromotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 			longformat.gameRules.promotionsAllowed = {
 				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
-				white: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => ShortToInt_Piece(abv).slice(0,-1)) : [],
-				black: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => ShortToInt_Piece(abv).slice(0,-1)) : []
+				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : [],
+				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : []
 			};
 
 			continue;
@@ -473,7 +473,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 				string = string.replace(/[\(\)]/g,"").split("|");
 				if (string.length == 1) string.push(string[0]);
 				for (let i = 0; i < 2; i++) {
-					const color = (i == 0 ? "white" : "black");
+					const color = (i == 0 ? p.WHITE : p.BLACK);
 					longformat.gameRules.winConditions[color] = [];
 					for (const wincon of string[i].split(",")) {
 						longformat.gameRules.winConditions[color].push(wincon);
@@ -497,15 +497,15 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const shortmoves = (string + "  " + shortformat).trimEnd();
 			const moves = convertShortMovesToLong(shortmoves);
 			if (moves.length > 0) longformat.moves = moves;
-			if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { white: ['checkmate'], black: ['checkmate'] }; // Default win conditions if none specified
-			longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white','black']; // Default turn order if none specified
-			longformat.fullMove = longformat.fullMove || 1;
+			if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] }; // Default win conditions if none specified
+			longformat.gameRules.turnOrder = longformat.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
+			longformat.fullMove = longformat.fullMove ?? 1;
 			return longformat;
 		}
 	}
-	if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { white: ['checkmate'], black: ['checkmate'] }; // Default win conditions if none specified
-	longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white','black']; // Default turn order if none specified
-	longformat.fullMove = longformat.fullMove || 1;
+	if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] }; // Default win conditions if none specified
+	longformat.gameRules.turnOrder = longformat.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
+	longformat.fullMove = longformat.fullMove ?? 1;
 	return longformat;
 }
 

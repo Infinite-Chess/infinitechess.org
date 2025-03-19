@@ -217,7 +217,6 @@ function genPieceModel(): BufferModel | undefined {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-	const [ r, g, b, a ] = preferences.getTintColorOfType(pieceType!);
 	
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
@@ -240,7 +239,7 @@ function genPieceModel(): BufferModel | undefined {
 	
 	const data: number[] = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
-	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
+	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 0, 0, 0, 0)); // Piece
 	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 

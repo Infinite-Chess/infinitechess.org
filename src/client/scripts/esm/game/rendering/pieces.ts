@@ -39,8 +39,9 @@ function renderPiecesInGame(gamefile: gamefile) {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords) {
-	const color = preferences.getTintColorOfType(type); color[3] *= ghostOpacity;
-	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
+	// eslint-disable-next-line prefer-const
+	let [r, g, b, a] = preferences.getTintColorOfType(type); a *= ghostOpacity;
+	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, [r, g, b, a]);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }

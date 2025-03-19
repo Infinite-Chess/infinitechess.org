@@ -9,7 +9,7 @@ import type { Piece } from '../../chess/util/boardutil.js';
 import { TypeRange } from '../../chess/logic/organizedpieces.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
-
+import type { RegenerateData } from '../../chess/logic/organizedpieces.js';
 
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';
@@ -31,7 +31,7 @@ import { gl } from './webgl.js';
 // @ts-ignore
 import movement from './movement.js';
 import { rawTypes } from '../../chess/config.js';
-
+import events from '../../chess/logic/events.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -89,6 +89,16 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
 
 // Generating Meshes ------------------------------------------------------------------------
 
+function addListeners(gamefile: gamefile) { 
+	events.addEventListener(gamefile.events, "regenerateLists", (gamefile: gamefile, types: RegenerateData) => {
+		console.log("Organized pieces regenerated, regenerating affected meshes...");
+		for (const strtype of Object.keys(types)) {
+			const type = Number(strtype);
+			regenType(gamefile, type);
+		}
+		return false;
+	});
+}
 
 /**
  * Regenerates every single piece mesh in the gamefile.
@@ -144,6 +154,7 @@ async function genTypeModel(gamefile: gamefile, type: number): Promise<MeshData>
 	const svg: SVGElement = (await svgcache.getSVGElements([type], IMG_SIZE, IMG_SIZE))[0]!;
 	// console.log("Converting svg to image again..");
 	let image: HTMLImageElement = await svgtoimageconverter.svgToImage(svg);
+	console.log(svg, image);
 	// Patches firefox bug that darkens the image caused by double-multiplying the RGB channels by the alpha channel
 	image = await svgtoimageconverter.normalizeImagePixelData(image);
 	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
@@ -181,7 +192,7 @@ function getInstanceDataForTypeRange(gamefile: gamefile, pieceList: TypeRange): 
 	let currIndex: number = 0;
 	for (let i = pieceList.start; i < pieceList.end; i++) {
 		const coords = boardutil.getCoordsFromIdx(gamefile.ourPieces, i);
-		if (coords === undefined) {
+		if (pieceList.undefineds.includes(i)) {
 			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
 			instanceData64[currIndex + 1] = Infinity;
@@ -383,6 +394,8 @@ export default {
 	overwritebufferdata,
 	deletebufferdata,
 	renderAll,
+
+	addListeners,
 };
 
 export type {

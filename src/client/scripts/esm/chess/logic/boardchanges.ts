@@ -181,7 +181,6 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 		// Iterate forwards through the changes array
 		for (const change of changes) {
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-            console.log(funcs[change.action]!, change);
 			funcs[change.action]!(gamefile, change);
 		}
 	} else {
@@ -189,7 +188,6 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 		for (let i = changes.length - 1; i >= 0; i--) {
 			const change = changes[i]!;
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-            console.log(funcs[change.action]!, change);
 			funcs[change.action]!(gamefile, change);
 		}
 	}
@@ -209,11 +207,12 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	if (change.piece.index === -1) {
 		if (typedata.undefineds.length === 0) {
 			if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.piece.type)) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position`);
-			events.runEvent(gamefile.events, "regenerateLists", gamefile);
+			const regenData = organizedpieces.regenerateLists(gamefile.ourPieces, gamefile.gameRules);
+			events.runEvent(gamefile.events, "regenerateLists", gamefile, regenData);
 		}
 
 		idx = typedata.undefineds.pop()!;
-		change.piece.index = idx;
+		change.piece.index = idx - typedata.start;
 	} else {
 		idx = typedata.start + change.piece.index;
 		const ri = typedata.undefineds.indexOf(idx);

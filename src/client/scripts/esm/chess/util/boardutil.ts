@@ -161,7 +161,7 @@ function getCoordsFromIdx(o: OrganizedPieces, idx: number): Coords {
 }
 
 function isIdxUndefinedPiece(o: OrganizedPieces, idx: number): boolean {
-	return idx in o.typeRanges.get(o.types[idx]!)!.undefineds;
+	return o.typeRanges.get(o.types[idx]!)!.undefineds.includes(idx);
 }
 
 function getTypeFromCoords(o: OrganizedPieces, coords: Coords): number | undefined {
