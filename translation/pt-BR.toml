@@ -1,6 +1,6 @@
 name = "Português" # Nome do idioma
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "29"
+version = "46"
 maintainer = "Emerson P. Machado" # The_Skeleton on discord
 
 [header]
@@ -78,8 +78,10 @@ variants_credits = [
 "projetado por Andreas Tsevas.",
 "projetado por Cory Evans e Joel Hamkins.",
 "projetado por Cory Evans, Joel Hamkins, e Norman Lewis Perlmutter.",
-"Chess on an Infinite Plane - Huygens Options by V. Reinhart.",
-"Trappist-1 by V. Reinhart"
+"Chess on an Infinite Plane - Huygens Options por V. Reinhart.",
+"Confined Classical por Andreas Tsevas.",
+"4x4x4x4 Chess por Andreas Tsevas.",
+"5D Chess por Jace.",
 ]
 textures_heading = "Texturas"
 textures_licensed_under = "texturas licenciadas sob a licença"
@@ -113,11 +115,17 @@ resend_message = ["Não recebeu um? Verifique sua pasta de spam. Também, ", "en
 verify_confirm = "Obrigado! Sua conta foi verificada"
 joined = "Ingressou:"
 seen = ["Visto:", " desde de"]
+practice_progress = "Progresso no modo Prática:"
 reveal_info = "Mostre informações da conta"
 account_info_heading = "Informações da conta"
 email = "Email:"
 delete_account = "Deletar conta"
 password_reset_message = ["Para mudar seu nome de usuário, email or senha, ", "Contate-nos."]
+
+[member.badge-tooltips]
+checkmate_bronze = "Veterano do Xeque-mate: Complete 50% de todos os confrontos de prática."
+checkmate_silver = "Pro do Xeque-mate: Concluir 75% de todos os confrontos de prática."
+checkmate_gold = "Mestre do Xeque-mate: Complete 100% de todos os checkmates de prática."
 
 [create-account]
 title = "Criar conta"
@@ -146,6 +154,7 @@ error = "ERRO"
 [play.main-menu]
 credits = "Créditos"
 play = "Jogar"
+practice = "Práticar"
 guide = "Guia"
 editor = "Editor de tabuleiro"
 
@@ -171,6 +180,7 @@ keybinds = [
 ["Space", " e ", "Shift", " para aumentar e diminuir o zoom"],
 ["Escape", " para pausar o jogo."],
 ["Tab", " alterna o modo de funcionamento da seta nas bordas da tela que apontam para peças fora da tela. Por padrão, esse modo é definido como \"Defesa\", que mostra uma seta para peças que podem se mover para o seu local a partir de onde estão. Mas ", "tab", " pode mudar para o modo \"Todas\" ou \"Off\", sendo que o modo \"Todas\" revela todas as peças nessas ortogonais e diagonais, quer elas possam se mover ortogonalmente ou diagonalmente. Essa configuração também pode ser alternada no menu de pausa."],
+["Control", " will force-drag the board instead of dragging a piece, if dragging is enabled in the settings."],
 " ativará \"Modo Editor\" em jogos locais. Isso permite que você mova qualquer peça para qualquer outro lugar do tabuleiro! Muito útil para análise."
 ]
 controls_paragraph2 = "Esses são os principais controles que você precisa conhecer. Mas aqui estão alguns extras, caso você venha a precisar deles!"
@@ -199,8 +209,15 @@ guard = {name="Guarda", description="Move-se como um rei, exceto que não é sus
 hawk = {name="Falcão", description="Salta exatamente 2 ou 3 quadrados em qualquer direção."}
 centaur = {name="Centauro", description="Move-se como um cavalo e um guarda combinados."}
 knightrider = {name="Knightrider", description="Pula como um cavalo em uma direção infinitamente, até ser obstruído."}
+huygen = {name=“Huygen”, description="Pula infinitamente em uma das quatro direções cardeais, visitando apenas os quadrados com uma distância de número primo do seu quadrado inicial, até ser obstruído."}
 obstacle = {name="Obstáculo", description="Uma peça neutra (não controlado por nenhum dos jogadores) que bloqueia o movimento, mas pode ser capturado."}
 void = {name="Vazio", description="Uma peça neutra (não controlada por nenhum dos jogadores) que representa a ausência do tabuleiro. As peças não podem se mover através dele ou sobre ele."}
+
+[play.practice-menu]
+title = "Práticar - Xeque-mates"
+play = "Jogar"
+back = "Voltar"
+difficulty = "Dificuldade"
 
 [play.play-menu]
 title = "Jogar - Online"
@@ -231,11 +248,11 @@ Chess = "Xadrez"
 Classical_KOTH = "Experimental: Classical - KOTH"
 CoaIP_KOTH = "Experimental: Coaip - KOTH"
 CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
-Trappist_1 = "Trappist-1"
 Omega = "Showcase: Omega"
 Omega_Squared = "Showcase: Omega^2"
 Omega_Cubed = "Showcase: Omega^3"
 Omega_Fourth = "Showcase: Omega^4"
+4x4x4x4_Chess = "4×4×4×4 Chess"
 5D_Chess = "5D Chess"
 no_clock = "Sem relógio"
 clock = "Relógio"
@@ -265,6 +282,8 @@ recenter = "Recentralizar"
 rewind_move = "Lance anterior"
 forward_move = "Próximo lance"
 pause = "Pausar"
+undo = "Voltar lance" # Checkmate practice game
+restart = "Recomeçar partida" # Checkmate practice game
 
 [play.pause]
 title = "Pausado"
@@ -274,6 +293,7 @@ perspective = "Perspectiva: Off"
 copy = "Copiar Jogo"
 paste = "Colar Jogo"
 offer_draw = "Oferecer Empate"
+practice_menu = "Menu Práticar"
 main_menu = "Menu Principal"
 
 [play.drawoffer] # The draw offer UI that appears on the bottom bar
@@ -314,10 +334,24 @@ webgl_unsupported = "Por favor atualize seu navegador! Atualmente não suporta W
 bigints_unsupported = "Não há suporte para BigInts. Atualize seu navegador.\nBigInts são necessários para tornar o tabuleiro infinito."
 shaders_failed = "Não foi possível inicializar o programa de shaders:"
 failed_compiling_shaders = "Ocorreu um erro na compilação dos shaders:"
+# Checkmate Practice
+versus = "vs"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
+insane = "Insane"
+checkmate_logged_out = "Você precisa entrar para ganhar distintivos."
+checkmate_bronze = "Veterano do Xeque-mate: Complete 50% de todos os confrontos de prática."
+checkmate_silver = "Pro do Xeque-mate: Concluir 75% de todos os confrontos de prática."
+checkmate_gold = "Mestre do Xeque-mate: Complete 100% de todos os checkmates de prática."
+checkmate_bronze_unearned = "Complete 50% de todos os xeque-mate de prática para ganhar esse distintivo."
+checkmate_silver_unearned = "Complete 75% de todos os xeque-mate de prática para ganhar esse distintivo."
+checkmate_gold_unearned = "Complete 100% de todos os xeque-mate de prática para ganhar esse distintivo."
 
 [play.javascript.copypaste]
 copied_game = "Jogo copiado para a área de transferência!"
 cannot_paste_in_public = "Não é possível colar o jogo em uma partida pública!"
+cannot_paste_in_engine = "Não é possível colar o jogo em uma partida com Engine!"
 cannot_paste_after_moves = "Não é possível colar o jogo depois que os movimentos são feitos!"
 clipboard_denied = "Permissão negada para a área de transferência. Pode ser seu navegador."
 clipboard_invalid = "A área de transferência não está em uma notação ICN válida."
@@ -337,7 +371,6 @@ on = "On"
 off = "Off"
 icon_rendering_off = "Renderização de ícones desativada."
 icon_rendering_on = "Renderização de ícones ativada."
-toggled_edit = "Alterado para modo Editor:"
 perspective = "Perspectiva"
 perspective_mode_on_desktop = "O modo de perspectiva está disponível no desktop!"
 movement_tutorial = "WASD para mover. Espaço e shift para dar zoom."
@@ -534,6 +567,7 @@ ws-username_reserved = "Esse nome de usuário já está reservado"
 ws-email_too_long = "Seu e-mail é muito loooooooongo."
 ws-email_invalid = "Este não é um e-mail válido"
 ws-email_in_use = "Este e-mail já está em uso"
+ws-email_domain_invalid = "Domínio Inválido."
 ws-you_are_banned = "Você foi banido."
 ws-password_length = "A senha deve ter entre 6-72 caracteres"
 ws-password_format = "A senha está em um formato incorreto"
