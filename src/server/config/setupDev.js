@@ -33,6 +33,10 @@ async function createDevelopmentAccounts() {
 		const checkmates_beaten = Object.values(validcheckmates.validCheckmates).flat().join(',');
 		updateMemberColumns(user_id, { checkmates_beaten });
 	}
+	if (!doesMemberOfUsernameExist("admin")) {
+		const user_id = await generateAccount({ username: "Admin", email: "email4", password: "1", autoVerify: true });
+		giveRole(user_id, "admin");
+	}
 	if (!doesMemberOfUsernameExist("patron")) {
 		const user_id = await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
 		giveRole(user_id, "patron");
@@ -40,7 +44,6 @@ async function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("member")) {
 		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
-	// generateAccount({ username: "Member23", email: "email@teste3mail.com", password: "1", autoVerify: false });
 }
 
 
