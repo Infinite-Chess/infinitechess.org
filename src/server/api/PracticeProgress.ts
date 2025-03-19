@@ -67,7 +67,6 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function) 
 	}
 
 	const checkmates_beaten = getCheckmatesBeaten(user_id); // Fetch their checkmates_beaten from the database
-	if (!checkmates_beaten) return next(); // No checkmates_beaten set for this user, or the user doesn't exist.
 
 	createPracticeProgressCookie(res, checkmates_beaten);
 	
