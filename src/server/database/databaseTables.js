@@ -13,7 +13,7 @@ const user_id_upper_cap = 14_776_336; // Limit of unique user id with 4-digit ba
 
 /** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
 const uniqueMemberKeys = ['user_id', 'username', 'email'];
-	
+
 /** All columns of the members table. Each of these would be valid to retrieve from any member. */
 const allMemberColumns = [
 	'user_id',
@@ -21,12 +21,12 @@ const allMemberColumns = [
 	'username_history',
 	'email',
 	'hashed_password',
-	'roles', 
+	'roles',
 	'joined',
 	'last_seen',
 	'refresh_tokens',
 	'preferences',
-	'verification', 
+	'verification',
 	'login_count',
 	'checkmates_beaten'
 ];
@@ -67,6 +67,16 @@ function generateTables() {
 	// reason deleted: "unverified" / "user request" / "banned" / "inactive"
 	db.run(createTableSQLQuery);
 
+	// Ratings table
+	createTableSQLQuery = `
+		CREATE TABLE IF NOT EXISTS ratings (
+			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
+			elo INTEGER NOT NULL DEFAULT 1000,
+			rating_deviation INTEGER NOT NULL DEFAULT 350
+		);
+	`;
+	db.run(createTableSQLQuery);
+
 	// Bans table
 	// createTableSQLQuery = `
 	// 	CREATE TABLE IF NOT EXISTS bans (
@@ -89,12 +99,12 @@ function deleteTable(tableName) {
 	try {
 		// Prepare the SQL query to drop the table
 		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
-		
+
 		// Run the query
 		db.run(deleteTableSQL);
 		console.log(`Table ${tableName} deleted successfully.`);
 	} catch (error) {
-	  	console.error(`Error deleting table ${tableName}:`, error);
+		console.error(`Error deleting table ${tableName}:`, error);
 	}
 }
 // deleteTable('test');
