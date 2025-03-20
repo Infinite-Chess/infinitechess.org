@@ -47,7 +47,7 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function) 
 	const memberInfoCookieStringified = req.cookies.memberInfo;
 	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
 
-	let memberInfoCookie: {user_id: string, username: string}; // { user_id, username }
+	let memberInfoCookie: {user_id: number, username: string}; // { user_id, username }
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
