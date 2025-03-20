@@ -209,7 +209,7 @@ guard = {name="Guarda", description="Move-se como um rei, exceto que não é sus
 hawk = {name="Falcão", description="Salta exatamente 2 ou 3 quadrados em qualquer direção."}
 centaur = {name="Centauro", description="Move-se como um cavalo e um guarda combinados."}
 knightrider = {name="Knightrider", description="Pula como um cavalo em uma direção infinitamente, até ser obstruído."}
-huygen = {name=“Huygen”, description="Pula infinitamente em uma das quatro direções cardeais, visitando apenas os quadrados com uma distância de número primo do seu quadrado inicial, até ser obstruído."}
+huygen = {name="Huygen", description="Pula infinitamente em uma das quatro direções cardeais, visitando apenas os quadrados com uma distância de número primo do seu quadrado inicial, até ser obstruído."}
 obstacle = {name="Obstáculo", description="Uma peça neutra (não controlado por nenhum dos jogadores) que bloqueia o movimento, mas pode ser capturado."}
 void = {name="Vazio", description="Uma peça neutra (não controlada por nenhum dos jogadores) que representa a ausência do tabuleiro. As peças não podem se mover através dele ou sobre ele."}
 
