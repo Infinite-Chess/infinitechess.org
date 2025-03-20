@@ -31,7 +31,6 @@ import frametracker from '../frametracker.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
 import boardutil from '../../../chess/util/boardutil.js';
-import preferences from '../../../components/header/preferences.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -773,13 +772,16 @@ function processPieceList(draftlist: ArrowPieceDraft[]): PieceArrow[] {
 	const slideExceptions = getSlideExceptions();
 
 	for (const draft of draftlist) {
-		if (mode !== 3 && !draft.canSlideOntoScreen && coordutil.getKeyFromCoords(draft.line) in slideExceptions) continue;
+		if (mode !== 3 && !draft.canSlideOntoScreen && !(coordutil.getKeyFromCoords(draft.line) in slideExceptions)) continue;
 
-		const thisPieceIntersections = math.findLineBoxIntersections(draft.piece.coords, draft.line, boundingBoxInt!); // should THIS BE FLOAT???
+		const thisPieceIntersections = math.findLineBoxIntersections(draft.piece.coords, draft.line, boundingBoxFloat!); // should THIS BE FLOAT???
 		if (thisPieceIntersections.length < 2) continue; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
 		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.	
-		const arrow = processPiece(draft, draft.line, positiveDotProduct ? thisPieceIntersections[0]!.coords : thisPieceIntersections[1]!.coords, 0, worldHalfWidth, mouseWorldLocation, false);
-		piecearrows.push({arrow: arrow, direction: !positiveDotProduct ? draft.line : math.negateVector(draft.line)});
+		const dir = !positiveDotProduct ? draft.line : math.negateVector(draft.line);
+		const intersect = positiveDotProduct ? thisPieceIntersections[0]!.coords : thisPieceIntersections[1]!.coords;
+		const arrow = processPiece(draft, dir, intersect, 0, worldHalfWidth, mouseWorldLocation, false);
+
+		piecearrows.push({arrow: arrow, direction: dir});
 	}
 
 	return piecearrows;
@@ -985,7 +987,6 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
-	const [ r, g, b ] = preferences.getTintColorOfType(arrow.piece.type);
 	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
 
 	// Opacity changing with distance
@@ -993,7 +994,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	// opacity = Math.sin(maxAxisDist / 40) * 0.5
 
 	//								instaceposition	   instancetexcoord  instancecolor
-	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, r,g,b,a);
+	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, 1,1,1,a);
 
 	// Next append the data of the little arrow!
 

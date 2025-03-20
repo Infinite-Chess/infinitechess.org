@@ -154,7 +154,7 @@ async function genTypeModel(gamefile: gamefile, type: number): Promise<MeshData>
 	const svg: SVGElement = (await svgcache.getSVGElements([type], IMG_SIZE, IMG_SIZE))[0]!;
 	// console.log("Converting svg to image again..");
 	let image: HTMLImageElement = await svgtoimageconverter.svgToImage(svg);
-	console.log(svg, image);
+	
 	// Patches firefox bug that darkens the image caused by double-multiplying the RGB channels by the alpha channel
 	image = await svgtoimageconverter.normalizeImagePixelData(image);
 	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
