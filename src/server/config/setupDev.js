@@ -34,7 +34,7 @@ async function createDevelopmentAccounts() {
 		updateMemberColumns(user_id, { checkmates_beaten });
 	}
 	if (!doesMemberOfUsernameExist("admin")) {
-		const user_id = await generateAccount({ username: "Admin", email: "email4", password: "1", autoVerify: true });
+		const user_id = await generateAccount({ username: "Admin", email: "email5", password: "1", autoVerify: true });
 		giveRole(user_id, "admin");
 	}
 	if (!doesMemberOfUsernameExist("patron")) {
