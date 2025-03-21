@@ -46,8 +46,6 @@
 		"eslint": "^9.16.0",
 		"globals": "^15.9.0",
 		"madge": "^8.0.0",
-		"ts_dependency_graph": "^2.1.1",
-		"ts-node": "^10.9.2",
 		"typescript": "^5.7.2",
 		"typescript-eslint": "^8.16.0"
 	},
