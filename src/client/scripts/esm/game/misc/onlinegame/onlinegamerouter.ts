@@ -1,6 +1,6 @@
 
 
-import type { ClockValues } from "../../../chess/logic/clock.js";
+import type { ClockValues } from "../../../chess/logic/offlineclockstuff.js";
 import type { MetaData } from "../../../chess/util/metadata.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
@@ -18,6 +18,7 @@ import gameloader from "../../chess/gameloader.js";
 import gameslot from "../../chess/gameslot.js";
 import guititle from "../../gui/guititle.js";
 import clock from "../../../chess/logic/clock.js";
+import offlineclockstuff from "../../../chess/logic/offlineclockstuff.js";
 import selection from "../../chess/selection.js";
 import onlinegame from "./onlinegame.js";
 // @ts-ignore
@@ -201,7 +202,7 @@ function handleJoinGame(message: JoinGameMessage) {
 function handleUpdatedClock(gamefile: gamefile, clockValues: ClockValues) {
 	// Adjust the timer whos turn it is depending on ping.
 	if (clockValues) clockValues = clock.adjustClockValuesForPing(clockValues);
-	clock.edit(gamefile, clockValues); // Edit the clocks
+	offlineclockstuff.edit(gamefile, clockValues); // Edit the clocks
 	guiclock.edit(gamefile);
 }
 

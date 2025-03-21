@@ -14,6 +14,8 @@ import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
+// @ts-ignore
+import copyutils from '../chess/primeGamefileForCopying.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -135,9 +137,9 @@ async function submitMove() {
 	const gamefile = gameslot.getGamefile()!;
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-
+	const longform = copyutils.primeGamefileForCopying(gamefile,true); // Prepare the gamefile for copying
 	// Send the gamefile to the engine web worker
-	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig })));
+	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig, lf: longform })));
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 

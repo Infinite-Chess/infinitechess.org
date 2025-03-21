@@ -192,19 +192,26 @@ async function startEngineGame(options: {
 	/** The "Event" string of the game's metadata */
 	Event: string,
 	youAreColor: 'white' | 'black',
-	currentEngine: 'engineCheckmatePractice', // Expand to a union type when more engines are added
+	currentEngine: 'engineCheckmatePractice'|'classicEngine', // add more union types when more engines are added
+	//if you are using enginecheckmatepractice, engineconfig has to have checkmateSelectedID, otherwise, it doesn't need it
+	//todo: should fix that in typescript later
 	engineConfig: EngineConfig,
-	variantOptions: VariantOptions,
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true
-}) {
+}
+&
+(
+	| { variant: string; variantOptions?: never }
+	| { variant?: never; variantOptions: VariantOptions }
+)) {
+
 	typeOfGameWeAreIn = 'engine';
 	gameLoading = true;
 
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const metadata: MetaData = {
+	let metadata: MetaData = {
 		Event: options.Event,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
@@ -216,12 +223,36 @@ async function startEngineGame(options: {
 	};
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
-	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
-		metadata,
-		viewWhitePerspective: options.youAreColor === 'white',
-		allowEditCoords: false,
-		additional: { variantOptions: options.variantOptions }
-	});
+	let graphicalPromise: Promise<void>;
+
+	// Update metadata based on options.variant or options.variantOptions
+	if (options.variant) {
+		metadata = {
+			...metadata, // Spread the default values
+			Variant: options.variant,
+			Event: `Casual computer ${translations[options.variant]} infinite chess game`, // Change only the Event field
+		};
+		graphicalPromise = gameslot.loadGamefile({
+			metadata,
+			viewWhitePerspective: options.youAreColor === 'white',
+			allowEditCoords: true,
+		});
+	} else if (options.variantOptions) {
+		metadata = {
+			...metadata, // Spread the default values
+			Event: options.Event, // Change the Event field
+		};
+		/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
+		graphicalPromise = gameslot.loadGamefile({
+			metadata,
+			viewWhitePerspective: options.youAreColor === 'white',
+			allowEditCoords: false,
+			additional: { variantOptions: options.variantOptions },
+		});
+	} else {
+		// Throw an error if neither condition is met
+		throw new Error('Invalid options: neither variant nor variantOptions provided');
+	}
 
 	/** A promise that resolves when the engine script has been fetched. */
 	const enginePromise: Promise<void> = enginegame.initEngineGame(options);
