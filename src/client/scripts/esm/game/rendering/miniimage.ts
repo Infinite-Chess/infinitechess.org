@@ -190,8 +190,8 @@ function genModel() {
 
 		// Animate the captured piece too, if there is one
 		if (!a.captured) return;
-		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
-		({ r, g, b } = preferences.getTintColorOfType(a.type));
+		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.captured.type, rotation));
+		({ r, g, b } = preferences.getTintColorOfType(a.captured.type));
 		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
 	});
 
