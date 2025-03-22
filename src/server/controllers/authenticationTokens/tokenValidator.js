@@ -36,6 +36,8 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 
 	// Extract user ID and username from the token
 	const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
+	console.log("Type of roles from decoded token: " + typeof roles);
+	console.log("Actual roles: " + roles);
 	if (user_id === undefined || username === undefined || roles === undefined) return { isValid: false }; // Expired or tampered token
 
 	if (!doesMemberOfIDExist(user_id)) {
