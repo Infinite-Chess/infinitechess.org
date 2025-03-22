@@ -643,7 +643,6 @@ span.arrow-head-left {
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
-	-webkit-touch-callout: none; /* Safari-specific, prevents long-press */
 }
 
 .selectable { /* Makes text inside the elements with the .unselectable class re-selectable */
@@ -651,7 +650,6 @@ span.arrow-head-left {
     -moz-user-select: text;
     -webkit-user-select: text;
     -ms-user-select: text;
-	-webkit-touch-callout: unset; /* Safari-specific, allows long-press */
 }
 
 
@@ -838,10 +836,6 @@ span.arrow-head-left {
 
 .badge:hover .shine-clockwise, .badge:hover .shine-anticlockwise {
     opacity: 1;
-}
-
-.badge img {
-
 }
 
 @keyframes rotateShine {
