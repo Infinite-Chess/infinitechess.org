@@ -180,7 +180,7 @@ keybinds = [
 ["Space", " e ", "Shift", " para aumentar e diminuir o zoom"],
 ["Escape", " para pausar o jogo."],
 ["Tab", " alterna o modo de funcionamento da seta nas bordas da tela que apontam para peças fora da tela. Por padrão, esse modo é definido como \"Defesa\", que mostra uma seta para peças que podem se mover para o seu local a partir de onde estão. Mas ", "tab", " pode mudar para o modo \"Todas\" ou \"Off\", sendo que o modo \"Todas\" revela todas as peças nessas ortogonais e diagonais, quer elas possam se mover ortogonalmente ou diagonalmente. Essa configuração também pode ser alternada no menu de pausa."],
-["Control", " will force-drag the board instead of dragging a piece, if dragging is enabled in the settings."],
+["Control", "forçará o arrasto do tabuleiro em vez de arrastar uma peça, se o arrasto estiver ativado nas configurações."],
 " ativará \"Modo Editor\" em jogos locais. Isso permite que você mova qualquer peça para qualquer outro lugar do tabuleiro! Muito útil para análise."
 ]
 controls_paragraph2 = "Esses são os principais controles que você precisa conhecer. Mas aqui estão alguns extras, caso você venha a precisar deles!"
