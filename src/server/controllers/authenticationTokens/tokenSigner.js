@@ -24,8 +24,6 @@ import { accessTokenExpiryMillis, refreshTokenExpiryMillis } from '../../config/
  * @returns {string} - The generated access token.
  */
 function signAccessToken(userId, username, roles, allowedActions) {
-	console.log("Type of roles from when signing ACCESS token: " + typeof roles);
-	console.log("Actual roles: " + roles);
 	const payload = generatePayload(userId, username, roles, allowedActions);
 	const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
 	return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: accessTokenExpirySecs }); // Typically short-lived, for in-memory storage only.
@@ -40,8 +38,6 @@ function signAccessToken(userId, username, roles, allowedActions) {
  * @returns {string} - The generated refresh token.
  */
 function signRefreshToken(userId, username, roles) {
-	console.log("Type of roles from when signing REFRESH token: " + typeof roles);
-	console.log("Actual roles: " + roles);
 	const payload = generatePayload(userId, username, roles);
 	const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
 	return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: refreshTokenExpirySecs }); // Longer-lived, stored in an httpOnly cookie.

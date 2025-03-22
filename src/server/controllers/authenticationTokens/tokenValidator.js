@@ -35,9 +35,10 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 	}
 
 	// Extract user ID and username from the token
-	const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
-	console.log("Type of roles from decoded token: " + typeof roles);
-	console.log("Actual roles: " + roles);
+	// eslint-disable-next-line prefer-const
+	let { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
+	// MAY DELETE THIS LINE AFTER 5 DAYS!! ================================================================================================================
+	if (typeof roles === 'string') roles = JSON.parse(roles); // The roles fetched from the database is a stringified json string array, parse it here!
 	if (user_id === undefined || username === undefined || roles === undefined) return { isValid: false }; // Expired or tampered token
 
 	if (!doesMemberOfIDExist(user_id)) {
