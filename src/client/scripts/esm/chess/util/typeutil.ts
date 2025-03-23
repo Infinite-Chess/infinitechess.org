@@ -10,11 +10,11 @@ import type { Piece } from "./boardutil.js";
  */
 const strtypes = ['voids', 'obstacle', 'kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'roses', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'] as const;
 
-const jumpingroyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
+const jumpingRoyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
 
 const slidingroyals = [rawTypes.ROYALQUEEN];
 
-const royals = [...jumpingroyals, ...slidingroyals];
+const royals = [...jumpingRoyals, ...slidingroyals];
 
 const strcolors = ["neutral", "white", "black"] as const;
 
@@ -93,7 +93,7 @@ export type {
 };
 
 export default {
-	jumpingroyals,
+	jumpingRoyals,
 	royals,
 	SVGLESS_TYPES,
 

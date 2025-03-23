@@ -140,10 +140,9 @@ function genModel() {
 		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
-		const [ r, g, b ] = preferences.getTintColorOfType(type);
 
 		for (let i = range.start; i < range.end; i++) {
-			processPiece(boardutil.getCoordsFromIdx(ourPieces, i), texleft, texbottom, texright, textop, r, g, b);
+			processPiece(boardutil.getCoordsFromIdx(ourPieces, i), texleft, texbottom, texright, textop, 1, 1, 1);
 		}
 	};
 

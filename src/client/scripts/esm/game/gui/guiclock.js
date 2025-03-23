@@ -101,7 +101,7 @@ function stopClocks(gamefile) {
  */
 function resetClocks() {
 	stopClocks();
-	lowtimeNotif.colorsNotified = new Set();
+	lowtimeNotif.playersNotified = new Set();
 }
 
 /**
@@ -203,7 +203,7 @@ function rescheduleMinuteTick(gamefile) {
 	if (gamefile.clocks.startTime.minutes < lowtimeNotif.clockMinsRequiredToUse) return; // 1 minute lowtime notif is not used in bullet games.
 	clearTimeout(lowtimeNotif.timeoutID);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
-	if (lowtimeNotif.colorsNotified.has(gamefile.clocks.colorTicking)) return;
+	if (lowtimeNotif.playersNotified.has(gamefile.clocks.colorTicking)) return;
 	const timeRemainAtTurnStart = gamefile.clocks.timeRemainAtTurnStart;
 	const timeRemain = timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd; // Time remaining until sound it should start playing
 	if (timeRemain < 0) return;
@@ -212,7 +212,7 @@ function rescheduleMinuteTick(gamefile) {
 
 function playMinuteTick(color) {
 	sound.playSound_tick({ volume: 0.07 });
-	lowtimeNotif.colorsNotified.add(color);
+	lowtimeNotif.playersNotified.add(color);
 }
 
 function set(gamefile) {

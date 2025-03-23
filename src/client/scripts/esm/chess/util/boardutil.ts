@@ -142,7 +142,7 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
 		if (range === undefined) return;
 
 		getCoordsOfTypeRange(o, royalCoordsList, range);
-	}, [color], typeutil.jumpingroyals);
+	}, [color], typeutil.jumpingRoyals);
 
 	return royalCoordsList;
 }

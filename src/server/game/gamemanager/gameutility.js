@@ -551,8 +551,10 @@ function printGame(game) {
  * @returns {string} - The simplified game string
  */
 function getSimplifiedGameString(game) {
-	const whiteSocket = game.whiteSocket;
-	const blackSocket = game.blackSocket;
+	const sockets = {};
+	for (const [c, data] of Object.entries(game.players)) {
+		sockets[c] = data.socket;
+	}
 	const originalAutoTimeLossTimeoutID = game.autoTimeLossTimeoutID;
 	const originalAutoAFKResignTimeoutID = game.autoAFKResignTimeoutID;
 	const originalDeleteTimeoutID = game.deleteTimeoutID;
@@ -560,8 +562,10 @@ function getSimplifiedGameString(game) {
 	const originalDrawOffers = game.drawOffers;
 
 	// We can't print normal websockets because they contain self-referencing.
-	if (whiteSocket) game.whiteSocket = socketUtility.stringifySocketMetadata(whiteSocket);
-	if (blackSocket) game.blackSocket = socketUtility.stringifySocketMetadata(blackSocket);
+	for (const data of Object.values(game.players)) {
+		if (data.socket === undefined) continue;
+		data.socket = socketUtility.stringifySocketMetadata(data.socket);
+	}
 	delete game.autoTimeLossTimeoutID;
 	delete game.disconnect;
 	delete game.autoAFKResignTimeoutID;
@@ -569,8 +573,10 @@ function getSimplifiedGameString(game) {
 
 	const stringifiedGame = ensureJSONString(game, 'There was an error when stringifying game.');
 
-	if (whiteSocket) game.whiteSocket = whiteSocket;
-	if (blackSocket) game.blackSocket = blackSocket;
+	for (const [c, data] of Object.entries(game.players)) {
+		if (data.socket === undefined) continue;
+		data.socket = sockets[c];
+	}
 	game.autoTimeLossTimeoutID = originalAutoTimeLossTimeoutID;
 	game.autoAFKResignTimeoutID = originalAutoAFKResignTimeoutID;
 	game.deleteTimeoutID = originalDeleteTimeoutID;
@@ -621,7 +627,6 @@ function isDisconnectTimerActiveForColor(game, color) {
  */
 function isAutoResignDisconnectTimerActiveForColor(game, color) {
 	// If these are defined, then the timer is defined.
-	console.log(game.players[color], color);
 	return game.players[color].disconnect.timeToAutoLoss !== undefined;
 }
 
