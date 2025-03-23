@@ -4,17 +4,18 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
+import { players } from "../../chess/config.js";
 
 /**
  * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  */
 
 const element_timers = {
-	white: {
+	[players.WHITE]: {
 		timer: document.getElementById('timer-white'),
 		container: document.getElementById('timer-container-white'),
 	},
-	black: {
+	[players.BLACK]: {
 		timer: document.getElementById('timer-black'),
 		container: document.getElementById('timer-container-black')
 	}

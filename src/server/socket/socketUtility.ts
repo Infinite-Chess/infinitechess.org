@@ -4,7 +4,7 @@
 // @ts-ignore
 import { ensureJSONString } from '../utility/JSONUtils.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-
+import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ interface CustomWebSocket extends WebSocket {
 			game?: {
 				/** The id of the game they're in. @type {string} */
 				id: string;
-				/** The color they are playing as. @type {string} */
+				/** The color they are playing as. @type {Player} */
 				color: string;
 			};
 		};

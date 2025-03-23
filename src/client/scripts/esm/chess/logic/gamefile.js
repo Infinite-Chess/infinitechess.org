@@ -146,27 +146,27 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** The clocks of the game, if the game is timed. */
 	this.clocks = {
-		/** The time each player has remaining, in milliseconds. @type {{ [color: string]: number | null }}*/
+		/** The time each player has remaining, in milliseconds. @type {{ [color in Player]?: number | undefined }}*/
 		currentTime: {
-			white: undefined,
-			black: undefined,
+			[players.WHITE]: undefined,
+			[players.BLACK]: undefined,
 		},
 
 		/** Contains information about the start time of the game. */
 		startTime: {
-			/** The number of minutes both sides started with. @type {null | number} */
+			/** The number of minutes both sides started with. @type {undefined | number} */
 			minutes: undefined,
-			/** The number of miliseconds both sides started with. @type {null | number}  */
+			/** The number of miliseconds both sides started with. @type {undefined | number}  */
 			millis: undefined,
-			/** The increment used, in milliseconds. @type {null | number} */
+			/** The increment used, in milliseconds. @type {undefined | number} */
 			increment: undefined,
 		},
 		/** We need this separate from gamefile's "whosTurn", because when we are
 		 * in an online game and we make a move, we want our Clock to continue
-		 * ticking until we receive the Clock information back from the server! @type {} */
+		 * ticking until we receive the Clock information back from the server! @type {Player} */
 		colorTicking: undefined,
 		/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-		 * When set to undefined no clocks are ticking @type {number | null} */
+		 * When set to undefined no clocks are ticking @type {number | undefined} */
 		timeRemainAtTurnStart: undefined,
 		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. @type {number | undefined} */
 		timeAtTurnStart: undefined,
@@ -192,7 +192,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.specialRights = jsutil.deepCopyObject(this.startSnapshot.specialRights);
 	/** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
-     * which is whos turn it was at the *beginning* of the game. */
+     * which is whos turn it was at the *beginning* of the game. @type {Player}*/
 	this.whosTurn = this.gameRules.turnOrder[0];
 	/** If the currently-viewed move is in check, this will be a list of coordinates
      * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {Coords[] | false} */

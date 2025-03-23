@@ -79,8 +79,8 @@ function kings(gamefile, coords, color) {
 	const leftColor = leftPieceType ? typeutil.getColorFromType(leftPieceType) : undefined;
 	const rightColor = rightPieceType ? typeutil.getColorFromType(rightPieceType) : undefined;
 
-	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns') || typeutil.jumpingRoyals.some(type => leftPieceType.startsWith(type))) leftLegal = false;
-	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns') || typeutil.jumpingRoyals.some(type => rightPieceType.startsWith(type))) rightLegal = false;
+	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || typeutil.getRawType(leftPieceType) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(leftPieceType) === type)) leftLegal = false;
+	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || typeutil.getRawType(rightPieceType) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(rightPieceType) === type)) rightLegal = false;
 	if (!leftLegal && !rightLegal) return individualMoves;
 
 	// 2. IF USING CHECKMATE: The king must not currently be in check,
@@ -340,7 +340,7 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
  * @returns {boolean}
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
-	if (!typeutil.getRawType(type) === rawTypes.PAWN) return false;
+	if (typeutil.getRawType(type) !== rawTypes.PAWN) return false;
 	if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = typeutil.getColorFromType(type);

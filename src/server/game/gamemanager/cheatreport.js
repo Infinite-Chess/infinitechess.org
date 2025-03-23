@@ -9,7 +9,7 @@ import { logEvents } from '../../middleware/logEvents.js';
 // Custom imports
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
-import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
@@ -31,7 +31,7 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
 	if (!game) return console.error("Unable to find game after a hack report.");
 
 	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-	const opponentColor = colorutil.getOppositeColor(ourColor);
+	const opponentColor = typeutil.invertPlayer(ourColor);
 
 	if (game.publicity === 'private') {
 		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;

@@ -8,6 +8,7 @@
 function ensureJSONString(input, errorMessage) {
 	if (typeof input === 'string') return input;
 	try {
+		console.log(input);
 		return JSON.stringify(input);
 	} catch (error) {
 		// Handle cases where input cannot be stringified

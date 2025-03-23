@@ -13,25 +13,25 @@ import pingManager from '../../util/pingManager.js';
 import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';
-import { Player } from '../util/typeutil.js';
-
 
 // Type Definitions ---------------------------------------------------------------
 
 // @ts-ignore
 import type gamefile from './gamefile.js';
+import type { Player } from '../util/typeutil.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
 interface ClockValues {
 	/** The actual clock values. An object containing each color in the game for the keys, and that color's time left in milliseconds for the values. */
-	clocks: { [color: string]: number }
+	// eslint-disable-next-line no-unused-vars
+	clocks: { [color in Player]?: number }
 	/**
 	 * If a player's timer is currently counting down, this should be specified.
 	 * No clock is ticking if less than 2 moves are played, or if game is over.
 	 * 
 	 * The color specified should have their time immediately accomodated for ping.
 	 */
-	colorTicking?: string,
+	colorTicking?: Player,
 	/**
 	 * The timestamp the color ticking (if there is one) will lose by timeout.
 	 * This should be calulated AFTER we adjust the clock values for ping.
@@ -59,9 +59,9 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 	const clock = gamefile.metadata.TimeControl; // "600+5"
 	const clocks = gamefile.clocks;
 
-	clocks.startTime.minutes = null;
-	clocks.startTime.millis = null;
-	clocks.startTime.increment = null;
+	clocks.startTime.minutes = undefined;
+	clocks.startTime.millis = undefined;
+	clocks.startTime.increment = undefined;
 
 	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock); // { minutes, increment }
 	if (clockPartsSplit !== null) {
@@ -98,6 +98,7 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
 		// Adjust the clock value according to the precalculated time they will lost by timeout.
 		if (clockValues.timeColorTickingLosesAt === undefined) throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() beore edit()');
 		const colorTickingTrueTimeRemaining = clockValues.timeColorTickingLosesAt - Date.now();
+		// @ts-ignore
 		clockValues.clocks[colorTicking] = colorTickingTrueTimeRemaining;
 	}
 
@@ -107,7 +108,7 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
 	const now = Date.now();
 	clocks.timeAtTurnStart = now;
 
-	clocks.timeRemainAtTurnStart = clocks.colorTicking === 'white' ? clocks.currentTime.white : clocks.currentTime.black;
+	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking];
 }
 
 /**
@@ -155,7 +156,7 @@ function push(gamefile: gamefile) {
 
 function endGame(gamefile: gamefile) {
 	const clocks = gamefile.clocks;
-	clocks.timeRemainAtTurnStart = null;
+	clocks.timeRemainAtTurnStart = undefined;
 	clocks.timeAtTurnStart = undefined;
 }
 

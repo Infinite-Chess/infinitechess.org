@@ -126,7 +126,7 @@ function setInSyncFalse() {
 function initOnlineGame(options: {
 	/** The id of the online game */
 	id: string,
-	youAreColor: 'white' | 'black',
+	youAreColor: Player,
 	publicity: 'public' | 'private',
 	drawOffer: DrawOfferInfo,
 	/** If our opponent has disconnected, this will be present. */
@@ -141,7 +141,7 @@ function initOnlineGame(options: {
 }) {
 	inOnlineGame = true;
 	id = options.id;
-	ourColor = typeutil.getPlayerFromString(options.youAreColor);
+	ourColor = options.youAreColor;
 	isPrivate = options.publicity === 'private';
 	inSync = true;
 

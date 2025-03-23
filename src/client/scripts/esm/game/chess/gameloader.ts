@@ -21,7 +21,6 @@ import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
-import typeutil from "../../chess/util/typeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
 import loadingscreen from "../gui/loadingscreen.js";
@@ -175,7 +174,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 
 	gameslot.loadGamefile({
 		metadata: options.metadata,
-		viewWhitePerspective: options.youAreColor === 'white',
+		viewWhitePerspective: options.youAreColor === players.WHITE,
 		allowEditCoords: false,
 		additional
 	})

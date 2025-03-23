@@ -763,7 +763,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		}
 
 		// update en passant
-		if (move.type.startsWith('pawns') && Math.abs(move.endCoords[1] - move.startCoords[1]) === 2) {
+		if (typeutil.getRawType(move.type) === r.PAWN && Math.abs(move.endCoords[1] - move.startCoords[1]) === 2) {
 			ret.enpassant = [move.endCoords[0], (move.startCoords[1] + move.endCoords[1]) / 2];
 		} else delete ret.enpassant;
 
@@ -875,12 +875,12 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 
 	for (const key in position) {
 		const thisPiece = position[key]; // e.g. "pawnsW"
-		if (pawnDoublePush && thisPiece.startsWith('pawns')) specialRights[key] = true;
-		else if (castleWith && thisPiece.startsWith('kings')) {
+		if (pawnDoublePush && typeutil.getRawType(thisPiece) === r.PAWN) specialRights[key] = true;
+		else if (castleWith && typeutil.getRawType(thisPiece) === r.KING) {
 			specialRights[key] = true;
 			kingsFound[key] = getPieceColorFromType(thisPiece);
 		}
-		else if (castleWith && thisPiece.startsWith(castleWith)) {
+		else if (castleWith && typeutil.getRawType(thisPiece) === castleWith) {
 			castleWithsFound[key] = getPieceColorFromType(thisPiece);
 		}
 	}

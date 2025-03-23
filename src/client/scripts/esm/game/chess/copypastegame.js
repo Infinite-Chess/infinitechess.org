@@ -19,7 +19,7 @@ import gameloader from './gameloader.js';
 import { pieceCountToDisableCheckmate } from '../../chess/config.js';
 import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
-import { players } from '../../chess/config.js';
+import { players, rawTypes } from '../../chess/config.js';
 // Import End
 
 "use strict";
@@ -277,7 +277,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		 * Erase the enpassant property! (or just don't transfer it over)
 		 */
 		const pieceOnExpectedSquare = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
-		if (pieceOnExpectedSquare && pieceOnExpectedSquare.startsWith('pawns') && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
+		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === rawTypes.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
 			// Valid pawn to capture via enpassant is present
 			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
 		}

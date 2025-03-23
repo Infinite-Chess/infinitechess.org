@@ -82,17 +82,17 @@ function isSocketInAnActiveGame(ws) {
  * Returns true if the player behind the socket is not in an active game
  * of the provided ID (has seen the game conclusion).
  * @param {Game} game
- * @param {color} color
+ * @param {Player} color
  * @returns {boolean}
  */
 function hasColorInGameSeenConclusion(game, color) {
-	const player = game[color]; // { member }  OR  { browser }   (only contains one)
+	const player = game.players[color]; // { member }  OR  { browser }   (only contains one)
 	if (!player) return console.error(`Invalid color "${color}" when checking if color in game has seen game conclusion!`);
 
 	if (player.member) {
-		if (membersInActiveGames[player.member] !== game.id) return true;
+		if (membersInActiveGames[player.identifier.member] !== game.id) return true;
 	} else if (player.browser) {
-		if (browsersInActiveGames[player.browser] !== game.id) return true;
+		if (browsersInActiveGames[player.identifier.browser] !== game.id) return true;
 	}
     
 	return false; // Has not seen conclusion yet, (has not requested to be removed from the players in active games list).

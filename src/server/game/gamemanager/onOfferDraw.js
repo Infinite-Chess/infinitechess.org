@@ -7,7 +7,7 @@
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
-import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
@@ -39,7 +39,7 @@ function offerDraw(ws, game) {
 	openDrawOffer(game, color);
 
 	// Alert their opponent
-	const opponentColor = colorutil.getOppositeColor(color);
+	const opponentColor = typeutil.invertPlayer(color);
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'drawoffer');
 }
 
@@ -75,7 +75,7 @@ function acceptDraw(ws, game) {
 function declineDraw(ws, game) {
 	if (!game) return console.error("Can't decline any open draw when they don't belong in a game.");
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-	const opponentColor = colorutil.getOppositeColor(color);
+	const opponentColor = typeutil.invertPlayer(color);
 
 	// Since this method is run every time a move is submitted, we have to early exit
 	// if their opponent doesn't have an open draw offer. 

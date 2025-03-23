@@ -1,8 +1,6 @@
 
 // Import Start
-import websocket from '../websocket.js';
 import localstorage from '../../util/localstorage.js';
-import style from './style.js';
 import statustext from './statustext.js';
 import invites from '../misc/invites.js';
 import gui from './gui.js';
@@ -10,6 +8,7 @@ import guititle from './guititle.js';
 import timeutil from '../../util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
+import { players } from '../../chess/config.js';
 // Import End
 
 
@@ -230,10 +229,14 @@ function callback_createInvite() {
  * @returns {InviteOptions}
  */
 function getInviteOptions() {
+	const strcolor = element_optionColor.value;
+	const color = strcolor === "White" ? players.WHITE :
+		strcolor === "Black" ? players.BLACK :
+		players.NEUTRAL;
 	return {
 		variant: element_optionVariant.value,
 		clock: element_optionClock.value,
-		color: element_optionColor.value,
+		color: color,
 		private: element_optionPrivate.value,
 		rated: element_optionRated.value,
 	};

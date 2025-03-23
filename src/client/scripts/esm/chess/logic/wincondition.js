@@ -9,6 +9,8 @@ import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
+
+import { rawTypes } from '../config.js';
 // Import End
 
 // Type Definitions...
@@ -97,7 +99,7 @@ function detectKoth(gamefile) {
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(gamefile.moves);
 	if (!lastMove) return false;
-	if (!lastMove.type.startsWith('kings')) return false;
+	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return false;
 
 	let kingInCenter = false;
 	for (let i = 0; i < kothCenterSquares.length; i++) {
@@ -105,7 +107,7 @@ function detectKoth(gamefile) {
 
 		const typeAtSquare = boardutil.getTypeFromCoords(gamefile.ourPieces, thisCenterSquare);
 		if (!typeAtSquare) continue;
-		if (typeAtSquare.startsWith('kings')) {
+		if (typeutil.getRawType(typeAtSquare) === rawTypes.KING) {
 			kingInCenter = true;
 			break;
 		}

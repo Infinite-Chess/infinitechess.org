@@ -8,7 +8,7 @@
 // Custom imports
 
 import gameutility from './gameutility.js';
-import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 // Type imports
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
@@ -45,7 +45,7 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
  */
 function cancelAutoAFKResignTimer(game, { alertOpponent } = {}) {
 	if (gameutility.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
-		const opponentColor = colorutil.getOppositeColor(game.whosTurn);
+		const opponentColor = typeutil.invertPlayer(game.whosTurn);
 		gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn');
 	}
 
@@ -84,11 +84,12 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
 		cancelAutoAFKResignTimer(game);
 	}
 
-	const opponentColor = colorutil.getOppositeColor(color);
+	const opponentColor = typeutil.invertType(color);
+	const opponent = game.players[opponentColor];
 
-	game.disconnect.autoResign[color].timeoutID = setTimeout(onAutoResignFunc, timeBeforeAutoResign, game, opponentColor);
-	game.disconnect.autoResign[color].timeToAutoLoss = timeToAutoLoss;
-	game.disconnect.autoResign[color].wasByChoice = !closureNotByChoice;
+	opponent.disconnect.timeoutID = setTimeout(onAutoResignFunc, timeBeforeAutoResign, game, opponentColor);
+	opponent.disconnect.timeToAutoLoss = timeToAutoLoss;
+	opponent.disconnect.wasByChoice = !closureNotByChoice;
 
 	// Alert their opponent the time their opponent will be auto-resigned by disconnection.
 	const value = { millisUntilAutoDisconnectResign: timeBeforeAutoResign, wasByChoice: !closureNotByChoice };
@@ -101,8 +102,9 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
  * @param {Game} game - The game
  */
 function cancelDisconnectTimers(game) {
-	cancelDisconnectTimer(game, 'white', { dontNotifyOpponent: true });
-	cancelDisconnectTimer(game, 'black', { dontNotifyOpponent: true });
+	for (const color of Object.keys(game.players)) {
+		cancelDisconnectTimer(game, Number(color), { dontNotifyOpponent: true });
+	}
 }
 
 /**
@@ -117,12 +119,14 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
 	/** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */
 	const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(game, color);
     
-	clearTimeout(game.disconnect.startTimer[color]);
-	clearTimeout(game.disconnect.autoResign[color].timeoutID);
-	game.disconnect.startTimer[color] = undefined;
-	game.disconnect.autoResign[color].timeoutID = undefined;
-	game.disconnect.autoResign[color].timeToAutoLoss = undefined;
-	game.disconnect.autoResign[color].wasByChoice = undefined;
+	const playerdata = game.players[color];
+
+	clearTimeout(playerdata.disconnect.startID);
+	clearTimeout(playerdata.disconnect.timeoutID);
+	playerdata.disconnect.startTimer = undefined;
+	playerdata.disconnect.timeoutID = undefined;
+	playerdata.disconnect.timeToAutoLoss = undefined;
+	playerdata.disconnect.wasByChoice = undefined;
     
 	if (dontNotifyOpponent) return;
 
@@ -130,7 +134,7 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
 
 	if (!autoResignTimerWasRunning) return; // Opponent was never notified their opponent was afk, skip telling them their opponent has returned.
 
-	const opponentColor = colorutil.getOppositeColor(color);
+	const opponentColor = typeutil.invertPlayer(color);
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnectreturn');
 }
 

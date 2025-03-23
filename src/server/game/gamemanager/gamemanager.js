@@ -16,7 +16,7 @@ import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCoun
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
-import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
@@ -57,12 +57,12 @@ function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1
 		// Player 1 (invite owner)'s socket closed before their invite was deleted.
 		// Immediately start the auto-resign by disconnection timer
 		const player2Color = gameutility.doesSocketBelongToGame_ReturnColor(game, player2Socket);
-		const player1Color = colorutil.getOppositeColor(player2Color);
+		const player1Color = typeutil.invertPlayer(player2Color);
 		startDisconnectTimer(game, player1Color, false, onPlayerLostByDisconnect);
 	}
-
-	addUserToActiveGames(game.white, game.id);
-	addUserToActiveGames(game.black, game.id);
+	for (const data of Object.values(game.players)) {
+		addUserToActiveGames(data.identifier, game.id);
+	}
 
 	addGameToActiveGames(game);
 
@@ -105,7 +105,7 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 	if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
 		console.log("Waiting 5 seconds before starting disconnection timer.");
 		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
-		game.disconnect.startTimer[color] = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect);
+		game.players[color].disconnect.startID = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect);
 	} else { // Closed tab manually. Immediately start auto-resign timer.
 		startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect);
 	}
@@ -169,7 +169,7 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
 	if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
 	// Is the opponent still in the players in active games list? (has not seen the game results)
 	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-	const opponentColor = colorutil.getOppositeColor(color);
+	const opponentColor = (color);
 	if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
 
 	// console.log("Deleting game immediately, instead of waiting 15 seconds, because both players have seen the game conclusion and requested to be removed from the players in active games list.")
@@ -200,8 +200,10 @@ function pushGameClock(game) {
 	let newTime = game.timeRemainAtTurnStart - timeSpent;
 	game.timeAtTurnStart = now;
 
-	if (colorWhoJustMoved === 'white') game.timeRemainAtTurnStart = game.timerBlack;
-	else                               game.timeRemainAtTurnStart = game.timerWhite;
+	const curPlayerdata = game.players[game.whosTurn];
+	const prevPlayerdata = game.players[colorWhoJustMoved];
+
+	game.timeRemainAtTurnStart = curPlayerdata.timer;
 
 	// Start the timer that will auto-terminate the player when they lose on time
 	setAutoTimeLossTimer(game);
@@ -209,8 +211,8 @@ function pushGameClock(game) {
 	if (game.moves.length < 3) return; //////////////////////////////////////// Atleast 3 moves played
 
 	newTime += game.incrementMillis; // Increment
-	if (colorWhoJustMoved === 'white') game.timerWhite = newTime;
-	else                               game.timerBlack = newTime;
+	
+	prevPlayerdata.timer = newTime;
 }
 
 /**
@@ -305,7 +307,7 @@ function onPlayerLostOnTime(game) {
 
 	// Who lost on time?
 	const loser = game.whosTurn;
-	const winner = colorutil.getOppositeColor(loser);
+	const winner = typeutil.invertPlayer(loser);
 
 	setGameConclusion(game, `${winner} time`);
 
@@ -379,12 +381,12 @@ async function deleteGame(game) {
 
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
-	gameutility.unsubClientFromGame(game, game.whiteSocket);
-	gameutility.unsubClientFromGame(game, game.blackSocket);
 
 	// Remove them from the list of users in active games to allow them to join a new game.
-	removeUserFromActiveGame(game.white, game.id);
-	removeUserFromActiveGame(game.black, game.id);
+	for (const data of Object.values(game.players)) {
+		gameutility.unsubClientFromGame(game, data.socket);
+		removeUserFromActiveGame(data.identifier, game.id);
+	}
 
 	delete activeGames[game.id]; // Delete the game
 
