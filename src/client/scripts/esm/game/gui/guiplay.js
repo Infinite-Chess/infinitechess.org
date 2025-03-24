@@ -260,7 +260,8 @@ function callback_createInvite() {
 			Variant: inviteOptions.variant,
 			youAreColor: ourColor,
 			currentEngine: "engineCheckmatePractice",
-			engineConfig: { engineTimeLimitPerMoveMillis: 500 },
+			// engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
+			engineConfig: { engineTimeLimitPerMoveMillis: 500 }, // Half a second for dev testing
 		});
 	}
 }
