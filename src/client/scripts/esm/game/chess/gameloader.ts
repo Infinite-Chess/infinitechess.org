@@ -193,13 +193,20 @@ async function startOnlineGame(options: JoinGameMessage) {
 async function startEngineGame(options: {
 	/** The "Event" string of the game's metadata */
 	Event: string,
+	/** If it's not a practice checkmate, this is the "Variant" string of the game's metadata.
+	 * MUTUALLY EXCLUSIVE with variantOptions. */
+	Variant?: string,
+	/** MUTUALLY EXCLUSIVE with Variant. */
+	variantOptions?: VariantOptions,
 	youAreColor: Player,
-	currentEngine: 'engineCheckmatePractice', // Expand to a union type when more engines are added
+	currentEngine: 'engineCheckmatePractice' | 'classicEngine', // Add more union types when more engines are added
 	engineConfig: EngineConfig,
-	variantOptions: VariantOptions,
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true
 }) {
+	if (options.Variant && options.variantOptions) throw Error("Can't provide both Variant and variantOptions at the same time when starting an engine game. They are mutually exclusive.");
+	if (!options.Variant && !options.variantOptions) throw Error("Must provide either Variant or variantOptions when starting an engine game.");
+
 	typeOfGameWeAreIn = 'engine';
 	gameLoading = true;
 
@@ -216,6 +223,7 @@ async function startEngineGame(options: {
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
+	if (options.Variant) metadata.Variant = options.Variant;
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({

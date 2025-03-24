@@ -48,6 +48,8 @@ import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
 import { rawTypes } from '../../../chess/config.js';
+// @ts-ignore
+import guipause from '../../gui/guipause.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -284,6 +286,8 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
+	if (guipause.areWePaused()) return; // Exit if paused
+
 	reset(); // Initiate the arrows empty
 	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
 		arrowlegalmovehighlights.reset(); // Also reset this

@@ -75,10 +75,10 @@ const alsoPrintSentEchos = false;
 const alsoPrintIncomingEchos = false;
 
 /** Enables simulated websocket latency, and prints all sent and received messages. */
-let DEBUG = true;
+let DEBUG = false;
 /** The amount of milliseconds of delay to add to our sent socket messages in DEBUG mode. */
-// const simulatedWebsocketLatencyMillis = 1000; // 1 Second
-const simulatedWebsocketLatencyMillis_Debug = 0; // 2 Seconds
+// const simulatedWebsocketLatencyMillis_Debug = 1000; // 1 Second
+const simulatedWebsocketLatencyMillis_Debug = 2000; // 2 Seconds
 
 /**
  * The last time the server closed our socket connection request because

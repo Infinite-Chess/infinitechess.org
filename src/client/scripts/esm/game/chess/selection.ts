@@ -180,8 +180,9 @@ function update() {
  */
 function updateHoverSquareLegal(gamefile: gamefile): void {
 	if (!pieceSelected) return;
+	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
 	// Required to pass on the special flag
-	const legal = legalmoves.checkIfMoveLegal(legalMoves!, pieceSelected!.coords, hoverSquare);
+	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, hoverSquare);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
 }

@@ -1,7 +1,8 @@
 /* eslint-disable max-depth */
 
 'use strict';
-// 
+
+/* eslint-disable max-depth */
 import { rawTypes as r, ext as e, players as p } from "../config.js";
 import typeutil from "../util/typeutil.js";
 
@@ -14,6 +15,9 @@ import typeutil from "../util/typeutil.js";
  * compact ICN (Infinite Chess Noation) and back, still human-readable,
  * but taking less space to describe positions.
  */
+
+/** Regex for numbers in scientific notation from https://stackoverflow.com/questions/638565/parsing-scientific-notation-sensibly */
+const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
 
 const playersDict = {
 	[p.WHITE]: "w",
@@ -132,10 +136,84 @@ function ShortToInt_Piece(shortpiece) {
 function isJson(str) {
 	try {
 		JSON.parse(str);
-	} catch (e) {
+	} catch {
 		return false;
 	}
 	return true;
+}
+
+/**
+ * This function brings the input number into a standard format that is not in scientific notation
+ * @param {string} str - A string representing a number, may be in scientific notation or not, e.g. "2.0e32"
+ * @returns {string} - A string with the number expanded to not use scientific notation, e.g. "200000000000000000000000000000000"
+ */
+function standardizeNumberString(str) {
+	let coefficient;
+	let exponent;
+	if (!/e/i.test(str)) {
+		// If string does not contain "e" or "E", it is not in scientific notation and exponent = 0
+		coefficient = str;
+		exponent = 0;
+	} else {
+		[coefficient, exponent] = str.toLowerCase().split('e');
+    	exponent = Number(exponent);
+	}
+
+	// Handle decimal in coefficient
+	if (coefficient.includes('.')) {
+		const [intPart, decimalPart] = coefficient.split('.');
+		const decimalLength = decimalPart.length;
+
+		// Remove the decimal point and adjust the exponent
+		coefficient = `${intPart}${decimalPart}`;
+		exponent -= decimalLength;
+	}
+
+	// Calculate the expanded number
+	if (exponent >= 0) {
+		return (BigInt(coefficient) * BigInt(10) ** BigInt(exponent)).toString();
+	} else {
+		// Cut off and remember leading sign
+		let leadingsign = "";
+		if (coefficient[0] === '+') coefficient = coefficient.slice(1);
+		else if (coefficient[0] === '-') {
+			coefficient = coefficient.slice(1);
+			leadingsign = "-";
+		}
+
+		// If exponent is negative, we need to move the decimal point to the left
+		const absExp = Math.abs(exponent);
+		let returnstring;
+		if (absExp >= coefficient.length) {
+			const zeros = "0".repeat(absExp - coefficient.length);
+			returnstring = `0.${zeros}${coefficient}`;
+		} else {
+			const index = coefficient.length - absExp;
+			returnstring = `${coefficient.slice(0, index)}.${coefficient.slice(index)}`;
+		}
+
+		// Formatting cleanup
+		returnstring = returnstring.replace(/^0+/, ''); // trim unneeded zeroes at the start
+		if (returnstring[0] === ".") returnstring = "0" + returnstring; // add leading zero before . if needed
+		returnstring = returnstring.replace(/0+$/, ''); // trim unneeded zeroes at the end
+		returnstring = returnstring.replace(/\.$/, ''); // trim . at the end
+
+		return `${leadingsign}${returnstring}`;
+	}
+}
+
+/**
+ * This function brings the input coordinate into a standard format that is not in scientific notation
+ * @param {string} str - A string representing a coordinate, may be in scientific notation or not, e.g. "2.0e32,-01.0e0"
+ * @returns {string} - A string with the coordinate expanded to not use scientific notation, e.g. "200000000000000000000000000000000,-1"
+ */
+function standardizeCoordString(str) {
+	if (str.includes(',')) {
+		const [coord0, coord1] = str.split(',');
+		return `${standardizeNumberString(coord0)},${standardizeNumberString(coord1)}`;
+	} else {
+		throw Error("Expected ',' in coordinate string"); // If string does not contain ",", it is not a coordinate string
+	}
 }
 
 /**
@@ -186,7 +264,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	let fullmove = 1;
 	if (longformat.fullMove) {
 		shortformat += `${longformat.fullMove.toString()} `;
-		fullmove = parseInt(longformat.fullMove);
+		fullmove = Number(longformat.fullMove);
 	}
 
 	// promotion lines, currently assumes that "promotionRanks" is always defined as a list of length 2, if it is defined
@@ -197,7 +275,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				shortformat += longformat.gameRules.promotionRanks[p.WHITE].join(',');
 				const promotionListWhite = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.WHITE] : null);
 				if (promotionListWhite) {
-					if (!(promotionListWhite.length == 4 && promotionListWhite.includes("rooks") && promotionListWhite.includes("queens") && promotionListWhite.includes("bishops") && promotionListWhite.includes("knights"))) {
+					if (!(promotionListWhite.length === 4 && promotionListWhite.includes("rooks") && promotionListWhite.includes("queens") && promotionListWhite.includes("bishops") && promotionListWhite.includes("knights"))) {
 						shortformat += ";";
 						for (const longpiece of promotionListWhite) {
 							shortformat += `${IntToShort_Piece(longpiece + e.W)},`;
@@ -211,7 +289,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				shortformat += longformat.gameRules.promotionRanks[p.BLACK].join(',');
 				const promotionListBlack = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.BLACK] : null);
 				if (promotionListBlack) {
-					if (!(promotionListBlack.length == 4 && promotionListBlack.includes("rooks") && promotionListBlack.includes("queens") && promotionListBlack.includes("bishops") && promotionListBlack.includes("knights"))) {
+					if (!(promotionListBlack.length === 4 && promotionListBlack.includes("rooks") && promotionListBlack.includes("queens") && promotionListBlack.includes("bishops") && promotionListBlack.includes("knights"))) {
 						shortformat += ";";
 						for (const longpiece of promotionListBlack) {
 							shortformat += `${IntToShort_Piece(longpiece + e.B)},`;
@@ -231,11 +309,11 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 			const blackwins = longformat.gameRules.winConditions.black;
 			if (whitewins && blackwins) {
 				let wins_are_equal = true;
-				if (whitewins.length == blackwins.length) {
+				if (whitewins.length === blackwins.length) {
 					for (let i = 0; i < whitewins.length; i++) {
 						let white_win_i_is_black_win = false;
 						for (let j = 0; j < blackwins.length; j++) {
-							if (whitewins[i] == blackwins[j]) {
+							if (whitewins[i] === blackwins[j]) {
 								white_win_i_is_black_win = true;
 								break;
 							}
@@ -306,20 +384,20 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 		} else { // compact_moves > 0
 			shortmoves += (i === 0 ? "" : "|");
 		}
-		shortmoves += (longmove.type && (compact_moves == 0 || compact_moves == 1) ? IntToShort_Piece(longmove.type) : "");
+		shortmoves += (longmove.type && (compact_moves === 0 || compact_moves === 1) ? IntToShort_Piece(longmove.type) : "");
 		shortmoves += longmove.startCoords.toString();
-		shortmoves += (compact_moves == 0 ? " " : "");
-		shortmoves += (longmove.flags.capture && (compact_moves == 0 || compact_moves == 1) ? "x" : ">");
-		shortmoves += (compact_moves == 0 ? " " : "");
+		shortmoves += (compact_moves === 0 ? " " : "");
+		shortmoves += (longmove.flags.capture && (compact_moves === 0 || compact_moves === 1) ? "x" : ">");
+		shortmoves += (compact_moves === 0 ? " " : "");
 		shortmoves += longmove.endCoords.toString();
-		shortmoves += (compact_moves == 0 ? " " : "");
+		shortmoves += (compact_moves === 0 ? " " : "");
 		if (longmove.promotion) {
-			shortmoves += (compact_moves == 0 || compact_moves == 1 ? "=" : "");
+			shortmoves += (compact_moves === 0 || compact_moves === 1 ? "=" : "");
 			shortmoves += IntToShort_Piece(longmove.promotion);
 		}
-		if (longmove.flags.mate && (compact_moves == 0 || compact_moves == 1)) {
+		if (longmove.flags.mate && (compact_moves === 0 || compact_moves === 1)) {
 			shortmoves += "#";
-		} else if (longmove.flags.check && (compact_moves == 0 || compact_moves == 1)) {
+		} else if (longmove.flags.check && (compact_moves === 0 || compact_moves === 1)) {
 			shortmoves += "+";
 		}
 		shortmoves = shortmoves.trimEnd();
@@ -370,13 +448,13 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 	while (shortformat.indexOf("[") > -1) {
 		const start_index = shortformat.indexOf("[");
 		const end_index = shortformat.indexOf("]");
-		if (end_index == -1) throw new Error("Unclosed [ detected");
+		if (end_index === -1) throw new Error("Unclosed [ detected");
 		const metadatastring = shortformat.slice(start_index + 1,end_index);
 		shortformat = `${shortformat.slice(0,start_index)}${shortformat.slice(end_index + 1)}`;
         
 		// new metadata format [Metadata "value"]
-		if (/^[^\s\:]*\s+\"/.test(metadatastring)) {
-			const split_index = metadatastring.search(/\s\"/);
+		if (/^[^\s:]*\s+"/.test(metadatastring)) {
+			const split_index = metadatastring.search(/\s"/);
 			metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index + 2, -1);
 		}
 		// old metadata format [Metadata: value]
@@ -388,13 +466,13 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 	}
 	longformat.metadata = metadata;
 
-	while (shortformat != "") {
+	while (shortformat !== "") {
 		if (/\s/.test(shortformat[0])) {
 			shortformat = shortformat.slice(1);
 			continue;
 		}
 		let index = shortformat.search(/\s/);
-		if (index == -1) index = shortformat.length;
+		if (index === -1) index = shortformat.length;
 		let string = shortformat.slice(0,index);
 		shortformat = shortformat.slice(index + 1);
 
@@ -411,8 +489,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// en passant
-		if (!longformat.enpassant && /^(-?[0-9]+,-?[0-9]+)$/.test(string)) {
-			longformat.enpassant = [parseInt(string.split(",")[0]), parseInt(string.split(",")[1])];
+		if (!longformat.enpassant && RegExp(`^(${scientificNumberRegex},${scientificNumberRegex})$`).test(string)) {
+			longformat.enpassant = [Number(string.split(",")[0]), Number(string.split(",")[1])];
 			continue;
 		}
 
@@ -424,12 +502,12 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 		// full move counter
 		if (!longformat.fullMove && /^([0-9]+)$/.test(string)) {
-			longformat.fullMove = parseInt(string);
+			longformat.fullMove = Number(string);
 			continue;
 		}
 
 		// promotion lines
-		if (/^\(((()|([^\(\)\|]*\|)-?[0-9]+)|(\|\)$))/.test(string)) {
+		if (RegExp(`^\\(((()|([^\\(\\)\\|]*\\|)${scientificNumberRegex})|(\\|\\)$))`).test(string)) {
 			
 			/**
 			 * Possible cases the string could look like:
@@ -452,8 +530,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const blackRanksArray = blackRanks.length === 0 ? [] : blackRanks.split(',');
 
 			longformat.gameRules.promotionRanks = {
-				[p.WHITE]: whiteRanksArray.map(num => parseInt(num)), // [-3, 4]
-				[p.BLACK]: blackRanksArray.map(num => parseInt(num))
+				[p.WHITE]: whiteRanksArray.map(num => Number(num)), // [-3, 4]
+				[p.BLACK]: blackRanksArray.map(num => Number(num))
 			};
 
 			const defaultPromotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
@@ -470,10 +548,10 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		if (/^(\(?[a-zA-z][^0-9]+)$/.test(string)) {
 			if (!longformat.gameRules.winConditions) {
 				longformat.gameRules.winConditions = {};
-				string = string.replace(/[\(\)]/g,"").split("|");
-				if (string.length == 1) string.push(string[0]);
+				string = string.replace(/[()]/g,"").split("|");
+				if (string.length === 1) string.push(string[0]);
 				for (let i = 0; i < 2; i++) {
-					const color = (i == 0 ? p.WHITE : p.BLACK);
+					const color = (i === 0 ? p.WHITE : p.BLACK);
 					longformat.gameRules.winConditions[color] = [];
 					for (const wincon of string[i].split(",")) {
 						longformat.gameRules.winConditions[color].push(wincon);
@@ -484,7 +562,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// position
-		if (!longformat.startingPosition && /^([0-9]*[a-zA-z]+-?[0-9]+,-?[0-9]+\+?($|\|))/.test(string)) {
+		if (!longformat.startingPosition && RegExp(`^([0-9]*[a-zA-z]+${scientificNumberRegex},${scientificNumberRegex}\\+?($|\\|))`).test(string)) {
 			const { startingPosition, specialRights } = getStartingPositionAndSpecialRightsFromShortPosition(string);
 			longformat.specialRights = specialRights;
 			longformat.startingPosition = startingPosition;
@@ -493,7 +571,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		//moves - conversion stops here
-		if (/^(([0-9]+\.)|([a-zA-Z]*-?[0-9]+,-?[0-9]+[\s]*(x|>)+))/.test(string)) {
+		if (RegExp(`^(([0-9]+\\.$)|([a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+))`).test(string)) {
 			const shortmoves = (string + "  " + shortformat).trimEnd();
 			const moves = convertShortMovesToLong(shortmoves);
 			if (moves.length > 0) longformat.moves = moves;
@@ -512,42 +590,19 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 function convertShortMovesToLong(shortmoves) {
 	const longmoves = [];
 
-	shortmoves.replace(/[\!\?=]/g,"");
+	shortmoves.replace(/[!?=]/g,"");
 	while (shortmoves.indexOf("{") > -1) {
 		const start_index = shortmoves.indexOf("{");
 		const end_index = shortmoves.indexOf("}");
-		if (end_index == -1) throw new Error("Unclosed { found.");
+		if (end_index === -1) throw new Error("Unclosed { found.");
 		shortmoves = shortmoves.slice(0,start_index) + "|" + shortmoves.slice(end_index + 1);
 	}
-	shortmoves = shortmoves.match(/[a-zA-Z]*-?[0-9]+,-?[0-9]+[\s]*(x|>)+[\s]*-?[0-9]+,-?[0-9]+[^\|\.0-9]*/g);
+	shortmoves = shortmoves.match(RegExp(`[a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+[\\s]*${scientificNumberRegex},${scientificNumberRegex}[^\\|\\.0-9]*`, "g"));
 
 	if (!shortmoves) return longmoves;
 
-	/*
-    let runningCoordinates = {}; // contains current piece type at coordinates, and "undefined" if piece no longer on that square
-    let wasWhiteDoublePawnMove = false; // boolean specifying if previous move was double pawn move by white
-    let wasBlackDoublePawnMove = false; // boolean specifying if previous move was double pawn move by black
-    let pawnEndString; // end square of previous pawn move
-    if (reconstruct_optional_move_flags){
-        if (!longformat["startingPosition"]){
-            throw new Error("Moves have to be reconstructed but no starting position submitted!");
-        }
-        
-        if (longformat["enpassant"]){
-            pawnEndString = longformat["enpassant"].toString();
-            if (!longformat["turn"]){
-                wasBlackDoublePawnMove = true;
-            } else if (longformat["turn"] == "white"){
-                wasBlackDoublePawnMove = true;
-            } else if (longformat["turn"] == "black"){
-                wasWhiteDoublePawnMove = true;
-            }
-        }
-    }
-    */
-
 	for (let i = 0; i < shortmoves.length; i++) {
-		const coords = shortmoves[i].match(/-?[0-9]+,-?[0-9]+/g);
+		const coords = shortmoves[i].match(RegExp(`${scientificNumberRegex},${scientificNumberRegex}`, "g"));
 		const startString = coords[0];
 		const endString = coords[1];
 
@@ -555,159 +610,8 @@ function convertShortMovesToLong(shortmoves) {
 		const suffix = shortmoves[i].slice(suffix_index).trimStart().trimEnd();
 
 		// simplified longmoves (comment out next 2 lines and uncomment block below to get back old behavior)
-		const promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/) : "");
+		const promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/)[0] : "");
 		longmoves.push(`${startString}>${endString}${promotedPiece}`);
-
-		/*
-        let longmove = {};
-        let startCoords = getCoordsFromString(startString);
-        let endCoords = getCoordsFromString(endString);
-
-        let isCheck = false;
-        let isMate = false;
-        if (trust_check_and_mate_symbols){
-            if (suffix.match(/\+/g)) isCheck = true;
-            if (suffix.match(/\#/g)){
-                isCheck = true;
-                isMate = true;
-            }
-        }
-
-        let isPromotion = false;
-        let promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/) : "");
-        if (promotedPiece != ""){
-            isPromotion = true;
-            try{
-                promotedPiece = ShortToInt_Piece(promotedPiece);
-            } catch(e) {
-                // promoted piece defaults to Q or q if no valid promoted piece found
-                promotedPiece = (endCoords[1] > startCoords[1] ? r.QUEEN + e.W : [r.QUEEN + e.B]);
-            }
-        }
-
-        let movedPiece;
-        if (reconstruct_optional_move_flags){
-            if (runningCoordinates[startString]){
-                movedPiece =`${runningCoordinates[startString]}`;
-            } else{
-                movedPiece =`${longformat["startingPosition"][startString]}`;
-            }
-            runningCoordinates[startString] = undefined;
-            // moved piece defaults to Q if invalid:
-            movedPiece = (movedPiece == "" || movedPiece == "null" || movedPiece == "undefined" ? "queensW" : movedPiece);
-            longmove["type"] = movedPiece;
-        }
-        
-        longmove["startCoords"] = startCoords;
-        longmove["endCoords"] = endCoords;
-
-        // capture and en passant handling
-        if (reconstruct_optional_move_flags){
-            let capturedPiece;
-            if(runningCoordinates[endString]){
-                capturedPiece = `${runningCoordinates[endString]}`;
-                // captured piece defaults to Q if invalid:
-                capturedPiece = (capturedPiece == "" || capturedPiece == "null" || capturedPiece == "undefined" ? "queensW" : capturedPiece);
-                longmove["captured"] = capturedPiece;
-            } else if (longformat["startingPosition"][endString] && !(endString in runningCoordinates)){
-                capturedPiece = `${longformat["startingPosition"][endString]}`;
-                // captured piece defaults to Q if invalid:
-                capturedPiece = (capturedPiece == "" || capturedPiece == "null" || capturedPiece == "undefined" ? "queensW" : capturedPiece);
-                longmove["captured"] = capturedPiece;
-            } else if (movedPiece.slice(0, -1) == "pawns" && startCoords[0] != endCoords[0] && startCoords[1] != endCoords[1]){
-                // En passant (no piece was directly captured but pawn moved diagonally)
-                if (runningCoordinates[pawnEndString]){
-                    capturedPiece = `${runningCoordinates[pawnEndString]}`;
-                } else {
-                    capturedPiece = `${longformat["startingPosition"][pawnEndString]}`;
-                }
-                if (wasWhiteDoublePawnMove || wasBlackDoublePawnMove){
-                    runningCoordinates[pawnEndString] = undefined;
-                    // captured piece defaults to Q if invalid:
-                    capturedPiece = (capturedPiece == "" || capturedPiece == "null" || capturedPiece == "undefined" ? "queensW" : capturedPiece);
-                    longmove["captured"] = capturedPiece;
-                    longmove["enpassant"] = (wasWhiteDoublePawnMove ? 1 : -1);
-                }
-            }
-        }
-
-        // promotion handling
-        if (isPromotion){
-            longmove["promotion"] = promotedPiece;
-            if (reconstruct_optional_move_flags) runningCoordinates[endString] = promotedPiece;
-        } else{
-            if (reconstruct_optional_move_flags) runningCoordinates[endString] = movedPiece;
-        }
-
-        // detect if move is double pawn move, i.e. if it allows en passant next move
-        if (reconstruct_optional_move_flags){
-            if (movedPiece.slice(0, -1) == "pawns"){
-                if (startCoords[1] - endCoords[1] < -1){
-                    wasWhiteDoublePawnMove = true;
-                    wasBlackDoublePawnMove = false;
-                    pawnEndString = `${endString}`;
-                } else if (startCoords[1] - endCoords[1] > 1){
-                    wasWhiteDoublePawnMove = false;
-                    wasBlackDoublePawnMove = true;
-                    pawnEndString = `${endString}`;
-                } else{
-                    wasWhiteDoublePawnMove = false;
-                    wasBlackDoublePawnMove = false;
-                }
-            } else{
-                wasWhiteDoublePawnMove = false;
-                wasBlackDoublePawnMove = false;
-            }
-        }
-
-        // castling handling
-        if (reconstruct_optional_move_flags){
-            if (movedPiece.slice(0, -1) == "kings"){
-                const xmove = endCoords[0] - startCoords[0];
-                const ymove = endCoords[1] - startCoords[1];
-                if (Math.abs(xmove) === 2 && ymove === 0){
-                    let castle = {};
-                    let castleCandidate = "";
-                    for (let coordinate in longformat["specialRights"]){
-                        if (longformat["startingPosition"][coordinate]  && !(coordinate in runningCoordinates)){ // can only castle if unmoved in this game
-                            let coordinateVec = getCoordsFromString(coordinate);
-                            if (coordinateVec[1] == startCoords[1]){ // can only castle if same y coordinate
-                                if ((coordinateVec[0] > startCoords[0] && xmove > 1) || (coordinateVec[0] < startCoords[0] && xmove < 1)) {
-                                    if (castleCandidate == ""){
-                                        castleCandidate = coordinateVec;
-                                    } else{
-                                        if ((xmove > 1 && castleCandidate[0] > coordinateVec[0]) || (xmove < 1 && castleCandidate[1] < coordinateVec[0])){
-                                            castleCandidate = coordinateVec;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (castleCandidate != ""){
-                        castle["dir"] = (xmove > 1 ? 1 : -1);
-                        castle["coord"] = castleCandidate;
-                        longmove["castle"] = castle;
-                        let castleString = castleCandidate.toString();
-                        runningCoordinates[`${(parseInt(endCoords[0])-castle["dir"]).toString()},${endCoords[1].toString()}`] = `${longformat["startingPosition"][castleString]}`;
-                        runningCoordinates[castleString] = undefined;
-                    }
-                }
-            }
-        }
-
-        // check and mate
-        if (trust_check_and_mate_symbols){
-            if (isCheck){
-                longmove["check"] = true;
-                if (isMate){
-                    longmove["mate"] = true;
-                }
-            }
-        }
-        
-        longmoves.push(longmove);
-        */
 	}
 
 	return longmoves;
@@ -752,7 +656,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 			if (move.flags.capture || move.type.slice(0, -1) === "pawns") {
 				ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
 			} else {
-				ret.moveRule = `${(parseInt(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
+				ret.moveRule = `${(Number(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
 			}
 		}
 
@@ -770,7 +674,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update coords of castled piece
 		if (move.castle) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition[`${(parseInt(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
+			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
 			delete ret.startingPosition[castleString];
 			if (ret.specialRights) delete ret.specialRights[castleString];
 		}
@@ -805,7 +709,7 @@ function LongToShort_CompactMove(longmove) {
  * @returns {Object} Output move as JSON: { startCoords, endCoords, promotion }
  */
 function ShortToLong_CompactMove(shortmove) {
-	let coords = shortmove.match(/-?[0-9]+,-?[0-9]+/g); // ['1,2','3,4']
+	let coords = shortmove.match(RegExp(`${scientificNumberRegex},${scientificNumberRegex}`, "g")); // ['1,2','3,4']
 	// Make sure the move contains exactly 2 coordinates.
 	if (coords.length !== 2) throw new Error(`Short move does not contain 2 valid coordinates: ${JSON.stringify(coords)}`);
 	coords = coords.map((movestring) => { return getCoordsFromString(movestring); }); // [[1,2],[3,4]]
@@ -815,11 +719,11 @@ function ShortToLong_CompactMove(shortmove) {
 		if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
 	});
 	// ShortToInt_Piece() will already throw an error if the piece abbreviation is invalid.
-	const promotedPiece = (/[a-zA-Z]+/.test(shortmove) ? ShortToInt_Piece(shortmove.match(/[a-zA-Z]+/)) : "");
+	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToInt_Piece(shortmove.match(/[a-zA-Z]+$/)[0]) : "");
 	const longmove = { compact: shortmove };
 	longmove.startCoords = coords[0];
 	longmove.endCoords = coords[1];
-	if (promotedPiece != "") {
+	if (promotedPiece !== "") {
 		longmove.promotion = promotedPiece;
 	}
 	return longmove;
@@ -842,7 +746,7 @@ function LongToShort_Position(position, specialRights = {}) {
 		}
 	}
 
-	if (shortposition.length != 0) shortposition = shortposition.slice(0,-1); // Trim off the final |
+	if (shortposition.length !== 0) shortposition = shortposition.slice(0,-1); // Trim off the final |
 	return shortposition;
 }
 
@@ -878,10 +782,10 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 		if (pawnDoublePush && typeutil.getRawType(thisPiece) === r.PAWN) specialRights[key] = true;
 		else if (castleWith && typeutil.getRawType(thisPiece) === r.KING) {
 			specialRights[key] = true;
-			kingsFound[key] = getPieceColorFromType(thisPiece);
+			kingsFound[key] = typeutil.getColorFromType(thisPiece);
 		}
 		else if (castleWith && typeutil.getRawType(thisPiece) === castleWith) {
-			castleWithsFound[key] = getPieceColorFromType(thisPiece);
+			castleWithsFound[key] = typeutil.getColorFromType(thisPiece);
 		}
 	}
 
@@ -915,19 +819,6 @@ function getCoordsFromString(key) {
 }
 
 /**
- * Returns the color of the provided piece type
- * @param {string} type - The type of the piece (e.g., "pawnsW")
- * @returns {string} The color of the piece, "white", "black", or "neutral"
- */
-function getPieceColorFromType(type) {
-	// If the last letter of the piece type is 'W', the piece is white.
-	if (type.endsWith('W')) return "white";
-	else if (type.endsWith('B')) return "black";
-	else if (type.endsWith('N')) return "neutral";
-	else throw new Error(`Cannot get color of piece with type "${type}"!`);
-}
-
-/**
  * Takes the position in compressed short form and returns the startingPosition and specialRights properties of the gamefile
  * @param {string} shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
  * @returns {Object} An object containing 2 properties: startingPosition, and specialRights
@@ -951,25 +842,25 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 				break;
 			}
 		}
-		end_index = shortposition.slice(index).search(/\+|\|/); // end of current piece coordinates, counted from index
-		if (end_index != -1) {
-			if (shortposition[index + end_index] == "+") {
+		end_index = shortposition.slice(index).search(/(\+($|\|))|\|/); // end of current piece coordinates, counted from index
+		if (end_index !== -1) {
+			if (shortposition[index + end_index] === "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
-				startingPosition[coordString] = ShortToInt_Piece(shortpiece);
-				specialRights[coordString] = true;
+				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
+				specialRights[standardizeCoordString(coordString)] = true;
 				index += end_index + 2;
 			} else {
-				startingPosition[shortposition.slice(index + piecelength, index + end_index)] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = ShortToInt_Piece(shortpiece);
 				index += end_index + 1;
 			}
 		} else {
-			if (shortposition.slice(-1) == "+") {
+			if (shortposition.slice(-1) === "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
-				startingPosition[coordString] = ShortToInt_Piece(shortpiece);
-				specialRights[coordString] = true;
+				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
+				specialRights[standardizeCoordString(coordString)] = true;
 				index = MAX_INDEX;
 			} else {
-				startingPosition[shortposition.slice(index + piecelength)] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = ShortToInt_Piece(shortpiece);
 				index = MAX_INDEX;
 			}
 		}
@@ -1008,69 +899,6 @@ function deepCopyObject(src) {
     
 	return copy; // Return the copied object
 }
-
-/////////// TESTS /////////////
-
-// try{
-//     // Example game converted from long to short format in three different levels of move compactness
-//     const gameExample = 
-//     {"metadata":{"Variant":"Classical","Version":"1","White":"Tom","Black":"Ben","TimeControl":"10+5","Date":"2024/03/17 13:42:06","Result":"0-1","Condition":"checkmate"},"turn":"white","moveRule":"0/100","fullMove":1,"gameRules":{"slideLimit":16,"promotionRanks":[8,1],"promotionsAllowed":{"white":["queens","rooks","bishops","knights"],"black":["queens","rooks","bishops","knights"]},"ovenTemperature": 350,"winConditions":{"white":["checkmate"],"black":["checkmate"]}},"specialRights":{"1,2":true,"2,2":true,"3,2":true,"4,2":true,"5,2":true,"6,2":true,"7,2":true,"8,2":true,"1,7":true,"2,7":true,"3,7":true,"4,7":true,"5,7":true,"6,7":true,"7,7":true,"8,7":true,"1,1":true,"5,1":true,"8,1":true,"1,8":true,"5,8":true,"8,8":true},"startingPosition":{"1,2":"pawnsW","2,2":"pawnsW","3,2":"pawnsW","4,2":"pawnsW","5,2":"pawnsW","6,2":"pawnsW","7,2":"pawnsW","8,2":"pawnsW","1,7":"pawnsB","2,7":"pawnsB","3,7":"pawnsB","4,7":"pawnsB","5,7":"pawnsB","6,7":"pawnsB","7,7":"pawnsB","8,7":"pawnsB","1,1":"rooksW","8,1":"rooksW","1,8":"rooksB","8,8":"rooksB","2,1":"knightsW","7,1":"knightsW","2,8":"knightsB","7,8":"knightsB","3,1":"bishopsW","6,1":"bishopsW","3,8":"bishopsB","6,8":"bishopsB","4,1":"queensW","4,8":"queensB","5,1":"kingsW","5,8":"kingsB"},"moves":[{"type":"pawnsW","startCoords":[4,2],"endCoords":[4,4]},{"type":"pawnsB","startCoords":[4,7],"endCoords":[4,6]},{"type":"pawnsW","startCoords":[4,4],"endCoords":[4,5]},{"type":"pawnsB","startCoords":[3,7],"endCoords":[3,5]},{"type":"pawnsW","startCoords":[4,5],"endCoords":[3,6],"captured":"pawnsB","enpassant":-1},{"type":"bishopsB","startCoords":[6,8],"endCoords":[3,11]},{"type":"pawnsW","startCoords":[3,6],"endCoords":[2,7],"captured":"pawnsB"},{"type":"bishopsB","startCoords":[3,11],"endCoords":[-4,4]},{"type":"pawnsW","startCoords":[2,7],"endCoords":[1,8],"captured":"rooksB","promotion":"queensW"},{"type":"bishopsB","startCoords":[-4,4],"endCoords":[2,-2],"check":true},{"type":"kingsW","startCoords":[5,1],"endCoords":[4,2]},{"type":"knightsB","startCoords":[7,8],"endCoords":[6,6]},{"type":"queensW","startCoords":[1,8],"endCoords":[2,8],"captured":"knightsB"},{"type":"kingsB","startCoords":[5,8],"endCoords":[7,8],"castle":{"dir":1,"coord":[8,8]}},{"type":"queensW","startCoords":[2,8],"endCoords":[1,7],"captured":"pawnsB"},{"type":"queensB","startCoords":[4,8],"endCoords":[0,4]},{"type":"queensW","startCoords":[1,7],"endCoords":[7,13],"check":true},{"type":"kingsB","startCoords":[7,8],"endCoords":[8,8]},{"type":"queensW","startCoords":[7,13],"endCoords":[7,7],"captured":"pawnsB","check":true},{"type":"kingsB","startCoords":[8,8],"endCoords":[7,7],"captured":"queensW"},{"type":"pawnsW","startCoords":[8,2],"endCoords":[8,4]},{"type":"queensB","startCoords":[0,4],"endCoords":[4,4],"check":true,"mate":true}]}
-//     const outputNice = LongToShort_Format(gameExample);
-//     console.log("Game in short format with nice moves:\n\n" + outputNice + "\n");
-//     const outputMoreCompact = LongToShort_Format(gameExample, { compact_moves: 1 });
-//     console.log("Game in short format with more compact moves:\n\n" + outputMoreCompact + "\n");
-//     const outputMostCompact = LongToShort_Format(gameExample, { compact_moves: 2 });
-//     console.log("Game in short format with most compact moves:\n\n" + outputMostCompact + "\n");
-
-//     // Converted back to long format
-//     const gameExampleBackToLong = ShortToLong_Format(outputNice, true, true);
-//     console.log("Converted back to long format:\n\n" + JSON.stringify(gameExampleBackToLong)+ "\n");
-
-//     // Position after 21 halfmoves:
-//     const position = GameToPosition(gameExample, 21, false);
-//     console.log("Position after 21 half moves in long format:\n\n" + JSON.stringify(position));
-//     console.log("Position after 21 half moves in short format:\n\n" + LongToShort_Format(position));
-
-//     // String test:
-//     console.log('\nTest:\n\n' + JSON.stringify(ShortToLong_Format(' 3,4 3 w 3232098/2319080123213 K3,3+ {"asdds}sd a": 2332, "{nes(|)t}" : { "nes t2": "233 22" } } [asa: adsdsa] checkmate,asd (|4;q) ')) + '\n');
-
-//     // String test - no position:
-//     console.log('Test (no moves):\n\n' + JSON.stringify(ShortToLong_Format('[Variant: Classical] w 0/100 1 (8|1) R8,1>11,1|r8,8>11,8', false, false)) + '\n');
-
-//     // String test - illegal moves:
-//     console.log('Test (illegal moves):\n\n' + JSON.stringify(ShortToLong_Format('[Variant: Classical]  w 0/100 1 (8|1) P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+  P6,2>10,8=Q NAN62,22>120,82=nan NAN3,1>3,8=n{great move} P6,7x5,6{what a move}n8,7x5,7{ha ha}')) + '\n');
-
-//     // Move conversion
-//     console.log(JSON.stringify(ShortToLong_CompactMove('2,-3>3,-4ha')));
-//     console.log(LongToShort_CompactMove({"startCoords":[2,-3],"endCoords":[3,-4],"promotion":"hawksB"}));
-
-//     // specialMoves reconstruction, given the position, pawnDoublePush gamerule, and castleWith gamerule
-//     const positionExample = {"1,2":"pawnsW","2,2":"pawnsW","3,2":"pawnsW","4,2":"pawnsW","5,2":"pawnsW","6,2":"pawnsW","7,2":"pawnsW","8,2":"pawnsW","1,7":"pawnsB","2,7":"pawnsB","3,7":"pawnsB","4,7":"pawnsB","5,7":"pawnsB","6,7":"pawnsB","7,7":"pawnsB","8,7":"pawnsB","1,1":"rooksW","8,1":"rooksW","1,8":"rooksB","8,8":"rooksB","2,1":"knightsW","7,1":"rooksW","2,8":"knightsB","7,8":"knightsB","3,1":"bishopsW","6,1":"bishopsW","3,8":"bishopsB","6,8":"bishopsB","4,1":"queensW","4,8":"queensB","5,1":"kingsW","5,8":"kingsB"};
-//     const specialMoves = generateSpecialRights(positionExample, true, "rooks")
-//     console.log(`\nspecialMoves reconstruction example:\n\n${JSON.stringify(specialMoves)}`)
-
-//     // Compressing of a variant's starting position, only provided the pawnDoublePush and castleWith gamerules.
-//     const a = {"1,2": "pawnsW","2,2": "pawnsW","3,2": "pawnsW","4,2": "pawnsW","5,2": "pawnsW","6,2": "pawnsW","7,2": "pawnsW","8,2": "pawnsW","1,7": "pawnsB","2,7": "pawnsB","3,7": "pawnsB","4,7": "pawnsB","5,7": "pawnsB","6,7": "pawnsB","7,7": "pawnsB","8,7": "pawnsB","1,1": "rooksW","8,1": "rooksW","1,8": "rooksB","8,8": "rooksB","2,1": "knightsW","7,1": "knightsW","2,8": "knightsB","7,8": "knightsB","3,1": "bishopsW","6,1": "bishopsW","3,8": "bishopsB","6,8": "bishopsB","4,1": "queensW","4,8": "queensB","5,1": "kingsW","5,8": "kingsB"}
-//     const b = LongToShort_Position_FromGamerules(a, true, 'rooks');
-//     console.log(`\n\nCompressing of a variant's starting position example:\n\n${JSON.stringify(b)}`)
-
-//     // Speed test, put large position in "longposition.txt"
-//     import fs from 'fs'; // supported in Node.js
-//     fs.readFile("longposition.txt", (err, data) => {
-//         if (err) return;
-//         const gameExampleLong = JSON.parse(data);
-//         console.log("\nTimer Start with " + Object.keys(gameExampleLong.startingPosition).length + " pieces and " + gameExampleLong.moves.length + " moves.");
-//         const start_time = Date.now();
-//         const outputLong = LongToShort_Format(gameExampleLong);
-//         const med_time = Date.now();
-//         console.log("Long to short: " + (med_time - start_time) / 1000);
-//         ShortToLong_Format(outputLong, true, true);
-//         console.log("Short to long: " +  (Date.now() - med_time) / 1000);
-//     });
-
-// } catch(e){
-//     console.log(e);
-// }
 
 export default {
 	LongToShort_Format,

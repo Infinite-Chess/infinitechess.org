@@ -112,9 +112,9 @@ function doesMoveCheckOut(move) {
 	const endCoordComponents = coordinates[1].split(',');
 	if (startCoordComponents.length !== 2) return false;
 	if (endCoordComponents.length < 2) return false;
-	if (isNaN(parseInt(startCoordComponents[0]))) return false;
-	if (isNaN(parseInt(startCoordComponents[1]))) return false;
-	if (isNaN(parseInt(endCoordComponents[0]))) return false;
+	if (isNaN(Number(startCoordComponents[0]))) return false;
+	if (isNaN(Number(startCoordComponents[1]))) return false;
+	if (isNaN(Number(endCoordComponents[0]))) return false;
 	// Right now, don't test the 2nd component of the endCoord, because we haven't split it off the promotion piece.
 	return true;
 }

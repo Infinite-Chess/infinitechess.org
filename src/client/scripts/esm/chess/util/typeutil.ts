@@ -4,17 +4,24 @@ import type { Piece } from "./boardutil.js";
 
 /**
  * All piece types the game is currently compatible with (excluding neutrals).
- * 
- * They are arranged in this order for faster checkmate/draw detection,
- * as we should check if the kings have a legal move first.
  */
 const strtypes = ['voids', 'obstacle', 'kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'roses', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'] as const;
 
+/** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
 const jumpingRoyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
-
-const slidingroyals = [rawTypes.ROYALQUEEN];
-
-const royals = [...jumpingRoyals, ...slidingroyals];
+/**
+ * A list of the royals that the checkmate algorithm cannot detect when they are in checkmate,
+ * however it still is illegal to move into check.
+ * 
+ * Players have to voluntarily resign if they
+ * belive their sliding royal is in checkmate.
+ */
+const slidingRoyals = [rawTypes.ROYALQUEEN];
+/**
+ * A list of the royal pieces, without the color appended.
+ * THIS SHOULD NOT CONTAIN DUPLICATES
+ */
+const royals = [...jumpingRoyals, ...slidingRoyals];
 
 const strcolors = ["neutral", "white", "black"] as const;
 
@@ -94,6 +101,7 @@ export type {
 
 export default {
 	jumpingRoyals,
+	slidingRoyals,
 	royals,
 	SVGLESS_TYPES,
 

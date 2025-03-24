@@ -90,7 +90,7 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): [numbe
 }
 
 /**
- * Compares two lines in general form to see if they are equal.
+ * Compares two lines in general form to see if they are equal/coincident.
  * Two lines are considered equal if their coefficients are proportional.
  * @param line1 - The first line in general form [A1, B1, C1]
  * @param line2 - The second line in general form [A2, B2, C2]

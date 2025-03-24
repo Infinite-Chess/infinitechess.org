@@ -203,7 +203,7 @@ function updateWhosTurn() {
 	if (!gameloader.areInLocalGame()) {
 		const ourTurn = gameloader.isItOurTurn();
 		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
-	} else textContent = color === players.BLACK ? translations['white_to_move'] : translations['black_to_move'];
+	} else textContent = color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
 
 	element_whosturn.textContent = textContent;
 

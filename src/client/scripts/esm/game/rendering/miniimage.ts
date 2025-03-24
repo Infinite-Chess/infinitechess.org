@@ -14,7 +14,6 @@ import gameslot from '../chess/gameslot.js';
 import { createModel, BufferModel } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
-import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -37,6 +36,8 @@ import board from './board.js';
 import typeutil from '../../chess/util/typeutil.js';
 import { rawTypes } from '../../chess/config.js';
 import boardutil from '../../chess/util/boardutil.js';
+// @ts-ignore
+import guipause from '../gui/guipause.js';
 
 
 // Variables --------------------------------------------------------------
@@ -111,6 +112,7 @@ function testIfToggled(): void {
  * and can start teleports.
  */
 function genModel() {
+	if (guipause.areWePaused()) return; // Exit if paused
 	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (disabled) return; // Too many pieces to render icons!
 
@@ -142,14 +144,14 @@ function genModel() {
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
 		for (let i = range.start; i < range.end; i++) {
-			processPiece(boardutil.getCoordsFromIdx(ourPieces, i), texleft, texbottom, texright, textop, 1, 1, 1);
+			if (boardutil.isIdxUndefinedPiece(ourPieces, i)) continue;
+			const coords = boardutil.getCoordsFromIdx(ourPieces, i);
+			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
+			processPiece(coords, texleft, texbottom, texright, textop, 1, 1, 1);
 		}
 	};
 
-	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
-		if (!coords) return; // Skip undefined placeholders
-		if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
-
+	function processPiece(coords: Coords, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		const startX: number = (coords[0] - boardPos[0]) * boardScale - halfWidth;
 		const startY: number = (coords[1] - boardPos[1]) * boardScale - halfWidth;
 		const endX: number = startX + widthWorld;
@@ -185,14 +187,12 @@ function genModel() {
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		let [ r, g, b ] = preferences.getTintColorOfType(a.type);
-		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
+		processPiece(currentCoords, texleft, texbottom, texright, textop, 1, 1, 1);
 
 		// Animate the captured piece too, if there is one
 		if (!a.captured) return;
-		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
-		([ r, g, b ] = preferences.getTintColorOfType(a.type));
-		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
+		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.captured.type, rotation));
+		processPiece(a.captured.coords, texleft, texbottom, texright, textop, 1, 1, 1);
 	});
 
 	// Finally, teleport to clicked pieces

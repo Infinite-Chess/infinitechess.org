@@ -3,15 +3,14 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 
-import type { Coords } from '../../chess/util/coordutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
 import type { Player } from '../../chess/util/typeutil.js';
 
 import selection from '../chess/selection.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import thread from '../../util/thread.js';
 import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
+import gamecompressor from '../chess/gamecompressor.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
 
@@ -20,9 +19,10 @@ import perspective from '../rendering/perspective.js';
 
 
 interface EngineConfig { 
-	checkmateSelectedID: string,
 	/** Hard time limit for the engine to think in milliseconds */
 	engineTimeLimitPerMoveMillis: number
+	// If you are using a checkmate practice engine, this is required.
+	checkmateSelectedID?: string,
 }
 
 
@@ -85,9 +85,11 @@ function initEngineGame(options: {
 
 	// Return a promise that resolves when the ENGINE WORKER has finished fetching/loading.
 	return new Promise<void>((resolve, reject) => {
-		// Set up a handler for the first message that indicates the worker is ready
-		// We have to manually send this message at the top of our engines. The message contents is blank.
-		engineWorker!.onmessage = (e: MessageEvent) => resolve(); // The first message we receive (undefined), we know the engine is ready!
+		// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
+		// We have to manually send this message at the top of our engines.
+		engineWorker!.onmessage = (e: MessageEvent) => {
+			if (e.data === 'readyok') resolve(); // Engine is ready!
+		};
 		engineWorker!.onerror = (e: ErrorEvent) => {
 			console.error("Worker failed to load:", e);
 			reject(new Error("Worker failed to load."));
@@ -117,7 +119,7 @@ function closeEngineGame() {
 
 /**
  * Tests if we are this color in the engine game.
- * @param color - "white" / "black"
+ * @param color - p.WHITE / p.BLACK
  * @returns *true* if we are that color.
  */
 function areWeColor(color: Player): boolean {
@@ -133,9 +135,9 @@ async function submitMove() {
 	const gamefile = gameslot.getGamefile()!;
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-
+	const abridgedGame = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
-	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig })));
+	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, lf: abridgedGame, engineConfig: engineConfig })));
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 

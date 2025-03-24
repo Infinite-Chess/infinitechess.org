@@ -87,6 +87,9 @@ type path = Coords[]
 interface MoveDraft {
 	startCoords: Coords,
 	endCoords: Coords,
+
+	// Special move tags...
+
 	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
 	enpassantCreate?: enpassantCreate,
 	/** Present if the move was special-move enpassant capture. This will be `true` */

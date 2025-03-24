@@ -57,13 +57,15 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.startSnapshot = {
 		/** In key format 'x,y':'type' @type {PiecesByKey} */
 		position: undefined,
+		/** @type {string} */
 		positionString: undefined,
+		/** @type {Record<CoordsKey, true>} */
 		specialRights: undefined,
 		/** What square coords, if legal, enpassant capture is possible in the starting position of the game. @type {EnPassant | undefined }*/
 		enpassant: undefined,
 		/** The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push) */
 		moveRuleState: undefined,
-		/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
+		/** This is the full-move number at the start of the game. Used for converting to ICN notation. @type {number} */
 		fullMove: undefined,
 		/** The number of players in this game (the number of unique players in the turn order) */
 		playerCount: undefined,
@@ -113,7 +115,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** @type {GameEvents} */
 	this.events = {
-		regenerateLists: [(gamefile) => {organizedpieces.regenerateLists(gamefile.ourPieces, gamefile.gameRules); return false;}]
+		regenerateLists: []
 	};
 
 	/** The object that contains the buffer model to render the voids */

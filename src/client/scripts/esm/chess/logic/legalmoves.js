@@ -39,6 +39,7 @@ import { rawTypes as r } from '../config.js';
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
  * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
+ * @property {true | undefined} brute - If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen.
  * @property {IgnoreFunction} ignoreFunc - The ignore function of the piece, to skip over moves.
  */
 
@@ -179,6 +180,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
     
 	if (!ignoreCheck) checkresolver.removeCheckInvalidMoves(gamefile, moves, piece, color);
 
+	// console.log(`Calculated legal moves:`, moves);
 	return moves;
 }
 
@@ -297,14 +299,16 @@ function slide_CalcLegalLimit(blockingFunc, organizedpieces, line, direction, sl
  * legal moves in the provided legalMoves object.
  * 
  * **This will modify** the provided endCoords to attach any special move flags.
- * @param {number[]} startCoords
+ * @param {gamefile} gamefile
  * @param {LegalMoves} legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
- * @param {number[]} endCoords 
+ * @param {Coords} startCoords - The coordinates of the piece owning the legal moves
+ * @param {Coords} endCoords - The square to test if the piece can legally move to
+ * @param {Player} colorOfFriendly - The player color owning the piece with the legal moves
  * @param {Object} options - An object that may contain the options:
  * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
  * @returns {boolean} *true* if the provided legalMoves object contains the provided endCoords.
  */
-function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividualMoves } = {}) {
+function checkIfMoveLegal(gamefile, legalMoves, startCoords, endCoords, colorOfFriendly, { ignoreIndividualMoves } = {}) {
 	// Return if it's the same exact square
 	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
@@ -325,12 +329,16 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 		const line = coordutil.getCoordsFromKey(strline); // 'dx,dy'
 		const limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
-		const selectedPieceLine = organizedpieces.getKeyFromLine(line,startCoords);
-		const clickedCoordsLine = organizedpieces.getKeyFromLine(line,endCoords);
+		const selectedPieceLine = organizedpieces.getKeyFromLine(line, startCoords);
+		const clickedCoordsLine = organizedpieces.getKeyFromLine(line, endCoords);
 		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
 
-		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue;
-		return true;
+		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
+		if (legalMoves.brute) { // Don't allow the slide if it results in check
+			const moveDraft = { startCoords: startCoords, endCoords };
+			if (checkresolver.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
+		}
+		return true; // Move is legal
 	}
 	return false;
 }
@@ -398,7 +406,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	// Test if that piece's legal moves contain the destinationCoords.
 	const legalMoves = calculate(gamefile, piecemoved);
 	// This should pass on any special moves tags at the same time.
-	if (!checkIfMoveLegal(legalMoves, moveDraftCopy.startCoords, moveDraftCopy.endCoords)) { // Illegal move
+	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, moveDraftCopy.endCoords, colorOfPieceMoved)) { // Illegal move
 		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}
