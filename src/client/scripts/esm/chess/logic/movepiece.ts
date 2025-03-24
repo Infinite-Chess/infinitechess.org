@@ -242,10 +242,9 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
  */
 function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
-	const wasACapture = boardchanges.wasACapture(move);
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = (move.flags.capture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
 	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
