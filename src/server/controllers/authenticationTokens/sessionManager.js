@@ -1,10 +1,13 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
-import { getCheckmatesBeaten, createPracticeProgressCookie, deletePracticeProgressCookie } from "../../api/PracticeProgress.js";
+import { deletePracticeProgressCookie } from "../../api/PracticeProgress.js";
 import { logEvents } from "../../middleware/logEvents.js";
 import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, deleteRefreshTokensOfUser, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from "../../config/config.js";
+
+/** @typedef {import("./refreshTokenObject.js").RefreshTokensList} RefreshTokensList */
+/** @typedef {import("./refreshTokenObject.js").RefreshTokenObject} RefreshTokenObject */
 
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
@@ -16,7 +19,7 @@ import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } fro
  * refresh it by giving them a new refresh cookie!
  * @param {number} userId - The user ID of the member whose refresh tokens are to be checked.
  * @param {number} username
- * @param {number} roles
+ * @param {string[] | null} roles
  * @param {string} token - The refresh token to check.
  * @param {string} IP - The IP address they are connecting from.
  * @param {number} req - The request object. 
@@ -62,13 +65,13 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 
 /**
  * Renews a player's login session
- * @param {*} req
- * @param {*} res 
- * @param {*} userId 
- * @param {*} username 
- * @param {*} roles 
- * @param {*} refreshTokens - The parsed refresh tokens from their data in the members table
- * @param {*} tokenObject - The token that needs to be renewed (deleted + add new) if we are renewing!
+ * @param {Request} req - The Request object
+ * @param {Response} res - The Response object
+ * @param {number} user_id - The unique id of the user in the database
+ * @param {string} username - The username of the user
+ * @param {string[] | null} roles - The roles the user has
+ * @param {RefreshTokensList} refreshTokens - The parsed refresh tokens from their data in the members table
+ * @param {RefreshTokenObject} tokenObject - The token that needs to be renewed (deleted + add new) if we are renewing!
  * @returns {boolean} true if the session was renewed (the refresh tokens will have been saved in the database)
  */
 function renewSession(req, res, userId, username, roles, refreshTokens, tokenObject) {
@@ -94,6 +97,14 @@ function renewSession(req, res, userId, username, roles, refreshTokens, tokenObj
 	return true;
 }
 
+/**
+ * Creates a new login session for a user when they login (not when their session is renewed)
+ * @param {Request} req - The Request object
+ * @param {Response} res - The Response object
+ * @param {number} user_id - The unique id of the user in the database
+ * @param {string} username - The username of the user
+ * @param {string[] | null} roles - The roles the user has
+ */
 function createNewSession(req, res, user_id, username, roles) {
 	// The payload can be an object with their username and their roles.
 	const refreshToken = signRefreshToken(user_id, username, roles);
@@ -128,7 +139,6 @@ function revokeSession(res) {
  * Creates and sets the cookies:
  * * memberInfo containing user info (user ID and username),
  * * jwt containing our refresh token.
- * * checkmates_beaten, storing practice mode progress
  * @param {Object} res - The response object.
  * @param {string} userId - The ID of the user.
  * @param {string} username - The username of the user.
@@ -137,7 +147,6 @@ function revokeSession(res) {
 function createSessionCookies(res, userId, username, refreshToken) {
 	createRefreshTokenCookie(res, refreshToken);
 	createMemberInfoCookie(res, userId, username);
-	createPracticeProgressCookie(res, getCheckmatesBeaten(userId));
 }
 
 /**
@@ -147,7 +156,6 @@ function createSessionCookies(res, userId, username, refreshToken) {
 function deleteSessionCookies(res) {
 	deleteRefreshTokenCookie(res);
 	deleteMemberInfoCookie(res);
-	deletePracticeProgressCookie(res);
 }
 
 /**
