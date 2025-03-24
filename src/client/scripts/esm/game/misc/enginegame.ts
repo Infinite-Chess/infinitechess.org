@@ -3,19 +3,16 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 
-import type { Coords } from '../../chess/util/coordutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
 
 
 import selection from '../chess/selection.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import thread from '../../util/thread.js';
 import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
+import gamecompressor from '../chess/gamecompressor.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
-// @ts-ignore
-import copyutils from '../chess/primeGamefileForCopying.js';
 
 
 // Type Definitions -------------------------------------------------------------
@@ -137,7 +134,7 @@ async function submitMove() {
 	const gamefile = gameslot.getGamefile()!;
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-	const longform = copyutils.primeGamefileForCopying(gamefile,true); // Prepare the gamefile for copying
+	const longform = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig, lf: longform })));
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");

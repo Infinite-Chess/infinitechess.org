@@ -20,7 +20,7 @@ import gameloader from './gameloader.js';
 import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import guipause from '../gui/guipause.js';
-import { primeGamefileForCopying } from './primeGamefileForCopying.js';
+import gamecompressor from './gamecompressor.js';
 // Import End
 
 "use strict";
@@ -44,7 +44,7 @@ function copyGame(copySinglePosition) {
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
-	const primedGamefile = primeGamefileForCopying(gamefile, copySinglePosition);
+	const primedGamefile = gamecompressor.compressGamefile(gamefile, copySinglePosition);
 	const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_Fourth';
 	const specifyPosition = !largeGame;
 	const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
