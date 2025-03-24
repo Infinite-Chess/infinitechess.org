@@ -27,7 +27,10 @@ import type { GameRules } from '../../chess/variants/gamerules.js';
 interface AbridgedGamefile {
 	metadata: MetaData,
 	fullMove: number,
-	startingPosition: string,
+	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
+	positionString: string,
+	startingPosition: PiecesByKey,
+	specialRights: Record<CoordsKey, true>,
 	gameRules: GameRules,
 	moves: Move[],
 	// Optional properties
@@ -54,7 +57,9 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 
 	let abridgedGamefile: AbridgedGamefile = {
 		metadata,
-		startingPosition: gamefile.startSnapshot.positionString,
+		positionString: gamefile.startSnapshot.positionString,
+		startingPosition: gamefile.startSnapshot.position,
+		specialRights: gamefile.startSnapshot.specialRights,
 		fullMove: gamefile.startSnapshot.fullMove,
 		gameRules,
 		moves: gamefile.moves,
@@ -74,7 +79,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 
 	// If we only want the current position, not the entire game
 
-	if (copySinglePosition) abridgedGamefile = turnMoveIntoSinglePosition(abridgedGamefile, gamefile.moveIndex, gamefile.startSnapshot.position, gamefile.startSnapshot.specialRights);
+	if (copySinglePosition) abridgedGamefile = turnMoveIntoSinglePosition(abridgedGamefile, gamefile.moveIndex);
 
 	return abridgedGamefile;
 }
@@ -86,12 +91,12 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
  * @param position - The position at the start of the game in key format ('x,y': 'pawns')
  * @param specialRights - The specialRights at the start of the game
  */
-function turnMoveIntoSinglePosition(abridgedGamefile: AbridgedGamefile, desiredMove: number, position: PiecesByKey, specialRights: Record<CoordsKey, true>): AbridgedGamefile {
+function turnMoveIntoSinglePosition(abridgedGamefile: AbridgedGamefile, desiredMove: number): AbridgedGamefile {
 
 	const primedGamefile = {
 		metadata: abridgedGamefile.metadata,
-		startingPosition: position,
-		specialRights,
+		startingPosition: abridgedGamefile.startingPosition,
+		specialRights: abridgedGamefile.specialRights,
 		fullMove: abridgedGamefile.fullMove,
 		gameRules: abridgedGamefile.gameRules,
 		moves: abridgedGamefile.moves,
