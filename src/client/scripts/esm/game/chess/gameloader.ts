@@ -191,19 +191,19 @@ async function startOnlineGame(options: JoinGameMessage) {
 async function startEngineGame(options: {
 	/** The "Event" string of the game's metadata */
 	Event: string,
+	/** If it's not a practice checkmate, this is the "Variant" string of the game's metadata.
+	 * MUTUALLY EXCLUSIVE with variantOptions. */
+	Variant?: string,
+	/** MUTUALLY EXCLUSIVE with Variant. */
+	variantOptions?: VariantOptions,
 	youAreColor: 'white' | 'black',
-	currentEngine: 'engineCheckmatePractice'|'classicEngine', // add more union types when more engines are added
-	//if you are using enginecheckmatepractice, engineconfig has to have checkmateSelectedID, otherwise, it doesn't need it
-	//todo: should fix that in typescript later
+	currentEngine: 'engineCheckmatePractice' | 'classicEngine', // Add more union types when more engines are added
 	engineConfig: EngineConfig,
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true
-}
-&
-(
-	| { variant: string; variantOptions?: never }
-	| { variant?: never; variantOptions: VariantOptions }
-)) {
+}) {
+	if (options.Variant && options.variantOptions) throw Error("Can't provide both Variant and variantOptions at the same time when starting an engine game. They are mutually exclusive.");
+	if (!options.Variant && !options.variantOptions) throw Error("Must provide either Variant or variantOptions when starting an engine game.");
 
 	typeOfGameWeAreIn = 'engine';
 	gameLoading = true;
@@ -211,7 +211,7 @@ async function startEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	let metadata: MetaData = {
+	const metadata: MetaData = {
 		Event: options.Event,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
@@ -221,38 +221,15 @@ async function startEngineGame(options: {
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
+	if (options.Variant) metadata.Variant = options.Variant;
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
-	let graphicalPromise: Promise<void>;
-
-	// Update metadata based on options.variant or options.variantOptions
-	if (options.variant) {
-		metadata = {
-			...metadata, // Spread the default values
-			Variant: options.variant,
-			Event: `Casual computer ${translations[options.variant]} infinite chess game`, // Change only the Event field
-		};
-		graphicalPromise = gameslot.loadGamefile({
-			metadata,
-			viewWhitePerspective: options.youAreColor === 'white',
-			allowEditCoords: true,
-		});
-	} else if (options.variantOptions) {
-		metadata = {
-			...metadata, // Spread the default values
-			Event: options.Event, // Change the Event field
-		};
-		/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
-		graphicalPromise = gameslot.loadGamefile({
-			metadata,
-			viewWhitePerspective: options.youAreColor === 'white',
-			allowEditCoords: false,
-			additional: { variantOptions: options.variantOptions },
-		});
-	} else {
-		// Throw an error if neither condition is met
-		throw new Error('Invalid options: neither variant nor variantOptions provided');
-	}
+	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
+		metadata,
+		viewWhitePerspective: options.youAreColor === 'white',
+		allowEditCoords: false,
+		additional: { variantOptions: options.variantOptions }
+	});
 
 	/** A promise that resolves when the engine script has been fetched. */
 	const enginePromise: Promise<void> = enginegame.initEngineGame(options);

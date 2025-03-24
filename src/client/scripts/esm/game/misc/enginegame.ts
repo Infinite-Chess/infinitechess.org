@@ -19,9 +19,10 @@ import perspective from '../rendering/perspective.js';
 
 
 interface EngineConfig { 
-	checkmateSelectedID: string,
 	/** Hard time limit for the engine to think in milliseconds */
 	engineTimeLimitPerMoveMillis: number
+	// If you are using a checkmate practice engine, this is required.
+	checkmateSelectedID?: string,
 }
 
 

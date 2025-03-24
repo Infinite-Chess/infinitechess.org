@@ -252,11 +252,11 @@ function callback_createInvite() {
 	} else if (modeSelected === 'computer') {
 		// Load options the game loader needs to load a local loaded game
 		const options = {
-			Event:`Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
+			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
+			Variant: inviteOptions.variant,
 			youAreColor: "white",
 			currentEngine: "engineCheckmatePractice",
-			engineConfig: {engineTimeLimitPerMoveMillis: 500 },
-			variant: inviteOptions.variant,
+			engineConfig: { engineTimeLimitPerMoveMillis: 500 },
 		};
 		close(); // Close the invite creation screen
 		gameloader.startEngineGame(options); // Actually load the game
