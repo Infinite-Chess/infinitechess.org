@@ -107,3 +107,7 @@ function turnMoveIntoSinglePosition(abridgedGamefile: AbridgedGamefile, desiredM
 export default {
 	compressGamefile,
 };
+
+export type {
+	AbridgedGamefile,
+};
