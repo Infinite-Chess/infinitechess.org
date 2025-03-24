@@ -1502,20 +1502,6 @@ a {
     transform: rotate(180deg);
 }
 
-.unselectable { /* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
-    user-select: none; 
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-}
-
-.selectable { /* Makes text inside the elements with the .unselectable class re-selectable */
-    user-select: text;
-    -moz-user-select: text;
-    -webkit-user-select: text;
-    -ms-user-select: text;
-}
-
 
 
 /* Animations */

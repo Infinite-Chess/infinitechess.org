@@ -33,7 +33,10 @@ async function handleLogin(req, res) {
 	const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive);
 	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
 
-	createNewSession(req, res, user_id, username, roles);
+	// The roles fetched from the database is a stringified json string array, parse it here!
+	const parsedRoles = roles !== null ? JSON.parse(roles) : null;
+
+	createNewSession(req, res, user_id, username, parsedRoles);
 
 	res.status(200).json({ message: "Logged in! Issued refresh token cookie and member info cookie." }); // Success!
     

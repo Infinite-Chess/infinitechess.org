@@ -241,7 +241,7 @@ function doesAnyPlayerGet2TurnsInARow(gamefile: gamefile): boolean {
 }
 
 /**
- * Strips the coordinates of any special move properties.
+ * Strips the coordinates of any special move properties. NON-MUTATING, returns new coords.
  */
 function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
