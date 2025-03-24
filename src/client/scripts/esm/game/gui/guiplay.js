@@ -53,6 +53,7 @@ const element_createInvite = document.getElementById('create-invite');
 const element_optionCardColor = document.getElementById('option-card-color');
 const element_optionCardPrivate = document.getElementById('option-card-private');
 const element_optionCardRated = document.getElementById('option-card-rated');
+const element_optionCardClock = document.getElementById('option-card-clock');
 const element_optionVariant = document.getElementById('option-variant');
 const element_optionClock = document.getElementById('option-clock');
 const element_optionColor = document.getElementById('option-color');
@@ -170,6 +171,7 @@ function changePlayMode(mode) { // online / local / computer
 		element_optionCardRated.classList.remove('hidden');
 		element_optionCardPrivate.classList.remove('hidden');
 		const localStorageClock = localstorage.loadItem('preferred_online_clock_invite_value');
+		element_optionCardClock.classList.remove('hidden');
 		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
 		element_joinPrivate.classList.remove('hidden');
 		// callback_updateOptions()
@@ -190,13 +192,13 @@ function changePlayMode(mode) { // online / local / computer
 		element_optionCardColor.classList.add('hidden');
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
+		element_optionCardClock.classList.remove('hidden');
 		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
 		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 	} else if (mode === 'computer') {
-		//todo: add menu for choosing computer time, engine, difficulty, etc., show only classic variant works?
-		// time control for player?
+		// For now, until engines become stronger, time is not customizable.
 		enableCreateInviteButton();
 		element_playName.textContent = translations.menu_computer;
 		element_online.classList.remove('selected');
@@ -206,9 +208,10 @@ function changePlayMode(mode) { // online / local / computer
 		element_computer.classList.add('selected');
 		element_computer.classList.remove('not-selected');
 		element_createInvite.textContent = translations.invites.start_game;
-		element_optionCardColor.classList.add('hidden');
+		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
+		element_optionCardClock.classList.add('hidden');
 		const localStorageClock = localstorage.loadItem('preferred_local_clock_invite_value');
 		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOfInfiniteTime; // Infinite Time
 		element_joinPrivate.classList.add('hidden');
@@ -250,16 +253,15 @@ function callback_createInvite() {
 		if (invites.doWeHave()) invites.cancel();
 		else invites.create(inviteOptions);
 	} else if (modeSelected === 'computer') {
-		// Load options the game loader needs to load a local loaded game
-		const options = {
+		close(); // Close the invite creation screen
+		const ourColor = inviteOptions.color === 'White' ? 'white' : inviteOptions.color === 'Black' ? 'black' : Math.random() > 0.5 ? 'white' : 'black';
+		gameloader.startEngineGame({
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
-			youAreColor: "white",
+			youAreColor: ourColor,
 			currentEngine: "engineCheckmatePractice",
 			engineConfig: { engineTimeLimitPerMoveMillis: 500 },
-		};
-		close(); // Close the invite creation screen
-		gameloader.startEngineGame(options); // Actually load the game
+		});
 	}
 }
 
