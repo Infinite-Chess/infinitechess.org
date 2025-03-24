@@ -18,8 +18,6 @@ import drawoffers from './drawoffers.js';
 import moveutil from '../../../chess/util/moveutil.js';
 // @ts-ignore
 import websocket from '../../websocket.js';
-import { ClockValues } from '../../../chess/logic/offlineclockstuff.js';
-import pingManager from '../../../util/pingManager.js';
 
 
 // Variables ------------------------------------------------------------------------------------------------------

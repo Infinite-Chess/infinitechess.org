@@ -6,7 +6,7 @@ import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
-import offlineclockstuff from './offlineclockstuff.js';
+import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 import checkdetection from './checkdetection.js';
@@ -21,7 +21,7 @@ import checkdetection from './checkdetection.js';
 /** @typedef {import('../util/coordutil.js').CoordsKey} CoordsKey */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
-/** @typedef {import('./offlineclockstuff.js').ClockValues} ClockValues */
+/** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
 /** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
@@ -238,7 +238,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	if (gameConclusion) this.gameConclusion = gameConclusion;
 	else gamefileutility.doGameOverChecks(this);
 
-	offlineclockstuff.set(this, clockValues);
+	clock.set(this, clockValues);
 };
 
 // Typedef export DO NOT USE
