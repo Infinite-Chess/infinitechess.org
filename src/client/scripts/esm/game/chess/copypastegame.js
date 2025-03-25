@@ -226,7 +226,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 		// longformat.enpassant is in the form: Coords
 		// need to convert it to: { square: Coords, pawn: Coords }
 		const firstTurn = longformat.gameRules.turnOrder[0];
-		const yParity = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when pasting a game! Can't parse enpassant option.`); })();
+		const yParity = firstTurn === players.WHITE ? 1 : firstTurn === players.BLACK ? -1 : (() => { throw new Error(`Invalid first turn player ${firstTurn} when pasting a game! Can't parse enpassant option.`); })();
 		const pawnExpectedSquare = [longformat.enpassant[0], longformat.enpassant[1] - yParity];
 		/**
 		 * First make sure there IS a pawn on the square!

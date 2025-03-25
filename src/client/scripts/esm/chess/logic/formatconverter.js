@@ -653,7 +653,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update move rule
 		if (ret.moveRule) {
 			const slashindex = ret.moveRule.indexOf("/");
-			if (move.flags.capture || move.type.slice(0, -1) === "pawns") {
+			if (move.flags.capture || move.type === r.PAWN) {
 				ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
 			} else {
 				ret.moveRule = `${(Number(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
