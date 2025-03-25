@@ -50,9 +50,10 @@ function initExistingTypes(gamefile) {
 
 	// Makes sure all possible pieces are accounted for. even when they dont start with them
 	const promotiontypes = gamefile.gameRules.promotionsAllowed ? Object.values(gamefile.gameRules.promotionsAllowed) : [];
-    
 	for (const rawTypeList of promotiontypes) {
-		rawtypes.add(...rawTypeList);
+		for (const t of rawTypeList) {
+			rawtypes.add(t);
+		}
 	}
 	
 	for (const tpiece of teamtypes) {
@@ -60,6 +61,7 @@ function initExistingTypes(gamefile) {
 	}
 
 	gamefile.startSnapshot.existingTypes = [...rawtypes];
+	console.log(gamefile.startSnapshot.existingTypes);
 }
 
 /**
