@@ -229,7 +229,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
 
 		// Is there a piece on this square?
 		const pieceAtSquare = boardutil.getTypeFromCoords(gamefile.ourPieces, thisMove);
-		if (!pieceAtSquare) continue; // Next move if there is no square here
+		if (pieceAtSquare === undefined) continue; // Next move if there is no square here
 
 		// Do the players match?
 		const pieceAtSquareColor = typeutil.getColorFromType(pieceAtSquare);
