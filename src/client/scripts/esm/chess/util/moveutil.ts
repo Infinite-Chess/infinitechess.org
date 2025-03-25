@@ -14,6 +14,7 @@ import type { GameRules } from '../variants/gamerules.js';
 import type { Player } from './typeutil.js';
 
 import coordutil from './coordutil.js';
+import { players } from '../config.js';
 
 
 // Type Definitions ------------------------------------------------------------------------------
@@ -188,14 +189,14 @@ function areMovesIn2DFormat(longmoves: Move[] | DepricatedMoves): boolean {
  * @param results - PROVIDE AS AN EMPTY OBJECT! The 'turn' property will be set, destructively.
  * @returns Moves converted to the new 1D array format
  */
-function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], turn: string } {
-	let turn = 'white';
+function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], turn: Player } {
+	let turn: Player = players.WHITE;
 	const moves1D: MoveDraft[] = [];
 	for (let a = 0; a < moves.length; a++) {
 		const thisPair = moves[a]!;
 		for (let b = 0; b < thisPair.length; b++) {
 			const thisMove = thisPair[b]!;
-			if (thisMove === null) turn = 'black';
+			if (thisMove === null) turn = players.BLACK;
 			else moves1D.push(thisMove as MoveDraft);
 		}
 	}
