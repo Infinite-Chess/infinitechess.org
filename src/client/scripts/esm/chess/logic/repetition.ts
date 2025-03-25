@@ -14,7 +14,7 @@ import type gamefile from "./gamefile.js";
 import boardchanges from "./boardchanges.js";
 import { StateChange } from "./state.js";
 import typeutil from "../util/typeutil.js";
-import { rawTypes } from "../config.js";
+import { players, rawTypes } from "../config.js";
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${string|number}`; // `x,y,type` | `x,y,enpassant`
@@ -26,7 +26,7 @@ type Flux = `${string},${string},${string|number}`; // `x,y,type` | `x,y,enpassa
  * @param gamefile - The gamefile
  * @returns Whether there is a three fold repetition present.
  */
-function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
+function detectRepetitionDraw(gamefile: gamefile): string | false {
 	const moveList = gamefile.moves;
 	const turnOrderLength = gamefile.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.
@@ -125,7 +125,7 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 	}
 
 	// Loop is finished. How many equal positions did we find?
-	if (equalPositionsFound === 2) return 'draw repetition';
+	if (equalPositionsFound === 2) return `${players.NEUTRAL} repetition`; // Victor of player NEUTRAL means it was a draw.
 	else return false;
 }
 

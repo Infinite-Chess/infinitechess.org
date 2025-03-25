@@ -108,7 +108,7 @@ function Game() {
 	this.turnOrder = undefined;
 	/** Whos turn it is currently. @type {Player?} */
 	this.whosTurn = undefined;
-	/** If the game is over, this is a string. For example, "white checkmate". Otherwise false. */
+	/** If the game is over, this is a string. For example, "1 checkmate". Otherwise false. */
 	this.gameConclusion = undefined;
 	/** The amount of time remaining, in milliseconds, the current player had at the beginning of their turn. */
 	this.timeRemainAtTurnStart = undefined;

@@ -14,6 +14,7 @@ import type { EnPassant } from "../../chess/logic/state.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
 import type { Position } from "../../chess/variants/variant.js";
+import type { Player } from "../../chess/util/typeutil.js";
 
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
@@ -66,7 +67,9 @@ import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
 
-import { pieceCountToDisableCheckmate } from "../../chess/config.js";
+import { pieceCountToDisableCheckmate, players } from "../../chess/config.js";
+// @ts-ignore
+import winconutil from "../../chess/util/winconutil.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -337,13 +340,14 @@ function concludeGame() {
 	onlinegame.onGameConclude();
 	enginegame.onGameConclude();
 
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(loadedGamefile.gameConclusion).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {
-		if (!loadedGamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
 		if (loadedGamefile.gameConclusion.includes(typeutil.getColorStringFromType(onlinegame.getOurColor()))) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else if (loadedGamefile.gameConclusion.includes('draw') || loadedGamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
+		else if (victor === players.NEUTRAL || !victor) sound.playSound_draw(delayToPlayConcludeSoundSecs);
 		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
 	}
 	

@@ -14,13 +14,13 @@ import typeutil from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
-import { rawTypes } from '../config.js';
+import { players, rawTypes } from '../config.js';
 
 
 /**
  * Calculates if the provided gamefile is over by checkmate or stalemate
  * @param gamefile - The gamefile to detect if it's in checkmate
- * @returns The color of the player who won by checkmate. 'white checkmate', 'black checkmate', or 'draw stalemate'. Or *false* if the game isn't over.
+ * @returns The color of the player who won by checkmate. '1 checkmate', '2 checkmate', or '0 stalemate'. Or *false* if the game isn't over.
  */
 function detectCheckmateOrStalemate(gamefile: gamefile): string | false {
 
@@ -47,7 +47,7 @@ function detectCheckmateOrStalemate(gamefile: gamefile): string | false {
 	if (gamefileutility.isCurrentViewedPositionInCheck(gamefile) && usingCheckmate) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
 		return `${colorThatWon} checkmate`;
-	} else return 'draw stalemate';
+	} else return `${players.NEUTRAL} stalemate`; // Victor of player NEUTRAL means it was a draw.
 }
 
 

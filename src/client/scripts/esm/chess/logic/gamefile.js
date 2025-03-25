@@ -226,7 +226,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	}
 	
 	movepiece.makeAllMovesInGame(this, moves);
-	/** The game's conclusion, if it is over. For example, `'white checkmate'`
+	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;
 	else gamefileutility.doGameOverChecks(this);

@@ -10,7 +10,7 @@ import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
 
-import { rawTypes } from '../config.js';
+import { players, rawTypes } from '../config.js';
 // Import End
 
 // Type Definitions...
@@ -32,9 +32,9 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
 /**
  * Tests if the game is over by the win condition used, and if so,
  * returns the `gameConclusion` property of the gamefile.
- * For example, "white checkmate", or "draw stalemate".
+ * For example, "1 checkmate", or "0 stalemate".
  * @param {gamefile} gamefile - The gamefile
- * @returns {string | false} The conclusion string, if the game is over. For example, "white checkmate", or "draw stalemate". If the game isn't over, this returns *false*.
+ * @returns {string | false} The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *false*.
  */
 function getGameConclusion(gamefile) {
 	if (!moveutil.areWeViewingLatestMove(gamefile)) throw new Error("Cannot perform game over checks when we're not on the last move.");
@@ -124,11 +124,11 @@ function detectKoth(gamefile) {
 /**
  * Detects if the game is over by, for example, the 50-move rule.
  * @param {gamefile} gamefile - The gamefile
- * @returns {string | false} 'draw moverule', if the game is over by the move-rule, otherwise *false*.
+ * @returns {string | false} '0 moverule', if the game is over by the move-rule, otherwise *false*.
  */
 function detectMoveRule(gamefile) {
 	if (!gamefile.gameRules.moveRule) return false; // No move-rule being used
-	if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return 'draw moverule';
+	if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
 	return false;
 }
 

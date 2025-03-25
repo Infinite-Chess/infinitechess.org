@@ -55,7 +55,7 @@ function getCheckCoordsOfCurrentViewedPosition(gamefile: gamefile): Coords[] {
 function setTerminationMetadata(gamefile: gamefile) {
 	if (!gamefile.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
-	const victorAndCondition: { victor?: string, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
+	const victorAndCondition: { victor?: Player, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
 	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(gamefile, victorAndCondition.condition);
 	gamefile.metadata.Termination = conditionInPlainEnglish;
 

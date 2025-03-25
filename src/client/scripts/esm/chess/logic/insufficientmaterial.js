@@ -154,7 +154,7 @@ function ordered_tuple_descending(tuple) {
 /**
  * Detects if the game is drawn for insufficient material
  * @param {gamefile} gamefile - The gamefile
- * @returns {'draw insuffmat' | false} 'draw insuffmat', if the game is over by the insufficient material, otherwise *false*.
+ * @returns {string | false} '0 insuffmat', if the game is over by the insufficient material, otherwise *false*.
  */
 function detectInsufficientMaterial(gamefile) {
 	// Only make the draw check if the win condition is checkmate for both players
@@ -209,8 +209,8 @@ function detectInsufficientMaterial(gamefile) {
 	}
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
-	if (isScenarioInsuffMat(scenario)) return 'draw insuffmat';
-	else if (isScenarioInsuffMat(invertedScenario)) return 'draw insuffmat';
+	if (isScenarioInsuffMat(scenario)) return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
+	else if (isScenarioInsuffMat(invertedScenario)) return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
 	else return false;
 }
 

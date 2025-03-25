@@ -6,6 +6,10 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
+import { players } from "../config.js";
+
+import type { Player } from "./typeutil.js";
+
 // Type Definitions ---------------------------------------------------------------
 
 
@@ -50,12 +54,12 @@ interface MetaData {
  * @param victor - The victor of the game. Can be 'white', 'black', 'draw', or 'aborted'.
  * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
  */
-function getResultFromVictor(victor?: string): string {
-	if (victor === 'white') return '1-0';
-	else if (victor === 'black') return '0-1';
-	else if (victor === 'draw') return '1/2-1/2';
+function getResultFromVictor(victor?: Player): string {
+	if (victor === players.WHITE) return '1-0';
+	else if (victor === players.BLACK) return '0-1';
+	else if (victor === players.NEUTRAL) return '1/2-1/2';
 	else if (victor === undefined) return '0-0';
-	throw new Error(`Cannot get game result from strange victor "${victor}"!`);
+	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
 
