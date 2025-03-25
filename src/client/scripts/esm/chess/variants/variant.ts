@@ -118,7 +118,7 @@ const defaultPromotionsAllowed = repeatPromotionsAllowedForEachColor(defaultProm
 const coaIPPromotions = [...defaultPromotions,r.GUARD,r.CHANCELLOR,r.HAWK];
 const coaIPPromotionsAllowed = repeatPromotionsAllowedForEachColor(coaIPPromotions);
 
-const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule: null, turnOrder: ['black', 'white'] }; // No promotions, no 50-move rule, and reversed turn order.
+const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule: null, turnOrder: [p.BLACK, p.WHITE] }; // No promotions, no 50-move rule, and reversed turn order.
 
 
 /**
