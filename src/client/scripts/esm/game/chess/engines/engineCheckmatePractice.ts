@@ -364,6 +364,34 @@ function initEvalWeightsAndSearchProperties() {
 	}
 
 	switch (checkmateSelectedID) {
+		case "2Q-1k":
+			legalMoveEvalDictionary = {
+				// in check
+				0: {
+					0: -Infinity, // checkmate
+					1: -250,
+					2: -220,
+					3: -190,
+					4: -160,
+					5: -120,
+					6: -90,
+					7: -60,
+					8: 0
+				},
+				// not in check
+				1: {
+					0: Infinity, // stalemate
+					1: -220,
+					2: -190,
+					3: -160,
+					4: -130,
+					5: -100,
+					6: -70,
+					7: -40,
+					8: 0
+				}
+			};
+			break;
 		case "1K1AM-1k":
 			ignoreroyalmoves = true;
 			legalMoveEvalDictionary = {
@@ -447,6 +475,32 @@ function initEvalWeightsAndSearchProperties() {
 			break;
 		case "1K3NR-1k":
 			distancesEvalDictionary[5] = [[20, manhattanNorm], [20, manhattanNorm]]; // king
+			legalMoveEvalDictionary = {
+				// in check
+				0: {
+					0: -Infinity, // checkmate
+					1: -25,
+					2: -17,
+					3: -8,
+					4: -4,
+					5: -3,
+					6: -2,
+					7: -1,
+					8: 0
+				},
+				// not in check
+				1: {
+					0: Infinity, // stalemate
+					1: -20,
+					2: -15,
+					3: -6,
+					4: -3,
+					5: -2,
+					6: -1,
+					7: -1,
+					8: 0
+				}
+			};
 			break;
 	}
 }
