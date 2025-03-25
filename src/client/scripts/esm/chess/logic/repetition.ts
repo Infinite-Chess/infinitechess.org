@@ -28,6 +28,10 @@ type Flux = `${string},${string},${string|number}`; // `x,y,type` | `x,y,enpassa
  */
 function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 	const moveList = gamefile.moves;
+	const turnOrderLength = gamefile.gameRules.turnOrder.length;
+	/** What index of the turn order whos turn it is at the front of the game.
+	 * 0 => First player's turn in the turn order. */
+	const currentPlayerTurn = moveList.length % turnOrderLength;
 
 	/** When compared to our current position, this is a running set of surpluses of previous positions, preventing them from being equivalent to the current position. */
 	const surplus = new Set<Flux>;
@@ -98,10 +102,14 @@ function detectRepetitionDraw(gamefile: gamefile): 'draw repetition' | false {
 			// If so, we can't count this as an equal position, because it will break it in multiplayer games,
 			// or if we have multiple turns in a row.
 			const indexDiff = indexOfLastEqualPositionFound - index;
-			if (indexDiff < gamefile.gameRules.turnOrder.length) break checkEqualPosition; // Hasn't been a full turn cycle yet, don't increment the counter
+			if (indexDiff < turnOrderLength) break checkEqualPosition; // Hasn't been a full turn cycle yet, don't increment the counter
 
 			// If both the deficit and surplus objects are EMPTY, this position is equal to our current position!
 			if (surplus.size === 0 && deficit.size === 0) {
+				// Check if it's the same player's turn as the front of the game, that is also a requirement for equality.
+				const thisPlayerTurn = index % turnOrderLength;
+				if (thisPlayerTurn !== currentPlayerTurn) break checkEqualPosition;
+				// Equal!
 				equalPositionsFound++;
 				indexOfLastEqualPositionFound = index;
 				if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
