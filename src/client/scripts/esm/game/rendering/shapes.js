@@ -282,7 +282,8 @@ function getDataQuad_ColorTexture_FromCoordAndType(coords, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
-	const { r, g, b, a } = color;
+	console.log(texleft, texright, texbottom, textop);
+	const [ r, g, b, a ] = color;
 
 	return bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
 }
@@ -291,7 +292,7 @@ function getDataQuad_ColorTexture3D_FromCoordAndType(coords, z, type, color) {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { left, right, bottom, top } = getTransformedBoundingBoxOfSquare(coords);
-	const { r, g, b, a } = color;
+	const [ r, g, b, a ] = color;
 
 	return bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, r, g, b, a);
 }

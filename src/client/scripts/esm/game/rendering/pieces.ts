@@ -11,7 +11,6 @@ import type { gamefile } from '../../chess/logic/gamefile.js';
 
 import spritesheet from './spritesheet.js';
 import { createModel } from './buffermodel.js';
-import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
 // @ts-ignore
 import miniimage from './miniimage.js';
@@ -39,9 +38,8 @@ function renderPiecesInGame(gamefile: gamefile) {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords) {
-	// eslint-disable-next-line prefer-const
-	let [r, g, b, a] = preferences.getTintColorOfType(type); a *= ghostOpacity;
-	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, [r, g, b, a]);
+	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, [1, 1, 1, ghostOpacity]);
+	console.log(data);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }
