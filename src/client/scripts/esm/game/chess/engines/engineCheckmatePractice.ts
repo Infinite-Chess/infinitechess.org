@@ -1189,8 +1189,9 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 				// enforce parity constraint to never get checkmated: the king will always move to the square color with fewer bishops unless making a capture
 				if (checkmateSelectedID === "3B3B-1k" && piecelist.length < 6) {
 					const parity = (coordlist.filter(([a, b]) => (a + b) % 2 === 0).length < 3 ? 0 : 1);
-					if (black_moves.some(([a, b]) => Math.abs((a + b) % 2) === parity)) {
-						globallyBestVariation[0] = [NaN, black_moves.find(([a, b]) => Math.abs((a + b) % 2) === parity)!];
+					const optimal_move = black_moves.find(([a, b]) => Math.abs((a + b) % 2) === parity);
+					if (optimal_move !== undefined) {
+						globallyBestVariation[0] = [NaN, optimal_move];
 						break;
 					};
 				}
