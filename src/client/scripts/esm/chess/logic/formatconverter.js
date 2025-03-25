@@ -643,6 +643,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 	ret.fullMove = longformat.fullMove + Math.floor(ret.moves.length / longformat.gameRules.turnOrder.length);
 	for (let i = 0; i < Math.min(halfmoves, ret.moves.length); i++) {
 		const move = ret.moves[i];
+		const rawType = typeutil.getRawType(move.type);
 
 		const startString = move.startCoords.toString();
 		const endString = move.endCoords.toString();
@@ -661,12 +662,10 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// update move rule
 		if (ret.moveRule) {
-			const slashindex = ret.moveRule.indexOf("/");
-			if (move.flags.capture || move.type === r.PAWN) {
-				ret.moveRule = `0/${ret.moveRule.slice(slashindex + 1)}`;
-			} else {
-				ret.moveRule = `${(Number(ret.moveRule.slice(0,slashindex)) + 1).toString()}/${ret.moveRule.slice(slashindex + 1)}`;
-			}
+			const parts = ret.moveRule.split("/").map(Number); // [X,100]
+			// If the move is one-way, reset the draw by 50 move rule counter.
+			if (move.flags.capture || rawType === r.PAWN) ret.moveRule = `0/${parts[1]}`; // One-way action. Reset counter until draw by 50 move rule.
+			else ret.moveRule = `${parts[0] + 1}/${parts[1]}`;
 		}
 
 		// delete captured piece en passant
@@ -676,7 +675,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		}
 
 		// update en passant
-		if (typeutil.getRawType(move.type) === r.PAWN && Math.abs(move.endCoords[1] - move.startCoords[1]) === 2) {
+		if (rawType === r.PAWN && Math.abs(move.endCoords[1] - move.startCoords[1]) === 2) {
 			ret.enpassant = [move.endCoords[0], (move.startCoords[1] + move.endCoords[1]) / 2];
 		} else delete ret.enpassant;
 
