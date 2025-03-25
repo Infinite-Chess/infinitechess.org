@@ -638,7 +638,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
     
 	if (!longformat.moves || longformat.moves.length === 0) return longformat;
 	const ret = modify_input ? longformat : deepCopyObject(longformat);
-	const yParity = longformat.gameRules.turnOrder[0] === 'white' ? 1 : -1;
+	const yParity = longformat.gameRules.turnOrder[0] === p.WHITE ? 1 : longformat.gameRules.turnOrder[0] === p.BLACK ? -1 : (() => { throw new Error(`Unsupported turn player ${longformat.gameRules.turnOrder[0]} when converting game to position.`); })();
 	let pawnThatDoublePushedKey = (ret.enpassant ? [ret.enpassant[0], ret.enpassant[1] - yParity].toString() : "");
 	ret.fullMove = longformat.fullMove + Math.floor(ret.moves.length / longformat.gameRules.turnOrder.length);
 	for (let i = 0; i < Math.min(halfmoves, ret.moves.length); i++) {
