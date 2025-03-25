@@ -91,6 +91,8 @@ const metadata_key_ordering = [
     "Termination"
 ];
 
+const defaultPromotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
+
 function invertDictionary(json) {
 	const inv = {};
 	for (const key in json) {
@@ -274,28 +276,26 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 			if (longformat.gameRules.promotionRanks[p.WHITE].length > 0) {
 				shortformat += longformat.gameRules.promotionRanks[p.WHITE].join(',');
 				const promotionListWhite = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.WHITE] : null);
-				if (promotionListWhite) {
-					if (!(promotionListWhite.length === 4 && promotionListWhite.includes("rooks") && promotionListWhite.includes("queens") && promotionListWhite.includes("bishops") && promotionListWhite.includes("knights"))) {
-						shortformat += ";";
-						for (const longpiece of promotionListWhite) {
-							shortformat += `${IntToShort_Piece(longpiece + e.W)},`;
-						}
-						shortformat = shortformat.slice(0, -1);
+				// Only add the legal promotions to the ICN if they aren't the default
+				if (promotionListWhite && !isPromotionListDefaultPromotions(promotionListWhite)) {
+					shortformat += ";";
+					for (const longpiece of promotionListWhite) {
+						shortformat += `${IntToShort_Piece(longpiece + e.W)},`;
 					}
+					shortformat = shortformat.slice(0, -1);
 				}
 			}
 			shortformat += "|";
 			if (longformat.gameRules.promotionRanks[p.BLACK].length > 0) {
 				shortformat += longformat.gameRules.promotionRanks[p.BLACK].join(',');
 				const promotionListBlack = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.BLACK] : null);
-				if (promotionListBlack) {
-					if (!(promotionListBlack.length === 4 && promotionListBlack.includes("rooks") && promotionListBlack.includes("queens") && promotionListBlack.includes("bishops") && promotionListBlack.includes("knights"))) {
-						shortformat += ";";
-						for (const longpiece of promotionListBlack) {
-							shortformat += `${IntToShort_Piece(longpiece + e.B)},`;
-						}
-						shortformat = shortformat.slice(0, -1);
+				// Only add the legal promotions to the ICN if they aren't the default
+				if (promotionListBlack && !isPromotionListDefaultPromotions(promotionListBlack)) {
+					shortformat += ";";
+					for (const longpiece of promotionListBlack) {
+						shortformat += `${IntToShort_Piece(longpiece + e.B)},`;
 					}
+					shortformat = shortformat.slice(0, -1);
 				}
 			}
 			shortformat += ") ";
@@ -413,6 +413,16 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 		}
 	}
 	return shortmoves.trimEnd();
+}
+
+/**
+ * Tests if the provided array of legal promotions is the default set of promotions.
+ * @param {number[]} promotionList 
+ * @returns {boolean}
+ */
+function isPromotionListDefaultPromotions(promotionList) {
+	if (promotionList.length !== defaultPromotions.length) return false;
+	return defaultPromotions.every(promotion => promotionList.includes(promotion));
 }
 
 /**
@@ -534,7 +544,6 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 				[p.BLACK]: blackRanksArray.map(num => Number(num))
 			};
 
-			const defaultPromotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 			longformat.gameRules.promotionsAllowed = {
 				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
 				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : [],
