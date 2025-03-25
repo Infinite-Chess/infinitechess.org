@@ -39,7 +39,6 @@ function renderPiecesInGame(gamefile: gamefile) {
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords) {
 	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, [1, 1, 1, ghostOpacity]);
-	console.log(data);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }
