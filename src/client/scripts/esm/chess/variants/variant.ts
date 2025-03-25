@@ -101,7 +101,7 @@ interface SpecialVicinity {
 	 * `piece` is the type without color information. (i.e. r.PAWN)
 	 * The value is a list of coordinates that it may be possible for that piece type to make a special capture from that distance.
 	 */
-	[piece: string]: Coords[]
+	[piece: number]: Coords[]
 }
 
 "use strict";
@@ -284,9 +284,9 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { [p.WHITE]: [19], [p.BLACK]: [1] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove },
 		specialVicinity: { 
-			pawns: fourdimensionalgenerator.getPawnVicinity(5, true),
-			knights: fourdimensionalgenerator.getKnightVicinity(5),
-			kings: fourdimensionalgenerator.getKingVicinity(5, false)
+			[r.PAWN]: fourdimensionalgenerator.getPawnVicinity(5, true),
+			[r.KNIGHT]: fourdimensionalgenerator.getKnightVicinity(5),
+			[r.KING]: fourdimensionalgenerator.getKingVicinity(5, false)
 		}
 	},
 	'5D_Chess': {
@@ -298,9 +298,9 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { [p.WHITE]: [8, 17, 26, 35, 44, 53, 62, 71], [p.BLACK]: [1, 10, 19, 28, 37, 46, 55, 64] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove },
 		specialVicinity: { 
-			pawns: fourdimensionalgenerator.getPawnVicinity(9, false),
-			knights: fourdimensionalgenerator.getKnightVicinity(9),
-			kings: fourdimensionalgenerator.getKingVicinity(9, true)
+			[r.PAWN]: fourdimensionalgenerator.getPawnVicinity(9, false),
+			[r.KNIGHT]: fourdimensionalgenerator.getKnightVicinity(9),
+			[r.KING]: fourdimensionalgenerator.getKingVicinity(9, true)
 		 }
 	}
 };
@@ -403,12 +403,12 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 	Variant: string,
 	UTCDate: string,
 	UTCTime: string
-}, position: Position): GameRules {
+}): GameRules {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 
 	const gameruleModifications: GameRuleModifications = getVariantGameRuleModifications({ Variant, UTCDate, UTCTime });
 	
-	return getGameRules(gameruleModifications, position);
+	return getGameRules(gameruleModifications);
 }
 
 function getVariantGameRuleModifications({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
@@ -435,7 +435,7 @@ function getVariantGameRuleModifications({ Variant, UTCDate = timeutil.getCurren
  * @param modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
  * @returns The gamerules
  */
-function getGameRules(modifications: GameRuleModifications = {}, position?: Position): GameRules { // { slideLimit, promotionRanks, position }
+function getGameRules(modifications: GameRuleModifications = {}): GameRules { // { slideLimit, promotionRanks, position }
 	const gameRules: any = {
 		// REQUIRED gamerules
 		winConditions: modifications.winConditions || defaultWinConditions,
@@ -445,8 +445,8 @@ function getGameRules(modifications: GameRuleModifications = {}, position?: Posi
 	// GameRules that have a dedicated ICN spot...
 	if (modifications.promotionRanks !== null) { // Either undefined (use default), or custom
 		gameRules.promotionRanks = modifications.promotionRanks || { [p.WHITE]: [8], [p.BLACK]: [1] };
-		if (!modifications.promotionsAllowed && !position) throw new Error("Cannot set promotionsAllowed gamerule when getting gamerules. Must be specified in the modifications, or the position passed as an argument so it can be auto-calculated.");
-		gameRules.promotionsAllowed = modifications.promotionsAllowed || getPromotionsAllowed(position!, gameRules.promotionRanks);
+		if (!modifications.promotionsAllowed) throw new Error("When overriding promotionRanks, you must also override promotionsAllowed!");
+		gameRules.promotionsAllowed = modifications.promotionsAllowed;
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
 
@@ -478,39 +478,6 @@ function getBareMinimumGameRules(): GameRules {
 // 	// otherwise return the default instead.
 // 	return gameruleModifications.turnOrder || defaultTurnOrder;
 // }
-
-/**
- * Returns the `promotionsAllowed` property of the variant's gamerules.
- * You can promote to whatever pieces the game starts with.
- * @param position - The starting position of the game, organized by key `{ '1,2': 'queensB' }`
- * @param promotionRanks - The `promotionRanks` gamerule of the variant. If one side's promotion rank is `null`, then we won't add legal promotions for them.
- * @returns The gamefile's `promotionsAllowed` gamerule.
- */
-function getPromotionsAllowed(position: Position, promotionRanks: GameRules['promotionRanks']): ColorVariantProperty<RawType[]> {
-	console.log("Parsing position to get the promotionsAllowed gamerule..");
-
-	// We can't promote to royals or pawns, whether we started the game with them.
-	const unallowedPromotes: RawType[] = jsutil.deepCopyObject(typeutil.royals); // [r.KING, 'royalQueens', 'royalCentaurs']
-	unallowedPromotes.push(r.PAWN); // [r.KING, 'royalQueens', 'royalCentaurs', r.PAWN]
-
-	const white: RawType[] = [];
-	const black: RawType[] = [];
-
-	if (!promotionRanks) return { white, black };
-
-	for (const key in position) {
-		const thisPieceType: number = position[key]!; // TODO: need to fight the format converter first
-		const [raw, c] = typeutil.splitType(thisPieceType);
-		if (c === p.NEUTRAL) continue; // Skip
-		if (unallowedPromotes.includes(raw)) continue; // Not allowed
-		if (white.includes(raw)) continue; // Already added
-		// Only add if the color's promotion ranks is not empty
-		if (promotionRanks.white.length > 0) white.push(raw);
-		if (promotionRanks.black.length > 0) black.push(raw);
-	}
-
-	return { white, black };
-}
 
 /**
  * Accepts either a `positionString` or `gameruleModifications` property of a variant entry,
@@ -638,7 +605,6 @@ export default {
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	// getVariantTurnOrder,
-	getPromotionsAllowed,
 	getMovesetsOfVariant,
 	getSpecialMovesOfVariant,
 	getSpecialVicinityOfVariant,

@@ -133,7 +133,7 @@ function initStartSnapshotAndGamerules(gamefile, metadata) {
 		positionString,
 		specialRights
 	};
-	gamefile.gameRules = variant.getGameRulesOfVariant(metadata, position);
+	gamefile.gameRules = variant.getGameRulesOfVariant(metadata);
 
 	// console.log(jsutil.deepCopyObject(position));
 	// console.log(jsutil.deepCopyObject(positionString));
