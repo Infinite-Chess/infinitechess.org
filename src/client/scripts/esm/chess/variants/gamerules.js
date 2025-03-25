@@ -14,7 +14,7 @@ import { players } from "../config.js";
 /**
  * Checks if a specified color has a given win condition.
  * @param {GameRules} gameRules
- * @param {number} color - The color to check (e.g., 'white', 'black').
+ * @param {number} color - The player color to check (e.g., 1, 2).
  * @param {string} winCondition - The win condition for.
  * @returns {boolean} True if the specified color has the given win condition, otherwise false.
  */
@@ -25,7 +25,7 @@ function doesColorHaveWinCondition(gameRules, color, winCondition) {
 /**
  * Gets the count of win conditions for a specified color in the gamefile.
  * @param {GameRules} gameRules
- * @param {string} color - The color to check (e.g., 'white', 'black').
+ * @param {number} color - The player color to check (e.g., 1, 2).
  * @returns {number} The number of win conditions for the specified color. Returns 0 if the color is not defined.
  */
 function getWinConditionCountOfColor(gameRules, color) {
@@ -39,13 +39,13 @@ function getWinConditionCountOfColor(gameRules, color) {
  */
 function swapCheckmateForRoyalCapture(gameRules) {
 	// Check if the game is using the "royalcapture" win condition
-	if (doesColorHaveWinCondition(gameRules, 'white', 'checkmate')) {
-		jsutil.removeObjectFromArray(gameRules.winConditions.white, 'checkmate');
-		gameRules.winConditions.white.push('royalcapture');
+	if (doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate')) {
+		jsutil.removeObjectFromArray(gameRules.winConditions[players.WHITE], 'checkmate');
+		gameRules.winConditions[players.WHITE].push('royalcapture');
 	}
-	if (doesColorHaveWinCondition(gameRules, 'black', 'checkmate')) {
-		jsutil.removeObjectFromArray(gameRules.winConditions.black, 'checkmate');
-		gameRules.winConditions.black.push('royalcapture');
+	if (doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')) {
+		jsutil.removeObjectFromArray(gameRules.winConditions[players.BLACK], 'checkmate');
+		gameRules.winConditions[players.BLACK].push('royalcapture');
 	}
 	console.log("Swapped checkmate wincondition for royalcapture.");
 }
