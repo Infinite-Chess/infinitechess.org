@@ -21,8 +21,8 @@ interface ColorArgs {
 }
 
 const dualColors: PieceColorGroup = {
-	[players.WHITE]: [1, 0, 0.5, 1],
-	[players.BLACK]: [0, 1, 0, 0.5],
+	[players.WHITE]: [1, 1, 1, 1],
+	[players.BLACK]: [1, 1, 1, 1],
 	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1]
 };
 
@@ -33,8 +33,8 @@ const pieceDefaultColors: PieceColorTheme = {
 		[players.NEUTRAL]: [0, 0, 0, 1]
 	},
 	[rawTypes.OBSTACLE]: {
-		[players.WHITE]: [1, 1, 1, 1],
-		[players.BLACK]: [0.5, 0.5, 0.5, 1],
+		[players.WHITE]: [1, 1, 1, 0.5],
+		[players.BLACK]: [0, 0, 0, 1],
 		[players.NEUTRAL]: [1, 1, 1, 1]
 	},
 	[rawTypes.KING]: dualColors,

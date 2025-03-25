@@ -5,7 +5,6 @@
  */
 import { Player, RawType } from '../../chess/util/typeutil.js';
 
-import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../chess/config.js';
@@ -75,7 +74,7 @@ async function initUI(promotionsAllowed: { [color in Player]?: RawType[]} | unde
 			console.warn(`Player ${player} has a promotion but not promotion UI`);
 			continue;
 		}
-		const svgs = await svgcache.getSVGElements(types.map(promotion => typeutil.buildType(promotion, Number(player) as Player)));
+		const svgs = await svgcache.getSVGElements(types);
 		svgs.forEach(svg => {
 			svg.classList.add('promotepiece');
 			svg.addEventListener('click', callback_promote);

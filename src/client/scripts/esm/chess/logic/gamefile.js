@@ -75,7 +75,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		 * For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }`
          * @type {BoundingBox} */
 		box: undefined,
-		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {RawType[]} */
+		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {number[]} */
 		existingTypes: undefined,
 	};
     

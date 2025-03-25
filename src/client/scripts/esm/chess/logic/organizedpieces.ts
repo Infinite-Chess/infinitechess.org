@@ -1,11 +1,10 @@
 import typeutil from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
-import { listExtras, players } from "../config.js";
+import { listExtras } from "../config.js";
 
 // @ts-ignore
 import type gamefile from "./gamefile.js";
-import type { RawType } from "../util/typeutil.js";
 import type { Vec2, LineKey, Vec2Key } from "../util/boardutil.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 // @ts-ignore
@@ -172,8 +171,7 @@ function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player
 
 	if (!promotionGameRule[color]) return false; // Eliminates neutral pieces.
     
-	const trimmedType = typeutil.getRawType(type);
-	return promotionGameRule[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
+	return promotionGameRule[color].includes(type); // Eliminates all pieces that can't be promoted to
 }
 
 /**
@@ -183,14 +181,13 @@ function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player
 function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
 	const state: TypeRanges = new Map();
 
-	typeutil.forEachPieceType(t => {
+	gamefile.startSnapshot.existingTypes.forEach((t: number) => {
 		state.set(t, {
 			start: 0,
 			end: 0,
 			undefineds: []
 		});
-	}, [players.NEUTRAL, players.WHITE, players.BLACK],
-	gamefile.startSnapshot.existingTypes as RawType[]);
+	});
 
 	return state;
 }
@@ -261,11 +258,12 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
  * excluding pieces that aren't in the provided position.
  */
 function getPossibleSlides(gamefile: gamefile): Vec2[] {
-	const rawtypes = gamefile.startSnapshot.existingTypes;
+	const types = gamefile.startSnapshot.existingTypes;
 	const movesets = gamefile.pieceMovesets;
 	const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
-	for (const type of rawtypes) {
-		let moveset = movesets[type];
+	for (const type of types) {
+		const rawtype = typeutil.getRawType(type);
+		let moveset = movesets[rawtype];
 		if (!moveset) continue;
 		moveset = moveset();
 		if (!moveset.sliding) continue;
@@ -424,7 +422,8 @@ function areColinearSlidesPresentInGame(gamefile: gamefile): boolean { // [[1,1]
 	 */
 
 	if (gamefile.startSnapshot.existingTypes.some((type: number) => {
-		const movesetFunc = gamefile.pieceMovesets[type];
+		const rawType = typeutil.getRawType(type);
+		const movesetFunc = gamefile.pieceMovesets[rawType];
 		if (!movesetFunc) return false;
 		const thisTypeMoveset: PieceMoveset = movesetFunc();
 		// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.

@@ -280,7 +280,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				if (promotionListWhite && !isPromotionListDefaultPromotions(promotionListWhite)) {
 					shortformat += ";";
 					for (const longpiece of promotionListWhite) {
-						shortformat += `${IntToShort_Piece(longpiece + e.W)},`;
+						shortformat += `${IntToShort_Piece(longpiece)},`;
 					}
 					shortformat = shortformat.slice(0, -1);
 				}
@@ -293,7 +293,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				if (promotionListBlack && !isPromotionListDefaultPromotions(promotionListBlack)) {
 					shortformat += ";";
 					for (const longpiece of promotionListBlack) {
-						shortformat += `${IntToShort_Piece(longpiece + e.B)},`;
+						shortformat += `${IntToShort_Piece(longpiece)},`;
 					}
 					shortformat = shortformat.slice(0, -1);
 				}
@@ -546,8 +546,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 			longformat.gameRules.promotionsAllowed = {
 				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
-				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : [],
-				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : []
+				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions.map(r => r + e.W) : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => ShortToInt_Piece(abv)) : [],
+				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions.map(r => r + e.B)  : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => ShortToInt_Piece(abv)) : []
 			};
 
 			continue;

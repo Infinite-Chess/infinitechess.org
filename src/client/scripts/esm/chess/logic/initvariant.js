@@ -46,22 +46,21 @@ function initExistingTypes(gamefile) {
 
 	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
     
-	const rawtypes = new Set();
+	const types = new Set();
 
 	// Makes sure all possible pieces are accounted for. even when they dont start with them
 	const promotiontypes = gamefile.gameRules.promotionsAllowed ? Object.values(gamefile.gameRules.promotionsAllowed) : [];
 	for (const rawTypeList of promotiontypes) {
 		for (const t of rawTypeList) {
-			rawtypes.add(t);
+			types.add(t);
 		}
 	}
 	
 	for (const tpiece of teamtypes) {
-		rawtypes.add(typeutil.getRawType(tpiece)); // Make a set with the team color trimmed
+		types.add(tpiece); // Make a set with the team color trimmed
 	}
 
-	gamefile.startSnapshot.existingTypes = [...rawtypes];
-	console.log(gamefile.startSnapshot.existingTypes);
+	gamefile.startSnapshot.existingTypes = [...types];
 }
 
 /**

@@ -5,7 +5,7 @@
 
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import { RawType } from './typeutil.js';
+import type { RawType } from './typeutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 
@@ -88,7 +88,7 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: Player, 
  * that aren't included in this game.
  */
 function deleteUnusedMovesets(gamefile: gamefile) {
-	const existingTypes = gamefile.startSnapshot.existingTypes;
+	const existingTypes = gamefile.startSnapshot.existingTypes.map(typeutil.getRawType);
 	for (const key of Object.keys(gamefile.pieceMovesets)) {
 		if (!existingTypes.includes(Number(key) as RawType)) delete gamefile.pieceMovesets[key];
 	}

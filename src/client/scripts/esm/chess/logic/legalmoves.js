@@ -60,7 +60,8 @@ function genVicinity(gamefile) {
 	if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
 
 	// For every type in the game...
-	gamefile.startSnapshot.existingTypes.forEach(type => {
+	gamefile.startSnapshot.existingTypes.forEach(truetype => {
+		const type = typeutil.getRawType(truetype);
 		const movesetFunc = gamefile.pieceMovesets[type];
 		if (movesetFunc === undefined) return; // This piece type can't move, it can't check us from anywhere in the vicinity
 		const individualMoves = movesetFunc().individual ?? [];
@@ -88,9 +89,11 @@ function genSpecialVicinity(gamefile) {
 	const vicinity = {};
 	const existingTypes = gamefile.startSnapshot.existingTypes;
 	// Object keys are strings, so we need to cast the type to a number
-	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
-		const rawType = Number(rawTypeString);
-		if (!existingTypes.includes(rawType)) continue; // This piece isn't present in our game
+	for (const type of existingTypes) {
+		const rawType = typeutil.getRawType(type);
+		if (!(rawType in specialVicinityByPiece)) continue; // This piece isn't present in our game
+		
+		const pieceVicinity = specialVicinityByPiece[rawType];
 		pieceVicinity.forEach(coords => {
 			const coordsKey = coordutil.getKeyFromCoords(coords);
 			vicinity[coordsKey] = vicinity[coordsKey] ?? []; // Make sure its initialized
@@ -393,8 +396,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 			console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote to opposite color.");
 		}
-		const strippedPromotion = typeutil.getRawType(moveDraftCopy.promotion);
-		if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(strippedPromotion)) {
+		if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(moveDraftCopy.promotion)) {
 			console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason('Specified promotion is illegal.');
 		}

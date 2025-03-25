@@ -8,7 +8,7 @@
 import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
-import type { RawType } from '../util/typeutil.js';
+import type { RawType, Player } from '../util/typeutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 // @ts-ignore
@@ -38,7 +38,7 @@ interface GameRuleModifications {
 	promotionRanks?: { [color: string]: number[] } | null,
 	moveRule?: number | null,
 	turnOrder?: string[],
-	promotionsAllowed?: ColorVariantProperty<RawType[]>
+	promotionsAllowed?: ColorVariantProperty<number[]>
 	winConditions?: ColorVariantProperty<string[]>
 	slideLimit?: number
 }
@@ -311,8 +311,14 @@ const variantDictionary: { [variantName: string]: Variant } = {
  * repeats it for every color to produce the full `promotionsAllowed` gamerule:
  * `{ [p.WHITE]: [r.ROOK,r.QUEEN...], [p.BLACK]: [r.ROOK,r.QUEEN...] }`
  */
-function repeatPromotionsAllowedForEachColor(promotions: RawType[]) {
-	return { [p.WHITE]: promotions, [p.BLACK]: promotions };
+function repeatPromotionsAllowedForEachColor(promotions: RawType[], players: Player[] = [p.WHITE, p.BLACK]) {
+	const promotionRule: {[p in Player]?: number[]} = {};
+	for (const player of players) {
+		const arr: number[] = [];
+		for (const promotionType of promotions) arr.push(typeutil.buildType(promotionType, player));
+		promotionRule[player] = arr;
+	}
+	return promotionRule;
 }
 
 /**
