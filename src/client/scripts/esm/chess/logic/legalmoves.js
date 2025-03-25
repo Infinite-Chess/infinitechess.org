@@ -87,12 +87,14 @@ function genSpecialVicinity(gamefile) {
 	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(gamefile.metadata);
 	const vicinity = {};
 	const existingTypes = gamefile.startSnapshot.existingTypes;
-	for (const [type, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
-		if (!existingTypes.includes(type)) continue; // This piece isn't present in our game
+	// Object keys are strings, so we need to cast the type to a number
+	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
+		const rawType = Number(rawTypeString);
+		if (!existingTypes.includes(rawType)) continue; // This piece isn't present in our game
 		pieceVicinity.forEach(coords => {
 			const coordsKey = coordutil.getKeyFromCoords(coords);
 			vicinity[coordsKey] = vicinity[coordsKey] ?? []; // Make sure its initialized
-			vicinity[coordsKey].push(type);
+			vicinity[coordsKey].push(rawType);
 		});
 	}
 	return vicinity;

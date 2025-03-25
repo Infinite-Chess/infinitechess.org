@@ -113,9 +113,9 @@ function getDefaultSpecialVicinitiesByPiece() {
 	return {
 		// "kings": [], // Impossible for kings to make a capture while castling
 		// "royalCentaurs": [], // Same for royal centaurs
-		"pawns": [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
+		[rawTypes.PAWN]: [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
 		// All squares a rose piece could potentially capture on.
-		"roses": [[-2,-1],[-3,-3],[-2,-5],[0,-6],[2,-5],[3,-3],[2,-1],[-4,0],[-5,2],[-4,4],[-2,5],[0,4],[1,2],[-1,-2],[0,-4],[4,-4],[5,-2],[4,0],[2,1],[-5,-2],[-6,0],[-3,3],[-1,2],[1,-2],[6,0],[5,2],[3,3],[-4,-4],[-2,1],[4,4],[2,5],[0,6]],
+		[rawTypes.ROSE]: [[-2,-1],[-3,-3],[-2,-5],[0,-6],[2,-5],[3,-3],[2,-1],[-4,0],[-5,2],[-4,4],[-2,5],[0,4],[1,2],[-1,-2],[0,-4],[4,-4],[5,-2],[4,0],[2,1],[-5,-2],[-6,0],[-3,3],[-1,2],[1,-2],[6,0],[5,2],[3,3],[-4,-4],[-2,1],[4,4],[2,5],[0,6]],
 	};
 }
 
