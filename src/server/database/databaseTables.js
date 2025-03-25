@@ -71,8 +71,8 @@ function generateTables() {
 	createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS ratings (
 			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
-			elo REAL NOT NULL DEFAULT 1000.0,
-			rating_deviation REAL NOT NULL DEFAULT 350.0
+			infinite_elo REAL NOT NULL DEFAULT 1000.0,
+			infinite_rating_deviation REAL NOT NULL DEFAULT 350.0
 		);
 	`;
 	db.run(createTableSQLQuery);
