@@ -4,7 +4,7 @@
  */
 
 import { logEvents } from '../middleware/logEvents.js';
-import { ensureJSONString } from '../utility/JSONUtils.js';
+import { ensureJSONString } from '../../client/scripts/esm/util/JSONUtils.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';

@@ -2,7 +2,7 @@
 // This script contains generalized methods for working with websocket objects.
 
 // @ts-ignore
-import { ensureJSONString } from '../utility/JSONUtils.js';
+import { ensureJSONString } from '../../client/scripts/esm/util/JSONUtils.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
 import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 

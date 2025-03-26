@@ -14,7 +14,7 @@ import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLaten
 // @ts-ignore
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
 // @ts-ignore
-import { ensureJSONString } from "../utility/JSONUtils.js";
+import { ensureJSONString } from "../../client/scripts/esm/util/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
 

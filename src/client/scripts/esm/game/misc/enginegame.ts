@@ -13,7 +13,8 @@ import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
-
+// @ts-ignore
+import { reviver, replacer } from '../../util/JSONUtils.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -137,7 +138,7 @@ async function submitMove() {
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 	const abridgedGame = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
-	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, lf: abridgedGame, engineConfig: engineConfig })));
+	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, lf: abridgedGame, engineConfig: engineConfig }, replacer), reviver));
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 

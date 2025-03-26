@@ -5,7 +5,7 @@
 
 import validcheckmates from "../../client/scripts/esm/chess/util/validcheckmates.js";
 // @ts-ignore
-import { ensureJSONString } from "../utility/JSONUtils.js";
+import { ensureJSONString } from "../../client/scripts/esm/util/JSONUtils.js";
 // @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 // @ts-ignore

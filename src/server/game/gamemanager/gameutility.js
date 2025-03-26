@@ -12,7 +12,7 @@ import WebSocket from 'ws';
 // Middleware & other imports
 import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
-import { ensureJSONString } from '../../utility/JSONUtils.js';
+import { ensureJSONString } from '../../../client/scripts/esm/util/JSONUtils.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';

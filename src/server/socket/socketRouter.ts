@@ -17,7 +17,7 @@ import { logEvents } from '../middleware/logEvents.js';
 // @ts-ignore
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
 // @ts-ignore
-import { ensureJSONString } from '../utility/JSONUtils.js';
+import { ensureJSONString } from '../../client/scripts/esm/util/JSONUtils.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------

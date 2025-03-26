@@ -7,7 +7,7 @@
 import themes from "../../client/scripts/esm/components/header/themes.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 import { logEvents } from "../middleware/logEvents.js";
-import { ensureJSONString } from "../utility/JSONUtils.js";
+import { ensureJSONString } from "../../client/scripts/esm/util/JSONUtils.js";
 
 
 // Variables -------------------------------------------------------------
