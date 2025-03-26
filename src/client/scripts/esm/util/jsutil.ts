@@ -5,6 +5,30 @@
  * ZERO dependancies.
  */
 
+const fixedArrays = [
+	Float32Array,
+	Float64Array,
+
+	Int8Array,
+	Int16Array,
+	Int32Array,
+	BigInt64Array,
+
+	Uint8Array,
+	Uint16Array,
+	Uint32Array,
+	BigUint64Array,
+] as const;
+
+type FixedArray = Float32Array | Float64Array | Int8Array | Int16Array | Int32Array | BigInt64Array | Uint8Array | Uint16Array | Uint32Array | BigUint64Array;
+
+function getConstructorOfArray(array: any) {
+	for (const c of fixedArrays) {
+		if (array instanceof c) return c;
+	}
+	return false;
+}
+
 /**
  * Deep copies an entire object, no matter how deep its nested.
  * No properties will contain references to the source object.
@@ -13,11 +37,26 @@
  * 
  * SLOW. Avoid using for very massive objects.
  */
-function deepCopyObject<T>(src: T): T {
+function deepCopyObject<T extends unknown>(src: T): T {
 	if (typeof src !== "object" || src === null) return src;
     
+	if (src instanceof Map) {
+		return new Map([...src]) as T;
+	}
+
+	const constructor = getConstructorOfArray(src);
+	if (constructor) {
+		// @ts-ignore
+		const copy = new constructor((src as FixedArray).length);
+		for (let i = 0; i < copy.length; i++) {
+			// @ts-ignore
+			copy[i] = src[i];
+		}
+		return copy as T;
+	}
+
 	const copy: any = Array.isArray(src) ? [] : {}; // Create an empty array or object
-    
+
 	for (const key in src) {
 		const value = src[key];
 		copy[key] = deepCopyObject(value); // Recursively copy each property
