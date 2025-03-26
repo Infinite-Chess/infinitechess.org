@@ -68,32 +68,26 @@ function updatePlayerRatingValues(user_id, elo, rd) {
 /*
  * Updates the values related to the rating of the player. 
  * @param {number} user_id - The id for the user
- * @returns {object} A result object: { success (boolean), values (object: {elo: (number), rd: (number)}), reason (string, if failed) } 
+ * @returns {object | undefined} A result object: {user_id: (number), infinite_elo: (number), infinite_rating_deviation: (number)} 
  * */
 
 function getPlayerRatingValues(user_id) {
-	// SQL query to check if a username exists in the 'members' table
+	// SQL query to check if a username exists in the 'ratings' table
 	const query = 'SELECT * FROM ratings WHERE user_id = ?';
 
 	try {
-		// Execute the query with the username parameter
-		const row = db.get(query, [username]);
+		// Execute the query with the user_id parameter
+		const row = db.get(query, [user_id]);
 		return row;
 	} catch (error) {
 		// Log the error for debugging purposes
-		logEvents(`Error getting row of member "${username}": ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error getting row of member "${user_id}": ${error.message}`, 'errLog.txt', { print: true });
 		return;
 	}
-};
-
-function testRatingCode() {
-	addUserToRatingsTable(2142397);
-	updatePlayerRatingValues(2142397, 1143.7, 86.4);
 };
 
 export {
 	addUserToRatingsTable,
 	updatePlayerRatingValues,
 	getPlayerRatingValues,
-	testRatingCode,
 };	
