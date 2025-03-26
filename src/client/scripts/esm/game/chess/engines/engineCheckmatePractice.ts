@@ -365,6 +365,7 @@ function initEvalWeightsAndSearchProperties() {
 
 	switch (checkmateSelectedID) {
 		case "2Q-1k":
+			wiggleroomDictionary[1] = 2; // queen
 			legalMoveEvalDictionary = {
 				// in check
 				0: {
@@ -1159,7 +1160,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 			globalSurvivalPlies = evaluation.survivalPlies;
 			// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
 
-			// early exit condition
+			// early exit conditions
 			if (depth === 1) {
 				const black_move = globallyBestVariation[0]![1]!;
 				const [new_piecelist, new_coordlist] = make_black_move(black_move, piecelist, coordlist);
@@ -1182,6 +1183,17 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 						gameRules: input_gamefile.gameRules
 					} as unknown as gamefile;
 					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
+				}
+
+				// special case for 3B3B-1k variant after piece capture
+				// enforce parity constraint to never get checkmated: the king will always move to the square color with fewer bishops unless making a capture
+				if (checkmateSelectedID === "3B3B-1k" && piecelist.length < 6) {
+					const parity = (coordlist.filter(([a, b]) => (a + b) % 2 === 0).length < 3 ? 0 : 1);
+					const optimal_move = black_moves.find(([a, b]) => Math.abs((a + b) % 2) === parity);
+					if (optimal_move !== undefined) {
+						globallyBestVariation[0] = [NaN, optimal_move];
+						break;
+					};
 				}
 			}
 		}
