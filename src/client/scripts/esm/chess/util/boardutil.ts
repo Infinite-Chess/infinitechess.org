@@ -161,6 +161,7 @@ function getCoordsFromIdx(o: OrganizedPieces, idx: number): Coords {
 }
 
 function isIdxUndefinedPiece(o: OrganizedPieces, idx: number): boolean {
+	// TODO: Use binary search here instead of linear search
 	return o.typeRanges.get(o.types[idx]!)!.undefineds.includes(idx);
 }
 

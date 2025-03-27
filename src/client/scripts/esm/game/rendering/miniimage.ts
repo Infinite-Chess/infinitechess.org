@@ -34,7 +34,7 @@ import area from './area.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
-import { rawTypes } from '../../chess/config.js';
+import { players, rawTypes } from '../../chess/config.js';
 import boardutil from '../../chess/util/boardutil.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
@@ -138,7 +138,18 @@ function genModel() {
 	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
 	const ourPieces = gamefile.ourPieces;
-	for (const [type, range] of ourPieces.typeRanges) {
+	
+	const unsortedTypes = [...ourPieces.typeRanges.keys()];
+	// Sort the type keys in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
+	const sortedColors = unsortedTypes.filter(t => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a, b) => b - a);
+	const sortedNeutrals = unsortedTypes.filter(t => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a, b) => b - a);
+
+	// Process the neutrals first so they are rendered on bottom.
+	sortedNeutrals.forEach(processType);
+	sortedColors.forEach(processType);
+
+	function processType(type: number) {
+		const range = ourPieces.typeRanges.get(type)!;
 		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
@@ -149,7 +160,7 @@ function genModel() {
 			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
 			processPiece(coords, texleft, texbottom, texright, textop, 1, 1, 1);
 		}
-	};
+	}
 
 	function processPiece(coords: Coords, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		const startX: number = (coords[0] - boardPos[0]) * boardScale - halfWidth;
