@@ -68,7 +68,7 @@ function updatePlayerRatingValues(user_id, elo, rd) {
 /*
  * Updates the values related to the rating of the player. 
  * @param {number} user_id - The id for the user
- * @returns {object | undefined} A result object: {user_id: (number), infinite_elo: (number), infinite_rating_deviation: (number)} 
+ * @returns {object} A result object: {user_id: (number), infinite_elo: (number), infinite_rating_deviation: (number)} | {} 
  * */
 
 function getPlayerRatingValues(user_id) {
@@ -82,7 +82,7 @@ function getPlayerRatingValues(user_id) {
 	} catch (error) {
 		// Log the error for debugging purposes
 		logEvents(`Error getting row of member "${user_id}": ${error.message}`, 'errLog.txt', { print: true });
-		return;
+		return {};
 	}
 };
 
