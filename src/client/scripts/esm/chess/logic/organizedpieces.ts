@@ -30,8 +30,10 @@ type RegenerateData = {[type: number]: number};
 type RegenerateHook = (gamefile: gamefile, regenData: RegenerateData) => false
 
 interface TypeRange {
+	/** Inclusive */
 	start: number,
-	end: number, // Exclusive
+	/** Exclusive */
+	end: number,
 	/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
 	undefineds: Array<number>
 }
