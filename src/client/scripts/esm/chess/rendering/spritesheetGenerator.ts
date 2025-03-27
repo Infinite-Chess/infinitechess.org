@@ -83,8 +83,6 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	// Create an HTMLImageElement from the canvas
 	const spritesheetImage = new Image();
 	spritesheetImage.src = canvas.toDataURL();
-  
-	document.body.appendChild(spritesheetImage);
 
 	// Return a promise that resolves when the image is loaded
 	await spritesheetImage.decode();

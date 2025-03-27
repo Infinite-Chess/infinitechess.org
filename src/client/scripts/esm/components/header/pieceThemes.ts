@@ -33,7 +33,7 @@ const pieceDefaultColors: PieceColorTheme = {
 		[players.NEUTRAL]: [0, 0, 0, 1]
 	},
 	[rawTypes.OBSTACLE]: {
-		[players.WHITE]: [1, 1, 1, 0.5],
+		[players.WHITE]: [10, 10, 10, 1],
 		[players.BLACK]: [0, 0, 0, 1],
 		[players.NEUTRAL]: [1, 1, 1, 1]
 	},
