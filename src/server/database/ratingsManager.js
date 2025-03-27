@@ -44,13 +44,13 @@ function addUserToRatingsTable(user_id) {
 function updatePlayerRatingValues(user_id, elo, rd) {
 	const query = `
     UPDATE ratings
-    SET infinite_elo = ${elo}, infinite_rating_deviation = ${rd}
-    WHERE user_id = ${user_id}
+    SET infinite_elo = ?, infinite_rating_deviation = ?
+    WHERE user_id = ?
 	`
 	// Tries to execute the query to modify the data.
 	try {
 		// Execute the query
-		const result = db.run(query); // 
+		const result = db.run(query, [elo, rd, user_id]); // 
 
 		// Return success result
 		return { success: true, result };
@@ -66,7 +66,7 @@ function updatePlayerRatingValues(user_id, elo, rd) {
 };
 
 /*
- * Updates the values related to the rating of the player. 
+ * Gets the values related to the rating of the player. 
  * @param {number} user_id - The id for the user
  * @returns {object} A result object: {user_id: (number), infinite_elo: (number), infinite_rating_deviation: (number)} | {} 
  * */
@@ -86,8 +86,28 @@ function getPlayerRatingValues(user_id) {
 	}
 };
 
+/*
+ * Gets the top players by elo. 
+ * @param {number} user_id - The id for the user
+ * @returns {object} A result object: {user_id: (number), infinite_elo: (number), infinite_rating_deviation: (number)} | {} 
+ * */
+function getNTopPlayersRatingValues(n_players) {
+	const query = 'SELECT * FROM ratings ORDER BY infinite_elo DESC LIMIT ?'
+
+	try {
+		// Execute the query with the n_players parameter
+		const top_players = db.get(query, [n_players]);
+		return top_players;
+	} catch (error) {
+		// Log the error for debugging purposes
+		logEvents(`Error getting top "${n_players}" players: ${error.message}`, 'errLog.txt', { print: true });
+		return {};
+	}
+}
+
 export {
 	addUserToRatingsTable,
 	updatePlayerRatingValues,
 	getPlayerRatingValues,
+	getNTopPlayersRatingValues,
 };	
