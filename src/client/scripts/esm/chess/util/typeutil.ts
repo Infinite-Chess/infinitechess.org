@@ -92,7 +92,7 @@ function getPlayerFromString(string: StrPlayer): Player {
 
 function debugType(type: number): string {
 	const [raw, c] = splitType(type);
-	return `[${type}]${getRawTypeStr(raw)}(${strcolors[c]})`;
+	return `[${type}] ${getRawTypeStr(raw)}(${strcolors[c]})`;
 }
 
 export type {

@@ -11,7 +11,6 @@ import typeutil from "../../chess/util/typeutil.js";
 
 
 import type { Color } from "../../chess/util/colorutil.js";
-import type { RawType } from "../../chess/util/typeutil.js";
 
 
 
