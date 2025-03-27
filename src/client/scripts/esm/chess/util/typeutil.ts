@@ -48,6 +48,7 @@ function buildType(type: RawType, color: Player): number {
 	return color * numTypes + type;
 }
 
+/** Splits a type into its raw type and player */
 function splitType(type: number): [RawType, Player] {
 	return [getRawType(type), getColorFromType(type)];
 }

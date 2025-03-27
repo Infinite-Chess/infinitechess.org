@@ -10,6 +10,7 @@ import typeutil from '../util/typeutil.js';
 import preferences from '../../components/header/preferences.js';
 
 import type { RawType, Player } from '../util/typeutil.js';
+import pieceThemes from '../../components/header/pieceThemes.js';
 
 // Variables -----------------------------------------------------------------
 
@@ -53,7 +54,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 		locations.add(raw);
 	}
 
-	return preferences.getSVGLocations(locations);
+	return pieceThemes.getLocationsForTypes(locations);
 } 
 
 function getSVGIDs(types: number[], width?: number, height?: number): SVGElement[] {
@@ -81,7 +82,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 			svgs.push(cloned);
 			continue l;
 		}
-		console.error(`${preferences.getLocationForType(raw)} does not contain an svg with extensions ${checks} for ${baseId}`);
+		console.error(`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${checks} for ${baseId}`);
 		failed = true;
 	}
 	if (failed) throw Error("SVG theme is missing ids for pieces");

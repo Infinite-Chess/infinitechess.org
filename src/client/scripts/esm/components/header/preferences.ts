@@ -1,7 +1,7 @@
 
 
 import themes from "./themes.js";
-import pieceThemes from "./pieceThemes.js";
+import pieceThemes, { PieceColorGroup } from "./pieceThemes.js";
 import localstorage from "../../util/localstorage.js";
 import timeutil from "../../util/timeutil.js";
 import validatorama from "../../util/validatorama.js";
@@ -251,36 +251,23 @@ function getBoxOutlineColor(): Color {
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
-// Returns { r, g, b, a } depending on our current theme!
+/** Returns the tint color for a piece of the given type, according to our current theme. */
 function getTintColorOfType(type: number): Color {
+	const [r, p] = typeutil.splitType(type);
+
+	const baseColor: Color = pieceThemes.getBaseColorForType(r, p);
+
 	const themeName: string = getTheme();
+	const themePieceColors: Partial<PieceColorGroup> = themes.getPropertyOfTheme(themeName, "pieceTheme");
+	const tint: Color = themePieceColors[p] ?? [1, 1, 1, 1];
 
-	const [raw, c] = typeutil.splitType(type);
-	const piecetheme = themes.getPropertyOfTheme(themeName, "pieceTheme");
-	const colorArgs = pieceThemes.getPieceDataForTheme(raw, pieceThemes.pieceDefaultColors, piecetheme); // { white, black, neutral }
-	if (!colorArgs) return [1, 1, 1, 1]; // No theme, return default white.
-	const color = colorArgs[c];
-
-	return color;
-}
-
-function getSVGLocations(types: Iterable<RawType>): Set<string> {
-	const themeName: string = getTheme();
-
-	const piecetheme = themes.getPropertyOfTheme(themeName, "svgTheme");
-	const locations: Set<string> = new Set();
-	for (const raw of types) {
-		const svg = pieceThemes.getPieceDataForTheme(raw, pieceThemes.pieceDefaultSVGs, piecetheme);
-		if (svg === undefined) continue;
-		locations.add(svg);
-	}
-	return locations;
-}
-
-function getLocationForType(type: RawType): string | undefined {
-	const themeName: string = getTheme();
-	const piecetheme = themes.getPropertyOfTheme(themeName, "svgTheme");
-	return pieceThemes.getPieceDataForTheme(type, pieceThemes.pieceDefaultSVGs, piecetheme);
+	// Multiply the colors together to get the final color
+	return [
+		baseColor[0] * tint[0],
+		baseColor[1] * tint[1],
+		baseColor[2] * tint[2],
+		baseColor[3] * tint[3]
+	];
 }
 
 // /**
@@ -410,6 +397,4 @@ export default {
 	getCheckHighlightColor,
 	getBoxOutlineColor,
 	getTintColorOfType,
-	getSVGLocations,
-	getLocationForType
 };
