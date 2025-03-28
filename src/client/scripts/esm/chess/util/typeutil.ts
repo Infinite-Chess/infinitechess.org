@@ -5,6 +5,14 @@
  */
 
 
+/**
+ * Every raw type of piece supported in the game.
+ * 
+ * This exact arrangement affects the order of which
+ * the checkmate algorithm searches for legal moves,
+ * and it affects the order the miniimages of the
+ * pieces are rendered when zoomed out.
+ */
 const rawTypes = {
 	VOID: 0,
 	OBSTACLE: 1,
@@ -30,6 +38,7 @@ const rawTypes = {
 	PAWN: 21
 } as const;
 
+/** All player colors suppored in the game. */
 const players = {
 	NEUTRAL: 0,
 	WHITE: 1,
@@ -38,6 +47,7 @@ const players = {
 
 const numTypes = Object.keys(rawTypes).length;
 
+/** Color extensions of all players. Add this to a raw type to get the colored type. */
 const ext = {
 	N: players.NEUTRAL * numTypes,
 	W: players.WHITE * numTypes,
