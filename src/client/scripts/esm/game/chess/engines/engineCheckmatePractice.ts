@@ -937,13 +937,14 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
  * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search
  * @param {Boolean} inProtectedRiderFleeMode - whether one should neglect all white candidate moves by rider in deeper search and reward distance from him
+ * @param {Coords[]} black_killer_list - list of black killer responses that is being maintained when white to move
  * @param {Number} alpha 
  * @param {Number} beta 
  * @param {Number} alphaPlies - alpha beta for remaining plies in the game: tiebreak in case of early game over: the more plies the game lasts the better for black
  * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean, black_killer_list: Coords[], alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, black_killer_move?: Coords, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
@@ -962,6 +963,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	if (black_to_move) {
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
+		let black_killer_move: Coords | undefined = undefined;
 		const black_moves = get_black_legal_moves(inTrapFleeMode, piecelist, coordlist);
 
 		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
@@ -969,6 +971,15 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 
 		// Black is in protected rider flee mode and considers no white rider candidate moves no piece captures from here on out:
 		if (mayEnterProtectedRiderFleeMode && depth === start_depth && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
+
+		// Use killer move heuristic, i.e. put moves in black_killer_list in front
+		for (let index = 0; index < black_moves.length; index++) {
+			if (tuplelist_contains_tuple(black_killer_list, black_moves[index]!)) {
+				// Shuffe killer move to the front of black_moves
+				const optimal_move = black_moves.splice(index, 1)[0]!;
+				black_moves.unshift(optimal_move);
+			}
+		}
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
@@ -988,7 +999,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
 		for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, alpha, beta, alphaPlies, betaPlies);
+			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, [], alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 			followingPrincipal = false;
 
@@ -1010,10 +1021,11 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				}
 			}
 			if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
+				black_killer_move = move;
 				break;
 			}
 		}
-		return { score: maxScore, bestVariation: bestVariation, survivalPlies: maxPlies, terminate_now: false };
+		return { score: maxScore, bestVariation: bestVariation, survivalPlies: maxPlies, black_killer_move: black_killer_move, terminate_now: false };
 
 	// White to move
 	} else {
@@ -1056,9 +1068,12 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, alpha, beta, alphaPlies, betaPlies);
+				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, black_killer_list, alpha, beta, alphaPlies, betaPlies);
 				if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 				followingPrincipal = false;
+
+				// append black killer move to running black_killer_list, if it caused a beta cutoff
+				if (evaluation.black_killer_move) black_killer_list.push(evaluation.black_killer_move);
 
 				const new_score = evaluation.score;
 				const survivalPlies = evaluation.survivalPlies;
@@ -1095,7 +1110,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	try {
 		// iteratively deeper and deeper search
 		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, -Infinity, Infinity, 0, Infinity);
+			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, [], -Infinity, Infinity, 0, Infinity);
 			if (evaluation.terminate_now) { 
 				// console.log("Search interrupted at depth " + depth);
 				break;
