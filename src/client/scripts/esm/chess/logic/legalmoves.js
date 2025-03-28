@@ -150,6 +150,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 	const color = typeutil.getColorFromType(type); // Color of piece calculating legal moves of
 
 	const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
+	thisPieceMoveset.individual = thisPieceMoveset.individual ?? []; // Ensure individual moves are present (more may be added during legal move calculation)
 	
 	let legalIndividualMoves = [];
 	const legalSliding = {};

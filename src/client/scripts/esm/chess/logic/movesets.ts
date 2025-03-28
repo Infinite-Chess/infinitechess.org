@@ -38,7 +38,7 @@ interface PieceMoveset {
 	 * 
 	 * TODO: Separate moving-moves from capturing-moves.
 	 */
-    individual: Coords[],
+    individual?: Coords[],
 	/**
 	 * Sliding moves the piece can make.
 	 * 
@@ -137,7 +137,6 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	return {
 		// Finitely moving
 		[rawTypes.PAWN]: {
-			individual: [],
 			special: specialdetect.pawns
 		},
 		[rawTypes.KNIGHT]: {
@@ -169,21 +168,18 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		// Infinitely moving
 		[rawTypes.ROOK]: {
-			individual: [],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.BISHOP]: {
-			individual: [],
 			sliding: {
 				'1,1': [-slideLimit, slideLimit],
 				'1,-1': [-slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.QUEEN]: {
-			individual: [],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
@@ -192,7 +188,6 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			}
 		},
 		[rawTypes.ROYALQUEEN]: {
-			individual: [],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit],
@@ -251,7 +246,6 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
             ]
 		},
 		[rawTypes.KNIGHTRIDER]: {
-			individual: [],
 			sliding: {
 				'1,2' : [-slideLimit, slideLimit],
 				'1,-2' : [-slideLimit,slideLimit],
@@ -281,7 +275,6 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			special: specialdetect.kings
 		},
 		[rawTypes.HUYGEN]: {
-			individual: [],
 			sliding: {
 				'1,0': [-slideLimit, slideLimit],
 				'0,1': [-slideLimit, slideLimit]
@@ -301,7 +294,6 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 			}
 		},
 		[rawTypes.ROSE]: {
-			individual: [],
 			special: specialdetect.roses
 		}
 	};
