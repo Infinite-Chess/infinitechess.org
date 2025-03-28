@@ -118,12 +118,13 @@ function ShortToInt_Piece(shortpiece) {
 	const UNKERR = new Error("Unknown piece type detected: " + shortpiece);
 	if (results === null) throw UNKERR;
 
-	const lowerType = results[2];
+	let lowerType = results[2];
+	if (results[1] !== "") lowerType = lowerType.toLowerCase(); // If the player is specified, make it lowercase (neutrals don't have uppercase entries in dictionary)
 
-	if (!invertedpieceDictionary[lowerType]) throw UNKERR;
+	if (invertedpieceDictionary[lowerType] === undefined) throw UNKERR;
 
 	let type = Number(invertedpieceDictionary[lowerType]);
-	if (results[1] !== "") {
+	if (results[1] !== "") { // Overwrite the player that owns it
 		const player = Number(results[1]);
 		type = typeutil.buildType(typeutil.getRawType(type), player);
 	}
