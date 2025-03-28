@@ -233,56 +233,112 @@ function getMissingStringsFromArray(array1: string[], array2: string[]): string[
 /**
  * Estimates the size, in memory, of ANY object, no matter how deep it's nested,
  * and returns that number in a human-readable string.
- * 
+ *
  * This takes into account added overhead from each object/array created,
- * as those have extra prototype methods, etc, adding more memory.
+ * as those have extra prototype methods, etc, adding more memory. It also
+ * attempts to correctly estimate the size of TypedArrays, ArrayBuffers, Maps, and Sets.
  * 
- * For that reason, it'd be good to avoid the number of objects we create being
- * linear with the number of pieces in our game.
+ * @author Gemini 2.5 Pro
  */
 function estimateMemorySizeOf(obj: any): string {
-	// Credit: Liangliang Zheng https://stackoverflow.com/a/6367736
-	function roughSizeOfObject(value: any, level?: number ) {
-		if (level === undefined) level = 0;
+	const visited = new Set<any>(); // Use a Set to track visited objects to handle cycles and prevent double-counting.
+
+	// --- Helper Functions ---
+
+	function roughSizeOfObject(value: any): number {
 		let bytes = 0;
-	
+
+		// --- Primitive types ---
 		if (typeof value === 'boolean') bytes = 4;
-		else if (typeof value === 'string' ) bytes = value.length * 2;
-		else if (typeof value === 'number') bytes = 8;
-		else if (value === null) bytes = 1;
+		else if (typeof value === 'string') bytes = value.length * 2; // Each char is 2 bytes in JS strings (UTF-16)
+		else if (typeof value === 'number') bytes = 8; // 64-bit float
+		else if (typeof value === 'symbol') bytes = (value.description?.length ?? 0) * 2 + 8; // Description + internal overhead
+		else if (typeof value === 'bigint') bytes = 8 + Math.ceil(value.toString().length / 2); // Rough guess
+		else if (value === null || typeof value === 'undefined') bytes = 0; // Very small
+		else if (typeof value === 'function') bytes = value.toString().length * 2 + 100; // Very rough guess
+		// --- Object types ---
 		else if (typeof value === 'object') {
-			if (value['__visited__']) return 0;
-			value['__visited__'] = 1;
-			for (const i in value) {
-				bytes += i.length * 2;
-				bytes += 8; // an assumed existence overhead
-				bytes += roughSizeOfObject(value[i], 1);
+			// --- Handle circular references and already visited objects ---
+			if (visited.has(value)) return 0;
+			visited.add(value);
+
+			// --- Specific object types ---
+
+			// ArrayBuffer: The raw data store
+			if (value instanceof ArrayBuffer) {
+				bytes = value.byteLength + 64; // byteLength + object overhead
+			}
+			// TypedArray views (Int8Array, Float32Array, etc.)
+			else if (ArrayBuffer.isView(value)) {
+				bytes = value.byteLength + 64; // Data size + view object overhead
+				// Ensure the underlying buffer is also marked as visited if not already
+				if (value.buffer && !visited.has(value.buffer)) {
+					visited.add(value.buffer);
+					// Optionally add buffer overhead ONCE if buffer itself wasn't visited
+					// bytes += 64; // Depends on desired accuracy for shared buffer overhead.
+				}
+			}
+			// Date objects
+			else if (value instanceof Date) bytes = 8 + 40; // Internal number + object overhead
+			// RegExp objects
+			else if (value instanceof RegExp) bytes = value.source.length * 2 + 40; // Source string + object overhead
+			// Map objects
+			else if (value instanceof Map) {
+				bytes = 64; // Overhead for the Map object itself
+				for (const [key, val] of value.entries()) {
+					bytes += roughSizeOfObject(key);
+					bytes += roughSizeOfObject(val);
+					bytes += 16; // Overhead per entry (approx)
+				}
+			}
+			// Set objects
+			else if (value instanceof Set) {
+				bytes = 64; // Overhead for the Set object itself
+				for (const val of value.values()) {
+					bytes += roughSizeOfObject(val);
+					bytes += 16; // Overhead per entry (approx)
+				}
+			}
+			// --- Generic objects and arrays ---
+			else {
+				const isArray = Array.isArray(value);
+				// Overhead for object/array itself (pointers, length, prototype)
+				bytes = isArray ? 40 : 40;
+
+				for (const key in value) {
+					// Only count own properties
+					if (!Object.hasOwnProperty.call(value, key)) continue;
+
+					// Size of the key (property name or array index)
+					if (!isArray || isNaN(parseInt(key, 10))) {
+						 bytes += key.length * 2; // Key string size
+					}
+
+					// Reference pointer size (approx)
+					bytes += 8; // Assumed pointer/reference overhead
+
+					// Size of the value (recursive call)
+					bytes += roughSizeOfObject(value[key]);
+				}
 			}
 		}
-	
-		if (level === 0) clear__visited__(value);
+
 		return bytes;
-	}
-	
-	function clear__visited__(value: any) {
-		if (typeof value === 'object' && value !== null) {
-			delete value['__visited__'];
-			for (const i in value) {
-				clear__visited__(value[i]);
-			}
-		}
 	}
 
 	// Turns the number into a human-readable string
 	function formatByteSize(bytes: number): string {
-		if (bytes < 1000) return bytes + " bytes";
-		else if (bytes < 1000000) return (bytes / 1000).toFixed(3) + " KB";
-		else if (bytes < 1000000000) return (bytes / 1000000).toFixed(3) + " MB";
-		else return (bytes / 1000000000).toFixed(3) + " GB";
-	};
+		if (bytes < 1024) return bytes + " bytes";
+		else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+		else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+		else return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+	}
 
-	return formatByteSize(roughSizeOfObject(obj));
-};
+	// --- Main execution ---
+	const totalBytes = roughSizeOfObject(obj);
+	visited.clear(); // Clean up the visited set
+	return formatByteSize(totalBytes);
+}
 
 
 
