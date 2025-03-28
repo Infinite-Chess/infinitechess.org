@@ -248,32 +248,32 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 
 	// Holiday themes
 
-	halloween: {
-		[lightTiles]: [1, 0.65, 0.4, 1],
-		[darkTiles]: [1, 0.4, 0, 1],
-		[legalMovesHighlightColor_Friendly]: [0.6, 0, 1, 0.55],
-		[legalMovesHighlightColor_Opponent]: [0, 0.5, 0, 0.35],
-		[legalMovesHighlightColor_Premove]: [1, 0.15, 0, 0.65],
-		[lastMoveHighlightColor]: [0.5, 0.2, 0, 0.75],
-		[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0.5, 0.76],
-		[pieceTheme]: {
-			[players.WHITE]: [0.6, 0.5, 0.45, 1],
-			[players.BLACK]: [0.8, 0, 1, 1],
-		},
-	},
-	christmas: {
-		[lightTiles]: [0.60, 0.93, 1, 1],
-		[darkTiles]: [0 / 255, 199 / 255, 238 / 255, 1],
-		[legalMovesHighlightColor_Friendly]: [0, 0, 1, 0.35],
-		[legalMovesHighlightColor_Opponent]: [1, 0.7, 0, 0.35],
-		[legalMovesHighlightColor_Premove]: [0.25, 0, 0.7, 0.3],
-		[lastMoveHighlightColor]: [0, 0, 0.3, 0.35],
-		[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
-		[pieceTheme]: {
-			[players.WHITE]: [0.4, 1, 0.4, 1],
-			[players.BLACK]: [1, 0.2, 0.2, 1],
-		},
-	}
+	// halloween: {
+	// 	[lightTiles]: [1, 0.65, 0.4, 1],
+	// 	[darkTiles]: [1, 0.4, 0, 1],
+	// 	[legalMovesHighlightColor_Friendly]: [0.6, 0, 1, 0.55],
+	// 	[legalMovesHighlightColor_Opponent]: [0, 0.5, 0, 0.35],
+	// 	[legalMovesHighlightColor_Premove]: [1, 0.15, 0, 0.65],
+	// 	[lastMoveHighlightColor]: [0.5, 0.2, 0, 0.75],
+	// 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0.5, 0.76],
+	// 	[pieceTheme]: {
+	// 		[players.WHITE]: [0.6, 0.5, 0.45, 1],
+	// 		[players.BLACK]: [0.8, 0, 1, 1],
+	// 	},
+	// },
+	// christmas: {
+	// 	[lightTiles]: [0.60, 0.93, 1, 1],
+	// 	[darkTiles]: [0 / 255, 199 / 255, 238 / 255, 1],
+	// 	[legalMovesHighlightColor_Friendly]: [0, 0, 1, 0.35],
+	// 	[legalMovesHighlightColor_Opponent]: [1, 0.7, 0, 0.35],
+	// 	[legalMovesHighlightColor_Premove]: [0.25, 0, 0.7, 0.3],
+	// 	[lastMoveHighlightColor]: [0, 0, 0.3, 0.35],
+	// 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
+	// 	[pieceTheme]: {
+	// 		[players.WHITE]: [0.4, 1, 0.4, 1],
+	// 		[players.BLACK]: [1, 0.2, 0.2, 1],
+	// 	},
+	// }
 };
 
 /**
