@@ -1020,7 +1020,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
 		let black_killer_move: Coords | undefined = undefined;
-		const black_moves = get_black_legal_moves(inTrapFleeMode, piecelist, coordlist);
+		let black_moves = get_black_legal_moves(inTrapFleeMode, piecelist, coordlist);
 
 		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
 		if (mayEnterTrapFleeMode && depth === start_depth && isBlackInTrap(piecelist, coordlist)) inTrapFleeMode = true;
@@ -1028,15 +1028,32 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		// Black is in protected rider flee mode and considers no white rider candidate moves no piece captures from here on out:
 		if (mayEnterProtectedRiderFleeMode && depth === start_depth && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
 
+		// Order black moves by immediate evaluation function
+		if (depth > 1 && black_moves.length > 1) {
+			const black_move_evals: number[] = [];
+			for (const move of black_moves) {
+				const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
+				const score = get_position_evaluation(new_piecelist, new_coordlist, false, inProtectedRiderFleeMode);
+				black_move_evals.push(score);
+			}
+
+			// Get sorted indices
+			const indices = black_move_evals.map((_, i) => i).sort((a, b) => black_move_evals[b]! - black_move_evals[a]!);
+
+			// Reorder black_moves arrays based on sorted indices
+			black_moves = indices.map(i => black_moves[i]!);
+		}
+
 		// Use killer move heuristic, i.e. put moves in black_killer_list in front
 		if (black_killer_list.length > 0) {
-			const reordered_moves: Coords[] = [];
+			const reordered_indices_killers: Coords[] = [];
+			const reordered_indices_nonkillers: Coords[] = [];
 			for (const move of black_moves) {
-				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_moves.unshift(move); // Add killer moves to the front
-				else reordered_moves.push(move); // Add non-killer moves to the end
+				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_indices_killers.push(move); // Add killer moves to the front
+				else reordered_indices_nonkillers.push(move); // Add non-killer moves to the end
 			}
 			black_moves.length = 0;
-			black_moves.push(...reordered_moves);
+			black_moves.push(...reordered_indices_killers, ...reordered_indices_nonkillers);
 		}
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
