@@ -19,6 +19,7 @@ import state from './state.js';
 import boardchanges from './boardchanges.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
+import { rawTypes } from '../util/typeutil.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -31,7 +32,6 @@ import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
-import { rawTypes } from '../util/typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 

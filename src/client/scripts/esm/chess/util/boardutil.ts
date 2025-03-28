@@ -10,8 +10,9 @@ import type { RawType, Player } from "./typeutil.js";
 interface Piece {
 	type: number,
 	coords: Coords,
-	index: number, // relative to the type range
-	// to get the actual idx add the starting point of the type range
+	/** Relative to the start of its type range.
+	 * To get the actual idx, add the starting point of the type range */
+	index: number,
 }
 
 /**
