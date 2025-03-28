@@ -1028,12 +1028,14 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		if (mayEnterProtectedRiderFleeMode && depth === start_depth && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
 
 		// Use killer move heuristic, i.e. put moves in black_killer_list in front
-		for (let index = 0; index < black_moves.length; index++) {
-			if (tuplelist_contains_tuple(black_killer_list, black_moves[index]!)) {
-				// Shuffe killer move to the front of black_moves
-				const optimal_move = black_moves.splice(index, 1)[0]!;
-				black_moves.unshift(optimal_move);
+		if (black_killer_list.length > 0) {
+			const reordered_moves: Coords[] = [];
+			for (const move of black_moves) {
+				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_moves.unshift(move); // Add killer moves to the front
+				else reordered_moves.push(move); // Add non-killer moves to the end
 			}
+			black_moves.length = 0;
+			black_moves.push(...reordered_moves);
 		}
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
