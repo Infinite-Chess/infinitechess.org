@@ -4,7 +4,8 @@ import math from "../../util/math.js";
 
 // @ts-ignore
 import type gamefile from "./gamefile.js";
-import type { Vec2, LineKey, Vec2Key } from "../util/boardutil.js";
+import { Vec2, Vec2Key } from "../../util/math.js";
+import type { LineKey, Position } from "../util/boardutil.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 // @ts-ignore
 import type { GameRules } from "../variants/gamerules.js";
@@ -174,6 +175,7 @@ function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boole
  * @param {string} type - The type of piece (e.g. "pawnsW")
  * @returns {boolean} *true* if we need to append placeholders for this type.
  */
+// eslint-disable-next-line no-unused-vars
 function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player]?: number[]} | undefined, type: number): boolean {
 	if (!promotionGameRule) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
@@ -188,16 +190,16 @@ function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player
  * 
  * @param {gamefile} gamefile
  */
-function getEmptyTypeRanges(gamefile: gamefile): TypeRanges {
+function getEmptyTypeRanges(types: Iterable<number>): TypeRanges {
 	const state: TypeRanges = new Map();
 
-	gamefile.startSnapshot.existingTypes.forEach((t: number) => {
-		state.set(t, {
+	for (const type of types) {
+		state.set(type, {
 			start: 0,
 			end: 0,
 			undefineds: []
 		});
-	});
+	}
 
 	return state;
 }
@@ -213,18 +215,26 @@ function toSizedArray<T extends SizedArray>(arr: number[], sizedArray: T): T {
  * Converts a piece list organized by key to organized by type.
  * @returns Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
  */
-function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArrayConstructor): OrganizedPieces {
+function buildStateForGame(gamefile: gamefile, coordConstructor: PositionArrayConstructor): OrganizedPieces {
 	const keyList = gamefile.startSnapshot.position;
-	const ranges = getEmptyTypeRanges(gamefile);
+	return buildStateFromPosition(keyList, coordConstructor, gamefile.startSnapshot.existingTypes, getSlidingMoves(gamefile));
+}
+
+function buildStateFromPosition(position: Position, coordConstructor: PositionArrayConstructor, possibleTypes: Iterable<number>, 
+	{ hippogonalsPresent = false, slides = [] as Vec2[], colinearsPresent = false} = {}
+): OrganizedPieces {
 	const piecesByType: {[type: number]: Coords[]} = {};
+	const ranges = getEmptyTypeRanges(possibleTypes);
+
 	const organizedPieces: Partial<OrganizedPieces> = {
 		typeRanges: ranges,
+		hippogonalsPresent: hippogonalsPresent,
+		slides: slides,
+		colinearsPresent: colinearsPresent,
 	};
 
 	// For some reason, does not iterate through inherited properties?
-	for (const key in keyList) {
-		const stype = keyList[key];
-		const type = Number(stype);
+	for (const [key, type] of Object.entries(position)) {
 		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
 		
 		if (!piecesByType[type]) piecesByType[type] = [];
@@ -253,8 +263,6 @@ function buildStateFromKeyList(gamefile: gamefile, coordConstructor: PositionArr
 	organizedPieces.XPositions = toSizedArray(x, new coordConstructor(currentOffset));
 	organizedPieces.YPositions = toSizedArray(y, new coordConstructor(currentOffset));
 	organizedPieces.types = toSizedArray(t, new Uint8Array(currentOffset));
-
-	initSlidingMoves(gamefile, organizedPieces);
 
 	placePieces(organizedPieces);
 
@@ -289,10 +297,13 @@ function getPossibleSlides(gamefile: gamefile): Vec2[] {
  * This contains the information of what slides are possible, according to
  * what piece types are in this game.
  */
-function initSlidingMoves(gamefile: gamefile, o: Partial<OrganizedPieces>) {
-	o.slides = getPossibleSlides(gamefile);
-	o.hippogonalsPresent = areHippogonalsPresentInGame(o.slides);
-	o.colinearsPresent = areColinearSlidesPresentInGame(gamefile, o);
+function getSlidingMoves(gamefile: gamefile) {
+	const slides = getPossibleSlides(gamefile);
+	return {
+		slides,
+		hippogonalsPresent: areHippogonalsPresentInGame(slides),
+		colinearsPresent: areColinearSlidesPresentInGame(gamefile, slides),
+	};
 }
 
 function placePieces(organizedPieces: Partial<OrganizedPieces>) {
@@ -410,7 +421,7 @@ function getCFromKey(lineKey: LineKey): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(gamefile: gamefile, o: Partial<OrganizedPieces>): boolean { // [[1,1], [1,0], ...]
+function areColinearSlidesPresentInGame(gamefile: gamefile, slides: Vec2[]): boolean { // [[1,1], [1,0], ...]
 
 	/**
 	 * 1. Colinears are present if any vector is NOT a primitive vector.
@@ -422,7 +433,7 @@ function areColinearSlidesPresentInGame(gamefile: gamefile, o: Partial<Organized
 	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
 	 */
 
-	if (o.slides!.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
+	if (slides!.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
 
 	/**
 	 * 2. Colinears are present if there's at least one custom ignore function.
@@ -473,7 +484,8 @@ export default {
 
 	areHippogonalsPresentInGame,
 	areColinearSlidesPresentInGame,
-	buildStateFromKeyList,
+	buildStateForGame,
+	buildStateFromPosition,
 
 	registerPieceInSpace,
 	removePieceFromSpace,

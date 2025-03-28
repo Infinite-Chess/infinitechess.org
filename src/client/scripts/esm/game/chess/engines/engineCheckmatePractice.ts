@@ -12,7 +12,7 @@ import isprime from '../../../util/isprime.js';
 // @ts-ignore
 import insufficientmaterial from '../../../chess/logic/insufficientmaterial.js';
 import { rawTypes as r, ext as e, players, numTypes} from '../../../chess/util/typeutil.js';
-
+import organizedpieces from '../../../chess/logic/organizedpieces.js';
 /**
  * Typescript types are erased during compilation, so adding these
  * here doesn't actually mean adding dependancies.
@@ -22,6 +22,7 @@ import type gamefile from "../../../chess/logic/gamefile";
 import type { MoveDraft } from "../../../chess/logic/movepiece";
 import type { Coords } from "../../../chess/util/coordutil";
 import type { Vec2 } from "../../../util/math";
+import type { Position } from '../../../chess/util/boardutil.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
@@ -119,9 +120,9 @@ const pieceNameDictionary: { [pieceType: number]: number } = {
 };
 
 function invertPieceNameDictionary(json: { [key: string]: number }) {
-	const inv: { [key: number]: string } = {};
+	const inv: { [key: number]: number } = {};
 	for (const key in json) {
-		inv[json[key]!] = key;
+		inv[json[key]!] = Number(key);
 	}
 	return inv;
 }
@@ -1115,19 +1116,19 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 				// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
 				// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
 				if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
-					const piecesOrganizedByKey: { [key: string]: string } = {};
-					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? "kingsB" : "royalCentaursB");
+					const piecesOrganizedByKey: Position = {};
+					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? r.KING + e.B : r.ROYALCENTAUR + e.B);
 					for (let i = 0; i < piecelist.length; i++) {
 						if (new_piecelist[i] !== 0) {
 							piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
 						}
 					}
 					const dummy_gamefile = { 
-						piecesOrganizedByKey: piecesOrganizedByKey,
-						ourPieces: {},
 						moves: [],
-						gameRules: input_gamefile.gameRules
+						gameRules: input_gamefile.gameRules,
+						ourPieces: organizedpieces.buildStateFromPosition(piecesOrganizedByKey, Int32Array, Object.values(piecesOrganizedByKey)),
 					} as unknown as gamefile;
+
 					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
 				}
 			}

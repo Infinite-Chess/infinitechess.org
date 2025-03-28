@@ -26,6 +26,7 @@ import { players } from '../util/typeutil.js';
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
+/** @typedef {import('../util/boardutil.js').Position} Position*/
 /** @typedef {import('./events.js').GameEvents} GameEvents*/
 /** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
@@ -55,7 +56,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
-		/** In key format 'x,y':'type' @type {PiecesByKey} */
+		/** In key format 'x,y':'type' @type {Position} */
 		position: undefined,
 		/** @type {string} */
 		positionString: undefined,
@@ -208,7 +209,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** @type {false | string} */
 	this.gameConclusion = false;
 
-	this.ourPieces = organizedpieces.buildStateFromKeyList(this, Int32Array);
+	this.ourPieces = organizedpieces.buildStateForGame(this, Int32Array);
 	this.startSnapshot.pieceCount = boardutil.getPieceCountOfGame(this.ourPieces);
 
 	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
