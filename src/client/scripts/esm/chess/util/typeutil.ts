@@ -1,5 +1,9 @@
 
-import type { Piece } from "./boardutil.js";
+/**
+ * This script contains lists of all piece types and players,
+ * and utility methods for working with them.
+ */
+
 
 const rawTypes = {
 	VOID: 0,
