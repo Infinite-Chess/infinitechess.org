@@ -121,6 +121,7 @@ function doesVicinityAttackSquare(gamefile: gamefile, square: Coords, friendlyCo
 		// Is it the same color?
 		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
 		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
+		if (typeOnSquareColor === players.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
 
 		// Is that a match with any piece type on this vicinity square?
 		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) { // This square can be captured
@@ -152,6 +153,7 @@ function doesSpecialAttackSquare(gamefile: gamefile, square: CoordsSpecial, frie
 		// Is it the same color?
 		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
 		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
+		if (typeOnSquareColor === players.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
 
 		// Is that a match with any piece type on this vicinity square?
 		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured via special move...

@@ -7,7 +7,7 @@ import movepiece from './movepiece.js';
 import boardutil from '../util/boardutil.js';
 import specialdetect from './specialdetect.js';
 import organizedpieces from './organizedpieces.js';
-import typeutil from '../util/typeutil.js';
+import typeutil, { players } from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
@@ -110,8 +110,9 @@ function genSpecialVicinity(gamefile) {
  * @returns {PieceMoveset} A moveset object.
  */
 function getPieceMoveset(gamefile, pieceType) {
-	pieceType = typeutil.getRawType(pieceType); // Remove the 'W'/'B' from end of type
-	const movesetFunc = gamefile.pieceMovesets[pieceType];
+	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
+	if (player === players.NEUTRAL) return {}; // Neutral pieces CANNOT MOVE!
+	const movesetFunc = gamefile.pieceMovesets[rawType];
 	if (!movesetFunc) return {}; // Piece doesn't have a specified moveset (could be neutral). Return empty.
 	return movesetFunc(); // Calling these parameters as a function returns their moveset.
 }
