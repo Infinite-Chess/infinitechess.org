@@ -37,7 +37,7 @@ const SVGConfig: {
 		colors: {
 			[players.WHITE]: [1, 1, 1, 1],
 			[players.BLACK]: [0, 0, 0, 1],
-			[players.NEUTRAL]: [1, 1, 1, 1]
+			[players.NEUTRAL]: [0.08, 0.08, 0.08, 1]
 		}
 	},
 	[rawTypes.KING]: { location: "classical" },
