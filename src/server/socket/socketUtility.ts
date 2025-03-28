@@ -1,10 +1,7 @@
 
 // This script contains generalized methods for working with websocket objects.
 
-// @ts-ignore
-import { ensureJSONString } from '../../client/scripts/esm/util/JSONUtils.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------
 
@@ -79,7 +76,7 @@ function printSocket(ws: CustomWebSocket) { console.log(stringifySocketMetadata(
 function stringifySocketMetadata(ws: CustomWebSocket): string {
 	// Removes the recursion from the metadata, making it safe to stringify.
 	const simplifiedMetadata = getSimplifiedMetadata(ws);
-	return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
+	return jsutil.ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
 }
 
 /**

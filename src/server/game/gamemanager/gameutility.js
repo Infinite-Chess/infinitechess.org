@@ -12,7 +12,6 @@ import WebSocket from 'ws';
 // Middleware & other imports
 import { logEvents } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
-import { ensureJSONString } from '../../../client/scripts/esm/util/JSONUtils.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
@@ -571,7 +570,7 @@ function getSimplifiedGameString(game) {
 	delete game.autoAFKResignTimeoutID;
 	delete game.deleteTimeoutID;
 
-	const stringifiedGame = ensureJSONString(game, 'There was an error when stringifying game.');
+	const stringifiedGame = jsutil.ensureJSONString(game, 'There was an error when stringifying game.');
 
 	for (const [c, data] of Object.entries(game.players)) {
 		if (data.socket === undefined) continue;

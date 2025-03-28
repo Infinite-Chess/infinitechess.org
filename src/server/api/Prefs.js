@@ -5,9 +5,9 @@
  */
 
 import themes from "../../client/scripts/esm/components/header/themes.js";
+import jsutil from "../../client/scripts/esm/util/jsutil.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 import { logEvents } from "../middleware/logEvents.js";
-import { ensureJSONString } from "../../client/scripts/esm/util/JSONUtils.js";
 
 
 // Variables -------------------------------------------------------------
@@ -54,18 +54,18 @@ function setPrefsCookie(req, res, next) {
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt', { print: true });
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
 	if (typeof memberInfoCookie !== "object") {
-		logEvents(`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
 	const user_id = memberInfoCookie.user_id;
 	if (typeof user_id !== 'number') {
-		logEvents(`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
@@ -140,7 +140,7 @@ function postPrefs(req, res) {
 	const preferences = req.body.preferences;
 
 	if (!arePrefsValid(preferences)) {
-		logEvents(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
+		logEvents(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${jsutil.ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
 		return res.status(400).json({ message: "Preferences not valid, cannot save on the server."});
 	}
 

@@ -4,8 +4,7 @@
  */
 
 import validcheckmates from "../../client/scripts/esm/chess/util/validcheckmates.js";
-// @ts-ignore
-import { ensureJSONString } from "../../client/scripts/esm/util/JSONUtils.js";
+import jsutil from "../../client/scripts/esm/util/jsutil.js";
 // @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 // @ts-ignore
@@ -51,18 +50,18 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function) 
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as Error).stack}`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as Error).stack}`, 'errLog.txt', { print: true });
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 
 	if (typeof memberInfoCookie !== "object") {
-		logEvents(`memberInfo cookie did not parse into an object when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie did not parse into an object when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 
 	const user_id = memberInfoCookie.user_id;
 	if (typeof user_id !== 'number') {
-		logEvents(`memberInfo cookie user_id property was not a number when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie user_id property was not a number when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 

@@ -8,6 +8,7 @@
 import { sendSocketMessage } from './sendSocketMessage.js';
 import { handleUnsubbing } from './socketManager.js';
 import socketUtility from './socketUtility.js';
+import jsutil from '../../client/scripts/esm/util/jsutil.js';
 // @ts-ignore
 import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
 // @ts-ignore
@@ -16,8 +17,6 @@ import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
 import { logEvents } from '../middleware/logEvents.js';
 // @ts-ignore
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
-// @ts-ignore
-import { ensureJSONString } from '../../client/scripts/esm/util/JSONUtils.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -111,7 +110,7 @@ function handleSubbing(ws: CustomWebSocket, value: any) {
 }
 
 function handleFeatureNotSupported(ws: CustomWebSocket, description: any) {
-	const errText = `Client unsupported feature: ${ensureJSONString(description)}   Socket: ${socketUtility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
+	const errText = `Client unsupported feature: ${jsutil.ensureJSONString(description)}   Socket: ${socketUtility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
 	logEvents(errText, 'featuresUnsupported.txt', { print: true });
 }
 
