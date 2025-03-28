@@ -96,7 +96,7 @@ function rateLimit(req, res, next) {
 
 	const clientIP = getClientIP(req);
 	if (!clientIP) {
-		logEvents('Unable to identify client IP address when rate limiting!', 'hackLog.txt');
+		logEvents('Unable to identify client IP address when rate limiting!', 'reqLogRateLimited.txt');
 		return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
 	}
 
@@ -112,7 +112,7 @@ function rateLimit(req, res, next) {
 	incrementClientConnectionCount(userKey);
 
 	if (rateLimitHash[userKey].length > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
-		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'hackLog.txt');
+		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'reqLogRateLimited.txt');
 		return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
 	}
 
@@ -138,7 +138,7 @@ function rateLimitWebSocket(req, ws) {
 	incrementClientConnectionCount(userKey);
 
 	if (rateLimitHash[userKey].length > maxRequestsPerMinute) {
-		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'hackLog.txt');
+		logEvents(`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey].length}`, 'reqLogRateLimited.txt');
 		ws.close(1009, 'Too Many Requests. Try again soon.');
 		return false;
 	}
@@ -148,7 +148,7 @@ function rateLimitWebSocket(req, ws) {
 	// Then again.. Unless their initial http websocket upgrade request contains a massive amount of bytes, this will immediately reject them anyway!
 	const messageSize = ws._socket.bytesRead;
 	if (messageSize > maxWebsocketMessageSizeBytes) {
-		logEvents(`Agent ${userKey} sent too big a websocket message.`, 'hackLog.txt');
+		logEvents(`Agent ${userKey} sent too big a websocket message.`, 'reqLogRateLimited.txt');
 		ws.close(1009, 'Message Too Big');
 		return false;
 	}
@@ -247,11 +247,13 @@ setInterval(() => {
 
 function logAttackBegin() {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
+	logEvents(logText, 'reqLogRateLimited.txt', { print: true });
 	logEvents(logText, 'hackLog.txt', { print: true });
 }
 
 function logAttackEnd() {
 	const logText = `DDOS attack has ended.`;
+	logEvents(logText, 'reqLogRateLimited.txt', { print: true });
 	logEvents(logText, 'hackLog.txt', { print: true });
 }
 

@@ -26,9 +26,9 @@ import type { Request, Response } from "express";
  * It is possible for the memberInfo cookie to be tampered with, but checkmates_beaten can be public information anyway.
  * We are reading the memberInfo cookie instead of verifying their session token
  * because that could take a little bit longer as it requires a database look up.
- * @param {Object} req - The Express request object.
- * @param {Object} res - The Express response object.
- * @param {Function} next - The Express next middleware function.
+ * @param req - The Express request object.
+ * @param res - The Express response object.
+ * @param next - The Express next middleware function.
  */
 function setPracticeProgressCookie(req: Request, res: Response, next: Function) {
 	if (!req.cookies) {
@@ -47,11 +47,11 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function) 
 	const memberInfoCookieStringified = req.cookies.memberInfo;
 	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
 
-	let memberInfoCookie: {user_id: number, username: string}; // { user_id, username }
+	let memberInfoCookie: { user_id: number, username: string };
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as any).stack}`, 'errLog.txt', { print: true });
+		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as Error).stack}`, 'errLog.txt', { print: true });
 		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
 	}
 
@@ -184,7 +184,6 @@ function postCheckmateBeaten(req: CustomRequest, res: Response): void {
 
 export {
 	setPracticeProgressCookie,
-	createPracticeProgressCookie,
 	deletePracticeProgressCookie,
 	getCheckmatesBeaten,
 	postCheckmateBeaten

@@ -258,7 +258,9 @@
                     <p id="play-name" class="play-name"><%=t('play.play-menu.title')%></p>
                     <button id="online" class="online titlebubble button"><%=t('play.play-menu.online')%></button>
                     <button id="local" class="local titlebubble button"><%=t('play.play-menu.local')%></button>
-                    <button id="computer" class="computer titlebubble opacity-0_5 button"><%=t('play.play-menu.computer')%></button>
+                    <button id="computer" class="computer titlebubble button"><%=t('play.play-menu.computer')%></button>
+                    <!-- ENABLE UNTIL ENGINE GAMES ARE READY -->
+                    <!-- <button id="computer" class="computer titlebubble opacity-0_5 button"><%=t('play.play-menu.computer')%></button> -->
                     <div class="game-options titlebubble">
                         <div class="options">
                             <div class="option-card">
@@ -296,7 +298,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="option-card">
+                            <div id="option-card-clock" class="option-card">
                                 <p><%=t('play.play-menu.clock')%></p>
                                 <div class="option">
                                     <select id="option-clock" class="button">
@@ -307,7 +309,7 @@
                                         <option value="180+2">3<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
                                         <option value="300+2">5<%=t('play.play-menu.minutes')%>+2<%=t('play.play-menu.seconds')%></option>
                                         <option value="480+3">8<%=t('play.play-menu.minutes')%>+3<%=t('play.play-menu.seconds')%></option>
-                                        <option value="600+4" selected>10<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
+                                        <option value="600+4" selected>10<%=t('play.play-menu.minutes')%>+4<%=t('play.play-menu.seconds')%></option>
                                         <option value="720+5">12<%=t('play.play-menu.minutes')%>+5<%=t('play.play-menu.seconds')%></option>
                                         <option value="900+6">15<%=t('play.play-menu.minutes')%>+6<%=t('play.play-menu.seconds')%></option>
                                         <option value="1200+8">20<%=t('play.play-menu.minutes')%>+8<%=t('play.play-menu.seconds')%></option>
@@ -451,7 +453,7 @@
                 </div>
 
                 <!-- Navigation controls -->
-                <div id="navigation-bar" class="navigation-bar hidden">
+                <div id="navigation-bar" class="navigation-bar hidden unselectable">
                     <div class="teleport">
                         <div class="buttoncontainer">
                             <div id="back" class="button tooltip-dr" data-tooltip="<%=t('play.gamebuttontooltips.undo_transition')%>">

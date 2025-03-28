@@ -89,6 +89,9 @@ type path = Coords[]
 interface MoveDraft {
 	startCoords: Coords,
 	endCoords: Coords,
+
+	// Special move tags...
+
 	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
 	enpassantCreate?: enpassantCreate,
 	/** Present if the move was special-move enpassant capture. This will be `true` */
@@ -208,6 +211,11 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
  * Queues gamefile state changes to delete all 
  * special rights that should have been revoked from the move.
  * This includes the startCoords and endCoords of all move actions.
+ * 
+ * TODO: ITERATE THROUGH all pieces with their special rights, and delete
+ * the ones that are now useless (i.e. rooks have no royal they could ever castle with).
+ * This will upgrade the repetition algorithm to not delay declaring a draw
+ * if a rook moves that had its special right, but could never castle. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 	move.changes.forEach(change => {
@@ -234,10 +242,9 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
  */
 function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
-	const wasACapture = boardchanges.wasACapture(move);
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = (move.flags.capture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
 	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
