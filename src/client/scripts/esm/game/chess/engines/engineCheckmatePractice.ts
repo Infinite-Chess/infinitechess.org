@@ -1055,7 +1055,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		}
 
 		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
-		for (const move of black_moves) {
+		blackMoveLoop: for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
 			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, [], white_killer_list, alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
@@ -1083,7 +1083,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			}
 			if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
 				black_killer_move = move;
-				break;
+				break blackMoveLoop;
 			}
 		}
 		return { score: maxScore, bestVariation: bestVariation, survivalPlies: maxPlies, black_killer_move: black_killer_move, terminate_now: false };
@@ -1139,7 +1139,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		}
 
 		// loop over all possible white moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
-		outerWhite: for (const piece_index of indices) {
+		whiteMoveLoop: for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
 				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, black_killer_list, [], alpha, beta, alphaPlies, betaPlies);
@@ -1163,7 +1163,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				}
 				if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
 					white_killer_piece_index = piece_index;
-					break outerWhite;
+					break whiteMoveLoop;
 				}
 			}
 		}
@@ -1187,7 +1187,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, [], [], -Infinity, Infinity, 0, Infinity);
 			if (evaluation.terminate_now) { 
-				console.log("Search interrupted at depth " + depth);
+				// console.log("Search interrupted at depth " + depth);
 				break;
 			}
 			globallyBestVariation = evaluation.bestVariation;
@@ -1286,7 +1286,7 @@ async function runEngine() {
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
 		// console.log(globalSurvivalPlies);
 		// console.log(globallyBestVariation);
-		console.log(enginePositionCounter);
+		// console.log(enginePositionCounter);
 
 		// submit engine move after enough time has passed
 		const time_now = Date.now();
