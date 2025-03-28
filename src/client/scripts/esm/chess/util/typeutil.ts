@@ -120,10 +120,6 @@ function getRawTypeStr(type: RawType): string {
 	return strtypes[type];
 }
 
-function isRawType(piece: Piece, type: RawType) {
-	return piece.type === type;
-}
-
 function getPlayerFromString(string: StrPlayer): Player {
 	return strcolors.indexOf(string) as Player;
 }
@@ -160,7 +156,6 @@ export default {
 	forEachPieceType,
 	getRawTypeStr,
 	invertPlayer,
-	isRawType,
 	getPlayerFromString,
 	debugType
 };
