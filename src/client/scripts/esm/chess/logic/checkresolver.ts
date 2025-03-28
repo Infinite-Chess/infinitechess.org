@@ -162,7 +162,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	// 1. Capture the checking piece
 
 	let capturingMove: Coords | undefined; // We will ONLY add this move if all sliding moves are deleted, otherwise it may be a duplicate.
-	const capturingImpossible = attackerCount > 1 && !gamefile.startSnapshot.colinearsPresent; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
+	const capturingImpossible = attackerCount > 1 && !gamefile.ourPieces.colinearsPresent; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
 	// Check if the piece has the ability to capture
 	if (!capturingImpossible && legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, attacker.coords, color, { ignoreIndividualMoves: true })) {
 		capturingMove = attacker.coords;
@@ -282,7 +282,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 
 		if (Object.keys(moves.sliding).length === 0) delete moves.sliding; // No sliding moves left
 		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
-		else if (gamefile.startSnapshot.colinearsPresent) moves.brute = true;
+		else if (gamefile.ourPieces.colinearsPresent) moves.brute = true;
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
@@ -321,7 +321,7 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 		const blockPoint = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
 
 		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
-		if (blockPoint === undefined && gamefile.startSnapshot.colinearsPresent && math.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) {
+		if (blockPoint === undefined && gamefile.ourPieces.colinearsPresent && math.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) {
 			// The piece lies on the same line from the attacker to the royal!
 			// Flag this slide direction to brute force check each move for legality.
 			moves.brute = true;
@@ -342,7 +342,7 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
 		if (coordutil.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
 		// Don't add the move if it's already in the list. This can happen with colinear lines, since different slide direction can have the same exact vector, and thus blocking point.
-		if (gamefile.startSnapshot.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
+		if (gamefile.ourPieces.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
 
 		// Can our piece legally move there?
 		if (legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPoint, color, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!

@@ -185,7 +185,6 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
     
 	if (!ignoreCheck) checkresolver.removeCheckInvalidMoves(gamefile, moves, piece, color);
 
-	// console.log(`Calculated legal moves:`, moves);
 	return moves;
 }
 

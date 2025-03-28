@@ -60,11 +60,13 @@ interface OrganizedPieces {
 	 * Map{ 'dx,dy' => Map { 'yint|xafter0' => [idx, idx, idx...] }}
 	 */
 	lines: Map<Vec2Key, Map<LineKey,number[]>>
+	/** All slide directions possible in the game. [1,0] guaranteed for castling to work. */
 	slides: Vec2[]
+	/** Whether there are any hippogonal riders in the game (knightriders). */
 	hippogonalsPresent: boolean
 	/** Whether colinear lines are present in the gamefile.
-	* (e.g. [1,0] and [2,0] are colinear) @type {boolean} */
-	colinearsPresent: undefined,
+	* (e.g. [1,0] and [2,0] are colinear) */
+	colinearsPresent: boolean,
 }
 
 
@@ -290,6 +292,7 @@ function getPossibleSlides(gamefile: gamefile): Vec2[] {
 function initSlidingMoves(gamefile: gamefile, o: Partial<OrganizedPieces>) {
 	o.slides = getPossibleSlides(gamefile);
 	o.hippogonalsPresent = areHippogonalsPresentInGame(o.slides);
+	o.colinearsPresent = areColinearSlidesPresentInGame(gamefile, o);
 }
 
 function placePieces(organizedPieces: Partial<OrganizedPieces>) {
@@ -407,7 +410,7 @@ function getCFromKey(lineKey: LineKey): number {
  * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
  * by using royalcapture instead of checkmate.
  */
-function areColinearSlidesPresentInGame(gamefile: gamefile): boolean { // [[1,1], [1,0], ...]
+function areColinearSlidesPresentInGame(gamefile: gamefile, o: Partial<OrganizedPieces>): boolean { // [[1,1], [1,0], ...]
 
 	/**
 	 * 1. Colinears are present if any vector is NOT a primitive vector.
@@ -419,7 +422,7 @@ function areColinearSlidesPresentInGame(gamefile: gamefile): boolean { // [[1,1]
 	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
 	 */
 
-	if (gamefile.startSnapshot.slidingPossible.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
+	if (o.slides!.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
 
 	/**
 	 * 2. Colinears are present if there's at least one custom ignore function.
