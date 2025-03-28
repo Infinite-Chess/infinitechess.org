@@ -14,7 +14,7 @@ import type { GameRules } from '../variants/gamerules.js';
 import type { Player } from './typeutil.js';
 
 import coordutil from './coordutil.js';
-import { players } from '../config.js';
+import { players } from './typeutil.js';
 
 
 // Type Definitions ------------------------------------------------------------------------------

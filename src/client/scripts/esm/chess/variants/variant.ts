@@ -30,7 +30,7 @@ import omega4generator from './omega4generator.js';
 import typeutil from '../util/typeutil.js';
 // @ts-ignore
 import specialmove from '../logic/specialmove.js';
-import { rawTypes as r, players as p} from '../config.js';
+import { rawTypes as r, players as p} from '../util/typeutil.js';
 
 
 /** An object that describes what modifications to make to default gamerules in a variant. */

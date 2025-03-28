@@ -10,7 +10,7 @@ import moveutil from '../util/moveutil.js';
 import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../variants/gamerules.js';
-import { rawTypes as r, ext as e, players } from '../config.js';
+import { rawTypes as r, ext as e, players } from '../util/typeutil.js';
 // Import End
 
 /** 

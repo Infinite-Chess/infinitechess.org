@@ -14,7 +14,7 @@ import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
 import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
-import { rawTypes as r } from '../config.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 /** 
  * Type Definitions 

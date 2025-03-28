@@ -1,7 +1,6 @@
 import typeutil from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
-import { listExtras } from "../config.js";
 
 // @ts-ignore
 import type gamefile from "./gamefile.js";
@@ -67,6 +66,13 @@ interface OrganizedPieces {
 	* (e.g. [1,0] and [2,0] are colinear) @type {boolean} */
 	colinearsPresent: undefined,
 }
+
+
+/** How many extra undefined placeholders each type range should have.
+ * When these are all exhausted, the large piece lists must be regenerated. */
+const listExtras = 10;
+/** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
+const pieceCountToDisableCheckmate = 50_000;
 
 
 function getArrayType<C extends SizedArray>(a: C) {
@@ -460,6 +466,7 @@ export type {
 
 export default {
 	MaxTypedArrayValues,
+	pieceCountToDisableCheckmate,
 
 	areHippogonalsPresentInGame,
 	areColinearSlidesPresentInGame,

@@ -11,10 +11,10 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
-// @ts-ignore
-import type { GameRules } from "../../chess/variants/gamerules.js";
 import type { Position } from "../../chess/variants/variant.js";
 import type { Player } from "../../chess/util/typeutil.js";
+// @ts-ignore
+import type { GameRules } from "../../chess/variants/gamerules.js";
 
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
@@ -28,10 +28,18 @@ import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import typeutil from "../../chess/util/typeutil.js";
 import piecemodels from "../rendering/piecemodels.js";
+import movepiece from "../../chess/logic/movepiece.js";
+import miniimage from "../rendering/miniimage.js";
+import animation from "../rendering/animation.js";
+import organizedpieces from "../../chess/logic/organizedpieces.js";
+import arrows from "../rendering/arrows/arrows.js";
+import clock from "../../chess/logic/clock.js";
+import guigameinfo from "../gui/guigameinfo.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
+import selection from "./selection.js";
+import { players } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
-// @ts-ignore
-import movepiece from "../../chess/logic/movepiece.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -39,35 +47,19 @@ import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
 // @ts-ignore
-import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
-import selection from "./selection.js";
-// @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore
 import board from "../rendering/board.js";
 // @ts-ignore
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
-import miniimage from "../rendering/miniimage.js";
-// @ts-ignore
 import area from "../rendering/area.js";
 // @ts-ignore
 import movement from "../rendering/movement.js";
 // @ts-ignore
-import arrows from "../rendering/arrows/arrows.js";
-// @ts-ignore
-import clock from "../../chess/logic/clock.js";
-// @ts-ignore
-import guigameinfo from "../gui/guigameinfo.js";
-// @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import animation from "../rendering/animation.js";
-
-import { pieceCountToDisableCheckmate, players } from "../../chess/config.js";
 // @ts-ignore
 import winconutil from "../../chess/util/winconutil.js";
 
@@ -218,7 +210,7 @@ function loadLogical(loadOptions: LoadOptions) {
 	const lineCountToDisableArrows = 16;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= pieceCountToDisableCheckmate) {
+	if (newGamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
 	} else if (newGamefile.ourPieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)

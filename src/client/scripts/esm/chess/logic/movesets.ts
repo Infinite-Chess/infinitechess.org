@@ -9,7 +9,7 @@ import typeutil from '../util/typeutil.js';
 import math from '../../util/math.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
-import { rawTypes } from '../config.js';
+import { rawTypes } from '../util/typeutil.js';
 
 // Type definitions...
 

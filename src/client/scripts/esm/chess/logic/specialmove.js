@@ -5,7 +5,7 @@ import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import state from './state.js';
 
-import { rawTypes } from '../config.js';
+import { rawTypes } from '../util/typeutil.js';
 
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 

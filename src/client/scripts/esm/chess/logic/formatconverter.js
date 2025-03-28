@@ -3,7 +3,7 @@
 'use strict';
 
 /* eslint-disable max-depth */
-import { rawTypes as r, ext as e, players as p } from "../config.js";
+import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 
 /**

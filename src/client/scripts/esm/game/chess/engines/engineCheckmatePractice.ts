@@ -11,7 +11,7 @@
 import isprime from '../../../util/isprime.js';
 // @ts-ignore
 import insufficientmaterial from '../../../chess/logic/insufficientmaterial.js';
-import { rawTypes as r, ext as e, players, numTypes} from '../../../chess/config.js';
+import { rawTypes as r, ext as e, players, numTypes} from '../../../chess/util/typeutil.js';
 
 /**
  * Typescript types are erased during compilation, so adding these

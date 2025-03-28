@@ -11,7 +11,7 @@ import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 import checkdetection from './checkdetection.js';
-import { players } from '../config.js';
+import { players } from '../util/typeutil.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */

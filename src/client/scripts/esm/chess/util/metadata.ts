@@ -6,7 +6,7 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import { players } from "../config.js";
+import { players } from "./typeutil.js";
 
 import type { Player } from "./typeutil.js";
 

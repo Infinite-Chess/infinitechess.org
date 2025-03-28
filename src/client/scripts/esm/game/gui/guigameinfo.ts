@@ -19,7 +19,7 @@ import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import typeutil from '../../chess/util/typeutil.js';
-import { players } from '../../chess/config.js';
+import { players } from '../../chess/util/typeutil.js';
 
 "use strict";
 

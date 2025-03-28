@@ -4,7 +4,7 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
-import { players } from "../../chess/config.js";
+import { players } from "../../chess/util/typeutil.js";
 
 /**
  * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile

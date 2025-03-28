@@ -31,7 +31,7 @@ import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sen
 import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 
-import { players } from '../../../client/scripts/esm/chess/config.js';
+import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 // Type Definitions...
 
 /**

@@ -34,7 +34,7 @@ import area from './area.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
-import { players, rawTypes } from '../../chess/config.js';
+import { players, rawTypes } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';

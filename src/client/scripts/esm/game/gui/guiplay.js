@@ -8,7 +8,7 @@ import guititle from './guititle.js';
 import timeutil from '../../util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
-import { players } from '../../chess/config.js';
+import { players } from '../../chess/util/typeutil.js';
 // Import End
 
 

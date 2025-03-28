@@ -22,7 +22,7 @@ import { isServerRestarting } from '../updateServerRestart.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { players } from '../../../client/scripts/esm/chess/config.js';
+import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions

@@ -30,7 +30,7 @@ import winconutil from '../../chess/util/winconutil.js';
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
-import { players, ext as e, rawTypes as r } from '../../chess/config.js';
+import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 
 // Variables ----------------------------------------------------------------------------
 

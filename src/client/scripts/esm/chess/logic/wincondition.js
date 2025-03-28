@@ -10,7 +10,8 @@ import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
 
-import { players, rawTypes } from '../config.js';
+import { players, rawTypes } from '../util/typeutil.js';
+import organizedpieces from './organizedpieces.js';
 // Import End
 
 // Type Definitions...
@@ -161,7 +162,7 @@ function wasLastMoveARoyalCapture(gamefile) {
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
 function isCheckmateCompatibleWithGame(gamefile) {
-	if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
+	if (gamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (gamefile.ourPieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.

@@ -14,7 +14,7 @@ import style from './style.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
 import svgcache from '../../chess/rendering/svgcache.js';
-import { players } from '../../chess/config.js';
+import { players } from '../../chess/util/typeutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 
 // Variables ----------------------------------------------------------------------------

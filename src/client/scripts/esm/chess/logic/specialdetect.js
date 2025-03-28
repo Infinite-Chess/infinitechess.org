@@ -9,7 +9,7 @@ import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
 import checkresolver from './checkresolver.js';
-import { players, rawTypes } from '../config.js';
+import { players, rawTypes } from '../util/typeutil.js';
 // Import End
 
 /** 

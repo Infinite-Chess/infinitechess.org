@@ -1,4 +1,4 @@
-import { rawTypes, players } from "../../chess/config.js";
+import { rawTypes, players } from "../../chess/util/typeutil.js";
 
 import type { RawType, Player } from "../../chess/util/typeutil.js";
 import type { Color } from "../../chess/util/colorutil.js";

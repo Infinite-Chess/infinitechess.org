@@ -14,7 +14,7 @@ import type gamefile from "./gamefile.js";
 import boardchanges from "./boardchanges.js";
 import { StateChange } from "./state.js";
 import typeutil from "../util/typeutil.js";
-import { players, rawTypes } from "../config.js";
+import { players, rawTypes } from "../util/typeutil.js";
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${string|number}`; // `x,y,type` | `x,y,enpassant`

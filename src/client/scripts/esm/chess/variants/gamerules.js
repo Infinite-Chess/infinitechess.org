@@ -1,5 +1,5 @@
 import jsutil from "../../util/jsutil.js";
-import { players } from "../config.js";
+import { players } from "../util/typeutil.js";
 
 /**
  * This script contains the gameRules constructor,

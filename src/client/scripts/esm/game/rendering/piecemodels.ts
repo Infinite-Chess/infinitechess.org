@@ -30,7 +30,7 @@ import preferences from '../../components/header/preferences.js';
 import { gl } from './webgl.js';
 // @ts-ignore
 import movement from './movement.js';
-import { rawTypes } from '../../chess/config.js';
+import { rawTypes } from '../../chess/util/typeutil.js';
 import events from '../../chess/logic/events.js';
 
 // Type Definitions ---------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ import gamefile from "./gamefile.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
 
-import { players, rawTypes as r } from "../config.js";
+import { players, rawTypes as r } from "../util/typeutil.js";
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 

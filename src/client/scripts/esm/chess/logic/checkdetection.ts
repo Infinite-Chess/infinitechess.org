@@ -23,7 +23,7 @@ import type { Player } from '../util/typeutil.js';
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
 
-import { players } from '../config.js';
+import { players } from '../util/typeutil.js';
 
 
 // Types -------------------------------------------------------------------

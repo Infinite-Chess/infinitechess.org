@@ -47,7 +47,7 @@ import movement from '../movement.js';
 import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
-import { rawTypes } from '../../../chess/config.js';
+import { rawTypes } from '../../../chess/util/typeutil.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
 

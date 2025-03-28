@@ -14,7 +14,7 @@ import typeutil from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
-import { players, rawTypes } from '../config.js';
+import { players, rawTypes } from '../util/typeutil.js';
 
 
 /**

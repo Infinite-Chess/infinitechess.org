@@ -39,7 +39,7 @@ import movement from "../rendering/movement.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 
-import { players } from "../../chess/config.js";
+import { players } from "../../chess/util/typeutil.js";
 
 // Variables --------------------------------------------------------------------
 

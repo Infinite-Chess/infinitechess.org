@@ -26,7 +26,7 @@ import preferences from "../../../components/header/preferences.js";
 import movement from "../movement.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-import { players } from "../../../chess/config.js";
+import { players } from "../../../chess/util/typeutil.js";
 
 // Type Definitions -------------------------------------------------------------------------------------------
 

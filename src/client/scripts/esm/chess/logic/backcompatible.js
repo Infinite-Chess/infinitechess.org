@@ -3,7 +3,7 @@
 import formatconverter from './formatconverter.js';
 import moveutil from '../util/moveutil.js';
 import jsutil from '../../util/jsutil.js';
-import { players } from '../config.js';
+import { players } from '../util/typeutil.js';
 // Import End
 
 'use script';

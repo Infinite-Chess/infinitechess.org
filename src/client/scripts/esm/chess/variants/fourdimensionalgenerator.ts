@@ -18,7 +18,7 @@ import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
 
-import { rawTypes as r, ext as e } from "../config.js";
+import { rawTypes as r, ext as e } from "../util/typeutil.js";
 
 // Variables ------------------------------------------------------------------------------------------------
 

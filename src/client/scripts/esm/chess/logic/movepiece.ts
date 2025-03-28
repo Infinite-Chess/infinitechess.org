@@ -31,7 +31,7 @@ import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
-import { rawTypes } from '../config.js';
+import { rawTypes } from '../util/typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 

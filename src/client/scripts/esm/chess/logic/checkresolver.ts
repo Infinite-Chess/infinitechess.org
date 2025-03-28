@@ -37,7 +37,7 @@ import specialdetect from "./specialdetect.js";
 // @ts-ignore
 import legalmoves from "./legalmoves.js";
 
-import { players } from "../config.js";
+import { players } from "../util/typeutil.js";
 
 // Functions ------------------------------------------------------------------------------
 

@@ -3,7 +3,7 @@
 // type definitions for web sockets and our game.
 // And has no other script module dependancies.
 
-import { players } from "../../client/scripts/esm/chess/config";
+import { players } from "../../client/scripts/esm/chess/util/typeutil";
 
 
 /** @typedef {import("../socket/socketUtility").CustomWebSocket} CustomWebSocket */

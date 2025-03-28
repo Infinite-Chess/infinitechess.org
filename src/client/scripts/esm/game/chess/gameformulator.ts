@@ -8,7 +8,7 @@
 import gamefile from '../../chess/logic/gamefile.js';
 import typeutil from '../../chess/util/typeutil.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
-import { players as p, rawTypes as r } from '../../chess/config.js';
+import { players as p, rawTypes as r } from '../../chess/util/typeutil.js';
 
 import type { AbridgedGamefile } from './gamecompressor.js';
 import type { Move } from '../../chess/logic/movepiece.js';

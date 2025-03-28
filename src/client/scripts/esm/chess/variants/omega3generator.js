@@ -1,6 +1,6 @@
 
 import coordutil from '../util/coordutil.js';
-import { ext as e, rawTypes as r } from '../config.js';
+import { ext as e, rawTypes as r } from '../util/typeutil.js';
 
 /** 
  * Type Definitions 

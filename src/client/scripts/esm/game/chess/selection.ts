@@ -51,7 +51,7 @@ import transition from '../rendering/transition.js';
 import movement from '../rendering/movement.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-import { rawTypes, players } from '../../chess/config.js';
+import { rawTypes, players } from '../../chess/util/typeutil.js';
 
 
 // Variables -----------------------------------------------------------------------------
