@@ -348,8 +348,9 @@ function resyncToGame(ws, game, colorPlayingAs, replyToMessageID) {
  * @param {Game} game - The game
  */
 function sendGameUpdateToBothPlayers(game) {
-	sendGameUpdateToColor(game, 'white');
-	sendGameUpdateToColor(game, 'black');
+	for (const player in game.players) {
+		sendGameUpdateToColor(game, Number(player));
+	}
 }
 
 /**
@@ -519,13 +520,15 @@ function doesPlayerBelongToGame_ReturnColor(game, player) {
 /**
  * Sends a websocket message to the specified color in the game.
  * @param {Game} game - The game
- * @param {string} color - The color of the player in this game to send the message to
+ * @param {Player} color - The color of the player in this game to send the message to
  * @param {string} sub - Where this message should be routed to, client side.
  * @param {string} action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto-translate it!
  * @param {*} value - The value to send to the client.
  */
 function sendMessageToSocketOfColor(game, color, sub, action, value) {
-	const ws = color === 'white' ? game.whiteSocket : game.blackSocket;
+	const data = game.players[color];
+	if (data === undefined) return console.error(`Tried to send a message to player ${color} when there isnt one in game!`);
+	const ws = data.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
 		if (action === 'notify') return sendNotify(ws, value); // The value needs translating

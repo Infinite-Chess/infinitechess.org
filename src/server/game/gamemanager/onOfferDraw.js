@@ -8,6 +8,7 @@ import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import { isDrawOfferOpen, hasColorOfferedDrawTooFast, openDrawOffer, doesColorHaveExtendedDrawOffer, closeDrawOffer } from './drawoffers.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
@@ -30,7 +31,7 @@ function offerDraw(ws, game) {
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
 	if (gameutility.isGameOver(game)) return console.error("Client offered a draw when the game is already over. Ignoring.");
-	if (isDrawOfferOpen(game)) return console.error(`${color.toUpperCase()} tried to offer a draw when the game already has a draw offer!`);
+	if (isDrawOfferOpen(game)) return console.error(`${color} tried to offer a draw when the game already has a draw offer!`);
 	if (hasColorOfferedDrawTooFast(game, color)) return console.error("Client tried to offer a draw too fast.");
 	if (!gameutility.isGameResignable(game)) return console.error("Client tried to offer a draw on the first 2 moves");
 
@@ -63,7 +64,7 @@ function acceptDraw(ws, game) {
     
 	closeDrawOffer(game);
 	console.log(typeof setGameConclusion);
-	setGameConclusion(game, "draw agreement");
+	setGameConclusion(game, `${players.NEUTRAL} agreement`);
 	gameutility.sendGameUpdateToBothPlayers(game);
 }
 

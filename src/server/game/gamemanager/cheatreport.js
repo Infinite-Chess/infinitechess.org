@@ -59,9 +59,9 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
 	console.error(errText);
 	logEvents(errText, 'hackLog.txt');
     
-	gameutility.sendMessageToSocketOfColor(game, 'white', 'general', 'notify', "server.javascript.ws-game_aborted_cheating");
-	gameutility.sendMessageToSocketOfColor(game, 'black', 'general', 'notify', "server.javascript.ws-game_aborted_cheating");
-
+	for (const player in game.players) {
+		gameutility.sendMessageToSocketOfColor(game, player, 'general', 'notify', "server.javascript.ws-game_aborted_cheating");
+	}
 	// Cheating report was valid, terminate the game..
 
 	setGameConclusion(game, 'aborted');

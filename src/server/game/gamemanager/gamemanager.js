@@ -425,8 +425,9 @@ function broadCastGameRestarting() {
 	const timeToRestart = getTimeServerRestarting();
 	for (const gameID in activeGames) {
 		const game = activeGames[gameID];
-		gameutility.sendMessageToSocketOfColor(game, 'white', 'game', 'serverrestart', timeToRestart);
-		gameutility.sendMessageToSocketOfColor(game, 'black', 'game', 'serverrestart', timeToRestart);
+		for (const color in game.players) {
+			gameutility.sendMessageToSocketOfColor(game, color, 'game', 'serverrestart', timeToRestart);
+		}
 	}
 	const minutesTillRestart = Math.ceil((timeToRestart - Date.now()) / (1000 * 60));
 	console.log(`Alerted all clients in a game that the server is restarting in ${minutesTillRestart} minutes!`);
