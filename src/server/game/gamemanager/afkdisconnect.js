@@ -84,7 +84,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
 		cancelAutoAFKResignTimer(game);
 	}
 
-	const opponentColor = typeutil.invertType(color);
+	const opponentColor = typeutil.invertPlayer(color);
 	const opponent = game.players[opponentColor];
 
 	opponent.disconnect.timeoutID = setTimeout(onAutoResignFunc, timeBeforeAutoResign, game, opponentColor);
