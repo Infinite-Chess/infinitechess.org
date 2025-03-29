@@ -81,7 +81,6 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 		moves: [],
 		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
 		gameConclusion: false,
-		drawOffers: { lastOfferPly: {} },
 	};
 
 	if (!newGame.untimed) { // Set the start time and increment properties
@@ -427,22 +426,25 @@ function getDisplayNameOfPlayer(player) { // { member/browser }
  * @param {Game} game - The game to log
  */
 async function logGame(game) {
-	return; // I CBA this rn
-	// eslint-disable-next-line no-unreachable
 	if (game.moves.length === 0) return; // Don't log games with zero moves
 
 	// First line of log...
 
-	const playerWhite = game.white.member || `(${game.white.browser})`;
-	const playerBlack = game.black.member || `(${game.black.browser})`;
-	const playersString = `White: ${playerWhite}. Black: ${playerBlack}.`;
-
 	const gameToLog = { // This is all the information I want to log. Everything else will be in the ICN.
 		id: game.id,
 		publicity: game.publicity,
-		timerWhite: game.timerWhite,
-		timerBlack: game.timerBlack
 	};
+
+	let playersString = '';
+	for (const [player, data] of Object.entries(game.players)) {
+		let strplayer = typeutil.strcolors[Number(player)];
+		strplayer = strplayer[0].toUpperCase() + strplayer.substring(1);
+		const id = data.identifier.member || data.identifier.browser;
+		playersString += `${strplayer}: ${id}. `;
+
+		gameToLog[`timer${strplayer}`] = data.timer;
+	}
+
 	const stringifiedGame = JSON.stringify(gameToLog);
 
 	// Second line of log is the ICN...
@@ -553,9 +555,17 @@ function printGame(game) {
  * @returns {string} - The simplified game string
  */
 function getSimplifiedGameString(game) {
-	const sockets = {};
+	const players = game.players;
+
+	game.players = {};
+
 	for (const [c, data] of Object.entries(game.players)) {
-		sockets[c] = data.socket;
+		game.players[c] = {
+			identifier: data.identifier,
+			lastOfferPly: data.lastDrawOfferPly,
+			timer: data.timer,
+			socket: socketUtility.stringifySocketMetadata(data.socket)
+		};
 	}
 	const originalAutoTimeLossTimeoutID = game.autoTimeLossTimeoutID;
 	const originalAutoAFKResignTimeoutID = game.autoAFKResignTimeoutID;
@@ -569,21 +579,17 @@ function getSimplifiedGameString(game) {
 		data.socket = socketUtility.stringifySocketMetadata(data.socket);
 	}
 	delete game.autoTimeLossTimeoutID;
-	delete game.disconnect;
 	delete game.autoAFKResignTimeoutID;
 	delete game.deleteTimeoutID;
 
 	const stringifiedGame = jsutil.ensureJSONString(game, 'There was an error when stringifying game.');
 
-	for (const [c, data] of Object.entries(game.players)) {
-		if (data.socket === undefined) continue;
-		data.socket = sockets[c];
-	}
 	game.autoTimeLossTimeoutID = originalAutoTimeLossTimeoutID;
 	game.autoAFKResignTimeoutID = originalAutoAFKResignTimeoutID;
 	game.deleteTimeoutID = originalDeleteTimeoutID;
 	game.disconnect = originalDisconnect;
 	game.drawOffers = originalDrawOffers;
+	game.players = players;
 
 	return stringifiedGame;
 }

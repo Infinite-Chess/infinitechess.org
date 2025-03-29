@@ -160,6 +160,7 @@ export default {
 	slidingRoyals,
 	royals,
 	SVGLESS_TYPES,
+	strcolors,
 
 	getRawType,
 	getColorFromType,
