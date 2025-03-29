@@ -1049,8 +1049,8 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			const reordered_indices_killers: Coords[] = [];
 			const reordered_indices_nonkillers: Coords[] = [];
 			for (const move of black_moves) {
-				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_indices_killers.push(move); // Add killer moves to the front
-				else reordered_indices_nonkillers.push(move); // Add non-killer moves to the end
+				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_indices_killers.push(move); // Add killer moves to the first list
+				else reordered_indices_nonkillers.push(move); // Add non-killer moves to second list
 			}
 			black_moves.length = 0;
 			black_moves.push(...reordered_indices_killers, ...reordered_indices_nonkillers);
@@ -1204,7 +1204,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, [], [], -Infinity, Infinity, 0, Infinity);
 			if (evaluation.terminate_now) { 
-				// console.log("Search interrupted at depth " + depth);
+				console.log("Search interrupted at depth " + depth);
 				break;
 			}
 			globallyBestVariation = evaluation.bestVariation;
@@ -1303,7 +1303,7 @@ async function runEngine() {
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
 		// console.log(globalSurvivalPlies);
 		// console.log(globallyBestVariation);
-		// console.log(enginePositionCounter);
+		console.log(enginePositionCounter);
 
 		// submit engine move after enough time has passed
 		const time_now = Date.now();
