@@ -169,7 +169,7 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
 	if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
 	// Is the opponent still in the players in active games list? (has not seen the game results)
 	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-	const opponentColor = (color);
+	const opponentColor = typeutil.invertPlayer(color);
 	if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
 
 	// console.log("Deleting game immediately, instead of waiting 15 seconds, because both players have seen the game conclusion and requested to be removed from the players in active games list.")
@@ -412,7 +412,7 @@ async function logAllGames() {
 			gameutility.sendGameUpdateToBothPlayers(game);
 		}
 		// Immediately log the game and update statistics.
-		clearTimeout(game.deleteTimeoutID); // Cancel first, in case it's already scheduled to be deleted.
+		gameutility.cancelDeleteGameTimer(game); // Cancel first, in case it's already scheduled to be deleted.
 		await deleteGame(game);
 	}
 }
