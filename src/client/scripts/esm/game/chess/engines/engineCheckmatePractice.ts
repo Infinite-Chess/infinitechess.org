@@ -1204,7 +1204,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, [], [], -Infinity, Infinity, 0, Infinity);
 			if (evaluation.terminate_now) { 
-				console.log("Search interrupted at depth " + depth);
+				// console.log("Search interrupted at depth " + depth);
 				break;
 			}
 			globallyBestVariation = evaluation.bestVariation;
@@ -1303,7 +1303,7 @@ async function runEngine() {
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
 		// console.log(globalSurvivalPlies);
 		// console.log(globallyBestVariation);
-		console.log(enginePositionCounter);
+		// console.log(enginePositionCounter);
 
 		// submit engine move after enough time has passed
 		const time_now = Date.now();
