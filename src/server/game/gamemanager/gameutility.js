@@ -363,7 +363,7 @@ function sendGameUpdateToBothPlayers(game) {
  */
 function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	const playerdata = game.players[color];
-	if (playerdata === undefined || playerdata.socket === undefined) return; // Not connected, cant send message
+	if (playerdata.socket === undefined) return; // Not connected, cant send message
 
 	const opponentColor = typeutil.invertPlayer(color);
 	const messageContents = {
