@@ -74,8 +74,8 @@ const member = docutil.getLastSegmentOfURL();
 			if (response.status === 500) window.location = '/500';
 			return response.json();
 		})
-		.then(async(result) => { // result.verified = true/false
-			console.log(result); // { joined, seen, username, email, verified, checkmates_beaten }
+		.then(async (result) => { // result.verified = true/false
+			console.log(result); // { joined, seen, username, email, verified, checkmates_beaten, ranked_elo }
 
 			// Change on-screen data of the member
 			element_memberName.textContent = result.username;
@@ -84,6 +84,9 @@ const member = docutil.getLastSegmentOfURL();
 			const seenElement = document.getElementById('seen');
 			seenElement.textContent = result.seen;
 			updateCompletedCheckmatesInformation(result.checkmates_beaten);
+
+			const eloElement = document.getElementById('ranked_elo');
+			eloElement.textContent = Math.round(result.ranked_elo);
 
 			const loggedInAs = validatorama.getOurUsername();
 
@@ -123,7 +126,7 @@ function updateCompletedCheckmatesInformation(checkmates_beaten) {
 	const numTotal = Object.values(validcheckmates.validCheckmates).flat().length;
 
 	practiceProgressElement.textContent = `${numCompleted} / ${numTotal}`;
-	
+
 	let shownBadge;
 	if (numCompleted >= numTotal) shownBadge = element_checkmateBadgeGold;
 	else if (numCompleted >= 0.75 * numTotal) shownBadge = element_checkmateBadgeSilver;
@@ -195,7 +198,7 @@ function recalcUsernameSize() {
 	// Change username text size depending on character count
 	// const memberElementPadding = parseInt((window.getComputedStyle(element_member, null).getPropertyValue('padding-left')), 10) // parseInt() converts px to number
 	const targetWidth = (window.innerWidth - 185) * 0.52;
-    
+
 	let fontSize = targetWidth * (3 / element_memberName.textContent.length);
 	const cap = 50;
 	if (fontSize > cap) fontSize = cap;

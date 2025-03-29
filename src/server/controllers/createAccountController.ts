@@ -28,7 +28,8 @@ import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManage
 import emailValidator from 'node-email-verifier';
 // @ts-ignore
 import { Request, Response } from 'express';
-
+// @ts-ignore
+import { addUserToRatingsTable } from '../database/ratingsManager.js';
 
 // Variables -------------------------------------------------------------------------
 
@@ -39,53 +40,53 @@ import { Request, Response } from 'express';
  * admin
  */
 const reservedUsernames: string[] = [
-    'infinitechess',
-    'support', 'infinitechesssupport',
-    'administrator',
-    'amazon', 'amazonsupport', 'aws', 'awssupport',
-    'apple', 'applesupport',
-    'microsoft', 'microsoftsupport',
-    'google', 'googlesupport',
-    'adobe', 'adobesupport',
-    'youtube', 'facebook', 'tiktok', 'twitter', 'x', 'instagram', 'snapchat',
-    'tesla', 'elonmusk', 'meta',
-    'walmart', 'costco',
-    'valve', 'valvesupport',
-    'github',
-    'nvidia', 'amd', 'intel', 'msi', 'tsmc', 'gigabyte',
-    'roblox',
-    'minecraft',
-    'fortnite',
-    'teamfortress2',
-    'amongus', 'innersloth', 'henrystickmin',
-    'halflife', 'halflife2', 'gordonfreeman',
-    'epic', 'epicgames', 'epicgamessupport',
-    'taylorswift', 'kimkardashian', 'tomcruise', 'keanureeves', 'morganfreeman', 'willsmith',
-    'office', 'office365',
-    'usa', 'america',
-    'donaldtrump', 'joebiden'
+	'infinitechess',
+	'support', 'infinitechesssupport',
+	'administrator',
+	'amazon', 'amazonsupport', 'aws', 'awssupport',
+	'apple', 'applesupport',
+	'microsoft', 'microsoftsupport',
+	'google', 'googlesupport',
+	'adobe', 'adobesupport',
+	'youtube', 'facebook', 'tiktok', 'twitter', 'x', 'instagram', 'snapchat',
+	'tesla', 'elonmusk', 'meta',
+	'walmart', 'costco',
+	'valve', 'valvesupport',
+	'github',
+	'nvidia', 'amd', 'intel', 'msi', 'tsmc', 'gigabyte',
+	'roblox',
+	'minecraft',
+	'fortnite',
+	'teamfortress2',
+	'amongus', 'innersloth', 'henrystickmin',
+	'halflife', 'halflife2', 'gordonfreeman',
+	'epic', 'epicgames', 'epicgamessupport',
+	'taylorswift', 'kimkardashian', 'tomcruise', 'keanureeves', 'morganfreeman', 'willsmith',
+	'office', 'office365',
+	'usa', 'america',
+	'donaldtrump', 'joebiden'
 ];
 /** Any username cannot contain these words */
 const profainWords: string[] = [
-    'fuck',
-    'fuk',
-    'shit',
-    'piss',
-    // 'ass', // Can't enable because "pass" wouldn't be allowed.
-    'penis',
-    'bitch',
-    'bastard',
-    'cunt',
-    'penis',
-    'vagina',
-    'boob',
-    'nigger',
-    'niger',
-    'pussy',
-    'buthole',
-    'butthole',
-    'ohmygod',
-    'poop'
+	'fuck',
+	'fuk',
+	'shit',
+	'piss',
+	// 'ass', // Can't enable because "pass" wouldn't be allowed.
+	'penis',
+	'bitch',
+	'bastard',
+	'cunt',
+	'penis',
+	'vagina',
+	'boob',
+	'nigger',
+	'niger',
+	'pussy',
+	'buthole',
+	'butthole',
+	'ohmygod',
+	'poop'
 ];
 
 
@@ -138,7 +139,7 @@ async function generateAccount({ username, email, password, autoVerify = false }
 
 	const result = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
 	if (!result.success) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
-    
+
 	const logTxt = `Created new member: ${username}`;
 	logEvents(logTxt, 'newMemberLog.txt', { print: true });
 
@@ -147,6 +148,9 @@ async function generateAccount({ username, email, password, autoVerify = false }
 		const user_id = result.result.lastInsertRowid;
 		sendEmailConfirmation(user_id);
 	}
+
+	// Add the newly created user to the ratings table
+	addUserToRatingsTable(result.result.lastInsertRowid);
 
 	return result.result.lastInsertRowid;
 }
@@ -158,18 +162,18 @@ async function generateAccount({ username, email, password, autoVerify = false }
 
 async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	const lowercaseEmail = req.params['email']!.toLowerCase();
-	
+
 	if (isEmailTaken(lowercaseEmail)) {
-		res.json({"valid": false, "reason": getTranslationForReq('server.javascript.ws-email_in_use', req) });
+		res.json({ "valid": false, "reason": getTranslationForReq('server.javascript.ws-email_in_use', req) });
 		return;
 	}
-	if (!await isEmailDNSValid(lowercaseEmail)) { 
-		res.json({"valid": false, "reason": getTranslationForReq('server.javascript.ws-email_domain_invalid', req) });
+	if (!await isEmailDNSValid(lowercaseEmail)) {
+		res.json({ "valid": false, "reason": getTranslationForReq('server.javascript.ws-email_domain_invalid', req) });
 		return;
 	}
 
 	// Both checks pass
-	res.json({"valid": true});
+	res.json({ "valid": true });
 }
 
 
