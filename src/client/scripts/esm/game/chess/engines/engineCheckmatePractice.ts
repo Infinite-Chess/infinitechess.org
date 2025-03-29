@@ -1046,14 +1046,14 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 
 		// Use killer move heuristic, i.e. put moves in black_killer_list in front
 		if (black_killer_list.length > 0) {
-			const reordered_indices_killers: Coords[] = [];
-			const reordered_indices_nonkillers: Coords[] = [];
+			const reordered_moves_killers: Coords[] = [];
+			const reordered_moves_nonkillers: Coords[] = [];
 			for (const move of black_moves) {
-				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_indices_killers.push(move); // Add killer moves to the first list
-				else reordered_indices_nonkillers.push(move); // Add non-killer moves to second list
+				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_moves_killers.push(move); // Add killer moves to the first list
+				else reordered_moves_nonkillers.push(move); // Add non-killer moves to second list
 			}
 			black_moves.length = 0;
-			black_moves.push(...reordered_indices_killers, ...reordered_indices_nonkillers);
+			black_moves.push(...reordered_moves_killers, ...reordered_moves_nonkillers);
 		}
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
