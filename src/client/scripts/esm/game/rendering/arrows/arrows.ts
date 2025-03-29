@@ -10,9 +10,9 @@
  */
 
 import type { Coords } from '../../../chess/util/coordutil.js';
-import type { Change, Piece } from '../../../chess/logic/boardchanges.js';
 import type { BoundingBox, Vec2, Vec2Key } from '../../../util/math.js';
-import type { LineKey } from '../../../chess/logic/organizedlines.js';
+import type { LineKey } from '../../../chess/util/boardutil.js';
+import type { Piece } from '../../../chess/util/boardutil.js';
 import type { AttributeInfoInstanced } from '../buffermodel.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
@@ -25,13 +25,12 @@ import { createModel_Instanced_GivenAttribInfo } from '../buffermodel.js';
 import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
 import math from '../../../util/math.js';
-import organizedlines from '../../../chess/logic/organizedlines.js';
+import organizedpieces from '../../../chess/logic/organizedpieces.js';
+import typeutil from '../../../chess/util/typeutil.js';
 import frametracker from '../frametracker.js';
-import boardchanges from '../../../chess/logic/boardchanges.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import space from '../../misc/space.js';
-import gamefileutility from '../../../chess/util/gamefileutility.js';
-import preferences from '../../../components/header/preferences.js';
+import boardutil from '../../../chess/util/boardutil.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
@@ -48,6 +47,7 @@ import movement from '../movement.js';
 import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
+import { rawTypes } from '../../../chess/util/typeutil.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
 
@@ -95,7 +95,6 @@ interface ArrowsLineDraft {
 
 /** A single arrow indicator DRAFT. This may be removed depending on our mode. */
 type ArrowDraft = { piece: Piece, canSlideOntoScreen: boolean };
-
 
 /**
  * An object containing all the arrow lines of a single frame.
@@ -207,6 +206,15 @@ const hoveredArrows: HoveredArrow[] = [];
  * do so between the update() and render() calls.
  */
 let slideArrows: SlideArrows = {};
+
+type ArrowPieceDraft = { piece: Piece, canSlideOntoScreen: boolean, line: Vec2 }
+
+interface PieceArrow {
+	arrow: Arrow,
+	direction: Vec2,
+}
+
+let arrowPieces: PieceArrow[] = [];
 
 
 // Utility ------------------------------------------------------------------------------
@@ -369,7 +377,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
-	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
+	gamefile.ourPieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
 
 		// Find the 2 points on opposite sides of the bounding box
@@ -383,14 +391,14 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 		containingPointsLineC.sort((a, b) => a - b); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
 
 		// For all our lines in the game with this slope...
-		const organizedLinesOfDir = gamefile.piecesOrganizedByLines[slideKey];
-		for (const lineKey of Object.keys(organizedLinesOfDir)) {
+		const organizedLinesOfDir = gamefile.ourPieces.lines.get(slideKey)!;
+		for (const [lineKey, organizedLine] of organizedLinesOfDir) {
 			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
-			const C = organizedlines.getCFromKey(lineKey as LineKey);
+			const C = organizedpieces.getCFromKey(lineKey as LineKey);
 			if (C < containingPointsLineC[0] || C > containingPointsLineC[1]) continue; // Next line, this one is off-screen, so no piece arrows are visible
-			const organizedLine = organizedLinesOfDir[lineKey]!;
+
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
-			const arrowsLine = calcArrowsLineDraft(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine as Piece[], lineKey as LineKey);
+			const arrowsLine = calcArrowsLineDraft(gamefile, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine);
 			if (arrowsLine === undefined) continue;
 			if (!slideArrowsDraft[slideKey]) slideArrowsDraft[slideKey] = {}; // Make sure this exists first
 			slideArrowsDraft[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
@@ -408,7 +416,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
  * next to each other one the same line, since Huygens
  * can jump/skip over other pieces.
  */
-function calcArrowsLineDraft(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: Piece[], lineKey: LineKey): ArrowsLineDraft | undefined {
+function calcArrowsLineDraft(gamefile: gamefile, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: number[], ignoreCoords: Coords[] = []): ArrowsLineDraft | undefined {
 
 	const negDotProd: ArrowDraft[] = [];
 	const posDotProd: ArrowDraft[] = [];
@@ -420,17 +428,26 @@ function calcArrowsLineDraft(gamefile: gamefile, boundingBoxInt: BoundingBox, bo
 
 	const axis = slideDir[0] === 0 ? 1 : 0;
 
+	const firstPiece = boardutil.getPieceFromIdx(gamefile.ourPieces, organizedline[0]!)!;
+
 	/**
 	 * The 2 intersections points of the whole organized line, consistent for every piece on it.
 	 * The only difference is each piece may have a different dot product,
 	 * which just means it's on the opposite side.
 	 */
-	const intersections = math.findLineBoxIntersections(organizedline[0]!.coords, slideDir, boundingBoxFloat).map(c => c.coords);
+	const intersections = math.findLineBoxIntersections(firstPiece.coords, slideDir, boundingBoxFloat).map(c => c.coords);
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
 
-	organizedline.forEach(piece => {
+	organizedline.forEach(idx => {
+		
+		const piece = boardutil.getPieceFromIdx(gamefile.ourPieces, idx)!;
+
 		// Is the piece off-screen?
 		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
+
+		for (const coord of ignoreCoords) {
+			if (coordutil.areCoordsEqual(coord, piece.coords)) return;
+		}
 
 		// Piece is guaranteed off-screen...
 		
@@ -459,7 +476,7 @@ function calcArrowsLineDraft(gamefile: gamefile, boundingBoxInt: BoundingBox, bo
 		 * (which would mean it phased/skipped over pieces due to a custom blocking function)
 		 */
 
-		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slideDir, slideKey, lineKey, organizedline);
+		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slideDir, slideKey, organizedline);
 		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
 
 		/**
@@ -512,8 +529,8 @@ function calcArrowsLineDraft(gamefile: gamefile, boundingBoxInt: BoundingBox, bo
 	 * (which would only be the case if they can slide onto our screen),
 	 * And DON'T add them if they are a VOID square!
 	 */
-	if (closestPosDotProd !== undefined && !posDotProd.includes(closestPosDotProd) && closestPosDotProd.piece.type !== 'voidsN') posDotProd.push(closestPosDotProd);
-	if (closestNegDotProd !== undefined && !negDotProd.includes(closestNegDotProd) && closestNegDotProd.piece.type !== 'voidsN') negDotProd.push(closestNegDotProd);
+	if (closestPosDotProd !== undefined && !posDotProd.includes(closestPosDotProd) && typeutil.getRawType(closestPosDotProd.piece.type) !== rawTypes.VOID) posDotProd.push(closestPosDotProd);
+	if (closestNegDotProd !== undefined && !negDotProd.includes(closestNegDotProd) && typeutil.getRawType(closestNegDotProd.piece.type) !== rawTypes.VOID) negDotProd.push(closestNegDotProd);
 
 	if (posDotProd.length === 0 && negDotProd.length === 0) return; // If both are empty, return undefined
 
@@ -556,7 +573,7 @@ function getSlideExceptions(): Vec2Key[] {
 	const gamefile = gameslot.getGamefile()!;
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
-	if (mode === 2) slideExceptions = gamefile.startSnapshot.slidingPossible.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
+	if (mode === 2) slideExceptions = gamefile.ourPieces.slides.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
 	return slideExceptions;
 }
 
@@ -688,8 +705,22 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 
 // Arrow Shifting: Adding / Removing Arrows before rendering ------------------------------------------------------------------------------------------------
 
+/**
+ * 1. animation.update()
+ * 
+ * Piece is moved.
+ * Optional: Captured piece is added.
+ * 
+ * 2. droparrows.update()
+ * 
+ * Piece is deleted
+ * ==> Deletes any previous shift with a start or end on the deletion coords.
+ * 
+ * Piece is moved
+ * ==> Deletes any previous shift with a start or end on the deletion
+ */
 
-type Shift = { type: string } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
+type Shift = { type: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 
 /**
  * A list of arrow modifications made by other scripts
@@ -714,7 +745,7 @@ let shifts: Shift[] = [];
  * @param start - The coordinates the arrow will be deleted off of
  * @param end - The coordinates the arrow will be added on
  */
-function shiftArrow(type: string, start?: Coords, end?: Coords) {
+function shiftArrow(type: number, start?: Coords, end?: Coords) {
 	if (start === undefined && end === undefined) throw Error('Must provide one of either start or end coords of modified arrow.');
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 
@@ -736,80 +767,75 @@ function shiftArrow(type: string, start?: Coords, end?: Coords) {
 	shifts.push({ type, start, end } as Shift);
 }
 
+
+function processPieceList(draftlist: ArrowPieceDraft[]): PieceArrow[] {
+	const piecearrows: PieceArrow[] = [];
+	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+	const worldHalfWidth = worldWidth / 2;
+	const mouseWorldLocation = input.getTouchClickedWorld() ? input.getTouchClickedWorld() : input.getMouseWorldLocation();	
+	const slideExceptions = getSlideExceptions();
+
+	for (const draft of draftlist) {
+		if (mode !== 3 && !draft.canSlideOntoScreen && !(coordutil.getKeyFromCoords(draft.line) in slideExceptions)) continue;
+
+		const thisPieceIntersections = math.findLineBoxIntersections(draft.piece.coords, draft.line, boundingBoxFloat!); // should THIS BE FLOAT???
+		if (thisPieceIntersections.length < 2) continue; // RARE BUG. I think this is a failure of findLineBoxIntersections(). Just skip the piece when this happens.
+		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.	
+		const dir = !positiveDotProduct ? draft.line : math.negateVector(draft.line);
+		const intersect = positiveDotProduct ? thisPieceIntersections[0]!.coords : thisPieceIntersections[1]!.coords;
+		const arrow = processPiece(draft, dir, intersect, 0, worldHalfWidth, mouseWorldLocation, false);
+
+		piecearrows.push({arrow: arrow, direction: dir});
+	}
+
+	return piecearrows;
+}
+
 /** Execute any arrow modifications made by animation.js or arrowsdrop.js */
 function executeArrowShifts() {
 	// console.log("Executing arrow shifts");
 	// console.log(jsutil.deepCopyObject(shifts));
 
 	const gamefile = gameslot.getGamefile()!;
-	const changes: Change[] = [];
+	const ignoreCoords: Coords[] = [];
+	const draftArrowPieces: ArrowPieceDraft[] = [];
 
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 
 		// Delete the piece from the start location, and add it at the end location
-
-		// This may be defined if the animations haven't been reset and we're viewing different moves.
-		const originalPiece: Piece | undefined = shift.start !== undefined ? gamefileutility.getPieceAtCoords(gamefile, shift.start) : undefined;
-
-		// This matches the original piece's index, if it's a move action, otherwise it's a brand new piece. Or nothing it was purely a delete action.
-		const addedPiece: Piece | undefined = shift.end !== undefined ? { type: shift.type, coords: shift.end } as Piece : undefined;
-
-		// Do the delete action first, so that organized piece lists have an undefined placeholder for the proceeding addition
-		if (originalPiece !== undefined) boardchanges.queueDeletePiece(changes, originalPiece!, true);
-		// Add a safety net to prevent adding a piece that is already on the board.
-		// This can happen when the current animation position of a piece is EXACTLY over an existing piece.
-		if (shift.end !== undefined) queueAddPieceIfNoneAddedOnCoords(addedPiece!);
+		if (shift.start !== undefined) ignoreCoords.push(shift.start);
+		if (shift.end !== undefined && !math.boxContainsSquare(boundingBoxInt!, shift.end)) {
+			const slideMoveset = legalmoves.getPieceMoveset(gamefile, shift.type).sliding ?? {};
+			for (const linekey of gamefile.ourPieces.lines.keys()) {
+				const line = coordutil.getCoordsFromKey(linekey);
+				draftArrowPieces.push({ piece: {type: shift.type, coords: shift.end, index: -1}, line, canSlideOntoScreen: linekey in slideMoveset});
+			}
+		}
 	});
-	
-	/**
-	 * Will queue adding a piece to the running move changes list.
-	 * Contains safety nets in case we attempt to add in on an existing piece
-	 */
-	function queueAddPieceIfNoneAddedOnCoords(piece: Piece) {
-		/**
-		 * If the game already has a piece on the coordinates,
-		 * AND an arrow hasn't deleted it,
-		 * DON'T queue adding the piece.
-		 */
-		if (gamefileutility.isPieceOnCoords(gamefile, piece.coords)
-			&& !changes.some(change => change.action === 'delete' && coordutil.areCoordsEqual_noValidate(change.piece.coords, piece.coords))) return;
-		// Also, if another arrow is adding a piece on these exact coords, leave it be.
-		// An example where this can happen is castling, when the animated rook and king are right on top of each other.
-		if (changes.some(change => change.action === 'add' && coordutil.areCoordsEqual(change.piece.coords, piece.coords))) return;
-		boardchanges.queueAddPiece(changes, piece);
-	}
-
-	// console.log("Applying changes:");
-	// console.log(changes);
-
-	// Apply the board changes
-	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, true);
 
 	shifts.forEach(shift => {
 		// Recalculate every single line on the start and end coordinates.
-		if (shift.start !== undefined) recalculateLinesThroughCoords(gamefile, shift.start); 
-		if (shift.end !== undefined) recalculateLinesThroughCoords(gamefile, shift.end);
+		if (shift.start !== undefined) recalculateLinesThroughCoords(gamefile, shift.start, ignoreCoords); 
 	});
 
-	// Restore the board state
-	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, false);
+	arrowPieces = processPieceList(draftArrowPieces);
 }
 
 /**
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
+function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, ignoreCoords: Coords[] = []) {
 	// Recalculate every single line it is on.
 
 	// Prevents legal move highlights from rendering for
 	// the currently animated arrow indicator when hovering over its destination
 	// hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, coords));
 
-	gamefile.startSnapshot.slidingPossible.forEach((slide: Vec2) => { // For each slide direction in the game...
-		const slideKey = math.getKeyFromVec2(slide);
+	for (const [slideKey, linegroup] of gamefile.ourPieces.lines) { // For each slide direction in the game...
+		const slide = coordutil.getCoordsFromKey(slideKey);
 
-		const lineKey = organizedlines.getKeyFromLine(slide, coords);
+		const lineKey = organizedpieces.getKeyFromLine(slide, coords);
 
 		// Delete the original arrow line if it exists
 		if (slideKey in slideArrows) {
@@ -820,18 +846,18 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 		// Recalculate the arrow line...
 
 		// Fetch the organized line that our piece is on this direction.
-		const organizedLine = gamefile.piecesOrganizedByLines[slideKey][lineKey];
-		if (organizedLine === undefined) return; // No pieces on line, empty
+		const organizedLine = linegroup.get(lineKey);
+		if (organizedLine === undefined) continue; // No pieces on line, empty
 
-		const arrowsLineDraft = calcArrowsLineDraft(gamefile, boundingBoxInt!, boundingBoxFloat!, slide, slideKey, organizedLine, lineKey);
-		if (arrowsLineDraft === undefined) return; // Only intersects the corner of our screen, not visible.
+		const arrowsLineDraft = calcArrowsLineDraft(gamefile, boundingBoxInt!, boundingBoxFloat!, slide, slideKey, organizedLine, ignoreCoords);
+		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
 
 		// Remove Unnecessary arrows...
 
 		const slideExceptions = getSlideExceptions();
 		if (!slideExceptions.includes(slideKey)) {
 			removeTypesThatCantSlideOntoScreenFromLineDraft(arrowsLineDraft);
-			if (arrowsLineDraft.negDotProd.length === 0 && arrowsLineDraft.posDotProd.length === 0) return; // No more pieces on this line
+			if (arrowsLineDraft.negDotProd.length === 0 && arrowsLineDraft.posDotProd.length === 0) continue; // No more pieces on this line
 		}
 
 		// Calculate more detailed information, enough to render...
@@ -859,7 +885,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 
 		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
 		slideArrows[slideKey][lineKey] = { posDotProd, negDotProd }; // Set the new arrow line
-	});
+	};
 }
 
 
@@ -877,7 +903,7 @@ function render() {
 }
 
 function regenerateModelAndRender() {
-	if (Object.keys(slideArrows).length === 0) return; // No visible arrows, don't generate the model
+	if (Object.keys(slideArrows).length === 0 && arrowPieces.length === 0) return; // No visible arrows, don't generate the model
 
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const halfWorldWidth = worldWidth / 2;
@@ -917,6 +943,10 @@ function regenerateModelAndRender() {
 			slideLine.posDotProd.forEach((arrow, index) => concatData(instanceData_Pictures, instanceData_Arrows, arrow, vector, index));
 			slideLine.negDotProd.forEach((arrow, index) => concatData(instanceData_Pictures, instanceData_Arrows, arrow, negVector, index));
 		}
+	}
+
+	for (const pieceArrow of arrowPieces) {
+		concatData(instanceData_Pictures, instanceData_Arrows, pieceArrow.arrow, pieceArrow.direction, 0);
 	}
 
 	/*
@@ -961,7 +991,6 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
-	const { r, g, b } = preferences.getTintColorOfType(arrow.piece.type);
 	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
 
 	// Opacity changing with distance
@@ -969,7 +998,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	// opacity = Math.sin(maxAxisDist / 40) * 0.5
 
 	//								instaceposition	   instancetexcoord  instancecolor
-	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, r,g,b,a);
+	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, 1,1,1,a);
 
 	// Next append the data of the little arrow!
 

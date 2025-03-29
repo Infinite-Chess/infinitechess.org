@@ -5,7 +5,7 @@
  */
 
 /**
- * Creates a checkerboard pattern image of a given size with custom colors.
+ * Creates a checkerboard pattern image of a given size with custom players.
  * @param {string} lightColor - The color for the light squares (CSS color format).
  * @param {string} darkColor - The color for the dark squares (CSS color format).
  * @param {number} imageSize - The size of the image (width and height). The final image will be imageSize x imageSize, split into 4 squares.

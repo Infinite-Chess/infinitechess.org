@@ -11,7 +11,8 @@
 import isprime from '../../../util/isprime.js';
 // @ts-ignore
 import insufficientmaterial from '../../../chess/logic/insufficientmaterial.js';
-
+import { rawTypes as r, ext as e, players, numTypes} from '../../../chess/util/typeutil.js';
+import organizedpieces from '../../../chess/logic/organizedpieces.js';
 /**
  * Typescript types are erased during compilation, so adding these
  * here doesn't actually mean adding dependancies.
@@ -21,6 +22,7 @@ import type gamefile from "../../../chess/logic/gamefile";
 import type { MoveDraft } from "../../../chess/logic/movepiece";
 import type { Coords } from "../../../chess/util/coordutil";
 import type { Vec2 } from "../../../util/math";
+import type { Position } from '../../../chess/util/boardutil.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
@@ -101,26 +103,26 @@ let start_piecelist: number[]; // list of white pieces in starting position, lik
 let start_coordlist: Coords[]; // list of tuples, like [[2,3], [5,6], [6,7], ...], pieces are corresponding to ordering in start_piecelist
 
 // only used for parsing in the position
-const pieceNameDictionary: { [pieceType: string]: number } = {
+const pieceNameDictionary: { [pieceType: number]: number } = {
 	// 0 corresponds to a captured piece
-	"queensW": 1,
-	"rooksW": 2,
-	"bishopsW": 3,
-	"knightsW": 4,
-	"kingsW": 5,
-	"pawnsW": 6 ,
-	"amazonsW": 7,
-	"hawksW": 8,
-	"chancellorsW": 9,
-	"archbishopsW": 10,
-	"knightridersW": 11,
-	"huygensW": 12
+	[r.QUEEN + e.W]: 1,
+	[r.ROOK + e.W]: 2,
+	[r.BISHOP + e.W]: 3,
+	[r.KNIGHT + e.W]: 4,
+	[r.KING + e.W]: 5,
+	[r.PAWN + e.W]: 6 ,
+	[r.AMAZON + e.W]: 7,
+	[r.HAWK + e.W]: 8,
+	[r.CHANCELLOR + e.W]: 9,
+	[r.ARCHBISHOP + e.W]: 10,
+	[r.KNIGHTRIDER + e.W]: 11,
+	[r.HUYGEN + e.W]: 12
 };
 
 function invertPieceNameDictionary(json: { [key: string]: number }) {
-	const inv: { [key: number]: string } = {};
+	const inv: { [key: number]: number } = {};
 	for (const key in json) {
-		inv[json[key]!] = key;
+		inv[json[key]!] = Number(key);
 	}
 	return inv;
 }
@@ -1221,19 +1223,19 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 				// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
 				// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
 				if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
-					const piecesOrganizedByKey: { [key: string]: string } = {};
-					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? "kingsB" : "royalCentaursB");
+					const piecesOrganizedByKey: Position = {};
+					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? r.KING + e.B : r.ROYALCENTAUR + e.B);
 					for (let i = 0; i < piecelist.length; i++) {
 						if (new_piecelist[i] !== 0) {
 							piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
 						}
 					}
 					const dummy_gamefile = { 
-						piecesOrganizedByKey: piecesOrganizedByKey,
-						ourPieces: {},
 						moves: [],
-						gameRules: input_gamefile.gameRules
+						gameRules: input_gamefile.gameRules,
+						ourPieces: organizedpieces.buildStateFromPosition(piecesOrganizedByKey, Int32Array, Object.values(piecesOrganizedByKey)),
 					} as unknown as gamefile;
+
 					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
 				}
 
@@ -1266,18 +1268,39 @@ function move_to_gamefile_move(target_square: Coords): MoveDraft {
 	return { startCoords: gamefile_royal_coords, endCoords: endCoords };
 }
 
+function doesTypeExist(gamefile: gamefile, type: number): boolean {
+	const range = gamefile.ourPieces.typeRanges.get(type);
+
+	if (range === undefined) return false;
+
+	return range.end - range.start - range.undefineds.length > 0;
+}
+
+function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
+	const range = gamefile.ourPieces.typeRanges.get(type);
+
+	if (range === undefined) return;
+	if (range.end - range.start - range.undefineds.length <= 0) return;
+
+	for (let idx = range.start; idx < range.end; idx++) {
+		if (range.undefineds.includes(idx)) continue;
+		return [gamefile.ourPieces.XPositions[idx], gamefile.ourPieces.YPositions[idx]];
+	}
+	return;
+}
+
 /**
  * This function is called from outside and initializes the engine calculation given the provided gamefile
  */
 async function runEngine() {
 	try {
 		// get real coordinates and parse type of black royal piece
-		if ((input_gamefile.ourPieces.kingsB?.length ?? 0) !== 0) {
-			gamefile_royal_coords = input_gamefile.ourPieces.kingsB[0]!;
+		if (doesTypeExist(input_gamefile, r.KING + e.B)) {
+			gamefile_royal_coords = getFirstOfType(input_gamefile, r.KING + e.B)!;
 			royal_moves = king_moves;
 			royal_type = "k";
-		} else if ((input_gamefile.ourPieces.royalCentaursB?.length ?? 0) !== 0) {
-			gamefile_royal_coords = input_gamefile.ourPieces.royalCentaursB[0]!;
+		} else if (doesTypeExist(input_gamefile, r.ROYALCENTAUR + e.B)) {
+			gamefile_royal_coords = getFirstOfType(input_gamefile, r.ROYALCENTAUR + e.B)!;
 			royal_moves = centaur_moves;
 			royal_type = "rc";
 		} else {
@@ -1287,13 +1310,15 @@ async function runEngine() {
 		// create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
 		start_piecelist = [];
 		start_coordlist = [];
-		for (const key in input_gamefile.piecesOrganizedByKey) {
-			const pieceType = input_gamefile.piecesOrganizedByKey[key]!;
-			if (pieceType.slice(-1) !== "W") continue; // ignore nonwhite pieces
-			const coords = key.split(',').map(Number);
-			start_piecelist.push(pieceNameDictionary[pieceType]!);
-			// shift all white pieces, so that the black royal is at [0,0]
-			start_coordlist.push([coords[0]! - gamefile_royal_coords[0]!, coords[1]! - gamefile_royal_coords[1]!]);
+		for (const [type, range] of input_gamefile.ourPieces.typeRanges) {
+			for (let idx = range.start; idx < range.end; idx++) {
+				if (range.undefineds.includes(idx)) continue;
+				if (Math.floor(type / numTypes) !== players.WHITE) continue;
+				const coords = [input_gamefile.ourPieces.XPositions[idx], input_gamefile.ourPieces.YPositions[idx]];
+				start_piecelist.push(pieceNameDictionary[type]!);
+				// shift all white pieces, so that the black royal is at [0,0]
+				start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
+			}
 		}
 
 		// run iteratively deepened move search

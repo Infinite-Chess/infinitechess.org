@@ -1,11 +1,12 @@
 
 "use strict";
 
+/** @typedef {import('./typeutil').Player} Player */
+
 /**
  * This script contains lists of compatible win conditions in the game.
  * And contains a few utility methods for them.
  * 
- * ZERO dependancies.
  */
 
 /** Valid win conditions that either color can have. */
@@ -60,10 +61,10 @@ function isConclusionDecisive(condition) {
 
 /**
  * Calculates the victor and condition properties from the specified game conclusion.
- * For example, "white checkmate" => `{ victor: 'white', condition: 'checkmate' }`.
+ * For example, "1 checkmate" => `{ victor: 1, condition: 'checkmate' }`.
  * If the game was aborted, victor will be undefined.
- * @param {string} gameConclusion - The gameConclusion of the gamefile. Examples: 'white checkmate' / 'draw stalemate'  
- * @returns {{ victor?: string, condition: string }} An object containing 2 properties: `victor` and `condition`
+ * @param {string} gameConclusion - The gameConclusion of the gamefile. Examples: '1 checkmate' / '0 stalemate'  
+ * @returns {{ victor?: Player, condition: string }} An object containing 2 properties: `victor` and `condition`
  */
 function getVictorAndConditionFromGameConclusion(gameConclusion) {
 	if (gameConclusion === false) throw new Error('Should not be getting victor and condition from false gameConclusion! Game is not over.');
@@ -72,7 +73,7 @@ function getVictorAndConditionFromGameConclusion(gameConclusion) {
 		condition = victor;
 		victor = undefined;
 	}
-	return { victor, condition };
+	return { victor: victor ? Number(victor) : undefined, condition };
 }
 
 /**

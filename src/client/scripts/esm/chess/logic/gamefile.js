@@ -1,15 +1,17 @@
 
 // This script when called as a function using the new keyword, will return a new gamefile.
 
-import organizedlines from './organizedlines.js';
+import organizedpieces from './organizedpieces.js';
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 import checkdetection from './checkdetection.js';
+import { players } from '../util/typeutil.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
@@ -23,10 +25,12 @@ import checkdetection from './checkdetection.js';
 /** @typedef {import('../util/metadata.js').MetaData} MetaData */
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
-/** @typedef {import('./organizedlines.js').PiecesByType} PiecesByType */
-/** @typedef {import('./organizedlines.js').PiecesByKey} PiecesByKey */
-/** @typedef {import('./organizedlines.js').LinesByStep} LinesByStep */
+/** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
+/** @typedef {import('../util/boardutil.js').Position} Position*/
+/** @typedef {import('./events.js').GameEvents} GameEvents*/
+/** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
+/** @typedef {import('../util/typeutil.js').RawType} RawType*/
 /** @typedef {import('./checkdetection.js').Attacker} Attacker */
 /** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
 
@@ -52,7 +56,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
-		/** In key format 'x,y':'type' @type {PiecesByKey} */
+		/** In key format 'x,y':'type' @type {Position} */
 		position: undefined,
 		/** @type {string} */
 		positionString: undefined,
@@ -64,7 +68,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		moveRuleState: undefined,
 		/** This is the full-move number at the start of the game. Used for converting to ICN notation. @type {number} */
 		fullMove: undefined,
-		/** The number of players in this game (the number of unique colors in the turn order) */
+		/** The number of players in this game (the number of unique players in the turn order) */
 		playerCount: undefined,
 		/** The count of pieces the game started with. @type {number} */
 		pieceCount: undefined,
@@ -72,16 +76,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		 * For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }`
          * @type {BoundingBox} */
 		box: undefined,
-		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {string[]} */
+		/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` @type {number[]} */
 		existingTypes: undefined,
-		/** Possible sliding moves in this game, dependant on what pieces there are: `[[1,1],[1,0]]` @type {Vec2[]}*/
-		slidingPossible: undefined,
-		/** Whether hippogonal lines, or greater, are present in the gamefile.
-		 * True if there are knightriders, or greater, riders. @type {boolean} */
-		hippogonalsPresent: undefined,
-		/** Whether colinear lines are present in the gamefile.
-		 * (e.g. [1,0] and [2,0] are colinear) @type {boolean} */
-		colinearsPresent: undefined,
 	};
     
 	/** @type {GameRules} */
@@ -90,9 +86,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		promotionRanks: undefined,
 		promotionsAllowed: {
 			/** An array of types white can promote to, with the W/B removed from the end: `['queens','rooks']` @type {Array} */
-			white: undefined,
+			[players.WHITE]: undefined,
 			/** An array of types black can promote to, with the W/B removed from the end: `['queens','rooks']` @type {Array} */
-			black: undefined,
+			[players.BLACK]: undefined,
 		},
 		slideLimit: undefined,
 
@@ -103,12 +99,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		moveRule: undefined
 	};
 
-	/** Pieces organized by type: `{ queensW:[[1,2],[2,3]] }` @type {PiecesByType} */
+	/** All pieces on the board @type {OrganizedPieces} */
 	this.ourPieces = undefined;
-	/** Pieces organized by key: `{ '1,2':'queensW', '2,3':'queensW' }` @type {PiecesByKey} */
-	this.piecesOrganizedByKey = undefined;
-	/** Pieces organized by lines: `{ '1,0' { 2:[{type:'queensW',coords:[1,2]}] } }` @type {LinesByStep} */
-	this.piecesOrganizedByLines = undefined;
 	
 	/** The object that contains the buffer model to render the pieces */
 	this.mesh = {
@@ -120,6 +112,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		inverted: undefined,
 		/** An object containing the mesh data for each type of piece in the game. One for every type in `ourPieces` @type {{ [type: string]: MeshData }} */
 		types: {},
+	};
+
+	/** @type {GameEvents} */
+	this.events = {
+		regenerateLists: []
 	};
 
 	/** The object that contains the buffer model to render the voids */
@@ -141,38 +138,38 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
      * the names of pieces that could capture you from the distance.
      * This is used for efficient calculating if a king move would put you in check.
      * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
-     * DOES NOT include pawn moves. @type {Record<CoordsKey, string[]>} */
+     * DOES NOT include pawn moves. @type {Record<CoordsKey, RawType[]>} */
 	this.vicinity = undefined;
 	/** A variant of `vicinity`, except this only contains squares that
 	 * a special piece MIGHT be able to capture using a special move.
-	 * To find out for sure we'll have to calculate its legal moves. @type {Record<CoordsKey, string[]>} */
+	 * To find out for sure we'll have to calculate its legal moves. @type {Record<CoordsKey, RawType[]>} */
 	this.specialVicinity = undefined;
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
 
 	/** The clocks of the game, if the game is timed. */
 	this.clocks = {
-		/** The time each player has remaining, in milliseconds. @type {{ [color: string]: number | null }}*/
+		/** The time each player has remaining, in milliseconds. @type {{ [color in Player]?: number | undefined }}*/
 		currentTime: {
-			white: undefined,
-			black: undefined,
+			[players.WHITE]: undefined,
+			[players.BLACK]: undefined,
 		},
 
 		/** Contains information about the start time of the game. */
 		startTime: {
-			/** The number of minutes both sides started with. @type {null | number} */
+			/** The number of minutes both sides started with. @type {undefined | number} */
 			minutes: undefined,
-			/** The number of miliseconds both sides started with. @type {null | number}  */
+			/** The number of miliseconds both sides started with. @type {undefined | number}  */
 			millis: undefined,
-			/** The increment used, in milliseconds. @type {null | number} */
+			/** The increment used, in milliseconds. @type {undefined | number} */
 			increment: undefined,
 		},
 		/** We need this separate from gamefile's "whosTurn", because when we are
 		 * in an online game and we make a move, we want our Clock to continue
-		 * ticking until we receive the Clock information back from the server! @type {string} */
+		 * ticking until we receive the Clock information back from the server! @type {Player} */
 		colorTicking: undefined,
 		/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-		 * When set to undefined no clocks are ticking @type {number | null} */
+		 * When set to undefined no clocks are ticking @type {number | undefined} */
 		timeRemainAtTurnStart: undefined,
 		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. @type {number | undefined} */
 		timeAtTurnStart: undefined,
@@ -188,9 +185,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
 	/** The number of half-moves played since the last capture or pawn push. */
 	this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
-
-	gamefileutility.initStartingAreaBox(this);
-
 	/** The move list. @type {Move[]} */
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
@@ -201,7 +195,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.specialRights = jsutil.deepCopyObject(this.startSnapshot.specialRights);
 	/** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
-     * which is whos turn it was at the *beginning* of the game. */
+     * which is whos turn it was at the *beginning* of the game. @type {Player}*/
 	this.whosTurn = this.gameRules.turnOrder[0];
 	/** If the currently-viewed move is in check, this will be a list of coordinates
      * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {Coords[] | false} */
@@ -215,17 +209,15 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** @type {false | string} */
 	this.gameConclusion = false;
 
-	this.ourPieces = organizedlines.buildStateFromKeyList(this);
-	organizedlines.addMoreUndefineds(this); // Add several undefined placeholders in the lists, for when pieces are added (promotion, arrow addition, etc.)
+	this.ourPieces = organizedpieces.buildStateForGame(this, Int32Array);
+	this.startSnapshot.pieceCount = boardutil.getPieceCountOfGame(this.ourPieces);
 
-	this.startSnapshot.pieceCount = gamefileutility.getPieceCountOfGame(this);
+	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
+
 	gamefileutility.deleteUnusedMovesets(this);
-
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
-    
-	organizedlines.initOrganizedPieceLists(this);
 
 	{ // Set the game's `inCheck` and `attackers` properties at the front of the game.
 		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(this, this.whosTurn, 'checkmate');
@@ -233,14 +225,16 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		this.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackAttackers) this.attackers = checkResults.attackers;
 	}
-
+	
 	movepiece.makeAllMovesInGame(this, moves);
-	/** The game's conclusion, if it is over. For example, `'white checkmate'`
+	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
      * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) this.gameConclusion = gameConclusion;
 	else gamefileutility.doGameOverChecks(this);
 
 	clock.set(this, clockValues);
+
+	gamefileutility.initStartingAreaBox(this);
 };
 
 // Typedef export DO NOT USE

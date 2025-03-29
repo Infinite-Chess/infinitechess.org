@@ -6,7 +6,7 @@ import type { MetaData } from "../../../chess/util/metadata.js";
 import type { WebsocketMessage } from "../websocket.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
-
+import type { Player } from "../../../chess/util/typeutil.js";
 
 import disconnect from "./disconnect.js";
 import afk from "./afk.js";
@@ -48,7 +48,7 @@ interface JoinGameMessage extends GameUpdateMessage {
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData,
 	publicity: 'public' | 'private',
-	youAreColor: 'white' | 'black',
+	youAreColor: Player,
 };
 
 /** The message contents expected when we receive a server websocket 'gameupdate' message.  */

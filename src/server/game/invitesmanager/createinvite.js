@@ -22,6 +22,7 @@ import { isServerRestarting } from '../updateServerRestart.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
@@ -130,7 +131,7 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 
 	if (typeof invite.variant !== 'string') return true;
 	if (typeof invite.clock !== 'string') return true;
-	if (typeof invite.color !== 'string') return true;
+	if (typeof invite.color !== 'number') return true;
 	if (typeof invite.rated !== 'string') return true;
 	if (typeof invite.publicity !== 'string') return true;
 	if (typeof invite.tag !== 'string') return true;
@@ -139,7 +140,7 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 
 	if (!clockweb.isClockValueValid(invite.clock)) return true;
 
-	if (invite.color !== "White" && invite.color !== "Black" && invite.color !== "Random") return true;
+	if (invite.color !== players.WHITE && invite.color !== players.BLACK && invite.color !== players.NEUTRAL) return true;
 	if (invite.rated !== 'casual') return true;
 	if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 	if (invite.tag.length !== 8) return true; // Invite tags must be 8 characters long.

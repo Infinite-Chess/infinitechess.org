@@ -14,7 +14,7 @@ import socketUtility from '../../socket/socketUtility.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { pushGameClock, setGameConclusion } from './gamemanager.js';
-import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
@@ -49,7 +49,7 @@ function submitMove(ws, game, messageContents) {
 
 	// Their subscription info should tell us what game they're in, including the color they are.
 	const color = ws.metadata.subscriptions.game.color;
-	const opponentColor = colorutil.getOppositeColor(color);
+	const opponentColor = typeutil.invertPlayer(color);
 
 	// If the game is already over, don't accept it.
 	// Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
@@ -137,7 +137,7 @@ function doesGameConclusionCheckOut(game, gameConclusion, color) {
 	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
 	// Game conclusion is decisive...
 	// We can't submit a move where our opponent wins
-	const oppositeColor = colorutil.getOppositeColor(color);
+	const oppositeColor = typeutil.invertPlayer(color);
 	return victor !== oppositeColor;
 }
 

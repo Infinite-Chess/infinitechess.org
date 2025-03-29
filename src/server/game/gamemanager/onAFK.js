@@ -7,7 +7,7 @@
 import gameutility from './gameutility.js';
 import { onPlayerLostByAbandonment } from './gamemanager.js';
 import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
-import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
@@ -50,7 +50,7 @@ function onAFK(ws, game) {
     
 	if (gameutility.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!");
 
-	const opponentColor = colorutil.getOppositeColor(color);
+	const opponentColor = typeutil.invertPlayer(color);
 
 	// Start a 20s timer to auto terminate the game by abandonment.
 	game.autoAFKResignTimeoutID = setTimeout(onPlayerLostByAbandonment, durationOfAutoResignTimerMillis, game, opponentColor); // The auto resign function should have 2 arguments: The game, and the color that won.
