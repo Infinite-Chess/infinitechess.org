@@ -84,13 +84,14 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
 		cancelAutoAFKResignTimer(game);
 	}
 
+	const playerdata = game.players[color];
+
+	playerdata.disconnect.timeoutID = setTimeout(onAutoResignFunc, timeBeforeAutoResign, game, opponentColor);
+	playerdata.disconnect.timeToAutoLoss = timeToAutoLoss;
+	playerdata.disconnect.wasByChoice = !closureNotByChoice;
+
 	const opponentColor = typeutil.invertPlayer(color);
-	const opponent = game.players[opponentColor];
-
-	opponent.disconnect.timeoutID = setTimeout(onAutoResignFunc, timeBeforeAutoResign, game, opponentColor);
-	opponent.disconnect.timeToAutoLoss = timeToAutoLoss;
-	opponent.disconnect.wasByChoice = !closureNotByChoice;
-
+	
 	// Alert their opponent the time their opponent will be auto-resigned by disconnection.
 	const value = { millisUntilAutoDisconnectResign: timeBeforeAutoResign, wasByChoice: !closureNotByChoice };
 	gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentdisconnect', value);
