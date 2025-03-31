@@ -119,16 +119,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		regenerateLists: []
 	};
 
-	/** The object that contains the buffer model to render the voids */
-	this.voidMesh = {
-		/** High precision Float64Array for performing arithmetic. @type {Float64Array} */
-		instanceData64: undefined,
-		/** The buffer model of the void squares. These are rendered separately
-         * from the pieces because if they used a texture they would form gridlines.
-         * @type {BufferModelInstanced} */
-		model: undefined,
-	};
-
 	/** Contains the movesets of every piece for this game. 
      * When this object's parameters are called as a function,
      * it returns that piece's moveset as an object.
