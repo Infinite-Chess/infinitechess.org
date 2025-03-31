@@ -26,7 +26,6 @@ import preferences from "../../../components/header/preferences.js";
 import movement from "../movement.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-import { players } from "../../../chess/util/typeutil.js";
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -160,7 +159,6 @@ function regenModelsOfHoveredPieces() {
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Calculate the mesh...
 		const pieceColor = typeutil.getColorFromType(hoveredArrow.piece.type);
-		if (pieceColor === players.NEUTRAL) return console.error("Arrows for neutral pieces not supported");
 		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
