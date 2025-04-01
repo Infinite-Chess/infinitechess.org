@@ -24,12 +24,11 @@ const oneWayActions: string[] = ['capture', 'delete'];
 // Type Definitions-------------------------------------------------------------------------
 
 
-// @ts-ignore
-import type { gamefile } from "./gamefile.js";
-// @ts-ignore
 import type { Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { Piece } from "../util/boardutil.js";
+// @ts-ignore
+import type { gamefile } from "./gamefile.js";
 
 /**
  * Generic type to describe any changes to the board
