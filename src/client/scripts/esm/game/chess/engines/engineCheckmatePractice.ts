@@ -345,7 +345,8 @@ function initEvalWeightsAndSearchProperties() {
 	// whether to enter "trap flee mode" whenever the black royal is surrounded by white pieces
 	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal_Flee
 	trapFleeDictionary = {
-		"1K2HA1B-1k": [3, 6, 10],
+		"1K2HA1B-1k": [3, 7, 10],
+		"1K3HA-1k": [3, 7, 10],
 	};
 
 	if (checkmateSelectedID in trapFleeDictionary) {
@@ -952,15 +953,19 @@ function make_black_move(move: Coords, piecelist: number[], coordlist: Coords[])
  * @param {Array} piecelist 
  * @param {Array} coordlist 
  * @param {Boolean} black_to_move - false on white's turns, true on black's turns
+ * @param {Boolean} inTrapFleeMode - whether black is in trap flee mode -> leads to lower scores, if true
  * @param {Boolean} inProtectedRiderFleeMode - whether black is in protected rider flee mode -> leads to higher scores, if true
  * @returns {Number}
  */
-function get_position_evaluation(piecelist: number[], coordlist: Coords[], black_to_move: boolean, inProtectedRiderFleeMode: boolean): number {
+function get_position_evaluation(piecelist: number[], coordlist: Coords[], black_to_move: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean): number {
 	let score = 0;
 
 	// add penalty based on number of legal moves of black royal
 	const incheck = is_check(piecelist, coordlist);
 	score += legalMoveEvalDictionary[incheck ? 0 : 1]![get_black_legal_move_amount(false, piecelist, coordlist)]!;
+
+	// do not give stalemate Infinity reward if white to move or black in trap flee mode
+	if (score === Infinity && (!black_to_move || inTrapFleeMode)) score = 1.5 * legalMoveEvalDictionary[0]![1]!;
 
 	const black_to_move_num = black_to_move ? 0 : 1;
 	for (let i = 0; i < piecelist.length; i++) {
@@ -1010,10 +1015,10 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 	// If game over, return position evaluation
 	} else if ( black_to_move && get_black_legal_move_amount(false, piecelist, coordlist) === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
 	// At max depth, return position evaluation
 	} else if (depth === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
 	}
 
 	let bestVariation: { [key: number]: [number, Coords] } = {};
@@ -1036,7 +1041,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			const black_move_evals: number[] = [];
 			for (const move of black_moves) {
 				const [order_piecelist, order_coordlist] = make_black_move(move, piecelist, coordlist);
-				const order_score = get_position_evaluation(order_piecelist, order_coordlist, false, inProtectedRiderFleeMode);
+				const order_score = get_position_evaluation(order_piecelist, order_coordlist, false, inTrapFleeMode, inProtectedRiderFleeMode);
 				black_move_evals.push(order_score);
 			}
 
@@ -1199,7 +1204,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	const black_moves = get_black_legal_moves(false, piecelist, coordlist);
 	globallyBestVariation[0] = [NaN, black_moves[Math.floor(rand() * black_moves.length)]! ];
 	const [dummy_piecelist, dummy_coordlist] = make_black_move(globallyBestVariation[0]![1]!, piecelist, coordlist);
-	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false);
+	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false, false);
 	globalSurvivalPlies = 1;
 
 	try {
