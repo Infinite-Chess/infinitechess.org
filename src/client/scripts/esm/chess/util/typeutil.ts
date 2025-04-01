@@ -55,7 +55,9 @@ const ext = {
 } as const;
 
 /**
- * All piece types the game is currently compatible with (excluding neutrals).
+ * The string representations of each raw type.
+ * 
+ * MUST BE IN THE EXACT SAME ORDER AS {@link rawTypes}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 const strtypes = ['voids', 'obstacles', 'kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'roses', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'] as const;
 
@@ -75,9 +77,14 @@ const slidingRoyals = [rawTypes.ROYALQUEEN];
  */
 const royals = [...jumpingRoyals, ...slidingRoyals];
 
+/**
+ * The string representations of each player color.
+ * 
+ * MUST BE IN THE EXACT SAME ORDER AS {@link players}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ */
 const strcolors = ["neutral", "white", "black"] as const;
 
-/** Piece types that don't have an SVG */
+/** Raw piece types that don't have an SVG */
 const SVGLESS_TYPES = [rawTypes.VOID];
 
 type StrPlayer = typeof strcolors[number]
