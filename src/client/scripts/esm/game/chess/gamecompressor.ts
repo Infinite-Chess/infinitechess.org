@@ -18,6 +18,7 @@ import type { PiecesByKey } from '../../chess/logic/organizedlines.js';
 import type gamefile from '../../chess/logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
+import type { EnPassant } from '../../chess/logic/state.js';
 
 
 /**
@@ -29,6 +30,20 @@ interface AbridgedGamefile {
 	fullMove: number,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	positionString: string,
+	startingPosition: PiecesByKey,
+	specialRights: Record<CoordsKey, true>,
+	gameRules: GameRules,
+	moves: Move[],
+	// Optional properties
+	enpassant?: EnPassant,
+	moveRule?: `${number}/${number}`,
+}
+
+/** The game longformat the formatconverter expects games to come in. */
+interface FormatConverterLongform {
+	metadata: MetaData,
+	fullMove: number,
+	/** formatconverter.LongToShort_Format() may optionally take this in shortposition positionString format. GameToPosition() however needs it in this format. */
 	startingPosition: PiecesByKey,
 	specialRights: Record<CoordsKey, true>,
 	gameRules: GameRules,
@@ -68,11 +83,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	// Append the optional properties, if present
 
 	// enpassant
-	if (gamefile.startSnapshot.enpassant) { // In the form: { square: Coords, pawn: Coords },
-		// We need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
-		const yDistance = Math.abs(gamefile.startSnapshot.enpassant.square[1] - gamefile.startSnapshot.enpassant.pawn[1]);
-		if (yDistance === 1) abridgedGamefile.enpassant = gamefile.startSnapshot.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
-	}
+	if (gamefile.startSnapshot.enpassant) abridgedGamefile.enpassant = gamefile.startSnapshot.enpassant;
 
 	// moveRule
 	if (gamefile.gameRules.moveRule) abridgedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState!}/${gamefile.gameRules.moveRule}`;
@@ -93,7 +104,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
  */
 function turnMoveIntoSinglePosition(abridgedGamefile: AbridgedGamefile, desiredMove: number): AbridgedGamefile {
 
-	const primedGamefile = {
+	const fcLongform: FormatConverterLongform = {
 		metadata: abridgedGamefile.metadata,
 		startingPosition: abridgedGamefile.startingPosition,
 		specialRights: abridgedGamefile.specialRights,
@@ -101,11 +112,16 @@ function turnMoveIntoSinglePosition(abridgedGamefile: AbridgedGamefile, desiredM
 		gameRules: abridgedGamefile.gameRules,
 		moves: abridgedGamefile.moves,
 		// Optional properties
-		enpassant: abridgedGamefile.enpassant,
 		moveRule: abridgedGamefile.moveRule,
 	};
 
-	return formatconverter.GameToPosition(primedGamefile, desiredMove + 1); // Convert -1 based to 0 based
+	if (abridgedGamefile.enpassant) { // In the form: { square: Coords, pawn: Coords },
+		// We need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
+		const yDistance = Math.abs(abridgedGamefile.enpassant.square[1] - abridgedGamefile.enpassant.pawn[1]);
+		if (yDistance === 1) fcLongform.enpassant = abridgedGamefile.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
+	}
+
+	return formatconverter.GameToPosition(fcLongform, desiredMove + 1); // Convert -1 based to 0 based
 }
 
 

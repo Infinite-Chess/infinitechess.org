@@ -639,7 +639,6 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// Rotate the turn order, moving the first player to the back
 		ret.gameRules.turnOrder.push(ret.gameRules.turnOrder.shift());
 	}
-	delete ret.moves;
 	ret.moves = [];
 	return ret;
 }
