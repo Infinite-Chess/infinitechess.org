@@ -24,7 +24,11 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	verification = JSON.parse(verification);
 
 	// Get the player's rating values
-	const rating_values = getPlayerRatingValues(user_id);
+	const rating_values = getPlayerRatingValues(user_id); // { user_id, infinite_elo, infinite_rating_deviation } | undefined
+	if (!rating_values) {
+		logEvents(`Error getting rating values for member "${claimedUsername}" Not found.`, 'errLog.txt', { print: true });
+		return res.status(500).send('Internal Server Error');
+	}
 	const ranked_elo = rating_values.infinite_elo;
 
 

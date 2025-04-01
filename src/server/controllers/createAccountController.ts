@@ -137,23 +137,30 @@ async function generateAccount({ username, email, password, autoVerify = false }
 	const hashedPassword = await bcrypt.hash(password, 10); // Passes 10 salt rounds. (standard)
 	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID_Base62(8) });
 
-	const result = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
-	if (!result.success) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
+	const membersResult = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
+	if (!membersResult.success) {
+		// Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
+		logEvents(`Failed to create new member "${username}".`, 'errLog.txt', { print: true });
+		return;
+	}
     
 	// Add the newly created user to the ratings table
-	const user_id = result.result.lastInsertRowid;
-	addUserToRatingsTable(user_id);
+	const user_id = membersResult.result.lastInsertRowid;
+	const ratingsResult = addUserToRatingsTable(user_id);
+	if (!ratingsResult.success) {
+		logEvents(`Failed to add user "${username}" to ratings table: ${ratingsResult.reason}`, 'errLog.txt', { print: true });
+		return;
+	}
 
-	const logTxt = `Created new member: ${username}`;
-	logEvents(logTxt, 'newMemberLog.txt', { print: true });
+	logEvents(`Created new member: ${username}`, 'newMemberLog.txt', { print: true });
 
 	// SEND EMAIL CONFIRMATION
 	if (!autoVerify) {
-		const user_id = result.result.lastInsertRowid;
+		const user_id = membersResult.result.lastInsertRowid;
 		sendEmailConfirmation(user_id);
 	}
 
-	return result.result.lastInsertRowid;
+	return membersResult.result.lastInsertRowid;
 }
 
 /**
