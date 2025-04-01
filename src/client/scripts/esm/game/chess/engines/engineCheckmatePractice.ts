@@ -1334,6 +1334,20 @@ async function runEngine() {
 			start_coordlist.push([coords[0]! - gamefile_royal_coords[0]!, coords[1]! - gamefile_royal_coords[1]!]);
 		}
 
+		// reorder white piecelist and coordlist so that RNG is always initialized in the same way
+		const sort_indices = start_coordlist
+			.map((coord, index) => ({coord: coord, index: index})) // Store index and coord in an object
+			.sort((a, b) => { // Sort chosen objects by the stored coords
+				const normA = manhattanNorm(a.coord);
+				const normB = manhattanNorm(b.coord);
+				if (normA !== normB) return normA - normB;
+				else if (a.coord[1] !== b.coord[1]) return a.coord[1] - b.coord[1];
+				else return a.coord[0] - b.coord[0];
+			})
+			.map(object => object.index); // Extract the new order of indices
+		start_piecelist = sort_indices.map(i => start_piecelist[i]!); // Reorder start_piecelist based on sort_indices
+		start_coordlist = sort_indices.map(i => start_coordlist[i]!); // Reorder start_coordlist based on sort_indices
+
 		// Initialize seeded RNG function based on starting position
 		const seedString = `${start_piecelist.toString()}|${start_coordlist.toString()}`;
 		const seedArray = cyrb128(seedString);
