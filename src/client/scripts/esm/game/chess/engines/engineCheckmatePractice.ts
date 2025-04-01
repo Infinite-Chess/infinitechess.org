@@ -992,13 +992,15 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
  * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search
  * @param {Boolean} inProtectedRiderFleeMode - whether one should neglect all white candidate moves by rider in deeper search and reward distance from him
+ * @param {Coords[]} black_killer_list - list of black killer moves that is being maintained when white to move
+ * @param {Number[]} white_killer_list - list white killer pieces that is being maintained when black to move
  * @param {Number} alpha 
  * @param {Number} beta 
  * @param {Number} alphaPlies - alpha beta for remaining plies in the game: tiebreak in case of early game over: the more plies the game lasts the better for black
  * @param {Number} betaPlies
  * @returns {Object} with properties "score", "move" and "termination_depth"
  */
-function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean, alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, terminate_now: boolean } {
+function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, start_depth: number, black_to_move: boolean, followingPrincipal: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean, black_killer_list: Coords[], white_killer_list: Number[], alpha: number, beta: number, alphaPlies: number, betaPlies: number): { score: number, bestVariation: { [key: number]: [number, Coords] }, survivalPlies: number, black_killer_move?: Coords, white_killer_piece_index?: Number, terminate_now: boolean } {
 	enginePositionCounter++;
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (enginePositionCounter % 3000 === 0 && Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis ) {
@@ -1017,13 +1019,42 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 	if (black_to_move) {
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
-		const black_moves = get_black_legal_moves(inTrapFleeMode, piecelist, coordlist);
+		let black_killer_move: Coords | undefined = undefined;
+		let black_moves = get_black_legal_moves(inTrapFleeMode, piecelist, coordlist);
 
 		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
 		if (mayEnterTrapFleeMode && depth === start_depth && isBlackInTrap(piecelist, coordlist)) inTrapFleeMode = true;
 
 		// Black is in protected rider flee mode and considers no white rider candidate moves no piece captures from here on out:
 		if (mayEnterProtectedRiderFleeMode && depth === start_depth && isBlackNearProtectedRider(piecelist, coordlist)) inProtectedRiderFleeMode = true;
+
+		// Order black moves by immediate evaluation function
+		if (depth > 1 && black_moves.length > 1) {
+			const black_move_evals: number[] = [];
+			for (const move of black_moves) {
+				const [order_piecelist, order_coordlist] = make_black_move(move, piecelist, coordlist);
+				const order_score = get_position_evaluation(order_piecelist, order_coordlist, false, inProtectedRiderFleeMode);
+				black_move_evals.push(order_score);
+			}
+
+			// Get sorted indices
+			const order_indices = black_move_evals.map((_, i) => i).sort((a, b) => black_move_evals[b]! - black_move_evals[a]!);
+
+			// Reorder black_moves arrays based on sorted indices
+			black_moves = order_indices.map(i => black_moves[i]!);
+		}
+
+		// Use killer move heuristic, i.e. put moves in black_killer_list in front
+		if (black_killer_list.length > 0) {
+			const reordered_moves_killers: Coords[] = [];
+			const reordered_moves_nonkillers: Coords[] = [];
+			for (const move of black_moves) {
+				if (tuplelist_contains_tuple(black_killer_list, move)) reordered_moves_killers.push(move); // Add killer moves to the first list
+				else reordered_moves_nonkillers.push(move); // Add non-killer moves to second list
+			}
+			black_moves.length = 0;
+			black_moves.push(...reordered_moves_killers, ...reordered_moves_nonkillers);
+		}
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
@@ -1041,11 +1072,14 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		}
 
 		// loop over all possible black moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
-		for (const move of black_moves) {
+		blackMoveLoop: for (const move of black_moves) {
 			const [new_piecelist, new_coordlist] = make_black_move(move, piecelist, coordlist);
-			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, alpha, beta, alphaPlies, betaPlies);
+			const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, false, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, [], white_killer_list, alpha, beta, alphaPlies, betaPlies);
 			if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 			followingPrincipal = false;
+
+			// append white killer piece to running white_killer_list, if it caused a beta cutoff
+			if (evaluation.white_killer_piece_index) white_killer_list.push(evaluation.white_killer_piece_index);
 
 			const new_score = evaluation.score;
 			const survivalPlies = evaluation.survivalPlies;
@@ -1065,15 +1099,17 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				}
 			}
 			if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
-				break;
+				black_killer_move = move;
+				break blackMoveLoop;
 			}
 		}
-		return { score: maxScore, bestVariation: bestVariation, survivalPlies: maxPlies, terminate_now: false };
+		return { score: maxScore, bestVariation: bestVariation, survivalPlies: maxPlies, black_killer_move: black_killer_move, terminate_now: false };
 
 	// White to move
 	} else {
 		let minScore = Infinity;
 		let minPlies = Infinity;
+		let white_killer_piece_index: Number | undefined = undefined;
 		let candidate_moves: Coords[][];
 
 		if (inTrapFleeMode) candidate_moves = [[coordlist[0]], ...Array(piecelist.length - 1).fill([])];
@@ -1082,6 +1118,18 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		// go through pieces for in increasing order of what piece has how many candidate moves
 		const indices = [...Array(piecelist.length).keys()];
 		indices.sort((a, b) => { return candidate_moves[a]!.length - candidate_moves[b]!.length; });
+
+		// Use killer move heuristic, i.e. put pieces in white_killer_list in front
+		if (white_killer_list.length > 0) {
+			const reordered_indices_killers: number[] = [];
+			const reordered_indices_nonkillers: number[] = [];
+			for (const piece_index of indices) {
+				if (piece_index in white_killer_list) reordered_indices_killers.push(piece_index); // Add killer moves to the first list
+				else reordered_indices_nonkillers.push(piece_index); // Add non-killer moves to second list
+			}
+			indices.length = 0;
+			indices.push(...reordered_indices_killers, ...reordered_indices_nonkillers);
+		}
 
 		// If we are still in followingPrincipal mode, do principal variation ordering
 		if (followingPrincipal && globallyBestVariation[start_depth - depth]) {
@@ -1108,12 +1156,15 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		}
 
 		// loop over all possible white moves, do alpha beta pruning with (alpha, beta) (and (alphaPlies, betaPlies) as the tiebreaker)
-		for (const piece_index of indices) {
+		whiteMoveLoop: for (const piece_index of indices) {
 			for (const target_square of candidate_moves[piece_index]!) {
 				const [new_piecelist, new_coordlist] = make_white_move(piece_index, target_square, piecelist, coordlist);
-				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, alpha, beta, alphaPlies, betaPlies);
+				const evaluation = alphabeta(new_piecelist, new_coordlist, depth - 1, start_depth, true, followingPrincipal, inTrapFleeMode, inProtectedRiderFleeMode, black_killer_list, [], alpha, beta, alphaPlies, betaPlies);
 				if (evaluation.terminate_now) return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 				followingPrincipal = false;
+
+				// append black killer move to running black_killer_list, if it caused a beta cutoff
+				if (evaluation.black_killer_move) black_killer_list.push(evaluation.black_killer_move);
 
 				const new_score = evaluation.score;
 				const survivalPlies = evaluation.survivalPlies;
@@ -1128,11 +1179,12 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 					}
 				}
 				if ((beta < alpha) || (beta === alpha && betaPlies < alphaPlies)) {
-					break;
+					white_killer_piece_index = piece_index;
+					break whiteMoveLoop;
 				}
 			}
 		}
-		return { score: minScore, bestVariation: bestVariation, survivalPlies: minPlies, terminate_now: false };
+		return { score: minScore, bestVariation: bestVariation, survivalPlies: minPlies, white_killer_piece_index: white_killer_piece_index, terminate_now: false };
 	}
 }
 
@@ -1150,7 +1202,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	try {
 		// iteratively deeper and deeper search
 		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
-			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, -Infinity, Infinity, 0, Infinity);
+			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, [], [], -Infinity, Infinity, 0, Infinity);
 			if (evaluation.terminate_now) { 
 				// console.log("Search interrupted at depth " + depth);
 				break;
