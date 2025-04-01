@@ -1,4 +1,8 @@
 {
+	"47": {
+		"note": "Added ranked_elo on linne 119.",
+		"changes": []
+	},
 	"46": {
 		"note": "On line 183 added a note that holding Control will force-drag the board.",
 		"changes": []

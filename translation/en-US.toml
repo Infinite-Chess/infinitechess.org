@@ -116,6 +116,7 @@ verify_confirm = "Thank you! Your account has been verified."
 joined = "Joined:"
 seen = ["Seen:", " ago"]
 practice_progress = "Practice Mode Progress:"
+ranked_elo = "Elo:"
 reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"

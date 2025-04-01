@@ -39,6 +39,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.15.0",
+		"@types/better-sqlite3": "^7.6.12",
 		"@types/express": "^5.0.0",
 		"@types/node": "^22.10.1",
 		"@types/ws": "^8.5.13",
