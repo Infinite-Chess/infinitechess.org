@@ -54,6 +54,9 @@ self.onmessage = function(e: MessageEvent) {
 	runEngine();
 };
 
+/** Seeded RNG function, will be initialized in runEngine() */
+let rand: Function;
+
 /** Whether the engine has already been initialized for the current game */
 let engineInitialized: boolean = false;
 
@@ -1084,7 +1087,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			const new_score = evaluation.score;
 			const survivalPlies = evaluation.survivalPlies;
 			if (new_score >= maxScore) {
-				if (new_score > maxScore || survivalPlies > maxPlies || (survivalPlies === maxPlies && Math.random() < 0.5) || Object.keys(bestVariation).length === 0) {
+				if (new_score > maxScore || survivalPlies > maxPlies || (survivalPlies === maxPlies && rand() < 0.5) || Object.keys(bestVariation).length === 0) {
 					bestVariation = evaluation.bestVariation;
 					bestVariation[start_depth - depth] = [NaN, move];
 					maxScore = new_score;
@@ -1169,7 +1172,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				const new_score = evaluation.score;
 				const survivalPlies = evaluation.survivalPlies;
 				if (new_score <= minScore) {
-					if (new_score < minScore || survivalPlies < minPlies || (survivalPlies === minPlies && Math.random() < 0.5) || Object.keys(bestVariation).length === 0) {
+					if (new_score < minScore || survivalPlies < minPlies || (survivalPlies === minPlies && rand() < 0.5) || Object.keys(bestVariation).length === 0) {
 						bestVariation = evaluation.bestVariation;
 						bestVariation[start_depth - depth] = [piece_index, target_square];
 						minScore = new_score;
@@ -1194,7 +1197,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
 	// immediately initialize and set globallyBestVariation randomly, in case nothing better ever gets found
 	const black_moves = get_black_legal_moves(false, piecelist, coordlist);
-	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+	globallyBestVariation[0] = [NaN, black_moves[Math.floor(rand() * black_moves.length)]! ];
 	const [dummy_piecelist, dummy_coordlist] = make_black_move(globallyBestVariation[0]![1]!, piecelist, coordlist);
 	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false);
 	globalSurvivalPlies = 1;
@@ -1252,10 +1255,45 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	}
 	catch (error) {
 		// If engine suggests illegal move for black, choose it randomly, else abort with currently best move
-		if (!tuplelist_contains_tuple(black_moves, globallyBestVariation[0]![1]!)) globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+		if (!tuplelist_contains_tuple(black_moves, globallyBestVariation[0]![1]!)) globallyBestVariation[0] = [NaN, black_moves[Math.floor(rand() * black_moves.length)]! ];
 		console.error("Something went wrong with the iterative deepening calculation, aborting early...");
 		console.error(error);
 	}
+}
+
+/**
+ * Given some string, returns an array of four random seeds
+ * Source: https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+ */
+function cyrb128(str: string) {
+	let h1 = 1779033703, h2 = 3144134277,
+		h3 = 1013904242, h4 = 2773480762;
+	for (let i = 0, k; i < str.length; i++) {
+		k = str.charCodeAt(i);
+		h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+		h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+		h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+		h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+	}
+	h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+	h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+	h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+	h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+	h1 ^= (h2 ^ h3 ^ h4), h2 ^= h1, h3 ^= h1, h4 ^= h1;
+	return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0];
+}
+
+/**
+ * Given some number, returns a seeded function that draws uniformly random numbers between 0 and 1
+ * Source: https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+ */
+function mulberry32(a: number) {
+	return function() {
+	  let t = a += 0x6D2B79F5;
+	  t = Math.imul(t ^ t >>> 15, t | 1);
+	  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+	  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+	};
 }
 
 /**
@@ -1295,6 +1333,11 @@ async function runEngine() {
 			// shift all white pieces, so that the black royal is at [0,0]
 			start_coordlist.push([coords[0]! - gamefile_royal_coords[0]!, coords[1]! - gamefile_royal_coords[1]!]);
 		}
+
+		// Initialize seeded RNG function based on starting position
+		const seedString = `${start_piecelist.toString()}|${start_coordlist.toString()}`;
+		const seedArray = cyrb128(seedString);
+		rand = mulberry32(seedArray[0]!);
 
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
