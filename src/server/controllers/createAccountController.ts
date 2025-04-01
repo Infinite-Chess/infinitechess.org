@@ -139,6 +139,10 @@ async function generateAccount({ username, email, password, autoVerify = false }
 
 	const result = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
 	if (!result.success) return; // Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
+    
+	// Add the newly created user to the ratings table
+	const user_id = result.result.lastInsertRowid;
+	addUserToRatingsTable(user_id);
 
 	const logTxt = `Created new member: ${username}`;
 	logEvents(logTxt, 'newMemberLog.txt', { print: true });
@@ -148,9 +152,6 @@ async function generateAccount({ username, email, password, autoVerify = false }
 		const user_id = result.result.lastInsertRowid;
 		sendEmailConfirmation(user_id);
 	}
-
-	// Add the newly created user to the ratings table
-	addUserToRatingsTable(result.result.lastInsertRowid);
 
 	return result.result.lastInsertRowid;
 }

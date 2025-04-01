@@ -13,7 +13,7 @@ import { logEvents } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 
 // SHOULD ONLY ever return a JSON.
-const getMemberData = async (req, res) => { // route: /member/:member/data
+const getMemberData = async(req, res) => { // route: /member/:member/data
 
 	// What member are we getting data from?
 	const claimedUsername = req.params.member;
@@ -25,7 +25,7 @@ const getMemberData = async (req, res) => { // route: /member/:member/data
 
 	// Get the player's rating values
 	const rating_values = getPlayerRatingValues(user_id);
-	const ranked_elo = rating_values["infinite_elo"];
+	const ranked_elo = rating_values.infinite_elo;
 
 
 	// What data are we going to send?
@@ -53,7 +53,7 @@ const getMemberData = async (req, res) => { // route: /member/:member/data
 		res.status(500).send('Internal Server Error');
 	}
 	if (req.memberInfo.signedIn && req.memberInfo.username.toLowerCase() === claimedUsername.toLowerCase()) { // Their page
-
+		
 		sendData.email = email; // This is their account, include their email with the response
 
 		if (verification !== null) {
