@@ -20,6 +20,7 @@ import timeutil from '../../util/timeutil.js';
 import fourdimensionalgenerator from './fourdimensionalgenerator.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
+import { rawTypes as r, players as p } from '../util/typeutil.js';
 // @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
 // @ts-ignore
@@ -27,10 +28,7 @@ import omega3generator from './omega3generator.js';
 // @ts-ignore
 import omega4generator from './omega4generator.js';
 // @ts-ignore
-import typeutil from '../util/typeutil.js';
-// @ts-ignore
 import specialmove from '../logic/specialmove.js';
-import { rawTypes as r, players as p} from '../util/typeutil.js';
 
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
@@ -38,7 +36,7 @@ interface GameRuleModifications {
 	promotionRanks?: { [color: string]: number[] } | null,
 	moveRule?: number | null,
 	turnOrder?: string[],
-	promotionsAllowed?: ColorVariantProperty<number[]>
+	promotionsAllowed?: ColorVariantProperty<RawType[]>
 	winConditions?: ColorVariantProperty<string[]>
 	slideLimit?: number
 }
@@ -50,7 +48,7 @@ type TimeVariantProperty<T> = T | {
 
 /** Keys should be players */
 type ColorVariantProperty<T> = {
-	[color: string]: T
+	[p in Player]?: T
 }
 
 /** A single variant entry object in the variant dictionary */
@@ -311,12 +309,10 @@ const variantDictionary: { [variantName: string]: Variant } = {
  * repeats it for every color to produce the full `promotionsAllowed` gamerule:
  * `{ [p.WHITE]: [r.ROOK,r.QUEEN...], [p.BLACK]: [r.ROOK,r.QUEEN...] }`
  */
-function repeatPromotionsAllowedForEachColor(promotions: RawType[], players: Player[] = [p.WHITE, p.BLACK]) {
-	const promotionRule: {[p in Player]?: number[]} = {};
+function repeatPromotionsAllowedForEachColor(promotions: RawType[], players: Player[] = [p.WHITE, p.BLACK]): ColorVariantProperty<RawType[]> {
+	const promotionRule: ColorVariantProperty<RawType[]> = {};
 	for (const player of players) {
-		const arr: number[] = [];
-		for (const promotionType of promotions) arr.push(typeutil.buildType(promotionType, player));
-		promotionRule[player] = arr;
+		promotionRule[player] = promotions;
 	}
 	return promotionRule;
 }
@@ -619,5 +615,6 @@ export default {
 
 export type {
 	Position,
-	SpecialMoveFunction
+	SpecialMoveFunction,
+	ColorVariantProperty,
 };

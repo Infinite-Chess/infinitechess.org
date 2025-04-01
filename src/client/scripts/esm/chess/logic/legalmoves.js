@@ -58,17 +58,16 @@ import { rawTypes as r } from '../util/typeutil.js';
 function genVicinity(gamefile) {
 	const vicinity = {};
 	if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
-
+	
 	// For every type in the game...
-	gamefile.startSnapshot.existingTypes.forEach(truetype => {
-		const type = typeutil.getRawType(truetype);
-		const movesetFunc = gamefile.pieceMovesets[type];
+	gamefile.startSnapshot.existingRawTypes.forEach(rawType => {
+		const movesetFunc = gamefile.pieceMovesets[rawType];
 		if (movesetFunc === undefined) return; // This piece type can't move, it can't check us from anywhere in the vicinity
 		const individualMoves = movesetFunc().individual ?? [];
 		individualMoves.forEach(coords => {
-			const key = coordutil.getKeyFromCoords(coords);
-			if (!vicinity[key]) vicinity[key] = []; // Make sure the key's already initialized
-			if (!vicinity[key].includes(type)) vicinity[key].push(type); // Make sure the key contains the piece type that can capture from that distance
+			const coordsKey = coordutil.getKeyFromCoords(coords);
+			if (!(coordsKey in vicinity)) vicinity[coordsKey] = []; // Make sure it's initialized
+			vicinity[coordsKey].push(rawType); // Make sure the key contains the piece type that can capture from that distance
 		});
 	});
 	return vicinity;
@@ -87,16 +86,14 @@ function genVicinity(gamefile) {
 function genSpecialVicinity(gamefile) {
 	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(gamefile.metadata);
 	const vicinity = {};
-	const existingTypes = gamefile.startSnapshot.existingTypes;
+	const existingRawTypes = gamefile.startSnapshot.existingRawTypes;
 	// Object keys are strings, so we need to cast the type to a number
-	for (const type of existingTypes) {
-		const rawType = typeutil.getRawType(type);
-		if (!(rawType in specialVicinityByPiece)) continue; // This piece isn't present in our game
-		
-		const pieceVicinity = specialVicinityByPiece[rawType];
+	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) { // [number, Coords[]]
+		const rawType = Number(rawTypeString);
+		if (!existingRawTypes.includes(rawType)) continue; // This piece isn't present in our game
 		pieceVicinity.forEach(coords => {
 			const coordsKey = coordutil.getKeyFromCoords(coords);
-			vicinity[coordsKey] = vicinity[coordsKey] ?? []; // Make sure its initialized
+			if (!(coordsKey in vicinity)) vicinity[coordsKey] = []; // Make sure it's initialized
 			vicinity[coordsKey].push(rawType);
 		});
 	}
@@ -397,7 +394,8 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 			console.log(`Opponent's move is illegal because they promoted to the opposite color. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote to opposite color.");
 		}
-		if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(moveDraftCopy.promotion)) {
+		const rawPromotion = typeutil.getRawType(moveDraftCopy.promotion);
+		if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(rawPromotion)) {
 			console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason('Specified promotion is illegal.');
 		}

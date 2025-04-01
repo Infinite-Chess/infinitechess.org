@@ -3,13 +3,15 @@
  * This script handles our promotion menu, when
  * pawns reach the promotion line.
  */
-import { Player, RawType } from '../../chess/util/typeutil.js';
 
+import type { ColorVariantProperty } from '../../chess/variants/variant.js';
+import type { Player, RawType } from '../../chess/util/typeutil.js';
+
+import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../chess/util/typeutil.js';
 
-"use strict";
 
 
 // Variables --------------------------------------------------------------------
@@ -58,23 +60,23 @@ function close() {
 
 /**
  * Inits the promotion UI. Hides promotions not allowed, reveals promotions allowed.
- * @param {Object} promotionsAllowed - An object that contains the information about what promotions are allowed.
+ * @param promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-async function initUI(promotionsAllowed: { [color in Player]?: RawType[]} | undefined) {
+async function initUI(promotionsAllowed: ColorVariantProperty<RawType[]> | undefined) {
 	if (promotionsAllowed === undefined) return;
 
 	if (Object.values(promoteElements.players).some(element => element.childElementCount > 0)) {
 		throw new Error("Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.");
 	}
 
-	for (const [splayer, types] of Object.entries(promotionsAllowed)) {
-		const player = Number(splayer) as Player;
+	for (const [playerString, rawtypes] of Object.entries(promotionsAllowed)) {
+		const player = Number(playerString) as Player;
 		if (!(player in promoteElements.players)) {
 			console.warn(`Player ${player} has a promotion but not promotion UI`);
 			continue;
 		}
-		const svgs = await svgcache.getSVGElements(types);
+		const svgs = await svgcache.getSVGElements(rawtypes.map(rawPromotion => typeutil.buildType(rawPromotion, player)));
 		svgs.forEach(svg => {
 			svg.classList.add('promotepiece');
 			svg.addEventListener('click', callback_promote);

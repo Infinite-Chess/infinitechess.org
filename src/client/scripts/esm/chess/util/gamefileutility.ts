@@ -88,9 +88,10 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: Player, 
  * that aren't included in this game.
  */
 function deleteUnusedMovesets(gamefile: gamefile) {
-	const existingTypes = gamefile.startSnapshot.existingTypes.map(typeutil.getRawType);
-	for (const key of Object.keys(gamefile.pieceMovesets)) {
-		if (!existingTypes.includes(Number(key) as RawType)) delete gamefile.pieceMovesets[key];
+	const existingRawTypes = gamefile.startSnapshot.existingRawTypes;
+	for (const key in gamefile.pieceMovesets) {
+		const rawType = Number(key) as RawType;
+		if (!existingRawTypes.includes(rawType)) delete gamefile.pieceMovesets[key];
 	}
 }
 

@@ -179,11 +179,10 @@ function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boole
 function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player]?: number[]} | undefined, type: number): boolean {
 	if (!promotionGameRule) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
-	const color = typeutil.getColorFromType(type);
+	const [rawType, player] = typeutil.splitType(type);
 
-	if (!promotionGameRule[color]) return false; // Eliminates neutral pieces.
-    
-	return promotionGameRule[color].includes(type); // Eliminates all pieces that can't be promoted to
+	if (!promotionGameRule[player]) return false; // This player color cannot promote (neutral).
+	return promotionGameRule[player].includes(rawType); // Eliminates all pieces that can't be promoted to
 }
 
 /**
@@ -276,19 +275,16 @@ function buildStateFromPosition(position: Position, coordConstructor: PositionAr
  * excluding pieces that aren't in the provided position.
  */
 function getPossibleSlides(gamefile: gamefile): Vec2[] {
-	const types = gamefile.startSnapshot.existingTypes;
 	const movesets = gamefile.pieceMovesets;
-	const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
-	for (const type of types) {
-		const rawtype = typeutil.getRawType(type);
-		let moveset = movesets[rawtype];
-		if (!moveset) continue;
-		moveset = moveset();
+	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
+	for (const rawtype of gamefile.startSnapshot.existingRawTypes) {
+		const movesetFunc = movesets[rawtype];
+		if (!movesetFunc) continue;
+		const moveset: PieceMoveset = movesetFunc() as PieceMoveset;
 		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach(slide => slides.add(slide));
+		Object.keys(moveset.sliding).forEach(slide => slides.add(slide as Vec2Key));
 	}
-	const temp: Vec2[] = [];
-	slides.forEach(slideline => temp.push(coordutil.getCoordsFromKey(slideline as Vec2Key)));
+	const temp: Vec2[] = Array.from(slides, math.getVec2FromKey);
 	return temp;
 }
 

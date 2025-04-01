@@ -8,6 +8,8 @@ import { players } from "../../client/scripts/esm/chess/util/typeutil";
 
 /** @typedef {import("../socket/socketUtility").CustomWebSocket} CustomWebSocket */
 /** @typedef {import("../../client/scripts/esm/chess/util/typeutil").Player} Player*/
+/** @typedef {import("../../client/scripts/esm/chess/variants/variant").ColorVariantProperty} ColorVariantProperty*/
+/** @typedef {import("../../client/scripts/esm/chess/util/typeutil").RawType} RawType*/
 
 function PlayerData() {
 	/**
@@ -89,6 +91,7 @@ function Game() {
          * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
          * If one color can't promote, their list should be left undefined.
          * If no color can promote, this should be left undefined.
+		 * @type {ColorVariantProperty<RawType[]> | undefined}
          */
 		promotionsAllowed: {
 			/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */

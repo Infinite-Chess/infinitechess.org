@@ -5,7 +5,7 @@
 
 import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
-import typeutil from '../util/typeutil.js';
+import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import variant from '../variants/variant.js';
 
 /** 
@@ -42,25 +42,34 @@ function setupVariant(gamefile, metadata, options) {
  * @param {gamefile} gamefile
  */
 function initExistingTypes(gamefile) {
-	if (gamefile.editor) return gamefile.startSnapshot.existingTypes = [...typeutil.types, ...typeutil.neutralTypes]; // Editor mode may add any available piece type to the board
-
-	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
-    
-	const types = new Set();
-
-	// Makes sure all possible pieces are accounted for. even when they dont start with them
-	const promotiontypes = gamefile.gameRules.promotionsAllowed ? Object.values(gamefile.gameRules.promotionsAllowed) : [];
-	for (const rawTypeList of promotiontypes) {
-		for (const t of rawTypeList) {
-			types.add(t);
+	if (gamefile.editor) { // Editor mode may add any available piece type to the board
+		const types = [];
+		// Repeat each raw type for every single player in the game.
+		for (const player of players) {
+			for (const type of rawTypes) {
+				types.push(typeutil.buildType(type, player));
+			}
 		}
+		gamefile.startSnapshot.existingTypes = types;
+		return;
 	}
-	
-	for (const tpiece of teamtypes) {
-		types.add(tpiece); // Make a set with the team color trimmed
+
+	// Non-editor mode...
+
+	const types = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
+    
+	// Makes sure pieces that are possible to promote to are accounted for.
+	if (gamefile.gameRules.promotionsAllowed) {
+		for (const [playerString, rawPromotions] of Object.entries(gamefile.gameRules.promotionsAllowed)) {
+			const player = Number(playerString);
+			for (const rawType of rawPromotions) {
+				types.add(typeutil.buildType(rawType, player));
+			}
+		}
 	}
 
 	gamefile.startSnapshot.existingTypes = [...types];
+	gamefile.startSnapshot.existingRawTypes = [...new Set(gamefile.startSnapshot.existingTypes.map(typeutil.getRawType))];
 }
 
 /**

@@ -3,23 +3,23 @@
  * This script contains the default movesets for all pieces except specials (pawns, castling)
  */
 
-// @ts-ignore
-import isprime from '../../util/isprime.js';
 import typeutil from '../util/typeutil.js';
 import math from '../../util/math.js';
+import { rawTypes } from '../util/typeutil.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
-import { rawTypes } from '../util/typeutil.js';
+// @ts-ignore
+import isprime from '../../util/isprime.js';
 
 // Type definitions...
 
 import type { Coords } from '../util/coordutil.js';
+import type { CoordsSpecial } from './movepiece.js';
+import type { RawType, Player } from '../util/typeutil.js';
+import type { Vec2Key } from '../../util/math.js';
+import type { Piece } from '../util/boardutil.js';
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
-// @ts-ignore
-import type { Piece } from './boardchanges.js';
-import { CoordsSpecial } from './movepiece.js';
-import type { RawType, Player } from '../util/typeutil.js';
 
 
 /**
@@ -49,7 +49,7 @@ interface PieceMoveset {
 	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!!
 	 */
 	sliding?: {
-		[slideDirection: string]: Coords
+		[slideDirection: Vec2Key]: Coords
 	},
 	/**
 	 * The initial function that determines how far a piece is legally able to slide

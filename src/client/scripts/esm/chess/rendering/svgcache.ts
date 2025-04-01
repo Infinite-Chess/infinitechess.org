@@ -133,6 +133,7 @@ async function fetchLocation(location: string) {
 	
 				Array.from(doc.getElementsByTagName("svg")).forEach(svg => {
 					cachedPieceSVGs[svg.id] = svg;
+					// console.log(`Fetched piece svg at location ${location}`);
 				});
 			} catch (error) {
 				// Remove the failed promise from the cache to allow retrying

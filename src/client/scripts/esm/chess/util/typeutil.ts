@@ -38,7 +38,7 @@ const rawTypes = {
 	PAWN: 21
 } as const;
 
-/** All player colors suppored in the game. */
+/** All player colors suppored in the game. Multiply the raw type by this to get the colored type. */
 const players = {
 	NEUTRAL: 0,
 	WHITE: 1,
@@ -104,7 +104,7 @@ function getColorStringFromType(type: number): string {
 }
 
 function buildType(type: RawType, color: Player): number {
-	return color * numTypes + type;
+	return type + color * numTypes;
 }
 
 /** Splits a type into its raw type and player */
@@ -122,13 +122,12 @@ function forEachPieceType(callback: (pieceType: number) => void, players: Player
 }
 
 function invertType(type: number): number {
-	const c = getColorFromType(type);
-	const r = getRawType(type);
-	const newc = c === players.WHITE ? players.BLACK :
-				 c === players.BLACK ? players.WHITE :
+	const [r, p] = splitType(type);
+	const newp = p === players.WHITE ? players.BLACK :
+				 p === players.BLACK ? players.WHITE :
 				 undefined;
-	if ( newc === undefined ) return type;
-	return buildType(r, newc);
+	if (newp === undefined) return type;
+	return buildType(r, newp);
 }
 
 function invertPlayer(player: Player) {
