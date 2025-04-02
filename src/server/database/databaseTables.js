@@ -31,6 +31,28 @@ const allMemberColumns = [
 	'checkmates_beaten'
 ];
 
+/** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
+const allPlayerStatsColumns = [
+	'user_id',
+	'moves_played',
+	'last_played_rated_game',
+	'game_history',
+	'game_count',
+	'game_count_rated',
+	'game_count_casual',
+	'game_count_public',
+	'game_count_private',
+	'game_count_wins',
+	'game_count_losses',
+	'game_count_draws',
+	'game_count_wins_ranked',
+	'game_count_losses_ranked',
+	'game_count_draws_ranked',
+	'game_count_wins_casual',
+	'game_count_losses_casual',
+	'game_count_draws_casual'
+];
+
 
 // Functions -----------------------------------------------------------------------------------
 
@@ -77,6 +99,51 @@ function generateTables() {
 	`;
 	db.run(createTableSQLQuery);
 
+	// Player Stats table
+	createTableSQLQuery = `
+		CREATE TABLE IF NOT EXISTS player_stats (
+			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
+			moves_played INTEGER NOT NULL DEFAULT 0,
+			last_played_rated_game TIMESTAMP,
+			game_history TEXT NOT NULL DEFAULT '',
+			game_count INTEGER NOT NULL DEFAULT 0,
+			game_count_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_public INTEGER NOT NULL DEFAULT 0,
+			game_count_private INTEGER NOT NULL DEFAULT 0,
+			game_count_wins INTEGER NOT NULL DEFAULT 0,
+			game_count_losses INTEGER NOT NULL DEFAULT 0,
+			game_count_draws INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_casual INTEGER NOT NULL DEFAULT 0
+		);
+	`;
+	db.run(createTableSQLQuery);
+
+	// Games table
+	createTableSQLQuery = `
+		CREATE TABLE IF NOT EXISTS games (
+			id INTEGER PRIMAY KEY,
+			date TIMESTAMP NOT NULL,
+			players TEXT NOT NULL,
+			elo TEXT,
+			rating_diff TEXT,
+			time_control TEXT NOT NULL,
+			variant TEXT NOT NULL,
+			rated BOOLEAN NOT NULL,
+			private BOOLEAN NOT NULL,
+			result TEXT NOT NULL,
+			termination TEXT NOT NULL,
+			movecount INTEGER NOT NULL,
+			icn TEXT NOT NULL
+		);
+	`;
+	db.run(createTableSQLQuery);
+
 	// Bans table
 	// createTableSQLQuery = `
 	// 	CREATE TABLE IF NOT EXISTS bans (
@@ -116,5 +183,6 @@ export {
 	user_id_upper_cap,
 	uniqueMemberKeys,
 	allMemberColumns,
+	allPlayerStatsColumns,
 	generateTables,
 };
