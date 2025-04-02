@@ -99,10 +99,6 @@ function getColorFromType(type: number): Player {
 	return Math.floor(type / numTypes) as Player;
 }
 
-function getColorStringFromType(type: number): string {
-	return strcolors[getColorFromType(type)];
-}
-
 function buildType(type: RawType, color: Player): number {
 	return type + color * numTypes;
 }
@@ -170,7 +166,6 @@ export default {
 
 	getRawType,
 	getColorFromType,
-	getColorStringFromType,
 	buildType,
 	splitType,
 	invertType,
