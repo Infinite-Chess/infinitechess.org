@@ -53,6 +53,23 @@ const allPlayerStatsColumns = [
 	'game_count_draws_casual'
 ];
 
+/** All columns of the games table. Each of these would be valid to retrieve from any game. */
+const allGamesColumns = [
+	'game_id',
+	'date',
+	'players',
+	'elo',
+	'rating_diff',
+	'time_control',
+	'variant',
+	'rated',
+	'private',
+	'result',
+	'termination',
+	'movecount',
+	'icn'
+];
+
 
 // Functions -----------------------------------------------------------------------------------
 
@@ -127,7 +144,7 @@ function generateTables() {
 	// Games table
 	createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS games (
-			id INTEGER PRIMAY KEY,
+			game_id INTEGER PRIMAY KEY,
 			date TIMESTAMP NOT NULL,
 			players TEXT NOT NULL,
 			elo TEXT,
@@ -184,5 +201,6 @@ export {
 	uniqueMemberKeys,
 	allMemberColumns,
 	allPlayerStatsColumns,
+	allGamesColumns,
 	generateTables,
 };

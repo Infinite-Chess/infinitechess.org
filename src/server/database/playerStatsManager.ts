@@ -79,7 +79,7 @@ function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated
 		if (error instanceof Error && 'code' in error) {
 			// Example check for better-sqlite3 specific error codes
 			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = 'User ID does not exist in the player_stats table.';
+				reason = 'User ID does not exist in the members table.';
 			} else if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
 				reason = 'User ID already exists in the player_stats table.';
 			}
@@ -89,9 +89,9 @@ function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated
 }
 
 /**
- * Fetches specified columns of a single player_stats from the player_stats table based on user_id
+ * Fetches specified columns of a single player from the player_stats table based on user_id
  * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'last_played_rated_game']).
- * @param {number} user_id - The search key to use. Must be either 'user_id', 'username', or 'email'.
+ * @param {number} user_id - The user_id of the player
  * @returns {PlayerStatsRecord} - An object containing the requested columns, or undefined if no match is found.
  */
 function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsRecord | undefined {
