@@ -75,7 +75,7 @@ function Game() {
 			/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
 			[players.BLACK]: undefined,
 		},
-		/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. */
+		/** A list of colors that make up one full turn cycle. REQUIRED. @type {Player[]} */
 		turnOrder: undefined,
 
 		// Gamerules that also have dedicated slots in ICN notation...
@@ -107,7 +107,7 @@ function Game() {
 		/** The maximum number of steps any sliding piece can take. */
 		slideLimit: undefined,
 	};
-	/** The turn order of the game. `["white", "black"]` @type {Player[]} */
+	/** The turn order of the game. @type {Player[]} */
 	this.turnOrder = undefined;
 	/** Whos turn it is currently. @type {Player?} */
 	this.whosTurn = undefined;

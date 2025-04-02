@@ -306,8 +306,8 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	// win condition
 	if (longformat.gameRules) {
 		if (longformat.gameRules.winConditions) {
-			const whitewins = longformat.gameRules.winConditions.white;
-			const blackwins = longformat.gameRules.winConditions.black;
+			const whitewins = longformat.gameRules.winConditions[p.WHITE];
+			const blackwins = longformat.gameRules.winConditions[p.BLACK];
 			if (whitewins && blackwins) {
 				let wins_are_equal = true;
 				if (whitewins.length === blackwins.length) {
@@ -784,8 +784,8 @@ function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith
  */
 function generateSpecialRights(position, pawnDoublePush, castleWith) {
 	const specialRights = {};
-	const kingsFound = {}; // Running list of kings discovered, 'x,y':'white'
-	const castleWithsFound = {}; // Running list of pieces found that are able to castle (e.g. rooks), 'x,y':'black'
+	const kingsFound = {}; // Running list of kings discovered, 'x,y': player
+	const castleWithsFound = {}; // Running list of pieces found that are able to castle (e.g. rooks), 'x,y': player
 
 	for (const key in position) {
 		const thisPiece = position[key]; // e.g. "pawnsW"
@@ -802,9 +802,9 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 	// Only give the pieces that can castle their special move ability
 	// if they are the same row and color as a king!
 	if (Object.keys(kingsFound).length === 0) return specialRights; // Nothing can castle, return now.
-	outerFor: for (const coord in castleWithsFound) { // 'x,y':'white'
+	outerFor: for (const coord in castleWithsFound) { // 'x,y': player
 		const coords = getCoordsFromString(coord); // [x,y]
-		for (const kingCoord in kingsFound) { // 'x,y':'white'
+		for (const kingCoord in kingsFound) { // 'x,y': player
 			const kingCoords = getCoordsFromString(kingCoord); // [x,y]
 			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
 			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their players don't match
