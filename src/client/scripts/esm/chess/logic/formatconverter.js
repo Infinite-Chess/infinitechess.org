@@ -676,6 +676,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		}
 
 		// update en passant
+		// TODO: Doesn't the move object contain the enpassantCreate special flag? Let's read that instead
 		if (rawType === r.PAWN && Math.abs(move.endCoords[1] - move.startCoords[1]) === 2) {
 			ret.enpassant = [move.endCoords[0], (move.startCoords[1] + move.endCoords[1]) / 2];
 		} else delete ret.enpassant;
