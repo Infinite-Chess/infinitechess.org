@@ -1,6 +1,10 @@
 {
+	"48": {
+		"note": "Added selection-animations, line 24.",
+		"changes": []
+	},
 	"47": {
-		"note": "Added ranked_elo on linne 119.",
+		"note": "Added ranked_elo on line 119.",
 		"changes": []
 	},
 	"46": {
