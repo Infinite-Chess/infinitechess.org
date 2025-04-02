@@ -51,6 +51,7 @@ function initExistingTypes(gamefile) {
 			}
 		}
 		gamefile.startSnapshot.existingTypes = types;
+		gamefile.startSnapshot.existingRawTypes = [...new Set(gamefile.startSnapshot.existingTypes.map(typeutil.getRawType))];
 		return;
 	}
 

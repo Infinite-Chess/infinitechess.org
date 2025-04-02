@@ -716,7 +716,7 @@ function LongToShort_CompactMove(longmove) {
  * 
  * **Throws and error** if the move is in an invalid format.
  * @param {string} shortmove - Input move as string
- * @returns {Object} Output move as JSON: { startCoords, endCoords, promotion }
+ * @returns {Object} Output move as JSON: { startCoords, endCoords, promotion: type }
  */
 function ShortToLong_CompactMove(shortmove) {
 	let coords = shortmove.match(RegExp(`${scientificNumberRegex},${scientificNumberRegex}`, "g")); // ['1,2','3,4']

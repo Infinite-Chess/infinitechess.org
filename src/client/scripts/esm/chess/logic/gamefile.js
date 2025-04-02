@@ -57,7 +57,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
-		/** In key format 'x,y':'type' @type {Position} */
+		/** In key format 'x,y': type @type {Position} */
 		position: undefined,
 		/** @type {string} */
 		positionString: undefined,
