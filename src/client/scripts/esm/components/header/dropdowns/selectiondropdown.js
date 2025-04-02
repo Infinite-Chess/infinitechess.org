@@ -61,7 +61,7 @@ function toggleDrag() {
 function togglePremove() {
 	//preferences.setPremoveMode(premoveCheckbox.checked);
 }
-function togglePremove() {
+function toggleAnimations() {
 	preferences.setAnimationsMode(animationsCheckbox.checked);
 }
 
