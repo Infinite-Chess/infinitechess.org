@@ -1,4 +1,12 @@
 {
+	"48": {
+		"note": "Added selection-animations, line 24.",
+		"changes": []
+	},
+	"47": {
+		"note": "Added ranked_elo on line 119.",
+		"changes": []
+	},
 	"46": {
 		"note": "On line 183 added a note that holding Control will force-drag the board.",
 		"changes": []

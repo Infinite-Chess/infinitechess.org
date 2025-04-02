@@ -56,6 +56,9 @@ self.onmessage = function(e: MessageEvent) {
 	runEngine();
 };
 
+/** Seeded RNG function, will be initialized in runEngine() */
+let rand: Function;
+
 /** Whether the engine has already been initialized for the current game */
 let engineInitialized: boolean = false;
 
@@ -344,7 +347,8 @@ function initEvalWeightsAndSearchProperties() {
 	// whether to enter "trap flee mode" whenever the black royal is surrounded by white pieces
 	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal_Flee
 	trapFleeDictionary = {
-		"1K2HA1B-1k": [3, 6, 10],
+		"1K2HA1B-1k": [3, 7, 10],
+		"1K3HA-1k": [3, 7, 10],
 	};
 
 	if (checkmateSelectedID in trapFleeDictionary) {
@@ -951,15 +955,19 @@ function make_black_move(move: Coords, piecelist: number[], coordlist: Coords[])
  * @param {Array} piecelist 
  * @param {Array} coordlist 
  * @param {Boolean} black_to_move - false on white's turns, true on black's turns
+ * @param {Boolean} inTrapFleeMode - whether black is in trap flee mode -> leads to lower scores, if true
  * @param {Boolean} inProtectedRiderFleeMode - whether black is in protected rider flee mode -> leads to higher scores, if true
  * @returns {Number}
  */
-function get_position_evaluation(piecelist: number[], coordlist: Coords[], black_to_move: boolean, inProtectedRiderFleeMode: boolean): number {
+function get_position_evaluation(piecelist: number[], coordlist: Coords[], black_to_move: boolean, inTrapFleeMode: boolean, inProtectedRiderFleeMode: boolean): number {
 	let score = 0;
 
 	// add penalty based on number of legal moves of black royal
 	const incheck = is_check(piecelist, coordlist);
 	score += legalMoveEvalDictionary[incheck ? 0 : 1]![get_black_legal_move_amount(false, piecelist, coordlist)]!;
+
+	// do not give stalemate Infinity reward if white to move or black in trap flee mode
+	if (score === Infinity && (!black_to_move || inTrapFleeMode)) score = 1.5 * legalMoveEvalDictionary[0]![1]!;
 
 	const black_to_move_num = black_to_move ? 0 : 1;
 	for (let i = 0; i < piecelist.length; i++) {
@@ -1009,10 +1017,10 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 	// If game over, return position evaluation
 	} else if ( black_to_move && get_black_legal_move_amount(false, piecelist, coordlist) === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
 	// At max depth, return position evaluation
 	} else if (depth === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
 	}
 
 	let bestVariation: { [key: number]: [number, Coords] } = {};
@@ -1035,7 +1043,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			const black_move_evals: number[] = [];
 			for (const move of black_moves) {
 				const [order_piecelist, order_coordlist] = make_black_move(move, piecelist, coordlist);
-				const order_score = get_position_evaluation(order_piecelist, order_coordlist, false, inProtectedRiderFleeMode);
+				const order_score = get_position_evaluation(order_piecelist, order_coordlist, false, inTrapFleeMode, inProtectedRiderFleeMode);
 				black_move_evals.push(order_score);
 			}
 
@@ -1086,7 +1094,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			const new_score = evaluation.score;
 			const survivalPlies = evaluation.survivalPlies;
 			if (new_score >= maxScore) {
-				if (new_score > maxScore || survivalPlies > maxPlies || (survivalPlies === maxPlies && Math.random() < 0.5) || Object.keys(bestVariation).length === 0) {
+				if (new_score > maxScore || survivalPlies > maxPlies || (survivalPlies === maxPlies && rand() < 0.5) || Object.keys(bestVariation).length === 0) {
 					bestVariation = evaluation.bestVariation;
 					bestVariation[start_depth - depth] = [NaN, move];
 					maxScore = new_score;
@@ -1171,7 +1179,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 				const new_score = evaluation.score;
 				const survivalPlies = evaluation.survivalPlies;
 				if (new_score <= minScore) {
-					if (new_score < minScore || survivalPlies < minPlies || (survivalPlies === minPlies && Math.random() < 0.5) || Object.keys(bestVariation).length === 0) {
+					if (new_score < minScore || survivalPlies < minPlies || (survivalPlies === minPlies && rand() < 0.5) || Object.keys(bestVariation).length === 0) {
 						bestVariation = evaluation.bestVariation;
 						bestVariation[start_depth - depth] = [piece_index, target_square];
 						minScore = new_score;
@@ -1196,9 +1204,9 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdepth: number): void {
 	// immediately initialize and set globallyBestVariation randomly, in case nothing better ever gets found
 	const black_moves = get_black_legal_moves(false, piecelist, coordlist);
-	globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+	globallyBestVariation[0] = [NaN, black_moves[Math.floor(rand() * black_moves.length)]! ];
 	const [dummy_piecelist, dummy_coordlist] = make_black_move(globallyBestVariation[0]![1]!, piecelist, coordlist);
-	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false);
+	globallyBestScore = get_position_evaluation(dummy_piecelist, dummy_coordlist, false, false, false);
 	globalSurvivalPlies = 1;
 
 	try {
@@ -1254,10 +1262,45 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 	}
 	catch (error) {
 		// If engine suggests illegal move for black, choose it randomly, else abort with currently best move
-		if (!tuplelist_contains_tuple(black_moves, globallyBestVariation[0]![1]!)) globallyBestVariation[0] = [NaN, black_moves[Math.floor(Math.random() * black_moves.length)]! ];
+		if (!tuplelist_contains_tuple(black_moves, globallyBestVariation[0]![1]!)) globallyBestVariation[0] = [NaN, black_moves[Math.floor(rand() * black_moves.length)]! ];
 		console.error("Something went wrong with the iterative deepening calculation, aborting early...");
 		console.error(error);
 	}
+}
+
+/**
+ * Given some string, returns an array of four random seeds
+ * Source: https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+ */
+function cyrb128(str: string) {
+	let h1 = 1779033703, h2 = 3144134277,
+		h3 = 1013904242, h4 = 2773480762;
+	for (let i = 0, k; i < str.length; i++) {
+		k = str.charCodeAt(i);
+		h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+		h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+		h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+		h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+	}
+	h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+	h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+	h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+	h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+	h1 ^= (h2 ^ h3 ^ h4), h2 ^= h1, h3 ^= h1, h4 ^= h1;
+	return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0];
+}
+
+/**
+ * Given some number, returns a seeded function that draws uniformly random numbers between 0 and 1
+ * Source: https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+ */
+function mulberry32(a: number) {
+	return function() {
+	  let t = a += 0x6D2B79F5;
+	  t = Math.imul(t ^ t >>> 15, t | 1);
+	  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+	  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+	};
 }
 
 /**
@@ -1320,6 +1363,25 @@ async function runEngine() {
 				start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);
 			}
 		}
+
+		// reorder white piecelist and coordlist so that RNG is always initialized in the same way
+		const sort_indices = start_coordlist
+			.map((coord, index) => ({coord: coord, index: index})) // Store index and coord in an object
+			.sort((a, b) => { // Sort chosen objects by the stored coords
+				const normA = manhattanNorm(a.coord);
+				const normB = manhattanNorm(b.coord);
+				if (normA !== normB) return normA - normB;
+				else if (a.coord[1] !== b.coord[1]) return a.coord[1] - b.coord[1];
+				else return a.coord[0] - b.coord[0];
+			})
+			.map(object => object.index); // Extract the new order of indices
+		start_piecelist = sort_indices.map(i => start_piecelist[i]!); // Reorder start_piecelist based on sort_indices
+		start_coordlist = sort_indices.map(i => start_coordlist[i]!); // Reorder start_coordlist based on sort_indices
+
+		// Initialize seeded RNG function based on starting position
+		const seedString = `${start_piecelist.toString()}|${start_coordlist.toString()}`;
+		const seedArray = cyrb128(seedString);
+		rand = mulberry32(seedArray[0]!);
 
 		// run iteratively deepened move search
 		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);

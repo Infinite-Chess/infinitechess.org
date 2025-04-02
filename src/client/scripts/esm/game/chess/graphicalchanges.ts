@@ -13,6 +13,7 @@ import type gamefile from "../../chess/logic/gamefile.js";
 import piecemodels from "../rendering/piecemodels.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
+import preferences from "../../components/header/preferences.js";
 
 
 // Type Definitions -----------------------------------------------------------------------------------------
@@ -103,18 +104,21 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 function animateMove(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move') throw Error(`animateMove called with non-move action: ${change.action}`);
 	const waypoints = change.path ?? [change.piece.coords, change.endCoords];
+	if (instant === false && preferences.getAnimationsMode() === false) instant = true; // If animations are disabled, make it instant (sound only), just like dropping dragged pieces.
 	animation.animatePiece(change.piece.type, waypoints, undefined, instant, clearanimations);
 }
 
 function animateReturn(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`animateReturn called with non-move action: ${change.action}`);
 	const waypoints = change.path?.slice().reverse() ?? [change['endCoords'], change.piece.coords]; // slice() required because reverse() is mutating
+	if (instant === false && preferences.getAnimationsMode() === false) instant = true; // If animations are disabled, make it instant (sound only), just like dropping dragged pieces.
 	animation.animatePiece(change.piece.type, waypoints, undefined, instant, clearanimations);
 }
 
 function animateCapture(change: Change, instant: boolean, clearanimations: boolean) {
 	if (change.action !== 'capture') throw Error(`animateCapture called with non-capture action: ${change.action}`);
 	const waypoints = change.path ?? [change.piece.coords, change.endCoords];
+	if (instant === false && preferences.getAnimationsMode() === false) instant = true; // If animations are disabled, make it instant (sound only), just like dropping dragged pieces.
 	animation.animatePiece(change.piece.type, waypoints, change.capturedPiece, instant, clearanimations);
 }
 

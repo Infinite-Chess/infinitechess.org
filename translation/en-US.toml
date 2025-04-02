@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "46"
+version = "48"
 maintainer = "Naviary"
 
 [header]
@@ -21,6 +21,7 @@ legalmoves-dots = "Dots" # Dots and 4 corner triangles
 selection = "Selection"
 selection-drag = "Dragging pieces"
 selection-premove = "Premoves"
+selection-animations = "Animations"
 perspective = "Perspective" # Perspective-mode
 perspective-mouse-sensitivity = "Mouse Sensitivity"
 perspective-fov = "Field of View"
@@ -116,6 +117,7 @@ verify_confirm = "Thank you! Your account has been verified."
 joined = "Joined:"
 seen = ["Seen:", " ago"]
 practice_progress = "Practice Mode Progress:"
+ranked_elo = "Elo:"
 reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"
