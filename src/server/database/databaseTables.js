@@ -144,7 +144,7 @@ function generateTables() {
 	// Games table
 	createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS games (
-			game_id INTEGER PRIMAY KEY,
+			game_id INTEGER PRIMARY KEY,
 			date TIMESTAMP NOT NULL,
 			players TEXT NOT NULL,
 			elo TEXT,
