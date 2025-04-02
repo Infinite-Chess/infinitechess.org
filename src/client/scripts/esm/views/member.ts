@@ -109,7 +109,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		updateCompletedCheckmatesInformation(result.checkmates_beaten);
 
 		const eloElement = document.getElementById('ranked_elo')!;
-		eloElement.textContent = Math.round(result.ranked_elo);
+		eloElement.textContent = String(Math.round(result.ranked_elo));
 
 		const loggedInAs = validatorama.getOurUsername(); // Assuming returns string | null
 
@@ -128,7 +128,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 			element_deleteAccount.classList.remove('hidden');
 			element_deleteAccount.addEventListener("click", () => removeAccount(true)); // Add listener only if it's our profile
 			element_change.classList.remove('hidden');
-			element_email.textContent = result.email; // Use email if available, handle undefined case
+			element_email.textContent = result.email!; // Use email if available, handle undefined case
 		}
 
 		// Change username text size depending on character count
@@ -263,7 +263,6 @@ function recalcUsernameSize(): void {
 	if (!usernameText) return; // Exit if no username text
 
 	// Estimate available width (adjust padding/margin values as needed based on actual layout)
-	const memberElementPadding = 10; // Example padding, get dynamically if needed
 	const otherElementsWidth = 185; // Approximate width of other elements on the same line/area
 	const availableWidth = (window.innerWidth - otherElementsWidth) * 0.52; // Target width factor
 
