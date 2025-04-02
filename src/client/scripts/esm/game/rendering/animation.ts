@@ -181,7 +181,7 @@ function clearAnimations(playSounds = false): void {
 	animations.forEach(animation => {
 		clearTimeout(animation.soundTimeoutId); // Don't play it twice..
 		clearTimeout(animation.scheduledRemovalId); // Don't remove it twice..
-		if (playSounds && !animation.soundPlayed) playAnimationSound(animation, true); // .. play it NOW.
+		if (playSounds && !animation.soundPlayed) playAnimationSound(animation); // .. play it NOW.
 	});
 	animations.length = 0; // Empties existing animations
 }
@@ -225,7 +225,7 @@ function calculateAnimationDuration(totalDistance: number, waypointCount: number
 /** Schedules the playback of the sound of the animation. */
 function scheduleSoundPlayback(animation: Animation): void {
 	const playbackTime = Math.max(0, animation.durationMillis + SOUND_OFFSET);
-	animation.soundTimeoutId = setTimeout(() => playAnimationSound(animation, false), playbackTime);
+	animation.soundTimeoutId = setTimeout(() => playAnimationSound(animation), playbackTime);
 }
 
 /** Schedules the removal of an animation after it's over. */
@@ -243,15 +243,15 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param animation - The animation to play the sound for.
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
-function playAnimationSound(animation: Animation, dampen: boolean) {
-	playSoundOfDistance(animation.totalDistance, animation.captured !== undefined, dampen);
+function playAnimationSound(animation: Animation) {
+	playSoundOfDistance(animation.totalDistance, animation.captured !== undefined);
 	animation.soundPlayed = true;
 }
 
 /** Plays the sound of a move from just the distance traveled and whether it made a capture. */
-function playSoundOfDistance(distance: number, captured: boolean, dampen?: boolean) {
-	if (captured) sound.playSound_capture(distance, dampen);
-	else sound.playSound_move(distance, dampen);
+function playSoundOfDistance(distance: number, captured: boolean) {
+	if (captured) sound.playSound_capture(distance);
+	else sound.playSound_move(distance);
 }
 
 
