@@ -70,10 +70,6 @@ interface OrganizedPieces {
 	colinearsPresent: boolean,
 }
 
-
-/** How many extra undefined placeholders each type range should have.
- * When these are all exhausted, the large piece lists must be regenerated. */
-const listExtras = 10;
 /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
 const pieceCountToDisableCheckmate = 50_000;
 
@@ -90,9 +86,22 @@ function constuctNewArray<C extends SizedArray>(a: C, i: number): C {
 	return new constructor(a.length + i) as C;
 }
 
-function regenerateLists(o: OrganizedPieces, gamerule: GameRules): RegenerateData {
+/**
+ * This is used to regenerate the organizational lists of the board
+ * so that extra space can be added to anticipate extra pieces being added,
+ * currently this is only useful for promotion.
+ * @param o The organized pieces
+ * @param gamerule 
+ * @param listExtras The amount of undefineds that we should have for pieces that may be added
+ * @returns how much each typerange was extended by
+ */
+function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: number): RegenerateData {
 	const typeOrder = [...o.typeRanges.keys()];
-	typeOrder.sort((a,b) => {return o.typeRanges.get(a)!.start - o.typeRanges.get(b)!.start;});
+	typeOrder.sort((a,b) => {
+		const startDiff = o.typeRanges.get(a)!.start - o.typeRanges.get(b)!.start;
+		if (startDiff !== 0) return startDiff;
+		return b - a; // Just so typeranges are in the order of type ASC when they start at the same point.
+	});
 
 	let totalUndefinedsNeeded = 0;
 	let currentOffset = 0;
@@ -169,11 +178,11 @@ function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boole
 /**
  * Sees if the provided type is a type we need to append undefined
  * placeholders to the piece list of this type.
- * The mesh of all the pieces needs placeholders in case we
+ * The lists of all the pieces needs placeholders in case we
  * promote to a new piece.
- * @param {gamefile} gamefile - The gamefile
- * @param {string} type - The type of piece (e.g. "pawnsW")
- * @returns {boolean} *true* if we need to append placeholders for this type.
+ * @param gamefile - The gamefile
+ * @param type - The type of piece (e.g. r.pawns + e.W)
+ * @returns *true* if we need to append placeholders for this type.
  */
 // eslint-disable-next-line no-unused-vars
 function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player]?: number[]} | undefined, type: number): boolean {
@@ -186,23 +195,9 @@ function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player
 }
 
 /**
- * 
- * @param {gamefile} gamefile
+ * Copies the contents of an array over to a fixed array
  */
-function getEmptyTypeRanges(types: Iterable<number>): TypeRanges {
-	const state: TypeRanges = new Map();
-
-	for (const type of types) {
-		state.set(type, {
-			start: 0,
-			end: 0,
-			undefineds: []
-		});
-	}
-
-	return state;
-}
-
+// TODO: move to jsutil?
 function toSizedArray<T extends SizedArray>(arr: number[], sizedArray: T): T {
 	for (let i = 0; i < sizedArray.length; i++) {
 		sizedArray[i] = arr[i]!;
@@ -211,19 +206,34 @@ function toSizedArray<T extends SizedArray>(arr: number[], sizedArray: T): T {
 }
 
 /**
- * Converts a piece list organized by key to organized by type.
- * @returns Pieces organized by type: `{ pawnsW: [ [1,2], [2,2], ...]}`
+ * Uses the information in the gamefile to build organized pieces.
+ * @param gamefile 
+ * @param coordConstructor The type of array to be used for `Xpositions` and `Ypositions`
+ * @returns 
  */
 function buildStateForGame(gamefile: gamefile, coordConstructor: PositionArrayConstructor): OrganizedPieces {
 	const keyList = gamefile.startSnapshot.position;
-	return buildStateFromPosition(keyList, coordConstructor, gamefile.startSnapshot.existingTypes, getSlidingMoves(gamefile));
+	return buildStateFromPosition(keyList, coordConstructor, gamefile.startSnapshot.existingTypes, getSlidingInfo(gamefile));
 }
 
+/**
+ * Converts a piece list organized by key to the organized pieces format.
+ * @returns Organized pieces
+ */
 function buildStateFromPosition(position: Position, coordConstructor: PositionArrayConstructor, possibleTypes: Iterable<number>, 
 	{ hippogonalsPresent = false, slides = [] as Vec2[], colinearsPresent = false} = {}
 ): OrganizedPieces {
 	const piecesByType: {[type: number]: Coords[]} = {};
-	const ranges = getEmptyTypeRanges(possibleTypes);
+	const ranges: TypeRanges = new Map();
+
+	// Init all type ranges for pieces in game
+	for (const type of possibleTypes) {
+		ranges.set(type, {
+			start: 0,
+			end: 0,
+			undefineds: []
+		});
+	}
 
 	const organizedPieces: Partial<OrganizedPieces> = {
 		typeRanges: ranges,
@@ -242,7 +252,8 @@ function buildStateFromPosition(position: Position, coordConstructor: PositionAr
 		piecesByType[type]!.push(coords);
 	}
 
-	const typeOrder: number[] = Object.keys(piecesByType).map(Number).sort();
+	// convert piecesByType to piece lists
+	const typeOrder: number[] = [...possibleTypes].sort();
 	let currentOffset = 0;
 	const x: number[] = [];
 	const y: number[] = [];
@@ -259,13 +270,22 @@ function buildStateFromPosition(position: Position, coordConstructor: PositionAr
 			t.push(rt);
 		}
 	}
+
+	// Convert piece lists to fixed arrays
 	organizedPieces.XPositions = toSizedArray(x, new coordConstructor(currentOffset));
 	organizedPieces.YPositions = toSizedArray(y, new coordConstructor(currentOffset));
 	organizedPieces.types = toSizedArray(t, new Uint8Array(currentOffset));
 
-	placePieces(organizedPieces);
-
-	// TODO: Trim piece lists that are empty and cant be promoted to.
+	// Position all the pieces
+	organizedPieces.lines = new Map();
+	organizedPieces.coords = new Map();
+	for (const line of organizedPieces.slides!) {
+		const strline = coordutil.getKeyFromCoords(line);
+		organizedPieces.lines.set(strline, new Map());
+	}
+	for (let i = 0; i < organizedPieces.types!.length; i++) {
+		registerPieceInSpace(i, organizedPieces);
+	}
 
 	return organizedPieces as OrganizedPieces;
 }
@@ -293,7 +313,7 @@ function getPossibleSlides(gamefile: gamefile): Vec2[] {
  * This contains the information of what slides are possible, according to
  * what piece types are in this game.
  */
-function getSlidingMoves(gamefile: gamefile) {
+function getSlidingInfo(gamefile: gamefile) {
 	const slides = getPossibleSlides(gamefile);
 	return {
 		slides,
@@ -302,18 +322,12 @@ function getSlidingMoves(gamefile: gamefile) {
 	};
 }
 
-function placePieces(organizedPieces: Partial<OrganizedPieces>) {
-	organizedPieces.lines = new Map();
-	organizedPieces.coords = new Map();
-	for (const line of organizedPieces.slides!) {
-		const strline = coordutil.getKeyFromCoords(line);
-		organizedPieces.lines.set(strline, new Map());
-	}
-	for (let i = 0; i < organizedPieces.types!.length; i++) {
-		registerPieceInSpace(i, organizedPieces);
-	}
-}
-
+/**
+ * Adds a piece to coords and lines
+ * so that it can be used for collision detection
+ * @param idx 
+ * @param organizedPieces 
+ */
 function registerPieceInSpace(idx: number, organizedPieces: Partial<OrganizedPieces>) {
 	if (idx === undefined) throw Error("Undefined idx is trying");
 	const x = organizedPieces.XPositions![idx];
@@ -347,15 +361,15 @@ function removePieceFromSpace(idx: number, organizedPieces: Partial<OrganizedPie
 	}
 
 	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
-	function removePieceFromLine(organizedPieces: Map<LineKey,number[]>, lineKey: LineKey) {
-		const line = organizedPieces.get(lineKey)!;
+	function removePieceFromLine(lineset: Map<LineKey,number[]>, lineKey: LineKey) {
+		const line = lineset.get(lineKey)!;
 
 		for (let i = 0; i < line.length; i++) {
 			const thisPieceIdx = line[i]!;
 			if (thisPieceIdx !== idx) continue;
 			line.splice(i, 1); // Delete
-			// If the line length is now 0, remove itself from the organizedPieces
-			if (line.length === 0) organizedPieces.delete(lineKey);
+			// If the line length is now 0, remove itself from the lineset
+			if (line.length === 0) lineset.delete(lineKey);
 			break;
 		}
 	}

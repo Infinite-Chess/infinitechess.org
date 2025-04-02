@@ -170,7 +170,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	};
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	this.editor = editor;
-
+	/** How many extra undefined placeholders each type range should have.
+	 * When these are all exhausted, the large piece lists must be regenerated. */
+	this.listExtras = 10;
 	// JSDoc stuff over...
 
 	// Init things related to the variant, and the startSnapshot of the position
@@ -204,7 +206,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.ourPieces = organizedpieces.buildStateForGame(this, Int32Array);
 	this.startSnapshot.pieceCount = boardutil.getPieceCountOfGame(this.ourPieces);
 
-	organizedpieces.regenerateLists(this.ourPieces, this.gameRules);
+	organizedpieces.regenerateLists(this.ourPieces, this.gameRules, this.listExtras);
 
 	gamefileutility.deleteUnusedMovesets(this);
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!

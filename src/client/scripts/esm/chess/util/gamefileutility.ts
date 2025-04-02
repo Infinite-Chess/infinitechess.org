@@ -105,7 +105,7 @@ function doGameOverChecks(gamefile: gamefile) {
 	if (isGameOver(gamefile) && winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile);
 }
 
-// TODO: This is a GUI only feature that will use Mesh type. MOVE TO GAME WHEN POSSIBLE
+// TODO: This is a GUI only feature that will use Mesh type. MOVE TO ../../GAME WHEN POSSIBLE
 /**
  * Saves the bounding box of the game's starting position to the startSnapshot property
  */
