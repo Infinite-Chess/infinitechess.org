@@ -29,6 +29,7 @@ interface ClientSidePreferences {
 interface ServerSidePreferences {
 	theme: string;
 	legal_moves: 'dots' | 'squares';
+	animations: boolean,
 }
 
 /** Both client and server side preferences */
@@ -51,6 +52,8 @@ let preferences: Preferences;
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
 const default_drag_enabled: boolean = true;
 const default_premove_mode: boolean = false; // Change this to true when premoves are implemented.
+/** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
+const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
 
@@ -77,6 +80,7 @@ function loadPreferences(): void {
 		perspective_fov: default_perspective_fov,
 		drag_enabled: default_drag_enabled,
 		premove_mode: default_premove_mode,
+		animations: default_animations,
 	};
 
 	preferences = browserStoragePrefs;
@@ -193,6 +197,16 @@ function getPremoveMode(): boolean {
 function setPremoveMode(premove_mode: boolean): void {
 	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
 	preferences.premove_mode = premove_mode;
+	savePreferences();
+}
+
+function getAnimationsMode(): boolean {
+	return preferences.animations ?? default_animations;
+}
+
+function setAnimationsMode(animations_enabled: boolean) {
+	preferences.animations = animations_enabled;
+	onChangeMade();
 	savePreferences();
 }
 
@@ -403,6 +417,8 @@ export default {
 	setDragEnabled,
 	getPremoveMode,
 	setPremoveMode,
+	getAnimationsMode,
+	setAnimationsMode,
 	getPerspectiveSensitivity,
 	setPerspectiveSensitivity,
 	getPerspectiveFOV,
