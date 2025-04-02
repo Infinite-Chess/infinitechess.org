@@ -34,9 +34,9 @@ const allMemberColumns = [
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
 const allPlayerStatsColumns = [
 	'user_id',
-	'moves_played',
 	'last_played_rated_game',
 	'game_history',
+	'moves_played',
 	'game_count',
 	'game_count_rated',
 	'game_count_casual',
@@ -103,9 +103,9 @@ function generateTables() {
 	createTableSQLQuery = `
 		CREATE TABLE IF NOT EXISTS player_stats (
 			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
-			moves_played INTEGER NOT NULL DEFAULT 0,
 			last_played_rated_game TIMESTAMP,
 			game_history TEXT NOT NULL DEFAULT '',
+			moves_played INTEGER NOT NULL DEFAULT 0,
 			game_count INTEGER NOT NULL DEFAULT 0,
 			game_count_rated INTEGER NOT NULL DEFAULT 0,
 			game_count_casual INTEGER NOT NULL DEFAULT 0,

@@ -8,7 +8,7 @@ import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 import { ensureJSONString } from '../utility/JSONUtils.js';
 // @ts-ignore
 import db from './database.js';
-
+// @ts-ignore
 import { allPlayerStatsColumns } from './databaseTables.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
@@ -20,9 +20,9 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 /** Structure of a player_stats record. This is all allowed columns of a user_id. */
 interface PlayerStatsRecord {
 	user_id?: number;
-	moves_played?: number;
     last_played_rated_game?: Date;
     game_history?: string;
+    moves_played?: number;
     game_count?: number;
     game_count_rated?: number;
     game_count_casual?: number;
@@ -46,12 +46,14 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 // Methods --------------------------------------------------------------------------------------------
 
 
-/*
- * Adds an entry to the player stats table
- * @param user_id - The id for the user (fails if it doesn't exist in player_stats or due to constraints)
- * @returns A result object indicating success or failure.
+/**
+ * Adds an entry to the player_stats table
+ * @param {number} user_id - The id for the user (fails if it doesn't exist in player_stats or due to constraints)
+ * @param {object} [options] - Optional parameters for the user.
+ * @param {Date} [options.last_played_rated_game] - The user's last_played_rated_game timestamp
+ * @returns {ModifyQueryResult} A result object indicating success or failure.
  */
-function addUserToPlayerStatsTable(user_id: number): ModifyQueryResult {
+function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated_game?: Date } = {}): ModifyQueryResult {
 	const query = `
 	INSERT INTO player_stats (
 		user_id,
@@ -61,7 +63,7 @@ function addUserToPlayerStatsTable(user_id: number): ModifyQueryResult {
 
 	try {
 		// Execute the query with the provided values
-		const result = db.run(query, [user_id]);
+		const result = db.run(query, [user_id, options.last_played_rated_game]);
 
 		// Return success result
 		return { success: true, result };
@@ -122,9 +124,10 @@ function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsReco
 
 		// Return the fetched row (single object)
 		return row;
-	} catch (error) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		// Log the error and return undefined
-		logEvents(`Error executing query: ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error executing query: ${message}`, 'errLog.txt', { print: true });
 		return undefined;
 	}
 }
@@ -149,10 +152,6 @@ function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStats
 			const reason = `Invalid column "${column}" provided for user ID "${user_id}" when updating player_stats columns!`;
 			logEvents(reason, 'errLog.txt', { print: true });
 			return { success: false, reason };
-		}
-		// Convert objects (e.g., JSON) to strings for storage
-		if (typeof columnsAndValues[column] === 'object' && columnsAndValues[column] !== null) {
-			columnsAndValues[column] = JSON.stringify(columnsAndValues[column]);
 		}
 	}
 
