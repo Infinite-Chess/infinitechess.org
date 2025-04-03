@@ -1242,7 +1242,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 					const dummy_gamefile = { 
 						moves: [],
 						gameRules: input_gamefile.gameRules,
-						ourPieces: organizedpieces.buildStateFromPosition(piecesOrganizedByKey, Int32Array, Object.values(piecesOrganizedByKey)),
+						ourPieces: organizedpieces.buildStateFromPosition(piecesOrganizedByKey, Float32Array, Object.values(piecesOrganizedByKey)),
 					} as unknown as gamefile;
 
 					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;

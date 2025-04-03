@@ -203,7 +203,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** @type {false | string} */
 	this.gameConclusion = false;
 
-	this.ourPieces = organizedpieces.buildStateForGame(this, Int32Array);
+	this.ourPieces = organizedpieces.buildStateForGame(this, Float32Array);
 	this.startSnapshot.pieceCount = boardutil.getPieceCountOfGame(this.ourPieces);
 
 	organizedpieces.regenerateLists(this.ourPieces, this.gameRules, this.listExtras);

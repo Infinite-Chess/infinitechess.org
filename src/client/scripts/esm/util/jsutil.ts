@@ -20,7 +20,8 @@ const fixedArrays = [
 	BigUint64Array,
 ] as const;
 
-type FixedArray = typeof fixedArrays[keyof typeof fixedArrays];
+type FixedArrayConstructor = typeof fixedArrays[keyof typeof fixedArrays];
+type FixedArray = 	Float32Array | Float64Array | Int8Array | Int16Array | Int32Array | BigInt64Array | Uint8Array | Uint16Array | Uint32Array | BigUint64Array;
 
 /** Used for JSON stringifying and re-parsing fixed arrays using {@link stringifyReplacer} and {@link parseReviver}. */
 const FixedArrayNames = {
@@ -38,7 +39,7 @@ const FixedArrayNames = {
 	"BigUint64Array": BigUint64Array,
 };
 
-function getConstructorOfArray(array: any) {
+function getConstructorOfArray(array: any): any {
 	for (const c of fixedArrays) {
 		if (array instanceof c) return c;
 	}
@@ -62,10 +63,8 @@ function deepCopyObject<T extends unknown>(src: T): T {
 
 	const constructor = getConstructorOfArray(src);
 	if (constructor) {
-		// @ts-ignore
-		const copy = new constructor((src as FixedArray).length);
+		const copy = new constructor(((src as unknown) as FixedArray).length);
 		for (let i = 0; i < copy.length; i++) {
-			// @ts-ignore
 			copy[i] = src[i];
 		}
 		return copy as T;
@@ -391,7 +390,7 @@ function parseReviver(key: string, value: any): any {
 		}
 
 		if (value.TrueType in FixedArrayNames) {
-			const constructor: FixedArray = FixedArrayNames[value.TrueType as keyof typeof FixedArrayNames]; // Get the constructor based on the TrueType
+			const constructor: FixedArrayConstructor = FixedArrayNames[value.TrueType as keyof typeof FixedArrayNames]; // Get the constructor based on the TrueType
 			const array = new constructor(value.value.length);
 			for (let i = 0; i < array.length; i++) {
 				array[i] = value.value[i];
@@ -423,9 +422,13 @@ function ensureJSONString(input: any, errorMessage?: string): string {
 	}
 }
 
-
+export type {
+	FixedArray,
+	FixedArrayConstructor,
+};
 
 export default {
+	getConstructorOfArray,
 	deepCopyObject,
 	copyFloat32Array,
 	addElementToOrganizedArray,

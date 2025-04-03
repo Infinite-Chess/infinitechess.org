@@ -1,6 +1,7 @@
 import typeutil from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
+import jsutil from "../../util/jsutil.js";
 
 // @ts-ignore
 import type gamefile from "./gamefile.js";
@@ -11,11 +12,10 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { GameRules } from "../variants/gamerules.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { Player } from "../util/typeutil.js";
+import type { FixedArray } from "../../util/jsutil.js";
 
-const ArrayTypes = [Int8Array, Int16Array, Int32Array, BigInt64Array, Uint8Array];
-type PositionArray = Int8Array | Int16Array | Int32Array; //| BigInt64Array;
-type SizedArray = PositionArray | Uint8Array
-type PositionArrayConstructor = Int32ArrayConstructor | Int8ArrayConstructor | Int16ArrayConstructor; //| BigInt64ArrayConstructor;
+type PositionArray = Float32Array | Float64Array //| BigInt64Array;
+type PositionArrayConstructor = Float32ArrayConstructor | Float64ArrayConstructor //| BigInt64ArrayConstructor;
 /** Stores the maximum values for each typed array */
 const MaxTypedArrayValues: Record<string, bigint> = {
 	Int8Array: 127n,
@@ -74,15 +74,11 @@ interface OrganizedPieces {
 const pieceCountToDisableCheckmate = 50_000;
 
 
-function getArrayType<C extends SizedArray>(a: C) {
-	for (const t of ArrayTypes) {
-		if (a instanceof t) return t;
-	}
-	throw Error();
-}
+function extendArray<C extends FixedArray>(a: C, i: number): C {
+	const constructor = jsutil.getConstructorOfArray(a);
 
-function constuctNewArray<C extends SizedArray>(a: C, i: number): C {
-	const constructor = getArrayType(a);
+	if (!constructor) throw Error(`${a} is not a fixed array, cannot extend it.`);
+
 	return new constructor(a.length + i) as C;
 }
 
@@ -118,9 +114,9 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: nu
 		currentOffset += undefinedsNeeded;
 	}
 
-	const newXpos = constuctNewArray(o.XPositions, totalUndefinedsNeeded);
-	const newYpos = constuctNewArray(o.YPositions, totalUndefinedsNeeded);
-	const newTypes = constuctNewArray(o.types, totalUndefinedsNeeded);
+	const newXpos = extendArray(o.XPositions, totalUndefinedsNeeded);
+	const newYpos = extendArray(o.YPositions, totalUndefinedsNeeded);
+	const newTypes = extendArray(o.types, totalUndefinedsNeeded);
 
 	for (const [t, rangeData] of o.typeRanges) {
 		const extraNeeded = extraUndefinedsByType[t]!;
@@ -198,7 +194,7 @@ function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player
  * Copies the contents of an array over to a fixed array
  */
 // TODO: move to jsutil?
-function toSizedArray<T extends SizedArray>(arr: number[], sizedArray: T): T {
+function copyToSizedArray<T extends FixedArray>(arr: number[], sizedArray: T): T {
 	for (let i = 0; i < sizedArray.length; i++) {
 		sizedArray[i] = arr[i]!;
 	}
@@ -274,9 +270,9 @@ function buildStateFromPosition(position: Position, coordConstructor: PositionAr
 	}
 
 	// Convert piece lists to fixed arrays
-	organizedPieces.XPositions = toSizedArray(x, new coordConstructor(currentOffset));
-	organizedPieces.YPositions = toSizedArray(y, new coordConstructor(currentOffset));
-	organizedPieces.types = toSizedArray(t, new Uint8Array(currentOffset));
+	organizedPieces.XPositions = copyToSizedArray(x, new coordConstructor(currentOffset));
+	organizedPieces.YPositions = copyToSizedArray(y, new coordConstructor(currentOffset));
+	organizedPieces.types = copyToSizedArray(t, new Uint8Array(currentOffset));
 
 	// Position all the pieces
 	organizedPieces.lines = new Map();
