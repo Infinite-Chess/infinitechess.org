@@ -9,13 +9,13 @@ import checkmatepractice from '../chess/checkmatepractice.js';
 import guititle from './guititle.js';
 import validatorama from '../../util/validatorama.js';
 import validcheckmates from '../../chess/util/validcheckmates.js';
+import svgcache from '../../chess/rendering/svgcache.js';
+import { players } from '../../chess/util/typeutil.js';
+import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import style from './style.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
-import svgcache from '../../chess/rendering/svgcache.js';
-import { players } from '../../chess/util/typeutil.js';
-import typeutil from '../../chess/util/typeutil.js';
 
 // Variables ----------------------------------------------------------------------------
 

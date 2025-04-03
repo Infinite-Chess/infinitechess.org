@@ -11,17 +11,20 @@ import type gamefile from '../logic/gamefile.js';
 
 import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
+import moveutil from './moveutil.js';
+import metadata from './metadata.js';
+import math from '../../util/math.js';
 // @ts-ignore
 import winconutil from './winconutil.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
-import moveutil from './moveutil.js';
-import metadata from './metadata.js';
-import math from '../../util/math.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 // @ts-ignore
 import wincondition from '../logic/wincondition.js'; 
-// Import End
+
+
+// Methods -------------------------------------------------------------
+
 
 /**
  * Returns true if the game is over (gameConclusion is truthy).
@@ -114,7 +117,10 @@ function initStartingAreaBox(gamefile: gamefile) {
 	const box = math.getBoxFromCoordsList(coordsList);
 	gamefile.startSnapshot.box = box;
 }
+
+
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 export default {
 	isGameOver,

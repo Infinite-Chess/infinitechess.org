@@ -1,10 +1,11 @@
-import jsutil from "../../util/jsutil.js";
-import { players } from "../util/typeutil.js";
 
 /**
  * This script contains the gameRules constructor,
  * and contains utility methods for working with them.
  */
+
+import jsutil from "../../util/jsutil.js";
+import { players } from "../util/typeutil.js";
 
 /**
  * @typedef {import('../util/typeutil.js').Player} Player
@@ -12,10 +13,11 @@ import { players } from "../util/typeutil.js";
  * @typedef {import('../variants/variant.js').ColorVariantProperty} ColorVariantProperty
  */
 
+
 /**
  * Checks if a specified color has a given win condition.
  * @param {GameRules} gameRules
- * @param {number} color - The player color to check (e.g., 1, 2).
+ * @param {Player} color - The player color to check (e.g., 1, 2).
  * @param {string} winCondition - The win condition for.
  * @returns {boolean} True if the specified color has the given win condition, otherwise false.
  */
@@ -26,7 +28,7 @@ function doesColorHaveWinCondition(gameRules, color, winCondition) {
 /**
  * Gets the count of win conditions for a specified color in the gamefile.
  * @param {GameRules} gameRules
- * @param {number} color - The player color to check (e.g., 1, 2).
+ * @param {Player} color - The player color to check (e.g., 1, 2).
  * @returns {number} The number of win conditions for the specified color. Returns 0 if the color is not defined.
  */
 function getWinConditionCountOfColor(gameRules, color) {

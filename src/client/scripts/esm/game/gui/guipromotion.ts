@@ -15,14 +15,14 @@ import { players } from '../../chess/util/typeutil.js';
 
 
 // Variables --------------------------------------------------------------------
-interface PromotionGUI {
+
+const PromotionGUI: {
 	base: HTMLElement
 	players: {
+		// eslint-disable-next-line no-unused-vars
 		[p in Player]?: HTMLElement
 	}
-}
-
-const promoteElements: PromotionGUI = {
+} = {
 	base: document.getElementById('promote')!,
 	players: {
 		[players.WHITE]: document.getElementById('promotewhite')!,
@@ -37,25 +37,25 @@ let selectionOpen = false; // True when promotion GUI visible. Do not listen to 
 
 
 // Prevent right-clicking on the promotion UI
-promoteElements.base.addEventListener('contextmenu', (event) => event.preventDefault());
+PromotionGUI.base.addEventListener('contextmenu', (event) => event.preventDefault());
 
 
 function isUIOpen() { return selectionOpen; }
 
 function open(color: Player) {
 	selectionOpen = true;
-	promoteElements.base?.classList.remove('hidden');
-	if (!(color in promoteElements.players)) throw new Error(`Promotion UI does not support color "${color}"`);
-	promoteElements.players[color]!.classList.remove('hidden');
+	PromotionGUI.base.classList.remove('hidden');
+	if (!(color in PromotionGUI.players)) throw new Error(`Promotion UI does not support color "${color}"`);
+	PromotionGUI.players[color]!.classList.remove('hidden');
 }
 
 /** Closes the promotion UI */
 function close() {
 	selectionOpen = false;
-	for (const element of Object.values(promoteElements.players)) {
+	for (const element of Object.values(PromotionGUI.players)) {
 		element.classList.add('hidden');
 	}
-	promoteElements.base?.classList.add('hidden');
+	PromotionGUI.base.classList.add('hidden');
 }
 
 /**
@@ -66,21 +66,21 @@ function close() {
 async function initUI(promotionsAllowed: ColorVariantProperty<RawType[]> | undefined) {
 	if (promotionsAllowed === undefined) return;
 
-	if (Object.values(promoteElements.players).some(element => element.childElementCount > 0)) {
+	if (Object.values(PromotionGUI.players).some(element => element.childElementCount > 0)) {
 		throw new Error("Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.");
 	}
 
 	for (const [playerString, rawtypes] of Object.entries(promotionsAllowed)) {
 		const player = Number(playerString) as Player;
-		if (!(player in promoteElements.players)) {
-			console.warn(`Player ${player} has a promotion but not promotion UI`);
+		if (!(player in PromotionGUI.players)) {
+			console.error(`Player ${player} has a promotion but not promotion UI`);
 			continue;
 		}
 		const svgs = await svgcache.getSVGElements(rawtypes.map(rawPromotion => typeutil.buildType(rawPromotion, player)));
 		svgs.forEach(svg => {
 			svg.classList.add('promotepiece');
 			svg.addEventListener('click', callback_promote);
-			promoteElements.players[player]!.appendChild(svg);
+			PromotionGUI.players[player]!.appendChild(svg);
 		});
 	}
 }
@@ -89,11 +89,11 @@ async function initUI(promotionsAllowed: ColorVariantProperty<RawType[]> | undef
  * Resets the promotion UI by clearing all promotion options.
  */
 function resetUI() {
-	for (const playerPromo of Object.values(promoteElements.players)) {
-		while (playerPromo!.firstChild) {
-			const svg = playerPromo!.firstChild;
-			playerPromo!.removeChild(svg);
+	for (const playerPromo of Object.values(PromotionGUI.players)) {
+		while (playerPromo.firstChild) {
+			const svg = playerPromo.firstChild;
 			svg.removeEventListener('click', callback_promote);
+			playerPromo.removeChild(svg);
 		}
 	}
 }

@@ -6,12 +6,12 @@
 
 
 import type { Piece } from '../../chess/util/boardutil.js';
+import type { MoveDraft } from '../../chess/logic/movepiece.js';
+import type { RawType } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
-import type { MoveDraft } from '../../chess/logic/movepiece.js';
-import type { RawType } from '../../chess/util/typeutil.js';
 
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
@@ -31,6 +31,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
+import { rawTypes, players } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -51,7 +52,6 @@ import transition from '../rendering/transition.js';
 import movement from '../rendering/movement.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-import { rawTypes, players } from '../../chess/util/typeutil.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -286,12 +286,12 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
  */
 function canSelectPieceType(gamefile: gamefile, type: number | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
-	const [raw, color] = typeutil.splitType(type);
+	const [raw, player] = typeutil.splitType(type);
 	if (raw === rawTypes.VOID) return 0; // Can't select voids
 	if (editMode) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
-	if (color === players.NEUTRAL) return 0; // Can't select neutrals, period.
+	if (player === players.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
-	const isOurTurn = gameloader.isItOurTurn(color);
+	const isOurTurn = gameloader.isItOurTurn(player);
 	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
 	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
@@ -304,7 +304,7 @@ function canMovePieceType(pieceType: number): boolean {
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
-	return (!isPremove);
+	return (!isPremove); // For now we can't premove, can only move our pieces on our turn.
 }
 
 /**
@@ -317,6 +317,7 @@ function canDropOnPieceTypeInEditMode(type?: number) {
 	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
 	// Can't drop on voids or friendlies, EVER, not even when edit mode is on.
 	return rawtype !== rawTypes.VOID && (color !== selectedPieceColor);
+	// return color !== selectedPieceColor; // Allow capturing voids for debugging
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
@@ -458,7 +459,8 @@ function makePromotionMove(gamefile: gamefile) {
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
-	if (typeutil.SVGLESS_TYPES.some((type: RawType) => typeutil.getRawType(pieceSelected!.type) === type)) return; // No svg/texture for this piece (void), don't render the ghost image.
+	const rawType = typeutil.getRawType(pieceSelected.type);
+	if (typeutil.SVGLESS_TYPES.some((type: RawType) => type === rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }

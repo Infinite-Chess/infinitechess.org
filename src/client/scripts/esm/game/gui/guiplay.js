@@ -280,7 +280,7 @@ function getInviteOptions() {
 	return {
 		variant: element_optionVariant.value,
 		clock: element_optionClock.value,
-		color: color,
+		color,
 		private: element_optionPrivate.value,
 		rated: element_optionRated.value,
 	};

@@ -1,13 +1,15 @@
 
-"use strict";
 
-/** @typedef {import('./typeutil').Player} Player */
 
 /**
  * This script contains lists of compatible win conditions in the game.
  * And contains a few utility methods for them.
  * 
  */
+
+"use strict";
+
+/** @typedef {import('./typeutil').Player} Player */
 
 /** Valid win conditions that either color can have. */
 const validWinConditions = ['checkmate','royalcapture','allroyalscaptured','allpiecescaptured','threecheck','koth'];

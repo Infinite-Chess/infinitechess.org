@@ -24,6 +24,7 @@ import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
 import loadingscreen from "../gui/loadingscreen.js";
+import { players } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
@@ -39,7 +40,6 @@ import movement from "../rendering/movement.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 
-import { players } from "../../chess/util/typeutil.js";
 
 // Variables --------------------------------------------------------------------
 

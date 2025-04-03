@@ -24,13 +24,13 @@ import animation from '../rendering/animation.js';
 import validatorama from "../../util/validatorama.js";
 import validcheckmates from '../../chess/util/validcheckmates.js';
 import docutil from '../../util/docutil.js';
+import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
-import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 
 // Variables ----------------------------------------------------------------------------
 

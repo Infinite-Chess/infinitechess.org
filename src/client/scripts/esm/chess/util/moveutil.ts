@@ -7,11 +7,11 @@
 import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
+import type { Player } from './typeutil.js';
 // @ts-ignore
 import type { gamefile } from '../logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../variants/gamerules.js';
-import type { Player } from './typeutil.js';
 
 import coordutil from './coordutil.js';
 import { players } from './typeutil.js';

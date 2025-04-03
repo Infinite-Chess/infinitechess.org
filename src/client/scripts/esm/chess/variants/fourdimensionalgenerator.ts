@@ -15,10 +15,10 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 
 import coordutil from "../util/coordutil.js";
 import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
+import { rawTypes as r, ext as e } from "../util/typeutil.js";
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
 
-import { rawTypes as r, ext as e } from "../util/typeutil.js";
 
 // Variables ------------------------------------------------------------------------------------------------
 

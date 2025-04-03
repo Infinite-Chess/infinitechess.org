@@ -9,18 +9,18 @@ import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { RawType, Player } from '../util/typeutil.js';
+import type { Position } from '../util/boardutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from './gamerules.js';
-import type { Position } from '../util/boardutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
 import fourdimensionalgenerator from './fourdimensionalgenerator.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
-import { rawTypes as r, players as p } from '../util/typeutil.js';
+import { rawTypes as r, players as p, rawTypes } from '../util/typeutil.js';
 // @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
 // @ts-ignore
@@ -48,6 +48,7 @@ type TimeVariantProperty<T> = T | {
 
 /** Keys should be players */
 type ColorVariantProperty<T> = {
+	// eslint-disable-next-line no-unused-vars
 	[p in Player]?: T
 }
 
@@ -94,12 +95,10 @@ type SpecialMoveFunction = (gamefile: gamefile, piece: Piece, move: Move) => boo
  * 
  * TODO: Move this to specialmove.ts when it's converted to typescript.
  */
-interface SpecialVicinity {
-	/**
-	 * `piece` is the type without color information. (i.e. r.PAWN)
-	 * The value is a list of coordinates that it may be possible for that piece type to make a special capture from that distance.
-	 */
-	[piece: number]: Coords[]
+type SpecialVicinity = {
+	/** The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance. */
+	// eslint-disable-next-line no-unused-vars
+	[r in RawType]?: Coords[]
 }
 
 "use strict";
@@ -111,9 +110,9 @@ const defaultWinConditions = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'
 const KOTHWinConditions = { [p.WHITE]: ['checkmate','koth'], [p.BLACK]: ['checkmate','koth'] };
 const defaultTurnOrder = [p.WHITE, p.BLACK];
 
-const defaultPromotions = [r.KNIGHT,r.BISHOP,r.ROOK,r.QUEEN];
+const defaultPromotions = [r.KNIGHT, r.BISHOP, r.ROOK, r.QUEEN];
 const defaultPromotionsAllowed = repeatPromotionsAllowedForEachColor(defaultPromotions);
-const coaIPPromotions = [...defaultPromotions,r.GUARD,r.CHANCELLOR,r.HAWK];
+const coaIPPromotions = [...defaultPromotions, r.GUARD, r.CHANCELLOR, r.HAWK];
 const coaIPPromotionsAllowed = repeatPromotionsAllowedForEachColor(coaIPPromotions);
 
 const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule: null, turnOrder: [p.BLACK, p.WHITE] }; // No promotions, no 50-move rule, and reversed turn order.
@@ -169,7 +168,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	},
 	Space: {
 		positionString: 'q4,31|ch4,23|p-12,18+|b4,18|p20,18+|p-11,17+|ar-10,17|p0,17+|b4,17|p8,17+|ar18,17|p19,17+|p-11,16+|p-10,16+|p-1,16+|p9,16+|p18,16+|p19,16+|p-1,15+|r0,15|ha4,15|r8,15|p9,15+|p3,6+|p4,6+|p5,6+|p2,5+|k4,5|p6,5+|n1,4|ce4,4|n7,4|p-10,3+|p-1,3+|p0,3+|p2,3+|p3,3+|p4,3+|p5,3+|p6,3+|p8,3+|p9,3+|p-12,2+|p-11,2+|p19,2+|p20,2+|p-13,1+|p21,1+|P-13,0+|P21,0+|P-12,-1+|P-11,-1+|P19,-1+|P20,-1+|P-1,-2+|P0,-2+|P2,-2+|P3,-2+|P4,-2+|P5,-2+|P6,-2+|P8,-2+|P9,-2+|P18,-2+|N1,-3|CE4,-3|N7,-3|P2,-4+|K4,-4|P6,-4+|P3,-5+|P4,-5+|P5,-5+|P-1,-14+|R0,-14|HA4,-14|R8,-14|P9,-14+|P-11,-15+|P-10,-15+|P-1,-15+|P9,-15+|P18,-15+|P19,-15+|P-11,-16+|AR-10,-16|P0,-16+|B4,-16|P8,-16+|AR18,-16|P19,-16+|P-12,-17+|B4,-17|P20,-17+|CH4,-22|Q4,-30',
-		gameruleModifications: { promotionRanks: { [p.WHITE]: [4], [p.BLACK]: [-3] }, promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions,r.HAWK,r.CENTAUR,r.ARCHBISHOP,r.CHANCELLOR]) }
+		gameruleModifications: { promotionRanks: { [p.WHITE]: [4], [p.BLACK]: [-3] }, promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.HAWK, r.CENTAUR, r.ARCHBISHOP, r.CHANCELLOR]) }
 	},
 	Obstocean: {
 		positionString: 'vo-8,14|vo-7,14|vo-6,14|vo-5,14|vo-4,14|vo-3,14|vo-2,14|vo-1,14|vo0,14|vo1,14|vo2,14|vo3,14|vo4,14|vo5,14|vo6,14|vo7,14|vo8,14|vo9,14|vo10,14|vo11,14|vo12,14|vo13,14|vo14,14|vo15,14|vo16,14|vo17,14|vo-8,13|vo-7,13|vo-6,13|vo-5,13|vo-4,13|vo-3,13|vo-2,13|vo-1,13|vo0,13|vo1,13|vo2,13|vo3,13|vo4,13|vo5,13|vo6,13|vo7,13|vo8,13|vo9,13|vo10,13|vo11,13|vo12,13|vo13,13|vo14,13|vo15,13|vo16,13|vo17,13|vo-8,12|vo-7,12|ob-6,12|ob-5,12|ob-4,12|ob-3,12|ob-2,12|ob-1,12|ob0,12|ob1,12|ob2,12|ob3,12|ob4,12|ob5,12|ob6,12|ob7,12|ob8,12|ob9,12|ob10,12|ob11,12|ob12,12|ob13,12|ob14,12|ob15,12|vo16,12|vo17,12|vo-8,11|vo-7,11|ob-6,11|ob-5,11|ob-4,11|ob-3,11|ob-2,11|ob-1,11|ob0,11|ob1,11|ob2,11|ob3,11|ob4,11|ob5,11|ob6,11|ob7,11|ob8,11|ob9,11|ob10,11|ob11,11|ob12,11|ob13,11|ob14,11|ob15,11|vo16,11|vo17,11|vo-8,10|vo-7,10|ob-6,10|ob-5,10|ob-4,10|ob-3,10|ob-2,10|ob-1,10|ob0,10|ob1,10|ob2,10|ob3,10|ob4,10|ob5,10|ob6,10|ob7,10|ob8,10|ob9,10|ob10,10|ob11,10|ob12,10|ob13,10|ob14,10|ob15,10|vo16,10|vo17,10|vo-8,9|vo-7,9|ob-6,9|ob-5,9|ob-4,9|ob-3,9|ob-2,9|ob-1,9|ob0,9|ob1,9|ob2,9|ob3,9|ob4,9|ob5,9|ob6,9|ob7,9|ob8,9|ob9,9|ob10,9|ob11,9|ob12,9|ob13,9|ob14,9|ob15,9|vo16,9|vo17,9|vo-8,8|vo-7,8|ob-6,8|ob-5,8|ob-4,8|ob-3,8|ob-2,8|ob-1,8|ob0,8|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|ob9,8|ob10,8|ob11,8|ob12,8|ob13,8|ob14,8|ob15,8|vo16,8|vo17,8|vo-8,7|vo-7,7|ob-6,7|ob-5,7|ob-4,7|ob-3,7|ob-2,7|ob-1,7|ob0,7|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|ob9,7|ob10,7|ob11,7|ob12,7|ob13,7|ob14,7|ob15,7|vo16,7|vo17,7|vo-8,6|vo-7,6|ob-6,6|ob-5,6|ob-4,6|ob-3,6|ob-2,6|ob-1,6|ob0,6|ob1,6|ob2,6|ob3,6|ob4,6|ob5,6|ob6,6|ob7,6|ob8,6|ob9,6|ob10,6|ob11,6|ob12,6|ob13,6|ob14,6|ob15,6|vo16,6|vo17,6|vo-8,5|vo-7,5|ob-6,5|ob-5,5|ob-4,5|ob-3,5|ob-2,5|ob-1,5|ob0,5|ob1,5|ob2,5|ob3,5|ob4,5|ob5,5|ob6,5|ob7,5|ob8,5|ob9,5|ob10,5|ob11,5|ob12,5|ob13,5|ob14,5|ob15,5|vo16,5|vo17,5|vo-8,4|vo-7,4|ob-6,4|ob-5,4|ob-4,4|ob-3,4|ob-2,4|ob-1,4|ob0,4|ob1,4|ob2,4|ob3,4|ob4,4|ob5,4|ob6,4|ob7,4|ob8,4|ob9,4|ob10,4|ob11,4|ob12,4|ob13,4|ob14,4|ob15,4|vo16,4|vo17,4|vo-8,3|vo-7,3|ob-6,3|ob-5,3|ob-4,3|ob-3,3|ob-2,3|ob-1,3|ob0,3|ob1,3|ob2,3|ob3,3|ob4,3|ob5,3|ob6,3|ob7,3|ob8,3|ob9,3|ob10,3|ob11,3|ob12,3|ob13,3|ob14,3|ob15,3|vo16,3|vo17,3|vo-8,2|vo-7,2|ob-6,2|ob-5,2|ob-4,2|ob-3,2|ob-2,2|ob-1,2|ob0,2|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|ob9,2|ob10,2|ob11,2|ob12,2|ob13,2|ob14,2|ob15,2|vo16,2|vo17,2|vo-8,1|vo-7,1|ob-6,1|ob-5,1|ob-4,1|ob-3,1|ob-2,1|ob-1,1|ob0,1|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|ob9,1|ob10,1|ob11,1|ob12,1|ob13,1|ob14,1|ob15,1|vo16,1|vo17,1|vo-8,0|vo-7,0|ob-6,0|ob-5,0|ob-4,0|ob-3,0|ob-2,0|ob-1,0|ob0,0|ob1,0|ob2,0|ob3,0|ob4,0|ob5,0|ob6,0|ob7,0|ob8,0|ob9,0|ob10,0|ob11,0|ob12,0|ob13,0|ob14,0|ob15,0|vo16,0|vo17,0|vo-8,-1|vo-7,-1|ob-6,-1|ob-5,-1|ob-4,-1|ob-3,-1|ob-2,-1|ob-1,-1|ob0,-1|ob1,-1|ob2,-1|ob3,-1|ob4,-1|ob5,-1|ob6,-1|ob7,-1|ob8,-1|ob9,-1|ob10,-1|ob11,-1|ob12,-1|ob13,-1|ob14,-1|ob15,-1|vo16,-1|vo17,-1|vo-8,-2|vo-7,-2|ob-6,-2|ob-5,-2|ob-4,-2|ob-3,-2|ob-2,-2|ob-1,-2|ob0,-2|ob1,-2|ob2,-2|ob3,-2|ob4,-2|ob5,-2|ob6,-2|ob7,-2|ob8,-2|ob9,-2|ob10,-2|ob11,-2|ob12,-2|ob13,-2|ob14,-2|ob15,-2|vo16,-2|vo17,-2|vo-8,-3|vo-7,-3|ob-6,-3|ob-5,-3|ob-4,-3|ob-3,-3|ob-2,-3|ob-1,-3|ob0,-3|ob1,-3|ob2,-3|ob3,-3|ob4,-3|ob5,-3|ob6,-3|ob7,-3|ob8,-3|ob9,-3|ob10,-3|ob11,-3|ob12,-3|ob13,-3|ob14,-3|ob15,-3|vo16,-3|vo17,-3|vo-8,-4|vo-7,-4|vo-6,-4|vo-5,-4|vo-4,-4|vo-3,-4|vo-2,-4|vo-1,-4|vo0,-4|vo1,-4|vo2,-4|vo3,-4|vo4,-4|vo5,-4|vo6,-4|vo7,-4|vo8,-4|vo9,-4|vo10,-4|vo11,-4|vo12,-4|vo13,-4|vo14,-4|vo15,-4|vo16,-4|vo17,-4|vo-8,-5|vo-7,-5|vo-6,-5|vo-5,-5|vo-4,-5|vo-3,-5|vo-2,-5|vo-1,-5|vo0,-5|vo1,-5|vo2,-5|vo3,-5|vo4,-5|vo5,-5|vo6,-5|vo7,-5|vo8,-5|vo9,-5|vo10,-5|vo11,-5|vo12,-5|vo13,-5|vo14,-5|vo15,-5|vo16,-5|vo17,-5',
@@ -177,11 +176,11 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	},
 	Abundance: {
 		positionString: 'p-3,10+|ha-2,10|ha-1,10|r0,10|ha1,10|ha2,10|p3,10+|p-2,9+|p-1,9+|p1,9+|p2,9+|p-5,6+|gu-4,6|r-3,6+|b-2,6|b-1,6|k0,6+|b1,6|b2,6|r3,6+|gu4,6|p5,6+|p-4,5+|gu-3,5|n-1,5|q0,5|n1,5|gu3,5|p4,5+|p-3,4+|p-2,4+|gu-1,4|ch0,4|gu1,4|p2,4+|p3,4+|p-1,3+|p0,3+|p1,3+|P-1,-3+|P0,-3+|P1,-3+|P-3,-4+|P-2,-4+|GU-1,-4|CH0,-4|GU1,-4|P2,-4+|P3,-4+|P-4,-5+|GU-3,-5|N-1,-5|Q0,-5|N1,-5|GU3,-5|P4,-5+|P-5,-6+|GU-4,-6|R-3,-6+|B-2,-6|B-1,-6|K0,-6+|B1,-6|B2,-6|R3,-6+|GU4,-6|P5,-6+|P-2,-9+|P-1,-9+|P1,-9+|P2,-9+|P-3,-10+|HA-2,-10|HA-1,-10|R0,-10|HA1,-10|HA2,-10|P3,-10+',
-		gameruleModifications: { promotionRanks: { [p.WHITE]: [6], [p.BLACK]: [-6] }, promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.GUARD,r.HAWK,r.CHANCELLOR]) }
+		gameruleModifications: { promotionRanks: { [p.WHITE]: [6], [p.BLACK]: [-6] }, promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.GUARD, r.HAWK, r.CHANCELLOR]) }
 	},
 	// Amazon_Chandelier: {
 	// 	positionString: 'p-1,26+|p1,26+|p-2,25+|p-1,25+|p0,25+|p1,25+|p2,25+|p-2,24+|p-1,24+|am0,24|p1,24+|p2,24+|p-2,23+|p-1,23+|p0,23+|p1,23+|p2,23+|p-2,22+|p-1,22+|p1,22+|p2,22+|p-5,21+|p-4,21+|p-3,21+|p-2,21+|p-1,21+|p1,21+|p2,21+|p3,21+|p4,21+|p5,21+|p-5,20+|q-4,20|p-3,20+|p-2,20+|p-1,20+|p1,20+|p2,20+|p3,20+|q4,20|p5,20+|p-5,19+|p-4,19+|p-3,19+|p-2,19+|p-1,19+|p1,19+|p2,19+|p3,19+|p4,19+|p5,19+|p-5,18+|p-3,18+|p-2,18+|p-1,18+|p1,18+|p2,18+|p3,18+|p5,18+|p-8,17+|p-5,17+|p-3,17+|p-2,17+|p-1,17+|p1,17+|p2,17+|p3,17+|p5,17+|p8,17+|p-11,16+|p-10,16+|gu-9,16|ha-8,16|p-7,16+|gu-6,16|p-5,16+|p-3,16+|p-2,16+|p-1,16+|p1,16+|p2,16+|p3,16+|p5,16+|gu6,16|p7,16+|ha8,16|gu9,16|p10,16+|p11,16+|p-11,15+|r-10,15|p-9,15+|p-8,15+|r-7,15|p-6,15+|p-5,15+|p-3,15+|p-2,15+|p-1,15+|p1,15+|p2,15+|p3,15+|p5,15+|p6,15+|r7,15|p8,15+|p9,15+|r10,15|p11,15+|gu-12,14|p-11,14+|p-10,14+|p-9,14+|p-8,14+|p-7,14+|p-6,14+|p-5,14+|p-3,14+|p-2,14+|p-1,14+|p1,14+|p2,14+|p3,14+|p5,14+|p6,14+|p7,14+|p8,14+|p9,14+|p10,14+|p11,14+|gu12,14|p-19,13+|p-17,13+|gu-16,13|p-14,13+|p-12,13+|p-11,13+|p-9,13+|p-8,13+|p-6,13+|p-5,13+|p-3,13+|p-2,13+|p-1,13+|p1,13+|p2,13+|p3,13+|p5,13+|p6,13+|p8,13+|p9,13+|p11,13+|p12,13+|p14,13+|gu16,13|p17,13+|p19,13+|p-19,12+|b-18,12|p-17,12+|gu-16,12|p-14,12+|b-13,12|p-12,12+|p-11,12+|p-9,12+|p-8,12+|p-6,12+|p-5,12+|p-3,12+|p-2,12+|p-1,12+|p1,12+|p2,12+|p3,12+|p5,12+|p6,12+|p8,12+|p9,12+|p11,12+|p12,12+|b13,12|p14,12+|gu16,12|p17,12+|b18,12|p19,12+|gu-20,11|p-19,11+|p-17,11+|p-14,11+|p-12,11+|p-11,11+|p-9,11+|p-8,11+|p-6,11+|p-5,11+|p-3,11+|p-2,11+|p-1,11+|p1,11+|p2,11+|p3,11+|p5,11+|p6,11+|p8,11+|p9,11+|p11,11+|p12,11+|p14,11+|p17,11+|p19,11+|gu20,11|ha-20,10|p-19,10+|p-17,10+|p-14,10+|p-12,10+|p-11,10+|p-9,10+|p-8,10+|p-6,10+|p-5,10+|p-3,10+|p-2,10+|p-1,10+|p1,10+|p2,10+|p3,10+|p5,10+|p6,10+|p8,10+|p9,10+|p11,10+|p12,10+|p14,10+|p17,10+|p19,10+|ha20,10|n-11,9|n11,9|n-10,7|gu-5,7|gu-4,7|gu4,7|gu5,7|n10,7|n-8,6|n8,6|n-6,5|n6,5|n-4,4|k0,4|n4,4|n-2,3|n2,3|n0,2|N0,-1|N-2,-2|N2,-2|N-4,-3|K0,-3|N4,-3|N-6,-4|N6,-4|N-8,-5|N8,-5|N-10,-6|GU-5,-6|GU-4,-6|GU4,-6|GU5,-6|N10,-6|N-11,-8|N11,-8|HA-20,-9|P-19,-9+|P-17,-9+|P-14,-9+|P-12,-9+|P-11,-9+|P-9,-9+|P-8,-9+|P-6,-9+|P-5,-9+|P-3,-9+|P-2,-9+|P-1,-9+|P1,-9+|P2,-9+|P3,-9+|P5,-9+|P6,-9+|P8,-9+|P9,-9+|P11,-9+|P12,-9+|P14,-9+|P17,-9+|P19,-9+|HA20,-9|GU-20,-10|P-19,-10+|P-17,-10+|P-14,-10+|P-12,-10+|P-11,-10+|P-9,-10+|P-8,-10+|P-6,-10+|P-5,-10+|P-3,-10+|P-2,-10+|P-1,-10+|P1,-10+|P2,-10+|P3,-10+|P5,-10+|P6,-10+|P8,-10+|P9,-10+|P11,-10+|P12,-10+|P14,-10+|P17,-10+|P19,-10+|GU20,-10|P-19,-11+|B-18,-11|P-17,-11+|GU-16,-11|P-14,-11+|B-13,-11|P-12,-11+|P-11,-11+|P-9,-11+|P-8,-11+|P-6,-11+|P-5,-11+|P-3,-11+|P-2,-11+|P-1,-11+|P1,-11+|P2,-11+|P3,-11+|P5,-11+|P6,-11+|P8,-11+|P9,-11+|P11,-11+|P12,-11+|B13,-11|P14,-11+|GU16,-11|P17,-11+|B18,-11|P19,-11+|P-19,-12+|P-17,-12+|GU-16,-12|P-14,-12+|P-12,-12+|P-11,-12+|P-9,-12+|P-8,-12+|P-6,-12+|P-5,-12+|P-3,-12+|P-2,-12+|P-1,-12+|P1,-12+|P2,-12+|P3,-12+|P5,-12+|P6,-12+|P8,-12+|P9,-12+|P11,-12+|P12,-12+|P14,-12+|GU16,-12|P17,-12+|P19,-12+|GU-12,-13|P-11,-13+|P-10,-13+|P-9,-13+|P-8,-13+|P-7,-13+|P-6,-13+|P-5,-13+|P-3,-13+|P-2,-13+|P-1,-13+|P1,-13+|P2,-13+|P3,-13+|P5,-13+|P6,-13+|P7,-13+|P8,-13+|P9,-13+|P10,-13+|P11,-13+|GU12,-13|P-11,-14+|R-10,-14|P-9,-14+|P-8,-14+|R-7,-14|P-6,-14+|P-5,-14+|P-3,-14+|P-2,-14+|P-1,-14+|P1,-14+|P2,-14+|P3,-14+|P5,-14+|P6,-14+|R7,-14|P8,-14+|P9,-14+|R10,-14|P11,-14+|P-11,-15+|P-10,-15+|GU-9,-15|HA-8,-15|P-7,-15+|GU-6,-15|P-5,-15+|P-3,-15+|P-2,-15+|P-1,-15+|P1,-15+|P2,-15+|P3,-15+|P5,-15+|GU6,-15|P7,-15+|HA8,-15|GU9,-15|P10,-15+|P11,-15+|P-8,-16+|P-5,-16+|P-3,-16+|P-2,-16+|P-1,-16+|P1,-16+|P2,-16+|P3,-16+|P5,-16+|P8,-16+|P-5,-17+|P-3,-17+|P-2,-17+|P-1,-17+|P1,-17+|P2,-17+|P3,-17+|P5,-17+|P-5,-18+|P-4,-18+|P-3,-18+|P-2,-18+|P-1,-18+|P1,-18+|P2,-18+|P3,-18+|P4,-18+|P5,-18+|P-5,-19+|Q-4,-19|P-3,-19+|P-2,-19+|P-1,-19+|P1,-19+|P2,-19+|P3,-19+|Q4,-19|P5,-19+|P-5,-20+|P-4,-20+|P-3,-20+|P-2,-20+|P-1,-20+|P1,-20+|P2,-20+|P3,-20+|P4,-20+|P5,-20+|P-2,-21+|P-1,-21+|P1,-21+|P2,-21+|P-2,-22+|P-1,-22+|P0,-22+|P1,-22+|P2,-22+|P-2,-23+|P-1,-23+|AM0,-23|P1,-23+|P2,-23+|P-2,-24+|P-1,-24+|P0,-24+|P1,-24+|P2,-24+|P-1,-25+|P1,-25+',
-	// 	gameruleModifications: { promotionRanks: [10,-9], promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions,r.HAWK,r.GUARD,r.AMAZON]) }
+	// 	gameruleModifications: { promotionRanks: [10,-9], promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.HAWK, r.GUARD, r.AMAZON]) }
 	// },
 	// Containment: {
 	// 	positionString: 'K5,-5|k5,14|Q4,-5|q4,14|HA1,-6|HA8,-6|ha1,15|ha8,15|CH-6,-6|CH15,-6|ch-6,15|ch15,15|AR-6,-5|AR15,-5|ar-6,14|ar15,14|N-1,0|N1,0|N2,0|N4,-1|N5,-1|N7,0|N8,0|N10,0|n-1,9|n1,9|n2,9|n4,10|n5,10|n7,9|n8,9|n10,9|GU-2,-2|GU1,-3|GU3,-4|GU6,-4|GU8,-3|GU11,-2|gu-2,11|gu1,12|gu3,13|gu6,13|gu8,12|gu11,11|R-5,-6|R-5,-5|R-4,-5|R-4,-6|R13,-6|R13,-5|R14,-5|R14,-6|r-5,15|r-5,14|r-4,14|r-4,15|r13,15|r13,14|r14,14|r14,15|B-5,-2|B-4,-3|B-3,-2|B12,-2|B13,-3|B14,-2|b-5,11|b-4,12|b-3,11|b12,11|b13,12|b14,11|P-9,-8+|P-9,-6+|P-9,-4+|P-9,-2+|P-9,0+|P-9,2+|P-9,4+|P-9,6+|P-9,8+|P-9,10+|P-9,12+|P-9,14+|P-9,16+|P-8,-7+|P-8,-5+|P-8,-3+|P-8,-1+|P-8,1+|P-8,3+|P-8,5+|P-8,7+|P-8,9+|P-8,11+|P-8,13+|P-8,15+|P-8,17+|P17,-8+|P17,-6+|P17,-4+|P17,-2+|P17,0+|P17,2+|P17,4+|P17,6+|P17,8+|P17,10+|P17,12+|P17,14+|P17,16+|P18,-7+|P18,-5+|P18,-3+|P18,-1+|P18,1+|P18,3+|P18,5+|P18,7+|P18,9+|P18,11+|P18,13+|P18,15+|P18,17+|P-7,-8+|P-5,-8+|P-3,-8+|P-1,-8+|P1,-8+|P3,-8+|P5,-8+|P7,-8+|P9,-8+|P11,-8+|P13,-8+|P15,-8+|P-6,-7+|P-4,-7+|P-2,-7+|P0,-7+|P2,-7+|P4,-7+|P6,-7+|P8,-7+|P10,-7+|P12,-7+|P14,-7+|P16,-7+|P-7,16+|P-5,16+|P-3,16+|P-1,16+|P1,16+|P3,16+|P5,16+|P7,16+|P9,16+|P11,16+|P13,16+|P15,16+|P-6,17+|P-4,17+|P-2,17+|P0,17+|P2,17+|P4,17+|P6,17+|P8,17+|P10,17+|P12,17+|P14,17+|P16,17+|P-7,-6+|P-7,-4+|P-7,-2+|P-6,-2+|P-6,-1+|P-5,-1+|P-5,0+|P-5,-4+|P-4,-4+|P-4,-2+|P-4,-1+|P-3,-6+|P-3,-5+|P-3,-1+|P-3,0+|P-2,0+|P-2,1+|P-1,1+|P-1,-4+|P0,-3+|P1,-2+|P0,-1+|P0,1+|P1,1+|P2,1+|P3,1+|P3,0+|P3,-3+|P3,-5+|P4,-4+|P4,1+|P5,1+|P5,-4+|P6,-5+|P6,-3+|P6,0+|P6,1+|P7,1+|P8,1+|P9,1+|P9,-1+|P8,-2+|P9,-3+|P10,-4+|P10,1+|P11,1+|P11,0+|P12,0+|P12,-1+|P12,-5+|P12,-6+|P13,-4+|P13,-2+|P13,-1+|P14,0+|P14,-1+|P14,-4+|P15,-2+|P15,-1+|P16,-1+|P16,-3+|P16,-5+|p-9,-7+|p-9,-5+|p-9,-3+|p-9,-1+|p-9,1+|p-9,3+|p-9,5+|p-9,7+|p-9,9+|p-9,11+|p-9,13+|p-9,15+|p-9,17+|p-8,-8+|p-8,-6+|p-8,-4+|p-8,-2+|p-8,0+|p-8,2+|p-8,4+|p-8,6+|p-8,8+|p-8,10+|p-8,12+|p-8,14+|p-8,16+|p17,-7+|p17,-5+|p17,-3+|p17,-1+|p17,1+|p17,3+|p17,5+|p17,7+|p17,9+|p17,11+|p17,13+|p17,15+|p17,17+|p18,-8+|p18,-6+|p18,-4+|p18,-2+|p18,0+|p18,2+|p18,4+|p18,6+|p18,8+|p18,10+|p18,12+|p18,14+|p18,16+|p-6,-8+|p-4,-8+|p-2,-8+|p0,-8+|p2,-8+|p4,-8+|p6,-8+|p8,-8+|p10,-8+|p12,-8+|p14,-8+|p16,-8+|p-7,-7+|p-5,-7+|p-3,-7+|p-1,-7+|p1,-7+|p3,-7+|p5,-7+|p7,-7+|p9,-7+|p11,-7+|p13,-7+|p15,-7+|p-6,16+|p-4,16+|p-2,16+|p0,16+|p2,16+|p4,16+|p6,16+|p8,16+|p10,16+|p12,16+|p14,16+|p16,16+|p-7,17+|p-5,17+|p-3,17+|p-1,17+|p1,17+|p3,17+|p5,17+|p7,17+|p9,17+|p11,17+|p13,17+|p15,17+|p-7,15+|p-7,13+|p-7,11+|p-6,11+|p-6,10+|p-5,10+|p-5,9+|p-5,13+|p-4,13+|p-4,11+|p-4,10+|p-3,15+|p-3,14+|p-3,10+|p-3,9+|p-2,9+|p-2,8+|p-1,8+|p-1,13+|p0,12+|p1,11+|p0,10+|p0,8+|p1,8+|p2,8+|p3,8+|p3,9+|p3,12+|p3,14+|p4,13+|p4,8+|p5,8+|p5,13+|p6,14+|p6,12+|p6,9+|p6,8+|p7,8+|p8,8+|p9,8+|p9,10+|p8,11+|p9,12+|p10,13+|p10,8+|p11,8+|p11,9+|p12,9+|p12,10+|p12,14+|p12,15+|p13,13+|p13,11+|p13,10+|p14,9+|p14,10+|p14,13+|p15,11+|p15,10+|p16,10+|p16,12+|p16,14+',
@@ -221,7 +220,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	},
 	Knightline: {
 		positionString: 'k5,8+|n3,8|n4,8|n6,8|n7,8|p-5,7+|p-4,7+|p-3,7+|p-2,7+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,7+|p12,7+|p13,7+|p14,7+|p15,7+|K5,1+|N3,1|N4,1|N6,1|N7,1|P-5,2+|P-4,2+|P-3,2+|P-2,2+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,2+|P12,2+|P13,2+|P14,2+|P15,2+',
-		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.KNIGHT,r.QUEEN]) }
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.KNIGHT, r.QUEEN]) }
 	},
 	Knighted_Chess: {
 		positionString: {
@@ -229,7 +228,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			1722470400000: 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|NR2,1|NR7,1|nr2,8|nr7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+',
 			0: 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|P0,1+|P1,0+|P2,0+|P3,0+|P6,0+|P7,0+|P8,0+|P9,1+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p0,8+|p1,9+|p2,9+|p3,9+|p6,9+|p7,9+|p8,9+|p9,8+|CH1,1+|CH8,1+|ch1,8+|ch8,8+|N2,1|N7,1|n2,8|n7,8|AR3,1|AR6,1|ar3,8|ar6,8|AM4,1|am4,8|RC5,1+|rc5,8+'
 		},
-		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.CHANCELLOR,r.KNIGHTRIDER,r.ARCHBISHOP,r.AMAZON]) }
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.CHANCELLOR, r.KNIGHTRIDER, r.ARCHBISHOP, r.AMAZON]) }
 	},
 	Omega: {
 		positionString: 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3|Q-1,-3|P2,-3|K0,-4',
@@ -258,11 +257,12 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	// Chess on an Infinite Plane - Huygens Options
 	CoaIP_HO: {
 		positionString: 'p-4,14+|ha-2,14|p0,14+|p9,14+|ha11,14|p13,14+|p-3,13+|p-1,13+|p10,13+|p12,13+|p-2,12+|p11,12+|gu-1,9|hu0,9|ch1,9|ch8,9|hu9,9|gu10,9|p-1,8+|p0,8+|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|p9,8+|p10,8+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P-1,1+|P0,1+|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|P9,1+|P10,1+|GU-1,0|HU0,0|CH1,0|CH8,0|HU9,0|GU10,0|P-2,-3+|P11,-3+|P-3,-4+|P-1,-4+|P10,-4+|P12,-4+|P-4,-5+|HA-2,-5|P0,-5+|P9,-5+|HA11,-5|P13,-5+',
-		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions,r.HUYGEN]) }
+		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions, r.HUYGEN]) }
 	},
+	// DISABLED BECAUSE IT has a smothered mate in 2 if one side allows it.
 	// Trappist_1: { // Also has the huygen featured in it!
 	// 	positionString: 'p-6,16+|ha-4,16|p-2,16+|p11,16+|ha13,16|p15,16+|p-5,15+|p-3,15+|p12,15+|p14,15+|p-4,14+|p13,14+|p-3,9+|hu-2,9|n3,9|b4,9|b5,9|n6,9|hu11,9|p12,9+|p-2,8+|r-1,8+|ch0,8|gu1,8|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|gu8,8|ch9,8|r10,8+|p11,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P-2,1+|R-1,1+|CH0,1|GU1,1|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|GU8,1|CH9,1|R10,1+|P11,1+|P-3,0+|HU-2,0|N3,0|B4,0|B5,0|N6,0|HU11,0|P12,0+|P-4,-5+|P13,-5+|P-5,-6+|P-3,-6+|P12,-6+|P14,-6+|P-6,-7+|HA-4,-7|P-2,-7+|P11,-7+|HA13,-7|P15,-7+',
-	// 	gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions,r.HUYGEN]) }
+	// 	gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([...coaIPPromotions, r.HUYGEN]) }
 	// },
 	'4x4x4x4_Chess': {
 		generator: {
@@ -299,7 +299,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			[r.PAWN]: fourdimensionalgenerator.getPawnVicinity(9, false),
 			[r.KNIGHT]: fourdimensionalgenerator.getKnightVicinity(9),
 			[r.KING]: fourdimensionalgenerator.getKingVicinity(9, true)
-		 }
+		}
 	}
 };
 
@@ -560,6 +560,7 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	// The running piece movesets property of the gamefile.
 	const pieceMovesets: {
+		// eslint-disable-next-line no-unused-vars
 		[_pieceType in RawType]?: () => PieceMoveset
 	} = {};
 

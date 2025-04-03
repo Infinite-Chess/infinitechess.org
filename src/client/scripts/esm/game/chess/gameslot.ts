@@ -26,7 +26,6 @@ import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
-import typeutil from "../../chess/util/typeutil.js";
 import piecemodels from "../rendering/piecemodels.js";
 import movepiece from "../../chess/logic/movepiece.js";
 import miniimage from "../rendering/miniimage.js";
@@ -207,7 +206,7 @@ function loadLogical(loadOptions: LoadOptions) {
 	youAreColor = loadOptions.viewWhitePerspective ? 'white' : 'black';
 
 	// If the game has more lines than this, then we turn off arrows at the start to prevent a lag spike.
-	const lineCountToDisableArrows = 16;
+	const lineCountToDisableArrows = 8;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
 	if (newGamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) {
@@ -257,7 +256,6 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	 */
 	piecemodels.addListeners(loadedGamefile!);
 }
-
 
 /** The canvas will no longer render the current game */
 function unloadGame() {
@@ -338,7 +336,7 @@ function concludeGame() {
 		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (loadedGamefile.gameConclusion.includes(String(onlinegame.getOurColor()))) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		if (victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else if (victor === players.NEUTRAL || !victor) sound.playSound_draw(delayToPlayConcludeSoundSecs);
 		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
 	}

@@ -219,7 +219,7 @@ function callback_Back() {
 }
 
 function callback_Expand() {
-	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()?.ourPieces!);
+	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.ourPieces!);
 	area.initTelFromCoordsList(allCoords);
 }
 

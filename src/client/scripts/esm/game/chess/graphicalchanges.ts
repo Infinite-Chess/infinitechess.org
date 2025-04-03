@@ -94,7 +94,7 @@ function uncaptureMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'capture') throw Error(`uncaptureMeshPiece called with non-capture action: ${change.action}`);
 
 	returnMeshPiece(gamefile, change);
-	addMeshPiece(gamefile, { action: 'add', main: change.main, piece: change.capturedPiece});
+	addMeshPiece(gamefile, { action: 'add', main: change.main, piece: change.capturedPiece });
 }
 
 
