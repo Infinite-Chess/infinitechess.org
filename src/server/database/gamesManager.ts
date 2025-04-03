@@ -9,7 +9,7 @@ import { ensureJSONString } from '../utility/JSONUtils.js';
 // @ts-ignore
 import db from './database.js';
 // @ts-ignore
-import { allGamesColumns } from './databaseTables.js';
+import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
 
@@ -20,7 +20,7 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 /** Structure of a games record. This is all allowed columns of a game_id. */
 interface GamesRecord {
     game_id?: number;
-    date?: Date;
+    date?: string;
     players?: string;
     elo?: string;
     rating_diff?: string;
@@ -42,25 +42,27 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 
 /**
  * Adds an entry to the games table
- * @param game_id - The id for the game
- * @param [options] - Optional parameters for all the entries of the game
+ * @param [options] - Parameters for all the entries of the game
  * @returns A result object indicating success or failure.
  */
-function addGameToGamesTable(game_id: number, 
+function addGameToGamesTable(
 	options: {
-        date?: Date,
-        players?: string,
-        elo?: string,
-        rating_diff?: string,
-        time_control?: string,
-        variant?: string,
-        rated?: boolean,
-        private?: boolean,
-        result?: string,
-        termination?: string,
-        movecount?: number,
-        icn?: string
-    } = {}): ModifyQueryResult {
+        date: string,
+        players: string,
+        elo: string,
+        rating_diff: string,
+        time_control: string,
+        variant: string,
+        rated: boolean,
+        private: boolean,
+        result: string,
+        termination: string,
+        movecount: number,
+        icn: string
+    }): ModifyQueryResult {
+
+	// Generate a unique game ID
+	const game_id = genUniqueGameID();
 
 	const query = `
 	INSERT INTO games (
@@ -122,12 +124,53 @@ function addGameToGamesTable(game_id: number,
 }
 
 /**
+ * Generates a **UNIQUE** game_id. It queries if it is taken to do so.
+ */
+function genUniqueGameID(): number {
+	let id: number;
+	do {
+		id = generateRandomGameId();
+	} while (isGameIdTaken(id));
+	return id;
+}
+
+/**
+ * Generates a random game_id. DOES NOT test if it's taken already.
+ * @returns - A random game_id.
+ */
+function generateRandomGameId(): number {
+	// Generate a random number between 0 and game_id_upper_cap
+	return Math.floor(Math.random() * game_id_upper_cap);
+}
+
+/**
+ * Checks if a given game_id exists in the games table.
+ * @param game_id - The game_id to check.
+ * @returns - Returns true if the game_id exists, false otherwise.
+ */
+function isGameIdTaken(game_id: number): boolean {
+	try {
+		const query = 'SELECT 1 FROM games WHERE game_id = ?';
+
+		// Execute query to check if the game_id exists in the games table
+		const row = db.get(query, [game_id]); // { '1': 1 }
+
+		// If a row is found, the game_id exists
+		return row !== undefined;
+	} catch (error) {
+		// Log the error if the query fails
+		logEvents(`Error checking if game_id "${game_id}" is taken: ${error.message}`, 'errLog.txt', { print: true });
+		return false; // Return false if an error occurs
+	}
+}
+
+/**
  * Fetches specified columns of a single game from the games table based on game_id
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'players']).
  * @param game_id - The game_id of the game
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
-function getGameData(columns: string[], game_id: number): GamesRecord | undefined {
+function getGameData(game_id: number, columns: string[]): GamesRecord | undefined {
 
 	// Guard clauses... Validating the arguments...
 

@@ -20,7 +20,7 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 /** Structure of a player_stats record. This is all allowed columns of a user_id. */
 interface PlayerStatsRecord {
 	user_id?: number;
-    last_played_rated_game?: Date;
+    last_played_rated_game?: string;
     game_history?: string;
     moves_played?: number;
     game_count?: number;
@@ -53,7 +53,7 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
  * @param [options.last_played_rated_game] - The user's last_played_rated_game timestamp
  * @returns - A result object indicating success or failure.
  */
-function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated_game?: Date } = {}): ModifyQueryResult {
+function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated_game?: string } = {}): ModifyQueryResult {
 	const query = `
 	INSERT INTO player_stats (
 		user_id,
@@ -93,7 +93,7 @@ function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated
  * @param user_id - The user_id of the player
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
-function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsRecord | undefined {
+function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsRecord | undefined {
 
 	// Guard clauses... Validating the arguments...
 
