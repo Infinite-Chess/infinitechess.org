@@ -31,8 +31,8 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 
 /**
  * Adds an entry to the ratings table, defaulting to 1000 elo and 350 rd (assuming DB defaults)
- * @param {number} user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
- * @returns {ModifyQueryResult} A result object indicating success or failure.
+ * @param user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
+ * @returns A result object indicating success or failure.
  */
 function addUserToRatingsTable(user_id: number): ModifyQueryResult {
 	const query = `
@@ -70,10 +70,10 @@ function addUserToRatingsTable(user_id: number): ModifyQueryResult {
 
 /**
  * Updates the values related to the rating of the player.
- * @param {number} user_id - The id for the user
- * @param {number} elo - The new elo value for the player
- * @param {number} rd - The new rating deviation for the player
- * @returns {ModifyQueryResult} A result object indicating success or failure.
+ * @param user_id - The id for the user
+ * @param elo - The new elo value for the player
+ * @param rd - The new rating deviation for the player
+ * @returns A result object indicating success or failure.
  */
 function updatePlayerRatingValues(user_id: number, elo: number, rd: number): ModifyQueryResult {
 	const query = `
@@ -107,8 +107,8 @@ function updatePlayerRatingValues(user_id: number, elo: number, rd: number): Mod
 
 /**
  * Gets the values related to the rating of the player.
- * @param {number} user_id - The id for the user
- * @returns {RatingRecord | undefined} The player's rating record object or undefined if not found or on error.
+ * @param user_id - The id for the user
+ * @returns The player's rating record object or undefined if not found or on error.
  * */
 function getPlayerRatingValues(user_id: number): RatingRecord | undefined {
 	// SQL query to select specific rating columns for a user
@@ -128,8 +128,8 @@ function getPlayerRatingValues(user_id: number): RatingRecord | undefined {
 
 /**
  * Gets the top N players by elo.
- * @param {number} n_players - The maximum number of top players to retrieve
- * @returns {RatingRecord[]} An array of top player rating records, potentially empty.
+ * @param n_players - The maximum number of top players to retrieve
+ * @returns An array of top player rating records, potentially empty.
  */
 function getNTopPlayersRatingValues(n_players: number): RatingRecord[] {
 	// Select specific columns, order by elo descending, limit to n_players

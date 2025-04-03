@@ -42,9 +42,9 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 
 /**
  * Adds an entry to the games table
- * @param {number} game_id - The id for the game
- * @param {object} [options] - Optional parameters for all the entries of the game
- * @returns {ModifyQueryResult} A result object indicating success or failure.
+ * @param game_id - The id for the game
+ * @param [options] - Optional parameters for all the entries of the game
+ * @returns A result object indicating success or failure.
  */
 function addGameToGamesTable(game_id: number, 
 	options: {
@@ -123,9 +123,9 @@ function addGameToGamesTable(game_id: number,
 
 /**
  * Fetches specified columns of a single game from the games table based on game_id
- * @param {string[]} columns - The columns to retrieve (e.g., ['game_id', 'date', 'players']).
- * @param {number} game_id - The game_id of the game
- * @returns {GamesRecord} - An object containing the requested columns, or undefined if no match is found.
+ * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'players']).
+ * @param game_id - The game_id of the game
+ * @returns - An object containing the requested columns, or undefined if no match is found.
  */
 function getGameData(columns: string[], game_id: number): GamesRecord | undefined {
 
@@ -170,9 +170,9 @@ function getGameData(columns: string[], game_id: number): GamesRecord | undefine
  * 
  * GOOD TO HAVE. BUT SHOULD NEVER BE USED EXCEPT FOR EXTREME CIRCUMSTANCES.
  * All added games should have correct values from the start.
- * @param {number} game_id - The game ID of the games.
- * @param {GamesRecord} columnsAndValues - An object containing column-value pairs to update.
- * @returns {ModifyQueryResult} - A result object indicating success or failure.
+ * @param game_id - The game ID of the games.
+ * @param columnsAndValues - An object containing column-value pairs to update.
+ * @returns - A result object indicating success or failure.
  */
 // eslint-disable-next-line no-unused-vars
 function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyQueryResult {
@@ -225,8 +225,8 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
  * Maybe useful to have? SHOULD NEVER BE USED THOUGH EXCEPT FOR EXTREME CIRCUMSTANCES.
  * NOT EVEN WHEN A USER DELETES THEIR ACCOUNT. Games are public information.
  * If a game is deleted, but a user isn't, then their game history will point to a game that doesn't exist.
- * @param {number} game_id - The ID of the game to delete.
- * @returns {ModifyQueryResult} - A result object indicating success or failure.
+ * @param game_id - The ID of the game to delete.
+ * @returns - A result object indicating success or failure.
  */
 // eslint-disable-next-line no-unused-vars
 function deleteGame(game_id: number): ModifyQueryResult {

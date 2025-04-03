@@ -48,10 +48,10 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 
 /**
  * Adds an entry to the player_stats table
- * @param {number} user_id - The id for the user (fails if it doesn't exist in player_stats or due to constraints)
- * @param {object} [options] - Optional parameters for the user.
- * @param {Date} [options.last_played_rated_game] - The user's last_played_rated_game timestamp
- * @returns {ModifyQueryResult} A result object indicating success or failure.
+ * @param user_id - The id for the user (fails if it doesn't exist in player_stats or due to constraints)
+ * @param [options] - Optional parameters for the user.
+ * @param [options.last_played_rated_game] - The user's last_played_rated_game timestamp
+ * @returns - A result object indicating success or failure.
  */
 function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated_game?: Date } = {}): ModifyQueryResult {
 	const query = `
@@ -89,9 +89,9 @@ function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated
 
 /**
  * Fetches specified columns of a single player from the player_stats table based on user_id
- * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'last_played_rated_game']).
- * @param {number} user_id - The user_id of the player
- * @returns {PlayerStatsRecord} - An object containing the requested columns, or undefined if no match is found.
+ * @param columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'last_played_rated_game']).
+ * @param user_id - The user_id of the player
+ * @returns - An object containing the requested columns, or undefined if no match is found.
  */
 function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsRecord | undefined {
 
@@ -133,9 +133,9 @@ function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsReco
 
 /**
  * Updates multiple column values in the player_stats table for a given user.
- * @param {number} user_id - The user ID of the player_stats.
- * @param {PlayerStatsRecord} columnsAndValues - An object containing column-value pairs to update.
- * @returns {ModifyQueryResult} - A result object indicating success or failure.
+ * @param user_id - The user ID of the player_stats.
+ * @param columnsAndValues - An object containing column-value pairs to update.
+ * @returns - A result object indicating success or failure.
  */
 function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStatsRecord): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
