@@ -121,7 +121,7 @@ function generateTables() {
 		CREATE TABLE IF NOT EXISTS player_stats (
 			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
 			last_played_rated_game TIMESTAMP,
-			game_history TEXT NOT NULL DEFAULT '',
+			game_history TEXT NOT NULL DEFAULT '', -- Delimited game ids
 			moves_played INTEGER NOT NULL DEFAULT 0,
 			game_count INTEGER NOT NULL DEFAULT 0,
 			game_count_rated INTEGER NOT NULL DEFAULT 0,
@@ -146,9 +146,9 @@ function generateTables() {
 		CREATE TABLE IF NOT EXISTS games (
 			game_id INTEGER PRIMARY KEY,
 			date TIMESTAMP NOT NULL,
-			players TEXT NOT NULL,
-			elo TEXT,
-			rating_diff TEXT,
+			players TEXT NOT NULL, -- Delimited user ids, where '_' indicates a guest
+			elo TEXT, -- If game was rated, delimited elos at the time of the game
+			rating_diff TEXT, -- If game was rated, delimited elo changes from the result of the game
 			time_control TEXT NOT NULL,
 			variant TEXT NOT NULL,
 			rated BOOLEAN NOT NULL,
@@ -156,7 +156,7 @@ function generateTables() {
 			result TEXT NOT NULL,
 			termination TEXT NOT NULL,
 			movecount INTEGER NOT NULL,
-			icn TEXT NOT NULL
+			icn TEXT NOT NULL -- Also includes clock timestamps after each move
 		);
 	`;
 	db.run(createTableSQLQuery);
