@@ -163,21 +163,13 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: nu
 	return extraUndefinedsByType;
 }
 
-function areWeShortOnUndefineds(o: OrganizedPieces, gamerules: GameRules): boolean {
-	for (const [t, range] of o.typeRanges) {
-		if (!isTypeATypeWereAppendingUndefineds(gamerules.promotionsAllowed!, t)) return false;
-		if (range.undefineds.length === 0) return true;
-	}
-	return false;
-}
-
 /**
  * Sees if the provided type is a type we need to append undefined
  * placeholders to the piece list of this type.
  * The lists of all the pieces needs placeholders in case we
  * promote to a new piece.
- * @param gamefile - The gamefile
- * @param type - The type of piece (e.g. r.pawns + e.W)
+ * @param promotionGameRule - what each player can promot to.
+ * @param type - the type we are checking
  * @returns *true* if we need to append placeholders for this type.
  */
 // eslint-disable-next-line no-unused-vars
@@ -499,7 +491,6 @@ export default {
 	removePieceFromSpace,
 
 	regenerateLists,
-	areWeShortOnUndefineds,
 	isTypeATypeWereAppendingUndefineds,
 
 	getKeyFromLine,
