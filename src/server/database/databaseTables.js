@@ -10,7 +10,7 @@ import db from './database.js';
 
 
 const user_id_upper_cap = 14_776_336; // 62**4: Limit of unique user id with 4-digit base-62 user ids!
-const game_id_upper_cap = 56_800_235_584; // 62**6: Limit of unique game id with 6-digit base-62 game ids!
+const game_id_upper_cap = 14_776_336; // 62**4: Limit of unique game id with 4-digit base-62 game ids!
 
 /** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
 const uniqueMemberKeys = ['user_id', 'username', 'email'];
