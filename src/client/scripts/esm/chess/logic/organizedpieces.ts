@@ -259,7 +259,9 @@ function buildStateFromPosition(position: Position, coordConstructor: PositionAr
 	const y: number[] = [];
 	const t: number[] = [];
 	for (const rt of typeOrder) {
-		const pieces = piecesByType[rt]!;
+		const pieces = piecesByType[rt];
+		if (pieces === undefined) continue; // There are no pieces of this type in the starting position
+
 		const range = ranges.get(rt)!;
 		range.start = currentOffset;
 		currentOffset += pieces.length;
