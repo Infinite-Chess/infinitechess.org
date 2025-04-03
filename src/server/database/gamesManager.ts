@@ -160,13 +160,16 @@ function getGameData(columns: string[], game_id: number): GamesRecord | undefine
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error and return undefined
-		logEvents(`Error executing query: ${message}`, 'errLog.txt', { print: true });
+		logEvents(`Error executing query when getting game data of game_id ${game_id}: ${message}. The query: "${query}"`, 'errLog.txt', { print: true });
 		return undefined;
 	}
 }
 
 /**
  * Updates multiple column values in the games table for a given game.
+ * 
+ * GOOD TO HAVE. BUT SHOULD NEVER BE USED EXCEPT FOR EXTREME CIRCUMSTANCES.
+ * All added games should have correct values from the start.
  * @param {number} game_id - The game ID of the games.
  * @param {GamesRecord} columnsAndValues - An object containing column-value pairs to update.
  * @returns {ModifyQueryResult} - A result object indicating success or failure.
@@ -174,17 +177,15 @@ function getGameData(columns: string[], game_id: number): GamesRecord | undefine
 function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		const reason = `Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns!`;
-		logEvents(reason, 'errLog.txt', { print: true });
-		return { success: false, reason };
+		logEvents(`Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
 	}
 
 	for (const column in columnsAndValues) {
 		// Validate all provided columns
 		if (!allGamesColumns.includes(column)) {
-			const reason = `Invalid column "${column}" provided for game ID "${game_id}" when updating games columns!`;
-			logEvents(reason, 'errLog.txt', { print: true });
-			return { success: false, reason };
+			logEvents(`Invalid column "${column}" provided for game ID "${game_id}" when updating games columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			return { success: false, reason: 'Invalid column.' }; // Generic error message
 		}
 	}
 
@@ -205,23 +206,24 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
 		// Check if the update was successful
 		if (result.changes > 0) return { success: true, result };
 		else {
-			const reason = `No changes made when updating columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"!`;
-			logEvents(reason, 'errLog.txt', { print: true });
-			return { success: false, reason };
+			logEvents(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			return { success: false, reason: 'No changes made.' }; // Generic error message
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		const reason = `Error updating columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}`;
-		logEvents(reason, 'errLog.txt', { print: true });
-
+		logEvents(`Error updating columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 		// Return an error message
-		return { success: false, reason };
+		return { success: false, reason: `Database error.` }; // Generic error message
 	}
 }
 
 /**
  * Deletes a game from the games table.
+ * 
+ * Maybe useful to have? SHOULD NEVER BE USED THOUGH EXCEPT FOR EXTREME CIRCUMSTANCES.
+ * NOT EVEN WHEN A USER DELETES THEIR ACCOUNT. Games are public information.
+ * If a game is deleted, but a user isn't, then their game history will point to a game that doesn't exist.
  * @param {number} game_id - The ID of the game to delete.
  * @returns {ModifyQueryResult} - A result object indicating success or failure.
  */
@@ -235,9 +237,8 @@ function deleteGame(game_id: number): ModifyQueryResult {
 
 		// Check if any rows were deleted
 		if (result.changes === 0) {
-			const reason = `Cannot delete game of ID "${game_id}", it was not found.`;
-			logEvents(reason, 'errLog.txt', { print: true });
-			return { success: false, reason };
+			logEvents(`Cannot delete game of ID "${game_id}", it was not found.`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			return { success: false, reason: 'Game not found.' }; // Generic error message
 		}
 
 		return { success: true, result }; // Deletion made successfully
@@ -245,9 +246,9 @@ function deleteGame(game_id: number): ModifyQueryResult {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		const reason = `Error deleting game with ID "${game_id}": ${message}`;
-		logEvents(reason, 'errLog.txt', { print: true });
-		return { success: false, reason };
+		logEvents(`Error deleting game with ID "${game_id}": ${message}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		// Return an error message
+		return { success: false, reason: 'Database error.' }; // Generic error message
 	}
 }
 
