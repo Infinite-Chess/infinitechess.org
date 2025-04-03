@@ -69,8 +69,10 @@ function getSpritesheetDataTexLocation(type: number): Coords {
 
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: gamefile) {
-	console.log(...gamefile.ourPieces.typeRanges.keys());
-	const types = [...gamefile.ourPieces.typeRanges.keys()].filter(t => {return !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES);});
+
+	// Filter our voids from all types in the game.
+	// @ts-ignore
+	const types: number[] = gamefile.startSnapshot.existingTypes.filter(type => !typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type)));
 
 	/**
 	 * The SVG elements we will use in the game to construct our spritesheet

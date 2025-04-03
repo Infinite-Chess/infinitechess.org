@@ -5,29 +5,12 @@
  * ZERO dependancies.
  */
 
-const fixedArrays = [
-	Float32Array,
-	Float64Array,
 
-	Int8Array,
-	Int16Array,
-	Int32Array,
-	BigInt64Array,
-
-	Uint8Array,
-	Uint16Array,
-	Uint32Array,
-	BigUint64Array,
-] as const;
-
-type FixedArrayConstructor = typeof fixedArrays[keyof typeof fixedArrays];
-type FixedArray = 	Float32Array | Float64Array | Int8Array | Int16Array | Int32Array | BigInt64Array | Uint8Array | Uint16Array | Uint32Array | BigUint64Array;
-
-/** Used for JSON stringifying and re-parsing fixed arrays using {@link stringifyReplacer} and {@link parseReviver}. */
-const FixedArrayNames = {
+/** TypedArray constructors and their names. */
+const FixedArrayInfo = {
 	"Float32Array": Float32Array,
 	"Float64Array": Float64Array,
-	
+
 	"Int8Array": Int8Array,
 	"Int16Array": Int16Array,
 	"Int32Array": Int32Array,
@@ -37,14 +20,14 @@ const FixedArrayNames = {
 	"Uint16Array": Uint16Array,
 	"Uint32Array": Uint32Array,
 	"BigUint64Array": BigUint64Array,
-};
+} as const;
 
-function getConstructorOfArray(array: any): any {
-	for (const c of fixedArrays) {
-		if (array instanceof c) return c;
-	}
-	return false;
-}
+/** Type representing any of the TypedArray constructor types listed in FixedArrayInfo. */
+type FixedArrayConstructor = typeof FixedArrayInfo[keyof typeof FixedArrayInfo];
+
+/** Type representing an *instance* of any TypedArray listed in FixedArrayInfo. */
+type FixedArray = InstanceType<FixedArrayConstructor>;
+
 
 /**
  * Deep copies an entire object, no matter how deep its nested.
@@ -57,21 +40,18 @@ function getConstructorOfArray(array: any): any {
 function deepCopyObject<T extends unknown>(src: T): T {
 	if (typeof src !== "object" || src === null) return src;
     
+	// Check for Maps
 	if (src instanceof Map) {
-		return new Map([...src]) as T;
+		return new Map([...src]) as T; // Use spread operator to copy Map
 	}
 
-	const constructor = getConstructorOfArray(src);
-	if (constructor) {
-		const copy = new constructor(((src as unknown) as FixedArray).length);
-		for (let i = 0; i < copy.length; i++) {
-			copy[i] = ((src as unknown) as FixedArray)[i];
-		}
-		return copy as T;
+	// Check for TypedArrays (which are ArrayBuffer views and have slice)
+	if (ArrayBuffer.isView(src) && typeof (src as any).slice === 'function') {
+		return (src as any).slice() as T; // Use slice for TypedArray copy
 	}
 
+	// Handle remaining arrays and objects
 	const copy: any = Array.isArray(src) ? [] : {}; // Create an empty array or object
-
 	for (const key in src) {
 		const value = src[key];
 		copy[key] = deepCopyObject(value); // Recursively copy each property
@@ -358,6 +338,7 @@ function estimateMemorySizeOf(obj: any): string {
 /**
  * A "replacer" for JSON.stringify()'ing with custom behavior,
  * allowing us to stringify special objects like Maps and TypedArrays.
+ * Use {@link parseReviver} to parse back.
  */
 function stringifyReplacer(key: string, value: any): any {
 	if (value instanceof Map) {
@@ -367,7 +348,7 @@ function stringifyReplacer(key: string, value: any): any {
 		};
 	}
 		
-	for (const [name, type] of Object.entries(FixedArrayNames)) {
+	for (const [name, type] of Object.entries(FixedArrayInfo)) {
 		if (value instanceof type) {
 			return {
 				TrueType: name,
@@ -389,8 +370,8 @@ function parseReviver(key: string, value: any): any {
 			return new Map(value.value);
 		}
 
-		if (value.TrueType in FixedArrayNames) {
-			const constructor: FixedArrayConstructor = FixedArrayNames[value.TrueType as keyof typeof FixedArrayNames]; // Get the constructor based on the TrueType
+		if (value.TrueType in FixedArrayInfo) {
+			const constructor: FixedArrayConstructor = FixedArrayInfo[value.TrueType as keyof typeof FixedArrayInfo]; // Get the constructor based on the TrueType
 			const array = new constructor(value.value.length);
 			for (let i = 0; i < array.length; i++) {
 				array[i] = value.value[i];
@@ -422,13 +403,8 @@ function ensureJSONString(input: any, errorMessage?: string): string {
 	}
 }
 
-export type {
-	FixedArray,
-	FixedArrayConstructor,
-};
 
 export default {
-	getConstructorOfArray,
 	deepCopyObject,
 	copyFloat32Array,
 	addElementToOrganizedArray,
@@ -442,7 +418,11 @@ export default {
 	removeObjectFromArray,
 	getMissingStringsFromArray,
 	estimateMemorySizeOf,
-	ensureJSONString,
 	stringifyReplacer,
 	parseReviver,
+	ensureJSONString,
+};
+
+export type {
+	FixedArray,
 };

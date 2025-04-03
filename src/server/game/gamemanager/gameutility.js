@@ -198,10 +198,10 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
  */
 function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
 	if (!ws) return; // Socket undefined, can't unsub.
-	if (ws.metadata.subscriptions.game === undefined) return logEvents(`Cannot unsub client from game when their socket isn't subbed to begin with!! Socket: ${socketUtility.stringifySocketMetadata(ws)}`, 'errLog.txt', { print: true });
+	if (ws.metadata.subscriptions.game === undefined) return; // Already unsubbed (they aborted)
 
 	// 1. Detach their socket from the game so we no longer send updates
-	removePlayerSocketFromGame(game, ws.metadata.subscriptions.game.color);
+	delete game.players[ws.metadata.subscriptions.game.color]?.socket;
 
 	// 2. Remove the game key-value pair from the sockets metadata subscription list.
 	delete ws.metadata.subscriptions.game;
@@ -210,18 +210,6 @@ function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
 
 	// Tell the client to unsub on their end, IF the socket isn't closing.
 	if (sendMessage && ws.readyState === WebSocket.OPEN) sendSocketMessage(ws, 'game', 'unsub');
-}
-
-/**
- * Removes the player's websocket from the game.
- * Call this when their websocket closes and we're unsubbing them from game updates.
- * @param {Game} game - The game they are a part of.
- * @param {Player} color - The color they are playing as.
- */
-function removePlayerSocketFromGame(game, color) {
-	const playerdata = game.players[color];
-	if (playerdata === undefined) console.error(`Cannot remove player socket from game when their color is ${color}.`);
-	playerdata.socket = undefined;
 }
 
 /**
@@ -285,30 +273,32 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 function getMetadataOfGame(game) {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
+	const white = game.players[players.WHITE].identifier;
+	const black = game.players[players.BLACK].identifier;
 	const gameMetadata = {
 		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
 		Site: "https://www.infinitechess.org/",
 		Round: "-",
 		Variant: game.variant,
-		White: getDisplayNameOfPlayer(game.players[players.WHITE].identifier), // Protect browser's browser-id cookie
-		Black: getDisplayNameOfPlayer(game.players[players.BLACK].identifier), // Protect browser's browser-id cookie
+		White: getDisplayNameOfPlayer(white), // Protect browser's browser-id cookie
+		Black: getDisplayNameOfPlayer(black), // Protect browser's browser-id cookie
 		TimeControl: game.clock,
 		UTCDate,
 		UTCTime,
 	};
-	id: if (game.players[players.WHITE].member !== undefined) {
-		const user_id = getUserIdByUsername(game.players[players.WHITE].member);
+	id: if (white.member !== undefined) {
+		const user_id = getUserIdByUsername(white.member);
 		if (user_id === undefined) {
-			logEvents(`Unable to find the user ID of member "${game.players[players.WHITE].member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
+			logEvents(`Unable to find the user ID of member "${white.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
 			break id;
 		}
 		const base62 = uuid.base10ToBase62(user_id);
 		gameMetadata.WhiteID = base62;
 	}
-	id: if (game.players[players.BLACK].member !== undefined) {
-		const user_id = getUserIdByUsername(game.players[players.BLACK].member);
+	id: if (black.member !== undefined) {
+		const user_id = getUserIdByUsername(black.member);
 		if (user_id === undefined) {
-			logEvents(`Unable to find the user ID of member "${game.players[players.BLACK].member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
+			logEvents(`Unable to find the user ID of member "${black.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
 			break id;
 		}
 		const base62 = uuid.base10ToBase62(user_id);
@@ -362,7 +352,7 @@ function sendGameUpdateToBothPlayers(game) {
  */
 function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	const playerdata = game.players[color];
-	if (playerdata.socket === undefined) return; // Not connected, cant send message
+	if (playerdata.socket === undefined) return; // Not connected, can't send message
 
 	const opponentColor = typeutil.invertPlayer(color);
 	const messageContents = {
@@ -529,7 +519,7 @@ function doesPlayerBelongToGame_ReturnColor(game, player) {
  */
 function sendMessageToSocketOfColor(game, color, sub, action, value) {
 	const data = game.players[color];
-	if (data === undefined) return console.error(`Tried to send a message to player ${color} when there isnt one in game!`);
+	if (data === undefined) return logEvents(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt', { print: true });
 	const ws = data.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
@@ -555,43 +545,21 @@ function printGame(game) {
  * @returns {string} - The simplified game string
  */
 function getSimplifiedGameString(game) {
-	const players = game.players;
 
-	game.players = {};
-
+	// Only transfer interesting information.
+	const simplifiedGame = {
+		id: game.id,
+		timeCreated: timeutil.timestampToSqlite(game.timeCreated),
+		variant: game.variant,
+		clock: game.clock,
+		rated: game.rated,
+	};
+	simplifiedGame.players = {};
 	for (const [c, data] of Object.entries(game.players)) {
-		game.players[c] = {
-			identifier: data.identifier,
-			lastOfferPly: data.lastDrawOfferPly,
-			timer: data.timer,
-			socket: socketUtility.stringifySocketMetadata(data.socket)
-		};
+		simplifiedGame.players[c] = data.identifier;
 	}
-	const originalAutoTimeLossTimeoutID = game.autoTimeLossTimeoutID;
-	const originalAutoAFKResignTimeoutID = game.autoAFKResignTimeoutID;
-	const originalDeleteTimeoutID = game.deleteTimeoutID;
-	const originalDisconnect = game.disconnect;
-	const originalDrawOffers = game.drawOffers;
 
-	// We can't print normal websockets because they contain self-referencing.
-	for (const data of Object.values(game.players)) {
-		if (data.socket === undefined) continue;
-		data.socket = socketUtility.stringifySocketMetadata(data.socket);
-	}
-	delete game.autoTimeLossTimeoutID;
-	delete game.autoAFKResignTimeoutID;
-	delete game.deleteTimeoutID;
-
-	const stringifiedGame = jsutil.ensureJSONString(game, 'There was an error when stringifying game.');
-
-	game.autoTimeLossTimeoutID = originalAutoTimeLossTimeoutID;
-	game.autoAFKResignTimeoutID = originalAutoAFKResignTimeoutID;
-	game.deleteTimeoutID = originalDeleteTimeoutID;
-	game.disconnect = originalDisconnect;
-	game.drawOffers = originalDrawOffers;
-	game.players = players;
-
-	return stringifiedGame;
+	return JSON.stringify(simplifiedGame);
 }
 
 /**
@@ -643,7 +611,7 @@ function isAutoResignDisconnectTimerActiveForColor(game, color) {
  * @param {Game} game - The game
  */
 function sendUpdatedClockToColor(game, color) {
-	if (color !== players.BLACK && color !== players.WHITE) return console.error(`color must be white or black! ${color}`);
+	if (color !== players.BLACK && color !== players.WHITE) return logEvents(`Color must be white or black when sending clock to color! Got: ${color}`, 'errLog.txt', { print: true });
 	if (game.untimed) return; // Don't send clock values in an untimed game
 
 	const message = getGameClockValues(game);
@@ -690,7 +658,7 @@ function updateClockValues(game) {
 	const timeElapsedSinceTurnStart = now - game.timeAtTurnStart;
 	const newTime = game.timeRemainAtTurnStart - timeElapsedSinceTurnStart;
 	const playerdata = game.players[game.whosTurn];
-	if (playerdata === undefined) throw new Error(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`);
+	if (playerdata === undefined) return logEvents(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`, 'errLog.txt', { print: true });
 	playerdata.timer = newTime;
 }
 
@@ -700,7 +668,7 @@ function updateClockValues(game) {
  * @param {string} color - The color of the player to send the latest move to
  */
 function sendMoveToColor(game, color) {
-	if (!(color in game.players)) return console.error(`colorJustMoved must be white or black! ${color}`);
+	if (!(color in game.players)) return logEvents(`Color to send move to must be white or black! ${color}`, 'errLog.txt', { print: true });
     
 	const message = {
 		move: getLastMove(game),
@@ -745,7 +713,7 @@ function getLastMove(game) {
  * Returns error if index -1
  * @param {Game} game
  * @param {number} i - The moveIndex
- * @returns {string} - The color that played the moveIndex
+ * @returns {Player} - The color that played the moveIndex
  */
 function getColorThatPlayedMoveIndex(game, i) {
 	if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");

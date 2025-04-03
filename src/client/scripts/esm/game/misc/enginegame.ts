@@ -138,7 +138,7 @@ async function submitMove() {
 	const abridgedGame = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
-	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer); // Clean the gamefile to remove any circular references
+	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);
 	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig });
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }

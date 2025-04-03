@@ -14,6 +14,8 @@ import gameslot from '../chess/gameslot.js';
 import { createModel, BufferModel } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
+import { players, rawTypes } from '../../chess/util/typeutil.js';
+import boardutil from '../../chess/util/boardutil.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -34,8 +36,6 @@ import area from './area.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
-import { players, rawTypes } from '../../chess/util/typeutil.js';
-import boardutil from '../../chess/util/boardutil.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 

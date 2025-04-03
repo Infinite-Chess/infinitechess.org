@@ -6,10 +6,10 @@
 
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
-import { TypeRange } from '../../chess/logic/organizedpieces.js';
+import type { TypeRange } from '../../chess/logic/organizedpieces.js';
+import type { RegenerateData } from '../../chess/logic/organizedpieces.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
-import type { RegenerateData } from '../../chess/logic/organizedpieces.js';
 
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';
@@ -21,17 +21,17 @@ import math from '../../util/math.js';
 import miniimage from './miniimage.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 import frametracker from './frametracker.js';
+import preferences from '../../components/header/preferences.js';
+import { rawTypes } from '../../chess/util/typeutil.js';
+import events from '../../chess/logic/events.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
 import texture from './texture.js';
-import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import { gl } from './webgl.js';
 // @ts-ignore
 import movement from './movement.js';
-import { rawTypes } from '../../chess/util/typeutil.js';
-import events from '../../chess/logic/events.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -87,7 +87,9 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
 	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
 };
 
+
 // Generating Meshes ------------------------------------------------------------------------
+
 
 function addListeners(gamefile: gamefile) { 
 	events.addEventListener(gamefile.events, "regenerateLists", (gamefile: gamefile, types: RegenerateData) => {
@@ -124,6 +126,8 @@ async function regenAll(gamefile: gamefile) {
 }
 
 /**
+ * MIGHT BE UNUSED, SOON??
+ * 
  * Regenerates the single model of the provided type.
  * Call externally after adding more undefined placeholders to a type list.
  * @param gamefile
@@ -190,8 +194,8 @@ function getInstanceDataForTypeRange(gamefile: gamefile, pieceList: TypeRange): 
 
 	let currIndex: number = 0;
 	for (let i = pieceList.start; i < pieceList.end; i++) {
-		const coords = boardutil.getCoordsFromIdx(gamefile.ourPieces, i);
-		if (pieceList.undefineds.includes(i)) {
+		const coords = boardutil.getCoordsFromIdx(gamefile.ourPieces, i); // May be [0,0] if this is an undefined placeholder
+		if (boardutil.isIdxUndefinedPiece(gamefile.ourPieces, i)) {
 			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
 			instanceData64[currIndex + 1] = Infinity;
@@ -277,8 +281,9 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
 	gamefile.mesh.inverted = newInverted;
 	const newVertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 
-	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
-		if (typeutil.getRawType(Number(type)) === rawTypes.VOID) continue; // Voids don't need to be rotated, they are symmetrical
+	for (const [stringType, meshData] of Object.entries(gamefile.mesh.types)) {
+		const rawType = typeutil.getRawType(Number(stringType));
+		if (typeutil.SVGLESS_TYPES.some(t => t === rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
 		const vertexData = (meshData as MeshData).model.vertexData;
 		if (vertexData.length !== newVertexData.length) throw Error("New vertex data must be the same length as the existing! Cannot update buffer indices."); // Safety net
@@ -365,9 +370,9 @@ function renderAll(gamefile: gamefile) {
 	const boardScale = movement.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
-	for (const [type, meshData] of Object.entries(gamefile.mesh.types)) {
+	for (const meshData of Object.values(gamefile.mesh.types)) {
 		// Use a custom tint uniform if our theme has custom colors for the players pieces
-		(meshData as MeshData).model.render(position, scale, undefined);
+		(meshData as MeshData).model.render(position, scale);
 	}
 }
 
@@ -388,13 +393,12 @@ function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
 
 
 export default {
+	addListeners,
 	regenAll,
 	regenType,
 	overwritebufferdata,
 	deletebufferdata,
 	renderAll,
-
-	addListeners,
 };
 
 export type {

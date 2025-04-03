@@ -17,7 +17,7 @@ import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js'
+import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
@@ -30,8 +30,9 @@ import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js
 
 /**
  * The object containing all currently active games. Each game's id is the key: `{ id: Game }` 
- * This may temporarily include games that are over, but not yet deleted/logged.
- * */
+ * This may temporarily include games that are over, but not yet deleted/logged. 
+ * @type {Record<string, Game>}
+ */
 const activeGames = {};
 
 /**
@@ -212,7 +213,6 @@ function pushGameClock(game) {
 	if (game.moves.length < 3) return; //////////////////////////////////////// Atleast 3 moves played
 
 	newTime += game.incrementMillis; // Increment
-	
 	prevPlayerdata.timer = newTime;
 }
 
@@ -264,7 +264,11 @@ function setGameConclusion(game, conclusion) {
 function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
 	if (!dontDecrementActiveGames) decrementActiveGameCount();
 
-	console.log(`Game ${game.id} over. White: ${JSON.stringify(game.players[p.WHITE])}. Black: ${JSON.stringify(game.players[p.BLACK])}. Conclusion: ${game.gameConclusion}`);
+	const players = {};
+	for (const [c, data] of Object.entries(game.players)) {
+		players[c] = data.identifier;
+	}
+	console.log(`Game ${game.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${game.gameConclusion}. Moves: ${game.moves.length}.`);
 	printActiveGameCount();
 
 	stopGameClock(game);
@@ -380,8 +384,7 @@ async function deleteGame(game) {
 
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
-
-	// Remove them from the list of users in active games to allow them to join a new game.
+	// And remove them from the list of users in active games to allow them to join a new game.
 	for (const data of Object.values(game.players)) {
 		gameutility.unsubClientFromGame(game, data.socket);
 		removeUserFromActiveGame(data.identifier, game.id);

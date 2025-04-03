@@ -74,12 +74,19 @@ interface OrganizedPieces {
 const pieceCountToDisableCheckmate = 50_000;
 
 
+/**
+ * Creates a new, larger TypedArray of the SAME specific type as the input array.
+ * Does NOT copy the elements from the original array.
+ * @param a The TypedArray instance to base the new array on.
+ * @param i The number of elements to add to the length.
+ * @returns A new, empty TypedArray of the same type as 'a' with length 'a.length + i'.
+ */
 function extendArray<C extends FixedArray>(a: C, i: number): C {
-	const constructor = jsutil.getConstructorOfArray(a);
-
-	if (!constructor) throw Error(`${a} is not a fixed array, cannot extend it.`);
-
-	return new constructor(a.length + i) as C;
+	// Use the specific constructor property of the input array 'a'
+	// eslint-disable-next-line no-unused-vars
+	const constructor = a.constructor as new (length: number) => C;
+	// Create a new array of the *same specific type* as 'a'
+	return new constructor(a.length + i);
 }
 
 /**
@@ -87,7 +94,7 @@ function extendArray<C extends FixedArray>(a: C, i: number): C {
  * so that extra space can be added to anticipate extra pieces being added,
  * currently this is only useful for promotion.
  * @param o The organized pieces
- * @param gamerule 
+ * @param gamerule
  * @param listExtras The amount of undefineds that we should have for pieces that may be added
  * @returns how much each typerange was extended by
  */
@@ -114,9 +121,9 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: nu
 		currentOffset += undefinedsNeeded;
 	}
 
-	const newXpos = extendArray(o.XPositions, totalUndefinedsNeeded);
-	const newYpos = extendArray(o.YPositions, totalUndefinedsNeeded);
-	const newTypes = extendArray(o.types, totalUndefinedsNeeded);
+	const newXpos = extendArray(o.XPositions as unknown as FixedArray, totalUndefinedsNeeded);
+	const newYpos = extendArray(o.YPositions as unknown as FixedArray, totalUndefinedsNeeded);
+	const newTypes = extendArray(o.types as unknown as FixedArray, totalUndefinedsNeeded);
 
 	for (const [t, rangeData] of o.typeRanges) {
 		const extraNeeded = extraUndefinedsByType[t]!;
@@ -128,7 +135,7 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: nu
 			newTypes[i + currentOffset] = o.types[i]!;
 		}
 		// Move undefineds
-		for (const i in rangeData.undefineds) {
+		for (let i = 0; i < rangeData.undefineds.length; i++) {
 			rangeData.undefineds[i]! += currentOffset;
 		}
 		// Move ranges
@@ -137,12 +144,13 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: nu
 		// Add new undefineds
 		for (let i = rangeData.end; i < rangeData.end + extraNeeded; i++) {
 			rangeData.undefineds.push(i);
-			newTypes[i] = t;
+			newTypes[i] = t; // Assign type to new undefined slots
 		}
 
-		rangeData.end += extraNeeded;
+		rangeData.end += extraNeeded; // Update final end
 	}
 
+	// Update indices in o.lines (original logic)
 	for (const l of o.lines.values()) {
 		for (const line of l.values()) {
 			for (const i in line) {
@@ -156,9 +164,9 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: nu
 		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]!]!);
 	}
 
-	o.XPositions = newXpos;
-	o.YPositions = newYpos;
-	o.types = newTypes;
+	o.XPositions = newXpos as PositionArray;
+	o.YPositions = newYpos as PositionArray;
+	o.types = newTypes as Uint8Array; // Assuming o.types is always Uint8Array
 
 	return extraUndefinedsByType;
 }

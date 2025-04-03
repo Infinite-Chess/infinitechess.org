@@ -12,6 +12,7 @@ import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 // Type imports
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
+/** @typedef {import('../TypeDefinitions.js').PlayerData} PlayerData */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -84,6 +85,7 @@ function startDisconnectTimer(game, color, closureNotByChoice, onAutoResignFunc)
 		cancelAutoAFKResignTimer(game);
 	}
 
+	/** @type {PlayerData} */
 	const playerdata = game.players[color];
 	const opponentColor = typeutil.invertPlayer(color);
 
@@ -120,11 +122,12 @@ function cancelDisconnectTimer(game, color, { dontNotifyOpponent } = {}) {
 	/** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */
 	const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(game, color);
     
+	/** @type {PlayerData} */
 	const playerdata = game.players[color];
 
 	clearTimeout(playerdata.disconnect.startID);
 	clearTimeout(playerdata.disconnect.timeoutID);
-	playerdata.disconnect.startTimer = undefined;
+	playerdata.disconnect.startID = undefined;
 	playerdata.disconnect.timeoutID = undefined;
 	playerdata.disconnect.timeToAutoLoss = undefined;
 	playerdata.disconnect.wasByChoice = undefined;

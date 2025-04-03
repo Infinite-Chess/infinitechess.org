@@ -6,6 +6,8 @@
 import socketUtility from "../../socket/socketUtility.js";
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../../client/scripts/esm/chess/util/typeutil.js").Player} Player */
+/** @typedef {import("../TypeDefinitions.js").Game} Game */
 
 //--------------------------------------------------------------------------------------------------------
 

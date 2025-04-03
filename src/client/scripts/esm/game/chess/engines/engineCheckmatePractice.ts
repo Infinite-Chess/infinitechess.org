@@ -13,6 +13,7 @@ import isprime from '../../../util/isprime.js';
 import insufficientmaterial from '../../../chess/logic/insufficientmaterial.js';
 import { rawTypes as r, ext as e, players, numTypes} from '../../../chess/util/typeutil.js';
 import organizedpieces from '../../../chess/logic/organizedpieces.js';
+import jsutil from '../../../util/jsutil.js';
 /**
  * Typescript types are erased during compilation, so adding these
  * here doesn't actually mean adding dependancies.
@@ -23,7 +24,6 @@ import type { MoveDraft } from "../../../chess/logic/movepiece";
 import type { Coords } from "../../../chess/util/coordutil";
 import type { Vec2 } from "../../../util/math";
 import type { Position } from '../../../chess/util/boardutil.js';
-import jsutil from '../../../util/jsutil.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;

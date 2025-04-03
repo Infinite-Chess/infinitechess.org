@@ -38,7 +38,7 @@ function isDrawOfferOpen(game) {
 /**
  * Returns true if the given color has extended a draw offer that's not confirmed yet.
  * @param {Game} game
- * @param {string} color - The color who extended the draw offer
+ * @param {Player} color - The color who extended the draw offer
  * @returns {boolean}
  */
 function doesColorHaveExtendedDrawOffer(game, color) {
@@ -49,7 +49,7 @@ function doesColorHaveExtendedDrawOffer(game, color) {
  * Returns true if they given color has extended a draw offer
  * too recently for them to extend another, yet.
  * @param {Game} game 
- * @param {string} color 
+ * @param {Player} color 
  * @returns {boolean}
  */
 function hasColorOfferedDrawTooFast(game, color) {

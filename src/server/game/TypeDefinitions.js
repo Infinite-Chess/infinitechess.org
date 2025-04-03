@@ -22,10 +22,10 @@ function PlayerData() {
 	 * @type {{ member: string } | { browser: string}}
 	 */
 	this.identifier = undefined; // CHANGE TO { signedIn: boolean, identifier: string }
-	/**vPlayer's socket, if they are connected. @type {CustomWebSocket} */
+	/** Player's socket, if they are connected. @type {CustomWebSocket} */
 	this.socket = undefined;
 	/** @type {number | null} */
-	this.lastDrawOfferPly = undefined;
+	this.lastOfferPly = undefined;
 	/** Players's current time remaining, in milliseconds, if the game is timed, otherwise undefined. @type {number|undefined}*/
 	this.timer = undefined;
 	/** Contains information about which sides are
@@ -128,7 +128,7 @@ function Game() {
      * AFK if they are currently AFK. */
 	this.autoAFKResignTime = undefined;
 
-	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise undefined. @type {string | undefined} */
+	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise undefined. @type {Player | undefined} */
 	this.drawOfferState = undefined;
 
 	/** The ID of the timer to delete the game after it has ended.
