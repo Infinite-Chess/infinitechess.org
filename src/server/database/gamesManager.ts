@@ -124,7 +124,8 @@ function addGameToGamesTable(
 }
 
 /**
- * Generates a **UNIQUE** game_id.
+ * Generates a **UNIQUE** game_id by testing if it's taken already.
+ * @returns - A unique game_id.
  */
 function genUniqueGameID(): number {
 	let id: number;
