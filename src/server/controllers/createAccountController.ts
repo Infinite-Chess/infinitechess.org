@@ -30,6 +30,8 @@ import emailValidator from 'node-email-verifier';
 import { Request, Response } from 'express';
 // @ts-ignore
 import { addUserToRatingsTable } from '../database/ratingsManager.js';
+// @ts-ignore
+import { addUserToPlayerStatsTable } from '../database/playerStatsManager.js';
 
 // Variables -------------------------------------------------------------------------
 
@@ -149,6 +151,13 @@ async function generateAccount({ username, email, password, autoVerify = false }
 	const ratingsResult = addUserToRatingsTable(user_id);
 	if (!ratingsResult.success) {
 		logEvents(`Failed to add user "${username}" to ratings table: ${ratingsResult.reason}`, 'errLog.txt', { print: true });
+		return;
+	}
+
+	// Add the newly created user to the player_stats table
+	const playerStatsResult = addUserToPlayerStatsTable(user_id);
+	if (!playerStatsResult.success) {
+		logEvents(`Failed to add user "${username}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt', { print: true });
 		return;
 	}
 

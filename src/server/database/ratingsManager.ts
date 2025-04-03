@@ -29,7 +29,7 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 // Methods --------------------------------------------------------------------------------------------
 
 
-/*
+/**
  * Adds an entry to the ratings table, defaulting to 1000 elo and 350 rd (assuming DB defaults)
  * @param user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
  * @returns A result object indicating success or failure.
@@ -68,7 +68,7 @@ function addUserToRatingsTable(user_id: number): ModifyQueryResult {
 	}
 }
 
-/*
+/**
  * Updates the values related to the rating of the player.
  * @param user_id - The id for the user
  * @param elo - The new elo value for the player
@@ -105,7 +105,7 @@ function updatePlayerRatingValues(user_id: number, elo: number, rd: number): Mod
 	}
 }
 
-/*
+/**
  * Gets the values related to the rating of the player.
  * @param user_id - The id for the user
  * @returns The player's rating record object or undefined if not found or on error.
@@ -126,7 +126,7 @@ function getPlayerRatingValues(user_id: number): RatingRecord | undefined {
 	}
 }
 
-/*
+/**
  * Gets the top N players by elo.
  * @param n_players - The maximum number of top players to retrieve
  * @returns An array of top player rating records, potentially empty.
