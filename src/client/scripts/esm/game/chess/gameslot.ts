@@ -125,8 +125,8 @@ interface VariantOptions {
 /** The currently loaded game. */
 let loadedGamefile: gamefile | undefined;
 
-/** True if we're viewing the game from white's perspective, false for black's perspective. */
-let youAreColor: string;
+/** The player color we are viewing the perspective of in the current loaded game. */
+let youAreColor: Player;
 
 /**
  * The timeout id of the timer that animates the latest-played
@@ -155,14 +155,9 @@ function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-/** Returns what color we are viewing the current loaded game by default. */
-function getOurColor(): string {
-	return youAreColor;
-}
-
 function isLoadedGameViewingWhitePerspective() {
 	if (!loadedGamefile) throw Error("Cannot ask if loaded game is from white's perspective when there isn't a loaded game.");
-	return youAreColor === 'white';
+	return youAreColor === players.WHITE;
 };
 
 /**
@@ -203,7 +198,7 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	const newGamefile = new gamefile(loadOptions.metadata, loadOptions.additional);
 
-	youAreColor = loadOptions.viewWhitePerspective ? 'white' : 'black';
+	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
 	// If the game has more lines than this, then we turn off arrows at the start to prevent a lag spike.
 	const lineCountToDisableArrows = 8;
@@ -360,7 +355,6 @@ function unConcludeGame() {
 export default {
 	getGamefile,
 	areInGame,
-	getOurColor,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,
 	unloadGame,

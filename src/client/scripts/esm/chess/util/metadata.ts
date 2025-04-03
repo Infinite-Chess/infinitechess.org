@@ -51,7 +51,7 @@ interface MetaData {
 
 /**
  * Returns the value of the game's Result metadata, depending on the victor.
- * @param victor - The victor of the game. Can be 'white', 'black', 'draw', or 'aborted'.
+ * @param victor - The victor of the game, in player number. Or none if undefined.
  * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
  */
 function getResultFromVictor(victor?: Player): string {

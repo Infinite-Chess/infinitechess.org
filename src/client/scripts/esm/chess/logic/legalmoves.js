@@ -27,6 +27,7 @@ import { rawTypes as r } from '../util/typeutil.js';
  * @typedef {import('./movesets.js').Coords} Coords
  * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
  * @typedef {import('../util/typeutil.js').Player} Player
+ * @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces
 */
 
 
@@ -88,7 +89,7 @@ function genSpecialVicinity(gamefile) {
 	const vicinity = {};
 	const existingRawTypes = gamefile.startSnapshot.existingRawTypes;
 	// Object keys are strings, so we need to cast the type to a number
-	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) { // [number, Coords[]]
+	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
 		const rawType = Number(rawTypeString);
 		if (!existingRawTypes.includes(rawType)) continue; // This piece isn't present in our game
 		pieceVicinity.forEach(coords => {
@@ -110,7 +111,7 @@ function getPieceMoveset(gamefile, pieceType) {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
 	if (player === players.NEUTRAL) return {}; // Neutral pieces CANNOT MOVE!
 	const movesetFunc = gamefile.pieceMovesets[rawType];
-	if (!movesetFunc) return {}; // Piece doesn't have a specified moveset (could be neutral). Return empty.
+	if (!movesetFunc) return {}; // Safety net. Piece doesn't have a specified moveset. Return empty.
 	return movesetFunc(); // Calling these parameters as a function returns their moveset.
 }
 
@@ -141,7 +142,6 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset) {
  * @returns {LegalMoves} The legalmoves object.
  */
 function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = false } = {}) { // piece: { type, coords }
-	// if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
 	const coords = piece.coords;
 	const type = piece.type;
 	const color = typeutil.getColorFromType(type); // Color of piece calculating legal moves of
@@ -184,6 +184,7 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
     
 	if (!ignoreCheck) checkresolver.removeCheckInvalidMoves(gamefile, moves, piece, color);
 
+	// console.log(`Calculated legal moves:`, moves);
 	return moves;
 }
 
@@ -247,13 +248,14 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
  * Takes in specified organized list, direction of the slide, the current moveset...
  * Shortens the moveset by pieces that block it's path.
  * @param {BlockingFunction} blockingFunc - The function that will check if each piece on the same line needs to block the piece
+ * @param {OrganizedPieces} o
  * @param {Piece[]} line - The list of pieces on this line 
  * @param {number[]} direction - The direction of the line: `[dx,dy]` 
  * @param {number[] | undefined} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
  * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
  * @param {Player} color - The color of friendlies
  */
-function slide_CalcLegalLimit(blockingFunc, organizedpieces, line, direction, slideMoveset, coords, color) {
+function slide_CalcLegalLimit(blockingFunc, o, line, direction, slideMoveset, coords, color) {
 
 	if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
@@ -265,7 +267,7 @@ function slide_CalcLegalLimit(blockingFunc, organizedpieces, line, direction, sl
 	// Iterate through all pieces on same line
 	for (let i = 0; i < line.length; i++) {
 
-		const thisPiece = boardutil.getPieceFromIdx(organizedpieces, line[i]); // { type, coords }
+		const thisPiece = boardutil.getPieceFromIdx(o, line[i]); // { type, coords }
 
 		/**
 		 * 0 => Piece doesn't block

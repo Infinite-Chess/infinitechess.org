@@ -184,7 +184,7 @@ function areMovesIn2DFormat(longmoves: Move[] | DepricatedMoves): boolean {
 /**
  * Converts a gamefile's move list from the old 2D array format to the new 1D format.
  * If it's a black-moves-first game, it sets the 'turn' property of the provided results
- * object to 'black', otherwise 'white'.
+ * object to player black, otherwise player white.
  * @param moves - The gamefile's moves in the old 2D array format
  * @param results - PROVIDE AS AN EMPTY OBJECT! The 'turn' property will be set, destructively.
  * @returns Moves converted to the new 1D array format

@@ -120,8 +120,8 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
  * @returns {Object} An object with 4 properties:
  * - `white`: An object with either the `member` or `browser` property.
  * - `black`: An object with either the `member` or `browser` property.
- * - `player1Color`: The color of player1, the invite owner. "white" / "black"
- * - `player2Color`: The color of player2, the invite accepter. "white" / "black"
+ * - `player1Color`: The color of player1, the invite owner.
+ * - `player2Color`: The color of player2, the invite accepter.
  */
 function assignWhiteBlackPlayersFromInvite(color, player1, player2) { // { id, owner, variant, clock, color, rated, publicity }
 	let white;
@@ -138,7 +138,7 @@ function assignWhiteBlackPlayersFromInvite(color, player1, player2) { // { id, o
 		black = player1;
 		player1Color = players.BLACK;
 		player2Color = players.WHITE;
-	} else { // Random
+	} else if (color === players.NEUTRAL) { // Random
 		if (Math.random() > 0.5) {
 			white = player1;
 			black = player2;
@@ -150,7 +150,7 @@ function assignWhiteBlackPlayersFromInvite(color, player1, player2) { // { id, o
 			player1Color = players.BLACK;
 			player2Color = players.WHITE;
 		}
-	}
+	} else throw Error(`Unsupported color ${color} when assigning players to game.`);
 	return { white, black, player1Color, player2Color };
 }
 
@@ -158,7 +158,7 @@ function assignWhiteBlackPlayersFromInvite(color, player1, player2) { // { id, o
  * Links their socket to this game, modifies their metadata.subscriptions, and sends them the game info.
  * @param {Game} game - The game they are a part of.
  * @param {Object} playerSocket - Their websocket.
- * @param {Player} playerColor - What color they are playing in this game. "white" / "black"
+ * @param {Player} playerColor - What color they are playing in this game. p.NEU
  * @param {Object} options - An object that may contain the option `sendGameInfo`, that when *true* won't send the game information over. Default: *true*
  * @param {boolean} options.sendGameInfo
  * @param {number} options.replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
@@ -216,7 +216,7 @@ function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
  * Removes the player's websocket from the game.
  * Call this when their websocket closes and we're unsubbing them from game updates.
  * @param {Game} game - The game they are a part of.
- * @param {Player} color - The color they are playing. "white" / "black"
+ * @param {Player} color - The color they are playing as.
  */
 function removePlayerSocketFromGame(game, color) {
 	const playerdata = game.players[color];
@@ -230,7 +230,7 @@ function removePlayerSocketFromGame(game, color) {
  * Makes sure not to send sensitive info, such as player's browser-id cookies.
  * @param {Game} game - The game they're in.
  * @param {CustomWebSocket} playerSocket - Their websocket
- * @param {Player} playerColor - The color the are. "white" / "black"
+ * @param {Player} playerColor - The color they are.
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {

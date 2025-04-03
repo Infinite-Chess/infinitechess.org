@@ -33,6 +33,7 @@ import { players } from '../util/typeutil.js';
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
 /** @typedef {import('./checkdetection.js').Attacker} Attacker */
 /** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
+/** @typedef {import('../util/typeutil.js').Players} Players */
 
 'use strict'; 
 
@@ -56,7 +57,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
-		/** In key format 'x,y':'type' @type {Position} */
+		/** In key format 'x,y': type @type {Position} */
 		position: undefined,
 		/** @type {string} */
 		positionString: undefined,
@@ -94,7 +95,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		},
 		slideLimit: undefined,
 
-		/** An array of teams: `['white','black']` @type {string[]} */
+		/** An array of players @type {Player[]} */
 		turnOrder: undefined,
 
 		/** How many plies (half-moves) may pass until a draw is automatically pronounced! */

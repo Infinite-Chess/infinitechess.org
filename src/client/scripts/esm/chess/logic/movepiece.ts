@@ -169,12 +169,12 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	 */
 	state.createEnPassantState(move, gamefile.enpassant, undefined);
 
-	const trimmedType = typeutil.getRawType(move.type); // "queens"
+	const rawType = typeutil.getRawType(move.type);
 	let specialMoveMade: boolean = false;
 	// If a special move function exists for this piece type, run it.
 	// The actual function will return whether a special move was actually made or not.
 	// If a special move IS made, we skip the normal move piece method.
-	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
+	if (rawType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[rawType](gamefile, piece, move);
 	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
 	// Must be set before calling queueIncrementMoveRuleStateChange()
@@ -224,7 +224,7 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 			// Delete the special rights off the start coords AND the capture coords, if there are ones.
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
 			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
-			const captureCoordsKey = coordutil.getKeyFromCoords(change.endCoords);
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
 			state.createSpecialRightsState(move, captureCoordsKey, gamefile.specialRights[captureCoordsKey], undefined);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.
@@ -241,8 +241,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (move.flags.capture ||
-		typeutil.getRawType(move.type) === rawTypes.PAWN) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = (move.flags.capture || typeutil.getRawType(move.type) === rawTypes.PAWN) ? 0 : gamefile.moveRuleState + 1;
 	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 

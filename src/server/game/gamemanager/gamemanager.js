@@ -17,6 +17,7 @@ import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js'
 
 /**
  * Type Definitions
@@ -232,8 +233,7 @@ function stopGameClock(game) {
 	let newTime = game.timeRemainAtTurnStart - timeSpent;
 	if (newTime < 0) newTime = 0;
 
-	if (game.whosTurn === 'white') game.timerWhite = newTime;
-	else                           game.timerBlack = newTime;
+	game.players[game.whosTurn].clock = newTime;
 
 	game.whosTurn = undefined;
 
@@ -264,7 +264,7 @@ function setGameConclusion(game, conclusion) {
 function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
 	if (!dontDecrementActiveGames) decrementActiveGameCount();
 
-	console.log(`Game ${game.id} over. White: ${JSON.stringify(game.white)}. Black: ${JSON.stringify(game.black)}. Conclusion: ${game.gameConclusion}`);
+	console.log(`Game ${game.id} over. White: ${JSON.stringify(game.players[p.WHITE])}. Black: ${JSON.stringify(game.players[p.BLACK])}. Conclusion: ${game.gameConclusion}`);
 	printActiveGameCount();
 
 	stopGameClock(game);
@@ -314,8 +314,7 @@ function onPlayerLostOnTime(game) {
 	// Sometimes they're clock can have 1ms left. Just make that zero.
 	// This needs to be done AFTER setting game conclusion, because that
 	// stops the clocks and changes their values.
-	if (loser === 'white') game.timerWhite = 0;
-	else                   game.timerBlack = 0;
+	game.players[loser].timer = 0;
 
 	gameutility.sendGameUpdateToBothPlayers(game);
 }
