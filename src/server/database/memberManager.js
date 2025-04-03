@@ -141,10 +141,10 @@ function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 /**
  * Generates a **UNIQUE** user_id.
  */
-function genUniqueUserID(length) {
+function genUniqueUserID() {
 	let id;
 	do {
-		id = generateRandomUserId(length);
+		id = generateRandomUserId();
 	} while (isUserIdTaken(id));
 	return id;
 }
