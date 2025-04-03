@@ -2,11 +2,11 @@
 
 import type { ClockValues } from "../../../chess/logic/clock.js";
 import type { MetaData } from "../../../chess/util/metadata.js";
+import type { Player } from "../../../chess/util/typeutil.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
-import type { Player } from "../../../chess/util/typeutil.js";
 
 import disconnect from "./disconnect.js";
 import afk from "./afk.js";

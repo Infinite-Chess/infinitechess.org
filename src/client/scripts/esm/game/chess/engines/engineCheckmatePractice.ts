@@ -23,6 +23,7 @@ import type { MoveDraft } from "../../../chess/logic/movepiece";
 import type { Coords } from "../../../chess/util/coordutil";
 import type { Vec2 } from "../../../util/math";
 import type { Position } from '../../../chess/util/boardutil.js';
+import jsutil from '../../../util/jsutil.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
@@ -42,7 +43,7 @@ postMessage('readyok');
 // Here, the engine webworker received messages from the outside
 self.onmessage = function(e: MessageEvent) {
 	const message = e.data;
-	input_gamefile = message.gamefile;
+	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;

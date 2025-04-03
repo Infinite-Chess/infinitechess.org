@@ -3,7 +3,6 @@
  * This script handles the logical side of moving pieces, nothing graphical.
  * 
  * Both ends, client & server, should be able to use this script.
- * It SHOULD have a healthy dependancy tree (need to work on that).
  */
 
 
