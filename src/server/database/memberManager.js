@@ -133,7 +133,7 @@ function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 	} catch (error) {
 		// Log the error for debugging purposes
 		logEvents(`Error deleting user with ID "${user_id}": ${error.stack}`, 'errLog.txt', { print: true });
-		return { succes: false, reason: `Failed to delete user of ID "${user_id}", an internal error ocurred.`};
+		return { success: false, reason: `Failed to delete user of ID "${user_id}", an internal error ocurred.`};
 	}
 }
 // console.log(deleteUser(3408674));

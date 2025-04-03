@@ -220,6 +220,37 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
 	}
 }
 
+/**
+ * Deletes a game from the games table.
+ * @param {number} game_id - The ID of the game to delete.
+ * @returns {ModifyQueryResult} - A result object indicating success or failure.
+ */
+function deleteGame(game_id: number): ModifyQueryResult {
+	// SQL query to delete a game by its game_id
+	const query = 'DELETE FROM games WHERE game_id = ?';
+
+	try {
+		// Execute the delete query
+		const result = db.run(query, [game_id]); // { changes: 1 }
+
+		// Check if any rows were deleted
+		if (result.changes === 0) {
+			const reason = `Cannot delete game of ID "${game_id}", it was not found.`;
+			logEvents(reason, 'errLog.txt', { print: true });
+			return { success: false, reason };
+		}
+
+		return { success: true, result }; // Deletion made successfully
+
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		// Log the error for debugging purposes
+		const reason = `Error deleting game with ID "${game_id}": ${message}`;
+		logEvents(reason, 'errLog.txt', { print: true });
+		return { success: false, reason };
+	}
+}
+
 
 // Exports --------------------------------------------------------------------------------------------
 
@@ -227,5 +258,6 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
 export {
 	addGameToGamesTable,
 	getGameData,
-	updateGameColumns
+	updateGameColumns,
+	deleteGame
 };	
