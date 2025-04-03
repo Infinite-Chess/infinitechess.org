@@ -65,7 +65,7 @@ function deepCopyObject<T extends unknown>(src: T): T {
 	if (constructor) {
 		const copy = new constructor(((src as unknown) as FixedArray).length);
 		for (let i = 0; i < copy.length; i++) {
-			copy[i] = src[i];
+			copy[i] = ((src as unknown) as FixedArray)[i];
 		}
 		return copy as T;
 	}
