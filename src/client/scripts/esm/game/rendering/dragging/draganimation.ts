@@ -7,7 +7,7 @@
 
 
 import type { BufferModel } from "../buffermodel.js";
-import type { Color } from "../../../chess/util/colorutil.js";
+import type { Color } from "../../../util/math.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { BoundingBox } from "../../../util/math.js";
 import type { Piece } from "../../../chess/util/boardutil.js";

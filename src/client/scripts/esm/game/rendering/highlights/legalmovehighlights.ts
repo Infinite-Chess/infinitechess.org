@@ -35,9 +35,8 @@ import shapes from '../shapes.js';
 // Type Definitions -----------------------------------------------------------------------------
 
 import type { Player } from '../../../chess/util/typeutil.js';
-import type { BoundingBox, Vec2 } from '../../../util/math.js';
+import type { BoundingBox, Vec2, Color } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
-import type { Color } from '../../../chess/util/colorutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';

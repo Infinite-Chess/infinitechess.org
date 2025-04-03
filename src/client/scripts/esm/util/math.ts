@@ -36,6 +36,8 @@ type Vec2Key = `${number},${number}`
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
 
+/** A color in a length-4 array: `[r,g,b,a]` */
+type Color = [number,number,number,number];
 
 // Geometry -------------------------------------------------------------------------------------------
 
@@ -674,4 +676,5 @@ export type {
 	Vec2,
 	Vec2Key,
 	Vec3,
+	Color
 };

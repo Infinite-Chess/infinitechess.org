@@ -6,7 +6,7 @@
 
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { Color } from '../../chess/util/colorutil.js';
+import type { Color } from '../../util/math.js';
 import type { RawType } from '../../chess/util/typeutil.js';
 
 import arrows from './arrows/arrows.js';

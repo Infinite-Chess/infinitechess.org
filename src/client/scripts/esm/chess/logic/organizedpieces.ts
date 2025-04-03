@@ -168,7 +168,7 @@ function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: nu
  * placeholders to the piece list of this type.
  * The lists of all the pieces needs placeholders in case we
  * promote to a new piece.
- * @param promotionGameRule - what each player can promot to.
+ * @param promotionGameRule - what each player can promote to.
  * @param type - the type we are checking
  * @returns *true* if we need to append placeholders for this type.
  */

@@ -6,7 +6,7 @@
 
 
 import type { Piece } from "../../../chess/util/boardutil.js";
-import type { Color } from "../../../chess/util/colorutil.js";
+import type { Color } from "../../../util/math.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
 // @ts-ignore
 import type { LegalMoves } from "../../../chess/logic/legalmoves.js";

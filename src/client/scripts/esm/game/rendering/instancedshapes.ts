@@ -13,7 +13,7 @@
 
 
 import type { Coords } from "../../chess/util/coordutil.js";
-import type { Color } from "../../chess/util/colorutil.js";
+import type { Color } from "../../util/math.js";
 
 
 // @ts-ignore

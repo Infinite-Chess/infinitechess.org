@@ -10,7 +10,7 @@ import docutil from "../../util/docutil.js";
 import typeutil from "../../chess/util/typeutil.js";
 
 
-import type { Color } from "../../chess/util/colorutil.js";
+import type { Color } from "../../util/math.js";
 
 
 
