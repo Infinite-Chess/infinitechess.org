@@ -174,6 +174,7 @@ function getGameData(columns: string[], game_id: number): GamesRecord | undefine
  * @param {GamesRecord} columnsAndValues - An object containing column-value pairs to update.
  * @returns {ModifyQueryResult} - A result object indicating success or failure.
  */
+// eslint-disable-next-line no-unused-vars
 function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
@@ -227,6 +228,7 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
  * @param {number} game_id - The ID of the game to delete.
  * @returns {ModifyQueryResult} - A result object indicating success or failure.
  */
+// eslint-disable-next-line no-unused-vars
 function deleteGame(game_id: number): ModifyQueryResult {
 	// SQL query to delete a game by its game_id
 	const query = 'DELETE FROM games WHERE game_id = ?';
@@ -259,6 +261,7 @@ function deleteGame(game_id: number): ModifyQueryResult {
 export {
 	addGameToGamesTable,
 	getGameData,
-	updateGameColumns,
-	deleteGame
+	// Commented out to emphasize they should not ever have to be used.
+	// updateGameColumns,
+	// deleteGame
 };	
