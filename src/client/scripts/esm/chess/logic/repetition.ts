@@ -17,7 +17,7 @@ import typeutil from "../util/typeutil.js";
 import { players, rawTypes } from "../util/typeutil.js";
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
-type Flux = `${string},${string},${string|number}`; // `x,y,type` | `x,y,enpassant`
+type Flux = `${string},${string},${number|string}`; // `x,y,43` | `x,y,enpassant`
 
 /**
  * Tests if the provided gamefile has had a repetition draw.

@@ -19,6 +19,7 @@ import { players, rawTypes } from '../util/typeutil.js';
  * @typedef {import('../util/coordutil.js').Coords} Coords
  * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
  * @typedef {import('./movepiece.js').enpassantCreate} enpassantCreate
+ * @typedef {import('../util/typeutil.js').Player} Player
  */
 
 "use strict";
@@ -38,7 +39,7 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * Appends legal king special moves to the provided legal individual moves list. (castling)
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the king selected
- * @param {any} color - The color of the king selected
+ * @param {Player} color - The color of the king selected
  * @returns {CoordsSpecial[]}
  */
 function kings(gamefile, coords, color) {
@@ -63,8 +64,7 @@ function kings(gamefile, coords, color) {
 	let left = -Infinity; // Piece directly left of king. (Infinity if none)
 	let right = Infinity; // Piece directly right of king. (Infinity if none)
 	for (let i = 0; i < row.length; i++) {
-		const thisPiece = boardutil.getPieceFromIdx(gamefile.ourPieces, row[i]); // { type, coords }
-		const thisCoord = thisPiece.coords;
+		const thisCoord = boardutil.getCoordsFromIdx(gamefile.ourPieces, row[i]); // [x,y]
 
 		if (thisCoord[0] < x && thisCoord[0] > left) left = thisCoord[0];
 		else if (thisCoord[0] > x && thisCoord[0] < right) right = thisCoord[0];
@@ -126,7 +126,7 @@ function kings(gamefile, coords, color) {
  * pawn moves, even though those don't need a special move flag.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the pawn selected
- * @param {any} color - The color of the pawn selected
+ * @param {Player} color - The color of the pawn selected
  * @returns {CoordsSpecial[]}
  */
 function pawns(gamefile, coords, color) {
@@ -240,7 +240,7 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, landCoord
  * Appends legal moves for the rose piece to the provided legal individual moves list.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the rose selected
- * @param {number} color - The color of the rose selected
+ * @param {Player} color - The color of the rose selected
  * @returns {CoordsSpecial[]}
  */
 function roses(gamefile, coords, color) {
@@ -335,6 +335,7 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
 
 /**
  * Returns true if a pawn moved onto a promotion line.
+ * @param {gamefile} gamefile
  * @param {string} type 
  * @param {number[]} coordsClicked 
  * @returns {boolean}

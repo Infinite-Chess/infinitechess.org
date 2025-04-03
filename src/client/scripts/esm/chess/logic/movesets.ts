@@ -26,7 +26,7 @@ import type { gamefile } from './gamefile.js';
  * A Movesets object containing the movesets for every piece type in a game
  */
 type Movesets = {
-	[_ in RawType]?: PieceMoveset
+	[IntPiece in RawType]?: PieceMoveset
 }
 
 /**

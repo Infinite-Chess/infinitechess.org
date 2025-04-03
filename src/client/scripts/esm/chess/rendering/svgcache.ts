@@ -24,7 +24,7 @@ const processingCache: { [key: string]: Promise<void> } = {};
 
 
 // Initialization: Cache classical pieces on load
-fetchLocation("classical").then();
+fetchLocation("classical");
 
 // Helper functions ---------------------------------------------------------
 
