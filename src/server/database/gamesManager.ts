@@ -151,7 +151,7 @@ function getGameData(columns: string[], game_id: number): GamesRecord | undefine
 
 		// If no row is found, return undefined
 		if (!row) {
-			logEvents(`No matches found for game_id = ${game_id}`, 'errLog.txt', { print: true });
+			logEvents(`No matches found in games table for game_id = ${game_id}.`, 'errLog.txt', { print: true });
 			return undefined;
 		}
 
@@ -206,13 +206,13 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
 		// Check if the update was successful
 		if (result.changes > 0) return { success: true, result };
 		else {
-			logEvents(`No changes made when updating columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEvents(`No changes made when updating games table columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 			return { success: false, reason: 'No changes made.' }; // Generic error message
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error updating columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEvents(`Error updating games table columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 		// Return an error message
 		return { success: false, reason: `Database error.` }; // Generic error message
 	}

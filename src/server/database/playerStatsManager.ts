@@ -69,10 +69,6 @@ function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated
 		return { success: true, result };
 
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEvents(`Error adding user to player_stats table "${user_id}": ${message}`, 'errLog.txt', { print: true });
-
 		// Return an error message
 		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
 		let reason = 'Failed to add user to player_stats table.';
@@ -84,7 +80,10 @@ function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated
 				reason = 'User ID already exists in the player_stats table.';
 			}
 		}
-		return { success: false, reason };
+		// Log the error for debugging purposes
+		const message = error instanceof Error ? error.message : String(error);
+		logEvents(`Error adding user to player_stats table "${user_id}": ${message}. The reason: "${reason}". The query: "${query}"`, 'errLog.txt', { print: true }); // Detailed error logging
+		return { success: false, reason }; // Generic error message
 	}
 }
 
@@ -118,7 +117,7 @@ function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsReco
 
 		// If no row is found, return undefined
 		if (!row) {
-			logEvents(`No matches found for user_id = ${user_id}`, 'errLog.txt', { print: true });
+			logEvents(`No matches found in player stats table for user_id = ${user_id}.`, 'errLog.txt', { print: true });
 			return undefined;
 		}
 
@@ -127,7 +126,7 @@ function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsReco
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error and return undefined
-		logEvents(`Error executing query: ${message}`, 'errLog.txt', { print: true });
+		logEvents(`Error executing query when gettings player stats of user_id ${user_id}: ${message}. The query: "${query}"`, 'errLog.txt', { print: true });
 		return undefined;
 	}
 }
@@ -141,17 +140,15 @@ function getPlayerStatsData(columns: string[], user_id: number): PlayerStatsReco
 function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStatsRecord): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		const reason = `Invalid or empty columns and values provided for user ID "${user_id}" when updating player_stats columns!`;
-		logEvents(reason, 'errLog.txt', { print: true });
-		return { success: false, reason };
+		logEvents(`Invalid or empty columns and values provided for user ID "${user_id}" when updating player_stats columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
 	}
 
 	for (const column in columnsAndValues) {
 		// Validate all provided columns
 		if (!allPlayerStatsColumns.includes(column)) {
-			const reason = `Invalid column "${column}" provided for user ID "${user_id}" when updating player_stats columns!`;
-			logEvents(reason, 'errLog.txt', { print: true });
-			return { success: false, reason };
+			logEvents(`Invalid column "${column}" provided for user ID "${user_id}" when updating player_stats columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			return { success: false, reason: 'Invalid column.' }; // Generic error message
 		}
 	}
 
@@ -172,18 +169,15 @@ function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStats
 		// Check if the update was successful
 		if (result.changes > 0) return { success: true, result };
 		else {
-			const reason = `No changes made when updating columns ${JSON.stringify(columnsAndValues)} for member in player_stats table with id "${user_id}"!`;
-			logEvents(reason, 'errLog.txt', { print: true });
-			return { success: false, reason };
+			logEvents(`No changes made when updating player stats table columns ${JSON.stringify(columnsAndValues)} for member in player_stats table with id "${user_id}"! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
+			return { success: false, reason: 'No changes made.' }; // Generic error message
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		const reason = `Error updating columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}": ${message}`;
-		logEvents(reason, 'errLog.txt', { print: true });
-
+		logEvents(`Error updating player stats table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}": ${message}! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
 		// Return an error message
-		return { success: false, reason };
+		return { success: false, reason: 'Database error.' }; // Generic error message
 	}
 }
 
