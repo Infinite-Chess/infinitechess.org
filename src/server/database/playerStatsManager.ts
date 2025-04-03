@@ -49,21 +49,18 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 /**
  * Adds an entry to the player_stats table
  * @param user_id - The id for the user (fails if it doesn't exist in player_stats or due to constraints)
- * @param [options] - Optional parameters for the user.
- * @param [options.last_played_rated_game] - The user's last_played_rated_game timestamp
  * @returns - A result object indicating success or failure.
  */
-function addUserToPlayerStatsTable(user_id: number, options: { last_played_rated_game?: string } = {}): ModifyQueryResult {
+function addUserToPlayerStatsTable(user_id: number): ModifyQueryResult {
 	const query = `
 	INSERT INTO player_stats (
-		user_id,
-        last_played_rated_game
-	) VALUES (?, ?)
-	`; // Only inserting user_id and last_played_rated_game is needed if others have DB defaults
+		user_id
+	) VALUES (?)
+	`; // Only inserting user_id is needed if others have DB defaults or may be NULL
 
 	try {
 		// Execute the query with the provided values
-		const result = db.run(query, [user_id, options.last_played_rated_game]);
+		const result = db.run(query, [user_id]);
 
 		// Return success result
 		return { success: true, result };

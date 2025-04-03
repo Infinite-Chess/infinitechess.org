@@ -157,9 +157,10 @@ function isGameIdTaken(game_id: number): boolean {
 
 		// If a row is found, the game_id exists
 		return row !== undefined;
-	} catch (error) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		// Log the error if the query fails
-		logEvents(`Error checking if game_id "${game_id}" is taken: ${error.message}`, 'errLog.txt', { print: true });
+		logEvents(`Error checking if game_id "${game_id}" is taken: ${message}`, 'errLog.txt', { print: true });
 		return false; // Return false if an error occurs
 	}
 }
