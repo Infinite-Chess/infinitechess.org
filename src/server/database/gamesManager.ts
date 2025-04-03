@@ -168,8 +168,8 @@ function isGameIdTaken(game_id: number): boolean {
 
 /**
  * Fetches specified columns of a single game from the games table based on game_id
- * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'players']).
  * @param game_id - The game_id of the game
+ * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'players']).
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
 function getGameData(game_id: number, columns: string[]): GamesRecord | undefined {
