@@ -59,7 +59,7 @@ const ext = {
  * 
  * MUST BE IN THE EXACT SAME ORDER AS {@link rawTypes}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-const strtypes = ['voids', 'obstacles', 'kings', 'giraffes', 'camels', 'zebras', 'knightriders', 'amazons', 'queens', 'royalQueens', 'hawks', 'chancellors', 'archbishops', 'centaurs', 'royalCentaurs', 'roses', 'knights', 'guards', 'huygens', 'rooks', 'bishops', 'pawns'] as const;
+const strtypes = ['void', 'obstacle', 'king', 'giraffe', 'camel', 'zebra', 'knightrider', 'amazon', 'queen', 'royalQueen', 'hawk', 'chancellor', 'archbishop', 'centaur', 'royalCentaur', 'rose', 'knight', 'guard', 'huygen', 'rook', 'bishop', 'pawn'] as const;
 
 /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
 const jumpingRoyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
