@@ -139,8 +139,7 @@ function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 // console.log(deleteUser(3408674));
 
 /**
- * Generates a **UNIQUE** user_id. It queries if it is taken to do so.
- * @returns {number} The length of the desired user_id
+ * Generates a **UNIQUE** user_id.
  */
 function genUniqueUserID(length) {
 	let id;
