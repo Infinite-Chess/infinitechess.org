@@ -481,7 +481,9 @@ function initEvalWeightsAndSearchProperties() {
 			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
 			bestMoveList = [
 				{bestMove: [1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[-2,-2]]},
-				{bestMove: [-1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[2,-2]]}
+				{bestMove: [-1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[2,-2]]},
+				{bestMove: [1,0], piecelist: [6, 1, 5], coordlist: [[1,-2],[-2,-1],[1,2]]},
+				{bestMove: [-1,0], piecelist: [6, 1, 5], coordlist: [[-1,-2],[2,-1],[-1,2]]}
 			];
 			break;
 		case "1K3NR-1k":
