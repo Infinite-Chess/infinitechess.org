@@ -543,7 +543,7 @@ function specialNorm(square: Coords): number {
 
 // pawn norm: gives slight malus for black king being near and above the pawn
 function pawnNorm(square: Coords): number {
-	const prefactor = square[0] < 0 && manhattanNorm(square) < 5 ? 0.9 : 1;
+	const prefactor = square[0] < 0 && manhattanNorm(square) < 5 ? 0.7 : 1;
 	return prefactor * (diagonalNorm(square) + manhattanNorm(square));
 }
 
