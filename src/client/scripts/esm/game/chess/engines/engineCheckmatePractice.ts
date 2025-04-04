@@ -237,7 +237,7 @@ function initEvalWeightsAndSearchProperties() {
 		3: [[2, manhattanNorm], [2, manhattanNorm]], // bishop
 		4: [[15, manhattanNorm], [15, manhattanNorm]], // knight
 		5: [[30, manhattanNorm], [30, manhattanNorm]], // king
-		6: [[200, specialNorm], [200, specialNorm]], // pawn
+		6: [[200, pawnNorm], [200, pawnNorm]], // pawn
 		7: [[14, manhattanNorm], [14, manhattanNorm]], // amazon
 		8: [[7, manhattanNorm], [7, manhattanNorm]], // hawk
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
@@ -532,6 +532,12 @@ function manhattanDistance(square1: Coords, square2: Coords): number {
 // special norm = manhattan + diagonal
 function specialNorm(square: Coords): number {
 	return diagonalNorm(square) + manhattanNorm(square);
+}
+
+// pawn norm: gives slight malus for black king being near and above the pawn
+function pawnNorm(square: Coords): number {
+	const prefactor = square[0] < 0 && manhattanNorm(square) < 5 ? 0.9 : 1;
+	return prefactor * (diagonalNorm(square) + manhattanNorm(square));
 }
 
 // special norm, which gives a massive malus to the piece being near the black king for black
