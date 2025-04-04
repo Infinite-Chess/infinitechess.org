@@ -220,6 +220,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		this.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackAttackers) this.attackers = checkResults.attackers;
 	}
+
+	// Must be BEFORE making all moves in the game, because the starting area box depends on the starting position.
+	gamefileutility.initStartingAreaBox(this);
 	
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
@@ -228,8 +231,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	else gamefileutility.doGameOverChecks(this);
 
 	clock.set(this, clockValues);
-
-	gamefileutility.initStartingAreaBox(this);
 };
 
 // Typedef export DO NOT USE
