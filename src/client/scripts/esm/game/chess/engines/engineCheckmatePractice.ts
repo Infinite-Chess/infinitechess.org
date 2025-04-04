@@ -482,6 +482,10 @@ function initEvalWeightsAndSearchProperties() {
 			bestMoveList = [
 				{bestMove: [1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[-2,-2]]},
 				{bestMove: [-1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[2,-2]]},
+				{bestMove: [1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-4],[-2,-2]]},
+				{bestMove: [-1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-4],[2,-2]]},
+				{bestMove: [1,-1], piecelist: [5, 1, 6], coordlist: [[0,2],[-2,-2],[0,-5]]},
+				{bestMove: [-1,-1], piecelist: [5, 1, 6], coordlist: [[0,2],[2,-2],[0,-5]]},
 				{bestMove: [1,0], piecelist: [6, 1, 5], coordlist: [[1,-2],[-2,-1],[1,2]]},
 				{bestMove: [-1,0], piecelist: [6, 1, 5], coordlist: [[-1,-2],[2,-1],[-1,2]]}
 			];
