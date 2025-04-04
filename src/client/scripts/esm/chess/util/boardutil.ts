@@ -40,12 +40,12 @@ type LineKey = `${number}|${number}`
  * @param [options.ignoreTypes] - Whether to ignore certain types pieces.
  * @returns The number of pieces in the gamefile.
  */
-function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreTypes }: { ignoreColors?: Set<Player>, ignoreTypes?: Set<RawType> } = {}): number {
+function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreRawTypes }: { ignoreColors?: Set<Player>, ignoreRawTypes?: Set<RawType> } = {}): number {
 	let count = 0; // Running count list
 
 	for (const [type, range] of o.typeRanges) {
 		if (ignoreColors && ignoreColors.has(typeutil.getColorFromType(type))) continue;
-		if (ignoreTypes && ignoreTypes.has(typeutil.getRawType(type))) continue;
+		if (ignoreRawTypes && ignoreRawTypes.has(typeutil.getRawType(type))) continue;
 
 		count += getPieceCountOfTypeRange(range);
 	}
@@ -150,7 +150,7 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
 function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange) {
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (idx === range.undefineds[undefinedidx]) {
+		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
 			undefinedidx++;
 			continue;
 		};

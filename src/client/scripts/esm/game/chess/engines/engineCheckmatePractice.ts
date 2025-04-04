@@ -1328,7 +1328,7 @@ function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
 
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (idx === range.undefineds[undefinedidx]) {
+		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
 			undefinedidx++;
 			continue;
 		}
@@ -1361,7 +1361,7 @@ async function runEngine() {
 		for (const [type, range] of input_gamefile.ourPieces.typeRanges) {
 			let undefinedidx = 0;
 			for (let idx = range.start; idx < range.end; idx++) {
-				if (idx === range.undefineds[undefinedidx]) {
+				if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
 					undefinedidx++;
 					continue;
 				}
