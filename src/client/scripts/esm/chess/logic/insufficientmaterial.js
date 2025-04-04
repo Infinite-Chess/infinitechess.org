@@ -165,8 +165,8 @@ function detectInsufficientMaterial(gamefile) {
 	const lastMove = moveutil.getLastMove(gamefile.moves);
 	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion)) return false;
 
-	// Only make the draw check if there are less than 11 non-obstacle pieces
-	if (boardutil.getPieceCountOfGame(gamefile.ourPieces, { ignoreTypes: [r.OBSTACLE] }) >= 11) return false;
+	// Only make the draw check if there are less than 11 non-obstacle or gargoyle pieces
+	if (boardutil.getPieceCountOfGame(gamefile.ourPieces, { ignoreTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(gamefile.ourPieces, r.VOID + e.N) >= 11) return false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};

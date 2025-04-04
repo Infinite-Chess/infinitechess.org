@@ -36,16 +36,16 @@ type LineKey = `${number}|${number}`
  * Counts the number of pieces in the gamefile. Doesn't count undefined placeholders.
  * @param gamefile - The gamefile object containing piece data.
  * @param [options] - Optional settings.
- * @param [options.ignoreVoids] - Whether to ignore void pieces.
- * @param [options.ignoreObstacles] - Whether to ignore obstacle pieces.
+ * @param [options.ignoreColors] - Whether to ignore certain colors eg p.NEUTRAL.
+ * @param [options.ignoreTypes] - Whether to ignore certain types pieces.
  * @returns The number of pieces in the gamefile.
  */
-function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreTypes }: { ignoreColors?: Player[], ignoreTypes?: RawType[] } = {}): number {
+function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreTypes }: { ignoreColors?: Set<Player>, ignoreTypes?: Set<RawType> } = {}): number {
 	let count = 0; // Running count list
 
 	for (const [type, range] of o.typeRanges) {
-		if (ignoreColors && typeutil.getColorFromType(type) in ignoreColors) continue;
-		if (ignoreTypes && typeutil.getRawType(type) in ignoreTypes) continue;
+		if (ignoreColors && ignoreColors.has(typeutil.getColorFromType(type))) continue;
+		if (ignoreTypes && ignoreTypes.has(typeutil.getRawType(type))) continue;
 
 		count += getPieceCountOfTypeRange(range);
 	}
@@ -73,7 +73,8 @@ function getPieceCountOfColor(o: OrganizedPieces, color: Player): number {
 /**
  * Returns the number of pieces in a given type list (e.g. "pawnsW"),
  * EXCLUDING undefined placeholders
- * @param typeList - An array of coordinates where you can find all the pieces of that given type
+ * @param o the piece data for the game
+ * @param type
  */
 function getPieceCountOfType(o: OrganizedPieces, type: number): number {
 	const typeList = o.typeRanges.get(type);
@@ -110,7 +111,7 @@ function getCoordsOfAllPieces(o: OrganizedPieces): Coords[] {
 
 /**
  * Returns an array containing the coordinates of ALL royal pieces of the specified color.
- * @param o - 
+ * @param o - the piece lists
  * @param color - The color of the royals to look for.
  * @returns A list of coordinates where all the royals of the provided color are at.
  */
@@ -129,7 +130,7 @@ function getRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 
 /**
  * Returns a list of all the jumping royal pieces of a specific color.
- * @param gamefile
+ * @param o the piece lists
  * @param color - The color of the jumping royals to look for.
  * @returns A list of coordinates where all the jumping royals of the provided color are at.
  */
