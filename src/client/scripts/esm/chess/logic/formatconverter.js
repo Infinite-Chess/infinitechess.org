@@ -499,6 +499,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// win condition (has to start with a letter and not include numbers)
+		// THIS IS CURRENTLY BROKEN IF YOU TRY TO specify different win conditions per player
 		if (/^(\(?[a-zA-z][^0-9]+)$/.test(string)) {
 			if (!longformat.gameRules.winConditions) {
 				longformat.gameRules.winConditions = {};
