@@ -345,8 +345,8 @@ function initEvalWeightsAndSearchProperties() {
 	// whether to enter "trap flee mode" whenever the black royal is surrounded by white pieces
 	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal_Flee
 	trapFleeDictionary = {
-		"1K2HA1B-1k": [3, 7, 10],
-		"1K3HA-1k": [3, 7, 10],
+		"1K2HA1B-1k": [3, 8, 10],
+		"1K3HA-1k": [3, 10, 10],
 	};
 
 	if (checkmateSelectedID in trapFleeDictionary) {
@@ -1212,7 +1212,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, [], [], -Infinity, Infinity, 0, Infinity);
 			if (evaluation.terminate_now) { 
-				console.log("Search interrupted at depth " + depth);
+				// console.log("Search interrupted at depth " + depth);
 				break;
 			}
 			globallyBestVariation = evaluation.bestVariation;
