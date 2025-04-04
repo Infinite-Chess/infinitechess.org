@@ -10,7 +10,7 @@
  */
 
 import organizedpieces from "./organizedpieces.js";
-import coordutil from "../util/coordutil.js";
+import jsutil from "../../util/jsutil.js";
 import events from "./events.js";
 
 
@@ -210,13 +210,13 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 			events.runEvent(gamefile.events, "regenerateLists", gamefile, regenData);
 		}
 
-		idx = typedata.undefineds.pop()!;
+		idx = typedata.undefineds.shift()!;
 		change.piece.index = idx - typedata.start;
 	} else {
 		idx = typedata.start + change.piece.index;
-		const ri = typedata.undefineds.indexOf(idx);
-		if (ri === -1) throw Error(`Piece ${change.piece} attemped to overwrite an occupied index`);
-		typedata.undefineds.splice(ri);
+		const {found, index} = jsutil.binarySearch(typedata.undefineds,idx);
+		if (!found) throw Error(`Piece ${change.piece} attemped to overwrite an occupied index`);
+		typedata.undefineds.splice(index);
 	}
 	pieces.XPositions[idx] = change.piece.coords[0];
 	pieces.YPositions[idx] = change.piece.coords[1];
@@ -231,11 +231,17 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 function deletePiece(gamefile: gamefile, change: Change) {
 	const pieces = gamefile.ourPieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
+
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 	if (change.piece.index === -1) throw Error("Piece has not been allocated in organizedPieces");
+
 	const idx = change.piece.index! + typedata.start;
+
 	organizedpieces.removePieceFromSpace(idx, pieces);
-	pieces.typeRanges.get(change.piece.type)!.undefineds.push(idx);
+	jsutil.addElementToOrganizedArray(typedata.undefineds, idx);
+	
+	pieces.XPositions[idx] = 0;
+	pieces.YPositions[idx] = 0;
 }
 
 
@@ -251,14 +257,12 @@ function movePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
 	const pieces = gamefile.ourPieces;
-	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.piece.coords))!;
-
+	const range = pieces.typeRanges.get(change.piece.type)!;
+	const idx = change.piece.index + range.start;
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
-
 	pieces.XPositions[idx] = change.endCoords[0];
 	pieces.YPositions[idx] = change.endCoords[1];
-
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
 
@@ -269,7 +273,8 @@ function returnPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
 	const pieces = gamefile.ourPieces;
-	const idx = pieces.coords.get(coordutil.getKeyFromCoords(change.endCoords))!;
+	const range = pieces.typeRanges.get(change.piece.type)!;
+	const idx = change.piece.index + range.start;
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
 

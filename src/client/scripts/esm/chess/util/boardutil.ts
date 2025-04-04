@@ -1,5 +1,6 @@
 import typeutil from "./typeutil.js";
 import coordutil from "./coordutil.js";
+import jsutil from "../../util/jsutil.js";
 
 // Type Definitions -----------------------------------------------------------------------------------------
 
@@ -96,7 +97,7 @@ function getPieceCount_IncludingUndefineds(o: OrganizedPieces): number {
 
 /**
  * Retrieves the coordinates of all pieces from the provided gamefile.
- * @param {Object} gamefile - The gamefile containing the board and pieces data.
+ * @param o - contains the pieces data.
  * @returns A list of coordinates of all pieces.
  */
 function getCoordsOfAllPieces(o: OrganizedPieces): Coords[] {
@@ -109,7 +110,7 @@ function getCoordsOfAllPieces(o: OrganizedPieces): Coords[] {
 
 /**
  * Returns an array containing the coordinates of ALL royal pieces of the specified color.
- * @param gamefile 
+ * @param o - 
  * @param color - The color of the royals to look for.
  * @returns A list of coordinates where all the royals of the provided color are at.
  */
@@ -159,8 +160,7 @@ function getCoordsFromIdx(o: OrganizedPieces, idx: number): Coords {
 }
 
 function isIdxUndefinedPiece(o: OrganizedPieces, idx: number): boolean {
-	// TODO: Use binary search here instead of linear search
-	return o.typeRanges.get(o.types[idx]!)!.undefineds.includes(idx);
+	return jsutil.binarySearch(o.typeRanges.get(o.types[idx]!)!.undefineds, idx).found;
 }
 
 function getTypeFromCoords(o: OrganizedPieces, coords: Coords): number | undefined {

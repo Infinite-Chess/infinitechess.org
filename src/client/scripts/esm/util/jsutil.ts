@@ -405,6 +405,7 @@ function ensureJSONString(input: any, errorMessage?: string): string {
 
 
 export default {
+	binarySearch,
 	deepCopyObject,
 	copyFloat32Array,
 	addElementToOrganizedArray,
