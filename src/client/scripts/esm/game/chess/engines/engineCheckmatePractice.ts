@@ -998,7 +998,7 @@ function get_position_evaluation(piecelist: number[], coordlist: Coords[], black
  * @param {Number} start_depth - does not get changed at all during recursion
  * @param {Boolean} black_to_move 
  * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
- * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search
+ * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search beyond the first white node
  * @param {Boolean} inProtectedRiderFleeMode - whether one should neglect all white candidate moves by rider in deeper search and reward distance from him
  * @param {Coords[]} black_killer_list - list of black killer moves that is being maintained when white to move
  * @param {Number[]} white_killer_list - list white killer pieces that is being maintained when black to move
@@ -1015,10 +1015,10 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		return {score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true};
 	// If game over, return position evaluation
 	} else if ( black_to_move && get_black_legal_move_amount(false, piecelist, coordlist) === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode && start_depth - depth > 1, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth - depth, terminate_now: false };
 	// At max depth, return position evaluation
 	} else if (depth === 0) {
-		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
+		return {score: get_position_evaluation(piecelist, coordlist, black_to_move, inTrapFleeMode && start_depth - depth > 1, inProtectedRiderFleeMode), bestVariation: {}, survivalPlies: start_depth + 1, terminate_now: false };
 	}
 
 	let bestVariation: { [key: number]: [number, Coords] } = {};
@@ -1028,7 +1028,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		let maxScore = -Infinity;
 		let maxPlies = -Infinity;
 		let black_killer_move: Coords | undefined = undefined;
-		let black_moves = get_black_legal_moves(inTrapFleeMode, piecelist, coordlist);
+		let black_moves = get_black_legal_moves(inTrapFleeMode && start_depth - depth > 1, piecelist, coordlist);
 
 		// Black is in trap flee mode and considers no white candidate moves no piece captures from here on out:
 		if (mayEnterTrapFleeMode && depth === start_depth && isBlackInTrap(piecelist, coordlist)) inTrapFleeMode = true;
@@ -1041,7 +1041,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 			const black_move_evals: number[] = [];
 			for (const move of black_moves) {
 				const [order_piecelist, order_coordlist] = make_black_move(move, piecelist, coordlist);
-				const order_score = get_position_evaluation(order_piecelist, order_coordlist, false, inTrapFleeMode, inProtectedRiderFleeMode);
+				const order_score = get_position_evaluation(order_piecelist, order_coordlist, false, inTrapFleeMode && start_depth - depth > 1, inProtectedRiderFleeMode);
 				black_move_evals.push(order_score);
 			}
 
@@ -1120,7 +1120,7 @@ function alphabeta(piecelist: number[], coordlist: Coords[], depth: number, star
 		let white_killer_piece_index: Number | undefined = undefined;
 		let candidate_moves: Coords[][];
 
-		if (inTrapFleeMode) candidate_moves = [[coordlist[0]], ...Array(piecelist.length - 1).fill([])];
+		if (inTrapFleeMode && start_depth - depth > 1) candidate_moves = [[coordlist[0]], ...Array(piecelist.length - 1).fill([])];
 		else candidate_moves = get_white_candidate_moves(inProtectedRiderFleeMode, piecelist, coordlist);
 
 		// go through pieces for in increasing order of what piece has how many candidate moves
@@ -1212,7 +1212,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 		for (let depth = 1; depth <= maxdepth; depth = depth + 2) {
 			const evaluation = alphabeta(piecelist, coordlist, depth, depth, true, true, false, false, [], [], -Infinity, Infinity, 0, Infinity);
 			if (evaluation.terminate_now) { 
-				// console.log("Search interrupted at depth " + depth);
+				console.log("Search interrupted at depth " + depth);
 				break;
 			}
 			globallyBestVariation = evaluation.bestVariation;
