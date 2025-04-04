@@ -19,24 +19,42 @@ function PlayerData() {
 	 * If they are signed out, their identifier is `{ browser: string }`, where browser is their browser-id cookie.
 	 * 
 	 * TODO: CHANGE THE IDENTIFIER value to match the return type of socketUtility.getSignedInAndIdentifierOfSocket
-	 * @type {{ member: string } | { browser: string}}
+	 * @type {{ member: string } | { browser: string }}
 	 */
 	this.identifier = undefined; // CHANGE TO { signedIn: boolean, identifier: string }
 	/** Player's socket, if they are connected. @type {CustomWebSocket} */
 	this.socket = undefined;
-	/** @type {number | null} */
+	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. @type {number | null} */
 	this.lastOfferPly = undefined;
-	/** Players's current time remaining, in milliseconds, if the game is timed, otherwise undefined. @type {number|undefined}*/
+	/** Players's current time remaining, in milliseconds, if the game is timed, otherwise undefined. @type {number | undefined}*/
 	this.timer = undefined;
-	/** Contains information about which sides are
-     * about to lose by disconnection. */
+	/** Contains information about this players disconnection and auto resign timer. */
 	this.disconnect = {
-		timeToAutoLoss: undefined,
+		/**
+		 * The timeout id of the timer that will START the auto disconnection timer
+		 * This is triggered if their socket unexpectedly closes,
+		 * and lasts for 5 seconds to give them a chance to reconnect.
+		 * @type {ReturnType<typeof setTimeout> | undefined}
+		 */
+		startID: undefined,
+		/**
+		 * The timeout id of the timer that will auto-resign the
+		 * player if they are disconnected for too long.
+		 * @type {ReturnType<typeof setTimeout> | undefined}
+		 */
 		timeoutID: undefined,
-		/** @type {boolean} */
+		/**
+		 * The estimated timestamp that the player will
+		 * be auto-resigned from being disconnected too long.
+		 * @type {number | undefined}
+		 */
+		timeToAutoLoss: undefined,
+		/**
+		 * Whether the player was disconnected by choice or not.
+		 * If not, they are given extra time to reconnect.
+		 * @type {boolean}
+		 */
 		wasByChoice: undefined,
-		/** @type {number} */
-		startID: undefined
 	};
 }
 
@@ -109,7 +127,7 @@ function Game() {
 	};
 	/** The turn order of the game. @type {Player[]} */
 	this.turnOrder = undefined;
-	/** Whos turn it is currently. @type {Player?} */
+	/** Whos turn it is currently. @type {Player | undefined} */
 	this.whosTurn = undefined;
 	/** If the game is over, this is a string. For example, "1 checkmate". Otherwise false. */
 	this.gameConclusion = undefined;
