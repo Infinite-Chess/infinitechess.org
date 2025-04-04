@@ -11,7 +11,11 @@ interface Piece {
 	type: number,
 	coords: Coords,
 	/** Relative to the start of its type range.
-	 * To get the actual idx, add the starting point of the type range */
+	 * To get the actual idx, add the starting point of the type range.
+	 * 
+	 * This will be -1 if the piece does not have an index yet.
+	 * This will get set to another number when it is added to the board
+	 */
 	index: number,
 }
 

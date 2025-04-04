@@ -203,7 +203,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 	let idx;
-	if (change.piece.index === -1) {
+	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
 			if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.piece.type)) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position`);
 			const regenData = organizedpieces.regenerateLists(gamefile.ourPieces, gamefile.gameRules, gamefile.listExtras);
