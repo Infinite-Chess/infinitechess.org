@@ -560,7 +560,7 @@ function specialNorm(square: Coords): number {
 // pawn norm: gives slight malus for black king being near and above the pawn. Also gives malus for black king being above white pawn everywhere
 function pawnNorm(square: Coords): number {
 	const prefactor = square[1] < 0 && manhattanNorm(square) < 5 ? 1 : 6;
-	return prefactor * (diagonalNorm(square) + manhattanNorm(square) + 0.5 * square[1]);
+	return prefactor * (0.5 * diagonalNorm(square) + 1.5 * manhattanNorm(square) + 0.5 * square[1]);
 }
 
 // special norm, which gives a massive malus to the piece being near the black king for black
