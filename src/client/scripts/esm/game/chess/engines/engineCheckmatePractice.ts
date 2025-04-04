@@ -195,6 +195,9 @@ let maxDistanceForRider: number;
 let maxDistanceForProtector: number;
 let protectedRiderFleeDictionary: { [key: string]: [number, number, number] };
 
+// bestMoveList stores the best black response for very specific positions in some variants
+let bestMoveList: {bestMove: Coords, piecelist: number[], coordlist: Coords[]}[] = [];
+
 /**
  * This method initializes the weights the evaluation function according to the checkmate ID provided, as well as global search properties
  */
@@ -476,6 +479,10 @@ function initEvalWeightsAndSearchProperties() {
 		case "1K1Q1P-1k":
 			distancesEvalDictionary[1] = [[-5, manhattanNorm], [-5, manhattanNorm]]; // queen
 			distancesEvalDictionary[5] = [[0, () => 0], [0, () => 0]]; // king
+			bestMoveList = [
+				{bestMove: [1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[-2,-2]]},
+				{bestMove: [-1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[2,-2]]}
+			];
 			break;
 		case "1K3NR-1k":
 			distancesEvalDictionary[5] = [[20, manhattanNorm], [20, manhattanNorm]]; // king
@@ -1363,8 +1370,20 @@ async function runEngine() {
 		const seedArray = cyrb128(seedString);
 		rand = mulberry32(seedArray[0]!);
 
+		// If current position is recorded in bestMoveList, the don't do search but just do bestMove
+		let positionInBestMoveList: boolean = false;
+		for (const entry of bestMoveList) {
+			if (JSON.stringify(start_piecelist) === JSON.stringify(entry.piecelist)) {
+				if (JSON.stringify(start_coordlist) === JSON.stringify(entry.coordlist)) {
+					globallyBestVariation[0] = [NaN, entry.bestMove];
+					positionInBestMoveList = true;
+					break;
+				}
+			}
+		}
+
 		// run iteratively deepened move search
-		runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
+		if (!positionInBestMoveList) runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
 		// console.log(isBlackInTrap(start_piecelist, start_coordlist));
 		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
