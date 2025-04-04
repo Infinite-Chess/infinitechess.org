@@ -1326,8 +1326,12 @@ function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
 	if (range === undefined) return;
 	if (range.end - range.start - range.undefineds.length <= 0) return;
 
+	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (range.undefineds.includes(idx)) continue;
+		if (idx === range.undefineds[undefinedidx]) {
+			undefinedidx++;
+			continue;
+		}
 		return [gamefile.ourPieces.XPositions[idx], gamefile.ourPieces.YPositions[idx]];
 	}
 	return;
@@ -1355,8 +1359,12 @@ async function runEngine() {
 		start_piecelist = [];
 		start_coordlist = [];
 		for (const [type, range] of input_gamefile.ourPieces.typeRanges) {
+			let undefinedidx = 0;
 			for (let idx = range.start; idx < range.end; idx++) {
-				if (range.undefineds.includes(idx)) continue;
+				if (idx === range.undefineds[undefinedidx]) {
+					undefinedidx++;
+					continue;
+				}
 				if (Math.floor(type / numTypes) !== players.WHITE) continue;
 				const coords = [input_gamefile.ourPieces.XPositions[idx], input_gamefile.ourPieces.YPositions[idx]];
 				start_piecelist.push(pieceNameDictionary[type]!);

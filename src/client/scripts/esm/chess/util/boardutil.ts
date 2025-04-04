@@ -148,8 +148,12 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
 }
 
 function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange) {
+	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
-		if (range.undefineds.includes(idx)) continue;
+		if (idx === range.undefineds[undefinedidx]) {
+			undefinedidx++;
+			continue;
+		};
 		coords.push([o.XPositions[idx]!, o.YPositions[idx]!]);
 	}
 }
