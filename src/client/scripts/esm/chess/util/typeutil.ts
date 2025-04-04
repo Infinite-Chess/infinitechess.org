@@ -91,6 +91,12 @@ type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
 type Player = typeof players[keyof typeof players]
 
+/** A dictionary type with all player colors for keys */
+type PlayerGroup<T> = {
+	// eslint-disable-next-line no-unused-vars
+	[p in Player]?: T
+}
+
 function getRawType(type: number): RawType {
 	return type % numTypes as RawType;
 }
@@ -147,7 +153,8 @@ function debugType(type: number): string {
 
 export type {
 	RawType,
-	Player
+	Player,
+	PlayerGroup,
 };
 
 export {

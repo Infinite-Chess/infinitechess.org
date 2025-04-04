@@ -8,7 +8,7 @@
 import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
-import type { RawType, Player } from '../util/typeutil.js';
+import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
 import type { Position } from '../util/boardutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
@@ -20,7 +20,7 @@ import timeutil from '../../util/timeutil.js';
 import fourdimensionalgenerator from './fourdimensionalgenerator.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
-import { rawTypes as r, players as p, rawTypes } from '../util/typeutil.js';
+import { rawTypes as r, players as p } from '../util/typeutil.js';
 // @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
 // @ts-ignore
@@ -36,20 +36,14 @@ interface GameRuleModifications {
 	promotionRanks?: { [color: string]: number[] } | null,
 	moveRule?: number | null,
 	turnOrder?: string[],
-	promotionsAllowed?: ColorVariantProperty<RawType[]>
-	winConditions?: ColorVariantProperty<string[]>
+	promotionsAllowed?: PlayerGroup<RawType[]>,
+	winConditions?: PlayerGroup<string[]>,
 	slideLimit?: number
 }
 
 /** Keys (if present) should be timestamps */
 type TimeVariantProperty<T> = T | {
 	[timestamp: number]: T
-}
-
-/** Keys should be players */
-type ColorVariantProperty<T> = {
-	// eslint-disable-next-line no-unused-vars
-	[p in Player]?: T
 }
 
 /** A single variant entry object in the variant dictionary */
@@ -309,8 +303,8 @@ const variantDictionary: { [variantName: string]: Variant } = {
  * repeats it for every color to produce the full `promotionsAllowed` gamerule:
  * `{ [p.WHITE]: [r.ROOK,r.QUEEN...], [p.BLACK]: [r.ROOK,r.QUEEN...] }`
  */
-function repeatPromotionsAllowedForEachColor(promotions: RawType[], players: Player[] = [p.WHITE, p.BLACK]): ColorVariantProperty<RawType[]> {
-	const promotionRule: ColorVariantProperty<RawType[]> = {};
+function repeatPromotionsAllowedForEachColor(promotions: RawType[], players: Player[] = [p.WHITE, p.BLACK]): PlayerGroup<RawType[]> {
+	const promotionRule: PlayerGroup<RawType[]> = {};
 	for (const player of players) {
 		promotionRule[player] = promotions;
 	}
@@ -617,5 +611,4 @@ export default {
 export type {
 	Position,
 	SpecialMoveFunction,
-	ColorVariantProperty,
 };

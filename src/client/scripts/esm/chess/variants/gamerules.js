@@ -10,7 +10,7 @@ import { players } from "../util/typeutil.js";
 /**
  * @typedef {import('../util/typeutil.js').Player} Player
  * @typedef {import('../util/typeutil.js').RawType} RawType
- * @typedef {import('../variants/variant.js').ColorVariantProperty} ColorVariantProperty
+ * @typedef {import("../util/typeutil.js").PlayerGroup} PlayerGroup
  */
 
 
@@ -84,7 +84,7 @@ function GameRules() {
      * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
      * If one color can't promote, their list should be left undefined.
      * If no color can promote, this should be left undefined.
-	 * @type {ColorVariantProperty<RawType[]> | undefined}
+	 * @type {PlayerGroup<RawType[]> | undefined}
      */
 	this.promotionsAllowed = {
 		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {RawType[]} */

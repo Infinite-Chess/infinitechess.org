@@ -4,8 +4,7 @@
  * pawns reach the promotion line.
  */
 
-import type { ColorVariantProperty } from '../../chess/variants/variant.js';
-import type { Player, RawType } from '../../chess/util/typeutil.js';
+import type { Player, PlayerGroup, RawType } from '../../chess/util/typeutil.js';
 
 import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
@@ -17,11 +16,8 @@ import { players } from '../../chess/util/typeutil.js';
 // Variables --------------------------------------------------------------------
 
 const PromotionGUI: {
-	base: HTMLElement
-	players: {
-		// eslint-disable-next-line no-unused-vars
-		[p in Player]?: HTMLElement
-	}
+	base: HTMLElement,
+	players: PlayerGroup<HTMLElement>
 } = {
 	base: document.getElementById('promote')!,
 	players: {
@@ -63,7 +59,7 @@ function close() {
  * @param promotionsAllowed - An object that contains the information about what promotions are allowed.
  * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
  */
-async function initUI(promotionsAllowed: ColorVariantProperty<RawType[]> | undefined) {
+async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined) {
 	if (promotionsAllowed === undefined) return;
 
 	if (Object.values(PromotionGUI.players).some(element => element.childElementCount > 0)) {
