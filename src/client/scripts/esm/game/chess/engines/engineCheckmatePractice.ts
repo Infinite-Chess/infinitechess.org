@@ -240,7 +240,7 @@ function initEvalWeightsAndSearchProperties() {
 		3: [[2, manhattanNorm], [2, manhattanNorm]], // bishop
 		4: [[15, manhattanNorm], [15, manhattanNorm]], // knight
 		5: [[30, manhattanNorm], [30, manhattanNorm]], // king
-		6: [[200, pawnNorm], [200, pawnNorm]], // pawn
+		6: [[100, pawnNorm], [100, pawnNorm]], // pawn
 		7: [[14, manhattanNorm], [14, manhattanNorm]], // amazon
 		8: [[7, manhattanNorm], [7, manhattanNorm]], // hawk
 		9: [[2, manhattanNorm], [2, manhattanNorm]], // chancellor
@@ -543,7 +543,7 @@ function specialNorm(square: Coords): number {
 
 // pawn norm: gives slight malus for black king being near and above the pawn
 function pawnNorm(square: Coords): number {
-	const prefactor = square[0] < 0 && manhattanNorm(square) < 5 ? 0.7 : 1;
+	const prefactor = square[1] < 0 && manhattanNorm(square) < 5 ? 0.5 : 2;
 	return prefactor * (diagonalNorm(square) + manhattanNorm(square));
 }
 
@@ -1370,7 +1370,7 @@ async function runEngine() {
 		const seedArray = cyrb128(seedString);
 		rand = mulberry32(seedArray[0]!);
 
-		// If current position is recorded in bestMoveList, the don't do search but just do bestMove
+		// If current position is recorded in bestMoveList, then don't do search but just do bestMove
 		let positionInBestMoveList: boolean = false;
 		for (const entry of bestMoveList) {
 			if (JSON.stringify(start_piecelist) === JSON.stringify(entry.piecelist)) {
