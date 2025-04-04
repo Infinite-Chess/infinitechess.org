@@ -217,7 +217,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 		idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 		const { found, index } = jsutil.binarySearch(typedata.undefineds, idx);
 		if (!found) throw Error(`Piece ${change.piece} attemped to overwrite an occupied index`);
-		typedata.undefineds.splice(index);
+		typedata.undefineds.splice(index, 1);
 	}
 	pieces.XPositions[idx] = change.piece.coords[0];
 	pieces.YPositions[idx] = change.piece.coords[1];
