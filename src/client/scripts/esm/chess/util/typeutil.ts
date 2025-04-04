@@ -125,17 +125,14 @@ function forEachPieceType(callback: (pieceType: number) => void, players: Player
 
 function invertType(type: number): number {
 	const [r, p] = splitType(type);
-	const newp = p === players.WHITE ? players.BLACK :
-				 p === players.BLACK ? players.WHITE :
-				 undefined;
-	if (newp === undefined) return type;
+	const newp = invertPlayer(p); // This will throw an error if the type is not invertible because of its color. (We should never attempt to invert it anyway)
 	return buildType(r, newp);
 }
 
-function invertPlayer(player: Player) {
+function invertPlayer(player: Player): Player {
 	return player === players.WHITE ? players.BLACK :
-				 player === players.BLACK ? players.WHITE :
-				 undefined;
+		   player === players.BLACK ? players.WHITE
+		   : (() => { throw Error(`Cannot invert player ${player}!`); })(); // No downsides to adding this, only more protection.
 }
 
 function getRawTypeStr(type: RawType): string {

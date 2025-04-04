@@ -40,9 +40,16 @@ interface TypeRange {
 type TypeRanges = Map<number, TypeRange>
 
 interface OrganizedPieces {
-	XPositions: PositionArray // The positions of all pieces, all undefined pieces have a 0,0 coordinates.
+	/** The X position of all pieces. Undefined pieces are set to 0. */
+	XPositions: PositionArray
+	/** The Y position of all pieces. Undefined pieces are set to 0. */
 	YPositions: PositionArray
-	types: Uint8Array // Range 0-255. There are 22 total types currently, potentially 4 unique players/players in a game ==> 88 posible types.
+	/**
+	 * The type of all pieces. Undefined pieces retain the type of the type range they are in.
+	 * 
+	 * Uint8Array range: 0-255. There are 22 total types currently, potentially 4 unique players/players in a game ==> 88 posible types.
+	*/
+	types: Uint8Array
 	typeRanges: TypeRanges
 	/**
 	 * Pieces organized by coordinate

@@ -213,13 +213,14 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 		idx = typedata.undefineds.shift()!;
 		change.piece.index = idx - typedata.start;
 	} else {
-		idx = typedata.start + change.piece.index;
-		const {found, index} = jsutil.binarySearch(typedata.undefineds,idx);
+		idx = typedata.start + change.piece.index; // Remove the relative-ness to the start of its type range
+		const { found, index } = jsutil.binarySearch(typedata.undefineds, idx);
 		if (!found) throw Error(`Piece ${change.piece} attemped to overwrite an occupied index`);
 		typedata.undefineds.splice(index);
 	}
 	pieces.XPositions[idx] = change.piece.coords[0];
 	pieces.YPositions[idx] = change.piece.coords[1];
+	// Don't need to set it's type, because it's spot in the type range already has its type.
 
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
@@ -235,13 +236,15 @@ function deletePiece(gamefile: gamefile, change: Change) {
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 	if (change.piece.index === -1) throw Error("Piece has not been allocated in organizedPieces");
 
-	const idx = change.piece.index! + typedata.start;
+	const idx = change.piece.index! + typedata.start; // Remove the relative-ness to the start of its type range
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
 	jsutil.addElementToOrganizedArray(typedata.undefineds, idx);
 	
+	// Set the undefined piece's coordinates to [0,0] to keep things tidy.
 	pieces.XPositions[idx] = 0;
 	pieces.YPositions[idx] = 0;
+	// Don't need to delete its type because every spot in a type range is expected to have the same type.
 }
 
 

@@ -34,7 +34,7 @@ type LineKey = `${number}|${number}`
 
 /**
  * Counts the number of pieces in the gamefile. Doesn't count undefined placeholders.
- * @param gamefile - The gamefile object containing piece data.
+ * @param o - The pieces
  * @param [options] - Optional settings.
  * @param [options.ignoreColors] - Whether to ignore certain colors eg p.NEUTRAL.
  * @param [options.ignoreTypes] - Whether to ignore certain types pieces.
@@ -97,7 +97,7 @@ function getPieceCount_IncludingUndefineds(o: OrganizedPieces): number {
 
 
 /**
- * Retrieves the coordinates of all pieces from the provided gamefile.
+ * Retrieves the coordinates of all pieces from the provided pieces.
  * @param o - contains the pieces data.
  * @returns A list of coordinates of all pieces.
  */
