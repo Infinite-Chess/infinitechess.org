@@ -494,7 +494,10 @@ function initEvalWeightsAndSearchProperties() {
 				{bestMove: [-1,-1], piecelist: [6, 5, 1], coordlist: [[-1,-2],[-1,2],[1,-5]]},
 
 				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[-3,-3]]},
-				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[3,-3]]}
+				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[3,-3]]},
+
+				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[-1,-3]]},
+				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[1,-3]]}
 			];
 			break;
 		case "1K3NR-1k":
