@@ -11,11 +11,12 @@ import type { RawType, Player } from "./typeutil.js";
 interface Piece {
 	type: number,
 	coords: Coords,
-	/** Relative to the start of its type range.
-	 * To get the actual idx, add the starting point of the type range.
+	/**
+	 * Relative to the start of its type range.
+	 * To get the absolute idx, use boardutil.getAbsoluteIdx.
 	 * 
 	 * This will be -1 if the piece does not have an index yet.
-	 * This will get set to another number when it is added to the board
+	 * This will get set to another number when it is added to the board.
 	 */
 	index: number,
 }
@@ -190,8 +191,18 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 	return {
 		type,
 		coords,
-		index: idx - o.typeRanges.get(type)!.start
+		index: getRelativeIdx(o, idx)
 	};
+}
+
+/** Returns the relative index of a piece in its type range. */
+function getRelativeIdx(o: OrganizedPieces, idx: number): number {
+	return idx - o.typeRanges.get(o.types[idx]!)!.start;
+}
+
+/** Reverts the relative-ness of the piece's index to the start of its type range to get its absolute index. */
+function getAbsoluteIdx(o: OrganizedPieces, piece: Piece): number {
+	return piece.index + o.typeRanges.get(piece.type)!.start;
 }
 
 function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
@@ -200,7 +211,7 @@ function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
 	return {
 		type,
 		coords: getCoordsFromIdx(o, idx),
-		index: idx - o.typeRanges.get(type)!.start
+		index: getRelativeIdx(o, idx)
 	};
 }
 
@@ -239,6 +250,8 @@ export default {
 	isPieceOnCoords,
 	getTypeFromCoords,
 	getPieceFromCoords,
+	getRelativeIdx,
+	getAbsoluteIdx,
 	getPieceFromIdx,
 	getCoordsFromIdx,
 	getTypeRangeFromIdx,

@@ -29,6 +29,7 @@ import type { Coords } from "./movesets.js";
 import type { Piece } from "../util/boardutil.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
+import boardutil from "../util/boardutil.js";
 
 /**
  * Generic type to describe any changes to the board
@@ -211,9 +212,9 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 		}
 
 		idx = typedata.undefineds.shift()!;
-		change.piece.index = idx - typedata.start;
+		change.piece.index = boardutil.getRelativeIdx(pieces, idx);
 	} else {
-		idx = typedata.start + change.piece.index; // Remove the relative-ness to the start of its type range
+		idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 		const { found, index } = jsutil.binarySearch(typedata.undefineds, idx);
 		if (!found) throw Error(`Piece ${change.piece} attemped to overwrite an occupied index`);
 		typedata.undefineds.splice(index);
@@ -236,7 +237,7 @@ function deletePiece(gamefile: gamefile, change: Change) {
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 	if (change.piece.index === -1) throw Error("Piece has not been allocated in organizedPieces");
 
-	const idx = change.piece.index! + typedata.start; // Remove the relative-ness to the start of its type range
+	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
 	jsutil.addElementToOrganizedArray(typedata.undefineds, idx);
@@ -260,8 +261,7 @@ function movePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
 	const pieces = gamefile.ourPieces;
-	const range = pieces.typeRanges.get(change.piece.type)!;
-	const idx = change.piece.index + range.start;
+	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
 	pieces.XPositions[idx] = change.endCoords[0];
