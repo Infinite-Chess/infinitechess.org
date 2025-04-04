@@ -1,7 +1,6 @@
 import typeutil from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
-import jsutil from "../../util/jsutil.js";
 
 // @ts-ignore
 import type gamefile from "./gamefile.js";
@@ -41,12 +40,10 @@ interface TypeRange {
 type TypeRanges = Map<number, TypeRange>
 
 interface OrganizedPieces {
-	XPositions: PositionArray
+	XPositions: PositionArray // The positions of all pieces, all undefined pieces have a 0,0 coordinates.
 	YPositions: PositionArray
 	types: Uint8Array // Range 0-255. There are 22 total types currently, potentially 4 unique players/players in a game ==> 88 posible types.
 	typeRanges: TypeRanges
-	// Maybe not needed? Since typeRanges above contains undefineds arrays. Correct me if wrong
-	// undefineds: Array<number>
 	/**
 	 * Pieces organized by coordinate
 	 * 
