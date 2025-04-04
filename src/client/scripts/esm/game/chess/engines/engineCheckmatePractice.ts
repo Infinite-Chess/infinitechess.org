@@ -323,7 +323,7 @@ function initEvalWeightsAndSearchProperties() {
 
 	// number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)
 	wiggleroomDictionary = {
-		1: 1, // queen
+		1: 2, // queen
 		2: 2, // rook
 		3: 2, // bishop
 		7: 1, // amazon
@@ -369,7 +369,6 @@ function initEvalWeightsAndSearchProperties() {
 
 	switch (checkmateSelectedID) {
 		case "2Q-1k":
-			wiggleroomDictionary[1] = 2; // queen
 			legalMoveEvalDictionary = {
 				// in check
 				0: {
