@@ -312,7 +312,7 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 	for (const type of existingTypes) {
 		const pieces = piecesByType.get(type) ?? []; // It will be empty if there are no pieces of this type in the starting position. Those may be acquired via promotion / board editor.
 
-		// Set the pieces X, Y, and type
+		// Set the pieces X, Y, and type, and register in space
 		for (let i = 0; i < pieces.length; i++) {
 			XPositions[pointer] = pieces[i]![0];
 			YPositions[pointer] = pieces[i]![1];
@@ -332,7 +332,7 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 
 		// Set the range
 		ranges.set(type, {
-			start: start,
+			start,
 			end: pointer,
 			undefineds,
 		});
