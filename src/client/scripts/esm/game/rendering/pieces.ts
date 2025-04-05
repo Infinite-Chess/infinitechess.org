@@ -11,13 +11,11 @@ import type { gamefile } from '../../chess/logic/gamefile.js';
 
 import spritesheet from './spritesheet.js';
 import { createModel } from './buffermodel.js';
-import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
 // @ts-ignore
 import miniimage from './miniimage.js';
 // @ts-ignore
 import shapes from './shapes.js';
-
 
 // Variables ---------------------------------------------------------------------
 
@@ -39,9 +37,8 @@ function renderPiecesInGame(gamefile: gamefile) {
 }
 
 /** Renders a semi-transparent piece at the specified coordinates. */
-function renderGhostPiece(type: string, coords: Coords) {
-	const color = preferences.getTintColorOfType(type); color.a *= ghostOpacity;
-	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, color);
+function renderGhostPiece(type: number, coords: Coords) {
+	const data = shapes.getDataQuad_ColorTexture_FromCoordAndType(coords, type, [1, 1, 1, ghostOpacity]);
 	const model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 	model.render();
 }

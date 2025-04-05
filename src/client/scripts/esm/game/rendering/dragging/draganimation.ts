@@ -7,10 +7,11 @@
 
 
 import type { BufferModel } from "../buffermodel.js";
-import type { Color } from "../../../chess/util/colorutil.js";
+import type { Color } from "../../../util/math.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { BoundingBox } from "../../../util/math.js";
-import type { Piece } from "../../../chess/logic/boardchanges.js";
+import type { Piece } from "../../../chess/util/boardutil.js";
+import type { RawType } from "../../../chess/util/typeutil.js";
 
 import spritesheet from "../spritesheet.js";
 import coordutil from "../../../chess/util/coordutil.js";
@@ -21,6 +22,7 @@ import droparrows from "./droparrows.js";
 import selection from "../../chess/selection.js";
 import preferences from "../../../components/header/preferences.js";
 import themes from "../../../components/header/themes.js";
+import typeutil from "../../../chess/util/typeutil.js";
 import animation from "../animation.js";
 // @ts-ignore
 import shapes from "../shapes.js";
@@ -36,8 +38,6 @@ import input from "../../input.js";
 import camera from "../camera.js";
 // @ts-ignore
 import board from "../board.js";
-// @ts-ignore
-import typeutil from "../../../chess/util/typeutil.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ let worldLocation: Coords | undefined;
 /** The square that the piece would be moved to if dropped now. It will be outlined. */
 let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
-let pieceType: string | undefined;
+let pieceType: number | undefined;
 
 
 // Functions --------------------------------------------------------------------------------------
@@ -209,7 +209,7 @@ function renderPiece() {
  */
 function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
-	if (typeutil.SVGLESS_TYPES.some((type: string) => pieceType!.startsWith(type))) return; // No SVG/texture for this piece (void), can't render it.
+	if (typeutil.SVGLESS_TYPES.some((type: RawType) => typeutil.getRawType(pieceType!) === type)) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = input.getPointerIsTouch();
@@ -217,7 +217,6 @@ function genPieceModel(): BufferModel | undefined {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-	const { r, g, b, a } = preferences.getTintColorOfType(pieceType!);
 	
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
@@ -240,7 +239,7 @@ function genPieceModel(): BufferModel | undefined {
 	
 	const data: number[] = [];
 	if (perspectiveEnabled) data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
-	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, r, g, b, a)); // Piece
+	data.push(...bufferdata.getDataQuad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
 	return createModel(data, 3, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 

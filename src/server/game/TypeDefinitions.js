@@ -3,11 +3,60 @@
 // type definitions for web sockets and our game.
 // And has no other script module dependancies.
 
-
+import { players } from "../../client/scripts/esm/chess/util/typeutil";
 
 
 /** @typedef {import("../socket/socketUtility").CustomWebSocket} CustomWebSocket */
+/** @typedef {import("../../client/scripts/esm/chess/util/typeutil").Player} Player */
+/** @typedef {import("../../client/scripts/esm/chess/util/typeutil").PlayerGroup} PlayerGroup */
+/** @typedef {import("../../client/scripts/esm/chess/util/typeutil").RawType} RawType */
 
+function PlayerData() {
+	/**
+	 * The identifier of each color.
+	 * 
+	 * If they are signed in, their identifier is `{ member: string }`, where member is their username.
+	 * If they are signed out, their identifier is `{ browser: string }`, where browser is their browser-id cookie.
+	 * 
+	 * TODO: CHANGE THE IDENTIFIER value to match the return type of socketUtility.getSignedInAndIdentifierOfSocket
+	 * @type {{ member: string } | { browser: string }}
+	 */
+	this.identifier = undefined; // CHANGE TO { signedIn: boolean, identifier: string }
+	/** Player's socket, if they are connected. @type {CustomWebSocket} */
+	this.socket = undefined;
+	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. @type {number | null} */
+	this.lastOfferPly = undefined;
+	/** Players's current time remaining, in milliseconds, if the game is timed, otherwise undefined. @type {number | undefined}*/
+	this.timer = undefined;
+	/** Contains information about this players disconnection and auto resign timer. */
+	this.disconnect = {
+		/**
+		 * The timeout id of the timer that will START the auto disconnection timer
+		 * This is triggered if their socket unexpectedly closes,
+		 * and lasts for 5 seconds to give them a chance to reconnect.
+		 * @type {ReturnType<typeof setTimeout> | undefined}
+		 */
+		startID: undefined,
+		/**
+		 * The timeout id of the timer that will auto-resign the
+		 * player if they are disconnected for too long.
+		 * @type {ReturnType<typeof setTimeout> | undefined}
+		 */
+		timeoutID: undefined,
+		/**
+		 * The estimated timestamp that the player will
+		 * be auto-resigned from being disconnected too long.
+		 * @type {number | undefined}
+		 */
+		timeToAutoLoss: undefined,
+		/**
+		 * Whether the player was disconnected by choice or not.
+		 * If not, they are given extra time to reconnect.
+		 * @type {boolean}
+		 */
+		wasByChoice: undefined,
+	};
+}
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */
 function Game() {
@@ -31,22 +80,20 @@ function Game() {
 	this.incrementMillis = undefined;
 	/** Whether the game is rated. @type {boolean}*/
 	this.rated = undefined;
-	/** The white player: `{ member }` or `{ browser }` */
-	this.white = undefined;
-	/** The black player: `{ member }` or `{ browser }` */
-	this.black = undefined;
 	/** The moves list of the game. Each move is a string that looks like `8,1>16,1`. @type {string[]} */
 	this.moves = undefined;
+	/** THe players in the game @type {PlayerGroup<PlayerData>}} */
+	this.players = undefined;
 	/** The gamerules of the variant. */
 	this.gameRules = {
 		/** An object containing lists of what win conditions each color can win by. This is REQUIRED. */
 		winConditions: {
 			/** A list of win conditions white can win by. REQUIRED. @type {string[]} */
-			white: undefined,
+			[players.WHITE]: undefined,
 			/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
-			black: undefined,
+			[players.BLACK]: undefined,
 		},
-		/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. */
+		/** A list of colors that make up one full turn cycle. REQUIRED. @type {Player[]} */
 		turnOrder: undefined,
 
 		// Gamerules that also have dedicated slots in ICN notation...
@@ -55,19 +102,20 @@ function Game() {
          * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
          * If one side can't promote, their rank is `null`.
          * If neither side can promote, this should be left as undefined.
-         * @type {{ white: number[], black: number[]} | undefined}
+         * @type {{ [players.WHITE]: number[], [players.BLACK]: number[]} | undefined}
          */
 		promotionRanks: undefined,
 		/**
          * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
          * If one color can't promote, their list should be left undefined.
          * If no color can promote, this should be left undefined.
+		 * @type {PlayerGroup<RawType[]> | undefined}
          */
 		promotionsAllowed: {
 			/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
-			white: undefined,
+			[players.WHITE]: undefined,
 			/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
-			black: undefined,
+			[players.BLACK]: undefined,
 		},
 		/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. */
 		moveRule: undefined,
@@ -77,18 +125,12 @@ function Game() {
 		/** The maximum number of steps any sliding piece can take. */
 		slideLimit: undefined,
 	};
-	/** The turn order of the game. `["white", "black"]` @type {string[]} */
+	/** The turn order of the game. @type {Player[]} */
 	this.turnOrder = undefined;
-	/** Whos turn it is currently. */
+	/** Whos turn it is currently. @type {Player | undefined} */
 	this.whosTurn = undefined;
-	/** If the game is over, this is a string. For example, "white checkmate". Otherwise false. */
+	/** If the game is over, this is a string. For example, "1 checkmate". Otherwise false. */
 	this.gameConclusion = undefined;
-
-	/** White's current time remaining, in milliseconds, if the game is timed, otherwise undefined. */
-	this.timerWhite = undefined;
-	/** Black's current time remaining, in milliseconds, if the game is timed, otherwise undefined. */
-	this.timerBlack = undefined;
-
 	/** The amount of time remaining, in milliseconds, the current player had at the beginning of their turn. */
 	this.timeRemainAtTurnStart = undefined;
 	/** The time, in milliseconds, of the javascript process since the beginning of the current player's turn. */
@@ -97,11 +139,6 @@ function Game() {
      * whos turn it currently is when they run out of time. */
 	this.autoTimeLossTimeoutID = undefined;
 
-	/** Player white's socket, if they are connected. @type {CustomWebSocket} */
-	this.whiteSocket = undefined;
-	/** Player black's socket, if they are connected. @type {CustomWebSocket} */
-	this.blackSocket = undefined;
-
 	/** The ID of the timeout which will auto-lose the player
      * whos turn it currently is if they go AFK too long. */
 	this.autoAFKResignTimeoutID = undefined;
@@ -109,43 +146,8 @@ function Game() {
      * AFK if they are currently AFK. */
 	this.autoAFKResignTime = undefined;
 
-	/** Information about the draw offers of the game. */
-	this.drawOffers = {
-		/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise undefined. @type {string | undefined} */
-		state: undefined,
-		/** Ply (half-move) numbers of when each color last extended a draw offer. Players may not extend draw offers too rapidly. */
-		lastOfferPly: {
-			/** The last ply (half-move) WHITE extended a draw offer, if they have, otherwise undefined. @type {number | undefined} */
-			white: undefined,
-			/** The last ply (half-move) BLACK extended a draw offer, if they have, otherwise undefined. @type {number | undefined} */
-			black: undefined,
-		},
-	};
-
-	/** Contains information about which sides are
-     * about to lose by disconnection. */
-	this.disconnect = {
-		/** Contains the timeout ID's for the timer *that will start* the timer to auto-lose by disconnection. */
-		startTimer: {
-			/** The ID of the timeout which will start the auto-lose disconnection timer for white. */
-			white: undefined,
-			/** The ID of the timeout which will start the auto-lose disconnection timer for black. */
-			black: undefined
-		},
-		/** Contains the timeout ID's for the timer that will auto-lose the player by disconnection. */
-		autoResign: {
-			white: {
-				timeToAutoLoss: undefined,
-				timeoutID: undefined,
-				wasByChoice: undefined,
-			},
-			black: {
-				timeToAutoLoss: undefined,
-				timeoutID: undefined,
-				wasByChoice: undefined,
-			}
-		}
-	};
+	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise undefined. @type {Player | undefined} */
+	this.drawOfferState = undefined;
 
 	/** The ID of the timer to delete the game after it has ended.
      * This can be used to cancel it in case a hacking was reported. */
@@ -153,5 +155,6 @@ function Game() {
 }
 
 export {
-	Game
+	Game,
+	PlayerData,
 };

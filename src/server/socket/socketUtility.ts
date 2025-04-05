@@ -1,10 +1,7 @@
 
 // This script contains generalized methods for working with websocket objects.
 
-// @ts-ignore
-import { ensureJSONString } from '../utility/JSONUtils.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-
 
 // Type Definitions ---------------------------------------------------------------------------
 
@@ -26,7 +23,7 @@ interface CustomWebSocket extends WebSocket {
 			game?: {
 				/** The id of the game they're in. @type {string} */
 				id: string;
-				/** The color they are playing as. @type {string} */
+				/** The color they are playing as. @type {Player} */
 				color: string;
 			};
 		};
@@ -79,7 +76,7 @@ function printSocket(ws: CustomWebSocket) { console.log(stringifySocketMetadata(
 function stringifySocketMetadata(ws: CustomWebSocket): string {
 	// Removes the recursion from the metadata, making it safe to stringify.
 	const simplifiedMetadata = getSimplifiedMetadata(ws);
-	return ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
+	return jsutil.ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
 }
 
 /**

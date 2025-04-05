@@ -32,28 +32,28 @@ const movesBetweenDrawOffers = 2;
  * @returns {boolean}
  */
 function isDrawOfferOpen(game) {
-	return game.drawOffers.state !== undefined;
+	return game.drawOfferState !== undefined;
 }
 
 /**
  * Returns true if the given color has extended a draw offer that's not confirmed yet.
  * @param {Game} game
- * @param {string} color - The color who extended the draw offer
+ * @param {Player} color - The color who extended the draw offer
  * @returns {boolean}
  */
 function doesColorHaveExtendedDrawOffer(game, color) {
-	return game.drawOffers.state === color;
+	return game.drawOfferState === color;
 }
 
 /**
  * Returns true if they given color has extended a draw offer
  * too recently for them to extend another, yet.
  * @param {Game} game 
- * @param {string} color 
+ * @param {Player} color 
  * @returns {boolean}
  */
 function hasColorOfferedDrawTooFast(game, color) {
-	const lastPlyDrawOffered = game.drawOffers.lastOfferPly[color]; // number | undefined
+	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(game, color); // number | undefined
 	if (lastPlyDrawOffered !== undefined) { // They have made atleast 1 offer this game
 		const movesSinceLastOffer = game.moves.length - lastPlyDrawOffered;
 		if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
@@ -65,12 +65,13 @@ function hasColorOfferedDrawTooFast(game, color) {
  * Opens a draw offer, extended by the provided color.
  * DOES NOT INFORM the opponent.
  * @param {Game} game
- * @param {string} color - The color of the player extending the offer
+ * @param {Player} color - The color of the player extending the offer
  */
 function openDrawOffer(game, color) {
 	if (isDrawOfferOpen(game)) return logEvents("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt", { print: true });
-	game.drawOffers.lastOfferPly[color] = game.moves.length;
-	game.drawOffers.state = color;
+	const data = game.players[color];
+	data.lastOfferPly = game.moves.length;
+	game.drawOfferState = color;
 }
 
 /**
@@ -79,7 +80,7 @@ function openDrawOffer(game, color) {
  * @param {Game} game
  */
 function closeDrawOffer(game) {
-	game.drawOffers.state = undefined;
+	game.drawOfferState = undefined;
 }
 
 /**
@@ -90,7 +91,7 @@ function closeDrawOffer(game) {
  * @returns {number | undefined}
  */
 function getLastDrawOfferPlyOfColor(game, color) {
-	return game.drawOffers.lastOfferPly[color];
+	return game.players[color]?.lastOfferPly;
 }
 
 //--------------------------------------------------------------------------------------------------------

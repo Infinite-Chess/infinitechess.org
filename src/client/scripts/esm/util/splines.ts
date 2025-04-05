@@ -6,7 +6,7 @@
  */
 
 import type { Coords } from "../chess/util/coordutil.js";
-import type { Color } from "../chess/util/colorutil";
+import type { Color } from "./math.js";
 
 import { createModel } from "../game/rendering/buffermodel.js";
 import space from "../game/misc/space.js";

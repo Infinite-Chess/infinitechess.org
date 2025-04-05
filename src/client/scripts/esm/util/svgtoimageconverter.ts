@@ -9,19 +9,27 @@
 // Functions --------------------------------------------------------------------------
 
 
-/** Converts a list of SVGs into a list of HTMLImageElements */
-async function convertSVGsToImages(svgElements: SVGElement[]) {
-	const readyImages: HTMLImageElement[] = [];
+/** Converts a list of SVGs into a list of HTMLImageElements. Does this in parallel. */
+async function convertSVGsToImages(svgElements: SVGElement[]): Promise<HTMLImageElement[]> {
 	try {
-		for (const svgElement of svgElements) {
-			const img = await svgToImage(svgElement); // You can adjust width and height as needed
-			// document.body.appendChild(img);
-			readyImages.push(img);
-		}
+		// Create an array of promises, where each promise resolves to an HTMLImageElement
+		const conversionPromises = svgElements.map(svgElement => svgToImage(svgElement));
+		
+		// Wait for all the conversion promises to resolve concurrently
+		const readyImages = await Promise.all(conversionPromises);
+		
+		// Optional: Append the images to the doc for debugging
+		// for (const img of readyImages) {
+		//     document.body.appendChild(img); 
+		// }
+
+		return readyImages;
 	} catch (e) {
-		console.error("Error caught while converting SVGs to Images:", e);
+		// Although we assume individual svgToImage calls resolve, Promise.all itself
+		// could theoretically encounter an issue, or svgToImage might throw a sync error.
+		console.error("Error caught during conversion of SVGs to Images:", e);
+		return []; // Return an empty array in case of unexpected errors
 	}
-	return readyImages;
 }
 
 /**

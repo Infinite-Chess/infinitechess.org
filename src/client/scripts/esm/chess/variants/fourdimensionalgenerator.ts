@@ -15,6 +15,7 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 
 import coordutil from "../util/coordutil.js";
 import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
+import { rawTypes as r, ext as e } from "../util/typeutil.js";
 // @ts-ignore
 import formatconverter from "../logic/formatconverter.js";
 
@@ -110,7 +111,7 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
 				// Only the edges of boards should be voids
 				if ((i % dim.BOARD_SPACING === 0) || (j % dim.BOARD_SPACING === 0)) {
-					resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
+					resultPos[coordutil.getKeyFromCoords([i, j])] = r.VOID + e.N;
 					// Add input_position_long to the board
 					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
 						for (const key in input_position_long) {
@@ -131,7 +132,7 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 				// Only the edges of boards should be voids
 				if ((i % dim.BOARD_SPACING === 0 || i % dim.BOARD_SPACING === 9)
 					|| (j % dim.BOARD_SPACING === 0 || j % dim.BOARD_SPACING === 9)) {
-					resultPos[coordutil.getKeyFromCoords([i, j])] = 'voidsN';
+					resultPos[coordutil.getKeyFromCoords([i, j])] = r.VOID + e.N;
 					// Add the subposition to the correct board
 					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
 						const sub_position_short = input_position[`${Math.floor(i / dim.BOARD_SPACING)},${Math.floor(j / dim.BOARD_SPACING)}`];
@@ -169,36 +170,36 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 	setMovementType(strong_kings_and_queens, strong_pawns);
 
 	const movesets: Movesets = {
-		queens: {
+		[r.QUEEN]: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
 				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
 			}
 		},
-		bishops: {
+		[r.BISHOP]: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
 				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
 			}
 		},
-		rooks: {
+		[r.ROOK]: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
 				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
 			}
 		},
-		kings: {
+		[r.KING]: {
 			individual: [],
 			special: fourdimensionalmoves.fourDimensionalKingMove
 		},
-		knights: {
+		[r.KNIGHT]: {
 			individual: [],
 			special: fourdimensionalmoves.fourDimensionalKnightMove
 		},
-		pawns: {
+		[r.PAWN]: {
 			individual: [],
 			special: fourdimensionalmoves.fourDimensionalPawnMove
 		}
@@ -216,17 +217,17 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 					// Add the moves
 
 					// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
-					if (mov.STRONG_KINGS_AND_QUEENS) movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					if (mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					
 					// Only add a bishop move if the move moves in two dimensions
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
-						movesets['bishops']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
-						if (!mov.STRONG_KINGS_AND_QUEENS) movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						movesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						if (!mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 					// Only add a rook move if the move moves in one dimension
 					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
-						movesets['rooks']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
-						if (!mov.STRONG_KINGS_AND_QUEENS) movesets['queens']!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						movesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+						if (!mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
 					}
 				}
 			}

@@ -18,7 +18,7 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
-
+import { players } from '../../chess/util/typeutil.js';
 
 "use strict";
 
@@ -172,8 +172,8 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
 		return {
-			white: onlinegame.areWeColorInOnlineGame('white') && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'],
-			black: onlinegame.areWeColorInOnlineGame('black') && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black']
+			white: onlinegame.areWeColorInOnlineGame(players.WHITE) && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'],
+			black: onlinegame.areWeColorInOnlineGame(players.BLACK) && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black']
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
@@ -196,18 +196,18 @@ function updateWhosTurn() {
 
 	const color = gamefile.whosTurn;
 
-	if (color !== 'white' && color !== 'black') throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
+	if (color !== players.WHITE && color !== players.BLACK) throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
 
 	let textContent = "";
 	if (!gameloader.areInLocalGame()) {
 		const ourTurn = gameloader.isItOurTurn();
 		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
-	} else textContent = color === "white" ? translations['white_to_move'] : translations['black_to_move'];
+	} else textContent = color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
 
 	element_whosturn.textContent = textContent;
 
 	element_dot.classList.remove('hidden');
-	if (color === 'white') {
+	if (color === players.WHITE) {
 		element_dot.classList.remove('dotblack');
 		element_dot.classList.add('dotwhite');
 	} else {
@@ -218,7 +218,7 @@ function updateWhosTurn() {
 
 /** Updates the whosTurn text to say who won! */
 function gameEnd(conclusion: string | false) {
-	// 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
+	// '1 checkmate' / '2 resignation' / '0 stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 	if (conclusion === false) throw Error("Should not call gameEnd when game isn't over.");
 
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
@@ -227,9 +227,9 @@ function gameEnd(conclusion: string | false) {
 
 	const gamefile = gameslot.getGamefile()!;
 
-	if (onlinegame.areInOnlineGame()) {	
+	if (onlinegame.areInOnlineGame()) {
 
-		if (victor !== undefined && onlinegame.areWeColorInOnlineGame(victor)) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
+		if (victor !== undefined && onlinegame.areInOnlineGame() && onlinegame.getOurColor() === victor) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                             : condition === 'time' ? resultTranslations.you_time
                                                                             : condition === 'resignation' ? resultTranslations.you_resignation
                                                                             : condition === 'disconnect' ? resultTranslations.you_disconnect
@@ -239,7 +239,7 @@ function gameEnd(conclusion: string | false) {
                                                                             : condition === 'threecheck' ? resultTranslations.you_threecheck
                                                                             : condition === 'koth' ? resultTranslations.you_koth
                                                                             : resultTranslations.you_generic;
-		else if (victor === 'draw') element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
+		else if (victor === players.NEUTRAL) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                     : condition === 'repetition' ? resultTranslations.draw_repetition
                                                                     : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(gamefile.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
                                                                                                     : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
@@ -257,26 +257,26 @@ function gameEnd(conclusion: string | false) {
                                                             : condition === 'koth' ? resultTranslations.opponent_koth
                                                             : resultTranslations.opponent_generic;
 	} else { // Local game
-		if (condition === 'checkmate') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_checkmate
-                                                                    : victor === 'black' ? resultTranslations.black_checkmate
+		if (condition === 'checkmate') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_checkmate
+                                                                    : victor === players.BLACK ? resultTranslations.black_checkmate
                                                                     : resultTranslations.bug_checkmate;
-		else if (condition === 'time') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_time
-                                                                    : victor === 'black' ? resultTranslations.black_time
+		else if (condition === 'time') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_time
+                                                                    : victor === players.BLACK ? resultTranslations.black_time
                                                                     : resultTranslations.bug_time;
-		else if (condition === 'royalcapture') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_royalcapture
-                                                                            : victor === 'black' ? resultTranslations.black_royalcapture
+		else if (condition === 'royalcapture') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_royalcapture
+                                                                            : victor === players.BLACK ? resultTranslations.black_royalcapture
                                                                             : resultTranslations.bug_royalcapture;
-		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_allroyalscaptured
-                                                                                : victor === 'black' ? resultTranslations.black_allroyalscaptured
+		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allroyalscaptured
+                                                                                : victor === players.BLACK ? resultTranslations.black_allroyalscaptured
                                                                                 : resultTranslations.bug_allroyalscaptured;
-		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_allpiecescaptured
-                                                                                : victor === 'black' ? resultTranslations.black_allpiecescaptured
+		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allpiecescaptured
+                                                                                : victor === players.BLACK ? resultTranslations.black_allpiecescaptured
                                                                                 : resultTranslations.bug_allpiecescaptured;
-		else if (condition === 'threecheck') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_threecheck
-                                                                            : victor === 'black' ? resultTranslations.black_threecheck
+		else if (condition === 'threecheck') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_threecheck
+                                                                            : victor === players.BLACK ? resultTranslations.black_threecheck
                                                                             : resultTranslations.bug_threecheck;
-		else if (condition === 'koth') element_whosturn.textContent = victor === 'white' ? resultTranslations.white_koth
-                                                                    : victor === 'black' ? resultTranslations.black_koth
+		else if (condition === 'koth') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_koth
+                                                                    : victor === players.BLACK ? resultTranslations.black_koth
                                                                     : resultTranslations.bug_koth;
 		else if (condition === 'stalemate') element_whosturn.textContent = resultTranslations.draw_stalemate;
 		else if (condition === 'repetition') element_whosturn.textContent = resultTranslations.draw_repetition;

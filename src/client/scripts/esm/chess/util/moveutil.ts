@@ -7,13 +7,14 @@
 import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
+import type { Player } from './typeutil.js';
 // @ts-ignore
 import type { gamefile } from '../logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../variants/gamerules.js';
 
-
 import coordutil from './coordutil.js';
+import { players } from './typeutil.js';
 
 
 // Type Definitions ------------------------------------------------------------------------------
@@ -121,7 +122,7 @@ function isIndexTheLastMove(moves: Move[], index: number): boolean {
  * Gets the color of whos turn it is currently, or at the front of the game.
  * Depends on the turn order.
  */
-function getWhosTurnAtFront(gamefile: gamefile): string {
+function getWhosTurnAtFront(gamefile: gamefile): Player {
 	return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
 }
 
@@ -132,9 +133,9 @@ function getWhosTurnAtFront(gamefile: gamefile): string {
  * 
  * You may need this if the gamefile hasn't actually been contructed yet.
  * @param numberOfMoves - The number of moves played in the game so far (length of the current moves list).
- * @param turnOrder - The order of colors turns in the game.
+ * @param turnOrder - The order of players turns in the game.
  */
-function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves: number, turnOrder: GameRules['turnOrder']): string {
+function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves: number, turnOrder: GameRules['turnOrder']): Player {
 	return turnOrder[numberOfMoves % turnOrder.length];
 }
 
@@ -183,19 +184,19 @@ function areMovesIn2DFormat(longmoves: Move[] | DepricatedMoves): boolean {
 /**
  * Converts a gamefile's move list from the old 2D array format to the new 1D format.
  * If it's a black-moves-first game, it sets the 'turn' property of the provided results
- * object to 'black', otherwise 'white'.
+ * object to player black, otherwise player white.
  * @param moves - The gamefile's moves in the old 2D array format
  * @param results - PROVIDE AS AN EMPTY OBJECT! The 'turn' property will be set, destructively.
  * @returns Moves converted to the new 1D array format
  */
-function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], turn: string } {
-	let turn = 'white';
+function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], turn: Player } {
+	let turn: Player = players.WHITE;
 	const moves1D: MoveDraft[] = [];
 	for (let a = 0; a < moves.length; a++) {
 		const thisPair = moves[a]!;
 		for (let b = 0; b < thisPair.length; b++) {
 			const thisMove = thisPair[b]!;
-			if (thisMove === null) turn = 'black';
+			if (thisMove === null) turn = players.BLACK;
 			else moves1D.push(thisMove as MoveDraft);
 		}
 	}
@@ -211,7 +212,7 @@ function isGameResignable(gamefile: gamefile): boolean { return gamefile.moves.l
 /**
  * Returns the color of the player that played the provided index within the moves list.
  */
-function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): 'white' | 'black' {
+function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): Player {
 	const turnOrder = gamefile.gameRules.turnOrder;
 	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
 	if (index === -1) return turnOrder[turnOrder.length - 1];
@@ -221,7 +222,7 @@ function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): 'white'
 /**
  * Returns the color whos turn it is after the specified move index was played.
  */
-function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): 'white' | 'black' {
+function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): Player {
 	return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
 }
 
