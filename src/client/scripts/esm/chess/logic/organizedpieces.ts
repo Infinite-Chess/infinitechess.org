@@ -1,17 +1,20 @@
-import typeutil from "../util/typeutil.js";
+
+
+import typeutil, { ext, players, rawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
+import movesets from "./movesets.js";
 
+import type { LineKey, Position } from "../util/boardutil.js";
+import type { Vec2, Vec2Key } from "../../util/math.js";
+import type { Coords, CoordsKey } from "../util/coordutil.js";
+import type { PieceMoveset } from "./movesets.js";
+import type { Player, PlayerGroup, RawType, TypeGroup } from "../util/typeutil.js";
+import type { FixedArray } from "../../util/jsutil.js";
 // @ts-ignore
 import type gamefile from "./gamefile.js";
-import { Vec2, Vec2Key } from "../../util/math.js";
-import type { LineKey, Position } from "../util/boardutil.js";
-import type { Coords, CoordsKey } from "../util/coordutil.js";
 // @ts-ignore
 import type { GameRules } from "../variants/gamerules.js";
-import type { PieceMoveset } from "./movesets.js";
-import type { Player } from "../util/typeutil.js";
-import type { FixedArray } from "../../util/jsutil.js";
 
 type PositionArray = Float32Array | Float64Array //| BigInt64Array;
 type PositionArrayConstructor = Float32ArrayConstructor | Float64ArrayConstructor //| BigInt64ArrayConstructor;
@@ -23,10 +26,8 @@ const MaxTypedArrayValues: Record<string, bigint> = {
 	BigInt64Array: 9223372036854775807n,
 };
 
-type RegenerateData = {[type: number]: number};
-
 // eslint-disable-next-line no-unused-vars
-type RegenerateHook = (gamefile: gamefile, regenData: RegenerateData) => false
+type RegenerateHook = (gamefile: gamefile, regenData: TypeGroup<number>) => false
 
 interface TypeRange {
 	/** Inclusive */
@@ -41,9 +42,9 @@ type TypeRanges = Map<number, TypeRange>
 
 interface OrganizedPieces {
 	/** The X position of all pieces. Undefined pieces are set to 0. */
-	XPositions: PositionArray
+	XPositions: Float64Array
 	/** The Y position of all pieces. Undefined pieces are set to 0. */
-	YPositions: PositionArray
+	YPositions: Float64Array
 	/**
 	 * The type of all pieces. Undefined pieces retain the type of the type range they are in.
 	 * 
@@ -64,18 +65,21 @@ interface OrganizedPieces {
 	 * 
 	 * Map{ 'dx,dy' => Map { 'yint|xafter0' => [idx, idx, idx...] }}
 	 */
-	lines: Map<Vec2Key, Map<LineKey,number[]>>
+	lines: Map<Vec2Key, Map<LineKey, number[]>>
 	/** All slide directions possible in the game. [1,0] guaranteed for castling to work. */
 	slides: Vec2[]
 	/** Whether there are any hippogonal riders in the game (knightriders). */
 	hippogonalsPresent: boolean
-	/** Whether colinear lines are present in the gamefile.
-	* (e.g. [1,0] and [2,0] are colinear) */
-	colinearsPresent: boolean,
 }
 
 /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
 const pieceCountToDisableCheckmate = 50_000;
+
+/** How many extra undefined placeholders each type range should have.
+ * When these are all exhausted, the large piece lists must be regenerated. */
+const listExtras = 10;
+/** EDITOR-MODE-SPECIFIC {@link listExtras} */
+const listExtras_Editor = 100;
 
 
 /**
@@ -93,106 +97,123 @@ function extendArray<C extends FixedArray>(a: C, i: number): C {
 	return new constructor(a.length + i);
 }
 
+// /**
+//  * This is used to regenerate the organizational lists of the board
+//  * so that extra space can be added to anticipate extra pieces being added,
+//  * currently this is only useful for promotion.
+//  * @param o The organized pieces
+//  * @param gamerule
+//  * @param listExtras The amount of undefineds that we should have for pieces that may be added
+//  * @returns how much each typerange was extended by
+//  */
+// function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: number): RegenerateData {
+// 	const typeOrder = [...o.typeRanges.keys()];
+// 	typeOrder.sort((a,b) => {
+// 		const startDiff = o.typeRanges.get(a)!.start - o.typeRanges.get(b)!.start;
+// 		if (startDiff !== 0) return startDiff;
+// 		return b - a; // Just so typeranges are in the order of type ASC when they start at the same point.
+// 	});
+
+// 	let totalUndefinedsNeeded = 0;
+// 	let currentOffset = 0;
+// 	const offsetByType: {[type: number]: number} = {};
+// 	const extraUndefinedsByType: RegenerateData = {};
+// 	for (const t of typeOrder) {
+// 		offsetByType[t] = currentOffset;
+// 		let undefinedsNeeded = 0;
+// 		if (isTypeATypeWereAppendingUndefineds(gamerule.promotionsAllowed!, t)) {
+// 			undefinedsNeeded = Math.max(listExtras - o.typeRanges.get(t)!.undefineds.length, undefinedsNeeded);
+// 		}
+// 		extraUndefinedsByType[t] = undefinedsNeeded;
+// 		totalUndefinedsNeeded += undefinedsNeeded;
+// 		currentOffset += undefinedsNeeded;
+// 	}
+
+// 	const newXpos = extendArray(o.XPositions as unknown as FixedArray, totalUndefinedsNeeded);
+// 	const newYpos = extendArray(o.YPositions as unknown as FixedArray, totalUndefinedsNeeded);
+// 	const newTypes = extendArray(o.types as unknown as FixedArray, totalUndefinedsNeeded);
+
+// 	for (const [t, rangeData] of o.typeRanges) {
+// 		const extraNeeded = extraUndefinedsByType[t]!;
+// 		const currentOffset = offsetByType[t]!;
+// 		// Copy all data
+// 		for (let i = rangeData.start; i < rangeData.end; i++) {
+// 			newXpos[i + currentOffset] = o.XPositions[i]!;
+// 			newYpos[i + currentOffset] = o.YPositions[i]!;
+// 			newTypes[i + currentOffset] = o.types[i]!;
+// 		}
+// 		// Move undefineds
+// 		for (let i = 0; i < rangeData.undefineds.length; i++) {
+// 			rangeData.undefineds[i]! += currentOffset;
+// 		}
+// 		// Move ranges
+// 		rangeData.start += currentOffset;
+// 		rangeData.end += currentOffset;
+// 		// Add new undefineds
+// 		for (let i = rangeData.end; i < rangeData.end + extraNeeded; i++) {
+// 			rangeData.undefineds.push(i);
+// 			newTypes[i] = t; // Assign type to new undefined slots
+// 		}
+
+// 		rangeData.end += extraNeeded; // Update final end
+// 	}
+
+// 	// Update indices in o.lines (original logic)
+// 	for (const l of o.lines.values()) {
+// 		for (const line of l.values()) {
+// 			for (const i in line) {
+// 				const idx = line[i]!;
+// 				line[i] = offsetByType[o.types[idx]!]! + idx;
+// 			}
+// 		}
+// 	}
+
+// 	for (const [pos, idx] of o.coords.entries()) {
+// 		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]!]!);
+// 	}
+
+// 	o.XPositions = newXpos as Float64Array;
+// 	o.YPositions = newYpos as Float64Array;
+// 	o.types = newTypes as Uint8Array; // Assuming o.types is always Uint8Array
+
+// 	return extraUndefinedsByType;
+// }
+
 /**
- * This is used to regenerate the organizational lists of the board
- * so that extra space can be added to anticipate extra pieces being added,
- * currently this is only useful for promotion.
- * @param o The organized pieces
- * @param gamerule
- * @param listExtras The amount of undefineds that we should have for pieces that may be added
- * @returns how much each typerange was extended by
+ * 
+ * @param o 
+ * @param type 
+ * @param numOfPieces - The number of pieces of this type in the position, EXCLUDING undefineds
+ * @param promotionsAllowed 
+ * @param editor 
+ * @returns 
  */
-function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: number): RegenerateData {
-	const typeOrder = [...o.typeRanges.keys()];
-	typeOrder.sort((a,b) => {
-		const startDiff = o.typeRanges.get(a)!.start - o.typeRanges.get(b)!.start;
-		if (startDiff !== 0) return startDiff;
-		return b - a; // Just so typeranges are in the order of type ASC when they start at the same point.
-	});
+function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): number {
+	const undefinedsBehavior = getTypeUndefinedsBehavior(type, promotionsAllowed, editor);
 
-	let totalUndefinedsNeeded = 0;
-	let currentOffset = 0;
-	const offsetByType: {[type: number]: number} = {};
-	const extraUndefinedsByType: RegenerateData = {};
-	for (const t of typeOrder) {
-		offsetByType[t] = currentOffset;
-		let undefinedsNeeded = 0;
-		if (isTypeATypeWereAppendingUndefineds(gamerule.promotionsAllowed!, t)) {
-			undefinedsNeeded = Math.max(listExtras - o.typeRanges.get(t)!.undefineds.length, undefinedsNeeded);
-		}
-		extraUndefinedsByType[t] = undefinedsNeeded;
-		totalUndefinedsNeeded += undefinedsNeeded;
-		currentOffset += undefinedsNeeded;
-	}
-
-	const newXpos = extendArray(o.XPositions as unknown as FixedArray, totalUndefinedsNeeded);
-	const newYpos = extendArray(o.YPositions as unknown as FixedArray, totalUndefinedsNeeded);
-	const newTypes = extendArray(o.types as unknown as FixedArray, totalUndefinedsNeeded);
-
-	for (const [t, rangeData] of o.typeRanges) {
-		const extraNeeded = extraUndefinedsByType[t]!;
-		const currentOffset = offsetByType[t]!;
-		// Copy all data
-		for (let i = rangeData.start; i < rangeData.end; i++) {
-			newXpos[i + currentOffset] = o.XPositions[i]!;
-			newYpos[i + currentOffset] = o.YPositions[i]!;
-			newTypes[i + currentOffset] = o.types[i]!;
-		}
-		// Move undefineds
-		for (let i = 0; i < rangeData.undefineds.length; i++) {
-			rangeData.undefineds[i]! += currentOffset;
-		}
-		// Move ranges
-		rangeData.start += currentOffset;
-		rangeData.end += currentOffset;
-		// Add new undefineds
-		for (let i = rangeData.end; i < rangeData.end + extraNeeded; i++) {
-			rangeData.undefineds.push(i);
-			newTypes[i] = t; // Assign type to new undefined slots
-		}
-
-		rangeData.end += extraNeeded; // Update final end
-	}
-
-	// Update indices in o.lines (original logic)
-	for (const l of o.lines.values()) {
-		for (const line of l.values()) {
-			for (const i in line) {
-				const idx = line[i]!;
-				line[i] = offsetByType[o.types[idx]!]! + idx;
-			}
-		}
-	}
-
-	for (const [pos, idx] of o.coords.entries()) {
-		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]!]!);
-	}
-
-	o.XPositions = newXpos as PositionArray;
-	o.YPositions = newYpos as PositionArray;
-	o.types = newTypes as Uint8Array; // Assuming o.types is always Uint8Array
-
-	return extraUndefinedsByType;
+	return undefinedsBehavior === 2 ? Math.max(listExtras_Editor, numOfPieces) // Count of piece can increase RAPIDLY (editor)
+		 : undefinedsBehavior === 1 ? listExtras // Count of piece can increase slowly (promotion)
+		 : undefinedsBehavior === 0 ? 0 // Count of piece CANNOT increase
+		 : (() => { throw Error(`Unsupported undefineds behavior" ${undefinedsBehavior} for type ${type}!`); })();
 }
 
 /**
- * Sees if the provided type is a type we need to append undefined
- * placeholders to the piece list of this type.
- * The lists of all the pieces needs placeholders in case we
- * promote to a new piece.
- * @param promotionGameRule - what each player can promote to.
- * @param type - the type we are checking
- * @returns *true* if we need to append placeholders for this type.
+ * Returns a number signifying the importance of this piece type needing undefineds placeholders in its type list.
+ * 
+ * 0 => Pieces of this type can not increase in count in this gamefile
+ * 1 => Can increase in count, but slowly (promotion)
+ * 2 => Can increase in count rapidly (board editor)
  */
-// eslint-disable-next-line no-unused-vars
-function isTypeATypeWereAppendingUndefineds(promotionGameRule: {[color in Player]?: number[]} | undefined, type: number): boolean {
-	if (!promotionGameRule) return false; // No pieces can promote, definitely not appending undefineds to this piece.
-
+function getTypeUndefinedsBehavior(type: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): 0 | 1 | 2 {
+	if (editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
+	if (!promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const [rawType, player] = typeutil.splitType(type);
-
-	if (!promotionGameRule[player]) return false; // This player color cannot promote (neutral).
-	return promotionGameRule[player].includes(rawType); // Eliminates all pieces that can't be promoted to
+	if (!promotionsAllowed[player]) return 0; // This player color cannot promote (neutral).
+	if (promotionsAllowed[player].includes(rawType)) return 1; // Can be promoted to
+	return 0; // This piece cannot be promoted to anything.
 }
+
+
 
 /**
  * Copies the contents of an array over to a fixed array
@@ -205,122 +226,185 @@ function copyToSizedArray<T extends FixedArray>(arr: number[], sizedArray: T): T
 	return sizedArray;
 }
 
-/**
- * Uses the information in the gamefile to build organized pieces.
- * @param gamefile 
- * @param coordConstructor The type of array to be used for `Xpositions` and `Ypositions`
- * @returns 
- */
-function buildStateForGame(gamefile: gamefile, coordConstructor: PositionArrayConstructor): OrganizedPieces {
-	const keyList = gamefile.startSnapshot.position;
-	return buildStateFromPosition(keyList, coordConstructor, gamefile.startSnapshot.existingTypes, getSlidingInfo(gamefile));
-}
 
 /**
  * Converts a piece list organized by key to the organized pieces format.
  * @returns Organized pieces
  */
-function buildStateFromPosition(position: Position, coordConstructor: PositionArrayConstructor, possibleTypes: Iterable<number>, 
-	{ hippogonalsPresent = false, slides = [] as Vec2[], colinearsPresent = false} = {}
-): OrganizedPieces {
-	const piecesByType: {[type: number]: Coords[]} = {};
-	const ranges: TypeRanges = new Map();
+function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+	pieces: OrganizedPieces,
+	pieceCount: number,
+	existingTypes: number[],
+	existingRawTypes: RawType[],
+} {
+	// Organize the pieces by type
 
-	// Init all type ranges for pieces in game
-	for (const type of possibleTypes) {
-		ranges.set(type, {
-			start: 0,
-			end: 0,
-			undefineds: []
-		});
+	const piecesByType: Map<number, Coords[]> = new Map();
+	let pieceCount = 0;
+	const existingTypesSet = new Set<number>();
+	for (const coordsKey in position) {
+		pieceCount++;
+		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
+		const type = position[coordsKey]!;
+		existingTypesSet.add(type);
+		if (!piecesByType.has(type)) piecesByType.set(type, []);
+		piecesByType.get(type)!.push(coords); // Push the coords
 	}
 
-	const organizedPieces: Partial<OrganizedPieces> = {
-		typeRanges: ranges,
-		hippogonalsPresent: hippogonalsPresent,
-		slides: slides,
-		colinearsPresent: colinearsPresent,
+	// Calculate the possible types
+
+	const { existingTypes, existingRawTypes } = getExistingTypes(existingTypesSet, turnOrder, promotionsAllowed, editor);
+
+	// Determine how many undefineds each type needs
+
+	const listExtrasByType: TypeGroup<number> = {};
+	for (const type of existingTypes) {
+		const numOfPieceInStartingPos = piecesByType.get(type)?.length ?? 0;
+		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, promotionsAllowed, editor);
+	}
+
+	console.log("List extras by type:");
+	console.log(listExtrasByType);
+
+	/**
+	 * Trim the pieceMovesets to only include movesets for types in the game
+	 * This is REQUIRED for possible slides to be calculated correctly!!
+	 */
+
+	for (const typeString in pieceMovesets) {
+		const rawType = Number(typeString) as RawType;
+		if (!existingRawTypes.includes(rawType)) delete pieceMovesets[typeString];
+	}
+
+	// We can get the possible slides now that the movesets are trimmed to only include the types in the game.
+	const slides = movesets.getPossibleSlides(pieceMovesets);
+
+	// Allocate the space needed for the XPositions, YPositions, and types arrays
+
+	const totalSlotsNeeded = pieceCount + Object.values(listExtrasByType).reduce((a, b) => a + b, 0);
+	console.log("Total piece count: " + pieceCount);
+	console.log(`Total slots needed: ${totalSlotsNeeded}`);
+	// This way we save on RAM since we don't have to construct normal arrays first and transfer the data after.
+	const XPositions = new Float64Array(totalSlotsNeeded);
+	const YPositions = new Float64Array(totalSlotsNeeded);
+	const types = new Uint8Array(totalSlotsNeeded);
+	
+	// Calculates all the possible lines in the game
+
+	const lines = new Map<Vec2Key, Map<LineKey, number[]>>();
+	for (const line of slides) {
+		const strline = math.getKeyFromVec2(line);
+		lines.set(strline, new Map());
+	}
+
+	// Fill the lists and Construct the type ranges...
+
+	const partialPieces = {
+		XPositions,
+		YPositions,
+		coords: new Map<CoordsKey, number>(),
+		lines,
 	};
 
-	// For some reason, does not iterate through inherited properties?
-	for (const [key, type] of Object.entries(position)) {
-		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
-		
-		if (!piecesByType[type]) piecesByType[type] = [];
-		if (!ranges.has(type)) throw Error(`Error when building state from key list. Type ${typeutil.debugType(type)} has no range!`);
-		// Push the coords
-		piecesByType[type]!.push(coords);
-	}
+	let start = 0; // The next range start
+	let pointer = 0; // The index within the XPositions, YPosition, and types, we are currently setting.
+	const ranges: TypeRanges = new Map();
+	for (const type of existingTypes) {
+		const pieces = piecesByType.get(type) ?? []; // It will be empty if there are no pieces of this type in the starting position. Those may be acquired via promotion / board editor.
 
-	// convert piecesByType to piece lists
-	const typeOrder: number[] = [...possibleTypes].sort();
-	let currentOffset = 0;
-	const x: number[] = [];
-	const y: number[] = [];
-	const t: number[] = [];
-	for (const rt of typeOrder) {
-		const pieces = piecesByType[rt];
-		if (pieces === undefined) continue; // There are no pieces of this type in the starting position
-
-		const range = ranges.get(rt)!;
-		range.start = currentOffset;
-		currentOffset += pieces.length;
-		range.end = currentOffset; 
-		for (const c of pieces) {
-			x.push(c[0]);
-			y.push(c[1]);
-			t.push(rt);
+		// Set the pieces X, Y, and type
+		for (let i = 0; i < pieces.length; i++) {
+			XPositions[pointer] = pieces[i]![0];
+			YPositions[pointer] = pieces[i]![1];
+			types[pointer] = Number(type);
+			registerPieceInSpace(pointer, partialPieces);
+			pointer++;
 		}
+		
+		// Create the undefineds list
+		const undefineds: number[] = [];
+		for (let i = 0; i < listExtrasByType[type]!; i++) {
+			// The XPositions and YPositions are initialized to 0, so we don't need to set them here.
+			types[pointer] = Number(type); // The undefined is still in the same type range, though, so we do need to set this.
+			undefineds.push(pointer);
+			pointer++;
+		}
+
+		// Set the range
+		ranges.set(type, {
+			start: start,
+			end: pointer,
+			undefineds,
+		});
+
+		// console.log("Set type range for type " + typeutil.debugType(type) + ":");
+		// console.log(ranges.get(type));
+
+		start = pointer;
 	}
 
-	// Convert piece lists to fixed arrays
-	organizedPieces.XPositions = copyToSizedArray(x, new coordConstructor(currentOffset));
-	organizedPieces.YPositions = copyToSizedArray(y, new coordConstructor(currentOffset));
-	organizedPieces.types = copyToSizedArray(t, new Uint8Array(currentOffset));
+	// Construct the OrganizedPieces object
 
-	// Position all the pieces
-	organizedPieces.lines = new Map();
-	organizedPieces.coords = new Map();
-	for (const line of organizedPieces.slides!) {
-		const strline = coordutil.getKeyFromCoords(line);
-		organizedPieces.lines.set(strline, new Map());
-	}
-	for (let i = 0; i < organizedPieces.types!.length; i++) {
-		registerPieceInSpace(i, organizedPieces);
-	}
-
-	return organizedPieces as OrganizedPieces;
-}
-
-/**
- * Calculates all possible slides that should be possible in the provided game,
- * excluding pieces that aren't in the provided position.
- */
-function getPossibleSlides(gamefile: gamefile): Vec2[] {
-	const movesets = gamefile.pieceMovesets;
-	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
-	for (const rawtype of gamefile.startSnapshot.existingRawTypes) {
-		const movesetFunc = movesets[rawtype];
-		if (!movesetFunc) continue;
-		const moveset: PieceMoveset = movesetFunc() as PieceMoveset;
-		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach(slide => slides.add(slide as Vec2Key));
-	}
-	const temp: Vec2[] = Array.from(slides, math.getVec2FromKey);
-	return temp;
-}
-
-/**
- * Inits the `slidingMoves` property of the `startSnapshot` of the gamefile.
- * This contains the information of what slides are possible, according to
- * what piece types are in this game.
- */
-function getSlidingInfo(gamefile: gamefile) {
-	const slides = getPossibleSlides(gamefile);
 	return {
-		slides,
-		hippogonalsPresent: areHippogonalsPresentInGame(slides),
-		colinearsPresent: areColinearSlidesPresentInGame(gamefile, slides),
+		pieces: {
+			XPositions,
+			YPositions,
+			types,
+			typeRanges: ranges,
+			coords: partialPieces.coords,
+			lines: partialPieces.lines,
+			slides,
+			hippogonalsPresent: areHippogonalsPresentInGame(slides),
+		},
+		pieceCount,
+		existingTypes,
+		existingRawTypes,
+	};
+}
+
+/**
+ * 
+ * @param existingTypesSet - A set of all existing types in the STARTING POSITION, not promotions.
+ * @param turnOrder 
+ * @param promotionsAllowed 
+ * @param editor 
+ * @returns 
+ */
+function getExistingTypes(existingTypesSet: Set<number>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+	existingTypes: number[],
+	existingRawTypes: RawType[],
+} {
+	let existingTypes: number[];
+	let existingRawTypes: RawType[];
+	if (editor) {
+		existingTypes = typeutil.buildAllTypesForPlayers(Object.values(players), Object.values(rawTypes));
+		existingRawTypes = Object.values(rawTypes);
+	} else {
+		if (promotionsAllowed) {
+			// Makes sure pieces that are possible to promote to are accounted for.
+			for (const playerString in promotionsAllowed) {
+				const player = Number(playerString) as Player;
+				const rawPromotions = promotionsAllowed[player]!;
+				for (const rawType of rawPromotions) {
+					existingTypesSet.add(typeutil.buildType(rawType, player));
+				}
+			}
+		}
+		/** If Player 3 or greater is present (multiplayer game), then gargoyles may appear when a player dies.
+		 * Which means we also must add corresponding neutral for every type in the game! */
+		if (turnOrder.some(p => p >= 3)) {
+			for (const type of [...existingTypesSet]) { // Spread to avoid problems with infinite iteration when adding to it at the same time.
+				// Convert it to neutral, and add it to existingTypes
+				existingTypesSet.add(typeutil.getRawType(type) + ext.N);
+			}
+		}
+		existingTypes = [...existingTypesSet];
+		existingRawTypes = [...new Set(existingTypes.map(typeutil.getRawType))];
+	}
+
+	return {
+		existingTypes,
+		existingRawTypes,
 	};
 }
 
@@ -328,17 +412,27 @@ function getSlidingInfo(gamefile: gamefile) {
  * Adds a piece to coords and lines
  * so that it can be used for collision detection
  * @param idx 
- * @param organizedPieces 
+ * @param o 
  */
-function registerPieceInSpace(idx: number, organizedPieces: Partial<OrganizedPieces>) {
+function registerPieceInSpace(idx: number, o: {
+	/*
+	 * Declaring the argument like this instead of using
+	 * Partial<OrganizedPieces> guarantees these options MUST be present.
+	 * And doesn't require us pass in a fully-constructed organized pieces object.
+	 */
+	XPositions: Float64Array,
+	YPositions: Float64Array,
+	coords: Map<CoordsKey, number>,
+	lines: Map<Vec2Key, Map<LineKey, number[]>>,
+}) {
 	if (idx === undefined) throw Error("Undefined idx is trying");
-	const x = organizedPieces.XPositions![idx];
-	const y = organizedPieces.YPositions![idx];
+	const x = o.XPositions![idx];
+	const y = o.YPositions![idx];
 	const coords = [x,y] as Coords;
 	const key = coordutil.getKeyFromCoords(coords);
-	if (organizedPieces.coords!.has(key)) throw Error(`While organizing a piece, there was already an existing piece there!! ${key}`);
-	organizedPieces.coords!.set(key, idx);
-	const lines = organizedPieces.lines!;
+	if (o.coords!.has(key)) throw Error(`While organizing a piece, there was already an existing piece there!! ${key} idx ${idx}`);
+	o.coords!.set(key, idx);
+	const lines = o.lines!;
 	for (const [strline, linegroup] of lines) {
 		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
 		// Is line initialized
@@ -427,47 +521,6 @@ function getCFromKey(lineKey: LineKey): number {
 }
 
 /**
- * Tests if the provided gamefile has colinear organized lines present in the game.
- * This can occur if there are sliders that can move in the same exact direction as others.
- * For example, [2,0] and [3,0]. We typically like to know this information because
- * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
- * by using royalcapture instead of checkmate.
- */
-function areColinearSlidesPresentInGame(gamefile: gamefile, slides: Vec2[]): boolean { // [[1,1], [1,0], ...]
-
-	/**
-	 * 1. Colinears are present if any vector is NOT a primitive vector.
-	 * 
-	 * This is because if a vector is not primitive, multiple simpler vectors can be combined to make it.
-	 * For example, [2,0] can be made by combining [1,0] and [1,0].
-	 * In a real game, you could have two [2,0] sliders, offset by 1 tile, and their lines would be colinear, yet not intersecting.
-	 * 
-	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
-	 */
-
-	if (slides!.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
-
-	/**
-	 * 2. Colinears are present if there's at least one custom ignore function.
-	 * 
-	 * This is because a custom ignore function can be used to simulate a non-primitive vector.
-	 * Or another vector for that matter.
-	 * We cannot predict if the piece will not cause colinears.
-	 */
-
-	if (gamefile.startSnapshot.existingTypes.some((type: number) => {
-		const rawType = typeutil.getRawType(type);
-		const movesetFunc = gamefile.pieceMovesets[rawType];
-		if (!movesetFunc) return false;
-		const thisTypeMoveset: PieceMoveset = movesetFunc();
-		// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
-		return 'ignore' in thisTypeMoveset || 'blocking' in thisTypeMoveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
-	})) return true; // Colinears are present
-
-	return false; // Colinears are not present
-}
-
-/**
  * Tests if the provided gamefile has hippogonal lines present in the game.
  * True if there are knightriders or higher riders.
  */
@@ -487,7 +540,6 @@ export type {
 	TypeRange,
 
 	RegenerateHook,
-	RegenerateData
 };
 
 export default {
@@ -495,15 +547,13 @@ export default {
 	pieceCountToDisableCheckmate,
 
 	areHippogonalsPresentInGame,
-	areColinearSlidesPresentInGame,
-	buildStateForGame,
-	buildStateFromPosition,
+	processInitialPosition,
 
 	registerPieceInSpace,
 	removePieceFromSpace,
 
-	regenerateLists,
-	isTypeATypeWereAppendingUndefineds,
+	// regenerateLists,
+	getTypeUndefinedsBehavior,
 
 	getKeyFromLine,
 	getCFromKey,

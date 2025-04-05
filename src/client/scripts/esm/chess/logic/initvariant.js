@@ -32,7 +32,6 @@ function setupVariant(gamefile, metadata, options) {
 
 	gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
 
-	initExistingTypes(gamefile);
 	initPieceMovesets(gamefile, metadata);
 }
 
@@ -84,10 +83,6 @@ function initPieceMovesets(gamefile, metadata) {
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
 	gamefile.pieceMovesets = variant.getMovesetsOfVariant(metadata);
 	gamefile.specialMoves = variant.getSpecialMovesOfVariant(metadata);
-
-	// Construct the vicinity objects (helps with check detection)
-	gamefile.vicinity = legalmoves.genVicinity(gamefile);
-	gamefile.specialVicinity = legalmoves.genSpecialVicinity(gamefile);
 }
 
 /**

@@ -15,8 +15,8 @@ import isprime from '../../util/isprime.js';
 
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
-import type { RawType, Player } from '../util/typeutil.js';
-import type { Vec2Key } from '../../util/math.js';
+import type { RawType, Player, TypeGroup } from '../util/typeutil.js';
+import type { Vec2, Vec2Key } from '../../util/math.js';
 import type { Piece } from '../util/boardutil.js';
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
@@ -299,12 +299,28 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 	};
 }
 
+/**	
+ * Calculates all possible slides that should be possible in the provided game,
+ * based on the provided movesets.
+ * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
+ */
+function getPossibleSlides(pieceMovesets: TypeGroup<() => PieceMoveset>): Vec2[] {
+	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
+	for (const rawtype in pieceMovesets) {
+		const moveset = pieceMovesets[rawtype]!();
+		if (!moveset.sliding) continue;
+		Object.keys(moveset.sliding).forEach(slide => slides.add(slide as Vec2Key));
+	}
+	return Array.from(slides, math.getVec2FromKey);
+}
+
 
 
 export default {
-	getPieceDefaultMovesets,
 	defaultBlockingFunction,
 	defaultIgnoreFunction,
+	getPieceDefaultMovesets,
+	getPossibleSlides,
 };
 
 export type { Movesets, PieceMoveset, Coords, BlockingFunction, IgnoreFunction, SpecialFunction };

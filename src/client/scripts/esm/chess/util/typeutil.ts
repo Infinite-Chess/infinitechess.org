@@ -91,6 +91,9 @@ type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
 type Player = typeof players[keyof typeof players]
 
+/** A dictionary type with all raw types for keys */
+type TypeGroup<T> = { [t: number]: T }
+
 /** A dictionary type with all player colors for keys */
 type PlayerGroup<T> = {
 	// eslint-disable-next-line no-unused-vars
@@ -112,6 +115,17 @@ function buildType(type: RawType, color: Player): number {
 /** Splits a type into its raw type and player */
 function splitType(type: number): [RawType, Player] {
 	return [getRawType(type), getColorFromType(type)];
+}
+
+/** Repeats each rawTypes for player color provided. */
+function buildAllTypesForPlayers(players: Player[], rawTypes: RawType[]): number[] {
+	const builtTypes: number[] = [];
+	for (let i = players.length - 1; i >= 0; i--) {
+		for (const r of rawTypes) {
+			builtTypes.push(buildType(r, players[i]!));
+		}
+	}
+	return builtTypes;
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -151,6 +165,7 @@ function debugType(type: number): string {
 export type {
 	RawType,
 	Player,
+	TypeGroup,
 	PlayerGroup,
 };
 
@@ -173,6 +188,7 @@ export default {
 	buildType,
 	splitType,
 	invertType,
+	buildAllTypesForPlayers,
 	forEachPieceType,
 	getRawTypeStr,
 	invertPlayer,

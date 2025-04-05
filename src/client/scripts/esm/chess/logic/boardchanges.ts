@@ -206,9 +206,10 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
-			if (!organizedpieces.isTypeATypeWereAppendingUndefineds(gamefile.gameRules.promotionsAllowed, change.piece.type)) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position`);
-			const regenData = organizedpieces.regenerateLists(gamefile.ourPieces, gamefile.gameRules, gamefile.listExtras);
-			events.runEvent(gamefile.events, "regenerateLists", gamefile, regenData);
+			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, gamefile.gameRules.promotionsAllowed, gamefile.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
+			throw Error("Can't regenerate lists with more undefineds yet!");
+			// const regenData = organizedpieces.regenerateLists(gamefile.ourPieces, gamefile.gameRules, gamefile.editor);
+			// events.runEvent(gamefile.events, "regenerateLists", gamefile, regenData);
 		}
 
 		idx = typedata.undefineds.shift()!;

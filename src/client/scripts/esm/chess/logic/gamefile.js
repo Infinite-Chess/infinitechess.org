@@ -12,6 +12,7 @@ import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 import checkdetection from './checkdetection.js';
 import { players } from '../util/typeutil.js';
+import legalmoves from './legalmoves.js';
 // Type Definitions...
 
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
@@ -34,6 +35,8 @@ import { players } from '../util/typeutil.js';
 /** @typedef {import('./checkdetection.js').Attacker} Attacker */
 /** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
 /** @typedef {import('../util/typeutil.js').Players} Players */
+/** @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup */
+/** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
 
 'use strict'; 
 
@@ -125,7 +128,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** Contains the movesets of every piece for this game. 
      * When this object's parameters are called as a function,
      * it returns that piece's moveset as an object.
-     * Pawns NOT included. */
+     * Pawns NOT included. @type {TypeGroup<() => PieceMoveset>} */
 	this.pieceMovesets = undefined;
 	/** Contains a list of square in the immediate vicinity with
      * the names of pieces that could capture you from the distance.
@@ -171,9 +174,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	};
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	this.editor = editor;
-	/** How many extra undefined placeholders each type range should have.
-	 * When these are all exhausted, the large piece lists must be regenerated. */
-	this.listExtras = 10;
 	// JSDoc stuff over...
 
 	// Init things related to the variant, and the startSnapshot of the position
@@ -204,12 +204,27 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** @type {false | string} */
 	this.gameConclusion = false;
 
-	this.ourPieces = organizedpieces.buildStateForGame(this, Float32Array);
-	this.startSnapshot.pieceCount = boardutil.getPieceCountOfGame(this.ourPieces);
+	const { pieces, pieceCount, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
+		this.startSnapshot.position,
+		this.pieceMovesets,
+		this.gameRules.turnOrder,
+		this.gameRules.promotionsAllowed,
+		this.editor
+	);
 
-	organizedpieces.regenerateLists(this.ourPieces, this.gameRules, this.listExtras);
+	this.ourPieces = pieces;
+	console.log('ourPieces constructed from game', this.ourPieces);
+	this.startSnapshot.pieceCount = pieceCount;
+	this.startSnapshot.existingTypes = existingTypes;
+	this.startSnapshot.existingRawTypes = existingRawTypes;
 
-	gamefileutility.deleteUnusedMovesets(this);
+	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
+	this.colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(this.pieceMovesets, this.ourPieces.slides);
+	this.vicinity = legalmoves.genVicinity(this.pieceMovesets);
+	// We can set this now, since existingRawTypes is now set.
+	this.specialVicinity = legalmoves.genSpecialVicinity(this.metadata, this.startSnapshot.existingRawTypes);
+
+	gamefileutility.deleteUnusedSpecialMoves(this);
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);

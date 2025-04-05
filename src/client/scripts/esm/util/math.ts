@@ -414,8 +414,8 @@ function areLinesCollinear(lines: Vec2[]): boolean {
 /**
  * Returns the key string of the coordinates: [dx,dy] => 'dx,dy'
  */
-function getKeyFromVec2(coords: Vec2): Vec2Key {
-	return `${coords[0]},${coords[1]}`;
+function getKeyFromVec2(vec2: Vec2): Vec2Key {
+	return `${vec2[0]},${vec2[1]}`;
 }
 
 /**

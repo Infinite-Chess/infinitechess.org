@@ -28,6 +28,9 @@ import { rawTypes as r } from '../util/typeutil.js';
  * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
  * @typedef {import('../util/typeutil.js').Player} Player
  * @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces
+ * @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup
+ * @typedef {import('../util/metadata.js').MetaData} MetaData
+ * @typedef {import('../util/typeutil.js').RawType} RawType
 */
 
 
@@ -53,24 +56,23 @@ import { rawTypes as r } from '../util/typeutil.js';
  * Must be called after the piece movesets are initialized. 
  * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
  * DOES NOT include pawn moves.
- * @param {gamefile} gamefile - The gamefile
+ * @param {TypeGroup<() => PieceMoveset} pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
  * @returns {Object} The vicinity object
  */
-function genVicinity(gamefile) {
+function genVicinity(pieceMovesets) {
 	const vicinity = {};
-	if (!gamefile.pieceMovesets) return console.error("Cannot generate vicinity before pieceMovesets is initialized.");
 	
 	// For every type in the game...
-	gamefile.startSnapshot.existingRawTypes.forEach(rawType => {
-		const movesetFunc = gamefile.pieceMovesets[rawType];
-		if (movesetFunc === undefined) return; // This piece type can't move, it can't check us from anywhere in the vicinity
+	for (const [rawTypeString, movesetFunc] of Object.entries(pieceMovesets)) {
+		const rawType = Number(rawTypeString);
 		const individualMoves = movesetFunc().individual ?? [];
 		individualMoves.forEach(coords => {
 			const coordsKey = coordutil.getKeyFromCoords(coords);
 			if (!(coordsKey in vicinity)) vicinity[coordsKey] = []; // Make sure it's initialized
 			vicinity[coordsKey].push(rawType); // Make sure the key contains the piece type that can capture from that distance
 		});
-	});
+	}
+
 	return vicinity;
 }
 
@@ -81,13 +83,13 @@ function genVicinity(gamefile) {
  * to see if they would check you or not.
  * This saves us from having to iterate through every single
  * special piece in the game to see if they would check you.
- * @param {gamefile} gamefile
+ * @param {MetaData} metadata - The metadata of the gamefile
+ * @param {RawType[]} existingRawTypes
  * @returns {Object} The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
-function genSpecialVicinity(gamefile) {
-	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(gamefile.metadata);
+function genSpecialVicinity(metadata, existingRawTypes) {
+	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(metadata);
 	const vicinity = {};
-	const existingRawTypes = gamefile.startSnapshot.existingRawTypes;
 	// Object keys are strings, so we need to cast the type to a number
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
 		const rawType = Number(rawTypeString);

@@ -4,7 +4,7 @@
  */
 
 import type { Coords } from './coordutil.js';
-import type { Player } from './typeutil.js';
+import type { Player, TypeGroup } from './typeutil.js';
 import type { RawType } from './typeutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
@@ -13,7 +13,7 @@ import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-import math from '../../util/math.js';
+import math, { Vec2 } from '../../util/math.js';
 // @ts-ignore
 import winconutil from './winconutil.js';
 // @ts-ignore
@@ -21,6 +21,7 @@ import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 // @ts-ignore
 import wincondition from '../logic/wincondition.js'; 
+import { PieceMoveset } from '../logic/movesets.js';
 
 
 // Methods -------------------------------------------------------------
@@ -87,14 +88,13 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: Player, 
 }
 
 /**
- * Deletes all movesets from a Movesets object for pieces
- * that aren't included in this game.
+ * Deletes all specialMove functions for pieces that aren't included in this game.
  */
-function deleteUnusedMovesets(gamefile: gamefile) {
+function deleteUnusedSpecialMoves(gamefile: gamefile) {
 	const existingRawTypes = gamefile.startSnapshot.existingRawTypes;
-	for (const key in gamefile.pieceMovesets) {
+	for (const key in gamefile.specialMoves) {
 		const rawType = Number(key) as RawType;
-		if (!existingRawTypes.includes(rawType)) delete gamefile.pieceMovesets[key];
+		if (!existingRawTypes.includes(rawType)) delete gamefile.specialMoves[key];
 	}
 }
 
@@ -118,6 +118,47 @@ function initStartingAreaBox(gamefile: gamefile) {
 	gamefile.startSnapshot.box = box;
 }
 
+/**
+ * Tests if the provided gamefile has colinear organized lines present in the game.
+ * This can occur if there are sliders that can move in the same exact direction as others.
+ * For example, [2,0] and [3,0]. We typically like to know this information because
+ * we want to avoid having trouble with calculating legal moves surrounding discovered attacks
+ * by using royalcapture instead of checkmate.
+ * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
+ * @param slides - All possible slide directions in the gamefile.
+ */
+function areColinearSlidesPresentInGame(pieceMovesets: TypeGroup<() => PieceMoveset>, slides: Vec2[]): boolean { // [[1,1], [1,0], ...]
+
+	/**
+	 * 1. Colinears are present if any vector is NOT a primitive vector.
+	 * 
+	 * This is because if a vector is not primitive, multiple simpler vectors can be combined to make it.
+	 * For example, [2,0] can be made by combining [1,0] and [1,0].
+	 * In a real game, you could have two [2,0] sliders, offset by 1 tile, and their lines would be colinear, yet not intersecting.
+	 * 
+	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
+	 */
+
+	if (slides!.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
+
+	/**
+	 * 2. Colinears are present if there's at least one custom ignore function.
+	 * 
+	 * This is because a custom ignore function can be used to simulate a non-primitive vector.
+	 * Or another vector for that matter.
+	 * We cannot predict if the piece will not cause colinears.
+	 */
+
+	if (Object.values(pieceMovesets).some(movesetFunc => {
+		const moveset: PieceMoveset = movesetFunc();
+		// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
+		return 'ignore' in moveset || 'blocking' in moveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
+		
+	})) return true; // Colinears are present
+
+	return false; // Colinears are not present
+}
+
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -129,7 +170,8 @@ export default {
 	setTerminationMetadata,
 	eraseTerminationMetadata,
 	isOpponentUsingWinCondition,
-	deleteUnusedMovesets,
+	deleteUnusedSpecialMoves,
 	doGameOverChecks,
 	initStartingAreaBox,
+	areColinearSlidesPresentInGame,
 };

@@ -7,7 +7,6 @@
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { TypeRange } from '../../chess/logic/organizedpieces.js';
-import type { RegenerateData } from '../../chess/logic/organizedpieces.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
 
@@ -92,13 +91,8 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
 
 
 function addListeners(gamefile: gamefile) { 
-	events.addEventListener(gamefile.events, "regenerateLists", (gamefile: gamefile, types: RegenerateData) => {
-		console.log("Organized pieces regenerated, regenerating affected meshes...");
-		for (const strtype of Object.keys(types)) {
-			const type = Number(strtype);
-			regenType(gamefile, type);
-		}
-		return false;
+	events.addEventListener(gamefile.events, "regenerateLists", (gamefile: gamefile) => {
+		throw Error("Don't know how to regenerate lists yet!");
 	});
 }
 
