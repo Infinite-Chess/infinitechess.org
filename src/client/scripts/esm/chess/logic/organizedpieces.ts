@@ -289,7 +289,7 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 	const YPositions = new Float64Array(totalSlotsNeeded);
 	const types = new Uint8Array(totalSlotsNeeded);
 	
-	// Calculates all the possible lines in the game
+	// Initialize the organized lines
 
 	const lines = new Map<Vec2Key, Map<LineKey, number[]>>();
 	for (const line of slides) {
@@ -297,7 +297,7 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 		lines.set(strline, new Map());
 	}
 
-	// Fill the lists and Construct the type ranges...
+	// Fill the lists and Construct the type ranges, coords, and lines!
 
 	const partialPieces = {
 		XPositions,
