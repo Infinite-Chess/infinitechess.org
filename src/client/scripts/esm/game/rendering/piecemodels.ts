@@ -15,10 +15,9 @@ import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
-import svgcache from '../../chess/rendering/svgcache.js';
+import imagecache from '../../chess/rendering/imagecache.js';
 import math from '../../util/math.js';
 import miniimage from './miniimage.js';
-import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes } from '../../chess/util/typeutil.js';
@@ -55,14 +54,6 @@ interface MeshData {
  * on the animated piece's destination that is higher in the depth buffer.
  */
 const Z: number = 0.001;
-
-/**
- * The image width each piece type's image should be.
- * 
- * ONLY HAS AN EFFECT if we don't use svgtoimageconverter.normalizeImagePixelData()
- * If we do use that, then the images dimensions are decided by that script.
- */
-const IMG_SIZE = 512;
 
 /**
  * The interval at which to modify the mesh's linear offset once you travel this distance.
@@ -102,7 +93,7 @@ function addListeners(gamefile: gamefile) {
  * 
  * SLOWEST. Minimize calling.
  */
-async function regenAll(gamefile: gamefile) {
+function regenAll(gamefile: gamefile) {
 	console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
@@ -113,7 +104,7 @@ async function regenAll(gamefile: gamefile) {
 	// For each piece type in the game, generate its mesh
 	for (const type of gamefile.ourPieces.typeRanges.keys()) { // pawnsW
 		if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
-		else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+		else gamefile.mesh.types[type] = genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
 
 	frametracker.onVisualChange();
@@ -127,11 +118,11 @@ async function regenAll(gamefile: gamefile) {
  * @param gamefile
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
-async function regenType(gamefile: gamefile, type: number) {
+function regenType(gamefile: gamefile, type: number) {
 	console.log(`Regenerating mesh of type ${type}.`);
 
 	if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
-	else gamefile.mesh.types[type] = await genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+	else gamefile.mesh.types[type] = genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 
 	frametracker.onVisualChange();
 }
@@ -144,16 +135,13 @@ async function regenType(gamefile: gamefile, type: number) {
  * @param gamefile
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
-async function genTypeModel(gamefile: gamefile, type: number): Promise<MeshData> {
+function genTypeModel(gamefile: gamefile, type: number): MeshData {
 	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
 	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.ourPieces.typeRanges.get(type)!);
 
-	const svg: SVGElement = (await svgcache.getSVGElements([type], IMG_SIZE, IMG_SIZE))[0]!;
-	// console.log("Converting svg to image again..");
-	let image: HTMLImageElement = await svgtoimageconverter.svgToImage(svg);
-	// Patches firefox bug that darkens the image (when it is partially transparent) caused by double-multiplying the RGB channels by the alpha channel
-	image = await svgtoimageconverter.normalizeImagePixelData(image);
+	const image: HTMLImageElement = imagecache.getPieceImage(type);
+
 	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
 
 	return {

@@ -36,6 +36,7 @@ import clock from "../../chess/logic/clock.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import selection from "./selection.js";
+import imagecache from "../../chess/rendering/imagecache.js";
 import { players } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
@@ -226,6 +227,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	guiclock.set(loadedGamefile);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
+	await imagecache.initImagesForGame(loadedGamefile!);
 	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
@@ -236,7 +238,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
 	// Generate the mesh of every piece type
-	await piecemodels.regenAll(loadedGamefile!);
+	piecemodels.regenAll(loadedGamefile!);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
@@ -258,6 +260,7 @@ function unloadGame() {
 	
 	loadedGamefile = undefined;
 
+	imagecache.deleteImageCache();
 	selection.unselectPiece();
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)

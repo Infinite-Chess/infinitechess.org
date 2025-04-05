@@ -4,7 +4,6 @@
 import organizedpieces from './organizedpieces.js';
 import movepiece from './movepiece.js';
 import gamefileutility from '../util/gamefileutility.js';
-import boardutil from '../util/boardutil.js';
 import initvariant from './initvariant.js';
 import jsutil from '../../util/jsutil.js';
 import clock from './clock.js';

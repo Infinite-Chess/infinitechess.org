@@ -194,7 +194,7 @@ function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowe
 	return undefinedsBehavior === 2 ? Math.max(listExtras_Editor, numOfPieces) // Count of piece can increase RAPIDLY (editor)
 		 : undefinedsBehavior === 1 ? listExtras // Count of piece can increase slowly (promotion)
 		 : undefinedsBehavior === 0 ? 0 // Count of piece CANNOT increase
-		 : (() => { throw Error(`Unsupported undefineds behavior" ${undefinedsBehavior} for type ${type}!`); })();
+		 : (() => { throw Error(`Unsupported undefineds behavior" ${undefinedsBehavior} for type ${typeutil.debugType(type)}!`); })();
 }
 
 /**

@@ -71,10 +71,10 @@ async function initImagesForGame(gamefile: gamefile): Promise<void> {
 				.then(normalizedImg => {
 					newCache[img.id] = normalizedImg;
 					// Optional: Log successful caching of a specific type
-					console.log(`Cached normalized image for type ${img.id}`);
+					console.log(`Cached normalized image for type ${typeutil.debugType(Number(img.id))}`);
 				})
 				.catch(error => {
-					console.error(`Failed to normalize or cache image for type ${img.id}:`, error);
+					console.error(`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`, error);
 					// Decide how to handle normalization failures - potentially throw?
 				});
 			normalizationPromises.push(promise);
