@@ -222,7 +222,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(this.pieceMovesets, this.ourPieces.slides);
 	this.vicinity = legalmoves.genVicinity(this.pieceMovesets);
 	// We can set this now, since existingRawTypes is now set.
-	this.specialVicinity = legalmoves.genSpecialVicinity(this.metadata, this.startSnapshot.existingRawTypes);
+	this.specialVicinity = legalmoves.genSpecialVicinity(metadata, existingRawTypes);
 
 	gamefileutility.deleteUnusedSpecialMoves(this);
 	// THIS HAS TO BE BEFORE gamefileutility.doGameOverChecks() below!!!
