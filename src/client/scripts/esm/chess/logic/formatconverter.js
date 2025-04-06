@@ -461,7 +461,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// promotion lines
-		if (RegExp(`^\\(${scientificNumberRegex}?[,;\\|]`).test(string)) {
+		if (RegExp(`^\\((${scientificNumberRegex})?[,;\\|]`).test(string)) {
 			
 			/**
 			 * Possible cases the string could look like:
