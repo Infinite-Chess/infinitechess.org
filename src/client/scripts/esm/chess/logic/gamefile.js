@@ -212,7 +212,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	);
 
 	this.ourPieces = pieces;
-	console.log('ourPieces constructed from game', this.ourPieces);
 	this.startSnapshot.pieceCount = pieceCount;
 	this.startSnapshot.existingTypes = existingTypes;
 	this.startSnapshot.existingRawTypes = existingRawTypes;

@@ -22,8 +22,6 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
-import arrows from "../rendering/arrows/arrows.js";
-// @ts-ignore
 import stats from "../gui/stats.js";
 // @ts-ignore
 import movepiece from "../../chess/logic/movepiece.js";
@@ -37,6 +35,7 @@ import clock from "../../chess/logic/clock.js";
 import frametracker from "../rendering/frametracker.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
+import piecemodels from "../rendering/piecemodels.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -49,8 +48,24 @@ import specialrighthighlights from "../rendering/highlights/specialrighthighligh
  */
 function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
+	
 	movepiece.makeMove(gamefile, move); // Logical changes
-	boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
+
+	/**
+	 * Check if boardchanges regenerated the organized pieces to add more undefineds,
+	 * if so, we need to completely regenerate the affected type range's types.
+	 * Otherwise, we run graphical changes as normal.
+	 */
+	if (gamefile.ourPieces.newlyRegenerated) {
+		/**
+		 * We have to regenerate ALL types here, not just the ones whos type ranges
+		 * were affected, because other pieces may still need graphical changes
+		 * from the move's changes! For example, pawn deleted that promoted.
+		 */
+		piecemodels.regenAll(gamefile);
+		delete gamefile.ourPieces.newlyRegenerated; // Delete this flag now
+	}
+	else boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes

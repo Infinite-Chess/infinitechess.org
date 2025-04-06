@@ -9,8 +9,9 @@
  * If no game is loaded, the cache should be empty.
  */
 
+import type { TypeGroup } from '../../chess/util/typeutil.js';
 // @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js'; // Assuming path is correct relative to imagecache.ts
+import type gamefile from '../../chess/logic/gamefile.js';
 
 import typeutil from '../../chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
@@ -22,7 +23,7 @@ import svgtoimageconverter from '../../util/svgtoimageconverter.js';
  * The cache storing HTMLImageElement objects for each piece type
  * required by the current game. Keys are the numeric piece types.
  */
-let cachedImages: { [type: number]: HTMLImageElement } = {};
+let cachedImages: TypeGroup<HTMLImageElement> = {};
 
 // Functions ---------------------------------------------------------------------------
 
@@ -32,6 +33,7 @@ let cachedImages: { [type: number]: HTMLImageElement } = {};
  * normalizes them, and stores them in the cache.
  */
 async function initImagesForGame(gamefile: gamefile): Promise<void> {
+	if (Object.keys(cachedImages).length > 0) throw Error("Image cache already initialized. Call deleteImageCache() when unloading games.");
 	console.log("Initializing image cache for game...");
 
 	// 1. Determine required piece types (excluding SVG-less ones)
@@ -46,19 +48,20 @@ async function initImagesForGame(gamefile: gamefile): Promise<void> {
 		return;
 	}
 
-	console.log("Required piece types for image cache:", types);
+	// console.log("Required piece types for image cache:", types);
 
 	try {
 		// 2. Get SVG elements using the existing svgcache
 		// No width/height needed here as normalization will handle sizing later
 		const svgElements = await svgcache.getSVGElements(types);
-		console.log(`Retrieved ${svgElements.length} SVG elements.`);
+		// console.log(`Retrieved ${svgElements.length} SVG elements.`);
 
 		// 3. Convert SVGs to initial Image elements
 		const initialImages = await svgtoimageconverter.convertSVGsToImages(svgElements);
-		console.log(`Converted ${initialImages.length} SVGs to initial images.`);
+		// console.log(`Converted ${initialImages.length} SVGs to initial images.`);
 
 		// 4. Normalize images and populate the cache
+		// Patches firefox bug that darkens the image (when it is partially transparent) caused by double-multiplying the RGB channels by the alpha channel
 		const newCache: { [type: string]: HTMLImageElement } = {}; // 'pawn-white' => HTMLImageElement
 		const normalizationPromises: Promise<void>[] = [];
 
@@ -71,7 +74,7 @@ async function initImagesForGame(gamefile: gamefile): Promise<void> {
 				.then(normalizedImg => {
 					newCache[img.id] = normalizedImg;
 					// Optional: Log successful caching of a specific type
-					console.log(`Cached normalized image for type ${typeutil.debugType(Number(img.id))}`);
+					// console.log(`Cached normalized image for type ${typeutil.debugType(Number(img.id))}`);
 				})
 				.catch(error => {
 					console.error(`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`, error);
@@ -86,7 +89,7 @@ async function initImagesForGame(gamefile: gamefile): Promise<void> {
 		// Replace the old cache with the newly populated one
 		cachedImages = newCache;
 
-		console.log(`Image cache initialization complete. Cached ${Object.keys(cachedImages).length} images.`);
+		// console.log(`Image cache initialization complete. Cached ${Object.keys(cachedImages).length} images.`);
 
 	} catch (error) {
 		console.error("Error during image cache initialization:", error);

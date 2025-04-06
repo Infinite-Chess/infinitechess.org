@@ -11,34 +11,10 @@ import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { Player, PlayerGroup, RawType, TypeGroup } from "../util/typeutil.js";
 import type { FixedArray } from "../../util/jsutil.js";
-// @ts-ignore
-import type gamefile from "./gamefile.js";
-// @ts-ignore
-import type { GameRules } from "../variants/gamerules.js";
 
-type PositionArray = Float32Array | Float64Array //| BigInt64Array;
-type PositionArrayConstructor = Float32ArrayConstructor | Float64ArrayConstructor //| BigInt64ArrayConstructor;
-/** Stores the maximum values for each typed array */
-const MaxTypedArrayValues: Record<string, bigint> = {
-	Int8Array: 127n,
-	Int16Array: 32767n,
-	Int32Array: 2147483647n,
-	BigInt64Array: 9223372036854775807n,
-};
 
-// eslint-disable-next-line no-unused-vars
-type RegenerateHook = (gamefile: gamefile, regenData: TypeGroup<number>) => false
+// Type Definitions ----------------------------------------------------------------
 
-interface TypeRange {
-	/** Inclusive */
-	start: number,
-	/** Exclusive */
-	end: number,
-	/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
-	undefineds: Array<number>
-}
-
-type TypeRanges = Map<number, TypeRange>
 
 interface OrganizedPieces {
 	/** The X position of all pieces. Undefined pieces are set to 0. */
@@ -69,8 +45,29 @@ interface OrganizedPieces {
 	/** All slide directions possible in the game. [1,0] guaranteed for castling to work. */
 	slides: Vec2[]
 	/** Whether there are any hippogonal riders in the game (knightriders). */
-	hippogonalsPresent: boolean
+	hippogonalsPresent: boolean,
+	/**
+	 * If this flag is present, it means the pieces have been regenerated
+	 * to add more undefineds to the type ranges.
+	 * movesequence should see this and immediately regenerate the piece models!
+	 */
+	newlyRegenerated?: true,
 }
+
+type TypeRanges = Map<number, TypeRange>
+
+interface TypeRange {
+	/** Inclusive */
+	start: number,
+	/** Exclusive */
+	end: number,
+	/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
+	undefineds: Array<number>
+}
+
+
+// Constants ---------------------------------------------------------------------------
+
 
 /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
 const pieceCountToDisableCheckmate = 50_000;
@@ -82,102 +79,8 @@ const listExtras = 10;
 const listExtras_Editor = 100;
 
 
-/**
- * Creates a new, larger TypedArray of the SAME specific type as the input array.
- * Does NOT copy the elements from the original array.
- * @param a The TypedArray instance to base the new array on.
- * @param i The number of elements to add to the length.
- * @returns A new, empty TypedArray of the same type as 'a' with length 'a.length + i'.
- */
-function extendArray<C extends FixedArray>(a: C, i: number): C {
-	// Use the specific constructor property of the input array 'a'
-	// eslint-disable-next-line no-unused-vars
-	const constructor = a.constructor as new (length: number) => C;
-	// Create a new array of the *same specific type* as 'a'
-	return new constructor(a.length + i);
-}
+// Functions ---------------------------------------------------------------------------
 
-// /**
-//  * This is used to regenerate the organizational lists of the board
-//  * so that extra space can be added to anticipate extra pieces being added,
-//  * currently this is only useful for promotion.
-//  * @param o The organized pieces
-//  * @param gamerule
-//  * @param listExtras The amount of undefineds that we should have for pieces that may be added
-//  * @returns how much each typerange was extended by
-//  */
-// function regenerateLists(o: OrganizedPieces, gamerule: GameRules, listExtras: number): RegenerateData {
-// 	const typeOrder = [...o.typeRanges.keys()];
-// 	typeOrder.sort((a,b) => {
-// 		const startDiff = o.typeRanges.get(a)!.start - o.typeRanges.get(b)!.start;
-// 		if (startDiff !== 0) return startDiff;
-// 		return b - a; // Just so typeranges are in the order of type ASC when they start at the same point.
-// 	});
-
-// 	let totalUndefinedsNeeded = 0;
-// 	let currentOffset = 0;
-// 	const offsetByType: {[type: number]: number} = {};
-// 	const extraUndefinedsByType: RegenerateData = {};
-// 	for (const t of typeOrder) {
-// 		offsetByType[t] = currentOffset;
-// 		let undefinedsNeeded = 0;
-// 		if (isTypeATypeWereAppendingUndefineds(gamerule.promotionsAllowed!, t)) {
-// 			undefinedsNeeded = Math.max(listExtras - o.typeRanges.get(t)!.undefineds.length, undefinedsNeeded);
-// 		}
-// 		extraUndefinedsByType[t] = undefinedsNeeded;
-// 		totalUndefinedsNeeded += undefinedsNeeded;
-// 		currentOffset += undefinedsNeeded;
-// 	}
-
-// 	const newXpos = extendArray(o.XPositions as unknown as FixedArray, totalUndefinedsNeeded);
-// 	const newYpos = extendArray(o.YPositions as unknown as FixedArray, totalUndefinedsNeeded);
-// 	const newTypes = extendArray(o.types as unknown as FixedArray, totalUndefinedsNeeded);
-
-// 	for (const [t, rangeData] of o.typeRanges) {
-// 		const extraNeeded = extraUndefinedsByType[t]!;
-// 		const currentOffset = offsetByType[t]!;
-// 		// Copy all data
-// 		for (let i = rangeData.start; i < rangeData.end; i++) {
-// 			newXpos[i + currentOffset] = o.XPositions[i]!;
-// 			newYpos[i + currentOffset] = o.YPositions[i]!;
-// 			newTypes[i + currentOffset] = o.types[i]!;
-// 		}
-// 		// Move undefineds
-// 		for (let i = 0; i < rangeData.undefineds.length; i++) {
-// 			rangeData.undefineds[i]! += currentOffset;
-// 		}
-// 		// Move ranges
-// 		rangeData.start += currentOffset;
-// 		rangeData.end += currentOffset;
-// 		// Add new undefineds
-// 		for (let i = rangeData.end; i < rangeData.end + extraNeeded; i++) {
-// 			rangeData.undefineds.push(i);
-// 			newTypes[i] = t; // Assign type to new undefined slots
-// 		}
-
-// 		rangeData.end += extraNeeded; // Update final end
-// 	}
-
-// 	// Update indices in o.lines (original logic)
-// 	for (const l of o.lines.values()) {
-// 		for (const line of l.values()) {
-// 			for (const i in line) {
-// 				const idx = line[i]!;
-// 				line[i] = offsetByType[o.types[idx]!]! + idx;
-// 			}
-// 		}
-// 	}
-
-// 	for (const [pos, idx] of o.coords.entries()) {
-// 		o.coords.set(pos as CoordsKey, idx + offsetByType[o.types[idx]!]!);
-// 	}
-
-// 	o.XPositions = newXpos as Float64Array;
-// 	o.YPositions = newYpos as Float64Array;
-// 	o.types = newTypes as Uint8Array; // Assuming o.types is always Uint8Array
-
-// 	return extraUndefinedsByType;
-// }
 
 /**
  * 
@@ -263,8 +166,8 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, promotionsAllowed, editor);
 	}
 
-	console.log("List extras by type:");
-	console.log(listExtrasByType);
+	// console.log("List extras by type:");
+	// console.log(listExtrasByType);
 
 	/**
 	 * Trim the pieceMovesets to only include movesets for types in the game
@@ -282,8 +185,9 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 	// Allocate the space needed for the XPositions, YPositions, and types arrays
 
 	const totalSlotsNeeded = pieceCount + Object.values(listExtrasByType).reduce((a, b) => a + b, 0);
-	console.log("Total piece count: " + pieceCount);
-	console.log(`Total slots needed: ${totalSlotsNeeded}`);
+	// console.log("Total piece count: " + pieceCount);
+	// console.log(`Total slots needed: ${totalSlotsNeeded}`);
+
 	// This way we save on RAM since we don't have to construct normal arrays first and transfer the data after.
 	const XPositions = new Float64Array(totalSlotsNeeded);
 	const YPositions = new Float64Array(totalSlotsNeeded);
@@ -360,6 +264,123 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 		existingTypes,
 		existingRawTypes,
 	};
+}
+
+/**
+ * Resizes the piece arrays and updates type ranges to ensure minimum undefined slots.
+ * Afterward, flags the pieces as newly regenerated. movesequence may
+ * watch for that to know when to regenerate the piece models.
+ */
+function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): void { // Return type changed to number[]
+
+	const additionalUndefinedsNeeded: Map<number, number> = new Map();
+	const typeOffsets: Map<number, number> = new Map();
+	const modifiedTypes: number[] = []; // A list of all type ranges that changed in size.
+	let totalAdditionalSlots = 0;
+	let currentCumulativeOffset = 0;
+
+	// 1. Calculate needed slots, offsets, and track modified types
+	// for (const [type, range] of typesAndRanges) {
+	for (const [type, range] of o.typeRanges) {
+		const pieceTypeCount = (range.end - range.start) - range.undefineds.length; // The type of this piece, excluding undefineds
+		const targetUndefineds = getListExtrasOfType(type, pieceTypeCount, promotionsAllowed, editor);
+		const needed = Math.max(0, targetUndefineds - range.undefineds.length);
+
+		additionalUndefinedsNeeded.set(type, needed);
+		typeOffsets.set(type, currentCumulativeOffset);
+
+		if (needed > 0) { // Only track if modification occurred
+			modifiedTypes.push(type);
+			totalAdditionalSlots += needed;
+		}
+
+		currentCumulativeOffset += needed;
+	}
+
+	// --- Early exit if no changes are needed ---
+	if (totalAdditionalSlots === 0) {
+		console.warn("regenerateLists() called but no additional slots were needed.");
+		return; // Return (no type ranges modified)
+	}
+
+	console.log(`Regenerating lists: Adding ${totalAdditionalSlots} more total slots for types: ${modifiedTypes.map(typeutil.debugType).join(', ')}.`);
+
+	// --- Prepare for copy ---
+	const oldSize = o.XPositions.length;
+	const newSize = oldSize + totalAdditionalSlots;
+
+	// 2. Allocate new, larger arrays
+	const newXPositions = new Float64Array(newSize);
+	const newYPositions = new Float64Array(newSize);
+	const newTypes = new Uint8Array(newSize);
+
+	// Keep track of original types before overwriting o.types
+	const originalTypes = new Uint8Array(o.types);
+
+	// 3. Copy data and update TypeRanges
+	for (const [type, range] of o.typeRanges) {
+		const offset = typeOffsets.get(type)!;
+		const addedSlots = additionalUndefinedsNeeded.get(type)!; // Will be 0 if not modified
+		const newStart = range.start + offset;
+		const newEnd = range.end + offset + addedSlots;
+
+		// console.log(`Copying type ${typeutil.debugType(type)}: ${range.start} -> ${newStart}, ${range.end} -> ${newEnd}`);
+
+		// Copy existing data block
+		newXPositions.set(o.XPositions.subarray(range.start, range.end), newStart);
+		newYPositions.set(o.YPositions.subarray(range.start, range.end), newStart);
+		newTypes.set(o.types.subarray(range.start, range.end), newStart);
+
+		// Update the TypeRange
+
+		// Update existing undefined indices
+		range.undefineds = range.undefineds.map(oldUndefIndex => oldUndefIndex + offset);
+
+		// Add new undefined indices (only if addedSlots > 0)
+		if (addedSlots > 0) {
+			const firstNewUndefIndex = range.end + offset;
+			for (let i = 0; i < addedSlots; i++) {
+				const newIndex = firstNewUndefIndex + i;
+				newTypes[newIndex] = type; // Set type for the new slot
+				range.undefineds.push(newIndex);
+			}
+		}
+
+		// Update range properties
+		range.start = newStart;
+		range.end = newEnd;
+	}
+
+	// 4. Update indices in coords map
+	const newCoords = new Map<CoordsKey, number>();
+	for (const [key, oldIdx] of o.coords.entries()) {
+		const type = originalTypes[oldIdx]!;
+		const offset = typeOffsets.get(type)!;
+		newCoords.set(key, oldIdx + offset);
+	}
+	o.coords = newCoords;
+
+	// 5. Update indices in lines map
+	for (const lineGroup of o.lines.values()) {
+		for (const indicesArray of lineGroup.values()) {
+			for (let i = 0; i < indicesArray.length; i++) {
+				const oldIdx = indicesArray[i]!;
+				const type = originalTypes[oldIdx]!;
+				const offset = typeOffsets.get(type)!;
+				indicesArray[i] = oldIdx + offset;
+			}
+		}
+	}
+
+	// 6. Replace old arrays with new ones
+	o.XPositions = newXPositions;
+	o.YPositions = newYPositions;
+	o.types = newTypes;
+
+	o.newlyRegenerated = true; // Mark as newly regenerated. Piece models should be regenerated too.
+
+	// console.log("Regenerated lists:");
+	// console.log(o);
 }
 
 /**
@@ -538,16 +559,14 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 export type {
 	OrganizedPieces,
 	TypeRange,
-
-	RegenerateHook,
 };
 
 export default {
-	MaxTypedArrayValues,
 	pieceCountToDisableCheckmate,
 
 	areHippogonalsPresentInGame,
 	processInitialPosition,
+	regenerateLists,
 
 	registerPieceInSpace,
 	removePieceFromSpace,

@@ -47,17 +47,17 @@ function removeEventListener<E extends Eventlist, N extends keyof E, L extends E
 	return false;
 }
 
-import type { RegenerateHook } from "./organizedpieces";
+// import type { RegenerateHook } from "./organizedpieces";
 
-interface GameEvents extends Eventlist {
-	// Runs when organizedPieces regenerate, DO NOT INTERRUPT.
-	regenerateLists: RegenerateHook[]
-}
+// interface GameEvents extends Eventlist {
+// 	// Runs when organizedPieces regenerate, DO NOT INTERRUPT.
+// 	regenerateLists: RegenerateHook[]
+// }
 
 export type {
 	Eventlist,
 
-	GameEvents
+	// GameEvents
 };
 
 export default {
