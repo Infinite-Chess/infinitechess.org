@@ -268,9 +268,9 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
-	arrows.shiftArrow(animation.type, animation.path[animation.path.length - 1]!, animationCurrentCoords);
+	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
 	// Add the captured piece only after we've shifted the piece that captured it
-	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.path.length - 1]);
+	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, true, undefined, animation.path[animation.path.length - 1]);
 }
 
 

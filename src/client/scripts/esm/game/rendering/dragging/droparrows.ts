@@ -81,13 +81,13 @@ function shiftArrows(): void {
 		const worldCoords = space.convertCoordToWorldSpace(capturedPieceThisFrame.coords) as Coords;
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
-		arrows.shiftArrow(capturedPieceThisFrame.type, capturedPieceThisFrame.coords, undefined);
+		arrows.shiftArrow(capturedPieceThisFrame.type, true, capturedPieceThisFrame.coords, undefined);
 		// Place the selected piece's arrow location on it
 		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
 	}
 
 	// Shift the arrow of the selected piece
-	arrows.shiftArrow(selectedPiece.type, selectedPiece.coords, newLocationOfSelectedPiece);
+	arrows.shiftArrow(selectedPiece.type, true, selectedPiece.coords, newLocationOfSelectedPiece);
 }
 
 function onDragTermination() {
