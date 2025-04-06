@@ -6,6 +6,7 @@
 import type { Coords } from './coordutil.js';
 import type { Player, TypeGroup } from './typeutil.js';
 import type { RawType } from './typeutil.js';
+import type { PieceMoveset } from '../logic/movesets.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 
@@ -21,7 +22,6 @@ import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 // @ts-ignore
 import wincondition from '../logic/wincondition.js'; 
-import { PieceMoveset } from '../logic/movesets.js';
 
 
 // Methods -------------------------------------------------------------

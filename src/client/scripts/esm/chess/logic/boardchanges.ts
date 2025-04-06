@@ -11,6 +11,7 @@
 
 import organizedpieces from "./organizedpieces.js";
 import jsutil from "../../util/jsutil.js";
+import boardutil from "../util/boardutil.js";
 
 
 // Variables -------------------------------------------------------------------------
@@ -28,7 +29,6 @@ import type { Coords } from "./movesets.js";
 import type { Piece } from "../util/boardutil.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
-import boardutil from "../util/boardutil.js";
 
 /**
  * Generic type to describe any changes to the board

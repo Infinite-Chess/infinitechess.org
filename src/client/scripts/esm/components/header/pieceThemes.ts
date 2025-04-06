@@ -1,3 +1,8 @@
+
+/**
+ * This script stores the SVG locations and default tint colors for the pieces.
+ */
+
 import { rawTypes, players } from "../../chess/util/typeutil.js";
 
 import type { RawType, Player } from "../../chess/util/typeutil.js";

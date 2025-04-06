@@ -1,3 +1,8 @@
+
+/**
+ * This script contains utility methods for working with the organized pieces of a game.
+ */
+
 import typeutil from "./typeutil.js";
 import coordutil from "./coordutil.js";
 import jsutil from "../../util/jsutil.js";

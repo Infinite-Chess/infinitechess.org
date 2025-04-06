@@ -6,29 +6,6 @@
  */
 
 
-/** TypedArray constructors and their names. */
-const FixedArrayInfo = {
-	"Float32Array": Float32Array,
-	"Float64Array": Float64Array,
-
-	"Int8Array": Int8Array,
-	"Int16Array": Int16Array,
-	"Int32Array": Int32Array,
-	"BigInt64Array": BigInt64Array,
-
-	"Uint8Array": Uint8Array,
-	"Uint16Array": Uint16Array,
-	"Uint32Array": Uint32Array,
-	"BigUint64Array": BigUint64Array,
-} as const;
-
-/** Type representing any of the TypedArray constructor types listed in FixedArrayInfo. */
-type FixedArrayConstructor = typeof FixedArrayInfo[keyof typeof FixedArrayInfo];
-
-/** Type representing an *instance* of any TypedArray listed in FixedArrayInfo. */
-type FixedArray = InstanceType<FixedArrayConstructor>;
-
-
 /**
  * Deep copies an entire object, no matter how deep its nested.
  * No properties will contain references to the source object.
@@ -360,6 +337,25 @@ function stringifyReplacer(key: string, value: any): any {
 	return value;
 }
 
+/** TypedArray constructors and their names. */
+const FixedArrayInfo = {
+	"Float32Array": Float32Array,
+	"Float64Array": Float64Array,
+
+	"Int8Array": Int8Array,
+	"Int16Array": Int16Array,
+	"Int32Array": Int32Array,
+	"BigInt64Array": BigInt64Array,
+
+	"Uint8Array": Uint8Array,
+	"Uint16Array": Uint16Array,
+	"Uint32Array": Uint32Array,
+	"BigUint64Array": BigUint64Array,
+} as const;
+
+/** Type representing any of the TypedArray constructor types listed in FixedArrayInfo. */
+type FixedArrayConstructor = typeof FixedArrayInfo[keyof typeof FixedArrayInfo];
+
 /**
  * A "reviver" for JSON.parse()'ing that will convert back from the custom stringified format to the original objects.
  * This allows us to parse back the special objects like Maps and TypedArrays that were stringified using {@link stringifyReplacer}.
@@ -422,8 +418,4 @@ export default {
 	stringifyReplacer,
 	parseReviver,
 	ensureJSONString,
-};
-
-export type {
-	FixedArray,
 };

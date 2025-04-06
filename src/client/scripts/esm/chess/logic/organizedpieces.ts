@@ -1,4 +1,15 @@
 
+/**
+ * This script generates and manages the organized pieces of a game.
+ * 
+ * The pieces are organized in many different ways to optimize for different accessing methods.
+ * 
+ * Ways to access the pieces:
+ * - By index
+ * - By coordinate
+ * - By line
+ */
+
 
 import typeutil, { ext, players, rawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
@@ -10,7 +21,6 @@ import type { Vec2, Vec2Key } from "../../util/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { Player, PlayerGroup, RawType, TypeGroup } from "../util/typeutil.js";
-import type { FixedArray } from "../../util/jsutil.js";
 
 
 // Type Definitions ----------------------------------------------------------------

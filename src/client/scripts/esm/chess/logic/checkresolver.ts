@@ -14,11 +14,11 @@ import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { BoundingBox, Vec2Key } from "../../util/math.js";
+import type { Player } from "../util/typeutil.js";
 // @ts-ignore
 import type { LegalMoves } from './legalmoves.js';
 // @ts-ignore
 import type { gamefile } from "../logic/gamefile.js";
-import type { Player } from "../util/typeutil.js";
 
 import gamefileutility from "../util/gamefileutility.js";
 import boardutil from "../util/boardutil.js";
@@ -28,6 +28,8 @@ import coordutil from "../util/coordutil.js";
 import movepiece from "./movepiece.js";
 import jsutil from "../../util/jsutil.js";
 import moveutil from "../util/moveutil.js";
+
+import { players } from "../util/typeutil.js";
 // @ts-ignore
 import typeutil from "../util/typeutil.js";
 // @ts-ignore
@@ -36,8 +38,6 @@ import checkdetection from "./checkdetection.js";
 import specialdetect from "./specialdetect.js";
 // @ts-ignore
 import legalmoves from "./legalmoves.js";
-
-import { players } from "../util/typeutil.js";
 
 // Functions ------------------------------------------------------------------------------
 

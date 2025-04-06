@@ -3,9 +3,7 @@
  * This script prepares our variant when a game is constructed
  */
 
-import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
-import typeutil, { players, rawTypes } from '../util/typeutil.js';
 import variant from '../variants/variant.js';
 
 /** 
@@ -36,7 +34,7 @@ function setupVariant(gamefile, metadata, options) {
 }
 
 /**
- * Initiates legalmoves's and the special detect, move, and undo scripts movesets they're using.
+ * Sets the pieceMovesets and specialMoves functions of the gamefile.
  * @param {gamefile} gamefile - The gamefile
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  */

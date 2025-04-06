@@ -9,7 +9,6 @@ import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
-
 import { players, rawTypes } from '../util/typeutil.js';
 import organizedpieces from './organizedpieces.js';
 // Import End
