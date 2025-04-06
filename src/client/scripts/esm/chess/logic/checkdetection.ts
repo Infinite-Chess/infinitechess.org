@@ -117,7 +117,7 @@ function doesVicinityAttackSquare(gamefile: gamefile, square: Coords, friendlyCo
 
 		// Fetch the piece type currently on that square
 		const typeOnSquare = boardutil.getTypeFromCoords(gamefile.pieces, actualSquare);
-		if (!typeOnSquare) continue; // Nothing there to capture us
+		if (typeOnSquare === undefined) continue; // Nothing there to capture us
 		// Is it the same color?
 		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
 		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
@@ -149,7 +149,7 @@ function doesSpecialAttackSquare(gamefile: gamefile, square: CoordsSpecial, frie
 
 		// Fetch the piece type currently on that square
 		const typeOnSquare = boardutil.getTypeFromCoords(gamefile.pieces, actualSquare);
-		if (!typeOnSquare) continue; // Nothing there to capture us
+		if (typeOnSquare === undefined) continue; // Nothing there to capture us
 		// Is it the same color?
 		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
 		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
