@@ -270,7 +270,7 @@ function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
 	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
 	// Add the captured piece only after we've shifted the piece that captured it
-	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, true, undefined, animation.path[animation.path.length - 1]);
+	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, true, undefined, animation.captured.coords);
 }
 
 
@@ -307,7 +307,7 @@ function renderAnimations() {
 	const data = animations.flatMap(animation => {
 		const currentPos = getCurrentAnimationPosition(animation);
 		const piecesData: number[] = [];
-		if (animation.captured !== undefined) piecesData.push(...generatePieceData(animation.captured.type, animation.captured.coords)); // Render the captured piece
+		if (animation.captured) piecesData.push(...generatePieceData(animation.captured.type, animation.captured.coords)); // Render the captured piece
 		piecesData.push(...generatePieceData(animation.type, currentPos)); // Render the moving piece
 		return piecesData;
 	});
