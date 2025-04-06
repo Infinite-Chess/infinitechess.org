@@ -11,9 +11,10 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
+import type { Position } from "../../chess/variants/variant.js";
+import type { Player } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
-
 
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
@@ -25,12 +26,20 @@ import movesequence from "./movesequence.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import moveutil from "../../chess/util/moveutil.js";
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
-import clientEventDispatcher from "../../util/clientEventDispatcher.js";
 import piecemodels from "../rendering/piecemodels.js";
+import movepiece from "../../chess/logic/movepiece.js";
+import miniimage from "../rendering/miniimage.js";
+import animation from "../rendering/animation.js";
+import organizedpieces from "../../chess/logic/organizedpieces.js";
+import arrows from "../rendering/arrows/arrows.js";
+import clock from "../../chess/logic/clock.js";
+import guigameinfo from "../gui/guigameinfo.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
+import selection from "./selection.js";
+import imagecache from "../../chess/rendering/imagecache.js";
+import { players } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
-// @ts-ignore
-import movepiece from "../../chess/logic/movepiece.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -38,34 +47,21 @@ import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
 // @ts-ignore
-import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
-import selection from "./selection.js";
-// @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore
 import board from "../rendering/board.js";
 // @ts-ignore
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
-import miniimage from "../rendering/miniimage.js";
-// @ts-ignore
 import area from "../rendering/area.js";
 // @ts-ignore
 import movement from "../rendering/movement.js";
-// @ts-ignore
-import arrows from "../rendering/arrows/arrows.js";
-// @ts-ignore
-import clock from "../../chess/logic/clock.js";
-// @ts-ignore
-import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
-import animation from "../rendering/animation.js";
-
+import winconutil from "../../chess/util/winconutil.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -118,7 +114,7 @@ interface VariantOptions {
 	 * The key of the object is the coordinates of the piece as a string,
 	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
 	 */
-	startingPosition: { [key: CoordsKey]: string }
+	startingPosition: Position
 	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
 	specialRights: { [key: CoordsKey]: true },
 }
@@ -130,8 +126,8 @@ interface VariantOptions {
 /** The currently loaded game. */
 let loadedGamefile: gamefile | undefined;
 
-/** True if we're viewing the game from white's perspective, false for black's perspective. */
-let youAreColor: string;
+/** The player color we are viewing the perspective of in the current loaded game. */
+let youAreColor: Player;
 
 /**
  * The timeout id of the timer that animates the latest-played
@@ -160,14 +156,9 @@ function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-/** Returns what color we are viewing the current loaded game by default. */
-function getOurColor(): string {
-	return youAreColor;
-}
-
 function isLoadedGameViewingWhitePerspective() {
 	if (!loadedGamefile) throw Error("Cannot ask if loaded game is from white's perspective when there isn't a loaded game.");
-	return youAreColor === 'white';
+	return youAreColor === players.WHITE;
 };
 
 /**
@@ -208,16 +199,16 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	const newGamefile = new gamefile(loadOptions.metadata, loadOptions.additional);
 
-	youAreColor = loadOptions.viewWhitePerspective ? 'white' : 'black';
+	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
 	// If the game has more lines than this, then we turn off arrows at the start to prevent a lag spike.
-	const lineCountToDisableArrows = 16;
+	const lineCountToDisableArrows = 8;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) {
+	if (newGamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
-	} else if (newGamefile.startSnapshot.slidingPossible.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
+	} else if (newGamefile.pieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
 		arrows.setMode(0);
 	}
 
@@ -236,6 +227,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	guiclock.set(loadedGamefile);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
+	await imagecache.initImagesForGame(loadedGamefile!);
 	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
@@ -246,7 +238,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
 	// Generate the mesh of every piece type
-	await piecemodels.regenAll(loadedGamefile!);
+	piecemodels.regenAll(loadedGamefile!);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
@@ -254,21 +246,6 @@ async function loadGraphical(loadOptions: LoadOptions) {
 		movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
-
-	/**
-	 * Listen for the event that inserts more undefineds into the piece lists.
-	 * When that occurs, we need to regenerate the model.
-	 */
-	clientEventDispatcher.listen('inserted-undefineds', regenModelOfType);
-}
-
-/**
- * Call when any one piece type list has increased in undefined placeholders.
- * The length of the array has changed, so we should regenerate its mesh.
- */
-function regenModelOfType(event: CustomEvent) {
-	const type = event.detail;
-	piecemodels.regenType(loadedGamefile!, type);
 }
 
 /** The canvas will no longer render the current game */
@@ -277,6 +254,7 @@ function unloadGame() {
 	
 	loadedGamefile = undefined;
 
+	imagecache.deleteImageCache();
 	selection.unselectPiece();
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
@@ -299,9 +277,6 @@ function unloadGame() {
 	
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
-
-	// Stop listening for the event that regenerates the mesh when more undefineds are inserted.
-	clientEventDispatcher.removeListener('inserted-undefineds', regenModelOfType);
 }
 
 /**
@@ -347,13 +322,14 @@ function concludeGame() {
 	onlinegame.onGameConclude();
 	enginegame.onGameConclude();
 
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(loadedGamefile.gameConclusion).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {
-		if (!loadedGamefile.gameConclusion.includes('draw')) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (loadedGamefile.gameConclusion.includes(onlinegame.getOurColor())) sound.playSound_win(delayToPlayConcludeSoundSecs);
-		else if (loadedGamefile.gameConclusion.includes('draw') || loadedGamefile.gameConclusion.includes('aborted')) sound.playSound_draw(delayToPlayConcludeSoundSecs);
+		if (victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		else if (victor === players.NEUTRAL || !victor) sound.playSound_draw(delayToPlayConcludeSoundSecs);
 		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
 	}
 	
@@ -376,7 +352,6 @@ function unConcludeGame() {
 export default {
 	getGamefile,
 	areInGame,
-	getOurColor,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,
 	unloadGame,

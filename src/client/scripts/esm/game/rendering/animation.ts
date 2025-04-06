@@ -5,8 +5,9 @@
  */
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { Piece } from '../../chess/logic/boardchanges.js';
-import type { Color } from '../../chess/util/colorutil.js';
+import type { Piece } from '../../chess/util/boardutil.js';
+import type { Color } from '../../util/math.js';
+import type { RawType } from '../../chess/util/typeutil.js';
 
 import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
@@ -14,7 +15,6 @@ import frametracker from './frametracker.js';
 import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
-import preferences from '../../components/header/preferences.js';
 import spritesheet from './spritesheet.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
@@ -33,7 +33,6 @@ import shapes from './shapes.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
-
 // Type Definitions -----------------------------------------------------------------------
 
 
@@ -47,7 +46,7 @@ interface AnimationSegment {
 /** Represents an animation of a piece. */
 interface Animation {
 	/** The type of piece to animate. */
-	type: string;
+	type: number;
 	/** The waypoints the piece will pass throughout the animation. Minimum: 2 */
 	path: Coords[];
 	/** The segments between each waypoint */
@@ -136,7 +135,7 @@ let DEBUG = false;
  * @param instant - If true, the piece was dropped and should not be animated. The SOUND will still be played.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: boolean, resetAnimations: boolean = true): void {
+function animatePiece(type: number, path: Coords[], captured?: Piece, instant?: boolean, resetAnimations: boolean = true): void {
 	if (path.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
@@ -147,8 +146,8 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: 
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
 	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
-	if (typeutil.SVGLESS_TYPES.some((typeNoSVG: string) => {
-		return type.startsWith(typeNoSVG) || (captured !== undefined && captured.type.startsWith(typeNoSVG));
+	if (typeutil.SVGLESS_TYPES.some((typeNoSVG: RawType) => {
+		return typeutil.getRawType(type) === typeNoSVG || (captured !== undefined && typeutil.getRawType(captured.type) === typeNoSVG);
 	})) instant = true; // But, still instant animate it so that the sound plays
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
@@ -269,9 +268,9 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const animationCurrentCoords = getCurrentAnimationPosition(animation);
-	arrows.shiftArrow(animation.type, animation.path[animation.path.length - 1]!, animationCurrentCoords);
+	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
 	// Add the captured piece only after we've shifted the piece that captured it
-	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, undefined, animation.path[animation.path.length - 1]);
+	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, true, undefined, animation.captured.coords);
 }
 
 
@@ -308,12 +307,12 @@ function renderAnimations() {
 	const data = animations.flatMap(animation => {
 		const currentPos = getCurrentAnimationPosition(animation);
 		const piecesData: number[] = [];
-		if (animation.captured !== undefined) piecesData.push(...generatePieceData(animation.captured.type, animation.captured.coords)); // Render the captured piece
+		if (animation.captured) piecesData.push(...generatePieceData(animation.captured.type, animation.captured.coords)); // Render the captured piece
 		piecesData.push(...generatePieceData(animation.type, currentPos)); // Render the moving piece
 		return piecesData;
 	});
 
-	createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet()).render();
+	createModel(data, 2, "TRIANGLES", false, spritesheet.getSpritesheet()).render();
 }
 
 /**
@@ -322,16 +321,14 @@ function renderAnimations() {
  * @param type - The type of piece the data and animation is for.
  * @param coords - The coordinates of the piece of the animation.
 */
-function generatePieceData(type: string, coords: Coords): number[] {
+function generatePieceData(type: number, coords: Coords): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 	const { startX, startY, endX, endY } = calculateBoardPosition(coords);
-	const { r, g, b, a } = preferences.getTintColorOfType(type);
     
-	return bufferdata.getDataQuad_ColorTexture(
+	return bufferdata.getDataQuad_Texture(
 		startX, startY, endX, endY,
 		texleft, texbottom, texright, textop,
-		r, g, b, a
 	);
 }
 

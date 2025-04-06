@@ -17,12 +17,13 @@ import guinavigation from "../gui/guinavigation.js";
 import boardchanges from "../../chess/logic/boardchanges.js";
 import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 import moveutil from "../../chess/util/moveutil.js";
+import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
+import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
+import piecemodels from "../rendering/piecemodels.js";
 // @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
 // @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
-import arrows from "../rendering/arrows/arrows.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 // @ts-ignore
@@ -35,8 +36,6 @@ import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import frametracker from "../rendering/frametracker.js";
-import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
-import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import boardeditor from "../misc/boardeditor.js";
 
 
@@ -50,8 +49,20 @@ import boardeditor from "../misc/boardeditor.js";
  */
 function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
+	
 	movepiece.makeMove(gamefile, move); // Logical changes
-	boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
+
+	/**
+	 * Check if boardchanges regenerated the organized pieces to add more undefineds,
+	 * if so, we need to completely regenerate the affected type range's types.
+	 * Otherwise, we run graphical changes as normal.
+	 * 
+	 * We have to regenerate ALL types here, not just the ones whos type ranges
+	 * were affected, because other pieces may still need graphical changes
+	 * from the move's changes! For example, pawn deleted that promoted.
+	 */
+	if (gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile);
+	else boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes

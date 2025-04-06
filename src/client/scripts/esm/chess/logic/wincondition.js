@@ -3,19 +3,20 @@
 // Import Start
 import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
-import organizedlines from './organizedlines.js';
+import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
-import colorutil from '../util/colorutil.js';
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate } from './checkmate.js';
+import { players, rawTypes } from '../util/typeutil.js';
+import organizedpieces from './organizedpieces.js';
 // Import End
 
 // Type Definitions...
 
 /** @typedef {import('./gamefile.js').gamefile} gamefile */
-/** @typedef {import('../variants/gamerules.js'.GameRules) GameRules*/
+/** @typedef {import('../variants/gamerules.js'.GameRules)} GameRules*/
 
 "use strict";
 
@@ -31,9 +32,9 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
 /**
  * Tests if the game is over by the win condition used, and if so,
  * returns the `gameConclusion` property of the gamefile.
- * For example, "white checkmate", or "draw stalemate".
+ * For example, "1 checkmate", or "0 stalemate".
  * @param {gamefile} gamefile - The gamefile
- * @returns {string | false} The conclusion string, if the game is over. For example, "white checkmate", or "draw stalemate". If the game isn't over, this returns *false*.
+ * @returns {string | false} The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *false*.
  */
 function getGameConclusion(gamefile) {
 	if (!moveutil.areWeViewingLatestMove(gamefile)) throw new Error("Cannot perform game over checks when we're not on the last move.");
@@ -68,7 +69,7 @@ function detectAllroyalscaptured(gamefile) {
 
 	// Are there any royal pieces remaining?
 	// Remember that whosTurn has already been flipped since the last move.
-	const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(gamefile.ourPieces, typeutil.royals, gamefile.whosTurn);
+	const royalCount = boardutil.getRoyalCoordsOfColor(gamefile.pieces, gamefile.whosTurn);
 
 	if (royalCount === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -82,7 +83,7 @@ function detectAllpiecescaptured(gamefile) {
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
-	const count = gamefileutility.getPieceCountOfColor(gamefile, gamefile.whosTurn);
+	const count = boardutil.getPieceCountOfColor(gamefile.pieces, gamefile.whosTurn);
 
 	if (count === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -98,15 +99,15 @@ function detectKoth(gamefile) {
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(gamefile.moves);
 	if (!lastMove) return false;
-	if (!lastMove.type.startsWith('kings')) return false;
+	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return false;
 
 	let kingInCenter = false;
 	for (let i = 0; i < kothCenterSquares.length; i++) {
 		const thisCenterSquare = kothCenterSquares[i];
 
-		const typeAtSquare = gamefileutility.getPieceTypeAtCoords(gamefile, thisCenterSquare);
-		if (!typeAtSquare) continue;
-		if (typeAtSquare.startsWith('kings')) {
+		const typeAtSquare = boardutil.getTypeFromCoords(gamefile.pieces, thisCenterSquare);
+		if (typeAtSquare === undefined) continue;
+		if (typeutil.getRawType(typeAtSquare) === rawTypes.KING) {
 			kingInCenter = true;
 			break;
 		}
@@ -123,11 +124,11 @@ function detectKoth(gamefile) {
 /**
  * Detects if the game is over by, for example, the 50-move rule.
  * @param {gamefile} gamefile - The gamefile
- * @returns {string | false} 'draw moverule', if the game is over by the move-rule, otherwise *false*.
+ * @returns {string | false} '0 moverule', if the game is over by the move-rule, otherwise *false*.
  */
 function detectMoveRule(gamefile) {
 	if (!gamefile.gameRules.moveRule) return false; // No move-rule being used
-	if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return 'draw moverule';
+	if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
 	return false;
 }
 
@@ -138,8 +139,8 @@ function wasLastMoveARoyalCapture(gamefile) {
 
 	const capturedTypes = new Set();
 
-	boardchanges.getCapturedPieces(lastMove).forEach((piece) => {
-		capturedTypes.add(colorutil.trimColorExtensionFromType(piece.type));
+	boardchanges.getCapturedPieceTypes(lastMove).forEach((type) => {
+		capturedTypes.add(typeutil.getRawType(type));
 	});
 
 	if (!capturedTypes.size) return false; // Last move not a capture
@@ -160,8 +161,8 @@ function wasLastMoveARoyalCapture(gamefile) {
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
 function isCheckmateCompatibleWithGame(gamefile) {
-	if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
-	if (gamefile.startSnapshot.slidingPossible.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
+	if (gamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
+	if (gamefile.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
 	return true; // Checkmate compatible!

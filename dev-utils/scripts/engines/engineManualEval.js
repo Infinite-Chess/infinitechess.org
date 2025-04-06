@@ -34,13 +34,13 @@ const engineManualEval = (function() {
         const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
         if (capturedPiece) {
             move.captured = capturedPiece.type;
-            gamefileutility.deleteIndexFromPieceList(gamefile.ourPieces[capturedPiece.type], piece.index);
+            gamefileutility.deleteIndexFromPieceList(gamefile.pieces[capturedPiece.type], piece.index);
 
         	// Remove captured piece from organized piece lists
         	organizedlines.removeOrganizedPiece(gamefile, capturedPiece.coords);
         }
 
-        gamefile.ourPieces[capturedPiece.type][capturedPiece.index] = move.endCoords;
+        gamefile.pieces[capturedPiece.type][capturedPiece.index] = move.endCoords;
 
         // Remove selected piece from all the organized piece lists (piecesOrganizedByKey, etc.)
         organizedlines.removeOrganizedPiece(gamefile, capturedPiece.coords);
@@ -143,9 +143,9 @@ const engineManualEval = (function() {
     function getConsideredMoves(gamefile) {
         const moves = [];
         const intersections = getIntersections(gamefile);
-        for (const type in gamefile.ourPieces) {
+        for (const type in gamefile.pieces) {
             if (gamefile.whosTurn !== math.getPieceColorFromType(type)) continue;
-            const thesePieces = gamefile.ourPieces[type];
+            const thesePieces = gamefile.pieces[type];
             for (let i = 0; i < thesePieces.length; i++) {
                 const coords = thesePieces[i];
                 if (!coords) continue;
@@ -172,7 +172,7 @@ const engineManualEval = (function() {
 	 */
     function loneBlackKingEval(gamefile) {
         let evaluation = 0;
-        const kingCoords = gamefile.ourPieces.kingsB[0];
+        const kingCoords = gamefile.pieces.kingsB[0];
         const kingLegalMoves = legalmoves.calculate(gamefile, { type: 'kingsB', coords: kingCoords, index: 0 });
         evaluation += kingLegalMoves.individual.length;
 
@@ -183,7 +183,7 @@ const engineManualEval = (function() {
                 if (gamefileutility.getPieceAtCoords(gamefile, [kingCoords[0] + x, kingCoords[1] + y])) evaluation += 1;
             }
         }
-        const opponentPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.ourPieces, 'white');
+        const opponentPieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(gamefile.pieces, 'white');
         evaluation -= opponentPieceCount * 100;
 
         // Pieces that can put a king in some sort of a box or a cage (for example two rooks can put a king in a cage)
@@ -208,7 +208,7 @@ const engineManualEval = (function() {
             if (!(type in whitePiecesWeightTable) || !gamefileutility.getPieceCountOfType(gamefile, type)) continue;
             const pieceWeightTable = whitePiecesWeightTable[type];
 
-            for (const pieceCoords of gamefile.ourPieces[type]) {
+            for (const pieceCoords of gamefile.pieces[type]) {
                 if (!pieceCoords) continue;
                 // calculate the distance between king and the piece
                 // multiply it by the piece weight and add it to the evaluation
@@ -224,8 +224,8 @@ const engineManualEval = (function() {
 	 * @returns {Move[]} - legal moves for the black king (first one if there's multiple)
 	 */
     function getBlackKingLegalMoves(gamefile) {
-        const kingCoords = gamefile.ourPieces.kingsB[0];
-        const kingPiece = gamefileutility.getPieceAtCoords(gamefile, gamefile.ourPieces.kingsB[0]);
+        const kingCoords = gamefile.pieces.kingsB[0];
+        const kingPiece = gamefileutility.getPieceAtCoords(gamefile, gamefile.pieces.kingsB[0]);
         const { individual } = legalmoves.calculate(gamefile, kingPiece);
         return individual.map(x => ({type: 'kingsB', startCoords: kingCoords, endCoords: x}));
     }

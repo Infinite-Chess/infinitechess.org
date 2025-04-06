@@ -4,16 +4,16 @@
 
 
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
-
+import type { Player } from '../../chess/util/typeutil.js';
 
 import selection from '../chess/selection.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
+import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
-
 
 // Type Definitions -------------------------------------------------------------
 
@@ -31,7 +31,7 @@ interface EngineConfig {
 
 /** Whether we are currently in an engine game. */
 let inEngineGame: boolean = false;
-let ourColor: 'white' | 'black' | undefined;
+let ourColor: Player | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
@@ -44,7 +44,7 @@ function areInEngineGame(): boolean {
 	return inEngineGame;
 }
 
-function getOurColor(): 'white' | 'black' {
+function getOurColor(): Player {
 	if (!inEngineGame) throw Error("Cannot get our color if we are not in an engine game!");
 	return ourColor!;
 }
@@ -64,7 +64,7 @@ function getCurrentEngine() {
  * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
-	youAreColor: 'white' | 'black',
+	youAreColor: Player,
 	currentEngine: string,
 	engineConfig: EngineConfig
 }): Promise<void> {
@@ -119,10 +119,10 @@ function closeEngineGame() {
 
 /**
  * Tests if we are this color in the engine game.
- * @param color - "white" / "black"
+ * @param color - p.WHITE / p.BLACK
  * @returns *true* if we are that color.
  */
-function areWeColor(color: string): boolean {
+function areWeColor(color: Player): boolean {
 	return color === ourColor;
 }
 
@@ -137,7 +137,9 @@ async function submitMove() {
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 	const abridgedGame = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
-	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, lf: abridgedGame, engineConfig: engineConfig })));
+	/** This has all nested functions removed. */
+	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);
+	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig });
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 

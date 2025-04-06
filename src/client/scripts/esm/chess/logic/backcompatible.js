@@ -3,6 +3,7 @@
 import formatconverter from './formatconverter.js';
 import moveutil from '../util/moveutil.js';
 import jsutil from '../../util/jsutil.js';
+import { players } from '../util/typeutil.js';
 // Import End
 
 'use script';
@@ -45,13 +46,13 @@ function getLongformatInNewNotation(longformat) {
 		converted.startingPosition = longformat.startingPosition;
 		converted.specialRights = formatconverter.generateSpecialRights(longformat.startingPosition, pawnDoublePush, castleWith);
 	}
-	let turnOrder = ['white','black'];
+	let turnOrder = [players.WHITE, players.BLACK];
 	if (longformat.moves?.length > 0) {
-		const { moves: moveslong, turn } = moveutil.convertMovesTo1DFormat(longformat.moves, results); // Long format still, needs to be compressed
+		const { moves: moveslong, turn } = moveutil.convertMovesTo1DFormat(longformat.moves); // Long format still, needs to be compressed
 		let turnOrderArray = ['w','b'];
-		if (turn === 'black') {
+		if (turn === players.BLACK) {
 			turnOrderArray = ['b','w'];
-			turnOrder = ['black','white'];
+			turnOrder = [players.BLACK, players.WHITE];
 		}
 		const options = {
 			turnOrderArray,
@@ -65,7 +66,7 @@ function getLongformatInNewNotation(longformat) {
 		converted.moves = shortmovessplit;
 	}
 	if (longformat.promotionRanks) {
-		const newRanks = { white: longformat.promotionRanks[1], black: longformat.promotionRanks[0] };
+		const newRanks = { [players.WHITE]: longformat.promotionRanks[1], [players.BLACK]: longformat.promotionRanks[0] };
 		if (!longformat.gameRules) longformat.gameRules = { promotionRanks: newRanks };
 		else longformat.gameRules.promotionRanks = newRanks;
 	}
@@ -86,14 +87,14 @@ function getLongformatInNewNotation(longformat) {
 		// }
 		const newGameRules = {
 			turnOrder,
-			winConditions: { white: ['checkmate'], black: ['checkmate'] }
+			winConditions: { [players.WHITE]: ['checkmate'], [players.BLACK]: ['checkmate'] }
 		};
 		if (longformat.gameRules.winConditions) {
-			const newWinConditions = { white: [], black: [] };
+			const newWinConditions = { [players.WHITE]: [], [players.BLACK]: [] };
 			for (const condition in longformat.gameRules.winConditions) {
 				const value = longformat.gameRules.winConditions[condition];
-				if (value === 'both' || value === 'white') newWinConditions.white.push(condition);
-				if (value === 'both' || value === 'black') newWinConditions.black.push(condition);
+				if (value === 'both' || value === 'white') newWinConditions[players.WHITE].push(condition);
+				if (value === 'both' || value === 'black') newWinConditions[players.BLACK].push(condition);
 			}
 			newGameRules.winConditions = newWinConditions;
 		}

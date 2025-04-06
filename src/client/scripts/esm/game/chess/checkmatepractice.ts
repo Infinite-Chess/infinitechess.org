@@ -7,10 +7,10 @@
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Position } from '../../chess/variants/variant.js';
 import type { VariantOptions } from './gameslot.js';
+import type { Player } from '../../chess/util/typeutil.js';
 
-
+import typeutil from '../../chess/util/typeutil.js';
 import localstorage from '../../util/localstorage.js';
-import colorutil from '../../chess/util/colorutil.js';
 import coordutil from '../../chess/util/coordutil.js';
 import gameslot from './gameslot.js';
 import guipractice from '../gui/guipractice.js';
@@ -24,13 +24,13 @@ import animation from '../rendering/animation.js';
 import validatorama from "../../util/validatorama.js";
 import validcheckmates from '../../chess/util/validcheckmates.js';
 import docutil from '../../util/docutil.js';
+import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
-
 
 // Variables ----------------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 
 	const options = {
 		Event: 'Infinite chess checkmate practice',
-		youAreColor: 'white' as 'white',
+		youAreColor: players.WHITE,
 		currentEngine: 'engineCheckmatePractice' as 'engineCheckmatePractice',
 		engineConfig: { checkmateSelectedID: checkmateSelectedID, engineTimeLimitPerMoveMillis: 500 },
 		variantOptions,
@@ -149,7 +149,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 	// place the black king not so far away for specific variants
 	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
 
-	const startingPosition: { [key: string]: string } = {}; // the position to be generated
+	const startingPosition: Position = {}; // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
 	let whitebishopparity: number = Math.floor(Math.random() * 2); // square color of first white bishop batch
 	
@@ -159,12 +159,12 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 
 	for (const entry of piecelist) {
 		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-		let piece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-		piece = formatconverter.ShortToLong_Piece(piece);
+		const strpiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
+		const piece: number = formatconverter.ShortToInt_Piece(strpiece);
 
 		// place amount many pieces of type piece
 		while (amount !== 0) {
-			if (colorutil.getPieceColorFromType(piece) === "white") {
+			if (typeutil.getColorFromType(piece) === players.WHITE) {
 				if (blackpieceplaced) throw Error("Must place all white pieces before placing black pieces.");
 
 				// randomly generate white piece coordinates in square around origin
@@ -173,7 +173,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				const key: string = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
-				if (!(key in startingPosition) && !(piece === "bishopsW" && (x + y) % 2 !== whitebishopparity)) {
+				if (!(key in startingPosition) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
 					startingPosition[key] = piece;
 					amount -= 1;
 				}
@@ -210,7 +210,7 @@ function squareNotInSight(square: CoordsKey, startingPosition: Position): boolea
 	for (const key in startingPosition) {
 		const [x, y]: number[] = coordutil.getCoordsFromKey(key as CoordsKey);
 		if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
-		if (startingPosition[key] === "knightridersW") {
+		if (startingPosition[key] === r.KNIGHTRIDER + e.W) {
 			if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
 				return false;
 			}
@@ -309,9 +309,9 @@ function onEngineGameConclude(): void {
 	if (gameConclusion === false) throw Error('Game conclusion is false, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
-	const victor: string | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
 	if (victor === undefined) throw Error('Victor should never be undefined when concluding an engine game.');
-	if (!enginegame.areWeColor(victor)) return; // Lost
+	if (!(enginegame.getOurColor() === victor)) return; // Lost
 
 	// WON!!! 🎉
 

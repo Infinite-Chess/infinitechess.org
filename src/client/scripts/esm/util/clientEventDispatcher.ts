@@ -18,7 +18,7 @@ const target: Window = isBrowser ? window : null!;
  * @param [data] Optional data to include in the event's detail property.
  */
 function dispatch(eventName: string, data?: any): void {
-    if (!isBrowser) return;
+	if (!isBrowser) return;
 	if (data !== undefined) target.dispatchEvent(new CustomEvent(eventName, { detail: data }));
 	else target.dispatchEvent(new Event(eventName));
 }
@@ -29,7 +29,7 @@ function dispatch(eventName: string, data?: any): void {
  * @param callback The callback function to invoke when the event occurs.
  */
 function listen(eventName: string, callback: (event: CustomEvent) => void): void {
-    if (!isBrowser) return;
+	if (!isBrowser) return;
 	target.addEventListener(eventName, callback as EventListener);
 }
 
@@ -39,12 +39,12 @@ function listen(eventName: string, callback: (event: CustomEvent) => void): void
  * @param callback The callback function to remove.
  */
 function removeListener(eventName: string, callback: (event: CustomEvent) => void): void {
-    if (!isBrowser) return;
+	if (!isBrowser) return;
 	target.removeEventListener(eventName, callback as EventListener);
 }
 
 export default {
-    dispatch,
-    listen,
-    removeListener
+	dispatch,
+	listen,
+	removeListener
 };

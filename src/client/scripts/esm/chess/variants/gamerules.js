@@ -1,14 +1,23 @@
-import jsutil from "../../util/jsutil.js";
 
 /**
  * This script contains the gameRules constructor,
  * and contains utility methods for working with them.
  */
 
+import jsutil from "../../util/jsutil.js";
+import { players } from "../util/typeutil.js";
+
+/**
+ * @typedef {import('../util/typeutil.js').Player} Player
+ * @typedef {import('../util/typeutil.js').RawType} RawType
+ * @typedef {import("../util/typeutil.js").PlayerGroup} PlayerGroup
+ */
+
+
 /**
  * Checks if a specified color has a given win condition.
  * @param {GameRules} gameRules
- * @param {string} color - The color to check (e.g., 'white', 'black').
+ * @param {Player} color - The player color to check (e.g., 1, 2).
  * @param {string} winCondition - The win condition for.
  * @returns {boolean} True if the specified color has the given win condition, otherwise false.
  */
@@ -19,7 +28,7 @@ function doesColorHaveWinCondition(gameRules, color, winCondition) {
 /**
  * Gets the count of win conditions for a specified color in the gamefile.
  * @param {GameRules} gameRules
- * @param {string} color - The color to check (e.g., 'white', 'black').
+ * @param {Player} color - The player color to check (e.g., 1, 2).
  * @returns {number} The number of win conditions for the specified color. Returns 0 if the color is not defined.
  */
 function getWinConditionCountOfColor(gameRules, color) {
@@ -33,13 +42,13 @@ function getWinConditionCountOfColor(gameRules, color) {
  */
 function swapCheckmateForRoyalCapture(gameRules) {
 	// Check if the game is using the "royalcapture" win condition
-	if (doesColorHaveWinCondition(gameRules, 'white', 'checkmate')) {
-		jsutil.removeObjectFromArray(gameRules.winConditions.white, 'checkmate');
-		gameRules.winConditions.white.push('royalcapture');
+	if (doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate')) {
+		jsutil.removeObjectFromArray(gameRules.winConditions[players.WHITE], 'checkmate');
+		gameRules.winConditions[players.WHITE].push('royalcapture');
 	}
-	if (doesColorHaveWinCondition(gameRules, 'black', 'checkmate')) {
-		jsutil.removeObjectFromArray(gameRules.winConditions.black, 'checkmate');
-		gameRules.winConditions.black.push('royalcapture');
+	if (doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')) {
+		jsutil.removeObjectFromArray(gameRules.winConditions[players.BLACK], 'checkmate');
+		gameRules.winConditions[players.BLACK].push('royalcapture');
 	}
 	console.log("Swapped checkmate wincondition for royalcapture.");
 }
@@ -59,7 +68,7 @@ function GameRules() {
 		/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
 		black: undefined,
 	};
-	/** A list of colors that make up one full turn cycle. Normally: `['white','black']`. REQUIRED. @type {('white' | 'black')[]} */
+	/** A list of players that make up one full turn cycle. REQUIRED. @type {Player[]} */
 	this.turnOrder = undefined;
 
 	// Gamerules that also have dedicated slots in ICN notation...
@@ -75,13 +84,13 @@ function GameRules() {
      * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
      * If one color can't promote, their list should be left undefined.
      * If no color can promote, this should be left undefined.
-	 * @type {Object<string, string[]> | undefined}
+	 * @type {PlayerGroup<RawType[]> | undefined}
      */
 	this.promotionsAllowed = {
-		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */
-		white: undefined,
-		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {string[]} */
-		black: undefined,
+		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {RawType[]} */
+		[players.WHITE]: undefined,
+		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {RawType[]} */
+		[players.BLACK]: undefined,
 	};
 	/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. @type {number | undefined} */
 	this.moveRule = undefined;

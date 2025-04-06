@@ -14,7 +14,8 @@ import gameslot from '../chess/gameslot.js';
 import { createModel, BufferModel } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
-import preferences from '../../components/header/preferences.js';
+import { players, rawTypes } from '../../chess/util/typeutil.js';
+import boardutil from '../../chess/util/boardutil.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -135,20 +136,30 @@ function genModel() {
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
 
 	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	typeutil.forEachPieceType((pieceType: string) => {
-		if (pieceType.startsWith('voids')) return; // Skip voids
-		if (!(pieceType in gamefile.ourPieces)) return; // Skip if we don't have any of this piece type
-		const thesePieces = gamefile.ourPieces[pieceType];
 
-		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
-		const { r, g, b } = preferences.getTintColorOfType(pieceType);
+	const pieces = gamefile.pieces;
+	
+	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
+	const sortedColors = gamefile.startSnapshot.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedNeutrals = gamefile.startSnapshot.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
 
-		thesePieces.forEach((coords: Coords | undefined) => {
-			if (!coords) return; // Skip undefined placeholders
+	// Process the neutrals first so they are rendered on bottom.
+	sortedNeutrals.forEach(processType);
+	sortedColors.forEach(processType);
+
+	function processType(type: number) {
+		const range = pieces.typeRanges.get(type)!;
+		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
+
+		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+
+		for (let i = range.start; i < range.end; i++) {
+			if (boardutil.isIdxUndefinedPiece(pieces, i)) continue;
+			const coords = boardutil.getCoordsFromIdx(pieces, i);
 			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
-			processPiece(coords, texleft, texbottom, texright, textop, r, g, b);
-		});
-	}, { ignoreVoids: true });
+			processPiece(coords, texleft, texbottom, texright, textop, 1, 1, 1);
+		}
+	}
 
 	function processPiece(coords: Coords, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		const startX: number = (coords[0] - boardPos[0]) * boardScale - halfWidth;
@@ -186,14 +197,12 @@ function genModel() {
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		let { r, g, b } = preferences.getTintColorOfType(a.type);
-		processPiece(currentCoords, texleft, texbottom, texright, textop, r, g, b);
+		processPiece(currentCoords, texleft, texbottom, texright, textop, 1, 1, 1);
 
 		// Animate the captured piece too, if there is one
 		if (!a.captured) return;
 		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.captured.type, rotation));
-		({ r, g, b } = preferences.getTintColorOfType(a.captured.type));
-		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
+		processPiece(a.captured.coords, texleft, texbottom, texright, textop, 1, 1, 1);
 	});
 
 	// Finally, teleport to clicked pieces
