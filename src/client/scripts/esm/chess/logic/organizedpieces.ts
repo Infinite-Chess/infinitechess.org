@@ -26,6 +26,17 @@ import type { Player, PlayerGroup, RawType, TypeGroup } from "../util/typeutil.j
 // Type Definitions ----------------------------------------------------------------
 
 
+/**
+ * An object that stores the pieces on the board in several different organized ways.
+ * This way we can quickly access the pieces when we are given different information.
+ * 
+ * - By index
+ * - By coordinate
+ * - By line
+ * 
+ * Also stores variables for all possible slide lines in the game,
+ * and whether there are any hippogonal riders present.
+ */
 interface OrganizedPieces {
 	/** The X position of all pieces. Undefined pieces are set to 0. */
 	XPositions: Float64Array
@@ -37,6 +48,7 @@ interface OrganizedPieces {
 	 * Uint8Array range: 0-255. There are 22 total types currently, potentially 4 unique players/players in a game ==> 88 posible types.
 	*/
 	types: Uint8Array
+	/** Contains start and end indices for where each type of piece begins and ends in the types array. */
 	typeRanges: TypeRanges
 	/**
 	 * Pieces organized by coordinate
@@ -61,8 +73,10 @@ interface OrganizedPieces {
 	newlyRegenerated?: true,
 }
 
+/** Contains start and end indices for where each type of piece begins and ends in the types array. */
 type TypeRanges = Map<number, TypeRange>
 
+/** Contains the start and end indices for where a single piece type begins and ends in the types array. */
 interface TypeRange {
 	/** Inclusive */
 	start: number,
