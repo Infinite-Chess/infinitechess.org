@@ -249,6 +249,12 @@ async function startEngineGame(options: {
 }
 
 async function startEditor() {
+	
+	typeOfGameWeAreIn = 'editor';
+	gameLoading = true;
+	
+	await loadingscreen.open();
+	
 	const metadata : MetaData = {
 		Variant: "CoaIP",
 		TimeControl: '-',
@@ -264,8 +270,10 @@ async function startEditor() {
 		viewWhitePerspective: true,
 		allowEditCoords: true,
 		additional: { editor: true },
-	});
-	typeOfGameWeAreIn = 'editor';
+	})
+		.then((result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));;
+	
 	boardeditor.initBoardEditor();
 
 	guiedit.open();
