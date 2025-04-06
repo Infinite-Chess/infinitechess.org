@@ -40,16 +40,13 @@ interface OrganizedPieces {
 	typeRanges: TypeRanges
 	/**
 	 * Pieces organized by coordinate
-	 * 
 	 * 'x,y' => idx
 	 */
 	coords: Map<CoordsKey, number>
 	/**
-	 * I actually do think we should stick to the maps being the keys of the slide/line
-	 * instead of integers of the dx/dy. There's half as many lookups to do (but maybe a little
-	 * slower due to them being strings), and string keys can contain arbitrarily large numbers.
-	 * 
+	 * Pieces organized by line (rank/file/diagonal)
 	 * Map{ 'dx,dy' => Map { 'yint|xafter0' => [idx, idx, idx...] }}
+	 * dx is never negative. If dx is 0, dy cannot be negative either.
 	 */
 	lines: Map<Vec2Key, Map<LineKey, number[]>>
 	/** All slide directions possible in the game. [1,0] guaranteed for castling to work. */
