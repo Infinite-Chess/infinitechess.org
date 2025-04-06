@@ -104,7 +104,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	};
 
 	/** All pieces on the board @type {OrganizedPieces} */
-	this.ourPieces = undefined;
+	this.pieces = undefined;
 	
 	/** The object that contains the buffer model to render the pieces */
 	this.mesh = {
@@ -114,7 +114,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		offset: undefined,
 		/** Whether the position data of each piece mesh is inverted. This will be true if we're viewing black's perspective. @type {boolean} */
 		inverted: undefined,
-		/** An object containing the mesh data for each type of piece in the game. One for every type in `ourPieces` @type {{ [type: string]: MeshData }} */
+		/** An object containing the mesh data for each type of piece in the game. One for every type in `pieces` @type {{ [type: string]: MeshData }} */
 		types: {},
 	};
 
@@ -205,13 +205,13 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		this.editor
 	);
 
-	this.ourPieces = pieces;
+	this.pieces = pieces;
 	this.startSnapshot.pieceCount = pieceCount;
 	this.startSnapshot.existingTypes = existingTypes;
 	this.startSnapshot.existingRawTypes = existingRawTypes;
 
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
-	this.colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(this.pieceMovesets, this.ourPieces.slides);
+	this.colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(this.pieceMovesets, this.pieces.slides);
 	this.vicinity = legalmoves.genVicinity(this.pieceMovesets);
 	// We can set this now, since existingRawTypes is now set.
 	this.specialVicinity = legalmoves.genSpecialVicinity(metadata, existingRawTypes);

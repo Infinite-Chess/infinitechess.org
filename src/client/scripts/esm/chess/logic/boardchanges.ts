@@ -199,14 +199,14 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
  * organizes the piece in the organized lists
  */
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
-	const pieces = gamefile.ourPieces;
+	const pieces = gamefile.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
 			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, gamefile.gameRules.promotionsAllowed, gamefile.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
-			organizedpieces.regenerateLists(gamefile.ourPieces, gamefile.gameRules.promotionsAllowed, gamefile.editor);
+			organizedpieces.regenerateLists(gamefile.pieces, gamefile.gameRules.promotionsAllowed, gamefile.editor);
 		}
 
 		idx = typedata.undefineds.shift()!;
@@ -229,7 +229,7 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
  * from the organized lists.
  */
 function deletePiece(gamefile: gamefile, change: Change) {
-	const pieces = gamefile.ourPieces;
+	const pieces = gamefile.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
 	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
@@ -258,7 +258,7 @@ function deletePiece(gamefile: gamefile, change: Change) {
 function movePiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
-	const pieces = gamefile.ourPieces;
+	const pieces = gamefile.pieces;
 	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
@@ -273,7 +273,7 @@ function movePiece(gamefile: gamefile, change: Change) {
 function returnPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
-	const pieces = gamefile.ourPieces;
+	const pieces = gamefile.pieces;
 	const range = pieces.typeRanges.get(change.piece.type)!;
 	const idx = change.piece.index + range.start;
 

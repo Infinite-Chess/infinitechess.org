@@ -30,10 +30,10 @@ function detectCheckmateOrStalemate(gamefile: gamefile): string | false {
 
 	for (const rType of Object.values(rawTypes)) {
 		const thisType = typeutil.buildType(rType, gamefile.whosTurn);
-		const thesePieces = gamefile.ourPieces.typeRanges.get(thisType);
+		const thesePieces = gamefile.pieces.typeRanges.get(thisType);
 		if (!thesePieces) continue; // The game doesn't have this type of piece
 		for (let idx = thesePieces.start; idx < thesePieces.end; idx++) {
-			const thisPiece = boardutil.getPieceFromIdx(gamefile.ourPieces, idx);
+			const thisPiece = boardutil.getPieceFromIdx(gamefile.pieces, idx);
 			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
 			const moves = legalmoves.calculate(gamefile, thisPiece);
 			if (legalmoves.hasAtleast1Move(moves)) return false; // Not checkmate

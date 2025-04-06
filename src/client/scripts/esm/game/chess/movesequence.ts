@@ -60,7 +60,7 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	 * were affected, because other pieces may still need graphical changes
 	 * from the move's changes! For example, pawn deleted that promoted.
 	 */
-	if (gamefile.ourPieces.newlyRegenerated) piecemodels.regenAll(gamefile);
+	if (gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile);
 	else boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	

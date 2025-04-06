@@ -103,7 +103,7 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
-	const thisRider = boardutil.getPieceFromCoords(gamefile.ourPieces, piece.coords)!;
+	const thisRider = boardutil.getPieceFromCoords(gamefile.pieces, piece.coords)!;
 	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
 
 	// Calculate the mesh...

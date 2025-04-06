@@ -113,7 +113,7 @@ function doGameOverChecks(gamefile: gamefile) {
  * Saves the bounding box of the game's starting position to the startSnapshot property
  */
 function initStartingAreaBox(gamefile: gamefile) {
-	const coordsList = boardutil.getCoordsOfAllPieces(gamefile.ourPieces);
+	const coordsList = boardutil.getCoordsOfAllPieces(gamefile.pieces);
 	const box = math.getBoxFromCoordsList(coordsList);
 	gamefile.startSnapshot.box = box;
 }

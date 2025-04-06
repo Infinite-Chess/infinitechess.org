@@ -142,7 +142,7 @@ interface Move extends MoveDraft {
  * and queueing its gamefile StateChanges.
  */
 function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
-	const piece = boardutil.getPieceFromCoords(gamefile.ourPieces, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
 	// Construct the full Move object
@@ -198,7 +198,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
  */
 function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, move.endCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, move.endCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
 	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);
@@ -358,7 +358,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
-	const piece = boardutil.getPieceFromCoords(gamefile.ourPieces, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
 	if (!piece) {
 		console.error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
 		return; // No piece on start coordinates, can't calculate Move, because it's illegal

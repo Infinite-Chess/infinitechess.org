@@ -412,7 +412,7 @@ function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[
 
 	// For each of these squares, calculate it's buffer data
 	for (const coord of legalIndividuals) {
-		const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.ourPieces, coord);
+		const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, coord);
 		const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 		if (isPieceOnCoords) instanceData_Capture.push(...offsetCoord);
 		else instanceData_NonCapture.push(...offsetCoord);
@@ -552,7 +552,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 			}
 
 			// Should we add instance data to the capturing or non-capturing model?
-			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.ourPieces, thisCoord);
+			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, thisCoord);
 			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);
 			else                 instanceData_NonCapture.push(...firstInstancePositionOffset);
 		}

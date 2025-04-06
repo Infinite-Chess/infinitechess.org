@@ -377,7 +377,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
-	gamefile.ourPieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
+	gamefile.pieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
 
 		// Find the 2 points on opposite sides of the bounding box
@@ -391,7 +391,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 		containingPointsLineC.sort((a, b) => a - b); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
 
 		// For all our lines in the game with this slope...
-		const organizedLinesOfDir = gamefile.ourPieces.lines.get(slideKey)!;
+		const organizedLinesOfDir = gamefile.pieces.lines.get(slideKey)!;
 		for (const [lineKey, organizedLine] of organizedLinesOfDir) {
 			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
 			const C = organizedpieces.getCFromKey(lineKey as LineKey);
@@ -428,7 +428,7 @@ function calcArrowsLineDraft(gamefile: gamefile, boundingBoxInt: BoundingBox, bo
 
 	const axis = slideDir[0] === 0 ? 1 : 0;
 
-	const firstPiece = boardutil.getPieceFromIdx(gamefile.ourPieces, organizedline[0]!)!;
+	const firstPiece = boardutil.getPieceFromIdx(gamefile.pieces, organizedline[0]!)!;
 
 	/**
 	 * The 2 intersections points of the whole organized line, consistent for every piece on it.
@@ -440,7 +440,7 @@ function calcArrowsLineDraft(gamefile: gamefile, boundingBoxInt: BoundingBox, bo
 
 	organizedline.forEach(idx => {
 		
-		const piece = boardutil.getPieceFromIdx(gamefile.ourPieces, idx)!;
+		const piece = boardutil.getPieceFromIdx(gamefile.pieces, idx)!;
 
 		// Is the piece off-screen?
 		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
@@ -573,7 +573,7 @@ function getSlideExceptions(): Vec2Key[] {
 	const gamefile = gameslot.getGamefile()!;
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
-	if (mode === 2) slideExceptions = gamefile.ourPieces.slides.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
+	if (mode === 2) slideExceptions = gamefile.pieces.slides.filter((slideDir: Vec2) => Math.max(Math.abs(slideDir[0]), Math.abs(slideDir[1])) === 1).map(math.getKeyFromVec2);
 	return slideExceptions;
 }
 
@@ -806,7 +806,7 @@ function executeArrowShifts() {
 		if (shift.start !== undefined) ignoreCoords.push(shift.start);
 		if (shift.end !== undefined && !math.boxContainsSquare(boundingBoxInt!, shift.end)) {
 			const slideMoveset = legalmoves.getPieceMoveset(gamefile, shift.type).sliding ?? {};
-			for (const linekey of gamefile.ourPieces.lines.keys()) {
+			for (const linekey of gamefile.pieces.lines.keys()) {
 				const line = coordutil.getCoordsFromKey(linekey);
 				draftArrowPieces.push({ piece: {type: shift.type, coords: shift.end, index: -1}, line, canSlideOntoScreen: linekey in slideMoveset});
 			}
@@ -832,7 +832,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords, ignor
 	// the currently animated arrow indicator when hovering over its destination
 	// hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, coords));
 
-	for (const [slideKey, linegroup] of gamefile.ourPieces.lines) { // For each slide direction in the game...
+	for (const [slideKey, linegroup] of gamefile.pieces.lines) { // For each slide direction in the game...
 		const slide = coordutil.getCoordsFromKey(slideKey);
 
 		const lineKey = organizedpieces.getKeyFromLine(slide, coords);

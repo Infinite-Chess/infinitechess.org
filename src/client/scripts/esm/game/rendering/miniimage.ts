@@ -137,9 +137,9 @@ function genModel() {
 
 	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
-	const ourPieces = gamefile.ourPieces;
+	const pieces = gamefile.pieces;
 	
-	const unsortedTypes = [...ourPieces.typeRanges.keys()];
+	const unsortedTypes = [...pieces.typeRanges.keys()];
 	// Sort the type keys in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
 	const sortedColors = unsortedTypes.filter(t => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a, b) => b - a);
 	const sortedNeutrals = unsortedTypes.filter(t => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a, b) => b - a);
@@ -149,14 +149,14 @@ function genModel() {
 	sortedColors.forEach(processType);
 
 	function processType(type: number) {
-		const range = ourPieces.typeRanges.get(type)!;
+		const range = pieces.typeRanges.get(type)!;
 		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
 
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
 		for (let i = range.start; i < range.end; i++) {
-			if (boardutil.isIdxUndefinedPiece(ourPieces, i)) continue;
-			const coords = boardutil.getCoordsFromIdx(ourPieces, i);
+			if (boardutil.isIdxUndefinedPiece(pieces, i)) continue;
+			const coords = boardutil.getCoordsFromIdx(pieces, i);
 			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
 			processPiece(coords, texleft, texbottom, texright, textop, 1, 1, 1);
 		}

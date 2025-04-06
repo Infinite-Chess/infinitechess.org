@@ -166,15 +166,15 @@ function detectInsufficientMaterial(gamefile) {
 	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion)) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle or gargoyle pieces
-	if (boardutil.getPieceCountOfGame(gamefile.ourPieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(gamefile.ourPieces, r.VOID + e.N) >= 11) return false;
+	if (boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(gamefile.pieces, r.VOID + e.N) >= 11) return false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};
 	// bishops are treated specially and separated by parity
 	const bishopsW_count = [0, 0];
 	const bishopsB_count = [0, 0];
-	for (const idx of gamefile.ourPieces.coords.values()) {
-		const piece = boardutil.getPieceFromIdx(gamefile.ourPieces, idx);
+	for (const idx of gamefile.pieces.coords.values()) {
+		const piece = boardutil.getPieceFromIdx(gamefile.pieces, idx);
 		const [raw, color] = typeutil.splitType(piece.type);
 		if (raw === r.OBSTACLE) continue;
 		

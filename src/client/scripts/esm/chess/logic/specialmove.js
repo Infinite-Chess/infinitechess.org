@@ -46,7 +46,7 @@ function kings(gamefile, piece, move) {
 	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
 
 	// Move the rook to new square
-	const pieceToCastleWith = boardutil.getPieceFromCoords(gamefile.ourPieces, specialTag.coord);
+	const pieceToCastleWith = boardutil.getPieceFromCoords(gamefile.pieces, specialTag.coord);
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
 
@@ -67,7 +67,7 @@ function pawns(gamefile, piece, move) {
 
 	const captureCoords = enpassantTag ? gamefile.enpassant.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, captureCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
 
 	// Delete the piece captured
 
@@ -91,7 +91,7 @@ function pawns(gamefile, piece, move) {
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
 function roses(gamefile, piece, move) {
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.ourPieces, move.endCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, move.endCoords);
 
 	// Delete the piece captured
 	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece, move.path);

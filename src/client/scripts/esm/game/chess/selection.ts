@@ -183,7 +183,7 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
-	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, hoverSquare);
+	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.pieces, hoverSquare);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
 }
 
@@ -202,7 +202,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 
 	// We have clicked, test if we clicked a piece...
 
-	const pieceClicked = boardutil.getPieceFromCoords(gamefile.ourPieces, hoverSquare);
+	const pieceClicked = boardutil.getPieceFromCoords(gamefile.pieces, hoverSquare);
 
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
@@ -363,7 +363,7 @@ function reselectPiece() {
 	const gamefile = gameslot.getGamefile()!;
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
-	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.ourPieces, pieceSelected.coords);
+	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.pieces, pieceSelected.coords);
 	if (pieceTypeOnCoords !== pieceSelected.type) { // It either moved, or was captured
 		unselectPiece(); // Can't be reselected, unselect it instead.
 		return;
@@ -372,7 +372,7 @@ function reselectPiece() {
 	if (gamefileutility.isGameOver(gamefile)) return; // Don't reselect, game is over
 
 	// Reselect! Recalc its legal moves, and recolor.
-	const pieceToReselect = boardutil.getPieceFromCoords(gamefile.ourPieces, pieceSelected.coords)!;
+	const pieceToReselect = boardutil.getPieceFromCoords(gamefile.pieces, pieceSelected.coords)!;
 	initSelectedPieceInfo(gamefile, pieceToReselect);
 }
 

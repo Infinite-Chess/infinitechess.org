@@ -165,11 +165,11 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 		if (thisPieceMoveset.sliding) {
 			const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 			for (const [linekey, limits] of Object.entries(thisPieceMoveset.sliding)) {
-				const lines = gamefile.ourPieces.lines.get(linekey);
+				const lines = gamefile.pieces.lines.get(linekey);
 				if (lines === undefined) continue;
 				const line = coordutil.getCoordsFromKey(linekey);
 				const key = organizedpieces.getKeyFromLine(line, coords);
-				legalSliding[linekey] = slide_CalcLegalLimit(blockingFunc, gamefile.ourPieces, lines.get(key), line, limits, coords, color);
+				legalSliding[linekey] = slide_CalcLegalLimit(blockingFunc, gamefile.pieces, lines.get(key), line, limits, coords, color);
 			};
 		};
 
@@ -208,7 +208,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(gamefile, piece, slide, slideKe
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = typeutil.getColorFromType(piece.type);
-	return slide_CalcLegalLimit(blockingFunc, gamefile.ourPieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
+	return slide_CalcLegalLimit(blockingFunc, gamefile.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
 }
 
 /**
@@ -232,7 +232,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
 		const thisMove = individualMoves[i];
 
 		// Is there a piece on this square?
-		const pieceAtSquare = boardutil.getTypeFromCoords(gamefile.ourPieces, thisMove);
+		const pieceAtSquare = boardutil.getTypeFromCoords(gamefile.pieces, thisMove);
 		if (pieceAtSquare === undefined) continue; // Next move if there is no square here
 
 		// Do the players match?
@@ -374,7 +374,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	movepiece.goToMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
 
 	// Make sure a piece exists on the start coords
-	const piecemoved = boardutil.getPieceFromCoords(gamefile.ourPieces, moveDraftCopy.startCoords); // { type, index, coords }
+	const piecemoved = boardutil.getPieceFromCoords(gamefile.pieces, moveDraftCopy.startCoords); // { type, index, coords }
 	if (!piecemoved) {
 		console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason('No piece exists at start coords.');

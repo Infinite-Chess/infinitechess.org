@@ -69,7 +69,7 @@ function detectAllroyalscaptured(gamefile) {
 
 	// Are there any royal pieces remaining?
 	// Remember that whosTurn has already been flipped since the last move.
-	const royalCount = boardutil.getRoyalCoordsOfColor(gamefile.ourPieces, gamefile.whosTurn);
+	const royalCount = boardutil.getRoyalCoordsOfColor(gamefile.pieces, gamefile.whosTurn);
 
 	if (royalCount === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -83,7 +83,7 @@ function detectAllpiecescaptured(gamefile) {
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, gamefile.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
-	const count = boardutil.getPieceCountOfColor(gamefile.ourPieces, gamefile.whosTurn);
+	const count = boardutil.getPieceCountOfColor(gamefile.pieces, gamefile.whosTurn);
 
 	if (count === 0) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
@@ -105,7 +105,7 @@ function detectKoth(gamefile) {
 	for (let i = 0; i < kothCenterSquares.length; i++) {
 		const thisCenterSquare = kothCenterSquares[i];
 
-		const typeAtSquare = boardutil.getTypeFromCoords(gamefile.ourPieces, thisCenterSquare);
+		const typeAtSquare = boardutil.getTypeFromCoords(gamefile.pieces, thisCenterSquare);
 		if (!typeAtSquare) continue;
 		if (typeutil.getRawType(typeAtSquare) === rawTypes.KING) {
 			kingInCenter = true;
@@ -162,7 +162,7 @@ function wasLastMoveARoyalCapture(gamefile) {
  */
 function isCheckmateCompatibleWithGame(gamefile) {
 	if (gamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
-	if (gamefile.ourPieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
+	if (gamefile.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
 	return true; // Checkmate compatible!

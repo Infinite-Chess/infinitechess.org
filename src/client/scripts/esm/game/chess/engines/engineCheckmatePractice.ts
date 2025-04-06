@@ -1245,7 +1245,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 						gameRules: input_gamefile.gameRules,
 						// TODO: pieceMovesets is the only required gamefile property that is lost when sending the gamefile to the engine.
 						// This will cause the possible slides to be calculated incorrectly, and thus the `lines` property not entirely filled out.
-						ourPieces: organizedpieces.processInitialPosition(piecesOrganizedByKey, emptyPieceMovesets, input_gamefile.gameRules.turnOrder, input_gamefile.gameRules.promotionsAllowed, input_gamefile.editor).pieces,
+						pieces: organizedpieces.processInitialPosition(piecesOrganizedByKey, emptyPieceMovesets, input_gamefile.gameRules.turnOrder, input_gamefile.gameRules.promotionsAllowed, input_gamefile.editor).pieces,
 					} as unknown as gamefile;
 
 					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
@@ -1316,7 +1316,7 @@ function move_to_gamefile_move(target_square: Coords): MoveDraft {
 }
 
 function doesTypeExist(gamefile: gamefile, type: number): boolean {
-	const range = gamefile.ourPieces.typeRanges.get(type);
+	const range = gamefile.pieces.typeRanges.get(type);
 
 	if (range === undefined) return false;
 
@@ -1324,7 +1324,7 @@ function doesTypeExist(gamefile: gamefile, type: number): boolean {
 }
 
 function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
-	const range = gamefile.ourPieces.typeRanges.get(type);
+	const range = gamefile.pieces.typeRanges.get(type);
 
 	if (range === undefined) return;
 	if (range.end - range.start - range.undefineds.length <= 0) return;
@@ -1335,7 +1335,7 @@ function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
 			undefinedidx++;
 			continue;
 		}
-		return [gamefile.ourPieces.XPositions[idx], gamefile.ourPieces.YPositions[idx]];
+		return [gamefile.pieces.XPositions[idx], gamefile.pieces.YPositions[idx]];
 	}
 	return;
 }
@@ -1361,7 +1361,7 @@ async function runEngine() {
 		// create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
 		start_piecelist = [];
 		start_coordlist = [];
-		for (const [type, range] of input_gamefile.ourPieces.typeRanges) {
+		for (const [type, range] of input_gamefile.pieces.typeRanges) {
 			let undefinedidx = 0;
 			for (let idx = range.start; idx < range.end; idx++) {
 				if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
@@ -1369,7 +1369,7 @@ async function runEngine() {
 					continue;
 				}
 				if (Math.floor(type / numTypes) !== players.WHITE) continue;
-				const coords = [input_gamefile.ourPieces.XPositions[idx], input_gamefile.ourPieces.YPositions[idx]];
+				const coords = [input_gamefile.pieces.XPositions[idx], input_gamefile.pieces.YPositions[idx]];
 				start_piecelist.push(pieceNameDictionary[type]!);
 				// shift all white pieces, so that the black royal is at [0,0]
 				start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);

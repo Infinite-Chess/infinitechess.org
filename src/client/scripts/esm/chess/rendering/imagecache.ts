@@ -37,7 +37,7 @@ async function initImagesForGame(gamefile: gamefile): Promise<void> {
 	console.log("Initializing image cache for game...");
 
 	// 1. Determine required piece types (excluding SVG-less ones)
-	const types = [...gamefile.ourPieces.typeRanges.keys()].filter(t => {
+	const types = [...gamefile.pieces.typeRanges.keys()].filter(t => {
 		return !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES);
 	});
 

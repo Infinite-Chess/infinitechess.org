@@ -95,14 +95,14 @@ function regenAll(gamefile: gamefile) {
 	gamefile.mesh.inverted = perspective.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
-	for (const type of gamefile.ourPieces.typeRanges.keys()) { // pawnsW
+	for (const type of gamefile.pieces.typeRanges.keys()) { // pawnsW
 		if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
 		else gamefile.mesh.types[type] = genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}
 
 	frametracker.onVisualChange();
 
-	delete gamefile.ourPieces.newlyRegenerated; // Delete this flag now. It was to let us know the piece models needed to be regen'd.
+	delete gamefile.pieces.newlyRegenerated; // Delete this flag now. It was to let us know the piece models needed to be regen'd.
 }
 
 /**
@@ -133,7 +133,7 @@ function regenType(gamefile: gamefile, type: number) {
 function genTypeModel(gamefile: gamefile, type: number): MeshData {
 	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.ourPieces.typeRanges.get(type)!);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.pieces.typeRanges.get(type)!);
 
 	const image: HTMLImageElement = imagecache.getPieceImage(type);
 
@@ -153,7 +153,7 @@ function genTypeModel(gamefile: gamefile, type: number): MeshData {
  */
 function genVoidModel(gamefile: gamefile, type: number): MeshData {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(preferences.getTintColorOfType(type));
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.ourPieces.typeRanges.get(type)!);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.pieces.typeRanges.get(type)!);
 
 	return {
 		instanceData64,
@@ -171,8 +171,8 @@ function getInstanceDataForTypeRange(gamefile: gamefile, pieceList: TypeRange): 
 
 	let currIndex: number = 0;
 	for (let i = pieceList.start; i < pieceList.end; i++) {
-		const coords = boardutil.getCoordsFromIdx(gamefile.ourPieces, i); // May be [0,0] if this is an undefined placeholder
-		if (boardutil.isIdxUndefinedPiece(gamefile.ourPieces, i)) {
+		const coords = boardutil.getCoordsFromIdx(gamefile.pieces, i); // May be [0,0] if this is an undefined placeholder
+		if (boardutil.isIdxUndefinedPiece(gamefile.pieces, i)) {
 			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
 			instanceData64[currIndex + 1] = Infinity;
