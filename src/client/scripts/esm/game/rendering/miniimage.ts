@@ -139,10 +139,9 @@ function genModel() {
 
 	const pieces = gamefile.pieces;
 	
-	const unsortedTypes = [...pieces.typeRanges.keys()];
-	// Sort the type keys in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
-	const sortedColors = unsortedTypes.filter(t => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a, b) => b - a);
-	const sortedNeutrals = unsortedTypes.filter(t => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a, b) => b - a);
+	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
+	const sortedColors = gamefile.startSnapshot.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedNeutrals = gamefile.startSnapshot.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
 
 	// Process the neutrals first so they are rendered on bottom.
 	sortedNeutrals.forEach(processType);
