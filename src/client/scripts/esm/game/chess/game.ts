@@ -28,6 +28,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import piecemodels from '../rendering/piecemodels.js';
 import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
@@ -54,10 +55,6 @@ import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 // @ts-ignore
-import piecesmodel from '../rendering/piecesmodel.js';
-// @ts-ignore
-import loadbalancer from '../misc/loadbalancer.js';
-// @ts-ignore
 import websocket from '../websocket.js';
 // @ts-ignore
 import camera from '../rendering/camera.js';
@@ -65,6 +62,8 @@ import camera from '../rendering/camera.js';
 import copypastegame from './copypastegame.js';
 // @ts-ignore
 import stats from '../gui/stats.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
 
 
 // Functions -------------------------------------------------------------------------------
@@ -85,7 +84,7 @@ function init() {
 function update() {
 	testOutGameDebugToggles();
 	invites.update();
-	if (gameslot.areWeLoadingGraphics()) return; // If the graphics aren't finished loading, nothing is visible, only the loading animation.
+	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return updateSelectionScreen(); // On title screen
@@ -116,7 +115,6 @@ function testInGameDebugToggles(gamefile: gamefile) {
 	if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
 	if (input.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (input.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
-	if (gamefile.mesh.locked && input.isKeyDown('z')) loadbalancer.setForceCalc(true);
 }
 
 function updateSelectionScreen() {
@@ -129,7 +127,10 @@ function updateBoard(gamefile: gamefile) {
 	if (input.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
 	if (input.isKeyDown('escape')) guipause.toggle();
 	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (input.isKeyDown('r')) piecesmodel.regenModel(gamefile, true);
+	if (input.isKeyDown('r')) {
+		piecemodels.regenAll(gamefile);
+		statustext.showStatus('Regenerated piece models.', false, 0.5);
+	}
 	if (input.isKeyDown('n')) {
 		guinavigation.toggle();
 		guigameinfo.toggle();
@@ -155,8 +156,6 @@ function updateBoard(gamefile: gamefile) {
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 
-	if (guipause.areWePaused()) return;
-
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
@@ -178,7 +177,7 @@ function updateBoard(gamefile: gamefile) {
 } 
 
 function render() {
-	if (gameslot.areWeLoadingGraphics()) return; // If the loading animation is visible, nothing in-game is (and the gamefile isn't defined anyway)
+	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	board.render(); // Renders the infinite checkerboard
 

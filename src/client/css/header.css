@@ -638,6 +638,20 @@ span.arrow-head-left {
     cursor: not-allowed;
 }
 
+.unselectable { /* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
+    user-select: none; 
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.selectable { /* Makes text inside the elements with the .unselectable class re-selectable */
+    user-select: text;
+    -moz-user-select: text;
+    -webkit-user-select: text;
+    -ms-user-select: text;
+}
+
 
 
 /* Animations */
@@ -648,5 +662,187 @@ span.arrow-head-left {
     }
     100% {
       transform: rotate(360deg); /* Complete a full 360 degree rotation */
+    }
+}
+
+
+
+/* Tooltips */
+
+.tooltip-dl, .tooltip-d, .tooltip-dr, .tooltip-u, .tooltip-ul {
+    position: relative;
+}
+
+/* The main tooltip black box */
+.tooltip-dl::before, .tooltip-d::before, .tooltip-dr::before, .tooltip-u::before, .tooltip-ul::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    background-color: black;
+    color: rgb(236, 236, 236);
+    text-align: center;
+    border-radius: 6px;
+    font-size: 12px;
+    width: max-content; /* Width based on content size */
+    max-width: 150px;
+    padding: 5px 5px;
+    visibility: hidden; /* Hidden by default */
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out;
+    /* Hovering over the tooltip won't count as hovering over its parent */
+    pointer-events: none;
+
+    /* Ensure text wraps inside the tooltip */
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+}
+
+/* down-left */
+.tooltip-dl::before {
+    top: calc(100% + 8px);
+    right: 0;
+}
+
+/* down */
+.tooltip-d::before {
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%); /* Shift it left by half of its width */
+}
+
+/* down-right */
+.tooltip-dr::before {
+    top: calc(100% + 8px);
+    left: 0;
+}
+
+/* up */
+.tooltip-u::before {
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%); /* Shift it left by half of its width */
+}
+
+/* up left */
+.tooltip-ul::before {
+    bottom: calc(100% + 8px);
+    right: 0;
+}
+
+/* The arrow above or below the tooltip box */
+.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after, .tooltip-u::after, .tooltip-ul::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    border-width: 5px;
+    border-style: solid;
+    border-color:  transparent transparent black transparent;
+    visibility: hidden; /* Hidden by default */
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out;
+    z-index: 1;
+    /* Hovering over the tooltip won't count as hovering over its parent */
+    pointer-events: none;
+}
+
+.tooltip-dl::after, .tooltip-d::after, .tooltip-dr::after {
+    top: calc(100% + 8.5px); /* Position right above the tooltip */
+    transform: translate(-50%, -100%);
+}
+
+.tooltip-u::after, .tooltip-ul::after {
+    bottom: calc(100% + 8.5px);
+    transform: rotate(180deg) translate(50%, -100%);
+}
+
+/* After 1s of hovering, the tooltip becomes visible */
+.tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before, .tooltip-ul:hover::before,
+.tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after, .tooltip-ul:hover::after {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0.5s; /* Delay the tooltip appearance. KEEP THE SAME AS IN TOOLTIPS.JS */
+    z-index: 1;
+}
+
+/* Overwriting styles after you've already started hovering (no delay) */
+.tooltip-dl.fast-transition:hover::before, .tooltip-d.fast-transition:hover::before, .tooltip-dr.fast-transition:hover::before, .tooltip-u.fast-transition:hover::before, .tooltip-ul.fast-transition:hover::before,
+.tooltip-dl.fast-transition:hover::after, .tooltip-d.fast-transition:hover::after, .tooltip-dr.fast-transition:hover::after, .tooltip-u.fast-transition:hover::after, .tooltip-ul.fast-transition:hover::after {
+    transition-delay: 0s; /* Delay the tooltip appearance */
+}
+
+/* Mobile devices should NOT show the tooltips on hover.. perhaps on active though? */
+@media not (pointer: fine) {
+    .tooltip-dl:hover::before, .tooltip-d:hover::before, .tooltip-dr:hover::before, .tooltip-u:hover::before, .tooltip-ul:hover::before,
+    .tooltip-dl:hover::after, .tooltip-d:hover::after, .tooltip-dr:hover::after, .tooltip-u:hover::after, .tooltip-ul:hover::after {
+        visibility: hidden;
+        opacity: 0;
+        transition-delay: 0; /* Delay the tooltip appearance */
+        z-index: 0;
+    }
+  
+    .tooltip-dl:active::before, .tooltip-d:active::before, .tooltip-dr:active::before, .tooltip-u:active::before, .tooltip-ul:active::before,
+    .tooltip-dl:active::after, .tooltip-d:active::after, .tooltip-dr:active::after, .tooltip-u:active::after, .tooltip-ul:active::after {
+        visibility: visible;
+        opacity: 1;
+        transition-delay: 0.5s; /* Delay the tooltip appearance */
+        z-index: 1;
+    }
+}
+
+
+
+/* Badge shine properties - needed both for play and for member page */
+
+#checkmate-badge-bronze {
+    --shine-color: rgba(229, 203, 180, 0.3);
+}
+
+#checkmate-badge-silver {
+    --shine-color: rgba(192, 192, 192, 0.22);
+}
+
+#checkmate-badge-gold {
+    --shine-color: rgba(255, 215, 0, 0.24);
+}
+  
+.badge .shine-clockwise, .badge .shine-anticlockwise {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translate(-50%, -50%);
+    /* Conic gradient produces the rays */
+    background: repeating-conic-gradient(var(--shine-color) 0deg 15deg, transparent 15deg 40deg);
+    /* Use a radial mask to fade the rays proportional to distance */
+    mask-image: radial-gradient(circle, black 30%, transparent 55%);
+    -webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    animation: rotateShine linear infinite;
+    pointer-events: none;  /* This prevents the shine from being part of the hover area */
+    z-index: -1;
+}
+
+.badge .shine-clockwise {
+    animation-direction: normal;
+    animation-duration: 13s;
+}
+
+.badge .shine-anticlockwise {
+    animation-direction: reverse;
+    animation-duration: 26s;
+}
+
+.badge:hover .shine-clockwise, .badge:hover .shine-anticlockwise {
+    opacity: 1;
+}
+
+@keyframes rotateShine {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
     }
 }

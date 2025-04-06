@@ -89,6 +89,9 @@ type path = Coords[]
 interface MoveDraft {
 	startCoords: Coords,
 	endCoords: Coords,
+
+	// Special move tags...
+
 	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
 	enpassantCreate?: enpassantCreate,
 	/** Present if the move was special-move enpassant capture. This will be `true` */
@@ -208,6 +211,11 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
  * Queues gamefile state changes to delete all 
  * special rights that should have been revoked from the move.
  * This includes the startCoords and endCoords of all move actions.
+ * 
+ * TODO: ITERATE THROUGH all pieces with their special rights, and delete
+ * the ones that are now useless (i.e. rooks have no royal they could ever castle with).
+ * This will upgrade the repetition algorithm to not delay declaring a draw
+ * if a rook moves that had its special right, but could never castle. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 	move.changes.forEach(change => {
@@ -234,10 +242,9 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
  */
 function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
-	const wasACapture = boardchanges.wasACapture(move);
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (wasACapture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = (move.flags.capture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
 	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
@@ -293,16 +300,16 @@ function updateTurn(gamefile: gamefile) {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(gamefile: gamefile, move: Move) {
-	let attackers: [] | undefined;
-	// Only pass in attackers array to be filled by the checking pieces if we're using checkmate win condition.
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
-	if (gamefile.gameRules.winConditions[oppositeColor].includes('checkmate')) attackers = [];
+	// Only track attackers if we're using checkmate win condition.
+	const trackAttackers = gamefile.gameRules.winConditions[oppositeColor].includes('checkmate');
 
-	const futureInCheck = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, attackers);
+	const checkResults = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
 	state.createCheckState(move, gamefile.inCheck, futureInCheck, gamefile); // Passes in the gamefile as an argument
-	state.createAttackersState(move, gamefile.attackers, attackers ?? [], gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.createAttackersState(move, gamefile.attackers, checkResults.attackers ?? [], gamefile); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 /**
@@ -439,18 +446,6 @@ function simulateMoveWrapper<R>(gamefile: gamefile, moveDraft: MoveDraft, callba
 }
 
 /**
- * Simulates a move to get the check
- * @returns false if the move does not result in check, otherwise a list of the coords of all the royals in check.
- */
-function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTestInCheck: string): false | Coords[] {
-	return simulateMoveWrapper(
-		gamefile,
-		moveDraft,
-		() => checkdetection.detectCheck(gamefile, colorToTestInCheck),
-	);	
-}
-
-/**
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
@@ -487,6 +482,5 @@ export default {
 	applyMove,
 	rewindMove,
 	simulateMoveWrapper,
-	getSimulatedCheck,
 	getSimulatedConclusion,
 };

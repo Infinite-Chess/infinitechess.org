@@ -41,12 +41,17 @@ const maxReverbVol = 3.5;
 const reverbDuration = 1.5;
 
 // How much quieter are moves when "dampened" (fast forwarding)?
-const amountToDampenSkippedMoves = 0.5;
-const amountToDampenSkippedBell = 0.3;
+const amountToDampenMoves = 0.5;
+const amountToDampenBell = 0.5;
 
-// This is to fix castling being twice as loud
-let timeLastMoveSoundPlayed = 0;
-const millisBetwMoveSounds = 35;
+
+/** Timestamp of the last time {@link playSound_move} or {@link playSound_capture} was called. */
+let timeLastMoveOrCaptureSound = 0;
+/** If move/capture sounds are played within this time, they get delayed until this time has passed.
+ * This is to prevent sounds from playing at the same time, such as castling. */
+const minMillisBetwMoveOrCaptureSounds = 35;
+/** If move/capture sounds are played within this time, they get dampened */
+const dampenThresholdMillis = 60;
 
 // Functions
 
@@ -280,38 +285,43 @@ function fadeOut(source, durationMillis) {
 
 // Sounds
 
-async function playSound_move(distanceMoved, dampen) {
-	await sleepIfSoundsPlayedTooRapidly();
+function playSound_move(distanceMoved) {
+	// Update the time since the last move sound was played
+	const now = Date.now();
+	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
+	timeLastMoveOrCaptureSound = now; // Update timestamp *after* checking
+
+	// Determine if we should add delay (sounds played at same time)
+	const delay = (Math.max(0, minMillisBetwMoveOrCaptureSounds - timeSinceLastMoveSoundPlayed)) / 1000;
+
+	// Determine if we should dampen the sound (sounds played too rapidly)
+	const shouldDampen = timeSinceLastMoveSoundPlayed < dampenThresholdMillis;
 
 	const bell = distanceMoved >= bellDist;
-	const dampener = dampen && bell ? amountToDampenSkippedBell : dampen ? amountToDampenSkippedMoves : 1;
+	const dampener = shouldDampen && bell ? amountToDampenBell : shouldDampen ? amountToDampenMoves : 1;
 	const volume = 1 * dampener;
 	// eslint-disable-next-line prefer-const
 	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
 	reverbVolume *= dampener;
-	playSound('move', { volume, reverbVolume, reverbDuration });
+	playSound('move', { volume, reverbVolume, reverbDuration, delay });
 
 	if (bell) {
 		const bellVolume = 0.6 * dampener;
-		playSound('bell', bellVolume);
+		playSound('bell', { volume: bellVolume, delay });
 	}
-
-	timeLastMoveSoundPlayed = Date.now(); // This fixes castling being twice as loud
 }
 
-// This fixes castling being twice as loud
-async function sleepIfSoundsPlayedTooRapidly() {
-	const timeSinceLastMoveSoundPlayed = Date.now() - timeLastMoveSoundPlayed;
+function playSound_capture(distanceMoved) {
+	// Update the time since the last move sound was played
+	const now = Date.now();
+	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
+	timeLastMoveOrCaptureSound = now; // Update timestamp *after* checking
+	
+	// Determine if we should dampen the sound (sounds played too rapidly)
+	const shouldDampen = timeSinceLastMoveSoundPlayed < dampenThresholdMillis;
 
-	if (timeSinceLastMoveSoundPlayed >= millisBetwMoveSounds) return;
-
-	const timeLeft = millisBetwMoveSounds - timeSinceLastMoveSoundPlayed;
-	await thread.sleep(timeLeft);
-}
-
-function playSound_capture(distanceMoved, dampen) {
 	const bell = distanceMoved >= bellDist;
-	const dampener = dampen && bell ? amountToDampenSkippedBell : dampen ? amountToDampenSkippedMoves : 1;
+	const dampener = shouldDampen && bell ? amountToDampenBell : shouldDampen ? amountToDampenMoves : 1;
 	const volume = 1 * dampener;
 	// eslint-disable-next-line prefer-const
 	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
@@ -320,7 +330,7 @@ function playSound_capture(distanceMoved, dampen) {
 
 	if (distanceMoved >= bellDist) {
 		const bellVolume = 0.6 * dampener;
-		playSound('bell', bellVolume);
+		playSound('bell', { volume: bellVolume });
 	}
 }
 

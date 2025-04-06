@@ -79,3 +79,14 @@ function updateNavigationLinks() {
 	// recalc the spacing/compactness of the header, as the items have changed their content.
 	document.dispatchEvent(new CustomEvent('resize'));
 }
+
+// For every '.badge img' in the document, prevent long-press context menu
+document.querySelectorAll('.badge img').forEach((img) => {
+	img.addEventListener('contextmenu', e => {
+		// Only prevent default if the context menu is triggered by touch or pen
+		if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+		console.log("Preventing context menu for badge image.");
+		e.preventDefault();
+	});
+});
+

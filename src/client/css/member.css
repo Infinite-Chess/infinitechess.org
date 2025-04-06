@@ -74,23 +74,53 @@ main {
 }
 
 .member {
-    white-space: nowrap;
-    text-align: left;
+    display: flex;
+    gap: 4%;
 }
 
 .member img {
     display: inline-block;
     height: 100px;
     vertical-align: top;
-    margin-right: 12px;
+}
+
+.membername-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
 }
 
 .member h1 {
-    display: inline-block;
     font-size: 16px;
     font-family: georgia;
-    line-height: 100px;
 }
+
+
+/* Badges */
+
+#badgelist {
+    display: flex;
+    height: 60px;
+}
+
+#badgelist img {
+    height: 100%;
+}
+
+.badge {
+    position: relative;
+    transition: transform 0.4s ease;
+    user-select: none;
+    width: 60px;
+    height: 60px;
+}
+  
+.badge:hover {
+    transform: scale(1.1);
+}
+
+/* Badge shine properties are in header.css since they are shared with badges on play page */
+
 
 #stats {
     padding: 12px 12px;
@@ -201,11 +231,6 @@ a {
 
     .member img {
         height: calc(100px + (100vw - 450px) * 0.165);
-        margin-right: calc(12px + (100vw - 450px) * 0.05);
-    }
-
-    .member h1 {
-        line-height: calc(100px + (100vw - 450px) * 0.165);
     }
 }
 
@@ -234,10 +259,5 @@ a {
 
     .member img {
         height: 160px;
-        margin-right: 30px;
-    }
-
-    .member h1 {
-        line-height: 160px;
     }
 }

@@ -21,9 +21,18 @@ const neutralTypes = ['obstacles', 'voids'];
 
 /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
 const jumpingRoyals = ['kings', 'royalCentaurs'];
-/** A list of the royals that are NOT compatible with checkmate, but must use royalcapture. */
+/**
+ * A list of the royals that the checkmate algorithm cannot detect when they are in checkmate,
+ * however it still is illegal to move into check.
+ * 
+ * Players have to voluntarily resign if they
+ * belive their sliding royal is in checkmate.
+ */
 const slidingRoyals = ['royalQueens'];
-/** A list of the royal pieces, without the color appended. */
+/**
+ * A list of the royal pieces, without the color appended.
+ * THIS SHOULD NOT CONTAIN DUPLICATES
+ */
 const royals = [...jumpingRoyals, ...slidingRoyals];
 
 /**
@@ -36,6 +45,11 @@ colorutil.validColors_NoNeutral.forEach((color, index) => {
 	colorsTypes[color] = types.map(type => type + colorExtension);
 });
 colorsTypes.neutral = neutralTypes.map(type => type + colorutil.colorExtensionOfNeutrals);
+
+/** Piece types that don't have an SVG */
+const SVGLESS_TYPES = ['voids'];
+
+
 
 /**
  * Iterates through every single piece TYPE in the game state, and performs specified function on the type.
@@ -61,5 +75,7 @@ export default {
 	colorsTypes,
 	royals,
 	jumpingRoyals,
+	slidingRoyals,
+	SVGLESS_TYPES,
 	forEachPieceType,
 };

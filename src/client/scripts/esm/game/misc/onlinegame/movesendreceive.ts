@@ -1,4 +1,3 @@
-
 /**
  * This script handles sending our move in online games to the server,
  * and receiving moves from our opponent.
@@ -17,6 +16,7 @@ import jsutil from "../../../util/jsutil.js";
 import selection from "../../chess/selection.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
+import movesequence from "../../chess/movesequence.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
@@ -29,7 +29,6 @@ import guiclock from "../../gui/guiclock.js";
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
-import movesequence from "../../chess/movesequence.js";
 
 
 // Functions -------------------------------------------------------------------
@@ -93,7 +92,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords)!;
 	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
 	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
-	legalmoves.checkIfMoveLegal(legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
+	legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial, onlinegame.getOpponentColor()); // Passes on any special moves flags to the endCoords
 
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
 	const move = movesequence.makeMove(gamefile, moveDraft);

@@ -409,7 +409,6 @@ function rewindMove() {
 	if (boardeditor.areInBoardEditor()) return boardeditor.undo();
 	
 	const gamefile = gameslot.getGamefile()!;
-	if (gamefile.mesh.locked > 0) return statustext.pleaseWaitForTask();
 	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
 
 	frametracker.onVisualChange();
@@ -424,7 +423,6 @@ function forwardMove() {
 	if (boardeditor.areInBoardEditor()) return boardeditor.redo();
 	
 	const gamefile = gameslot.getGamefile()!;
-	if (gamefile.mesh.locked) return statustext.pleaseWaitForTask();
 	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
 	movesequence.navigateMove(gamefile, true);

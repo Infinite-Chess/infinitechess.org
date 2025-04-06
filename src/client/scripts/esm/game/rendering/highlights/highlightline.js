@@ -21,6 +21,7 @@ import coordutil from '../../../chess/util/coordutil.js';
 import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
+import guipause from '../../gui/guipause.js';
 // Import End
 
 /**
@@ -44,7 +45,7 @@ const opacityOfGhostImage = 1;
 
 // Also tests to see if the line is being hovered over, or clicked to transition.
 function genModel() {
-    
+	if (guipause.areWePaused()) return; // Exit if paused
 	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (!selection.isAPieceSelected()) return;
 

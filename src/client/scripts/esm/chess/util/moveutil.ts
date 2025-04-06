@@ -211,16 +211,17 @@ function isGameResignable(gamefile: gamefile): boolean { return gamefile.moves.l
 /**
  * Returns the color of the player that played the provided index within the moves list.
  */
-function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): string {
-	if (index === -1) throw Error("Cannot get color that played move index when move index is -1.");
+function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): 'white' | 'black' {
 	const turnOrder = gamefile.gameRules.turnOrder;
+	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
+	if (index === -1) return turnOrder[turnOrder.length - 1];
 	return turnOrder[index % turnOrder.length];
 }
 
 /**
  * Returns the color whos turn it is after the specified move index was played.
  */
-function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): string {
+function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): 'white' | 'black' {
 	return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
 }
 
@@ -240,7 +241,7 @@ function doesAnyPlayerGet2TurnsInARow(gamefile: gamefile): boolean {
 }
 
 /**
- * Strips the coordinates of any special move properties.
+ * Strips the coordinates of any special move properties. NON-MUTATING, returns new coords.
  */
 function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties

@@ -7,6 +7,7 @@ import locale from 'date-fns/locale/index.js';
 import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
+import { getPlayerRatingValues } from '../database/ratingsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEvents } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
@@ -18,9 +19,18 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	const claimedUsername = req.params.member;
 
 	// eslint-disable-next-line prefer-const
-	let { user_id, username, email, joined, verification, last_seen } = getMemberDataByCriteria(['user_id','username','email','joined','verification','last_seen'], 'username', claimedUsername, { skipErrorLogging: true });
+	let { user_id, username, email, joined, verification, last_seen, checkmates_beaten } = getMemberDataByCriteria(['user_id', 'username', 'email', 'joined', 'verification', 'last_seen', 'checkmates_beaten'], 'username', claimedUsername, { skipErrorLogging: true });
 	if (user_id === undefined) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) }); // Member not found
 	verification = JSON.parse(verification);
+
+	// Get the player's rating values
+	const rating_values = getPlayerRatingValues(user_id); // { user_id, infinite_elo, infinite_rating_deviation } | undefined
+	if (!rating_values) {
+		logEvents(`Error getting rating values for member "${claimedUsername}" Not found.`, 'errLog.txt', { print: true });
+		return res.status(500).send('Internal Server Error');
+	}
+	const ranked_elo = rating_values.infinite_elo;
+
 
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...
@@ -28,7 +38,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 
 	// Load their data
 	const joinedPhrase = format(new Date(joined), 'PP');
-	let localeStr = req.i18n.resolvedLanguage.replace('-','');
+	let localeStr = req.i18n.resolvedLanguage.replace('-', '');
 	if (!(localeStr in locale)) localeStr = req.i18n.resolvedLanguage.split('-')[0];
 	const lastSeenDate = new Date(timeutil.sqliteToISO(last_seen));
 	const seenPhrase = formatDistance(new Date(), lastSeenDate, { locale: locale[localeStr] });
@@ -37,6 +47,8 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		username,
 		joined: joinedPhrase,
 		seen: seenPhrase,
+		checkmates_beaten,
+		ranked_elo,
 	};
 
 	// If they are the same person as who their requesting data, also include these.

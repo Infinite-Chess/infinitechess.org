@@ -9,11 +9,12 @@ import db from './database.js';
 // Variables -----------------------------------------------------------------------------------
 
 
-const user_id_upper_cap = 14_776_336; // Limit of unique user id with 4-digit base-62 user ids!
+const user_id_upper_cap = 14_776_336; // 62**4: Limit of unique user id with 4-digit base-62 user ids!
+const game_id_upper_cap = 14_776_336; // 62**4: Limit of unique game id with 4-digit base-62 game ids!
 
 /** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
 const uniqueMemberKeys = ['user_id', 'username', 'email'];
-	
+
 /** All columns of the members table. Each of these would be valid to retrieve from any member. */
 const allMemberColumns = [
 	'user_id',
@@ -21,13 +22,53 @@ const allMemberColumns = [
 	'username_history',
 	'email',
 	'hashed_password',
-	'roles', 
+	'roles',
 	'joined',
 	'last_seen',
 	'refresh_tokens',
 	'preferences',
-	'verification', 
+	'verification',
 	'login_count',
+	'checkmates_beaten'
+];
+
+/** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
+const allPlayerStatsColumns = [
+	'user_id',
+	'last_played_rated_game',
+	'game_history',
+	'moves_played',
+	'game_count',
+	'game_count_rated',
+	'game_count_casual',
+	'game_count_public',
+	'game_count_private',
+	'game_count_wins',
+	'game_count_losses',
+	'game_count_draws',
+	'game_count_wins_ranked',
+	'game_count_losses_ranked',
+	'game_count_draws_ranked',
+	'game_count_wins_casual',
+	'game_count_losses_casual',
+	'game_count_draws_casual'
+];
+
+/** All columns of the games table. Each of these would be valid to retrieve from any game. */
+const allGamesColumns = [
+	'game_id',
+	'date',
+	'players',
+	'elo',
+	'rating_diff',
+	'time_control',
+	'variant',
+	'rated',
+	'private',
+	'result',
+	'termination',
+	'movecount',
+	'icn'
 ];
 
 
@@ -50,7 +91,8 @@ function generateTables() {
 			preferences TEXT,
 			refresh_tokens TEXT,                          
 			verification TEXT, 
-			username_history TEXT
+			username_history TEXT,
+			checkmates_beaten TEXT NOT NULL DEFAULT ''
 		);
 	`;
 	db.run(createTableSQLQuery);
@@ -63,6 +105,61 @@ function generateTables() {
 		);
 	`;
 	// reason deleted: "unverified" / "user request" / "banned" / "inactive"
+	db.run(createTableSQLQuery);
+
+	// Ratings table
+	createTableSQLQuery = `
+		CREATE TABLE IF NOT EXISTS ratings (
+			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
+			infinite_elo REAL NOT NULL DEFAULT 1000.0,
+			infinite_rating_deviation REAL NOT NULL DEFAULT 350.0
+		);
+	`;
+	db.run(createTableSQLQuery);
+
+	// Player Stats table
+	createTableSQLQuery = `
+		CREATE TABLE IF NOT EXISTS player_stats (
+			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
+			last_played_rated_game TIMESTAMP,
+			game_history TEXT NOT NULL DEFAULT '', -- Delimited game ids
+			moves_played INTEGER NOT NULL DEFAULT 0,
+			game_count INTEGER NOT NULL DEFAULT 0,
+			game_count_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_public INTEGER NOT NULL DEFAULT 0,
+			game_count_private INTEGER NOT NULL DEFAULT 0,
+			game_count_wins INTEGER NOT NULL DEFAULT 0,
+			game_count_losses INTEGER NOT NULL DEFAULT 0,
+			game_count_draws INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_casual INTEGER NOT NULL DEFAULT 0
+		);
+	`;
+	db.run(createTableSQLQuery);
+
+	// Games table
+	createTableSQLQuery = `
+		CREATE TABLE IF NOT EXISTS games (
+			game_id INTEGER PRIMARY KEY,
+			date TIMESTAMP NOT NULL,
+			players TEXT NOT NULL, -- Delimited user ids, where '_' indicates a guest
+			elo TEXT, -- If game was rated, delimited elos at the time of the game
+			rating_diff TEXT, -- If game was rated, delimited elo changes from the result of the game
+			time_control TEXT NOT NULL,
+			variant TEXT NOT NULL,
+			rated BOOLEAN NOT NULL,
+			private BOOLEAN NOT NULL,
+			result TEXT NOT NULL,
+			termination TEXT NOT NULL,
+			movecount INTEGER NOT NULL,
+			icn TEXT NOT NULL -- Also includes clock timestamps after each move
+		);
+	`;
 	db.run(createTableSQLQuery);
 
 	// Bans table
@@ -87,12 +184,12 @@ function deleteTable(tableName) {
 	try {
 		// Prepare the SQL query to drop the table
 		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
-		
+
 		// Run the query
 		db.run(deleteTableSQL);
 		console.log(`Table ${tableName} deleted successfully.`);
 	} catch (error) {
-	  	console.error(`Error deleting table ${tableName}:`, error);
+		console.error(`Error deleting table ${tableName}:`, error);
 	}
 }
 // deleteTable('test');
@@ -102,7 +199,10 @@ function deleteTable(tableName) {
 
 export {
 	user_id_upper_cap,
+	game_id_upper_cap,
 	uniqueMemberKeys,
 	allMemberColumns,
+	allPlayerStatsColumns,
+	allGamesColumns,
 	generateTables,
 };

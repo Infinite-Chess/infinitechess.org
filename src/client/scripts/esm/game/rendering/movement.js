@@ -9,12 +9,10 @@ import transition from './transition.js';
 import guipromotion from '../gui/guipromotion.js';
 import guititle from '../gui/guititle.js';
 import frametracker from './frametracker.js';
-import game from '../chess/game.js';
 import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
-import selection from '../chess/selection.js';
-import gameslot from '../chess/gameslot.js';
 import draganimation from './dragging/draganimation.js';
+import guipause from '../gui/guipause.js';
 // Import End
 
 "use strict";
@@ -133,6 +131,7 @@ function isScaleLess1Pixel_Virtual() {
 
 // Called from game.updateBoard()
 function recalcPosition() {
+	if (guipause.areWePaused()) return; // Exit if paused
 	if (transition.areWeTeleporting()) return; // Exit if we are teleporting
 	if (loadbalancer.gisAFK()) return; // Exit if we're AFK. Save our CPU!
 
@@ -163,6 +162,7 @@ function recalcScale() {
 
 // Called from game.updateBoard()
 function updateNavControls() {
+	if (guipause.areWePaused()) return; // Exit if paused
 
 	checkIfBoardDropped(); // Needs to be before exiting from teleporting
 
@@ -456,6 +456,8 @@ function randomizePanVelDir() {
 
 // Called if the board is being dragged, calculates new board position.
 function dragBoard() {
+	if (guipause.areWePaused()) return; // Exit if paused
+
 	if (boardIsGrabbed === 1) dragBoard_WithMouse(); // Mouse is dragging board
 	else if (boardIsGrabbed === 2) dragBoard_WithFingers(); // Finger is dragging board
 	// Added > 0 so it's more clear

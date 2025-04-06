@@ -36,6 +36,8 @@ import input from "../../input.js";
 import camera from "../camera.js";
 // @ts-ignore
 import board from "../board.js";
+// @ts-ignore
+import typeutil from "../../../chess/util/typeutil.js";
 
 
 // Variables --------------------------------------------------------------------------------------
@@ -207,7 +209,7 @@ function renderPiece() {
  */
 function genPieceModel(): BufferModel | undefined {
 	if (perspective.isLookingUp()) return;
-	if (spritesheet.typesWithoutSVG.some(type => pieceType!.startsWith(type))) return; // No SVG/texture for this piece (void), can't render it.
+	if (typeutil.SVGLESS_TYPES.some((type: string) => pieceType!.startsWith(type))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = input.getPointerIsTouch();

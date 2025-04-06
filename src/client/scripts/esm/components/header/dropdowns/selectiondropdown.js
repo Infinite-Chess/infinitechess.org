@@ -13,6 +13,7 @@ const selectionDropdownTitle = document.querySelector('.selection-dropdown .drop
 
 const dragCheckbox = document.querySelector('.selection-option.drag input');
 const premoveCheckbox = document.querySelector('.selection-option.premove input');
+const animationsCheckbox = document.querySelector('.selection-option.animations input');
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -27,6 +28,7 @@ const premoveCheckbox = document.querySelector('.selection-option.premove input'
 function showCheckmarkOnSelectedOptions() {
 	dragCheckbox.checked = preferences.getDragEnabled();
 	premoveCheckbox.checked = preferences.getPremoveMode();
+	animationsCheckbox.checked = preferences.getAnimationsMode();
 }
 
 function open() {
@@ -44,11 +46,13 @@ function initListeners() {
 	selectionDropdownTitle.addEventListener('click', close);
 	dragCheckbox.addEventListener("click", toggleDrag);
 	premoveCheckbox.addEventListener("click", togglePremove);
+	animationsCheckbox.addEventListener('click', toggleAnimations);
 }
 function closeListeners() {
 	selectionDropdownTitle.removeEventListener('click', close);
 	dragCheckbox.removeEventListener("click", toggleDrag);
 	premoveCheckbox.removeEventListener("click", togglePremove);
+	animationsCheckbox.removeEventListener('click', toggleAnimations);
 }
 
 function toggleDrag() {
@@ -56,6 +60,9 @@ function toggleDrag() {
 }
 function togglePremove() {
 	//preferences.setPremoveMode(premoveCheckbox.checked);
+}
+function toggleAnimations() {
+	preferences.setAnimationsMode(animationsCheckbox.checked);
 }
 
 function updateSwitchColor() {

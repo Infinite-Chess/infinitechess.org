@@ -3,15 +3,14 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 
-import type { Coords } from '../../chess/util/coordutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
 
 
 import selection from '../chess/selection.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import thread from '../../util/thread.js';
 import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
+import gamecompressor from '../chess/gamecompressor.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
 
@@ -20,9 +19,10 @@ import perspective from '../rendering/perspective.js';
 
 
 interface EngineConfig { 
-	checkmateSelectedID: string,
 	/** Hard time limit for the engine to think in milliseconds */
 	engineTimeLimitPerMoveMillis: number
+	// If you are using a checkmate practice engine, this is required.
+	checkmateSelectedID?: string,
 }
 
 
@@ -67,23 +67,40 @@ function initEngineGame(options: {
 	youAreColor: 'white' | 'black',
 	currentEngine: string,
 	engineConfig: EngineConfig
-}) {
+}): Promise<void> {
+	console.log(`Starting engine game with engine "${options.currentEngine}".`);
+
 	inEngineGame = true;
 	ourColor = options.youAreColor;
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
 
 	// Initialize the engine as a webworker
-	if (!window.Worker) return alert("Your browser doesn't support web workers. Cannot play against an engine.");
-	// TODO: What happens if the engine fails / takes too long to load? =============================== !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	if (!window.Worker) {
+		alert("Your browser doesn't support web workers. Cannot play against an engine.");
+		// Reject the promise returned by this function
+		return Promise.reject(new Error("Cannot finish loading engine game because web workers aren't supported."));
+	}
 	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, { type: 'module' }); // module type allows the web worker to import methods and types from other scripts.
-	engineWorker.onmessage = function(e: MessageEvent) { 
-		// Messages from the engine mean it has submitted a move
-		const engineMove = e.data;
-		makeEngineMove(engineMove);
-	};
 
-	console.log(`Started engine game with engine "${currentEngine}".`);
+	// Return a promise that resolves when the ENGINE WORKER has finished fetching/loading.
+	return new Promise<void>((resolve, reject) => {
+		// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
+		// We have to manually send this message at the top of our engines.
+		engineWorker!.onmessage = (e: MessageEvent) => {
+			if (e.data === 'readyok') resolve(); // Engine is ready!
+		};
+		engineWorker!.onerror = (e: ErrorEvent) => {
+			console.error("Worker failed to load:", e);
+			reject(new Error("Worker failed to load."));
+		};
+	}).then((result: any) => {
+		// After the promise resolves, we know the worker is ready
+		// Overwrite the onmessage listener to listen for move submissions
+		engineWorker!.onmessage = (e: MessageEvent) => makeEngineMove(e.data);
+		// Remove the error handler (no longer needed after worker is ready)
+		engineWorker!.onerror = null;
+	});
 }
 
 // Call when we leave an engine game
@@ -118,9 +135,9 @@ async function submitMove() {
 	const gamefile = gameslot.getGamefile()!;
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-
+	const abridgedGame = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
-	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, engineConfig: engineConfig })));
+	if (engineWorker) engineWorker.postMessage(JSON.parse(JSON.stringify({ gamefile: gamefile, lf: abridgedGame, engineConfig: engineConfig })));
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 

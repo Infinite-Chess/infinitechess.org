@@ -15,6 +15,7 @@ import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
 import math from '../../util/math.js';
 import variant from '../variants/variant.js';
+import checkresolver from './checkresolver.js';
 
 /** 
  * Type Definitions 
@@ -38,6 +39,7 @@ import variant from '../variants/variant.js';
  * @typedef {Object} LegalMoves
  * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
  * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
+ * @property {true | undefined} brute - If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen.
  * @property {IgnoreFunction} ignoreFunc - The ignore function of the piece, to skip over moves.
  */
 
@@ -139,7 +141,6 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 	if (piece.index === undefined) throw new Error("To calculate a piece's legal moves, we must have the index property.");
 	const coords = piece.coords;
 	const type = piece.type;
-	const trimmedType = colorutil.trimColorExtensionFromType(type);
 	const color = colorutil.getPieceColorFromType(type); // Color of piece calculating legal moves of
 
 	const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
@@ -178,8 +179,9 @@ function calculate(gamefile, piece, { onlyCalcSpecials = false, ignoreCheck = fa
 		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
 	};
     
-	if (!ignoreCheck) checkdetection.removeMovesThatPutYouInCheck(gamefile, moves, piece, color);
+	if (!ignoreCheck) checkresolver.removeCheckInvalidMoves(gamefile, moves, piece, color);
 
+	// console.log(`Calculated legal moves:`, moves);
 	return moves;
 }
 
@@ -245,7 +247,7 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, individualMoves, co
  * @param {BlockingFunction} blockingFunc - The function that will check if each piece on the same line needs to block the piece
  * @param {Piece[]} line - The list of pieces on this line 
  * @param {number[]} direction - The direction of the line: `[dx,dy]` 
- * @param {number[]} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
+ * @param {number[] | undefined} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
  * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
  * @param {string} color - The color of friendlies
  */
@@ -298,14 +300,16 @@ function slide_CalcLegalLimit(blockingFunc, line, direction, slideMoveset, coord
  * legal moves in the provided legalMoves object.
  * 
  * **This will modify** the provided endCoords to attach any special move flags.
- * @param {number[]} startCoords
+ * @param {gamefile} gamefile
  * @param {LegalMoves} legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
- * @param {number[]} endCoords 
+ * @param {Coords} startCoords - The coordinates of the piece owning the legal moves
+ * @param {Coords} endCoords - The square to test if the piece can legally move to
+ * @param {'white'|'black'} colorOfFriendly - The player color owning the piece with the legal moves
  * @param {Object} options - An object that may contain the options:
  * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
  * @returns {boolean} *true* if the provided legalMoves object contains the provided endCoords.
  */
-function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividualMoves } = {}) {
+function checkIfMoveLegal(gamefile, legalMoves, startCoords, endCoords, colorOfFriendly, { ignoreIndividualMoves } = {}) {
 	// Return if it's the same exact square
 	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
@@ -326,12 +330,16 @@ function checkIfMoveLegal(legalMoves, startCoords, endCoords, { ignoreIndividual
 		const line = coordutil.getCoordsFromKey(strline); // 'dx,dy'
 		const limits = legalMoves.sliding[strline]; // [leftLimit,rightLimit]
 
-		const selectedPieceLine = organizedlines.getKeyFromLine(line,startCoords);
+		const selectedPieceLine = organizedlines.getKeyFromLine(line, startCoords);
 		const clickedCoordsLine = organizedlines.getKeyFromLine(line,endCoords);
 		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
 
-		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue;
-		return true;
+		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
+		if (legalMoves.brute) { // Don't allow the slide if it results in check
+			const moveDraft = { startCoords: startCoords, endCoords };
+			if (checkresolver.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
+		}
+		return true; // Move is legal
 	}
 	return false;
 }
@@ -399,7 +407,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	// Test if that piece's legal moves contain the destinationCoords.
 	const legalMoves = calculate(gamefile, piecemoved);
 	// This should pass on any special moves tags at the same time.
-	if (!checkIfMoveLegal(legalMoves, moveDraftCopy.startCoords, moveDraftCopy.endCoords)) { // Illegal move
+	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, moveDraftCopy.endCoords, colorOfPieceMoved)) { // Illegal move
 		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}

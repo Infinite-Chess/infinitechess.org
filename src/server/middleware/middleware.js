@@ -6,6 +6,7 @@
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
+import helmet from 'helmet';
 
 // Middleware
 import cookieParser from 'cookie-parser';
@@ -33,6 +34,7 @@ import { requestConfirmEmail } from '../controllers/sendMail.js';
 import { getMemberData } from '../api/Member.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
+import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { checkEmailValidity, checkUsernameAvailable, createNewMember } from '../controllers/createAccountController.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
@@ -61,7 +63,50 @@ function configureMiddleware(app) {
 
 	app.use(logger); // Log the request
 
+	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https
+	app.use(helmet({
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "'unsafe-inline'"],  // Allows inline scripts
+				scriptSrcAttr: ["'self'", "'unsafe-inline'"],  // Allows inline event handlers
+				objectSrc: ["'none'"],
+				frameSrc: ["'self'", 'https://www.youtube.com'],
+				imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com"]
+			},
+		},
+	}));
+
+	// Path Traversal Protection, and error protection from malformed URLs
+	app.use((req, res, next) => {
+		try {
+			const decoded = decodeURIComponent(req.url);
+			
+			// Check 1: Raw encoded patterns (before decoding)
+			const encodedPatterns = /(%2e%2e|%252e|%%32%65)/gi;
+			if (encodedPatterns.test(req.url)) {
+				console.warn('Blocked traversal:', req.url);
+				console.warn('Decoded URL:', decoded);
+				return res.status(403).send('Forbidden');
+			}
+
+			// Check 2: Decoded path segments
+			const segments = decoded.split(/[\\/]/);
+			if (segments.includes('..')) {
+				// Console warn both the decoded and the original URL
+				console.warn('Blocked traversal:', req.url);
+				console.warn('Decoded URL:', decoded);
+				return res.status(403).send('Forbidden');
+			}
+
+			next();
+		// eslint-disable-next-line no-unused-vars
+		} catch (err) {
+			console.warn('Blocked invalid URL encoding:', req.url); 
+			res.status(400).send('Invalid URL encoding');
+		}
+	});
 
 	app.use(credentials); // Handle credentials check. Must be before CORS.
 
@@ -104,6 +149,8 @@ function configureMiddleware(app) {
 	app.use(assignOrRenewBrowserID);
 	// This sets the user 'preferences' cookie on every request for an HTML file
 	app.use(setPrefsCookie);
+	// This sets the user 'checkmates_beaten' cookie on every request for an HTML file
+	app.use(setPracticeProgressCookie);
 
 	// Provide a route
 
@@ -150,6 +197,8 @@ function configureMiddleware(app) {
 	app.post("/api/get-access-token", accessTokenIssuer);
 
 	app.post('/api/set-preferences', postPrefs);
+
+	app.post('/api/update-checkmatelist', postCheckmateBeaten);
 
 	app.get("/logout", handleLogout);
 

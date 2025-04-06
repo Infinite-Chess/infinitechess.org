@@ -55,7 +55,8 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// 	preferences TEXT,
 	// 	refresh_tokens TEXT,                          
 	// 	verification TEXT, 
-	// 	username_history TEXT
+	// 	username_history TEXT,
+	//  checkmates_beaten TEXT NOT NULL DEFAULT ''
 	// );
 
 	if (roles !== undefined && typeof roles !== 'string') throw new Error('Roles must be a string.');
@@ -132,19 +133,19 @@ function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 	} catch (error) {
 		// Log the error for debugging purposes
 		logEvents(`Error deleting user with ID "${user_id}": ${error.stack}`, 'errLog.txt', { print: true });
-		return { succes: false, reason: `Failed to delete user of ID "${user_id}", an internal error ocurred.`};
+		return { success: false, reason: `Failed to delete user of ID "${user_id}", an internal error ocurred.`};
 	}
 }
 // console.log(deleteUser(3408674));
 
 /**
- * Generates a **UNIQUE** user_id. It queries if it is taken to do so.
- * @returns {number} The length of the desired user_id
+ * Generates a **UNIQUE** user_id by testing if it's taken already.
+ * @returns {number} A unique user_id.
  */
-function genUniqueUserID(length) {
+function genUniqueUserID() {
 	let id;
 	do {
-		id = generateRandomUserId(length);
+		id = generateRandomUserId();
 	} while (isUserIdTaken(id));
 	return id;
 }

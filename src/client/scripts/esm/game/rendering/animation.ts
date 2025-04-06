@@ -11,11 +11,13 @@ import type { Color } from '../../chess/util/colorutil.js';
 import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
 import frametracker from './frametracker.js';
-import spritesheet from './spritesheet.js';
 import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import preferences from '../../components/header/preferences.js';
+import spritesheet from './spritesheet.js';
+// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -145,7 +147,7 @@ function animatePiece(type: string, path: Coords[], captured?: Piece, instant?: 
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
 	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
-	if (spritesheet.typesWithoutSVG.some(typeNoSVG => {
+	if (typeutil.SVGLESS_TYPES.some((typeNoSVG: string) => {
 		return type.startsWith(typeNoSVG) || (captured !== undefined && captured.type.startsWith(typeNoSVG));
 	})) instant = true; // But, still instant animate it so that the sound plays
 
@@ -179,7 +181,7 @@ function clearAnimations(playSounds = false): void {
 	animations.forEach(animation => {
 		clearTimeout(animation.soundTimeoutId); // Don't play it twice..
 		clearTimeout(animation.scheduledRemovalId); // Don't remove it twice..
-		if (playSounds && !animation.soundPlayed) playAnimationSound(animation, true); // .. play it NOW.
+		if (playSounds && !animation.soundPlayed) playAnimationSound(animation); // .. play it NOW.
 	});
 	animations.length = 0; // Empties existing animations
 }
@@ -223,7 +225,7 @@ function calculateAnimationDuration(totalDistance: number, waypointCount: number
 /** Schedules the playback of the sound of the animation. */
 function scheduleSoundPlayback(animation: Animation): void {
 	const playbackTime = Math.max(0, animation.durationMillis + SOUND_OFFSET);
-	animation.soundTimeoutId = setTimeout(() => playAnimationSound(animation, false), playbackTime);
+	animation.soundTimeoutId = setTimeout(() => playAnimationSound(animation), playbackTime);
 }
 
 /** Schedules the removal of an animation after it's over. */
@@ -241,15 +243,15 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param animation - The animation to play the sound for.
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
-function playAnimationSound(animation: Animation, dampen: boolean) {
-	playSoundOfDistance(animation.totalDistance, animation.captured !== undefined, dampen);
+function playAnimationSound(animation: Animation) {
+	playSoundOfDistance(animation.totalDistance, animation.captured !== undefined);
 	animation.soundPlayed = true;
 }
 
 /** Plays the sound of a move from just the distance traveled and whether it made a capture. */
-function playSoundOfDistance(distance: number, captured: boolean, dampen?: boolean) {
-	if (captured) sound.playSound_capture(distance, dampen);
-	else sound.playSound_move(distance, dampen);
+function playSoundOfDistance(distance: number, captured: boolean) {
+	if (captured) sound.playSound_capture(distance);
+	else sound.playSound_move(distance);
 }
 
 

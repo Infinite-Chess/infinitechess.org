@@ -26,6 +26,8 @@ import preferences from "../../../components/header/preferences.js";
 import movement from "../movement.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
+// @ts-ignore
+import typeutil from "../../../chess/util/typeutil.js";
 
 
 // Type Definitions -------------------------------------------------------------------------------------------
@@ -110,13 +112,13 @@ function onPieceIndicatorHover(piece: Piece) {
 	// Calculate the mesh...
 
 	// Determine what color the legal move highlights should be...
-	const pieceColor = colorutil.getPieceColorFromType(piece.type);
+	const pieceColor = colorutil.getPieceColorFromType(piece.type) as 'white'|'black';
 	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 
-	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, color);
+	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);
 	// Store both these objects inside piecesHoveredOver
 	hoveredArrowsLegalMoves.push({ piece, legalMoves: thisPieceLegalMoves, model_NonCapture: NonCaptureModel, model_Capture: CaptureModel, color });
 }
@@ -159,7 +161,9 @@ function regenModelsOfHoveredPieces() {
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Calculate the mesh...
-		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, hoveredArrow.color);
+		const pieceColor = colorutil.getPieceColorFromType(hoveredArrow.piece.type);
+		if (pieceColor === "neutral") return console.error("Arrows for neutral pieces not supported");
+		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;
 		hoveredArrow.model_Capture = CaptureModel;

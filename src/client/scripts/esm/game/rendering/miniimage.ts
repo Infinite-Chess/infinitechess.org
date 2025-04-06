@@ -5,7 +5,6 @@
 
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { PooledArray } from '../../chess/logic/organizedlines.js';
 
 
 import space from '../misc/space.js';
@@ -36,6 +35,8 @@ import area from './area.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
+// @ts-ignore
+import guipause from '../gui/guipause.js';
 
 
 // Variables --------------------------------------------------------------
@@ -110,6 +111,7 @@ function testIfToggled(): void {
  * and can start teleports.
  */
 function genModel() {
+	if (guipause.areWePaused()) return; // Exit if paused
 	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (disabled) return; // Too many pieces to render icons!
 
@@ -141,13 +143,14 @@ function genModel() {
 		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
 		const { r, g, b } = preferences.getTintColorOfType(pieceType);
 
-		thesePieces.forEach((coords: Coords | undefined) => processPiece(coords, texleft, texbottom, texright, textop, r, g, b));
+		thesePieces.forEach((coords: Coords | undefined) => {
+			if (!coords) return; // Skip undefined placeholders
+			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
+			processPiece(coords, texleft, texbottom, texright, textop, r, g, b);
+		});
 	}, { ignoreVoids: true });
 
-	function processPiece(coords: Coords | undefined, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
-		if (!coords) return; // Skip undefined placeholders
-		if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
-
+	function processPiece(coords: Coords, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
 		const startX: number = (coords[0] - boardPos[0]) * boardScale - halfWidth;
 		const startY: number = (coords[1] - boardPos[1]) * boardScale - halfWidth;
 		const endX: number = startX + widthWorld;
@@ -188,8 +191,8 @@ function genModel() {
 
 		// Animate the captured piece too, if there is one
 		if (!a.captured) return;
-		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation));
-		({ r, g, b } = preferences.getTintColorOfType(a.type));
+		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.captured.type, rotation));
+		({ r, g, b } = preferences.getTintColorOfType(a.captured.type));
 		processPiece(a.captured.coords, texleft, texbottom, texright, textop, r, g, b);
 	});
 

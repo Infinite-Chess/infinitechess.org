@@ -161,8 +161,7 @@ function wasLastMoveARoyalCapture(gamefile) {
  */
 function isCheckmateCompatibleWithGame(gamefile) {
 	if (gamefile.startSnapshot.pieceCount >= gamefileutility.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
-	// 4x4x4x4 Chess is the only exception to colinears breaking the checkmate alg
-	if (gamefile.startSnapshot.colinearsPresent && gamefile.metadata.Variant !== '4x4x4x4_Chess') return false; // Logic surrounding making opening discovered attacks illegal is a nightmare.
+	if (gamefile.startSnapshot.slidingPossible.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
 	return true; // Checkmate compatible!

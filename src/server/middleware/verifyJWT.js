@@ -132,8 +132,7 @@ function verifyRefreshToken_WebSocket(ws) {
 	}
 
 	const { user_id, username, roles } = result;
-	const parsedRoles = JSON.parse(roles);
-	ws.metadata.memberInfo = { signedIn: true, user_id, username, roles: parsedRoles }; // Username was our payload when we generated the access token
+	ws.metadata.memberInfo = { signedIn: true, user_id, username, roles };
 }
 
 export {

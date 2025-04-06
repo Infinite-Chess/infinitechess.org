@@ -176,11 +176,14 @@ function removeOrganizedPiece(gamefile: gamefile, coords: Coords) {
 	}
 }
 
-function areWeShortOnUndefineds(gamefile: gamefile) {
-	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
-		if (getTypeUndefinedsBehavior(gamefile, key) === 0) continue;
-		if ((value as PooledArray<Coords>).undefineds.length === 0) return true;
-	}
+/**
+ * Tests if the piece list in the gamefile of a certain type uses
+ * undefined placeholders, and it's out of undefined placeholders.
+ */
+function isTypeShortOnUndefineds(gamefile: gamefile, type: string) {
+	const typeList = gamefile.ourPieces[type]!;
+	if (getTypeUndefinedsBehavior(gamefile, type) === 0) return false;
+	if (typeList.undefineds.length === 0) return true;
 	return false;
 }
 
@@ -198,22 +201,31 @@ function areWeShortOnUndefineds(gamefile: gamefile) {
 function addMoreUndefineds(gamefile: gamefile, { log = false } = {}) {
 	if (log) console.log('Adding more placeholder undefined pieces.');
     
-	for (const [key,value] of Object.entries(gamefile.ourPieces)) {
-		const undefinedsBehavior = getTypeUndefinedsBehavior(gamefile, key);
-		if (undefinedsBehavior === 0) continue; // This piece does not need undefineds
-		const list = value as PooledArray<Coords>;
-		// In the board editor, the length of the list should be doubled every time we run out of undefined slots, with a minimum of 100.
-		const expectedUndefinedCount = gamefile.editor ? Math.max(extraUndefineds_Editor, (list.length - list.undefineds.length)) : extraUndefineds;
-		for (let i = list.undefineds.length; i < expectedUndefinedCount; i++) list.addUndefineds();
+	for (const type of Object.keys(gamefile.ourPieces)) {
+		addMoreUndefinedsToType(gamefile, type);
 	}
+}
 
-	// piecesmodel.regenModel(gamefile);
+/**
+ * Gives a specific piece type list of the
+ * gamefile more undefined placeholders if it uses them,
+ * then dispatches a client-side only event to let
+ * the mesh logic know that piece's mesh should be regenerated.
+ */
+function addMoreUndefinedsToType(gamefile: gamefile, type: string) {
+	const undefinedsBehavior = getTypeUndefinedsBehavior(gamefile, type);
+	if (undefinedsBehavior === 0) return; // This piece does not need undefineds
+	const list = gamefile.ourPieces[type]!;
+	// In the board editor, the length of the list should be doubled every time we run out of undefined slots, with a minimum of 100.
+	const expectedUndefinedCount = undefinedsBehavior === 1 ? extraUndefineds : Math.max(extraUndefineds_Editor, (list.length - list.undefineds.length));
+	for (let i = list.undefineds.length; i < expectedUndefinedCount; i++) list.addUndefineds();
+	
 	/**
-	 * DISPATCH an event instead of calling piecesmodel.regenModel directly,
+	 * DISPATCH an event instead of regenerating the piece type mesh directly,
 	 * that way we don't tie up the game code as a dependancy.
 	 */
-	// console.log("Fired 'inserted-undefineds' event.");
-	clientEventDispatcher.dispatch('inserted-undefineds');
+	// console.log(`Firing 'inserted-undefineds' event for type ${type}.`);
+	clientEventDispatcher.dispatch('inserted-undefineds', type);
 }
 
 /**
@@ -367,7 +379,8 @@ function areColinearSlidesPresentInGame(gamefile: gamefile): boolean { // [[1,1]
 		const movesetFunc = gamefile.pieceMovesets[type];
 		if (!movesetFunc) return false;
 		const thisTypeMoveset: PieceMoveset = movesetFunc();
-		return 'ignore' in thisTypeMoveset; // True if this type has a custom ignore function being used (colinears may be present).
+		// A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
+		return 'ignore' in thisTypeMoveset || 'blocking' in thisTypeMoveset; // True if this type has a custom ignore/blocking function being used (colinears may be present).
 	})) return true; // Colinears are present
 
 	return false; // Colinears are not present
@@ -399,8 +412,9 @@ export default {
 	initOrganizedPieceLists,
 	organizePiece,
 	removeOrganizedPiece,
-	areWeShortOnUndefineds,
+	isTypeShortOnUndefineds,
 	addMoreUndefineds,
+	addMoreUndefinedsToType,
 	buildStateFromKeyList,
 	getKeyFromLine,
 	getCFromKey,

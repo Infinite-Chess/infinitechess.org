@@ -2,11 +2,9 @@
 // Import Start
 import guipause from '../gui/guipause.js';
 import webgl from './webgl.js';
-import piecesmodel from './piecesmodel.js';
 import camera from './camera.js';
 import statustext from '../gui/statustext.js';
 import { createModel } from './buffermodel.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import mat4 from './gl-matrix.js';
 import input from '../input.js';
 import selection from '../chess/selection.js';
@@ -74,7 +72,6 @@ function enable() {
 	lockMouse();
 
 	initCrosshairModel();
-	piecesmodel.initRotatedPiecesModel(gameslot.getGamefile()); // Async
 
 	statustext.showStatus(translations.rendering.movement_tutorial);
 }
@@ -91,8 +88,6 @@ function disable() {
     
 	const viewWhitePerspective = gameslot.areInGame() ? gameslot.isLoadedGameViewingWhitePerspective() : true;
 	resetRotations(viewWhitePerspective);
-
-	piecesmodel.eraseRotatedModel(gameslot.getGamefile());
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.

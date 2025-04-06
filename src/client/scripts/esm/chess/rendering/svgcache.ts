@@ -86,18 +86,30 @@ async function getSVGElementsFromSingularTypes(types: string[]): Promise<SVGElem
  * Returns all the SVG elements for the given piece IDs.
  * Piece IDs are in plural form.
  * @param ids - ['pawnsW', 'queensB']
+ * @param [width] Optional width to set for each SVG.
+ * @param [height] Optional height to set for each SVG.
  */
-async function getSVGElements(ids: string[]): Promise<SVGElement[]> {
+async function getSVGElements(ids: string[], width?: number, height?: number): Promise<SVGElement[]> {
 	const missing = ids.filter(id => !(id in cachedPieceSVGs));
-  
+
 	if (missing.length > 0) {
 		const typesToFetch = [...new Set(missing.map(getTypeFromSVGID))];
 		await fetchMissingTypes(typesToFetch);
 	}
 
 	return ids.map(id => {
-		if (!cachedPieceSVGs[id]) throw Error(`Missing SVG for ${id}`);
-		return cachedPieceSVGs[id].cloneNode(true) as SVGElement;
+		const original = cachedPieceSVGs[id];
+		if (!original) throw Error(`Missing SVG for ${id}`);
+
+		// Clone the SVG element
+		const cloned = original.cloneNode(true) as SVGElement;
+		// const cloned = tintSVG(original.cloneNode(true) as SVGElement, [1,0.2,0.2, 0.5]); // Apply a tint for debugging
+
+		// Set width and height if specified
+		if (width !== undefined) cloned.setAttribute('width', width.toString());
+		if (height !== undefined) cloned.setAttribute('height', height.toString());
+
+		return cloned;
 	});
 }
 
@@ -172,8 +184,25 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	// Append filter and apply it to the SVG
 	filter.appendChild(feColorMatrix);
 	defs.appendChild(filter);
+
 	// Apply the filter to the SVG element.
-	svgElement.setAttribute('filter', `url(#${filterId})`);
+	// svgElement.setAttribute('filter', `url(#${filterId})`);
+	{ // FIREFOX PATCH. Without this block, in firefox when converting the svg to an image, the filter is not applied.
+		// Create a <g> element to wrap all children (except <defs>)
+		const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+		group.setAttribute('filter', `url(#${filterId})`);
+
+		// Move all children (except <defs>) into the <g> element
+		const children = Array.from(svgElement.childNodes);
+		for (const child of children) {
+			if (child !== defs) {
+				group.appendChild(child);
+			}
+		}
+
+		// Append the <g> element to the SVG
+		svgElement.appendChild(group);
+	}
 
 	return svgElement;
 }

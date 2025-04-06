@@ -214,7 +214,7 @@ async function waitUntilInitialRequestBack(): Promise<void> {
 }
 
 /**
- * Whether we are logged in based on whether the username is defined.
+ * Whether we are logged in based on whether the memberInfo cookie is present.
  */
 function areWeLoggedIn(): boolean {
 	return memberInfo.signedIn;

@@ -28,11 +28,19 @@ interface ClientSidePreferences {
 
 interface ServerSidePreferences {
 	theme: string;
-	legal_moves: string;
+	legal_moves: 'dots' | 'squares';
+	animations: boolean,
 }
 
 /** Both client and server side preferences */
 type Preferences = ServerSidePreferences & ClientSidePreferences;
+
+/** A theme's color arguments as to what color to tint each player's pieces. */
+interface ColorArgs {
+	white: Color,
+	black: Color,
+	neutral: Color
+}
 
 
 // Variables ------------------------------------------------------------
@@ -44,6 +52,8 @@ let preferences: Preferences;
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
 const default_drag_enabled: boolean = true;
 const default_premove_mode: boolean = false; // Change this to true when premoves are implemented.
+/** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
+const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
 
@@ -70,6 +80,7 @@ function loadPreferences(): void {
 		perspective_fov: default_perspective_fov,
 		drag_enabled: default_drag_enabled,
 		premove_mode: default_premove_mode,
+		animations: default_animations,
 	};
 
 	preferences = browserStoragePrefs;
@@ -162,7 +173,7 @@ function getLegalMovesShape(): string {
 	return preferences.legal_moves || default_legal_moves;
 }
 
-function setLegalMovesShape(legal_moves: string): void {
+function setLegalMovesShape(legal_moves: 'dots' | 'squares'): void {
 	if (typeof legal_moves !== 'string') throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
 	onChangeMade();
@@ -186,6 +197,16 @@ function getPremoveMode(): boolean {
 function setPremoveMode(premove_mode: boolean): void {
 	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
 	preferences.premove_mode = premove_mode;
+	savePreferences();
+}
+
+function getAnimationsMode(): boolean {
+	return preferences.animations ?? default_animations;
+}
+
+function setAnimationsMode(animations_enabled: boolean) {
+	preferences.animations = animations_enabled;
+	onChangeMade();
 	savePreferences();
 }
 
@@ -255,7 +276,7 @@ function getTintColorOfType(type: string): { r: number, g: number, b: number, a:
 	const colorArgs: { white: Color, black: Color, neutral: Color } | undefined = getPieceRegenColorArgs(); // { white, black, neutral }
 	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-	const pieceColor = colorutil.getPieceColorFromType(type) as 'white' | 'black' | 'neutral';
+	const pieceColor = colorutil.getPieceColorFromType(type);
 	const color: Color = colorArgs[pieceColor];
 
 	return {
@@ -270,7 +291,7 @@ function getTintColorOfType(type: string): { r: number, g: number, b: number, a:
  * Returns the color arrays for the pieces, according to our theme.
  * @returns {Object | undefined} An object containing the properties "white", "black", and "neutral".
  */
-function getPieceRegenColorArgs(): { white: Color, black: Color, neutral: Color } | undefined {
+function getPieceRegenColorArgs(): ColorArgs | undefined {
 	const themeName: string = getTheme();
 	const themeProperties: any = themes.themes[themeName];
 	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
@@ -396,6 +417,8 @@ export default {
 	setDragEnabled,
 	getPremoveMode,
 	setPremoveMode,
+	getAnimationsMode,
+	setAnimationsMode,
 	getPerspectiveSensitivity,
 	setPerspectiveSensitivity,
 	getPerspectiveFOV,
@@ -410,4 +433,8 @@ export default {
 	getBoxOutlineColor,
 	getTintColorOfType,
 	getPieceRegenColorArgs,
+};
+
+export type {
+	ColorArgs,
 };

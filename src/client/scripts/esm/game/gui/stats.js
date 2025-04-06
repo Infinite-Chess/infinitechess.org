@@ -18,9 +18,6 @@ const element_Statuses = document.getElementById('stats');
 
 // Various statuses
 const elementStatusFPS = document.getElementById('status-fps');
-const elementStatusPiecesMesh = document.getElementById('status-pieces-mesh');
-const elementStatusRotateMesh = document.getElementById('status-rotate-mesh');
-const elementStatusCoords = document.getElementById('status-coords');
 const elementStatusMoves = document.getElementById('status-moves');
 
 // When hideMoves() is called, it decrements this by 1.
@@ -62,20 +59,6 @@ function updateStatsCSS() {
 	element_Statuses.style = `top: ${guinavigation.getHeightOfNavBar()}px`;
 }
 
-function showPiecesMesh() {
-	if (config.VIDEO_MODE) return;
-	elementStatusPiecesMesh.classList.remove('hidden');
-}
-
-function updatePiecesMesh(percent) {
-	const percentString = decimalToPercent(percent);
-	elementStatusPiecesMesh.textContent = `${translations.constructing_mesh} ${percentString}`;
-}
-
-function hidePiecesMesh() {
-	elementStatusPiecesMesh.classList.add('hidden');
-}
-
 function toggleFPS() {
 	fps = !fps;
 	if (fps) showFPS();
@@ -97,20 +80,6 @@ function updateFPS(fps) {
 	elementStatusFPS.textContent = `FPS: ${truncated}`;
 }
 
-function showRotateMesh() {
-	if (config.VIDEO_MODE) return;
-	elementStatusRotateMesh.classList.remove('hidden');
-}
-
-function updateRotateMesh(percent) {
-	const percentString = decimalToPercent(percent);
-	elementStatusRotateMesh.textContent = `${translations.rotating_mesh} ${percentString}`;
-}
-
-function hideRotateMesh() {
-	elementStatusRotateMesh.classList.add('hidden');
-}
-
 
 function decimalToPercent(decimal) {
 	// Multiply by 100 to convert to percentage, then round
@@ -124,13 +93,7 @@ function decimalToPercent(decimal) {
 export default {
 	showMoves,
 	updateStatsCSS,
-	showPiecesMesh,
-	updatePiecesMesh,
-	hidePiecesMesh,
 	toggleFPS,
 	updateFPS,
-	showRotateMesh,
-	updateRotateMesh,
-	hideRotateMesh,
 	updateTextContentOfMoves,
 };

@@ -15,7 +15,7 @@ import { ensureJSONString } from "../utility/JSONUtils.js";
 
 const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 seconds
 
-const validPrefs = ['theme', 'legal_moves'];
+const validPrefs = ['theme', 'legal_moves', 'animations'];
 const legal_move_shapes = ['squares', 'dots'];
 
 
@@ -124,7 +124,7 @@ function getPrefs(userId) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-async function postPrefs(req, res) {
+function postPrefs(req, res) {
 	if (!req.memberInfo) { // { user_id, username, roles }
 		logEvents("Can't save user preferences when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt', { print: true });
 		return res.status(500).json({ message: "Server Error: No Authorization"});
@@ -167,15 +167,18 @@ function arePrefsValid(preferences) {
 	if (preferences === undefined || typeof preferences !== 'object' || Array.isArray(preferences)) return false;
 	if (preferences === null) return true; // We can save null values.
 
-	for (const key in preferences) {
+	for (const [key, value] of Object.entries(preferences)) {
 		// 2. Validate that all keys are valid preferences
 		if (!validPrefs.includes(key)) return false;
 
 		// 3. Check if the theme property is valid
-		if (key === 'theme' && !themes.isThemeValid(preferences[key])) return false;
+		if (key === 'theme' && !themes.isThemeValid(value)) return false;
 
 		// 4. Validate legal_moves property
-		if (key === 'legal_moves' && !legal_move_shapes.includes(preferences[key])) return false;
+		if (key === 'legal_moves' && !legal_move_shapes.includes(value)) return false;
+
+		// 5. Check the animations property is a boolean
+		if (key === 'animations' && typeof value !== 'boolean') return false;
 	}
 
 	// If all checks pass, preferences are valid

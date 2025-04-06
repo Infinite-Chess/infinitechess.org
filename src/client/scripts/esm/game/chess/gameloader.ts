@@ -22,6 +22,7 @@ import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
+import loadingscreen from "../gui/loadingscreen.js";
 import boardeditor from "../misc/boardeditor.js";
 import guiedit from "../gui/guiedit.js";
 // @ts-ignore
@@ -45,6 +46,14 @@ import transition from "../rendering/transition.js";
 
 /** The type of game we are in, whether local or online, if we are in a game. */
 let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine' | 'editor';
+
+/**
+ * True when the gamefile is currently loading either the graphical
+ * (such as the SVG requests and spritesheet generation) or engine script.
+ * 
+ * If so, the spinny pawn loading animation will be open.
+ */
+let gameLoading: boolean = false;
 
 
 // Getters --------------------------------------------------------------------
@@ -85,6 +94,16 @@ function getOurColor(): 'white' | 'black' {
 }
 
 /**
+ * Returns true if either the graphics (spritesheet generating),
+ * or engine script, of the gamefile are currently being loaded.
+ * 
+ * If so, the spinny pawn loading animation will be open.
+ */
+function areWeLoadingGame(): boolean {
+	return gameLoading;
+}
+
+/**
  * Updates whatever game is currently loaded, for what needs to be updated.
  */
 function update() {
@@ -101,6 +120,12 @@ async function startLocalGame(options: {
 	Variant: string,
 	TimeControl: MetaData['TimeControl'],
 }) {
+	typeOfGameWeAreIn = 'local';
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
 	const metadata = {
 		...options,
 		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
@@ -110,7 +135,7 @@ async function startLocalGame(options: {
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
 
-	await gameslot.loadGamefile({
+	gameslot.loadGamefile({
 		metadata,
 		viewWhitePerspective: true,
 		allowEditCoords: true,
@@ -119,8 +144,9 @@ async function startLocalGame(options: {
 		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
 		 */
 		// additional: { editor: true }
-	});
-	typeOfGameWeAreIn = 'local';
+	})
+		.then((result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -133,6 +159,12 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
 
+	typeOfGameWeAreIn = 'online';
+	gameLoading = true;
+	
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
 	const additional: Additional = {
 		moves: options.moves,
 		variantOptions: localstorage.loadItem(options.id) as VariantOptions,
@@ -141,13 +173,15 @@ async function startOnlineGame(options: JoinGameMessage) {
 		clockValues: options.clockValues ? clock.adjustClockValuesForPing(options.clockValues) : undefined,
 	};
 
-	await gameslot.loadGamefile({
+	gameslot.loadGamefile({
 		metadata: options.metadata,
 		viewWhitePerspective: options.youAreColor === 'white',
 		allowEditCoords: false,
 		additional
-	});
-	typeOfGameWeAreIn = 'online';
+	})
+		.then((result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+
 	onlinegame.initOnlineGame(options);
 	
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -160,13 +194,26 @@ async function startOnlineGame(options: JoinGameMessage) {
 async function startEngineGame(options: {
 	/** The "Event" string of the game's metadata */
 	Event: string,
+	/** If it's not a practice checkmate, this is the "Variant" string of the game's metadata.
+	 * MUTUALLY EXCLUSIVE with variantOptions. */
+	Variant?: string,
+	/** MUTUALLY EXCLUSIVE with Variant. */
+	variantOptions?: VariantOptions,
 	youAreColor: 'white' | 'black',
-	currentEngine: 'engineCheckmatePractice', // Expand to a union type when more engines are added
+	currentEngine: 'engineCheckmatePractice' | 'classicEngine', // Add more union types when more engines are added
 	engineConfig: EngineConfig,
-	variantOptions: VariantOptions,
-	/** Whether the show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
+	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true
 }) {
+	if (options.Variant && options.variantOptions) throw Error("Can't provide both Variant and variantOptions at the same time when starting an engine game. They are mutually exclusive.");
+	if (!options.Variant && !options.variantOptions) throw Error("Must provide either Variant or variantOptions when starting an engine game.");
+
+	typeOfGameWeAreIn = 'engine';
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
 	const metadata: MetaData = {
 		Event: options.Event,
 		Site: 'https://www.infinitechess.org/',
@@ -177,15 +224,26 @@ async function startEngineGame(options: {
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
+	if (options.Variant) metadata.Variant = options.Variant;
 
-	await gameslot.loadGamefile({
+	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
+	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
 		viewWhitePerspective: options.youAreColor === 'white',
 		allowEditCoords: false,
 		additional: { variantOptions: options.variantOptions }
 	});
-	typeOfGameWeAreIn = 'engine';
-	enginegame.initEngineGame(options);
+
+	/** A promise that resolves when the engine script has been fetched. */
+	const enginePromise: Promise<void> = enginegame.initEngineGame(options);
+
+	/**
+	 * This resolves when BOTH the graphical and engine promises resolve,
+	 * OR rejects immediately when one of them rejects!
+	 */
+	Promise.all([graphicalPromise, enginePromise])
+		.then((results: any[]) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
@@ -211,6 +269,73 @@ async function startEditor() {
 	boardeditor.initBoardEditor();
 
 	guiedit.open();
+}
+
+/**
+ * Reloads the current local, online, or editor game from the provided metadata, existing moves, and variant options.
+ */
+async function pasteGame(options: {
+	metadata: MetaData,
+	additional: {
+		/** If we're in the board editor, this must be empty. */
+		moves?: string[],
+		variantOptions: VariantOptions,
+	}
+}) {
+	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online' && typeOfGameWeAreIn !== 'editor') throw Error("Can't paste a game when we're not in a local, online, or editor game.");
+	if (typeOfGameWeAreIn === 'editor' && options.additional.moves && options.additional.moves.length > 0) throw Error("Can't paste a game with moves played while in the editor.");
+
+	gameLoading = true;
+
+	// Has to be awaited to give the document a chance to repaint.
+	await loadingscreen.open();
+
+	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
+	const additionalToUse: Additional = {
+		...options.additional,
+		editor: gameslot.getGamefile()!.editor, // Retain the same option as the current loaded game.
+	};
+
+	gameslot.unloadGame();
+
+	gameslot.loadGamefile({
+		metadata: options.metadata,
+		viewWhitePerspective,
+		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
+		additional: additionalToUse,
+	})
+		.then((result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+	
+	// Open the gui stuff AFTER initiating the logical stuff,
+	// because the gui DEPENDS on the other stuff.
+
+	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+}
+
+/**
+ * A function that is executed when a game is FULLY loaded (graphical, spritesheet, engine, etc.)
+ * This hides the spinny pawn loading animation that covers the board.
+ */
+function onFinishedLoading() {
+	// console.log('COMPLETELY finished loading game!');
+	gameLoading = false;
+
+	// We can now close the loading screen.
+
+	// I don't think this one has to be awaited since we're pretty much
+	// done with loading, there's not gonna be another lag spike..
+	loadingscreen.close();
+	gameslot.startStartingTransition(); // Play the zoom-in animation at the start of games.
+}
+
+/**
+ * Replaces the loading animation with the words
+ * "ERROR. One or more resources failed to load. Please refresh."
+ */
+function onCatchLoadingError(err: Error) {
+	console.error(err);
+	loadingscreen.onError();
 }
 
 /**
@@ -249,12 +374,14 @@ export default {
 	areInLocalGame,
 	isItOurTurn,
 	getOurColor,
+	areWeLoadingGame,
 	getTypeOfGameWeIn,
 	update,
 	startLocalGame,
 	startOnlineGame,
 	startEngineGame,
 	startEditor,
+	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,
 };
