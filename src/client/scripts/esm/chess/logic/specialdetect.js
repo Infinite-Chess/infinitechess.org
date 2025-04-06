@@ -76,8 +76,8 @@ function kings(gamefile, coords, color) {
 	const rightCoord = [right, y];
 	const leftPieceType = boardutil.getTypeFromCoords(gamefile.pieces, leftCoord);
 	const rightPieceType = boardutil.getTypeFromCoords(gamefile.pieces, rightCoord);
-	const leftColor = leftPieceType ? typeutil.getColorFromType(leftPieceType) : undefined;
-	const rightColor = rightPieceType ? typeutil.getColorFromType(rightPieceType) : undefined;
+	const leftColor = leftPieceType !== undefined ? typeutil.getColorFromType(leftPieceType) : undefined;
+	const rightColor = rightPieceType !== undefined ? typeutil.getColorFromType(rightPieceType) : undefined;
 
 	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || typeutil.getRawType(leftPieceType) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(leftPieceType) === type)) leftLegal = false;
 	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || typeutil.getRawType(rightPieceType) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(rightPieceType) === type)) rightLegal = false;
@@ -140,13 +140,13 @@ function pawns(gamefile, coords, color) {
 
 	// Is there a piece in front of it?
 	const coordsInFront = [coords[0], coords[1] + yOneorNegOne];
-	if (!boardutil.getTypeFromCoords(gamefile.pieces, coordsInFront)) {
+	if (boardutil.getTypeFromCoords(gamefile.pieces, coordsInFront) === undefined) { // No piece in front of it.
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 
 		// Further... Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
 		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.pieces, doublePushCoord);
-		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
+		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
 			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); 
 		}
@@ -163,7 +163,7 @@ function pawns(gamefile, coords, color) {
 
 		// Is there an enemy piece at this coords?
 		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.pieces, thisCoordsToCapture);
-		if (!pieceAtCoords) continue; // No piece, skip
+		if (pieceAtCoords === undefined) continue; // No piece, skip
 
 		// There is a piece. Make sure it's a different color
 		const colorOfPiece = typeutil.getColorFromType(pieceAtCoords);

@@ -106,7 +106,7 @@ function detectKoth(gamefile) {
 		const thisCenterSquare = kothCenterSquares[i];
 
 		const typeAtSquare = boardutil.getTypeFromCoords(gamefile.pieces, thisCenterSquare);
-		if (!typeAtSquare) continue;
+		if (typeAtSquare === undefined) continue;
 		if (typeutil.getRawType(typeAtSquare) === rawTypes.KING) {
 			kingInCenter = true;
 			break;
