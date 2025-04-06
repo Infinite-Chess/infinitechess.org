@@ -90,7 +90,7 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: Player, movet
 
 		// Is there an enemy piece at this coords?
 		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.pieces, thisCoordsToCapture);
-		if (!pieceAtCoords) continue; // No piece
+		if (pieceAtCoords === undefined) continue; // No piece
 
 		// There is a piece. Make sure it's a different color
 		// Make sure its not a void
@@ -169,7 +169,7 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	const captureCoords = move.enpassant ? gamefile.enpassant!.pawn : move.endCoords;
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece); // Delete the piece captured
+	if (capturedPiece !== undefined) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece); // Delete the piece captured
 	else boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Move the pawn
 
 	if (move.promotion) { // Handle promotion special move
@@ -207,7 +207,7 @@ function fourDimensionalKnightMove(gamefile: gamefile, coords: Coords, color: Pl
 						const endPiece = boardutil.getTypeFromCoords(gamefile.pieces, endCoords);
 
 						// do not allow capturing friendly pieces or voids
-						if (endPiece && (color === typeutil.getColorFromType(endPiece) || typeutil.getRawType(endPiece) === r.VOID)) continue;
+						if (endPiece !== undefined && (color === typeutil.getColorFromType(endPiece) || typeutil.getRawType(endPiece) === r.VOID)) continue;
 
 						// do not allow knight to leave the 4D board
 						if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
@@ -262,7 +262,7 @@ function kingLegalMoves(gamefile: gamefile, coords: Coords, color: Player): Coor
 					const endPiece = boardutil.getTypeFromCoords(gamefile.pieces, endCoords);
 
 					// do not allow capturing friendly pieces or voids
-					if (endPiece && (color === typeutil.getColorFromType(endPiece) || typeutil.getRawType(endPiece) === r.VOID)) continue;
+					if (endPiece !== undefined && (color === typeutil.getColorFromType(endPiece) || typeutil.getRawType(endPiece) === r.VOID)) continue;
 
 					// do not allow king to leave the 4D board
 					if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
