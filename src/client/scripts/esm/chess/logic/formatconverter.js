@@ -461,7 +461,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// promotion lines
-		if (RegExp(`^\\(((()|([^\\(\\)\\|]*\\|)${scientificNumberRegex})|(\\|\\)$))`).test(string)) {
+		if (RegExp(`^\\(${scientificNumberRegex}?[,;\\|]`).test(string)) {
 			
 			/**
 			 * Possible cases the string could look like:
@@ -499,8 +499,19 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// win condition (has to start with a letter and not include numbers)
-		// THIS IS CURRENTLY BROKEN IF YOU TRY TO specify different win conditions per player
 		if (/^(\(?[a-zA-z][^0-9]+)$/.test(string)) {
+
+			/**
+			 * Possible cases of what the string could look like:
+			 * 
+			 * testtest
+			 * (bliblablub|blabla)
+			 * (bliblablub,testtest|blabla)
+			 * (bliblablub,testtest|blabla,hahaha)
+			 * 
+			 * et cetera....
+			 */
+
 			if (!longformat.gameRules.winConditions) {
 				longformat.gameRules.winConditions = {};
 				string = string.replace(/[()]/g,"").split("|");
