@@ -11,7 +11,6 @@
 
 import organizedpieces from "./organizedpieces.js";
 import jsutil from "../../util/jsutil.js";
-import events from "./events.js";
 
 
 // Variables -------------------------------------------------------------------------

@@ -21,7 +21,6 @@ import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes } from '../../chess/util/typeutil.js';
-import events from '../../chess/logic/events.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -80,12 +79,6 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
 
 // Generating Meshes ------------------------------------------------------------------------
 
-
-function addListeners(gamefile: gamefile) { 
-	events.addEventListener(gamefile.events, "regenerateLists", (gamefile: gamefile) => {
-		throw Error("Don't know how to regenerate lists yet!");
-	});
-}
 
 /**
  * Regenerates every single piece mesh in the gamefile.
@@ -375,7 +368,6 @@ function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
 
 
 export default {
-	addListeners,
 	regenAll,
 	regenType,
 	overwritebufferdata,

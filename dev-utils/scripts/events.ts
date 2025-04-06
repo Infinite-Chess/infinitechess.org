@@ -1,8 +1,16 @@
+
+/**
+ * A script that was intended for managing gamefile events for games
+ * on both client and server ends.
+ * 
+ * @author Idontuse
+ */
+
 // Disabling this  cause will be using func types lots
 /* eslint-disable no-unused-vars */
 
 // @ts-ignore
-import type gamefile from "./gamefile";
+import type gamefile from "../../src/client/scripts/esm/chess/logic/gamefile";
 
 type ExtractArr<T extends any[]> = T extends (infer U)[] ? U : never
  

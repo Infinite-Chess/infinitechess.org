@@ -27,7 +27,6 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
 /** @typedef {import('../util/boardutil.js').Position} Position*/
-/** @typedef {import('./events.js').GameEvents} GameEvents*/
 /** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
@@ -117,11 +116,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		inverted: undefined,
 		/** An object containing the mesh data for each type of piece in the game. One for every type in `ourPieces` @type {{ [type: string]: MeshData }} */
 		types: {},
-	};
-
-	/** @type {GameEvents} */
-	this.events = {
-		regenerateLists: []
 	};
 
 	/** Contains the movesets of every piece for this game. 

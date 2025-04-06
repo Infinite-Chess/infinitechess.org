@@ -246,12 +246,6 @@ async function loadGraphical(loadOptions: LoadOptions) {
 		movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
-
-	/**
-	 * Listen for the event that inserts more undefineds into the piece lists.
-	 * When that occurs, we need to regenerate the model.
-	 */
-	piecemodels.addListeners(loadedGamefile!);
 }
 
 /** The canvas will no longer render the current game */
