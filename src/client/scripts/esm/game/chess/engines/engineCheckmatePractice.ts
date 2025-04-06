@@ -1239,12 +1239,13 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 							piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
 						}
 					}
-					const emptyPieceMovesets = {}; // <--- What to do about this?
+					const emptyPieceMovesets = {}; // <--- Is this gonna be an issue?
 					const dummy_gamefile = { 
 						moves: [],
 						gameRules: input_gamefile.gameRules,
-						// TODO: pieceMovesets is the only required gamefile property that is lost when sending the gamefile to the engine.
+						// pieceMovesets is the only required gamefile property that is lost when sending the gamefile to the engine.
 						// This will cause the possible slides to be calculated incorrectly, and thus the `lines` property not entirely filled out.
+						// I THINK we are safe though, because I saw nowhere in detectInsufficientMaterial() where it reads the lines.
 						pieces: organizedpieces.processInitialPosition(piecesOrganizedByKey, emptyPieceMovesets, input_gamefile.gameRules.turnOrder, input_gamefile.gameRules.promotionsAllowed, input_gamefile.editor).pieces,
 					} as unknown as gamefile;
 
