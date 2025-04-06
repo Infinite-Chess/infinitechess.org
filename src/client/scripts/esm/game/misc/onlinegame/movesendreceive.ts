@@ -11,6 +11,7 @@ import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 
 import onlinegame from "./onlinegame.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
+import boardutil from "../../../chess/util/boardutil.js";
 import clock from "../../../chess/logic/clock.js";
 import jsutil from "../../../util/jsutil.js";
 import selection from "../../chess/selection.js";
@@ -89,7 +90,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 
 	// Forward the move...
 
-	const piecemoved = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords)!;
+	const piecemoved = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords)!;
 	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
 	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
 	legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial, onlinegame.getOpponentColor()); // Passes on any special moves flags to the endCoords

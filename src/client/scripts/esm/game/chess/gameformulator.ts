@@ -6,11 +6,9 @@
 
 // @ts-ignore
 import gamefile from '../../chess/logic/gamefile.js';
-// @ts-ignore
-import colorutil from '../../chess/util/colorutil.js';
-// @ts-ignore
+import typeutil from '../../chess/util/typeutil.js';
 import coordutil, { Coords } from '../../chess/util/coordutil.js';
-
+import { players as p, rawTypes as r } from '../../chess/util/typeutil.js';
 
 import type { AbridgedGamefile } from './gamecompressor.js';
 import type { Move } from '../../chess/logic/movepiece.js';
@@ -39,11 +37,11 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 	if (compressedGame.enpassant) { // Coords: [x,y]
 		// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
 		const firstTurn = compressedGame.gameRules.turnOrder[0];
-		const yParity = firstTurn === 'white' ? 1 : firstTurn === 'black' ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
+		const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
 		const pawnExpectedSquare = [compressedGame.enpassant[0], compressedGame.enpassant[1] - yParity] as Coords;
-		const pieceOnExpectedSquare: string | undefined = compressedGame.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+		const pieceOnExpectedSquare: number | undefined = compressedGame.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
 
-		if (pieceOnExpectedSquare && pieceOnExpectedSquare.startsWith('pawns') && colorutil.getPieceColorFromType(pieceOnExpectedSquare) !== firstTurn) {
+		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
 			variantOptions.enpassant = { square: compressedGame.enpassant, pawn: pawnExpectedSquare };
 		}
 	}

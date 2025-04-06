@@ -83,7 +83,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
 	// Create an HTMLImageElement from the canvas
 	const spritesheetImage = new Image();
 	spritesheetImage.src = canvas.toDataURL();
-  
+
 	// Return a promise that resolves when the image is loaded
 	await spritesheetImage.decode();
 	const spritesheetData = generateSpriteSheetData(images, gridSize);
@@ -99,7 +99,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  */
 function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {  
 	const pieceWidth = 1 / gridSize;
-	const texLocs: { [key: string]: Coords } = {};
+	const texLocs: { [key: number]: Coords } = {};
 
 	// Positioning variables
 	let x = 0;
@@ -112,8 +112,8 @@ function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {
 
 		// Store the texture coordinates
 		// Use the image id as the key for the data object
-		texLocs[image.id] = [texX, texY];
-    
+		texLocs[Number(image.id)] = [texX, texY];
+
 		// Update the position for the next image
 		x++;
 		if (x === gridSize) {

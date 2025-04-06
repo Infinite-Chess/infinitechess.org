@@ -2,15 +2,16 @@
 // This module stores our themes. Straight forward :P
 
 import jsutil from "../../util/jsutil.js";
+import { players } from "../../chess/util/typeutil.js";
 
-import type { Color } from "../../chess/util/colorutil.js";
-
+import type { Color } from "../../util/math.js";
+import type { PieceColorGroup } from "./pieceThemes.js";
 
 /*
  * Strings for computed property names.
  *
  * By using computed property names, we greatly compact this script,
- * as our bunder changes the symbols to a single letter.
+ * as our bundler changes the symbols to a single letter.
  */
 const lightTiles = "lightTiles";
 const darkTiles = "darkTiles";
@@ -20,6 +21,7 @@ const legalMovesHighlightColor_Premove = "legalMovesHighlightColor_Premove";
 const lastMoveHighlightColor = "lastMoveHighlightColor";
 const checkHighlightColor = "checkHighlightColor";
 const boxOutlineColor = "boxOutlineColor";
+const pieceTheme = "pieceTheme";
 
 
 interface ThemeProperties {
@@ -31,10 +33,7 @@ interface ThemeProperties {
 	[lastMoveHighlightColor]?: Color;
 	[checkHighlightColor]?: Color;
 	[boxOutlineColor]?: Color;
-	useColoredPieces?: boolean;
-	whitePiecesColor?: Color;
-	blackPiecesColor?: Color;
-	neutralPiecesColor?: Color;
+	[pieceTheme]?: Partial<PieceColorGroup>,
 }
 
 /**
@@ -45,12 +44,7 @@ const defaults: ThemeProperties = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
-	// If this is false, we will render them white,
-	// utilizing the more efficient color-less shader program!
-	useColoredPieces: false,
-	whitePiecesColor: [1, 1, 1, 1],
-	blackPiecesColor: [1, 1, 1, 1],
-	neutralPiecesColor: [1, 1, 1, 1],
+	[pieceTheme]: {},
 };
 
 const defaultTheme = 'wood_light';
@@ -262,10 +256,10 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 	// 	[legalMovesHighlightColor_Premove]: [1, 0.15, 0, 0.65],
 	// 	[lastMoveHighlightColor]: [0.5, 0.2, 0, 0.75],
 	// 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0.5, 0.76],
-	// 	useColoredPieces: true,
-	// 	whitePiecesColor: [0.6, 0.5, 0.45, 1],
-	// 	blackPiecesColor: [0.8, 0, 1, 1],
-	// 	neutralPiecesColor: [1, 1, 1, 1],
+	// 	[pieceTheme]: {
+	// 		[players.WHITE]: [0.6, 0.5, 0.45, 1],
+	// 		[players.BLACK]: [0.8, 0, 1, 1],
+	// 	},
 	// },
 	// christmas: {
 	// 	[lightTiles]: [0.60, 0.93, 1, 1],
@@ -275,10 +269,10 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 	// 	[legalMovesHighlightColor_Premove]: [0.25, 0, 0.7, 0.3],
 	// 	[lastMoveHighlightColor]: [0, 0, 0.3, 0.35],
 	// 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
-	// 	useColoredPieces: true,
-	// 	whitePiecesColor: [0.4, 1, 0.4, 1],
-	// 	blackPiecesColor: [1, 0.2, 0.2, 1],
-	// 	neutralPiecesColor: [1, 1, 1, 1],
+	// 	[pieceTheme]: {
+	// 		[players.WHITE]: [0.4, 1, 0.4, 1],
+	// 		[players.BLACK]: [1, 0.2, 0.2, 1],
+	// 	},
 	// }
 };
 

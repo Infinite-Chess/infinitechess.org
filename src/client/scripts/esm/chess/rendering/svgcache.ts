@@ -1,156 +1,84 @@
+
 /**
  * This module handles fetching and caching of chess piece SVGs.
  * It won't request the same SVG twice.
  */
 
 
-import type { Color } from '../util/colorutil.js';
+import type { Color } from '../../util/math.js';
+import type { RawType, Player } from '../util/typeutil.js';
 
-
-import colorutil from '../util/colorutil.js';
-// @ts-ignore
 import typeutil from '../util/typeutil.js';
+import preferences from '../../components/header/preferences.js';
+import pieceThemes from '../../components/header/pieceThemes.js';
 
 
 // Variables -----------------------------------------------------------------
 
-
-// Cache for SVG elements
+/** Stores fetched SVG elements, keyed by their unique svg id (e.g., 'pawn-white'). These ids are on the svg elements themselves. */
 const cachedPieceSVGs: { [pieceType: string]: SVGElement } = {};
 
-/** Classical chess pieces are grouped in one SVG */
-const CLASSICAL_PIECES: string[] = ['pawn', 'knight', 'bishop', 'rook', 'king', 'queen'];
-
-// Track ongoing fetch requests
+/** Tracks promises for ongoing SVG file fetch requests, using the file URL as the key, to prevent duplicates. */
 const processingCache: { [key: string]: Promise<void> } = {};
 
 
-
-// Initialization: Cache classical pieces on load
-fetchMissingTypes(['classical']);
-
-
-
-// Helper functions ---------------------------------------------------------
-
-
-/**
- * Calculates the SVG IDs for a given piece type.
- * 
- * If the type is provided as 'classical', it returns the SVG IDs for all classical pieces.
- */
-function getSVGIDsOfType(type: 'classical' | string): string[] {
-	if (type === 'classical') return CLASSICAL_PIECES.flatMap(piece => getSVGIDs(piece));
-	return getSVGIDs(type);
-}
-/**
- * Returns the SVG IDs for a given piece type.
- * @param type - The piece type in singular form
- */
-function getSVGIDs(type: string): string[] { 
-	return getColorSuffixes(type).map(suffix => `${type}s${suffix}`);
-}
-
-/**
- * Returns the color suffixes for a given piece type could have.
- * 
- * 'pawn' -> ['W','B']
- * 'obstacle' -> ['N']
- * @param type - The piece type in singular form
- */
-function getColorSuffixes(type: string): string[] {
-	const plural = `${type}s`;
-	return typeutil.neutralTypes.includes(plural) ? [colorutil.colorExtensionOfNeutrals] : colorutil.validColorExtensions_NoNeutral;
-};
-
-/**
- * Returns the singular form of a piece type from an SVG ID.
- * 'pawnsW' -> 'pawn'
- * @param id - The SVG ID of the piece. This includes its color information: 'pawnsW'
- */
-function getTypeFromSVGID(id: string): string {
-	const plural = colorutil.trimColorExtensionFromType(id); // 'pawns'
-	return plural.slice(0, -1); // 'pawn'
-}
+// Initialization: Cache classical pieces on load. EVERY SINGLE GAME USES THESE.
+fetchLocation("classical");
 
 
 // Core functionality --------------------------------------------------------
 
 
-async function getSVGElementsFromSingularTypes(types: string[]): Promise<SVGElement[]> {
-	const ids = types.flatMap(type => getSVGIDs(type));
-	return await getSVGElements(ids);
+/**
+ * Fetches required SVG files if not cached, then returns the SVG elements for the requested piece types.
+ * This is the main public function for retrieving piece SVGs.
+ */
+async function getSVGElements(ids: number[], width?: number, height?: number): Promise<SVGElement[]> {
+	const locations = getNeededSVGLocations(ids);
+	if (locations.size > 0) await fetchMissingTypes(locations);
+	// At this point, all needed SVGs should be in the cache!
+	return getSVGIDs(ids, width, height);
 }
 
 /**
- * Returns all the SVG elements for the given piece IDs.
- * Piece IDs are in plural form.
- * @param ids - ['pawnsW', 'queensB']
- * @param [width] Optional width to set for each SVG.
- * @param [height] Optional height to set for each SVG.
+ * Initiates fetch requests for all specified SVG file locations concurrently, preventing duplicate requests.
+ * @param locations - A set of unique SVG location names (e.g., "classical", "fairy/rose") to fetch.
  */
-async function getSVGElements(ids: string[], width?: number, height?: number): Promise<SVGElement[]> {
-	const missing = ids.filter(id => !(id in cachedPieceSVGs));
+async function fetchMissingTypes(locations: Set<string>) {
+	await Promise.all([...locations].map(async location => fetchLocation(location)));
+}
+/**
+ * Fetches an SVG file from a specific location, parses it, and caches the individual SVG elements found within.
+ * It prevents duplicate fetch requests for the same URL while a request is already in progress.
+ * @param location - The SVG file location on the server (e.g., "classical", "fairy/rose") relative to `svg/pieces/`.
+ * @returns A promise that resolves when the fetch and caching are complete.
+ */
+async function fetchLocation(location: string): Promise<void> {
+	const url = `svg/pieces/${location}.svg`;
 
-	if (missing.length > 0) {
-		const typesToFetch = [...new Set(missing.map(getTypeFromSVGID))];
-		await fetchMissingTypes(typesToFetch);
+	if (!processingCache[url]) {
+		processingCache[url] = (async() => {
+			try {
+				const response = await fetch(url);
+				if (!response.ok) throw new Error(`HTTP error when fetching piece svgs from location "${location}"! status: ${response.status}`);
+				const svgText = await response.text();
+				const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+	
+				Array.from(doc.getElementsByTagName("svg")).forEach(svg => {
+					cachedPieceSVGs[svg.id] = svg;
+					// console.log(`Fetched piece svg at location ${location}`);
+				});
+			} catch (error) {
+				// Remove the failed promise from the cache to allow retrying
+				delete processingCache[url];
+				throw error;
+			}
+		})();
+	} else {
+		// console.log(`Already fetching piece svg at location ${location}. Not sending duplicate request. Waiting..`);
 	}
 
-	return ids.map(id => {
-		const original = cachedPieceSVGs[id];
-		if (!original) throw Error(`Missing SVG for ${id}`);
-
-		// Clone the SVG element
-		const cloned = original.cloneNode(true) as SVGElement;
-		// const cloned = tintSVG(original.cloneNode(true) as SVGElement, [1,0.2,0.2, 0.5]); // Apply a tint for debugging
-
-		// Set width and height if specified
-		if (width !== undefined) cloned.setAttribute('width', width.toString());
-		if (height !== undefined) cloned.setAttribute('height', height.toString());
-
-		return cloned;
-	});
-}
-
-/**
- * Fetches the SVG for missing piece types using a regular fetch while using the processingCache
- * to prevent duplicate fetch requests.
- * If the type is included in the classical group, it fetches the classical group instead of the individual type.
- * @param typesSingular - Array of singular piece types that need to be fetched.
- */
-async function fetchMissingTypes(typesSingular: string[]) {
-	// If the type is included in the classical group, fetch the classical group instead of the individual type
-	const typesToFetch = [...new Set(typesSingular.map(type => CLASSICAL_PIECES.includes(type) ? 'classical' : type))];
-
-	await Promise.all(typesToFetch.map(async type => {
-		const url = `svg/pieces/${type === 'classical' ? 'classical' : `fairy/${type}`}.svg`;
-    
-		if (!processingCache[url]) {
-			processingCache[url] = (async() => {
-				try {
-					const response = await fetch(url);
-					if (!response.ok) throw new Error(`HTTP error when fetching piece svg of type "${type}"! status: ${response.status}`);
-					const svgText = await response.text();
-					const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
-        
-					getSVGIDsOfType(type).forEach(id => {
-						const el = doc.querySelector(`#${id}`);
-						if (el) cachedPieceSVGs[id] = el as SVGElement;
-						// console.log("Cached", id);
-					});
-				} catch (error) {
-					// Remove the failed promise from the cache to allow retrying
-					delete processingCache[url];
-					throw error;
-				}
-			})();
-		} else {
-			console.log(`Already fetching piece svg of type ${type}. Not sending duplicate request. Waiting..`);
-		}
-    
-		await processingCache[url];
-	}));
+	await processingCache[url];
 }
 
 /**
@@ -207,11 +135,104 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	return svgElement;
 }
 
+// Helper functions ---------------------------------------------------------
+
+/**
+ * Determines the priority of what player color gets what color of svg, depending on what's available.
+ * For example, if player neutral needs a pawn svg, it will first look for a neutral svg,
+ * but when it doesn't exist it will fallback to the white svg.
+ * @param color - The player color code (0, 1, or 2).
+ * @returns An array of SVG color variant suffixes, ordered by lookup priority.
+ */
+function getSVGColorPriority(color: Player): string[] {
+	switch (color) {
+		case 0: // Neutral: prioritize neutral svg over white
+			return ['-neutral','-white'];
+		case 1: // White: prioritize white svg over black
+			return ['-white','-neutral'];
+		case 2: // Black: prioritize black svg over neutral
+			return ['-black','-neutral'];
+		default:
+			throw new Error(`Invalid color code: ${color}`);
+	}
+}
+
+/**
+ * Identifies the unique SVG file locations (e.g., "classical", "fairy/rose") that need to be fetched.
+ * It checks the cache first and only returns locations for types whose SVG variants are not yet cached.
+ * @param types - An array of piece type numbers (combining raw type and color).
+ * @returns A set of unique SVG file location names required for the given types.
+ */
+function getNeededSVGLocations(types: number[]): Set<string> {
+	const locations: Set<RawType> = new Set();
+	typeloop: for (const type of types) {
+		const [raw, c] = typeutil.splitType(type);
+		const baseId = `${typeutil.getRawTypeStr(raw)}`;
+		const checks: string[] = getSVGColorPriority(c);
+		for (const c of checks) {
+			const id = baseId + c;
+			if (id in cachedPieceSVGs) continue typeloop;
+		}
+		locations.add(raw);
+	}
+
+	return pieceThemes.getLocationsForTypes(locations);
+} 
+
+/**
+ * Retrieves and prepares cloned SVG elements for the specified piece types from the cache.
+ * It automatically applies our theme's tint as well.
+ * @param types - An array of piece type numbers to get SVGs for.
+ * @param [width] - Optional width to set on the SVG elements.
+ * @param [height] - Optional height to set on the SVG elements.
+ * @returns An array of cloned and prepared SVG elements.
+ */
+function getSVGIDs(types: number[], width?: number, height?: number): SVGElement[] {
+	let failed: boolean = false;
+	const svgs: SVGElement[] = [];
+	l: for (const type of types) {
+		const tint = preferences.getTintColorOfType(type);
+		const [raw, c] = typeutil.splitType(type);
+		const baseId = `${typeutil.getRawTypeStr(raw)}`;
+		const checks: string[] = getSVGColorPriority(c);
+		for (const c of checks) {
+			const id = baseId + c;
+			if (!(id in cachedPieceSVGs)) continue;
+			// Clone the SVG element
+			const cloned = cachedPieceSVGs[id]!.cloneNode(true) as SVGElement;
+
+			cloned.id = String(type);
+
+			// Set width and height if specified
+			if (width !== undefined) cloned.setAttribute('width', width.toString());
+			if (height !== undefined) cloned.setAttribute('height', height.toString());
+			
+			tintSVG(cloned, tint);
+
+			svgs.push(cloned);
+			continue l;
+		}
+		console.error(`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${checks} for ${baseId}`);
+		failed = true;
+	}
+	if (failed) throw Error("SVG theme is missing ids for pieces");
+	return svgs;
+}
+
+/**
+ * Appends all cached SVG elements directly to the document body for debugging purposes.
+ * This allows visual inspection of the SVGs currently held in the cache.
+ */
+function showCache() {
+	for (const svg of Object.values(cachedPieceSVGs)) {
+		document.body.appendChild(svg);
+	}
+}
 
 // Exports -------------------------------------------------------------------
 
 
 export default {
-	getSVGElementsFromSingularTypes,
-	getSVGElements
+	getSVGElements,
+	showCache,
 };

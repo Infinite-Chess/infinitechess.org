@@ -3,26 +3,24 @@
  * This script handles the logical side of moving pieces, nothing graphical.
  * 
  * Both ends, client & server, should be able to use this script.
- * It SHOULD have a healthy dependancy tree (need to work on that).
  */
 
 
 // @ts-ignore
 import type gamefile from './gamefile.js';
-import type { Piece } from './boardchanges.js';
+import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-
-import colorutil from '../util/colorutil.js';
+import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
 import boardchanges from './boardchanges.js';
+import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
+import { rawTypes } from '../util/typeutil.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
-// @ts-ignore
-import gamefileutility from '../util/gamefileutility.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
 // @ts-ignore
@@ -33,7 +31,6 @@ import checkdetection from './checkdetection.js';
 import formatconverter from './formatconverter.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
-
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
@@ -69,7 +66,7 @@ type enpassant = true;
  */
 type promoteTrigger = boolean;
 /** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
-type promotion = string;
+type promotion = number;
 /** A special move tag for castling. */
 type castle = {
 	/** 1 => King castled right   2 => King castled left */
@@ -114,7 +111,7 @@ interface MoveDraft {
  */
 interface Move extends MoveDraft {
 	/** The type of piece moved */
-	type: string,
+	type: number,
 	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
 	changes: Array<Change>,
 	/** The state of the move is used to know how to modify specific gamefile
@@ -145,7 +142,7 @@ interface Move extends MoveDraft {
  * and queueing its gamefile StateChanges.
  */
 function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
-	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
 	// Construct the full Move object
@@ -172,12 +169,12 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	 */
 	state.createEnPassantState(move, gamefile.enpassant, undefined);
 
-	const trimmedType = colorutil.trimColorExtensionFromType(move.type); // "queens"
+	const rawType = typeutil.getRawType(move.type);
 	let specialMoveMade: boolean = false;
 	// If a special move function exists for this piece type, run it.
 	// The actual function will return whether a special move was actually made or not.
 	// If a special move IS made, we skip the normal move piece method.
-	if (trimmedType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[trimmedType](gamefile, piece, move);
+	if (rawType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[rawType](gamefile, piece, move);
 	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
 
 	// Must be set before calling queueIncrementMoveRuleStateChange()
@@ -201,10 +198,10 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
  */
 function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
 
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, move.endCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece);
-	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
+	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);
 }
 
 /**
@@ -227,7 +224,7 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 			// Delete the special rights off the start coords AND the capture coords, if there are ones.
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
 			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
-			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords);
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
 			state.createSpecialRightsState(move, captureCoordsKey, gamefile.specialRights[captureCoordsKey], undefined);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.
@@ -244,7 +241,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (move.flags.capture || move.type.startsWith('pawns')) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = (move.flags.capture || typeutil.getRawType(move.type) === rawTypes.PAWN) ? 0 : gamefile.moveRuleState + 1;
 	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
@@ -301,7 +298,7 @@ function updateTurn(gamefile: gamefile) {
  */
 function createCheckState(gamefile: gamefile, move: Move) {
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
-	const oppositeColor = colorutil.getOppositeColor(whosTurnItWasAtMoveIndex);
+	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
 	const trackAttackers = gamefile.gameRules.winConditions[oppositeColor].includes('checkmate');
 
@@ -361,7 +358,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
-	const piece = gamefileutility.getPieceAtCoords(gamefile, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
 	if (!piece) {
 		console.error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
 		return; // No piece on start coordinates, can't calculate Move, because it's illegal

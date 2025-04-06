@@ -5,10 +5,11 @@
 
 
 import type { DisconnectInfo, DrawOfferInfo } from './onlinegamerouter.js';
+import type { Player } from '../../../chess/util/typeutil.js';
 
 import localstorage from '../../../util/localstorage.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
-import colorutil from '../../../chess/util/colorutil.js';
+import typeutil from '../../../chess/util/typeutil.js';
 import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
 import tabnameflash from './tabnameflash.js';
@@ -39,7 +40,7 @@ let isPrivate: boolean | undefined;
 /**
  * The color we are in the online game.
  */
-let ourColor: 'white' | 'black' | undefined;
+let ourColor: Player | undefined;
 
 /**
  * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
@@ -76,16 +77,16 @@ function getIsPrivate(): boolean {
 	return isPrivate!;
 }
 
-function getOurColor(): 'white' | 'black' {
+function getOurColor(): Player {
 	if (!inOnlineGame) throw Error("Cannot get color we are in online game when we're not in an online game.");
 	return ourColor!; 
 }
 
-function getOpponentColor(): 'white' | 'black' {
-	return colorutil.getOppositeColor(ourColor!);
+function getOpponentColor(): Player {
+	return typeutil.invertPlayer(ourColor!)!;
 }
 
-function areWeColorInOnlineGame(color: string): boolean {
+function areWeColorInOnlineGame(color: Player): boolean {
 	if (!inOnlineGame) return false; // Can't be that color, because we aren't even in a game.
 	return ourColor === color;
 }
@@ -125,7 +126,7 @@ function setInSyncFalse() {
 function initOnlineGame(options: {
 	/** The id of the online game */
 	id: string,
-	youAreColor: 'white' | 'black',
+	youAreColor: Player,
 	publicity: 'public' | 'private',
 	drawOffer: DrawOfferInfo,
 	/** If our opponent has disconnected, this will be present. */

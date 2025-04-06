@@ -6,8 +6,7 @@
  */
 
 import type { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
-import type { Vec3 } from "../../../util/math.js";
-import type { Color } from "../../../chess/util/colorutil.js";
+import type { Vec3, Color } from "../../../util/math.js";
 
 
 import { BufferModelInstanced, createModel, createModel_Instanced } from "../buffermodel.js";

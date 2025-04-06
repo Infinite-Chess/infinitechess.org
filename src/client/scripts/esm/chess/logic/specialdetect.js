@@ -1,14 +1,15 @@
 
 // Import Start
 import gamefileutility from '../util/gamefileutility.js';
-import organizedlines from './organizedlines.js';
-import colorutil from '../util/colorutil.js';
+import boardutil from '../util/boardutil.js';
+import organizedpieces from './organizedpieces.js';
+import typeutil from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
 import checkresolver from './checkresolver.js';
-import typeutil from '../util/typeutil.js';
+import { players, rawTypes } from '../util/typeutil.js';
 // Import End
 
 /** 
@@ -18,6 +19,7 @@ import typeutil from '../util/typeutil.js';
  * @typedef {import('../util/coordutil.js').Coords} Coords
  * @typedef {import('./movepiece.js').CoordsSpecial} CoordsSpecial
  * @typedef {import('./movepiece.js').enpassantCreate} enpassantCreate
+ * @typedef {import('../util/typeutil.js').Player} Player
  */
 
 "use strict";
@@ -37,18 +39,18 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * Appends legal king special moves to the provided legal individual moves list. (castling)
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the king selected
- * @param {string} color - The color of the king selected
+ * @param {Player} color - The color of the king selected
  * @returns {CoordsSpecial[]}
  */
-function kings(gamefile, coords, color, ) {
+function kings(gamefile, coords, color) {
 	const individualMoves = [];
 
 	if (!doesPieceHaveSpecialRight(gamefile, coords)) return individualMoves; // King doesn't have castling rights
 
 	const x = coords[0];
 	const y = coords[1];
-	const key = organizedlines.getKeyFromLine([1,0],coords);
-	const row = gamefile.piecesOrganizedByLines['1,0'][key];
+	const key = organizedpieces.getKeyFromLine([1,0],coords);
+	const row = gamefile.pieces.lines.get('1,0').get(key);
 
 
 	// Castling. What makes a castle legal?
@@ -62,8 +64,7 @@ function kings(gamefile, coords, color, ) {
 	let left = -Infinity; // Piece directly left of king. (Infinity if none)
 	let right = Infinity; // Piece directly right of king. (Infinity if none)
 	for (let i = 0; i < row.length; i++) {
-		const thisPiece = row[i]; // { type, coords }
-		const thisCoord = thisPiece.coords;
+		const thisCoord = boardutil.getCoordsFromIdx(gamefile.pieces, row[i]); // [x,y]
 
 		if (thisCoord[0] < x && thisCoord[0] > left) left = thisCoord[0];
 		else if (thisCoord[0] > x && thisCoord[0] < right) right = thisCoord[0];
@@ -73,26 +74,26 @@ function kings(gamefile, coords, color, ) {
 	const rightDist = right - x;
 	const leftCoord = [left, y];
 	const rightCoord = [right, y];
-	const leftPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, leftCoord);
-	const rightPieceType = gamefileutility.getPieceTypeAtCoords(gamefile, rightCoord);
-	const leftColor = leftPieceType ? colorutil.getPieceColorFromType(leftPieceType) : undefined;
-	const rightColor = rightPieceType ? colorutil.getPieceColorFromType(rightPieceType) : undefined;
+	const leftPieceType = boardutil.getTypeFromCoords(gamefile.pieces, leftCoord);
+	const rightPieceType = boardutil.getTypeFromCoords(gamefile.pieces, rightCoord);
+	const leftColor = leftPieceType !== undefined ? typeutil.getColorFromType(leftPieceType) : undefined;
+	const rightColor = rightPieceType !== undefined ? typeutil.getColorFromType(rightPieceType) : undefined;
 
-	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || leftPieceType.startsWith('pawns') || typeutil.jumpingRoyals.some(type => leftPieceType.startsWith(type))) leftLegal = false;
-	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || rightPieceType.startsWith('pawns') || typeutil.jumpingRoyals.some(type => rightPieceType.startsWith(type))) rightLegal = false;
+	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(gamefile, leftCoord) || leftColor !== color || typeutil.getRawType(leftPieceType) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(leftPieceType) === type)) leftLegal = false;
+	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(gamefile, rightCoord) || rightColor !== color || typeutil.getRawType(rightPieceType) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(rightPieceType) === type)) rightLegal = false;
 	if (!leftLegal && !rightLegal) return individualMoves;
 
 	// 2. IF USING CHECKMATE: The king must not currently be in check,
 	// AND The square the king passes through must not be a check.
 	// The square the king lands on will be tested later, within  legalmoves.calculate()
 
-	const oppositeColor = colorutil.getOppositeColor(color);
+	const oppositeColor = typeutil.invertPlayer(color);
 	if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, 'checkmate')) {
 		if (gamefileutility.isCurrentViewedPositionInCheck(gamefile)) return individualMoves; // Not legal if in check
 
 		// Simulate the space in-between
 
-		const king = gamefileutility.getPieceAtCoords(gamefile, coords); // { type, index, coords }
+		const king = boardutil.getPieceFromCoords(gamefile.pieces, coords); // { type, index, coords }
 		if (leftLegal) {
 			const middleSquare = [x - 1, y];
 			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) leftLegal = false;
@@ -125,13 +126,13 @@ function kings(gamefile, coords, color, ) {
  * pawn moves, even though those don't need a special move flag.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the pawn selected
- * @param {string} color - The color of the pawn selected
+ * @param {Player} color - The color of the pawn selected
  * @returns {CoordsSpecial[]}
  */
 function pawns(gamefile, coords, color) {
 
 	// White and black pawns move and capture in opposite directions.
-	const yOneorNegOne = color === 'white' ? 1 : -1; 
+	const yOneorNegOne = color === players.WHITE ? 1 : -1; 
 	const individualMoves = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -139,13 +140,13 @@ function pawns(gamefile, coords, color) {
 
 	// Is there a piece in front of it?
 	const coordsInFront = [coords[0], coords[1] + yOneorNegOne];
-	if (!gamefileutility.getPieceTypeAtCoords(gamefile, coordsInFront)) {
+	if (boardutil.getTypeFromCoords(gamefile.pieces, coordsInFront) === undefined) { // No piece in front of it.
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, coordsInFront, color); // No piece, add the move
 
 		// Further... Is the double push legal?
 		const doublePushCoord = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
-		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, doublePushCoord);
-		if (!pieceAtCoords && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
+		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.pieces, doublePushCoord);
+		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(gamefile, coords)) { // Add the double push!
 			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, doublePushCoord, color); 
 		}
@@ -161,15 +162,15 @@ function pawns(gamefile, coords, color) {
 		const thisCoordsToCapture = coordsToCapture[i];
 
 		// Is there an enemy piece at this coords?
-		const pieceAtCoords = gamefileutility.getPieceTypeAtCoords(gamefile, thisCoordsToCapture);
-		if (!pieceAtCoords) continue; // No piece, skip
+		const pieceAtCoords = boardutil.getTypeFromCoords(gamefile.pieces, thisCoordsToCapture);
+		if (pieceAtCoords === undefined) continue; // No piece, skip
 
 		// There is a piece. Make sure it's a different color
-		const colorOfPiece = colorutil.getPieceColorFromType(pieceAtCoords);
+		const colorOfPiece = typeutil.getColorFromType(pieceAtCoords);
 		if (color === colorOfPiece) continue; // Same color, don't add the capture
 
 		// Make sure it isn't a void
-		if (pieceAtCoords.startsWith('voids')) continue;
+		if (typeutil.getRawType(pieceAtCoords) === rawTypes.VOID) continue;
 
 		appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
 	}
@@ -203,12 +204,12 @@ function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
 function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
 	if (gamefile.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = gamefileutility.getPieceTypeAtCoords(gamefile, gamefile.enpassant.pawn);
-	if (colorutil.getPieceColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
+	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.pieces, gamefile.enpassant.pawn);
+	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = gamefile.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
-	const yParity = color === 'white' ? 1 : -1;
+	const yParity = color === players.WHITE ? 1 : -1;
 	if (coords[1] + yParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
@@ -239,7 +240,7 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile, individualMoves, landCoord
  * Appends legal moves for the rose piece to the provided legal individual moves list.
  * @param {gamefile} gamefile - The gamefile
  * @param {number[]} coords - Coordinates of the rose selected
- * @param {string} color - The color of the rose selected
+ * @param {Player} color - The color of the rose selected
  * @returns {CoordsSpecial[]}
  */
 function roses(gamefile, coords, color) {
@@ -258,9 +259,9 @@ function roses(gamefile, coords, color) {
 				const movement = movements[math.posMod(b, movements.length)];
 				currentCoord = coordutil.addCoordinates(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
-				const pieceOnSquare = gamefileutility.getPieceAtCoords(gamefile, currentCoord); // { type, index, coords }
+				const pieceOnSquare = boardutil.getPieceFromCoords(gamefile.pieces, currentCoord); // { type, index, coords }
 				if (pieceOnSquare) {
-					const colorOfPiece = colorutil.getPieceColorFromType(pieceOnSquare.type);
+					const colorOfPiece = typeutil.getColorFromType(pieceOnSquare.type);
 					// eslint-disable-next-line max-depth
 					if (color !== colorOfPiece) appendCoordToIndividuals(currentCoord, path); // Capture is legal
 					break; // Break the spiral
@@ -334,15 +335,16 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
 
 /**
  * Returns true if a pawn moved onto a promotion line.
+ * @param {gamefile} gamefile
  * @param {string} type 
  * @param {number[]} coordsClicked 
  * @returns {boolean}
  */
 function isPawnPromotion(gamefile, type, coordsClicked) {
-	if (!type.startsWith('pawns')) return false;
+	if (typeutil.getRawType(type) !== rawTypes.PAWN) return false;
 	if (!gamefile.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
-	const color = colorutil.getPieceColorFromType(type);
+	const color = typeutil.getColorFromType(type);
 	const promotionRanks = gamefile.gameRules.promotionRanks[color];
 
 	return promotionRanks.includes(coordsClicked[1]);

@@ -2,10 +2,9 @@
  * This script handles queries to the player stats table. 
  */
 
+import jsutil from '../../client/scripts/esm/util/jsutil.js';
 // @ts-ignore
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
-// @ts-ignore
-import { ensureJSONString } from '../utility/JSONUtils.js';
 // @ts-ignore
 import db from './database.js';
 // @ts-ignore
@@ -95,11 +94,11 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
-		logEvents(`When getting player_stats data, columns must be an array of strings! Received: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEvents(`When getting player_stats data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
 		return undefined;
 	}
 	if (!columns.every(column => typeof column === 'string' && allPlayerStatsColumns.includes(column))) {
-		logEvents(`Invalid columns requested from player_stats table: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEvents(`Invalid columns requested from player_stats table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
 		return undefined;
 	}
 
@@ -137,14 +136,14 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStatsRecord): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEvents(`Invalid or empty columns and values provided for user ID "${user_id}" when updating player_stats columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEvents(`Invalid or empty columns and values provided for user ID "${user_id}" when updating player_stats columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
 	}
 
 	for (const column in columnsAndValues) {
 		// Validate all provided columns
 		if (!allPlayerStatsColumns.includes(column)) {
-			logEvents(`Invalid column "${column}" provided for user ID "${user_id}" when updating player_stats columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEvents(`Invalid column "${column}" provided for user ID "${user_id}" when updating player_stats columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 			return { success: false, reason: 'Invalid column.' }; // Generic error message
 		}
 	}
@@ -166,13 +165,13 @@ function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStats
 		// Check if the update was successful
 		if (result.changes > 0) return { success: true, result };
 		else {
-			logEvents(`No changes made when updating player stats table columns ${JSON.stringify(columnsAndValues)} for member in player_stats table with id "${user_id}"! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
+			logEvents(`No changes made when updating player stats table columns ${JSON.stringify(columnsAndValues)} for member in player_stats table with id "${user_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
 			return { success: false, reason: 'No changes made.' }; // Generic error message
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error updating player stats table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}": ${message}! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
+		logEvents(`Error updating player stats table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
 		// Return an error message
 		return { success: false, reason: 'Database error.' }; // Generic error message
 	}

@@ -62,9 +62,9 @@ const engine = (function() {
 	function getConsideredMoves(gamefile) {
 		const moves = [];
 		const intersections = getIntersections(gamefile);
-		for (const type in gamefile.ourPieces) {
+		for (const type in gamefile.pieces) {
 			if (gamefile.whosTurn !== math.getPieceColorFromType(type)) continue;
-			for (const coords of gamefile.ourPieces[type]) {
+			for (const coords of gamefile.pieces[type]) {
 				if (!coords) continue;
 				const piece = gamefileutility.getPieceFromTypeAndCoords(gamefile, type, coords);
 				const legalMoves = legalmoves.calculate(gamefile, piece);
@@ -90,7 +90,7 @@ const engine = (function() {
 	 */
 	function loneBlackKingEval(gamefile) {
 		let evaluation = 0;
-		const kingCoords = gamefile.ourPieces.kingsB[0];
+		const kingCoords = gamefile.pieces.kingsB[0];
 		const piece = gamefileutility.getPieceFromTypeAndCoords(gamefile, 'kingsB', kingCoords);
 		const kingLegalMoves = legalmoves.calculate(gamefile, piece);
 		evaluation += kingLegalMoves.individual.length;
@@ -127,7 +127,7 @@ const engine = (function() {
 			if (!(type in whitePiecesWeightTable) || !gamefileutility.getPieceCountOfType(gamefile, type)) continue;
 			const pieceWeightTable = whitePiecesWeightTable[type];
 
-			for (const pieceCoords of gamefile.ourPieces[type]) {
+			for (const pieceCoords of gamefile.pieces[type]) {
 				if (!pieceCoords) continue;
 				// calculate the distance between king and the piece
 				// multiply it by the piece weight and add it to the evaluation
@@ -143,8 +143,8 @@ const engine = (function() {
 	 * @returns {Move[]} - legal moves for the black king (first one if there's multiple)
 	 */
 	function getBlackKingLegalMoves(gamefile) {
-		const kingCoords = gamefile.ourPieces.kingsB[0];
-		const kingPiece = gamefileutility.getPieceAtCoords(gamefile, gamefile.ourPieces.kingsB[0]);
+		const kingCoords = gamefile.pieces.kingsB[0];
+		const kingPiece = gamefileutility.getPieceAtCoords(gamefile, gamefile.pieces.kingsB[0]);
 		const { individual } = legalmoves.calculate(gamefile, kingPiece);
 		return individual.map(x => ({type: 'kingsB', startCoords: kingCoords, endCoords: x}));
 	}

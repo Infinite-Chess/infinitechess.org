@@ -9,12 +9,11 @@ import { WebSocket } from "ws";
 import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis } from "./echoTracker.js";
 import socketUtility from "./socketUtility.js";
 import uuid from "../../client/scripts/esm/util/uuid.js";
+import jsutil from "../../client/scripts/esm/util/jsutil.js";
 // @ts-ignore
 import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
 // @ts-ignore
 import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
-// @ts-ignore
-import { ensureJSONString } from "../utility/JSONUtils.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
 
@@ -72,7 +71,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 	}
 
 	if (ws.readyState === WebSocket.CLOSED) {
-		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'errLog.txt', { print: true });
 		return;
 	}
