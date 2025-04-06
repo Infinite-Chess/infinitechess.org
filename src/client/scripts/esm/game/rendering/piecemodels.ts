@@ -101,6 +101,8 @@ function regenAll(gamefile: gamefile) {
 	}
 
 	frametracker.onVisualChange();
+
+	delete gamefile.ourPieces.newlyRegenerated; // Delete this flag now. It was to let us know the piece models needed to be regen'd.
 }
 
 /**

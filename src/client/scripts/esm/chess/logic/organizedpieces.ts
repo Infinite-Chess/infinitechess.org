@@ -81,7 +81,7 @@ interface TypeRange {
 
 /** How many extra undefined placeholders each type range should have.
  * When these are all exhausted, the large piece lists must be regenerated. */
-const listExtras = 2;
+const listExtras = 1;
 /** EDITOR-MODE-SPECIFIC {@link listExtras} */
 const listExtras_Editor = 100;
 
