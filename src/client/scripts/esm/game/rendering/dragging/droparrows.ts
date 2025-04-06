@@ -6,7 +6,7 @@
  */
 
 
-import type { Piece } from "../../../chess/logic/boardchanges.js";
+import type { Piece } from "../../../chess/util/boardutil.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 
 
@@ -14,7 +14,7 @@ import arrows from "../arrows/arrows.js";
 import selection from "../../chess/selection.js";
 import draganimation from "./draganimation.js";
 import space from "../../misc/space.js";
-import colorutil from "../../../chess/util/colorutil.js";
+import typeutil from "../../../chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
@@ -37,7 +37,7 @@ function updateCapturedPiece(): void {
 
 	const selectedPiece = selection.getPieceSelected()!;
 	const selectedPieceLegalMoves = selection.getLegalMovesOfSelectedPiece()!;
-	const selectedPieceColor = colorutil.getPieceColorFromType(selectedPiece.type) as 'white'|'black';
+	const selectedPieceColor = typeutil.getColorFromType(selectedPiece.type);
 
 	// Test if the mouse is hovering over any arrow
 
@@ -81,13 +81,13 @@ function shiftArrows(): void {
 		const worldCoords = space.convertCoordToWorldSpace(capturedPieceThisFrame.coords) as Coords;
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
-		arrows.shiftArrow(capturedPieceThisFrame.type, capturedPieceThisFrame.coords, undefined);
+		arrows.shiftArrow(capturedPieceThisFrame.type, true, capturedPieceThisFrame.coords, undefined);
 		// Place the selected piece's arrow location on it
 		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
 	}
 
 	// Shift the arrow of the selected piece
-	arrows.shiftArrow(selectedPiece.type, selectedPiece.coords, newLocationOfSelectedPiece);
+	arrows.shiftArrow(selectedPiece.type, true, selectedPiece.coords, newLocationOfSelectedPiece);
 }
 
 function onDragTermination() {

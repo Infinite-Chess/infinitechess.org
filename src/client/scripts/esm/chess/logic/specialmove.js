@@ -1,9 +1,10 @@
 
 /** This script stores the default methods for EXECUTING special moves */
 
-import gamefileutility from '../util/gamefileutility.js';
+import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import state from './state.js';
+import { rawTypes } from '../util/typeutil.js';
 
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 
@@ -15,10 +16,10 @@ import state from './state.js';
 // In the future, parameters can be added if variants have
 // different special moves for pieces.
 const defaultSpecialMoves = {
-	"kings": kings,
-	"royalCentaurs": kings,
-	"pawns": pawns,
-	"roses": roses,
+	[rawTypes.KING]: kings,
+	[rawTypes.ROYALCENTAUR]: kings,
+	[rawTypes.PAWN]: pawns,
+	[rawTypes.ROSE]: roses,
 };
 
 // A custom special move needs to be able to:
@@ -42,16 +43,16 @@ function kings(gamefile, piece, move) {
 
 	// Move the king to new square
 	const moveChanges = move.changes;
-	boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
 
 	// Move the rook to new square
-	const pieceToCastleWith = gamefileutility.getPieceAtCoords(gamefile, specialTag.coord);
+	const pieceToCastleWith = boardutil.getPieceFromCoords(gamefile.pieces, specialTag.coord);
 	const landSquare = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
-	boardchanges.queueMovePiece(moveChanges, pieceToCastleWith, false, landSquare); // Make normal move
+	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
 
+	// Special move was executed!
 	// (There is no captured piece with castling)
-
-	return true; // Special move was executed!
+	return true;
 }
 
 function pawns(gamefile, piece, move) {
@@ -66,22 +67,22 @@ function pawns(gamefile, piece, move) {
 
 	const captureCoords = enpassantTag ? gamefile.enpassant.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, captureCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
 
 	// Delete the piece captured
 
 	if (capturedPiece) {
-		boardchanges.queueCapture(moveChanges, piece, true, move.endCoords, capturedPiece);
+		boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece);
 	} else {
 		// Move the pawn
-		boardchanges.queueMovePiece(moveChanges, piece, true, move.endCoords);
+		boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
 	}
 
 	if (promotionTag) {
 		// Delete original pawn
-		boardchanges.queueDeletePiece(moveChanges, { type: piece.type, coords: move.endCoords, index: piece.index }, true);
+		boardchanges.queueDeletePiece(moveChanges, true, { coords: move.endCoords, type: piece.type, index: piece.index });
 
-		boardchanges.queueAddPiece(moveChanges, { type: promotionTag, coords: move.endCoords, index: undefined });
+		boardchanges.queueAddPiece(moveChanges, { coords: move.endCoords, type: promotionTag, index: -1 });
 	}
 
 	// Special move was executed!
@@ -90,11 +91,11 @@ function pawns(gamefile, piece, move) {
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
 function roses(gamefile, piece, move) {
-	const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, move.endCoords);
 
 	// Delete the piece captured
-	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, piece, true, move.endCoords, capturedPiece, move.path);
-	else boardchanges.queueMovePiece(move.changes, piece, true, move.endCoords, move.path);
+	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece, move.path);
+	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords, move.path);
 
 	// Special move was executed!
 	return true;
@@ -108,11 +109,9 @@ function roses(gamefile, piece, move) {
  */
 function getDefaultSpecialVicinitiesByPiece() {
 	return {
-		// "kings": [], // Impossible for kings to make a capture while castling
-		// "royalCentaurs": [], // Same for royal centaurs
-		"pawns": [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
+		[rawTypes.PAWN]: [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
 		// All squares a rose piece could potentially capture on.
-		"roses": [[-2,-1],[-3,-3],[-2,-5],[0,-6],[2,-5],[3,-3],[2,-1],[-4,0],[-5,2],[-4,4],[-2,5],[0,4],[1,2],[-1,-2],[0,-4],[4,-4],[5,-2],[4,0],[2,1],[-5,-2],[-6,0],[-3,3],[-1,2],[1,-2],[6,0],[5,2],[3,3],[-4,-4],[-2,1],[4,4],[2,5],[0,6]],
+		[rawTypes.ROSE]: [[-2,-1],[-3,-3],[-2,-5],[0,-6],[2,-5],[3,-3],[2,-1],[-4,0],[-5,2],[-4,4],[-2,5],[0,4],[1,2],[-1,-2],[0,-4],[4,-4],[5,-2],[4,0],[2,1],[-5,-2],[-6,0],[-3,3],[-1,2],[1,-2],[6,0],[5,2],[3,3],[-4,-4],[-2,1],[4,4],[2,5],[0,6]],
 	};
 }
 

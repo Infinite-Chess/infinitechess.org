@@ -36,6 +36,8 @@ type Vec2Key = `${number},${number}`
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
 
+/** A color in a length-4 array: `[r,g,b,a]` */
+type Color = [number,number,number,number];
 
 // Geometry -------------------------------------------------------------------------------------------
 
@@ -412,8 +414,8 @@ function areLinesCollinear(lines: Vec2[]): boolean {
 /**
  * Returns the key string of the coordinates: [dx,dy] => 'dx,dy'
  */
-function getKeyFromVec2(coords: Vec2): Vec2Key {
-	return `${coords[0]},${coords[1]}`;
+function getKeyFromVec2(vec2: Vec2): Vec2Key {
+	return `${vec2[0]},${vec2[1]}`;
 }
 
 /**
@@ -674,4 +676,5 @@ export type {
 	Vec2,
 	Vec2Key,
 	Vec3,
+	Color
 };

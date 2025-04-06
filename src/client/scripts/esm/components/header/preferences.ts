@@ -1,15 +1,16 @@
 
 
 import themes from "./themes.js";
+import pieceThemes, { PieceColorGroup } from "./pieceThemes.js";
 import localstorage from "../../util/localstorage.js";
 import timeutil from "../../util/timeutil.js";
 import validatorama from "../../util/validatorama.js";
 import jsutil from "../../util/jsutil.js";
 import docutil from "../../util/docutil.js";
-import colorutil from "../../chess/util/colorutil.js";
+import typeutil from "../../chess/util/typeutil.js";
 
 
-import type { Color } from "../../chess/util/colorutil.js";
+import type { Color } from "../../util/math.js";
 
 
 
@@ -34,14 +35,6 @@ interface ServerSidePreferences {
 
 /** Both client and server side preferences */
 type Preferences = ServerSidePreferences & ClientSidePreferences;
-
-/** A theme's color arguments as to what color to tint each player's pieces. */
-interface ColorArgs {
-	white: Color,
-	black: Color,
-	neutral: Color
-}
-
 
 // Variables ------------------------------------------------------------
 
@@ -271,36 +264,23 @@ function getBoxOutlineColor(): Color {
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
-/** Returns { r, g, b, a } depending on our current theme! */
-function getTintColorOfType(type: string): { r: number, g: number, b: number, a: number } {
-	const colorArgs: { white: Color, black: Color, neutral: Color } | undefined = getPieceRegenColorArgs(); // { white, black, neutral }
-	if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
+/** Returns the tint color for a piece of the given type, according to our current theme. */
+function getTintColorOfType(type: number): Color {
+	const [r, p] = typeutil.splitType(type);
 
-	const pieceColor = colorutil.getPieceColorFromType(type);
-	const color: Color = colorArgs[pieceColor];
+	const baseColor: Color = pieceThemes.getBaseColorForType(r, p);
 
-	return {
-		r: color[0],
-		g: color[1],
-		b: color[2],
-		a: color[3]
-	};
-}
-
-/**
- * Returns the color arrays for the pieces, according to our theme.
- * @returns {Object | undefined} An object containing the properties "white", "black", and "neutral".
- */
-function getPieceRegenColorArgs(): ColorArgs | undefined {
 	const themeName: string = getTheme();
-	const themeProperties: any = themes.themes[themeName];
-	if (!themeProperties.useColoredPieces) return; // Not using colored pieces
+	const themePieceColors: Partial<PieceColorGroup> = themes.getPropertyOfTheme(themeName, "pieceTheme");
+	const tint: Color = themePieceColors[p] ?? [1, 1, 1, 1];
 
-	return {
-		white: themes.getPropertyOfTheme(themeName, 'whitePiecesColor'),
-		black: themes.getPropertyOfTheme(themeName, 'blackPiecesColor'),
-		neutral: themes.getPropertyOfTheme(themeName, 'neutralPiecesColor'),
-	};
+	// Multiply the colors together to get the final color
+	return [
+		baseColor[0] * tint[0],
+		baseColor[1] * tint[1],
+		baseColor[2] * tint[2],
+		baseColor[3] * tint[3]
+	];
 }
 
 // /**
@@ -317,7 +297,7 @@ function getPieceRegenColorArgs(): ColorArgs | undefined {
 
 /*
  * The commented stuff below was ONLY used for fast
- * modifying of theme colors using the keyboard keys!!!
+ * modifying of theme players using the keyboard keys!!!
  */
 
 // const allProperties = Object.keys(themes.themes[themes.defaultTheme]);
@@ -432,9 +412,4 @@ export default {
 	getCheckHighlightColor,
 	getBoxOutlineColor,
 	getTintColorOfType,
-	getPieceRegenColorArgs,
-};
-
-export type {
-	ColorArgs,
 };

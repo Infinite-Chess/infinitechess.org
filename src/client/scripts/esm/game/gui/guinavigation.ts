@@ -2,7 +2,7 @@
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
+import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 // @ts-ignore
@@ -219,7 +219,7 @@ function callback_Back() {
 }
 
 function callback_Expand() {
-	const allCoords = gamefileutility.getCoordsOfAllPieces(gameslot.getGamefile()!);
+	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
 	area.initTelFromCoordsList(allCoords);
 }
 

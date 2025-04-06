@@ -11,6 +11,7 @@ import camera from './camera.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
+import imagecache from '../../chess/rendering/imagecache.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
@@ -20,6 +21,7 @@ import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
 import guipromotion from '../gui/guipromotion.js';
+import spritesheet from './spritesheet.js';
 // Import End
 
 /** 
@@ -86,7 +88,12 @@ let darkTiles;
 		updateTheme();
 		const gamefile = gameslot.getGamefile();
 		if (!gamefile) return;
-		piecemodels.regenAll(gamefile);
+		imagecache.deleteImageCache();
+		imagecache.initImagesForGame(gamefile).then(() => {
+			piecemodels.regenAll(gamefile);
+			// Regenerate the spritesheet with the new tinted images
+			spritesheet.initSpritesheetForGame(gl, gamefile);
+		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();
 		guipromotion.initUI(gamefile.gameRules.promotionsAllowed);

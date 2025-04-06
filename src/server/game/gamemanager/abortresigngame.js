@@ -5,7 +5,7 @@
 
 import gameutility from './gameutility.js';
 import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
-import colorutil from '../../../client/scripts/esm/chess/util/colorutil.js';
+import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { sendNotify } from '../../socket/sendSocketMessage.js';
 
 /**
@@ -52,7 +52,7 @@ function abortGame(ws, game) {
 
 	setGameConclusion(game, 'aborted');
 	onRequestRemovalFromPlayersInActiveGames(ws, game);
-	const opponentColor = colorutil.getOppositeColor(colorPlayingAs);
+	const opponentColor = typeutil.invertPlayer(colorPlayingAs);
 	gameutility.sendGameUpdateToColor(game, opponentColor);
 }
 
@@ -82,7 +82,7 @@ function resignGame(ws, game) {
 	// Resign
 
 	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-	const opponentColor = colorutil.getOppositeColor(ourColor);
+	const opponentColor = typeutil.invertPlayer(ourColor);
 	const gameConclusion = `${opponentColor} resignation`;
 	setGameConclusion(game, gameConclusion);
 	onRequestRemovalFromPlayersInActiveGames(ws, game);

@@ -3,13 +3,8 @@
  * This script prepares our variant when a game is constructed
  */
 
-import legalmoves from './legalmoves.js';
 import formatconverter from './formatconverter.js';
-import colorutil from '../util/colorutil.js';
-import coordutil from '../util/coordutil.js';
 import variant from '../variants/variant.js';
-import organizedlines from './organizedlines.js';
-import typeutil from '../util/typeutil.js';
 
 /** 
  * Type Definitions 
@@ -35,68 +30,11 @@ function setupVariant(gamefile, metadata, options) {
 
 	gamefile.startSnapshot.playerCount = new Set(gamefile.gameRules.turnOrder).size;
 
-	initExistingTypes(gamefile);
 	initPieceMovesets(gamefile, metadata);
-	initSlidingMoves(gamefile);
 }
 
 /**
- * Sets the `existingTypes` property of the `startSnapshot` of the gamefile,
- * which contains all types of pieces in the game, without their color extension.
- * @param {gamefile} gamefile
- */
-function initExistingTypes(gamefile) {
-	if (gamefile.editor) return gamefile.startSnapshot.existingTypes = [...typeutil.types, ...typeutil.neutralTypes]; // Editor mode may add any available piece type to the board
-
-	const teamtypes = new Set(Object.values(gamefile.startSnapshot.position)); // Make a set of all pieces in game
-    
-	// Makes sure all possible pieces are accounted for. even when they dont start with them
-	const promotiontypes = gamefile.gameRules.promotionsAllowed ? [...gamefile.gameRules.promotionsAllowed.white, ...gamefile.gameRules.promotionsAllowed.black] : [];
-    
-	// Promotion types already have teams stripped
-	const rawtypes = new Set(promotiontypes);
-	for (const tpiece of teamtypes) {
-		rawtypes.add(colorutil.trimColorExtensionFromType(tpiece)); // Make a set with the team color trimmed
-	}
-
-	gamefile.startSnapshot.existingTypes = [...rawtypes];
-}
-
-/**
- * Inits the `slidingMoves` property of the `startSnapshot` of the gamefile.
- * This contains the information of what slides are possible, according to
- * what piece types are in this game.
- * @param {gamefile} gamefile 
- */
-function initSlidingMoves(gamefile) {
-	gamefile.startSnapshot.slidingPossible = getPossibleSlides(gamefile);
-	gamefile.startSnapshot.hippogonalsPresent = organizedlines.areHippogonalsPresentInGame(gamefile.startSnapshot.slidingPossible);
-	gamefile.startSnapshot.colinearsPresent = organizedlines.areColinearSlidesPresentInGame(gamefile);
-}
-
-/**
- * Calculates all possible slides that should be possible in the provided game,
- * excluding pieces that aren't in the provided position.
- * @param {gamefile} gamefile
- */
-function getPossibleSlides(gamefile) {
-	const rawtypes = gamefile.startSnapshot.existingTypes;
-	const movesets = gamefile.pieceMovesets;
-	const slides = new Set(['1,0']); // '1,0' is required if castling is enabled.
-	for (const type of rawtypes) {
-		let moveset = movesets[type];
-		if (!moveset) continue;
-		moveset = moveset();
-		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach(slide => slides.add(slide));
-	}
-	const temp = [];
-	slides.forEach(slideline => temp.push(coordutil.getCoordsFromKey(slideline)));
-	return temp;
-}
-
-/**
- * Initiates legalmoves's and the special detect, move, and undo scripts movesets they're using.
+ * Sets the pieceMovesets and specialMoves functions of the gamefile.
  * @param {gamefile} gamefile - The gamefile
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  */
@@ -106,10 +44,6 @@ function initPieceMovesets(gamefile, metadata) {
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
 	gamefile.pieceMovesets = variant.getMovesetsOfVariant(metadata);
 	gamefile.specialMoves = variant.getSpecialMovesOfVariant(metadata);
-
-	// Construct the vicinity objects (helps with check detection)
-	gamefile.vicinity = legalmoves.genVicinity(gamefile);
-	gamefile.specialVicinity = legalmoves.genSpecialVicinity(gamefile);
 }
 
 /**
@@ -166,7 +100,7 @@ function initStartSnapshotAndGamerules(gamefile, metadata) {
 		positionString,
 		specialRights
 	};
-	gamefile.gameRules = variant.getGameRulesOfVariant(metadata, position);
+	gamefile.gameRules = variant.getGameRulesOfVariant(metadata);
 
 	// console.log(jsutil.deepCopyObject(position));
 	// console.log(jsutil.deepCopyObject(positionString));

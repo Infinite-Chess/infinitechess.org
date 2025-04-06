@@ -125,9 +125,7 @@ function genModel() {
 	const endX = startX + miniimage.getWidthWorld();
 	const endY = startY + miniimage.getWidthWorld();
 
-	const { r, g, b } = preferences.getTintColorOfType(type);
-
-	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, opacityOfGhostImage);
+	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, opacityOfGhostImage);
 
 	dataGhost.push(...data);
     

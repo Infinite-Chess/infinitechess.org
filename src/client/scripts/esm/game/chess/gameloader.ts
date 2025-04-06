@@ -14,6 +14,7 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { Additional, VariantOptions } from "./gameslot.js";
 import type { EngineConfig } from "../misc/enginegame.js";
+import type { Player } from "../../chess/util/typeutil.js";
 
 
 import gui from "../gui/gui.js";
@@ -23,6 +24,7 @@ import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
 import loadingscreen from "../gui/loadingscreen.js";
+import { players } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
 // @ts-ignore
@@ -75,7 +77,7 @@ function areInLocalGame(): boolean {
 	return typeOfGameWeAreIn === 'local';
 }
 
-function isItOurTurn(color?: string): boolean {
+function isItOurTurn(color?: Player): boolean {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't tell if it's our turn when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
@@ -83,7 +85,7 @@ function isItOurTurn(color?: string): boolean {
 	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
 }
 
-function getOurColor(): 'white' | 'black' {
+function getOurColor(): Player {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't get our color when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.getOurColor();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.getOurColor();
@@ -172,7 +174,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 
 	gameslot.loadGamefile({
 		metadata: options.metadata,
-		viewWhitePerspective: options.youAreColor === 'white',
+		viewWhitePerspective: options.youAreColor === players.WHITE,
 		allowEditCoords: false,
 		additional
 	})
@@ -196,7 +198,7 @@ async function startEngineGame(options: {
 	Variant?: string,
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions,
-	youAreColor: 'white' | 'black',
+	youAreColor: Player,
 	currentEngine: 'engineCheckmatePractice' | 'classicEngine', // Add more union types when more engines are added
 	engineConfig: EngineConfig,
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
@@ -216,8 +218,8 @@ async function startEngineGame(options: {
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		TimeControl: '-',
-		White: options.youAreColor === 'white' ? '(You)' : 'Engine',
-		Black: options.youAreColor === 'black' ? '(You)' : 'Engine',
+		White: options.youAreColor === players.WHITE ? '(You)' : 'Engine',
+		Black: options.youAreColor === players.BLACK ? '(You)' : 'Engine',
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
@@ -226,7 +228,7 @@ async function startEngineGame(options: {
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
-		viewWhitePerspective: options.youAreColor === 'white',
+		viewWhitePerspective: options.youAreColor === players.WHITE,
 		allowEditCoords: false,
 		additional: { variantOptions: options.variantOptions }
 	});

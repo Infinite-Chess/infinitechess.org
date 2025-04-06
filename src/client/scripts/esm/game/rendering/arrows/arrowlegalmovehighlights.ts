@@ -5,17 +5,17 @@
  */
 
 
-import type { Piece } from "../../../chess/logic/boardchanges.js";
-import type { Color } from "../../../chess/util/colorutil.js";
+import type { Piece } from "../../../chess/util/boardutil.js";
+import type { Color } from "../../../util/math.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
 // @ts-ignore
 import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 
 
 import arrows from "./arrows.js";
-import colorutil from "../../../chess/util/colorutil.js";
+import typeutil from "../../../chess/util/typeutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
-import gamefileutility from "../../../chess/util/gamefileutility.js";
+import boardutil from "../../../chess/util/boardutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
@@ -26,9 +26,6 @@ import preferences from "../../../components/header/preferences.js";
 import movement from "../movement.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import typeutil from "../../../chess/util/typeutil.js";
-
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -106,14 +103,14 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
-	const thisRider = gamefileutility.getPieceAtCoords(gamefile, piece.coords)!;
+	const thisRider = boardutil.getPieceFromCoords(gamefile.pieces, piece.coords)!;
 	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
 
 	// Calculate the mesh...
 
 	// Determine what color the legal move highlights should be...
-	const pieceColor = colorutil.getPieceColorFromType(piece.type) as 'white'|'black';
-	const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
+	const pieceColor = typeutil.getColorFromType(piece.type);
+	const opponentColor = onlinegame.areInOnlineGame() ? onlinegame.getOpponentColor() : typeutil.invertPlayer(gamefile.whosTurn);
 	const isOpponentPiece = pieceColor === opponentColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
@@ -161,8 +158,7 @@ function regenModelsOfHoveredPieces() {
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Calculate the mesh...
-		const pieceColor = colorutil.getPieceColorFromType(hoveredArrow.piece.type);
-		if (pieceColor === "neutral") return console.error("Arrows for neutral pieces not supported");
+		const pieceColor = typeutil.getColorFromType(hoveredArrow.piece.type);
 		const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(hoveredArrow.piece.coords, hoveredArrow.legalMoves, pieceColor, hoveredArrow.color);
 		// Overwrite the model inside piecesHoveredOver
 		hoveredArrow.model_NonCapture = NonCaptureModel;

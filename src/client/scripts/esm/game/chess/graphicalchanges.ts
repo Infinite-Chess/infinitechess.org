@@ -76,7 +76,7 @@ function deleteMeshPiece(gamefile: gamefile, change: Change) {
 
 function moveMeshPiece(gamefile: gamefile, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
-	piecemodels.overwritebufferdata(gamefile, { type: change.piece.type, index: change.piece.index, coords: change.endCoords });
+	piecemodels.overwritebufferdata(gamefile, { type: change.piece.type, coords: change.endCoords, index: change.piece.index });
 }
 
 function returnMeshPiece(gamefile: gamefile, change: Change) {

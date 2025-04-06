@@ -195,11 +195,29 @@ function sqliteToISO(sqliteString: string): string {
  */
 function isoToSQLite(isoString: string): string {
 	const date = new Date(isoString);
-	if (isNaN(date.getTime())) {
-		throw new Error("Invalid ISO 8601 string provided.");
-	}
+	if (isNaN(date.getTime())) throw new Error("Invalid ISO 8601 string provided.");
     
 	return date.toISOString().replace('T', ' ').split('.')[0]!;
+}
+
+/**
+ * Converts a timestamp (milliseconds since the UNIX epoch) to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
+ * The output string represents the timestamp in UTC.
+ * @param timestamp - The timestamp in milliseconds since the UNIX epoch.
+ * @returns The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
+ */
+function timestampToSqlite(timestamp: number): string {
+	const date = new Date(timestamp);
+
+	// Check if the timestamp resulted in a valid date
+	if (isNaN(date.getTime())) throw new Error("Invalid timestamp provided.");
+
+	// toISOString() returns in UTC format "YYYY-MM-DDTHH:MM:SS.sssZ"
+	// We need to format it to "YYYY-MM-DD HH:MM:SS"
+	const isoString = date.toISOString();
+
+	// Extract the date and time part, replace 'T' with space
+	return isoString.slice(0, 19).replace('T', ' ');
 }
 
 export default {
@@ -218,4 +236,5 @@ export default {
 	sqliteToTimestamp,
 	sqliteToISO,
 	isoToSQLite,
+	timestampToSqlite,
 };

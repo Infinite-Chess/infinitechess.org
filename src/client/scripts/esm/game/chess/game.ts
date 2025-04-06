@@ -64,7 +64,6 @@ import stats from '../gui/stats.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
-
 // Functions -------------------------------------------------------------------------------
 
 
