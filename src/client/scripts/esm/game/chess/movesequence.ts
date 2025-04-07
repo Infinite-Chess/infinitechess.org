@@ -53,7 +53,7 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 
 	/**
 	 * Check if boardchanges regenerated the organized pieces to add more undefineds,
-	 * if so, we need to completely regenerate the affected type range's types.
+	 * if so, we need to completely regenerate all piece models.
 	 * Otherwise, we run graphical changes as normal.
 	 * 
 	 * We have to regenerate ALL types here, not just the ones whos type ranges
