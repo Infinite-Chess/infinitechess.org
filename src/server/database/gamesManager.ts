@@ -34,7 +34,7 @@ interface GamesRecord {
 }
 
 /** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
+type ModifyGameQueryResult = { success: true; result: RunResult; game_id?: number } | { success: false; reason?: string };
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ function addGameToGamesTable(
         termination: string,
         movecount: number,
         icn: string
-    }): ModifyQueryResult {
+    }): ModifyGameQueryResult {
 
 	// Generate a unique game ID
 	const game_id = genUniqueGameID();
@@ -102,7 +102,7 @@ function addGameToGamesTable(
 		);
 
 		// Return success result
-		return { success: true, result };
+		return { success: true, result, game_id };
 
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -219,7 +219,7 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
  * @returns - A result object indicating success or failure.
  */
 // eslint-disable-next-line no-unused-vars
-function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyQueryResult {
+function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyGameQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
 		logEvents(`Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
@@ -273,7 +273,7 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
  * @returns - A result object indicating success or failure.
  */
 // eslint-disable-next-line no-unused-vars
-function deleteGame(game_id: number): ModifyQueryResult {
+function deleteGame(game_id: number): ModifyGameQueryResult {
 	// SQL query to delete a game by its game_id
 	const query = 'DELETE FROM games WHERE game_id = ?';
 

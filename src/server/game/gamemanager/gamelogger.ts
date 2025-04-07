@@ -22,7 +22,6 @@ import { getMemberDataByCriteria } from "../../database/memberManager.js";
  * Type Definitions
 */
 
-import type { PlayerStatsRecord } from "../../database/playerStatsManager.js";
 // @ts-ignore
 import type { Game } from '../TypeDefinitions.js';
 
@@ -99,8 +98,11 @@ async function logGame(game: Game) {
 		rating_diffString = '0,0';
 	}
 
+	// Convert the Date of the game to Sqlite string
+	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated) as string;
+
 	const gameToLog = {
-		date: timeutil.timestampToSqlite(game.timeCreated) as string,
+		date: dateSqliteString,
 		players: playersString,
 		elo: eloString,
 		rating_diff: rating_diffString,
@@ -114,11 +116,16 @@ async function logGame(game: Game) {
 		icn: ICN
 	};
 
-	// add game to games table in database
-	addGameToGamesTable(gameToLog);
+	// Add game to games table in database
+	const out = addGameToGamesTable(gameToLog);
+	if (!out.success) return;
+	const game_id = out.game_id;
 
 	// update player_stats entries for each logged in player
 	const winner = game.gameConclusion.split(" ")[0];
+	// What if game aborted?
+	// TODO
+
 	for (const player_key in game.players) {
 		if (user_ids[player_key] === undefined) continue;
 
@@ -132,13 +139,26 @@ async function logGame(game: Game) {
 		const read_columns = read_and_modify_columns.concat(read_and_increment_columns);
 		const player_stats = getPlayerStatsData(user_ids[player_key], read_columns);
 		if (player_stats === undefined) continue;
+
+		// Update last_played_rated_game date
+		if (game.rated) player_stats.last_played_rated_game = dateSqliteString;
+
+		// Update game history string
+		if (player_stats["game_history"] !== undefined) {
+			if (player_stats["game_history"] === '') player_stats["game_history"] = `${game_id}`;
+			else player_stats["game_history"] += `,${game_id}`;
+		}
+
+		// Update moves_played
+		// TODO
 		
 		// Update increment counts
 		for (const column of read_and_increment_columns) {
 			// @ts-ignore
-			if (player_stats[column] !== undefined) player_stats[column] = player_stats[column] + 1;
+			if (player_stats[column] !== undefined) player_stats[column]++;
 		}
 
+		// Push changed player_stats to database
 		updatePlayerStatsColumns(user_ids[player_key], player_stats);
 	}
 }
