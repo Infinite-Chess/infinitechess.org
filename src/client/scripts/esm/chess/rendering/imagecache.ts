@@ -34,7 +34,7 @@ let cachedImages: TypeGroup<HTMLImageElement> = {};
  */
 async function initImagesForGame(gamefile: gamefile): Promise<void> {
 	if (Object.keys(cachedImages).length > 0) throw Error("Image cache already initialized. Call deleteImageCache() when unloading games.");
-	console.log("Initializing image cache for game...");
+	// console.log("Initializing image cache for game...");
 
 	// 1. Determine required piece types (excluding SVG-less ones)
 	const types = gamefile.startSnapshot.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
@@ -117,7 +117,7 @@ function getPieceImage(type: number): HTMLImageElement {
  * Clears the image cache. Call this when the game unloads.
  */
 function deleteImageCache(): void {
-	console.log("Deleting image cache.");
+	// console.log("Deleting image cache.");
 	cachedImages = {};
 }
 
