@@ -15,7 +15,7 @@ import checkhighlight from "./checkhighlight.js";
 import { highlightLastMove } from "./lastmovehighlight.js";
 import legalmovehighlights from "./legalmovehighlights.js";
 import specialrighthighlights from "./specialrighthighlights.js";
-import drawsquares from "./drawing/drawsquares.js";
+import drawsquares from "./annotations/drawsquares.js";
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
