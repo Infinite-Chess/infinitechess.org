@@ -37,6 +37,7 @@ const allPlayerStatsColumns = [
 	'user_id',
 	'last_played_rated_game',
 	'game_history',
+	'games_starred',
 	'moves_played',
 	'game_count',
 	'game_count_rated',
@@ -123,6 +124,7 @@ function generateTables() {
 			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
 			last_played_rated_game TIMESTAMP,
 			game_history TEXT NOT NULL DEFAULT '', -- Delimited game ids
+			games_starred TEXT NOT NULL DEFAULT '', -- Delimited game ids of starred games
 			moves_played INTEGER NOT NULL DEFAULT 0,
 			game_count INTEGER NOT NULL DEFAULT 0,
 			game_count_rated INTEGER NOT NULL DEFAULT 0,

@@ -21,6 +21,7 @@ interface PlayerStatsRecord {
 	user_id?: number;
     last_played_rated_game?: string | null; // This cell is allowed to be null
     game_history?: string;
+	games_starred?: string;
     moves_played?: number;
     game_count?: number;
     game_count_rated?: number;

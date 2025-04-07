@@ -120,16 +120,13 @@ async function logGame(game: Game) {
 	for (const player_key in game.players) {
 		if (user_ids[player_key] === undefined) continue;
 
-		const change_columns = ( game.rated ? ["game_history", "moves_played", "last_played_rated_game"] : ["game_history", "moves_played"] );
-
 		const outcomeString = (winner === player_key ? "wins" : (winner === '0' ? "draws" : "losses"));
-		const gameTypeString = (game.publicity === 'public' ? (game.rated ? "rated" : "casual") : "private");
+		const publicityString = (game.publicity === 'public' ? "public" : "private");
+		const ratedString = (game.rated ? "rated" : "casual");
 
-		const increment_columns = ["game_count", `game_count_${gameTypeString}`, `game_count_${outcomeString}`];
-		if (game.publicity === 'public') {
-			increment_columns.push("game_count_public");
-			increment_columns.push(`game_count_${outcomeString}_${gameTypeString}`);
-		}
+		const change_columns = ( game.rated ? ["last_played_rated_game", "game_history", "moves_played"] : ["game_history", "moves_played"] );
+		const increment_columns = [ "game_count", `game_count_${ratedString}`, `game_count_${publicityString}`,
+									`game_count_${outcomeString}`, `game_count_${outcomeString}_${ratedString}`];
 		
 
 		// Update player_stats table
