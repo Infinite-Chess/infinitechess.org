@@ -11,9 +11,9 @@ import { getTranslation } from '../../utility/translate.js';
 // @ts-ignore
 import { logEvents } from '../../middleware/logEvents.js';
 // @ts-ignore
-import { getMetadataOfGame } from './gameutility.js';
+import gameutility from './gameutility.js';
 // @ts-ignore
-import timeutil from '../../../client/scripts/esm/chess/util/timeutil.js';
+import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 
 /**
  * Type Definitions
@@ -48,7 +48,7 @@ async function logGame(game: Game) {
      * gameRules
      */
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const metadata = getMetadataOfGame(game);
+	const metadata = gameutility.getMetadataOfGame(game);
 	const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
 	delete gameRules.moveRule;
 	metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.

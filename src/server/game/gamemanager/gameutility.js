@@ -739,6 +739,7 @@ export default {
 	subscribeClientToGame,
 	unsubClientFromGame,
 	resyncToGame,
+	getMetadataOfGame,
 	sendGameUpdateToBothPlayers,
 	sendGameUpdateToColor,
 	logGame,
