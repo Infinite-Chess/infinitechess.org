@@ -83,7 +83,7 @@ const PLUS_SIGN = {
  * @param color - The color [r, g, b, a]. This should MATCH the current theme's legal move color!
  * @returns The vertex data for the legal move square.
  */
-function getDataLegalMoveSquare(color: [number,number,number,number]): number[] {
+function getDataLegalMoveSquare(color: Color): number[] {
 	const coords: Coords = [0,0]; // The instance is going to be at [0,0]
 
 	// Generate and return the vertex data for the legal move square.
@@ -95,7 +95,7 @@ function getDataLegalMoveSquare(color: [number,number,number,number]): number[] 
  * @param color - The color [r, g, b, a]. This should MATCH the current theme's legal move color! An offset will be applied to its opacity.
  * @returns The vertex data for the "legal move dot" (circle).
  */
-function getDataLegalMoveDot(color: [number,number,number,number]): number[] {
+function getDataLegalMoveDot(color: Color): number[] {
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
 	a += DOTS.OPACITY_OFFSET; // Add the offset
