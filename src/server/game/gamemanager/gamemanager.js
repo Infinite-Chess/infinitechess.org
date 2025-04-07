@@ -9,6 +9,7 @@ import gameutility from './gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import statlogger from '../statlogger.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
+import gamelogger from './gamelogger.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
@@ -394,8 +395,10 @@ async function deleteGame(game) {
 
 	console.log(`Deleted game ${game.id}.`);
 
-	await executeSafely_async(gameutility.logGame, `Unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game); // The game log will only log games with at least 1 move played
-	await statlogger.logGame(game); // The statlogger will only log games with atleast 2 moves played (resignable)
+	await gamelogger.logGame(game); // Log games with at least one move played in database
+
+	// await executeSafely_async(gameutility.logGame, `Unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game); // The game log will only log games with at least 1 move played
+	// await statlogger.logGame(game); // The statlogger will only log games with atleast 2 moves played (resignable)
 }
 
 /**

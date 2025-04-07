@@ -49,8 +49,8 @@ function addGameToGamesTable(
 	options: {
         date: string,
         players: string,
-        elo: string,
-        rating_diff: string,
+        elo: string | null,
+        rating_diff: string | null,
         time_control: string,
         variant: string,
         rated: boolean,
