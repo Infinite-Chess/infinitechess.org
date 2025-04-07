@@ -133,7 +133,8 @@ function disableEditMode() { editMode = false; }
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
-	if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
+	// DISABLED BECAUSE highlight drawing uses the right click
+	// if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
