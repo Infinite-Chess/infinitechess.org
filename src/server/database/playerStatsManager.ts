@@ -183,6 +183,7 @@ function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStats
 
 
 export {
+	PlayerStatsRecord,
 	addUserToPlayerStatsTable,
 	getPlayerStatsData,
 	updatePlayerStatsColumns

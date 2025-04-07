@@ -3,6 +3,7 @@
 */
 
 import { addGameToGamesTable } from '../../database/gamesManager.js';
+import { getPlayerStatsData, updatePlayerStatsColumns } from "../../database/playerStatsManager.js";
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 // @ts-ignore
 import formatconverter from '../../../client/scripts/esm/chess/logic/formatconverter.js';
@@ -21,6 +22,7 @@ import { getMemberDataByCriteria } from "../../database/memberManager.js";
  * Type Definitions
 */
 
+import type { PlayerStatsRecord } from "../../database/playerStatsManager.js";
 // @ts-ignore
 import type { Game } from '../TypeDefinitions.js';
 
@@ -124,13 +126,20 @@ async function logGame(game: Game) {
 		const publicityString = (game.publicity === 'public' ? "public" : "private");
 		const ratedString = (game.rated ? "rated" : "casual");
 
-		const change_columns = ( game.rated ? ["last_played_rated_game", "game_history", "moves_played"] : ["game_history", "moves_played"] );
-		const increment_columns = [ "game_count", `game_count_${ratedString}`, `game_count_${publicityString}`,
-									`game_count_${outcomeString}`, `game_count_${outcomeString}_${ratedString}`];
+		const read_and_modify_columns = ["game_history", "moves_played"];
+		const read_and_increment_columns = [ "game_count", `game_count_${ratedString}`, `game_count_${publicityString}`,
+											 `game_count_${outcomeString}`, `game_count_${outcomeString}_${ratedString}`];
+		const read_columns = read_and_modify_columns.concat(read_and_increment_columns);
+		const player_stats = getPlayerStatsData(user_ids[player_key], read_columns);
+		if (player_stats === undefined) continue;
 		
+		// Update increment counts
+		for (const column of read_and_increment_columns) {
+			// @ts-ignore
+			if (player_stats[column] !== undefined) player_stats[column] = player_stats[column] + 1;
+		}
 
-		// Update player_stats table
-
+		updatePlayerStatsColumns(user_ids[player_key], player_stats);
 	}
 }
 
