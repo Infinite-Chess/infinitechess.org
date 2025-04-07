@@ -1,5 +1,7 @@
 /**
- * This script logs all completed games into the games database table
+ * This script logs all completed games into the "games" database table
+ * It also computes the players' ratings in rated games and logs them into the "ratings" table
+ * It also updates the players' stats in the "players_stats" table
 */
 
 import { addGameToGamesTable } from '../../database/gamesManager.js';
@@ -27,7 +29,7 @@ import type { Game } from '../TypeDefinitions.js';
 
 /**
  * Logs a completed game to the database
- * Updates the tables "games", "player_stats" and "ratings".
+ * Updates the tables "games", "player_stats" and "ratings" (computing the rating changes if necessary).
  * Only call after the game ends, and when it's being deleted.
  * 
  * Async so that the server can wait for logs to finish when
@@ -124,7 +126,7 @@ async function logGame(game: Game) {
 	// update player_stats entries for each logged in player
 	const winner = game.gameConclusion.split(" ")[0];
 	// What if game aborted?
-	// TODO
+	// TODO: add to "game_count_aborted"
 
 	for (const player_key in game.players) {
 		if (user_ids[player_key] === undefined) continue;

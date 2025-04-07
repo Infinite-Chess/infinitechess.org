@@ -31,6 +31,7 @@ interface PlayerStatsRecord {
     game_count_wins?: number;
     game_count_losses?: number;
     game_count_draws?: number;
+	game_count_aborted?: number;
     game_count_wins_rated?: number;
     game_count_losses_rated?: number;
     game_count_draws_rated?: number;
