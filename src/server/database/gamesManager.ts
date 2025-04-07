@@ -25,8 +25,8 @@ interface GamesRecord {
     rating_diff?: string;
     time_control?: string;
     variant?: string;
-    rated?: boolean;
-    private?: boolean;
+    rated?: number;
+    private?: number;
     result?: string;
     termination?: string;
     movecount?: number;
@@ -52,8 +52,8 @@ function addGameToGamesTable(
         rating_diff: string | null,
         time_control: string,
         variant: string,
-        rated: boolean,
-        private: boolean,
+        rated: number,
+        private: number,
         result: string,
         termination: string,
         movecount: number,
