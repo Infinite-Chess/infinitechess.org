@@ -30,9 +30,9 @@ interface PlayerStatsRecord {
     game_count_wins?: number;
     game_count_losses?: number;
     game_count_draws?: number;
-    game_count_wins_ranked?: number;
-    game_count_losses_ranked?: number;
-    game_count_draws_ranked?: number;
+    game_count_wins_rated?: number;
+    game_count_losses_rated?: number;
+    game_count_draws_rated?: number;
     game_count_wins_casual?: number;
     game_count_losses_casual?: number;
     game_count_draws_casual?: number;

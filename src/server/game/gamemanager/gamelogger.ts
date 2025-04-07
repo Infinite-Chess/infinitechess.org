@@ -14,6 +14,8 @@ import { logEvents } from '../../middleware/logEvents.js';
 import gameutility from './gameutility.js';
 // @ts-ignore
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
+// @ts-ignore
+import { getMemberDataByCriteria } from "../../database/memberManager.js";
 
 /**
  * Type Definitions
@@ -23,7 +25,8 @@ import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 import type { Game } from '../TypeDefinitions.js';
 
 /**
- * Logs the game to the database
+ * Logs a completed game to the database
+ * Updates the tables "games", "player_stats" and "ratings".
  * Only call after the game ends, and when it's being deleted.
  * 
  * Async so that the server can wait for logs to finish when
@@ -70,13 +73,18 @@ async function logGame(game: Game) {
 		await logEvents(errText, 'hackLog.txt', { print: true });
 	}
 
-	// Get the playerString for the games table
+	// Get the user_ids and construct the playersString for the games table
+	const user_ids: { [key: string] : number } = {};
 	let playersString: string = '';
 	for (const player_key in game.players) {
-		if (playersString !== '') playersString += ',';
-
 		const player_username = game.players[player_key].identifier.member ?? undefined;
-		if (player_username !== undefined) playersString += player_username;
+		if (player_username !== undefined) {
+			const { user_id } = getMemberDataByCriteria(['user_id'], 'username', player_username, { skipErrorLogging: true });
+			if (user_id !== undefined) user_ids[player_key] = user_id;
+		}
+		
+		if (playersString !== '') playersString += ',';
+		if (user_ids[player_key]) playersString += user_ids[player_key];
 		else playersString += '_';
 	}
 
@@ -104,7 +112,29 @@ async function logGame(game: Game) {
 		icn: ICN
 	};
 
+	// add game to games table in database
 	addGameToGamesTable(gameToLog);
+
+	// update player_stats entries for each logged in player
+	const winner = game.gameConclusion.split(" ")[0];
+	for (const player_key in game.players) {
+		if (user_ids[player_key] === undefined) continue;
+
+		const change_columns = ( game.rated ? ["game_history", "moves_played", "last_played_rated_game"] : ["game_history", "moves_played"] );
+
+		const outcomeString = (winner === player_key ? "wins" : (winner === '0' ? "draws" : "losses"));
+		const gameTypeString = (game.publicity === 'public' ? (game.rated ? "rated" : "casual") : "private");
+
+		const increment_columns = ["game_count", `game_count_${gameTypeString}`, `game_count_${outcomeString}`];
+		if (game.publicity === 'public') {
+			increment_columns.push("game_count_public");
+			increment_columns.push(`game_count_${outcomeString}_${gameTypeString}`);
+		}
+		
+
+		// Update player_stats table
+
+	}
 }
 
 

@@ -408,80 +408,6 @@ function getDisplayNameOfPlayer(player) { // { member/browser }
 }
 
 /**
- * Logs the game to the gameLog.txt.
- * Only call after the game ends, and when it's being deleted.
- * 
- * Async so that the server can wait for logs to finish when
- * the server is restarting/closing.
- * @param {Game} game - The game to log
- */
-async function logGame(game) {
-	if (game.moves.length === 0) return; // Don't log games with zero moves
-
-	// First line of log...
-
-	const gameToLog = { // This is all the information I want to log. Everything else will be in the ICN.
-		id: game.id,
-		publicity: game.publicity,
-	};
-
-	let playersString = '';
-	for (const [player, data] of Object.entries(game.players)) {
-		let strplayer = typeutil.strcolors[Number(player)];
-		strplayer = strplayer[0].toUpperCase() + strplayer.substring(1);
-		const id = data.identifier.member || data.identifier.browser;
-		playersString += `${strplayer}: ${id}. `;
-
-		gameToLog[`timer${strplayer}`] = data.timer;
-	}
-
-	const stringifiedGame = JSON.stringify(gameToLog);
-
-	// Second line of log is the ICN...
-
-	// To get this, we need to prime the gamefile for the format converter...
-
-	/** What values do we need?
-     * 
-     * metadata
-     * turn
-     * enpassant
-     * moveRule
-     * fullMove
-     * startingPosition (can pass in shortformat string instead)
-     * specialRights
-     * moves
-     * gameRules
-     */
-	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const metadata = getMetadataOfGame(game);
-	const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
-	delete gameRules.moveRule;
-	metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.
-	const primedGamefile = {
-		metadata,
-		moveRule,
-		fullMove: 1,
-		moves: game.moves,
-		gameRules
-	};
-
-	let logText = `Players: ${playersString} Game: ${stringifiedGame}`; // First line
-
-	let ICN = 'ICN UNAVAILABLE';
-	try {
-		ICN = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
-	} catch (e) {
-		const errText = `Error when logging game and converting to ICN! The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${e.stack}`;
-		await logEvents(errText, 'errLog.txt', { print: true });
-		await logEvents(errText, 'hackLog.txt', { print: true });
-	}
-
-	logText += `\n${ICN}`; // Add line 2
-	await logEvents(logText, 'gameLog.txt');
-}
-
-/**
  * Tests if the given socket belongs in the game. If so, it returns the color they are.
  * @param {Game} game - The game
  * @param {CustomWebSocket} ws - The websocket
@@ -742,7 +668,6 @@ export default {
 	getMetadataOfGame,
 	sendGameUpdateToBothPlayers,
 	sendGameUpdateToColor,
-	logGame,
 	doesSocketBelongToGame_ReturnColor,
 	sendMessageToSocketOfColor,
 	printGame,
