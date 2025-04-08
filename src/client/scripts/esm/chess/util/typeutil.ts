@@ -43,6 +43,10 @@ const players = {
 	NEUTRAL: 0,
 	WHITE: 1,
 	BLACK: 2,
+	RED: 3,
+	BLUE: 4,
+	YELLOW: 5,
+	GREEN: 6,
 } as const;
 
 const numTypes = Object.keys(rawTypes).length;
@@ -82,7 +86,7 @@ const royals = [...jumpingRoyals, ...slidingRoyals];
  * 
  * MUST BE IN THE EXACT SAME ORDER AS {@link players}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-const strcolors = ["neutral", "white", "black"] as const;
+const strcolors = ["neutral", "white", "black", "red", "blue", "yellow", "green"] as const;
 
 /** Raw piece types that don't have an SVG */
 const SVGLESS_TYPES = [rawTypes.VOID];
