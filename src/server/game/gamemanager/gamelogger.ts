@@ -25,7 +25,7 @@ import { getMemberDataByCriteria } from "../../database/memberManager.js";
 */
 
 // @ts-ignore
-import type { Game } from '../TypeDefinitions.js';
+import type { Game, Player } from '../TypeDefinitions.js';
 
 /**
  * Logs a completed game to the database
@@ -37,22 +37,10 @@ import type { Game } from '../TypeDefinitions.js';
  * @param {Game} game - The game to log
  */
 async function logGame(game: Game) {
-	if (game.moves.length === 0) return; // Don't log games with zero moves
+	const movecount = game.moves?.length ?? 0;
+	if (movecount === 0) return; // Don't log games with zero moves
 
-	/**
-     * We need to prime the gamefile for the format converter to get the ICN.
-     * What values do we need?
-     * 
-     * metadata
-     * turn
-     * enpassant
-     * moveRule
-     * fullMove
-     * startingPosition (can pass in shortformat string instead)
-     * specialRights
-     * moves
-     * gameRules
-     */
+	// We need to prime the gamefile for the format converter to get the ICN of the game.
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
 	const metadata = gameutility.getMetadataOfGame(game);
 	const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
@@ -66,6 +54,7 @@ async function logGame(game: Game) {
 		gameRules
 	};
 
+	// Get ICN of game
 	let ICN = 'ICN UNAVAILABLE';
 	try {
 		ICN = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
@@ -76,7 +65,7 @@ async function logGame(game: Game) {
 		await logEvents(errText, 'hackLog.txt', { print: true });
 	}
 
-	// Get the user_ids and construct the playersString for the games table
+	// Get the user_ids of the players and construct the playersString for the games table
 	const user_ids: { [key: string] : number } = {};
 	let playersString: string = '';
 	for (const player_key in game.players) {
@@ -91,11 +80,16 @@ async function logGame(game: Game) {
 		else playersString += '_';
 	}
 
-	// Get the eloString and rating_diffString for the games table
+	// Determine winner of game according to gameConclusion
+	const winner = game.gameConclusion.split(" ")[0]; // player_key of game winner
+	const winner_exists = (winner === "0" || winner in game.players); // Check if game was aborted, in which case gameConclusion provides no winner
+
+	// If game was rated, compute the elo change of the players
+	// Also get the eloString and rating_diffString for the games table
 	let eloString: string | null = null;
 	let rating_diffString: string | null = null;
-	if (game.rated) {
-		// TODO: get ELOs of players from database
+	if (game.rated && winner_exists) {
+		// TODO: Compute new ELOs of players according to game result
 		eloString = '1000,1000';
 		rating_diffString = '0,0';
 	}
@@ -114,7 +108,7 @@ async function logGame(game: Game) {
 		private: (game.publicity !== 'public' ? 1 : 0),
 		result: metadata.Result as string,
 		termination: metadata.Termination as string,
-		movecount: (game.moves?.length ?? 0),
+		movecount: movecount,
 		icn: ICN
 	};
 
@@ -124,10 +118,6 @@ async function logGame(game: Game) {
 	const game_id = out.game_id;
 
 	// update player_stats entries for each logged in player
-	const winner = game.gameConclusion.split(" ")[0];
-	// What if game aborted?
-	// TODO: add to "game_count_aborted"
-
 	for (const player_key in game.players) {
 		if (user_ids[player_key] === undefined) continue;
 
@@ -136,8 +126,10 @@ async function logGame(game: Game) {
 		const ratedString = (game.rated ? "rated" : "casual");
 
 		const read_and_modify_columns = ["game_history", "moves_played"];
-		const read_and_increment_columns = [ "game_count", `game_count_${ratedString}`, `game_count_${publicityString}`,
-											 `game_count_${outcomeString}`, `game_count_${outcomeString}_${ratedString}`];
+		const read_and_increment_columns = winner_exists ?
+											[ "game_count", `game_count_${ratedString}`, `game_count_${publicityString}`,
+											  `game_count_${outcomeString}`, `game_count_${outcomeString}_${ratedString}`] :
+											[ "game_count", "game_count_aborted"];
 		const read_columns = read_and_modify_columns.concat(read_and_increment_columns);
 		const player_stats = getPlayerStatsData(user_ids[player_key], read_columns);
 		if (player_stats === undefined) continue;
@@ -152,12 +144,24 @@ async function logGame(game: Game) {
 		}
 
 		// Update moves_played
-		// TODO
-		
+		if (player_stats["moves_played"] !== undefined && game.gameRules.turnOrder.includes(Number(player_key) as Player)) {
+			const fullmoves_completed_total = Math.floor(movecount / game.gameRules.turnOrder.length);
+			const player_moves_per_fullmove = game.gameRules.turnOrder.filter((x : Player) => x === Number(player_key) as Player).length;
+
+			const last_partial_move_length = movecount % game.gameRules.turnOrder.length;
+			const player_moves_in_last_partial_move 
+				= game.gameRules.turnOrder
+					.slice(0, last_partial_move_length)
+					.filter((x : Player) => x === Number(player_key) as Player).length;
+
+			const player_movecount = fullmoves_completed_total * player_moves_per_fullmove + player_moves_in_last_partial_move;
+			player_stats["moves_played"] += player_movecount;
+		}
+
 		// Update increment counts
-		for (const column of read_and_increment_columns) {
+		for (const column_key in player_stats) {
 			// @ts-ignore
-			if (player_stats[column] !== undefined) player_stats[column]++;
+			if (read_and_increment_columns.includes(column_key) && player_stats[column_key] !== undefined) player_stats[column_key]++;
 		}
 
 		// Push changed player_stats to database
