@@ -114,7 +114,7 @@ async function logGame(game: Game) {
 
 	// Add game to games table in database
 	const out = addGameToGamesTable(gameToLog);
-	if (!out.success) return;
+	if (!out.success) throw Error("Writing game to games table not succesful.");
 	const game_id = out.game_id;
 
 	// update player_stats entries for each logged in player

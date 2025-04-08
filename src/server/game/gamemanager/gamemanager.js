@@ -392,11 +392,11 @@ async function deleteGame(game) {
 
 	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
 	// The ratings are calculated during the logging of the game into the database
-	await gamelogger.logGame(game);
+	await executeSafely_async(gamelogger.logGame, `gamelogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
 
 	// Mostly deprecated:
 	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-	await statlogger.logGame(game);
+	await executeSafely_async(statlogger.logGame, `statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
 }
 
 /**
