@@ -18,10 +18,11 @@ const defaultBaseColors: PieceColorGroup = {
 	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1],
 	[players.WHITE]: [1, 1, 1, 1],
 	[players.BLACK]: [1, 1, 1, 1],
-	[players.RED]: [1, 0.5, 0.5, 1],
-	[players.BLUE]: [0.5, 0.5, 1, 1],
-	[players.YELLOW]: [1, 1, 0.5, 1],
-	[players.GREEN]: [0.5, 1, 0.5, 1],
+	// If these are solid color, they're quite saturated
+	[players.RED]: [1, 0.17, 0.17, 1],
+	[players.BLUE]: [0.23, 0.23, 1, 1],
+	[players.YELLOW]: [1, 1, 0.1, 1],
+	[players.GREEN]: [0.1, 1, 0.1, 1],
 };
 
 /** Config for the SVGs of the pieces */
