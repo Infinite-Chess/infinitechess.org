@@ -92,20 +92,25 @@ function ICNToGamefile(ICN: string): gamefile {
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
 	// longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
 
-	if (longformat.enpassant) { // Coords: [x,y]
-		// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
-		const firstTurn = longformat.gameRules.turnOrder[0];
-		const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
-		const pawnExpectedSquare = [longformat.enpassant[0], longformat.enpassant[1] - yParity] as Coords;
-		/**
-		 * First make sure there IS a pawn on the square!
-		 * If not, the ICN was likely tampered, throw an Error!
-		 */
-		const pieceOnExpectedSquare: number | undefined = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
-		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
-			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
-		} else throw Error(`Invalid enpassant ${longformat.enpassant} in ICN!`);
-	}
+	// if (longformat.enpassant) { // Coords: [x,y]
+	// 	// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
+	// 	const firstTurn = longformat.gameRules.turnOrder[0];
+	// 	const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
+	// 	const pawnExpectedSquare = [longformat.enpassant[0], longformat.enpassant[1] - yParity] as Coords;
+	// 	/**
+	// 	 * First make sure there IS a pawn on the square!
+	// 	 * If not, the ICN was likely tampered, throw an Error!
+	// 	 */
+	// 	const pieceOnExpectedSquare: number | undefined = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+	// 	if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
+	// 		variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
+	// 	} else throw Error(`Invalid enpassant ${longformat.enpassant} in ICN!`);
+	// }
+	/**
+	 * ACTUALLY, WE SHOULD NEVER expect an enpassant property in the starting position of ANY
+	 * game log! No variant starts with enpassant possible.
+	 */
+	if (longformat.enpassant) throw Error('Logged game ICNs should NEVER have an enpassant property on the starting position!!');
 
 	/**
 	 * This automatically forwards all moves to the front of the game.
