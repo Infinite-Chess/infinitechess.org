@@ -77,7 +77,7 @@ interface FormatConverterLong {
  * * Game contains an illegal move
  */
 function ICNToGamefile(ICN: string): gamefile {
-	let longformat: FormatConverterLong = formatconverter.ShortToLong_Format(ICN);
+	const longformat: FormatConverterLong = formatconverter.ShortToLong_Format(ICN);
 
 	const variantOptions: VariantOptions = {
 		fullMove: longformat.fullMove,
@@ -88,9 +88,8 @@ function ICNToGamefile(ICN: string): gamefile {
 		gameRules: longformat.gameRules
 	};
 
-	// Maybe useful?
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	// longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
+	longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
 
 	// if (longformat.enpassant) { // Coords: [x,y]
 	// 	// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
@@ -120,7 +119,19 @@ function ICNToGamefile(ICN: string): gamefile {
 	return new gamefile(longformat.metadata, { moves: longformat.moves, variantOptions });
 }
 
+function convertVariantFromSpokenLanguageToCode(Variant?: string) {
+	// Iterate through all translations until we find one that matches this name
+	for (const translationCode in translations) {
+		if (translations[translationCode] === Variant) {
+			return translationCode;
+		}
+	}
+	// Else unknown variant, return undefined
+	return;
+}
+
 export default {
 	formulateGame,
 	ICNToGamefile,
+	convertVariantFromSpokenLanguageToCode,
 };

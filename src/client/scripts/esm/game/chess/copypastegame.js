@@ -21,6 +21,7 @@ import { players, rawTypes } from '../../chess/util/typeutil.js';
 import guipause from '../gui/guipause.js';
 import gamecompressor from './gamecompressor.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
+import gameformulator from './gameformulator.js';
 // Import End
 
 "use strict";
@@ -201,7 +202,7 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	}
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
+	longformat.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
 
 	delete longformat.metadata.Clock;
 
@@ -269,16 +270,6 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	}
 
 	console.log(translations.copypaste.loaded_from_clipboard);
-}
-
-function convertVariantFromSpokenLanguageToCode(Variant) {
-	// Iterate through all translations until we find one that matches this name
-	for (const translationCode in translations) {
-		if (translations[translationCode] === Variant) {
-			return translationCode;
-		}
-	}
-	// Else unknown variant, return undefined
 }
 
 /**
