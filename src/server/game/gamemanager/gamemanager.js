@@ -394,6 +394,10 @@ async function deleteGame(game) {
 
 	console.log(`Deleted game ${game.id}.`);
 
+	// If the pastedGame flag is present, skip logging.
+	// We don't know the starting position.
+	if (game.positionPasted) return console.log('Skipping logging custom game.');
+
 	await executeSafely_async(gameutility.logGame, `Unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game); // The game log will only log games with at least 1 move played
 	await statlogger.logGame(game); // The statlogger will only log games with atleast 2 moves played (resignable)
 }

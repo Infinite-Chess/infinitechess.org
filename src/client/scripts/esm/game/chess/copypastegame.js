@@ -22,6 +22,7 @@ import guipause from '../gui/guipause.js';
 import gamecompressor from './gamecompressor.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 import gameformulator from './gameformulator.js';
+import websocket from '../websocket.js';
 // Import End
 
 "use strict";
@@ -100,7 +101,10 @@ async function callbackPaste(event) {
 
 	// console.log(longformat);
     
-	pasteGame(longformat);
+	const success = pasteGame(longformat);
+
+	// Let the server know if we pasted a custom position in a private match
+	if (success & onlinegame.areInOnlineGame() & onlinegame.getIsPrivate()) websocket.sendmessage('game', 'paste');
 }
 
 /**
@@ -163,6 +167,7 @@ function verifyWinConditions(winConditions) {
  * THIS FUNCTION AND gameforulator.formulateGame()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * 
  * @param {Object} longformat - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
+ * @returns {boolean} Whether the paste was successful
  */
 async function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
 	console.log(translations.copypaste.pasting_game);
@@ -179,7 +184,8 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
      * gameRules
      */
 
-	if (!verifyGamerules(longformat.gameRules)) return; // If this is false, it will have already displayed the error
+	// If this is false, it will have already displayed the error
+	if (!verifyGamerules(longformat.gameRules)) return false; // Failed to paste
 
 	// Create a new gamefile from the longformat...
 
@@ -270,6 +276,8 @@ async function pasteGame(longformat) { // game: { startingPosition (key-list), p
 	}
 
 	console.log(translations.copypaste.loaded_from_clipboard);
+
+	return true; // Successfully pasted
 }
 
 /**

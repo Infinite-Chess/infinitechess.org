@@ -81,6 +81,7 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 		moves: [],
 		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
 		gameConclusion: false,
+		positionPasted: false,
 	};
 
 	if (!newGame.untimed) { // Set the start time and increment properties
@@ -554,6 +555,7 @@ function getSimplifiedGameString(game) {
 		clock: game.clock,
 		rated: game.rated,
 	};
+	if (game.moves.length > 0) simplifiedGame.moves = game.moves;
 	simplifiedGame.players = {};
 	for (const [c, data] of Object.entries(game.players)) {
 		simplifiedGame.players[c] = data.identifier;
