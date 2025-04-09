@@ -470,7 +470,7 @@ async function logGame(game) {
 
 	let ICN = 'ICN UNAVAILABLE';
 	try {
-		ICN = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
+		ICN = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 0, make_new_lines: false, specifyPosition: false });
 	} catch (e) {
 		const errText = `Error when logging game and converting to ICN! The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${e.stack}`;
 		await logEvents(errText, 'errLog.txt', { print: true });
