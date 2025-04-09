@@ -152,6 +152,14 @@ function Game() {
 	/** The ID of the timer to delete the game after it has ended.
      * This can be used to cancel it in case a hacking was reported. */
 	this.deleteTimeoutID = undefined;
+
+	/**
+	 * Whether a custom position was pasted in by either player.
+	 * The game will NOT be logged, because it will crash if we try
+	 * to paste it since we don't know the starting position.
+	 * @type {boolean}
+	 */
+	this.positionPasted = undefined
 }
 
 export {
