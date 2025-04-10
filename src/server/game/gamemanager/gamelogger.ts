@@ -180,14 +180,18 @@ import readline from 'readline';
  * When it's done, it deletes the file /logs/gameLog.txt
  */
 async function migrateGameLogsToDatabase() {
-	// Create a readable stream from the file
-	let fileStream: fs.ReadStream;
-	try {
-		fileStream = fs.createReadStream('./logs/gameLog.txt');
-	} catch {
+	if (!fs.existsSync('./logs/gameLog.txt')) {
 		console.log("File gameLog.txt not found, no migration of games to database is performed.");
 		return;
-	}
+	}	
+
+	// Create a readable stream from the file
+	const fileStream = fs.createReadStream('./logs/gameLog.txt');
+
+	fileStream.on('error', (err) => {
+		console.error("Accessing file gameLog.txt did not work, no migration of games to database is performed.");
+		console.error(err);
+	});
 
 	// Create an interface to read the file line by line
 	const rl = readline.createInterface({
@@ -207,7 +211,7 @@ async function migrateGameLogsToDatabase() {
 				console.error('Error gameLog.txt:', err);
 				return;
 			}
-			console.log('gameLog.txt successfully');
+			console.log('gameLog.txt deleted successfully');
 		});
 	});
 
