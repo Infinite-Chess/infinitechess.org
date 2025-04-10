@@ -20,9 +20,13 @@ import typeutil from "../util/typeutil.js";
 const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
 
 const playersDict = {
+	[p.NEUTRAL]: "n", // I dont think we need this, good to have in case
 	[p.WHITE]: "w",
 	[p.BLACK]: "b",
-	[p.NEUTRAL]: "n" // I dont think we need this, good to have in case
+	[p.RED]: "r",
+	[p.BLUE]: "bu",
+	[p.YELLOW]: "y",
+	[p.GREEN]: "g",
 };
 
 const pieceDictionary = {
@@ -488,7 +492,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		shortformat = shortformat.slice(index + 1);
 
 		// turn order
-		if (!longformat.gameRules.turnOrder && /^[a-z](:[a-z])*$/.test(string)) {
+		if (!longformat.gameRules.turnOrder && /^[a-z]{1,2}(:[a-z]{1,2})*$/.test(string)) {
 			if (string === 'w') string = 'w:b'; // 'w' is short for 'w:b'
 			else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
 			const turnOrderArray = string.split(':'); // ['w','b']
@@ -555,7 +559,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// win condition (has to start with a letter and not include numbers)
-		if (/^(\(?[a-zA-z][^0-9]+)$/.test(string)) {
+		if (/^(\(?[a-zA-z][^0-9:]+)$/.test(string)) {
 
 			/**
 			 * Possible cases of what the string could look like:
