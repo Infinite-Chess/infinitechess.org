@@ -66,8 +66,8 @@ async function logGame(game: Game) {
 	}
 
 	// Get the user_ids of the players and construct the playersString for the games table
-	const user_ids: { [key: string] : number } = {};
-	let playersString: string = '';
+	const user_ids: { [key: string] : number } = {}; // this will look like {1: "Owner", 2: "_"} for example
+	let playersString: string = ''; // this will look like "Owner,_" for example
 	for (const player_key in game.players) {
 		const player_username = game.players[player_key].identifier.member ?? undefined;
 		if (player_username !== undefined) {
@@ -81,15 +81,15 @@ async function logGame(game: Game) {
 	}
 
 	// Determine winner of game according to gameConclusion
-	const winner = game.gameConclusion.split(" ")[0]; // player_key of game winner
-	const winner_exists = (winner === "0" || winner in game.players); // Check if game was aborted, in which case gameConclusion provides no winner
+	const winner = game.gameConclusion.split(" ")[0]; // player_key of game winner, e.g. "1" if player 1 wins, or "0" if there is a draw
+	const winner_exists = (winner === "0" || winner in game.players); // Check if winner is valid. If game was aborted, gameConclusion provides no winner
 
 	// If game was rated, compute the elo change of the players
 	// Also get the eloString and rating_diffString for the games table
 	let eloString: string | null = null;
 	let rating_diffString: string | null = null;
 	if (game.rated && winner_exists) {
-		// TODO: Compute new ELOs of players according to game result
+		// TODO: Compute new ELOs of players according to game result when implementing ranked
 		eloString = '1000,1000';
 		rating_diffString = '0,0';
 	}
@@ -121,6 +121,7 @@ async function logGame(game: Game) {
 	for (const player_key in game.players) {
 		if (user_ids[player_key] === undefined) continue;
 
+		// Construct the names of the columns that need to be accessed from the player_stats table
 		const outcomeString = (winner === player_key ? "wins" : (winner === '0' ? "draws" : "losses"));
 		const publicityString = (game.publicity === 'public' ? "public" : "private");
 		const ratedString = (game.rated ? "rated" : "casual");
