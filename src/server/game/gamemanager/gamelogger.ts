@@ -170,7 +170,109 @@ async function logGame(game: Game) {
 }
 
 
+import fs from 'fs';
+import readline from 'readline';
+/**
+ * TEMPORARY FUNCTION
+ * This functions opens the file /logs/gameLog.txt, if it exists
+ * It reads in all games from that file, and uses them to update the "games" and "player_stats" database tables
+ * It assumes that all games are unrated up to now! This will be deprecated after rated games are introduced
+ * When it's done, it deletes the file /logs/gameLog.txt
+ */
+async function migrateGameLogsToDatabase() {
+	// Create a readable stream from the file
+	let fileStream: fs.ReadStream;
+	try {
+		fileStream = fs.createReadStream('./logs/gameLog.txt');
+	} catch {
+		console.log("File gameLog.txt not found, no migration of games to database is performed.");
+		return;
+	}
+
+	// Create an interface to read the file line by line
+	const rl = readline.createInterface({
+		input: fileStream,
+		crlfDelay: Infinity
+	});
+
+	let gamecount = 0;
+	let lastread_JSON: Object = {};
+
+	rl.on('close', () => {
+		console.log(`Finished migrating gameLog.txt with ${gamecount} games to database.`);
+
+		// Delete gameLog.txt
+		fs.unlink('./logs/gameLog.txt', (err) => {
+			if (err) {
+				console.error('Error gameLog.txt:', err);
+				return;
+			}
+			console.log('gameLog.txt successfully');
+		});
+	});
+
+	rl.on('line', async(line) => {
+		// line starts with YYYY
+		if (/^[0-9]{4}/.test(line)) {
+			// parse JSON of infoline
+			lastread_JSON = JSON.parse(line.slice(line.indexOf("{")));
+		}
+
+		// line contains only whitespaces
+		else if (/^\s*$/.test(line)) {
+			// do nothing
+		}
+
+		// line starts with metadata
+		else if (/^\s*\[/.test(line)) {
+			const longformat = formatconverter.ShortToLong_Format(line);
+			const game: any = {};
+
+			// set all the needed properties of the Game Object, as required in TypeDefinitions.js
+
+			//@ts-ignore
+			game.id = lastread_JSON.id;
+			game.timeCreated = timeutil.convertUTCDateUTCTimeToTimeStamp(longformat.metadata.UTCDate, longformat.metadata.UTCTime);
+			//@ts-ignore
+			game.publicity = lastread_JSON.publicity;
+			game.variant = longformat.metadata.Variant;
+			game.clock = longformat.metadata.TimeControl;
+			game.untimed = (longformat.metadata.TimeControl === "-");
+			game.startTimeMillis = Number(longformat.metadata.TimeControl.split("+")[0]) * 1000;
+			game.incrementMillis = Number(longformat.metadata.TimeControl.split("+")[1]);
+			game.rated = false;
+			game.moves = longformat.moves;
+
+			game.players = { 1: { identifier: {} } , 2: { identifier: {} } };
+			if (longformat.metadata.White !== "(Guest)" ) game.players[1].identifier.member = longformat.metadata.White;
+			if (longformat.metadata.Black !== "(Guest)" ) game.players[2].identifier.member = longformat.metadata.Black;
+
+			game.gameRules = longformat.gameRules;
+			game.turnOrder = longformat.gameRules.turnOrder;
+
+			if (longformat.metadata.Termination === "Aborted") {
+				game.gameConclusion = "aborted";
+			} else {
+				const winner = (longformat.metadata.Result === "1-0" ? "1" : ( longformat.metadata.Result === "0-1" ? "2" : "0" ));
+				const lowercase_termination = String(longformat.metadata.Termination).charAt(0).toLowerCase() + longformat.metadata.Termination.slice(1);
+				game.gameConclusion = `${winner} ${lowercase_termination}`;
+			}
+
+			// game.whosTurn and all the time information is not needed for the logging of the game
+			
+			await logGame(game);
+			gamecount++;
+		}
+
+		else {
+			console.error(`Unexpected line encountered in gameLog.txt: ${line}`);
+		}
+	});
+}
+
+
 
 export default {
-	logGame
+	logGame,
+	migrateGameLogsToDatabase
 };
