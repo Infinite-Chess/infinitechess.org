@@ -407,6 +407,7 @@ function getDisplayNameOfPlayer(player) { // { member/browser }
 	return displayName;
 }
 
+/**
  * Tests if the given socket belongs in the game. If so, it returns the color they are.
  * @param {Game} game - The game
  * @param {CustomWebSocket} ws - The websocket
