@@ -4,6 +4,7 @@ import db from './database.js';
 import { genUniqueUserID } from './memberManager.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { addTokenToRefreshTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
+import { addUserToPlayerStatsTable, getPlayerStatsData } from './playerStatsManager.js';
 
 'use strict';
 
@@ -121,6 +122,32 @@ function migrateUsers() {
 	console.log("Finished migrating all users!");
 }
 
+/**
+ * Get a list of all user_ids from the members table
+ * Then each of them, check if they already exist in the player_stats table
+ * If not, then add them to it
+ */
+function migrateMembersToPlayerStatsTable() {
+	let migrated_members_count = 0;
+	const user_ids = db.all('SELECT user_id FROM members');
+	for (const entry of user_ids) {
+		const user_id = entry.user_id;
+
+		const player_stats_user_id = getPlayerStatsData(user_id, ['user_id'])?.user_id;
+		if (player_stats_user_id === undefined) {
+			const playerStatsResult = addUserToPlayerStatsTable(user_id);
+			if (!playerStatsResult.success) {
+				logEvents(`Failed to add user ID "${user_id}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt', { print: true });
+				continue;
+			}
+			migrated_members_count++;
+		}
+	}
+
+	console.log(`Migration of ${migrated_members_count} members to player_stats table is completed.`);
+}
+
 export {
-	migrateUsers
+	migrateUsers,
+	migrateMembersToPlayerStatsTable
 };
