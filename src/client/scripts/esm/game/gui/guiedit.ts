@@ -35,7 +35,7 @@ const coloredTypes = [
 	rawTypes.ROYALQUEEN,
 	rawTypes.OBSTACLE,
 ];
-const nuetralTypes = [ rawTypes.VOID ];
+const neutralTypes = [ rawTypes.VOID ];
 
 let isOpen = false;
 let initalized = false;
