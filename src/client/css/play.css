@@ -1229,7 +1229,7 @@ button.join-button, button.copy-button {
     font-weight: bold;
 }
 
-.dotwhite, .dotblack {
+.dotwhite, .dotblack, .dot {
     border: 1px solid black;
     width: 22px;
     height: 22px;
@@ -1350,25 +1350,33 @@ button.join-button, button.copy-button {
 
 /* Board Editor UI */
 
-.board-edit-tools {
+.editor-menu {
     position: absolute;
     right: 0;
     height: 100%;
     box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
-    display: grid;
     background: linear-gradient(to right, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
     -webkit-backdrop-filter: blur(5px); /* Must be BEFORE the unprefixed rules, so Lightning CSS correclty parses! */
     backdrop-filter: blur(8px); /* Apply a blur effect to the background */
+}
+
+.editor-types, .editor-tools {
+    display: grid;
     grid-template-columns: 65px 65px 65px;
-    font-size: 9px;
 }
 
-.board-edit-tools div {
+.editor-types svg, .editor-tools div {
     cursor: pointer;
+    aspect-ratio: 1/1;
 }
 
-.board-edit-tools :hover {
+.editor-types svg:hover, .editor-tools div:hover {
     background-color: #e5e5e5;
+}
+
+.void {
+    background-color: black;
+    margin: 10px;
 }
 
 /* Promotion UI */

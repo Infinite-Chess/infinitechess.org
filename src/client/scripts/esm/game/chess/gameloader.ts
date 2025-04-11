@@ -274,10 +274,10 @@ async function startEditor() {
 		additional: { editor: true },
 	})
 		.then((result: any) => onFinishedLoading())
-		.catch((err: Error) => onCatchLoadingError(err));;
+		.catch((err: Error) => onCatchLoadingError(err));
 	
+	await guiedit.initUI();
 	boardeditor.initBoardEditor();
-
 	guiedit.open();
 }
 

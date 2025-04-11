@@ -540,37 +540,21 @@
                         <div id="timer-black" class="timerblack">10:00</div>
                     </div>
                 </div>
-
-                <div id="board-edit-tools" class="board-edit-tools hidden">
-                    <div data-tool="save">Save</div>
-                    <div data-tool="eraser">Eraser</div>
-                    <div data-tool="clear">Clear all</div>
-                    <div data-tool="color">Toggle</div>
-                    <div data-tool="kings">king</div>
-                    <div data-tool="pawns">pawn</div>
-                    <div data-tool="knights">knight</div>
-                    <div data-tool="bishops">bishop</div>
-                    <div data-tool="rooks">rook</div>
-                    <div data-tool="queens">queen</div>
-                    <div data-tool="amazons">amazon</div>
-                    <div data-tool="hawks">hawk</div>
-                    <div data-tool="chancellors">chancellor</div>
-                    <div data-tool="archbishops">archbishop</div>
-                    <div data-tool="guards">guard</div>
-                    <div data-tool="camels">camel</div>
-                    <div data-tool="giraffes">giraffe</div>
-                    <div data-tool="zebras">zebra</div>
-                    <div data-tool="centaurs">centaur</div>
-                    <div data-tool="royalQueens">royalQueen</div>
-                    <div data-tool="royalCentaurs">royalCentaur</div>
-                    <div data-tool="knightriders">knightrider</div>
-                    <div data-tool="huygens">huygen</div>
-                    <div data-tool="roses">rose</div>
-                    <div data-tool="obstacles">obstacle</div>
-                    <div data-tool="voids">voids</div>
-                    <div data-tool="special">Special rights (TODO)</div>
+                
+                <!-- Board Editor UI -->
+                <div id="editor-menu" class="editor-menu hidden">
+                    <div id="editor-tools" class="editor-tools">
+                        <div data-tool="save">Save</div>
+                        <div data-tool="eraser">Eraser</div>
+                        <div data-tool="clear">Clear all</div>
+                        <div data-tool="color" class="dot"></div>
+                        <div data-tool="special">Special rights</div>
+                        <div data-tool="void" class="void"></div>
+                    </div>
+                    <div id="editor-pieceTypes">
+                    </div>
                 </div>
-
+                
                 <!-- Promotion UI -->
                 <div id="promote" class="center hidden">
                     <div id="promotewhite" class="promotecolor hidden">

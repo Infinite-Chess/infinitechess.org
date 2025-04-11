@@ -12,9 +12,7 @@ import input from '../input.js';
 import board from '../rendering/board.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
-import colorutil from '../../chess/util/colorutil.js';
-// @ts-ignore
-import typeutil from '../../chess/util/typeutil.js';
+import typeutil, {players, rawTypes} from '../../chess/util/typeutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
@@ -22,18 +20,22 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
 import state from '../../chess/logic/state.js';
+import boardutil from '../../chess/util/boardutil.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 // Type Definitions -------------------------------------------------------------
 
 import type { Coords } from '../../chess/util/coordutil.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js'
-import type { Change, Piece } from '../../chess/logic/boardchanges.js'
-import type { StateChange } from '../../chess/logic/state.js';
+import type { Change } from '../../chess/logic/boardchanges.js'
+import type { Piece } from '../../chess/util/boardutil.js';
+import type { MoveState } from '../../chess/logic/state.js';
+import type { RawType, Player } from '../../chess/util/typeutil.js';
 
 type Edit = {
 	changes: Array<Change>,
-	stateChanges: Array<StateChange>
+	state: MoveState
 }
 
 // Variables --------------------------------------------------------------------
@@ -41,10 +43,8 @@ type Edit = {
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
 
-const validTools = [...typeutil.types, ...typeutil.neutralTypes, 'eraser', 'special']
-
-let currentColor = "white";
-let currentTool: string = "queens";
+let currentPiece: number = 0;
+let currentTool: "piece" | "eraser" | "special";
 
 /**
  * Changes are stored in `thisEdit` until the user releases the button.
@@ -88,7 +88,7 @@ function canRedo () {
 
 function beginEdit() {
 	drawing = true;
-	thisEdit = { changes:[], stateChanges:[] };
+	thisEdit = { changes:[], state: {local: [], global: []} };
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 }
@@ -108,10 +108,8 @@ function runEdit(gamefile: gamefile, edit: Edit, forward: boolean = true) {
 	// Run graphical and logical changes
 	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
 	boardchanges.runChanges(gamefile, edit.changes, meshChanges, forward);
-	// Update special rights
-	for (const stateChange of edit.stateChanges) {
-		state.applyState(gamefile, stateChange, forward);
-	}
+	state.applyMove(gamefile, edit, forward, { globalChange: true });
+	specialrighthighlights.onMove();
 }
 
 function addEditToHistory(edit: Edit) {
@@ -121,7 +119,7 @@ function addEditToHistory(edit: Edit) {
 }
 
 function update() {
-	if (!inBoardEditor) return;
+	if (!inBoardEditor || !currentTool) return;
 	
 	const gamefile = gameslot.getGamefile()!;
 	
@@ -136,65 +134,76 @@ function update() {
 	if (coordutil.areCoordsEqual(coords, previousSquare)) return;
 	previousSquare = coords;
 	
-	const coordsKey = coordutil.getKeyFromCoords(coords);
-	const type = gamefile.piecesOrganizedByKey[coordsKey];
-	const pieceHovered = type === undefined ? undefined : gamefileutility.getPieceFromTypeAndCoords(gamefile, type, coords);
+	const pieceHovered = boardutil.getPieceFromCoords(gamefile.pieces, coords);
 	
-	let edit: Edit = { changes: [], stateChanges: [] };
+	let edit: Edit = { changes: [], state: { local: [], global: [] } };
 	
-	// TODO: Move tools into their own functions.
-	// This function is becoming very cluttered.
-	if (currentTool === "special") {
-		if (!pieceHovered) return;
-		const current: undefined | true = gamefile.specialRights[coordsKey];
-		const future = current ? undefined : true;
-		edit.stateChanges.push({ type: 'specialrights', current, future, coordsKey });
-	} else {
-		if (pieceHovered) {
-			boardchanges.queueDeletePiece(edit.changes, pieceHovered, false);
-			const current = gamefile!.specialRights[coordsKey];
-			edit.stateChanges.push({ type: 'specialrights', current, coordsKey });
-		}
-		
-		if (currentTool !== "eraser") {
-			const colorExtension = typeutil.neutralTypes.includes(currentTool) ? colorutil.colorExtensionOfNeutrals : colorutil.getColorExtensionFromColor(currentColor);
-			const type = currentTool + colorExtension;
-			const piece: Piece = { type, coords } as Piece;
-			boardchanges.queueAddPiece(edit.changes, piece);
-		}
+	switch (currentTool) {
+	case "special":
+		queueToggleSpecialRight(gamefile, edit, pieceHovered); break;
+	case "eraser":
+		queueRemovePiece(gamefile, edit, pieceHovered); break;
+	case "piece":
+		queueAddPiece(gamefile, edit, pieceHovered, coords, currentPiece); break;
+	default:
+		throw new Error("Invalid tool.");
 	}
+	
 	runEdit(gamefile, edit, true);
 	thisEdit!.changes.push(...edit.changes);
-	thisEdit!.stateChanges.push(...edit.stateChanges);
+	thisEdit!.state.local.push(...edit.state.local);
+	thisEdit!.state.global.push(...edit.state.global);
+}
+
+function queueToggleSpecialRight(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined) {
+	if (!pieceHovered) return;
+	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
+	if (!pieceHovered) return;
+	const current = gamefile.specialRights[coordsKey];
+	const future = current ? undefined : true;
+	state.createSpecialRightsState(edit, coordsKey, current, future)
+}
+
+function queueAddPiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number) {
+	if (pieceHovered) queueRemovePiece(gamefile, edit, pieceHovered);
+	const piece: Piece = { type, coords, index:-1 };
+	boardchanges.queueAddPiece(edit.changes, piece);
+}
+
+function queueRemovePiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined) {
+	if (!pieceHovered) return;
+	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
+	boardchanges.queueDeletePiece(edit.changes, false, pieceHovered);
+	const current = gamefile!.specialRights[coordsKey];
+	state.createSpecialRightsState(edit, coordutil.getKeyFromCoords(pieceHovered.coords), current);
+	if (coordutil.areCoordsEqual(pieceHovered.coords, gamefile.enpassant?.pawn)) {
+		// If the pawn has been removed, the en passant sqare must be too.
+		state.createEnPassantState(edit, gamefile.enpassant);
+	}
 }
 
 /**
  * Change the tool being used.
- * `tool` is a piece type without color extension, 'special' or 'eraser'.
  */
-function setTool(tool: string) {
-	if (!inBoardEditor) return;
-	if (!validTools.includes(tool)) throw Error(`Invalid editor tool: ${tool}`);
+function setTool(tool: typeof currentTool) {
 	currentTool = tool;
 }
 
-function toggleColor() {
-	return currentColor = colorutil.getOppositeColor(currentColor);
+// Set the piece type to be added to the board
+function setPiece (pieceType: number) {
+	currentPiece = pieceType;
 }
 
 function clearAll() {
 	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.");
 	const gamefile = gameslot.getGamefile()!;
-	const edit: Edit = { changes: [], stateChanges: [] }
-	gamefileutility.forEachPieceInGame(gamefile, (type, coords, gamefile) => {
-		const pieceToDelete = gamefileutility.getPieceFromTypeAndCoords(gamefile!, type, coords);
-		boardchanges.queueDeletePiece(edit.changes, pieceToDelete, false);
-		
-		const coordsKey = coordutil.getKeyFromCoords(coords);
-		const current = gamefile!.specialRights[coordsKey];
-		edit.stateChanges.push({ type: 'specialrights', current, coordsKey });
-	});
-	runEdit(gamefile!, edit, true);
+	const pieces = gamefile.pieces;
+	const edit: Edit = { changes: [], state: { local: [], global: [] } }
+	for (const idx of pieces.coords.values()) {
+		const pieceToDelete = boardutil.getPieceFromIdx(pieces, idx);
+		queueRemovePiece(gamefile, edit, pieceToDelete);
+	};
+	runEdit(gamefile, edit, true);
 	addEditToHistory(edit);
 }
 
@@ -224,11 +233,12 @@ function redo() {
 function save() {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
+	const pieces = gamefile.pieces;
 	let output = "";
-	const pieces = gamefile.piecesOrganizedByKey;
-	for (const key in pieces) {
-		output += formatconverter.LongToShort_Piece(pieces[key]) + key + '|';
-	}
+	pieces.coords.forEach((idx: number, coordsKey: string) => {
+		const type = pieces.types[idx];
+		output += formatconverter.IntToShort_Piece(type) + coordsKey + '|';
+	});
 	docutil.copyToClipboard(output);
 }
 
@@ -240,7 +250,7 @@ function submitMove () {
 		const move = gamefile.moves[i];
 		const edit: Edit = {
 			changes: move.changes,
-			stateChanges: [...move.state.global, ...move.state.local]
+			state: {global: move.state.global, local: move.state.local}
 		}
 		edits!.push(edit);
 	}
@@ -250,6 +260,10 @@ function submitMove () {
 	guinavigation.update_MoveButtons();
 }
 
+export type {
+	Edit
+}
+
 export default {
 	areInBoardEditor,
 	initBoardEditor,
@@ -257,7 +271,7 @@ export default {
 	submitMove,
 	update,
 	setTool,
-	toggleColor,
+	setPiece,
 	canUndo,
 	canRedo,
 	undo,
