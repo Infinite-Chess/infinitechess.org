@@ -29,6 +29,7 @@ import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import piecemodels from '../rendering/piecemodels.js';
+import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -150,6 +151,7 @@ function updateBoard(gamefile: gamefile) {
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
 	animation.update();
+	boardeditor.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 

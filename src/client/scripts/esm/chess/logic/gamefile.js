@@ -168,7 +168,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	this.editor = editor;
 	// JSDoc stuff over...
-
+	
 	// Init things related to the variant, and the startSnapshot of the position
 	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
 	/** The number of half-moves played since the last capture or pawn push. */
