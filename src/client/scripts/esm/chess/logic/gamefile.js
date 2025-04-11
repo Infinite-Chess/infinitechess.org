@@ -70,7 +70,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		moveRuleState: undefined,
 		/** This is the full-move number at the start of the game. Used for converting to ICN notation. @type {number} */
 		fullMove: undefined,
-		/** The number of players in this game (the number of unique players in the turn order) */
+		/** The number of players in this game (the number of unique players in the turn order) @type {number} */
 		playerCount: undefined,
 		/** The count of pieces the game started with. @type {number} */
 		pieceCount: undefined,

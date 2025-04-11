@@ -48,8 +48,10 @@ const keyHelds = []; // Keyboard keys that are currently being held.
 let mouseWheel = 0; // Amount scroll-wheel scrolled this frame.
 
 let mouseClicked = false; // Was there a simulated mouse click?
+let mouseClicked_Right = false; // Simulated right mouse click
 const mouseClickedDelaySeconds = 0.4; // Default: 0.12   Time the mouse must be lifted within to simulate a mouse click
 let timeMouseDownSeconds; // Records the time when mouse down was initiated
+let timeMouseDownSeconds_Right; // Records the time when RIGHT mouse down was initiated
 let mouseClickedTile; // [x,y]  The tile where the simulated mouse clicked clicked.
 let mouseClickedPixels; // [x,y] The screen coords where the simulated mouse clicked clicked.
 const pixelDistToCancelClick = 10; // Default: 12   If the mouse moves more than this while down, don't simulate a click
@@ -126,6 +128,11 @@ function getPointerHeld() {
 /** Returns whether there was a simulated click by a finger or mouse */
 function getPointerClicked() {
 	return pointerIsTouch ? touchClicked : mouseClicked;
+}
+
+/** Returns whether there was a simulated click by a finger or mouse */
+function getPointerClicked_Right() {
+	return mouseClicked_Right;
 }
 
 function getPointerWorldLocation() {
@@ -383,6 +390,7 @@ function initListeners_Mouse() {
 		board.recalcTile_MouseCrosshairOver();
 
 		if (event.button === 0) initMouseSimulatedClick(); // Left mouse button
+		else if (event.button === 2) initMouseSimulatedClick_Right(); // Right mouse button
 	});
 
 	// This mousedown event is ONLY for perspective mode, and it attached to the document instead of overlay!
@@ -403,6 +411,7 @@ function initListeners_Mouse() {
 		setTimeout(perspective.relockMouse, 1); // 1 millisecond, to give time for pause listener to fire
 
 		if (event.button === 0) executeMouseSimulatedClick(); // Left mouse button
+		else if (event.button === 2) executeMouseSimulatedClick_Right(); // Right mouse button
 	});
 
 	// This mouseup event is ONLY for perspective mode, and it attached to the document instead of overlay!
@@ -450,6 +459,16 @@ function initMouseSimulatedClick() {
 	mouseClickedPixels = mousePos;
 }
 
+function initMouseSimulatedClick_Right() {
+	if (mouseClicked_Right) return;
+	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
+
+	// Start the timer of when a simulated click is registered
+	timeMouseDownSeconds_Right = new Date().getTime() / 1000;
+	mouseClickedTile = space.convertWorldSpaceToCoords_Rounded(mouseWorldLocation);
+	mouseClickedPixels = mousePos;
+}
+
 function executeMouseSimulatedClick() {
 	if (!timeMouseDownSeconds || !mouseIsSupported) return;
 	// THIS PREVENTS A BUG THAT RANDOMLY SELECTS A PIECE AS SOON AS YOU START A GAME
@@ -468,6 +487,25 @@ function executeMouseSimulatedClick() {
 	if (d > pixelDistToCancelClick) return; // Don't simulate click
     
 	mouseClicked = true; // Simulate click
+}
+
+function executeMouseSimulatedClick_Right() {
+	if (!timeMouseDownSeconds_Right || !mouseIsSupported) return;
+
+	// See if the mouse was released fast enough to simulate a click!
+	const nowSeconds = new Date().getTime() / 1000;
+	const timePassed = nowSeconds - timeMouseDownSeconds_Right;
+	if (timePassed > mouseClickedDelaySeconds) return; // Don't simulate click
+
+	// Is the mouse too far away from it's starting click position?
+
+	const dx = mousePos[0] - mouseClickedPixels[0];
+	const dy = mousePos[1] - mouseClickedPixels[1];
+	const d = Math.hypot(dx, dy);
+	if (d > pixelDistToCancelClick) return; // Don't simulate click
+
+	mouseClicked_Right = true; // Simulate click
+	// console.log('Simulated right click')
 }
 
 function calcMouseWorldLocation() {
@@ -581,6 +619,7 @@ function resetKeyEvents() {
 	mouseDowns = []; // Mouse clicks this frame
 	mouseWheel = 0; // Amount scrolled this frame
 	mouseClicked = false; // Amount scrolled this frame
+	mouseClicked_Right = false; // Amount scrolled this frame
 	keyDowns = []; // Key presses this frame
 	atleastOneInputThisFrame = false; // Has there been atleast one input this frame?
 
@@ -637,6 +676,10 @@ function getTouchHeldByID(touchID) {
 
 function isMouseDown_Left() {
 	return mouseDowns.includes(leftMouseKey);
+}
+
+function isMouseDown_Middle() {
+	return mouseDowns.includes(middleMouseKey);
 }
 
 function isMouseDown_Right() {
@@ -761,6 +804,7 @@ export default {
 	getTouchHelds,
 	getTouchClicked,
 	isMouseDown_Left,
+	isMouseDown_Middle,
 	isMouseDown_Right,
 	removeMouseDown_Left,
 	removePointerDown,
@@ -787,6 +831,7 @@ export default {
 	getPointerDown,
 	getPointerHeld,
 	getPointerClicked,
+	getPointerClicked_Right,
 	getPointerWorldLocation,
 	getPointerIsTouch
 };
