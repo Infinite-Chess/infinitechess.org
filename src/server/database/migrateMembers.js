@@ -4,6 +4,8 @@ import db from './database.js';
 import { genUniqueUserID } from './memberManager.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { addTokenToRefreshTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
+import { addUserToPlayerStatsTable } from './playerStatsManager.js';
+import { addUserToRatingsTable } from './ratingsManager.js';
 
 'use strict';
 
@@ -121,6 +123,39 @@ function migrateUsers() {
 	console.log("Finished migrating all users!");
 }
 
+/**
+ * Get a list of all user_ids from the members table
+ * Then for each of them, check if they already exist in the player_stats and ratings tables
+ * If not, then add them to the respective table
+ */
+function migrateMembersToPlayerStatsAndRatingsTables() {
+	let migrated_player_stats = 0;
+	let migrated_ratings = 0;
+
+	const user_ids_members = db.all('SELECT user_id FROM members').map(user => user.user_id);
+	const user_ids_player_stats = db.all('SELECT user_id FROM player_stats').map(user => user.user_id);
+	const user_ids_ratings = db.all('SELECT user_id FROM ratings').map(user => user.user_id);
+
+	for (const user_id of user_ids_members) {
+		if (!user_ids_player_stats.includes(user_id)) {
+			const playerStatsResult = addUserToPlayerStatsTable(user_id);
+			if (!playerStatsResult.success) {
+				logEvents(`Failed to add user ID "${user_id}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt', { print: true });
+			} else migrated_player_stats++;
+		}
+
+		if (!user_ids_ratings.includes(user_id)) {
+			const ratingsResult = addUserToRatingsTable(user_id);
+			if (!ratingsResult.success) {
+				logEvents(`Failed to add user ID "${user_id}" to ratings table: ${ratingsResult.reason}`, 'errLog.txt', { print: true });
+			} else migrated_ratings++;
+		}
+	}
+
+	console.log(`Migration of ${migrated_player_stats} members to player_stats table and ${migrated_ratings} members to ratings table is completed.`);
+}
+
 export {
-	migrateUsers
+	migrateUsers,
+	migrateMembersToPlayerStatsAndRatingsTables
 };
