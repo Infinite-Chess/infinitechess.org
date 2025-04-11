@@ -61,7 +61,9 @@ function close() {
 async function initUI() {
 	if (initalized) return;
 	const gamefile = gameslot.getGamefile()!;
-	for (let player = players.NEUTRAL; player<=gamefile.startSnapshot.playerCount!; player++) {
+	const setOfPlayers: Set<Player> = new Set(gamefile.gameRules.turnOrder)
+	setOfPlayers.add(players.NEUTRAL);
+	setOfPlayers.forEach(async (player: Player) => {
 		const svgs = await svgcache.getSVGElements(coloredTypes.map((rawType) => { return typeutil.buildType(rawType, player) }));
 		
 		const playerPieces = document.createElement("div");
@@ -74,7 +76,7 @@ async function initUI() {
 		}
 		
 		element_typesContainer.appendChild(playerPieces);
-	}
+	});
 	initalized = true;
 }
 
@@ -100,7 +102,7 @@ function callback_ChangeTool(e: Event) {
 	const target = (e.currentTarget as HTMLElement)
 	const tool = target.getAttribute("data-tool");
 	switch (tool) {
-		case "color": toggleColor(); return;
+		case "color": nextColor(); return;
 		case "save":  boardeditor.save(); return;
 		case "clear": boardeditor.clearAll(); return;
 		case "eraser":
@@ -136,9 +138,12 @@ function setColor(newColor: Player) {
 	currentColor = newColor;
 }
 
-function toggleColor() {
-	// This looks rather messy is there a utility function for next player?
-	setColor((currentColor+1)%(gameslot.getGamefile()!.startSnapshot.playerCount!+1) as Player);
+function nextColor() {
+	// Is there a better way to do this?
+	const playersSet: Set<Player> = new Set(gameslot.getGamefile()!.gameRules.turnOrder);
+	playersSet.add(players.NEUTRAL);
+	const playersArray: Array<Player> = [...playersSet];
+	setColor(playersArray[(playersArray.indexOf(currentColor) + 1) % playersArray.length]!);
 }
 
 export default {
