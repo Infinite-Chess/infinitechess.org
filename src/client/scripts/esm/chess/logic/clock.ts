@@ -9,7 +9,6 @@
 import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
-import pingManager from '../../util/pingManager.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';
 
@@ -111,28 +110,6 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
 }
 
 /**
- * Modifies the clock values to account for ping.
- */
-function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
-	if (!clockValues.colorTicking) return clockValues; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
-
-	// Ping is round-trip time (RTT), So divided by two to get the approximate
-	// time that has elapsed since the server sent us the correct clock values
-	const halfPing = pingManager.getHalfPing();
-	if (halfPing > 2500) console.error("Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!");
-	// console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${clockValues.colorTicking}'s clock.`);
-
-	if (clockValues.clocks[clockValues.colorTicking] === undefined) throw Error(`Invalid color "${clockValues.colorTicking}" to modify clock value to account for ping.`);
-	clockValues.clocks[clockValues.colorTicking]! -= halfPing;
-
-	// Flag what time the player who's clock is ticking will lose on time.
-	// Do this because while while the gamefile is being constructed, the time left may become innacurate.
-	clockValues.timeColorTickingLosesAt = Date.now() + clockValues.clocks[clockValues.colorTicking]!;
-
-	return clockValues;
-}
-
-/**
  * Call after flipping whosTurn. Flips colorTicking in local games.
  */
 function push(gamefile: gamefile) {
@@ -206,7 +183,6 @@ export default {
 	push,
 	printClocks,
 	isGameUntimed,
-	adjustClockValuesForPing,
 };
 
 export type {

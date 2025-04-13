@@ -19,7 +19,6 @@ import type { Player } from "../../chess/util/typeutil.js";
 
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
-import clock from "../../chess/logic/clock.js";
 import timeutil from "../../util/timeutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
@@ -169,7 +168,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 		variantOptions: localstorage.loadItem(options.id) as VariantOptions,
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
-		clockValues: options.clockValues ? clock.adjustClockValuesForPing(options.clockValues) : undefined,
+		clockValues: options.clockValues,
 	};
 
 	gameslot.loadGamefile({
