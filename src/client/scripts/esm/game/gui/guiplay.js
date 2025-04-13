@@ -255,7 +255,7 @@ function callback_createInvite() {
 		else invites.create(inviteOptions);
 	} else if (modeSelected === 'computer') {
 		close(); // Close the invite creation screen
-		const ourColor = inviteOptions.color === 'White' ? players.WHITE : inviteOptions.color === 'Black' ? players.BLACK : Math.random() > 0.5 ? players.WHITE : players.BLACK;
+		const ourColor = inviteOptions.color !== players.NEUTRAL ? inviteOptions.color : Math.random() > 0.5 ? players.WHITE : players.BLACK;
 		gameloader.startEngineGame({
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
