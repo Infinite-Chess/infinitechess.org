@@ -12,8 +12,6 @@ import input from '../input.js';
 import board from '../rendering/board.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
-import typeutil, {players, rawTypes} from '../../chess/util/typeutil.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
 import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
@@ -205,6 +203,7 @@ function clearAll() {
 	};
 	runEdit(gamefile, edit, true);
 	addEditToHistory(edit);
+	guinavigation.update_MoveButtons();
 }
 
 function undo() {
