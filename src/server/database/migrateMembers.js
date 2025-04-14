@@ -5,7 +5,7 @@ import { genUniqueUserID } from './memberManager.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { addTokenToRefreshTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
 import { addUserToPlayerStatsTable } from './playerStatsManager.js';
-import { addUserToLeaderboard, Leaderboards } from './ratingsManager.js';
+import { addUserToLeaderboard, Leaderboards } from './leaderboardsManager.js';
 
 'use strict';
 
