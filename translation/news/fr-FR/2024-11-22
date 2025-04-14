@@ -1,0 +1,14 @@
+## Mise à jour des thèmes - v1.5 -
+
+- La couleur du plateau peut désormais être ajustée via le nouveau menu de paramètres ! Une grande variété de thèmes est disponible !
+- Vous pouvez désormais choisir si les coups légaux sont représentés par des points ou des carrés !
+- Sur PC, il est désormais possible d'ajuster la sensibilité de la souris ainsi que le champ de vision.
+- La latence est maintenant affichée dans les paramètres !
+- La langue se trouve maintenant dans les paramètres.
+- Les préférences sont enregistrées dans le navigateur et sur le serveur, de sorte qu'elles restent sauvegardées en permanence, où que vous soyez !
+- Un nouveau design de l'en-tête a été ajouté, avec le logo d'Infinite Chess, des vecteurs graphiques pour chaque lien et l'engrenage des paramètres. De plus, sur mobile, il n'est plus nécessaire de faire défiler l'écran horizontalement, car les liens s'adaptent à la taille de l'écran !
+- Lorsque vous lancez le plateau avec le bouton de la souris ou par clic droit, un peu de vitesse reste pour aller plus loin, plus vite !
+- Les sessions de connexion sont automatiquement renouvelées lorsque vous vous reconnectez le lendemain d'une précédente connexion, ce qui signifie que vous ne serez pas déconnecté au milieu d'une partie.
+- À présent, l'horloge affiche le temps du serveur et non celui de votre appareil, car les valeurs sont incorrectes.
+- Le compte des membres migrés est stocké dans une base de données SQLite.
+- Chaque membre a maintenant un identifiant unique, inchangeable, qui ne peut pas être réutilisé après la suppression d'un compte. Même en cas de changement de pseudonyme, l'identifiant pointe le même compte. Les notifications incluront également les identifiants des joueurs.
