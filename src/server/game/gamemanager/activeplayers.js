@@ -88,7 +88,7 @@ function isSocketInAnActiveGame(ws) {
  * @returns {boolean}
  */
 function hasColorInGameSeenConclusion(game, color) {
-	const player = game.players[color]; // { member }  OR  { browser }   (only contains one)
+	const player = game.players[color]; // { member, user_id }  OR  { browser }   (only contains one)
 	if (!player) return console.error(`Invalid color "${color}" when checking if color in game has seen game conclusion!`);
 
 	if (player.identifier.member) {

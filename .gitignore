@@ -4,8 +4,16 @@ logs
 dist
 # Old json data storage "database"
 /database
-# New database using SQLite
-database.db
+
+# SQLite Database Files
+*.db
+*.sqlite
+*.sqlite3
+
+# SQLite Journal Files
+*.db-journal
+*.sqlite-journal
+*.sqlite3-journal
 
 # Visual Studio automatically generated directories
 node_modules

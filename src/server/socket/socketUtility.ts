@@ -41,7 +41,7 @@ interface CustomWebSocket extends WebSocket {
 		memberInfo: {
 			/** True if they are signed in, if not they MUST have a browser-id cookie! */
 			signedIn: boolean;
-			user_id?: string;
+			user_id?: number;
 			username?: string;
 			roles?: string[];
 		};
@@ -107,9 +107,9 @@ function getSimplifiedMetadata(ws: CustomWebSocket) {
  * @param ws - The websocket
  * @returns An object that contains either the `member` or `browser` property.
  */
-function getOwnerFromSocket(ws: CustomWebSocket): { member: string } | { browser: string } {
+function getOwnerFromSocket(ws: CustomWebSocket): { member: string, user_id: number } | { browser: string } {
 	const metadata = ws.metadata;
-	if (metadata.memberInfo.signedIn) return { member: ws.metadata.memberInfo.username! };
+	if (metadata.memberInfo.signedIn) return { member: ws.metadata.memberInfo.username!, user_id: ws.metadata.memberInfo.user_id! };
 	else return { browser: metadata.cookies['browser-id']! };
 }
 

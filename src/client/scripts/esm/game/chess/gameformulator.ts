@@ -63,6 +63,7 @@ interface FormatConverterLong {
 	shortposition: string,
 	fullMove: number,
 	specialRights: Record<CoordsKey, true>,
+	/** DOES NOT CONTAIN moveRule!!!! */
 	gameRules: GameRules,
 	moves: string[],
 	// Optional properties...
@@ -134,4 +135,8 @@ export default {
 	formulateGame,
 	ICNToGamefile,
 	convertVariantFromSpokenLanguageToCode,
+};
+
+export type {
+	FormatConverterLong
 };
