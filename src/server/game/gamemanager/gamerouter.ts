@@ -76,6 +76,7 @@ function handleGameRoute(ws: CustomWebSocket, message: WebsocketInMessage): void
 			break;
 		case 'paste':
 			onPaste(ws, game);
+			break;
 		default:
 			return console.error(`Unsupported action ${message.action} in game route.`);
 	}
