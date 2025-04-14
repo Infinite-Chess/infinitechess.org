@@ -168,7 +168,7 @@ function updatePlayerStatsTable(game: Game, game_id: number, dateSqliteString: s
 		const publicityString = game.publicity;
 		const ratedString = (game.rated ? "rated" : "casual");
 
-		const read_and_modify_columns = ["last_played_rated_game", "game_history", "moves_played"];
+		const read_and_modify_columns = ["game_history", "moves_played"];
 		const read_and_increment_columns = victor !== undefined ?
 											[ "game_count", `game_count_${ratedString}`, `game_count_${publicityString}`,
 											  `game_count_${outcomeString}`, `game_count_${outcomeString}_${ratedString}`]
@@ -181,9 +181,6 @@ function updatePlayerStatsTable(game: Game, game_id: number, dateSqliteString: s
 			// console.log(`Not updating stats of deleted member "${game.players[playerStr].identifier.member}" of user_id "${user_id}". Game ID: ${game_id}.`); // UNCOMMENT AFTER MIGRATION
 			continue; // Continue updating next player's stats, they may not be deleted.
 		}
-
-		// Update last_played_rated_game date
-		if (game.rated) player_stats.last_played_rated_game = dateSqliteString;
 
 		// Update game history string
 		if (player_stats.game_history === '') player_stats.game_history = `${game_id}`; // First game, no delimiter needed.

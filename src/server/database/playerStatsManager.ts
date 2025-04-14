@@ -19,7 +19,6 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 /** Structure of a player_stats record. This is all allowed columns of a user_id. */
 interface PlayerStatsRecord {
 	user_id?: number;
-    last_played_rated_game?: string | null; // This cell is allowed to be null
     game_history?: string;
 	games_starred?: string;
     moves_played?: number;
@@ -88,7 +87,7 @@ function addUserToPlayerStatsTable(user_id: number): ModifyQueryResult {
 /**
  * Fetches specified columns of a single player from the player_stats table based on user_id
  * @param user_id - The user_id of the player
- * @param columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'last_played_rated_game']).
+ * @param columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'game_count'])
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
 function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsRecord | undefined {
