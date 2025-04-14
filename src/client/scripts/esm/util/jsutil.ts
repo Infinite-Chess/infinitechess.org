@@ -19,7 +19,14 @@ function deepCopyObject<T extends unknown>(src: T): T {
     
 	// Check for Maps
 	if (src instanceof Map) {
-		return new Map([...src]) as T; // Use spread operator to copy Map
+		// Create a new Map instance
+		const copy = new Map();
+		// Iterate over the original map's entries
+		for (const [key, value] of src.entries()) {
+			// Deep copy both the key and the value before setting them in the new map
+			copy.set(deepCopyObject(key), deepCopyObject(value));
+		}
+		return copy as T; // Return the new Map with deep copied entries
 	}
 
 	// Check for TypedArrays (which are ArrayBuffer views and have slice)
