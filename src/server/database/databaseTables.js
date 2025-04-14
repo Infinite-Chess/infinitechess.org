@@ -160,7 +160,7 @@ function generateTables() {
 			rating_diff TEXT, -- If game was rated, delimited elo changes from the result of the game
 			time_control TEXT NOT NULL,
 			variant TEXT NOT NULL,
-			rated BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
+			rated BOOLEAN NOT NULL CHECK (rated IN (0, 1)), -- Ensures only 0 or 1
 			private BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
 			result TEXT NOT NULL,
 			termination TEXT NOT NULL,
