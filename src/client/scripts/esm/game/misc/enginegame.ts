@@ -14,6 +14,7 @@ import gamecompressor from '../chess/gamecompressor.js';
 import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
+import typeutil from '../../chess/util/typeutil.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -32,6 +33,7 @@ interface EngineConfig {
 /** Whether we are currently in an engine game. */
 let inEngineGame: boolean = false;
 let ourColor: Player | undefined;
+let engineColor: Player | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
@@ -72,6 +74,7 @@ function initEngineGame(options: {
 
 	inEngineGame = true;
 	ourColor = options.youAreColor;
+	engineColor = typeutil.invertPlayer(ourColor);
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
 
@@ -107,6 +110,7 @@ function initEngineGame(options: {
 function closeEngineGame() {
 	inEngineGame = false;
 	ourColor = undefined;
+	engineColor = undefined;
 	currentEngine = undefined;
 	engineConfig = undefined;
 	perspective.resetRotations(); // Without this, leaving an engine game of which we were black, won't reset our rotation.
@@ -133,13 +137,15 @@ function areWeColor(color: Player): boolean {
 async function onMovePlayed() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
+	// Make sure it's the engine's turn
+	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 	const abridgedGame = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
 	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);
-	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig });
+	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig, youAreColor: engineColor });
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 
