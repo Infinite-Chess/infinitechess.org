@@ -29,7 +29,7 @@ const resolvers: (() => void)[] = [];
 
 let memberInfo: {
 	signedIn: boolean;
-	user_id?: string;
+	user_id?: number;
 	username?: string;
 	issued?: number;
 	expires?: number;

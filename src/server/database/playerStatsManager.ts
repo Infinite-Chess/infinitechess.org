@@ -41,7 +41,7 @@ interface PlayerStatsRecord {
 }
 
 /** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
+type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -115,7 +115,8 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 
 		// If no row is found, return undefined
 		if (!row) {
-			logEvents(`No matches found in player stats table for user_id = ${user_id}.`, 'errLog.txt', { print: true });
+			// Don't log, it's fine if they request stats from a deleted user.
+			// logEvents(`No matches found in player stats table for user_id = ${user_id}.`, 'errLog.txt', { print: true });
 			return undefined;
 		}
 

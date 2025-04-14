@@ -65,17 +65,18 @@ function isConclusionDecisive(condition) {
  * Calculates the victor and condition properties from the specified game conclusion.
  * For example, "1 checkmate" => `{ victor: 1, condition: 'checkmate' }`.
  * If the game was aborted, victor will be undefined.
+ * If the game was a draw, victor will be Player 0 (neutral).
  * @param {string} gameConclusion - The gameConclusion of the gamefile. Examples: '1 checkmate' / '0 stalemate'  
  * @returns {{ victor?: Player, condition: string }} An object containing 2 properties: `victor` and `condition`
  */
 function getVictorAndConditionFromGameConclusion(gameConclusion) {
 	if (gameConclusion === false) throw new Error('Should not be getting victor and condition from false gameConclusion! Game is not over.');
-	let [victor, condition] = gameConclusion.split(' ');
-	if (victor === 'aborted') { // If the conclusion is "aborted", then the victor isn't specified.
-		condition = victor;
-		victor = undefined;
+	let [victorStr, condition] = gameConclusion.split(' ');
+	if (victorStr === 'aborted') { // If the conclusion is "aborted", then the victor isn't specified.
+		condition = victorStr;
+		victorStr = undefined;
 	}
-	return { victor: victor ? Number(victor) : undefined, condition };
+	return { victor: victorStr !== undefined ? Number(victorStr) : undefined, condition };
 }
 
 /**

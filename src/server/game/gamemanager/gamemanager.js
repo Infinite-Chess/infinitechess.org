@@ -162,7 +162,7 @@ function getGameBySocket(ws) {
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws, game) {
-	const user = socketUtility.getOwnerFromSocket(ws); // { member/browser }
+	const user = socketUtility.getOwnerFromSocket(ws); // { member, user_id } | { browser }
 	if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game");
 	removeUserFromActiveGame(user, game.id);
     
@@ -392,7 +392,7 @@ async function deleteGame(game) {
 
 	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
 	// The ratings are calculated during the logging of the game into the database
-	await executeSafely_async(gamelogger.logGame, `gamelogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
+	await gamelogger.logGame(game);
 
 	// Mostly deprecated:
 	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection

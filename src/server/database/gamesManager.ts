@@ -25,7 +25,9 @@ interface GamesRecord {
     rating_diff?: string;
     time_control?: string;
     variant?: string;
+	/** 0 => false  1 => true */
     rated?: number;
+	/** 0 => false  1 => true */
     private?: number;
     result?: string;
     termination?: string;
@@ -34,7 +36,7 @@ interface GamesRecord {
 }
 
 /** The result of add/update operations */
-type ModifyGameQueryResult = { success: true; result: RunResult; game_id?: number } | { success: false; reason?: string };
+type ModifyGameQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -52,7 +54,9 @@ function addGameToGamesTable(
         rating_diff: string | null,
         time_control: string,
         variant: string,
+		/** 0 => false  1 => true */
         rated: number,
+		/** 0 => false  1 => true */
         private: number,
         result: string,
         termination: string,
@@ -102,7 +106,7 @@ function addGameToGamesTable(
 		);
 
 		// Return success result
-		return { success: true, result, game_id };
+		return { success: true, result };
 
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);

@@ -38,6 +38,7 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
  * @typedef {import('../../../client/scripts/esm/chess/variants/gamerules.js').GameRules} GameRules
  * @typedef {import('../../../client/scripts/esm/chess/logic/clock.js').ClockValues} ClockValues
  * @typedef {import('../../../client/scripts/esm/chess/util/typeutil.js').Player} Player
+ * @typedef {import('../../../client/scripts/esm/chess/util/metadata.js').MetaData} MetaData
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -268,7 +269,7 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 /**
  * Generates metadata for a game including event details, player information, and timestamps.
  * @param {Game} game - The game object containing details about the game.
- * @returns {Object} - An object containing metadata for the game including event name, players, time control, and UTC timestamps.
+ * @returns {MetaData} - An object containing metadata for the game including event name, players, time control, and UTC timestamps.
  */
 function getMetadataOfGame(game) {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
@@ -280,28 +281,18 @@ function getMetadataOfGame(game) {
 		Site: "https://www.infinitechess.org/",
 		Round: "-",
 		Variant: game.variant,
-		White: getDisplayNameOfPlayer(white), // Protect browser's browser-id cookie
-		Black: getDisplayNameOfPlayer(black), // Protect browser's browser-id cookie
+		White: white.member || "(Guest)", // Protect browser's browser-id cookie
+		Black: black.member || "(Guest)", // Protect browser's browser-id cookie
 		TimeControl: game.clock,
 		UTCDate,
 		UTCTime,
 	};
-	id: if (white.member !== undefined) {
-		const user_id = getUserIdByUsername(white.member);
-		if (user_id === undefined) {
-			logEvents(`Unable to find the user ID of member "${white.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
-			break id;
-		}
-		const base62 = uuid.base10ToBase62(user_id);
+	if (white.member !== undefined) {
+		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
 	}
-	id: if (black.member !== undefined) {
-		const user_id = getUserIdByUsername(black.member);
-		if (user_id === undefined) {
-			logEvents(`Unable to find the user ID of member "${black.member}" when generating metadata of game!"`, 'errLog.txt', { print: true });
-			break id;
-		}
-		const base62 = uuid.base10ToBase62(user_id);
+	if (black.member !== undefined) {
+		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
 	}
 
@@ -389,22 +380,6 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
 	sendSocketMessage(playerdata.socket, "game", "gameupdate", messageContents, replyTo);
-}
-
-/**
- * Returns the display name of the player, removing doxing information such as their `browser-id` cookie.
- * If they aren't signed in, their display name will be "(Guest)"
- * @param {Object} player - An object containing either the `member` or `browser` property.
- * @returns {string} The display name of the player.
- */
-function getDisplayNameOfPlayer(player) { // { member/browser }
-	// return player.member ? getUsernameCaseSensitive(player.member) : "(Guest)";
-	let displayName;
-	if (player.member) {
-		const { username } = getMemberDataByCriteria(['username'], 'username', player.member);
-		displayName = username;
-	} else displayName = "(Guest)";
-	return displayName;
 }
 
 /**
@@ -678,7 +653,6 @@ export default {
 	isAutoResignDisconnectTimerActiveForColor,
 	sendUpdatedClockToColor,
 	sendMoveToColor,
-	getDisplayNameOfPlayer,
 	cancelDeleteGameTimer,
 	isGameResignable,
 	getColorThatPlayedMoveIndex,

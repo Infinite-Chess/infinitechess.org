@@ -63,7 +63,6 @@ function acceptDraw(ws, game) {
 	// Accept draw offer!
     
 	closeDrawOffer(game);
-	console.log(typeof setGameConclusion);
 	setGameConclusion(game, `${players.NEUTRAL} agreement`); // Player NEUTRAL winning means it was a draw
 	gameutility.sendGameUpdateToBothPlayers(game);
 }

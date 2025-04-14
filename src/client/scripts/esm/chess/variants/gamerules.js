@@ -60,24 +60,18 @@ function GameRules() {
 	// REQUIRED gamerules...
 
 	/** An object containing lists of what win conditions each color can win by. This is REQUIRED.
-	 * @type {Object<string, string[]>}
+	 * @type {PlayerGroup<string[]>}
 	 */
-	this.winConditions = {
-		/** A list of win conditions white can win by. REQUIRED. @type {string[]} */
-		white: undefined,
-		/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
-		black: undefined,
-	};
+	this.winConditions = undefined;
 	/** A list of players that make up one full turn cycle. REQUIRED. @type {Player[]} */
 	this.turnOrder = undefined;
 
 	// Gamerules that also have dedicated slots in ICN notation...
 
 	/**
-     * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
-     * If one side can't promote, their rank is `null`.
+     * Contains a list of all promotion ranks each color promotes at, if they can promote.
      * If neither side can promote, this should be left as undefined.
-     * @type {{ white: number[], black: number[]} | undefined} (number | null)[] | undefined
+     * @type {PlayerGroup<number[]> | undefined}
      */
 	this.promotionRanks = undefined;
 	/**
@@ -86,12 +80,7 @@ function GameRules() {
      * If no color can promote, this should be left undefined.
 	 * @type {PlayerGroup<RawType[]> | undefined}
      */
-	this.promotionsAllowed = {
-		/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {RawType[]} */
-		[players.WHITE]: undefined,
-		/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. @type {RawType[]} */
-		[players.BLACK]: undefined,
-	};
+	this.promotionsAllowed = undefined;
 	/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. @type {number | undefined} */
 	this.moveRule = undefined;
 
