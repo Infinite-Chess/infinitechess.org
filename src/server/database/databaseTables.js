@@ -37,6 +37,7 @@ const allPlayerStatsColumns = [
 	'user_id',
 	'last_played_rated_game',
 	'game_history',
+	'games_starred',
 	'moves_played',
 	'game_count',
 	'game_count_rated',
@@ -46,9 +47,10 @@ const allPlayerStatsColumns = [
 	'game_count_wins',
 	'game_count_losses',
 	'game_count_draws',
-	'game_count_wins_ranked',
-	'game_count_losses_ranked',
-	'game_count_draws_ranked',
+	'game_count_aborted',
+	'game_count_wins_rated',
+	'game_count_losses_rated',
+	'game_count_draws_rated',
 	'game_count_wins_casual',
 	'game_count_losses_casual',
 	'game_count_draws_casual'
@@ -123,6 +125,7 @@ function generateTables() {
 			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
 			last_played_rated_game TIMESTAMP,
 			game_history TEXT NOT NULL DEFAULT '', -- Delimited game ids
+			games_starred TEXT NOT NULL DEFAULT '', -- Delimited game ids of starred games
 			moves_played INTEGER NOT NULL DEFAULT 0,
 			game_count INTEGER NOT NULL DEFAULT 0,
 			game_count_rated INTEGER NOT NULL DEFAULT 0,
@@ -132,9 +135,10 @@ function generateTables() {
 			game_count_wins INTEGER NOT NULL DEFAULT 0,
 			game_count_losses INTEGER NOT NULL DEFAULT 0,
 			game_count_draws INTEGER NOT NULL DEFAULT 0,
-			game_count_wins_ranked INTEGER NOT NULL DEFAULT 0,
-			game_count_losses_ranked INTEGER NOT NULL DEFAULT 0,
-			game_count_draws_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_aborted INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_rated INTEGER NOT NULL DEFAULT 0,
 			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
 			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
 			game_count_draws_casual INTEGER NOT NULL DEFAULT 0

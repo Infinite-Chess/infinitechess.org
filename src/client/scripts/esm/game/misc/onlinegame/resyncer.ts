@@ -59,7 +59,7 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
+	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
 	clock.edit(gamefile, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.

@@ -192,6 +192,8 @@ function handleJoinGame(message: JoinGameMessage) {
 	websocket.addSub('game');
 	guititle.close();
 	guiplay.close();
+	// If the clock values are present, adjust them for ping.
+	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
 	gameloader.startOnlineGame(message);
 }
 
@@ -200,7 +202,7 @@ function handleJoinGame(message: JoinGameMessage) {
  */
 function handleUpdatedClock(gamefile: gamefile, clockValues: ClockValues) {
 	// Adjust the timer whos turn it is depending on ping.
-	if (clockValues) clockValues = clock.adjustClockValuesForPing(clockValues);
+	if (clockValues) clockValues = onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(gamefile, clockValues); // Edit the clocks
 	guiclock.edit(gamefile);
 }

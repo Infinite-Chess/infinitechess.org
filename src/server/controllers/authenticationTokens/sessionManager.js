@@ -140,7 +140,7 @@ function revokeSession(res) {
  * * memberInfo containing user info (user ID and username),
  * * jwt containing our refresh token.
  * @param {Object} res - The response object.
- * @param {string} userId - The ID of the user.
+ * @param {number} userId - The ID of the user.
  * @param {string} username - The username of the user.
  * @param {string} refreshToken - The refresh token to be stored in the cookie.
  */
@@ -181,7 +181,7 @@ function deleteRefreshTokenCookie(res) {
  * Creates and sets a cookie containing user info (user ID and username),
  * accessible by JavaScript, with the same expiration as the refresh token.
  * @param {Object} res - The response object.
- * @param {string} userId - The ID of the user.
+ * @param {number} userId - The ID of the user.
  * @param {string} username - The username of the user.
  */
 function createMemberInfoCookie(res, userId, username) {

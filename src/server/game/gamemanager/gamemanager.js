@@ -9,6 +9,7 @@ import gameutility from './gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import statlogger from '../statlogger.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
+import gamelogger from './gamelogger.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
@@ -161,7 +162,7 @@ function getGameBySocket(ws) {
  * @param {Game | undefined} game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws, game) {
-	const user = socketUtility.getOwnerFromSocket(ws); // { member/browser }
+	const user = socketUtility.getOwnerFromSocket(ws); // { member, user_id } | { browser }
 	if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game");
 	removeUserFromActiveGame(user, game.id);
     
@@ -377,11 +378,6 @@ function onPlayerLostByAbandonment(game, colorWon) {
 async function deleteGame(game) {
 	if (!game) return console.error(`Unable to delete an undefined game!`);
 
-	const gameConclusion = game.gameConclusion;
-
-	// THIS IS WHERE WE MODIFY ELO based on who won!!!
-	// ...
-
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
 	// And remove them from the list of users in active games to allow them to join a new game.
@@ -398,8 +394,13 @@ async function deleteGame(game) {
 	// We don't know the starting position.
 	if (game.positionPasted) return console.log('Skipping logging custom game.');
 
-	await executeSafely_async(gameutility.logGame, `Unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game); // The game log will only log games with at least 1 move played
-	await statlogger.logGame(game); // The statlogger will only log games with atleast 2 moves played (resignable)
+	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+	// The ratings are calculated during the logging of the game into the database
+	await gamelogger.logGame(game);
+
+	// Mostly deprecated:
+	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
+	await executeSafely_async(statlogger.logGame, `statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
 }
 
 /**

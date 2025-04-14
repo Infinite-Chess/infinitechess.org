@@ -64,7 +64,7 @@ function generateNumbID(length: number): number {
  * MUST BE POSITIVE!!!	0+
  */
 function base10ToBase62(num: number): string {
-	if (!Number.isInteger(num) || num < 0) throw new Error('Input must be a non-negative integer when converting base 10 to base 62.');
+	if (!Number.isInteger(num) || num < 0) throw new Error('Input must be a non-negative integer when converting base 10 to base 62. Received: ' + num);
 
 	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	let result = '';
