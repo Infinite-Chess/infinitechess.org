@@ -9,6 +9,7 @@
  */
 
 
+import { addUserToLeaderboard, Leaderboards } from '../database/ratingsManager.js';
 import uuid from '../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
 import bcrypt from 'bcrypt';
@@ -28,8 +29,6 @@ import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManage
 import emailValidator from 'node-email-verifier';
 // @ts-ignore
 import { Request, Response } from 'express';
-// @ts-ignore
-import { addUserToRatingsTable } from '../database/ratingsManager.js';
 // @ts-ignore
 import { addUserToPlayerStatsTable } from '../database/playerStatsManager.js';
 
@@ -146,11 +145,11 @@ async function generateAccount({ username, email, password, autoVerify = false }
 		return;
 	}
     
-	// Add the newly created user to the ratings table
+	// Add the newly created user to the leaderboards table
 	const user_id = membersResult.result.lastInsertRowid;
-	const ratingsResult = addUserToRatingsTable(user_id);
+	const ratingsResult = addUserToLeaderboard(user_id, Leaderboards.INFINITY);
 	if (!ratingsResult.success) {
-		logEvents(`Failed to add user "${username}" to ratings table: ${ratingsResult.reason}`, 'errLog.txt', { print: true });
+		logEvents(`Failed to add user "${username}" to the INFINITY leaderboard: ${ratingsResult.reason}`, 'errLog.txt', { print: true });
 		return;
 	}
 

@@ -5,7 +5,7 @@ import { genUniqueUserID } from './memberManager.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { addTokenToRefreshTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
 import { addUserToPlayerStatsTable } from './playerStatsManager.js';
-import { addUserToRatingsTable } from './ratingsManager.js';
+import { addUserToLeaderboard, Leaderboards } from './ratingsManager.js';
 
 'use strict';
 
@@ -134,7 +134,8 @@ function migrateMembersToPlayerStatsAndRatingsTables() {
 
 	const user_ids_members = db.all('SELECT user_id FROM members').map(user => user.user_id);
 	const user_ids_player_stats = db.all('SELECT user_id FROM player_stats').map(user => user.user_id);
-	const user_ids_ratings = db.all('SELECT user_id FROM ratings').map(user => user.user_id);
+	/** All user_ids who are on the INFINITY leaderboard */
+	const user_ids_ratings = db.all('SELECT user_id FROM leaderboards WHERE leaderboard_id = ?', [Leaderboards.INFINITY]).map(user => user.user_id);
 
 	for (const user_id of user_ids_members) {
 		if (!user_ids_player_stats.includes(user_id)) {
@@ -145,7 +146,7 @@ function migrateMembersToPlayerStatsAndRatingsTables() {
 		}
 
 		if (!user_ids_ratings.includes(user_id)) {
-			const ratingsResult = addUserToRatingsTable(user_id);
+			const ratingsResult = addUserToLeaderboard(user_id, Leaderboards.INFINITY);
 			if (!ratingsResult.success) {
 				logEvents(`Failed to add user ID "${user_id}" to ratings table: ${ratingsResult.reason}`, 'errLog.txt', { print: true });
 			} else migrated_ratings++;
