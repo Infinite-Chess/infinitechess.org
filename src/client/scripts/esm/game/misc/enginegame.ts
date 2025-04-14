@@ -135,7 +135,7 @@ async function submitMove() {
 	const gamefile = gameslot.getGamefile()!;
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-	const abridgedGame = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
+	const abridgedGame = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
 	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);

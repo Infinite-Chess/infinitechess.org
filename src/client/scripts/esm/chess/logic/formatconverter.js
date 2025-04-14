@@ -669,9 +669,9 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// update coordinates in starting position
 		if (move.promotion) {
-			ret.startingPosition[endString] = `${move.promotion}`;
+			ret.startingPosition[endString] = move.promotion;
 		} else {
-			ret.startingPosition[endString] = `${ret.startingPosition[startString]}`;
+			ret.startingPosition[endString] = ret.startingPosition[startString];
 		}
 		delete ret.startingPosition[startString];
 		if (ret.specialRights) {
@@ -702,7 +702,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update coords of castled piece
 		if (move.castle) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
+			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`] = ret.startingPosition[castleString];
 			delete ret.startingPosition[castleString];
 			if (ret.specialRights) delete ret.specialRights[castleString];
 		}
