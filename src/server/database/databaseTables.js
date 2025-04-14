@@ -166,6 +166,12 @@ function generateTables() {
 	`;
 	db.run(createTableSQLQuery);
 
+	// Create an index on the date column of the games table for faster queries
+	const createGamesDateIndexSQL = `
+	  CREATE INDEX IF NOT EXISTS idx_games_date ON games (date DESC);
+	`;
+	db.run(createGamesDateIndexSQL);
+
 	// Bans table
 	// createTableSQLQuery = `
 	// 	CREATE TABLE IF NOT EXISTS bans (

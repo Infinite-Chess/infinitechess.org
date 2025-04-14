@@ -169,7 +169,7 @@ function verifyWinConditions(winConditions) {
  * @param {Object} longformat - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  * @returns {boolean} Whether the paste was successful
  */
-async function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
+function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
 	console.log(translations.copypaste.pasting_game);
 
 	/** longformat properties:
