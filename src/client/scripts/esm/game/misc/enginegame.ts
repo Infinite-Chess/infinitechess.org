@@ -130,7 +130,7 @@ function areWeColor(color: Player): boolean {
  * This method is called externally when the player submits his move in an engine game
  * It submits the gamefile to the webworker
  */
-async function submitMove() {
+async function onMovePlayed() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
@@ -189,7 +189,7 @@ export default {
 	initEngineGame,
 	closeEngineGame,
 	areWeColor,
-	submitMove,
+	onMovePlayed,
 	onGameConclude
 };
 

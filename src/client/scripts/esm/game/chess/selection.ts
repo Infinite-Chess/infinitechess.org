@@ -437,7 +437,7 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	movesequence.animateMove(move, true, animateMain);
 
 	movesendreceive.sendMove();
-	enginegame.submitMove();
+	enginegame.onMovePlayed();
 
 	unselectPiece();
 }
