@@ -386,6 +386,7 @@ function registerPieceInSpace(idx: number, o: {
 	const x = o.XPositions[idx];
 	const y = o.YPositions[idx];
 	const coords = [x,y] as Coords;
+	// console.log("Registering piece in space: " + idx + " coords: " + coords);
 	const key = coordutil.getKeyFromCoords(coords);
 	if (o.coords.has(key)) throw Error(`While organizing a piece, there was already an existing piece there!! ${key} idx ${idx}`);
 	o.coords.set(key, idx);
@@ -413,8 +414,9 @@ function removePieceFromSpace(idx: number, o: {
 	const x = o.XPositions![idx];
 	const y = o.YPositions![idx];
 	const coords = [x,y] as Coords;
+	// console.log("Removing piece from space: " + idx + " coords: " + coords);
 	const key = coordutil.getKeyFromCoords(coords);
-
+	if (!o.coords.has(key)) throw Error(`While removing a piece, there was no existing piece there!! ${key} idx ${idx}`);
 	o.coords.delete(key);
 	const lines = o.lines;
 	for (const [strline, linegroup] of lines) {
