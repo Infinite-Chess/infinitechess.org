@@ -647,6 +647,10 @@ function convertShortMovesToLong(shortmoves) {
 
 /**
  * Converts a gamefile in JSON format to single position gamefile in JSON format with deleted "moves" object
+ * 
+ * TODO: UPDATE THIS METHOD TO UTILIZE the changes arrays in the moves instead of manually checking for promotion,
+ * enpassant, and castle flags!!! This will make it future proof. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * 
  * @param {Object} longformat - Input gamefile in JSON format
  * @param {number} [halfmoves] - Number of halfmoves from starting position (Infinity: final position of game)
  * @param {boolean} [modify_input] - If false, a new object is created and returned. If true, the input object is modified (which is faster)
