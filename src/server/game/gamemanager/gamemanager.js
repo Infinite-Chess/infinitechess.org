@@ -390,6 +390,10 @@ async function deleteGame(game) {
 
 	console.log(`Deleted game ${game.id}.`);
 
+	// If the pastedGame flag is present, skip logging.
+	// We don't know the starting position.
+	if (game.positionPasted) return console.log('Skipping logging custom game.');
+
 	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
 	// The ratings are calculated during the logging of the game into the database
 	await gamelogger.logGame(game);
