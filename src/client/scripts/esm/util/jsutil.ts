@@ -29,6 +29,10 @@ function deepCopyObject<T extends unknown>(src: T): T {
 		return copy as T; // Return the new Map with deep copied entries
 	}
 
+	if (src instanceof Set) {
+		return new Set(src) as T;
+	}
+
 	// Check for TypedArrays (which are ArrayBuffer views and have slice)
 	if (ArrayBuffer.isView(src) && typeof (src as any).slice === 'function') {
 		return (src as any).slice() as T; // Use slice for TypedArray copy

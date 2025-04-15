@@ -30,7 +30,7 @@ interface AbridgedGamefile {
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	positionString: string,
 	startingPosition: Position,
-	specialRights: Record<CoordsKey, true>,
+	specialRights: Set<CoordsKey>,
 	gameRules: GameRules,
 	moves: Move[],
 	// Optional properties

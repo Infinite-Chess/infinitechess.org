@@ -328,7 +328,7 @@ function roses(gamefile, coords, color) {
  */
 function doesPieceHaveSpecialRight(gamefile, coords) {
 	const key = coordutil.getKeyFromCoords(coords);
-	return gamefile.specialRights[key];
+	return gamefile.specialRights.has(key);
 }
 
 // Returns true if the type is a pawn and the coords it moved to is a promotion line

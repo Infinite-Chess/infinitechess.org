@@ -116,7 +116,7 @@ interface VariantOptions {
 	 */
 	startingPosition: Position
 	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
-	specialRights: { [key: CoordsKey]: true },
+	specialRights: Set<CoordsKey>,
 }
 
 

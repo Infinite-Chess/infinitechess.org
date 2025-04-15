@@ -49,7 +49,7 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 		// If so, no further equal positions, terminate the loop.
 		// 'capture' move changes are handled lower down, they are one-way too.
 		if (typeutil.getRawType(move.type) === rawTypes.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
-		if (move.state.global.some((stateChange: StateChange) => stateChange.type === 'specialrights' && stateChange.future === undefined)) break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
+		if (move.state.global.some((stateChange: StateChange) => stateChange.type === 'specialrights' && stateChange.future === false)) break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
 
 		// Iterate through all move changes, adding the fluxes.
 		for (let i = 0; i < move.changes.length; i++) {

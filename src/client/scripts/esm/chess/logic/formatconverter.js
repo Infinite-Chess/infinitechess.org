@@ -679,8 +679,8 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		}
 		delete ret.startingPosition[startString];
 		if (ret.specialRights) {
-			delete ret.specialRights[startString];
-			delete ret.specialRights[endString];
+			ret.specialRights.delete(startString);
+			ret.specialRights.delete(endString);
 		}
 
 		// update move rule
@@ -694,7 +694,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// delete captured piece en passant
 		if (move.enpassant) {
 			delete ret.startingPosition[pawnThatDoublePushedKey];
-			if (ret.specialRights) delete ret.specialRights[pawnThatDoublePushedKey];
+			if (ret.specialRights) ret.specialRights.delete(pawnThatDoublePushedKey);
 		}
 
 		// update en passant
@@ -708,7 +708,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
 			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`] = ret.startingPosition[castleString];
 			delete ret.startingPosition[castleString];
-			if (ret.specialRights) delete ret.specialRights[castleString];
+			if (ret.specialRights) ret.specialRights.delete(castleString);
 		}
 
 		// save move coords for potential en passant
@@ -764,14 +764,14 @@ function ShortToLong_CompactMove(shortmove) {
 /**
  * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
  * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param {Object} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @param {Set} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
  * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
  */
-function LongToShort_Position(position, specialRights = {}) {
+function LongToShort_Position(position, specialRights = new Set()) {
 	let shortposition = "";
 	if (!position) return shortposition; // undefined position --> no string
 	for (const coordinate in position) {
-		if (specialRights[coordinate]) {
+		if (specialRights.has(coordinate)) {
 			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}+|`;
 		} else {
 			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}|`;
@@ -805,15 +805,15 @@ function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith
  * @returns {Object} The specialRights gamefile property, in the form 'x,y':true, where true means the piece at that location has their special move ability (pawn double push, castling rights..)
  */
 function generateSpecialRights(position, pawnDoublePush, castleWith) {
-	const specialRights = {};
+	const specialRights = new Set();
 	const kingsFound = {}; // Running list of kings discovered, 'x,y': player
 	const castleWithsFound = {}; // Running list of pieces found that are able to castle (e.g. rooks), 'x,y': player
 
 	for (const key in position) {
 		const thisPiece = position[key]; // e.g. "pawnsW"
-		if (pawnDoublePush && typeutil.getRawType(thisPiece) === r.PAWN) specialRights[key] = true;
+		if (pawnDoublePush && typeutil.getRawType(thisPiece) === r.PAWN) specialRights.add(key);
 		else if (castleWith && typeutil.getRawType(thisPiece) === r.KING) {
-			specialRights[key] = true;
+			specialRights.add(key);
 			kingsFound[key] = typeutil.getColorFromType(thisPiece);
 		}
 		else if (castleWith && typeutil.getRawType(thisPiece) === castleWith) {
@@ -832,7 +832,7 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their players don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
 			if (xDist < 3) continue; // Not ateast 3 squares away
-			specialRights[coord] = true; // Same row and color as the king! This piece can castle.
+			specialRights.add(coord); // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
 			// need to see if it's on the same rank as any other king
 			continue outerFor;
@@ -857,7 +857,7 @@ function getCoordsFromString(key) {
  */
 function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 	const startingPosition = {};
-	const specialRights = {};
+	const specialRights = new Set();
 	const letter_regex = /[a-zA-Z]/;
 	const MAX_INDEX = shortposition.length - 1;
 	let index = 0;
@@ -879,7 +879,7 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 			if (shortposition[index + end_index] === "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
 				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
-				specialRights[standardizeCoordString(coordString)] = true;
+				specialRights.add(standardizeCoordString(coordString));
 				index += end_index + 2;
 			} else {
 				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = ShortToInt_Piece(shortpiece);
@@ -889,7 +889,7 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 			if (shortposition.slice(-1) === "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
 				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
-				specialRights[standardizeCoordString(coordString)] = true;
+				specialRights.add(standardizeCoordString(coordString));
 				index = MAX_INDEX;
 			} else {
 				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = ShortToInt_Piece(shortpiece);

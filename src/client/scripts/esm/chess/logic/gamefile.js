@@ -62,7 +62,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		position: undefined,
 		/** @type {string} */
 		positionString: undefined,
-		/** @type {Record<CoordsKey, true>} */
+		/** @type {Set<CoordsKey>} */
 		specialRights: undefined,
 		/** What square coords, if legal, enpassant capture is possible in the starting position of the game. @type {EnPassant | undefined }*/
 		enpassant: undefined,
@@ -163,7 +163,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.moveIndex = -1;
 	/** If enpassant is allowed at the front of the game, this defines the coordinates. @type {EnPassant | undefined} */
 	this.enpassant = jsutil.deepCopyObject(this.startSnapshot.enpassant);
-	/** An object containing the information if each individual piece has its special move rights. */
+	/** An object containing the information if each individual piece has its special move rights. @type {Set<CoordsKey>}*/
 	this.specialRights = jsutil.deepCopyObject(this.startSnapshot.specialRights);
 	/** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
