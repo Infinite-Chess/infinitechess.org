@@ -52,7 +52,7 @@ function initModel() {
 	const squareCenter = board.gsquareCenter();
 
 	const gamefile = gameslot.getGamefile();
-	const startPositionBox = gamefileutility.getStartingAreaBox(gamefile);
+	const startPositionBox = gamefile.editor ? board.getBoundingBoxOfBoard() : gamefileutility.getStartingAreaBox(gamefile);
 
 	const startX = startPositionBox.left - squareCenter - extraLength;
 	const endX = startPositionBox.right + 1 - squareCenter + extraLength;

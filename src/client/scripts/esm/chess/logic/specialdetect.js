@@ -295,6 +295,11 @@ function roses(gamefile, coords, color) {
 			if (coord.path.length < newCoord.path.length) individualMoves[i] = coord; // First path shorter
 			else if (coord.path.length > newCoord.path.length) individualMoves[i] = newCoord; // Second path shorter
 			else if (coord.path.length === newCoord.path.length) { // Path are equal length
+				if (gamefile.editor) {
+					// JUST pick a random one!
+					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
+					return;
+				}
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
 				const centerOfPlay = math.calcCenterOfBoundingBox(gamefileutility.getStartingAreaBox(gamefile));
