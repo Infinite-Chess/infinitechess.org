@@ -35,8 +35,6 @@ const allMemberColumns = [
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
 const allPlayerStatsColumns = [
 	'user_id',
-	'game_history',
-	'games_starred',
 	'moves_played',
 	'game_count',
 	'game_count_rated',
@@ -55,16 +53,23 @@ const allPlayerStatsColumns = [
 	'game_count_draws_casual'
 ];
 
+/** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
+const allPlayerGamesColumns = [
+	'user_id',
+	'game_id',
+	'player_number',
+	'elo_at_game',
+	'elo_change_from_game'
+];
+
 /** All columns of the games table. Each of these would be valid to retrieve from any game. */
 const allGamesColumns = [
 	'game_id',
 	'date',
-	'players',
-	'elo',
-	'rating_diff',
 	'time_control',
 	'variant',
 	'rated',
+	'leaderboard_id',
 	'private',
 	'result',
 	'termination',
@@ -129,8 +134,6 @@ function generateTables() {
 	db.run(`
 		CREATE TABLE IF NOT EXISTS player_stats (
 			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
-			game_history TEXT NOT NULL DEFAULT '', -- Delimited game ids
-			games_starred TEXT NOT NULL DEFAULT '', -- Delimited game ids of starred games
 			moves_played INTEGER NOT NULL DEFAULT 0,
 			game_count INTEGER NOT NULL DEFAULT 0,
 			game_count_rated INTEGER NOT NULL DEFAULT 0,
@@ -150,17 +153,30 @@ function generateTables() {
 		);
 	`);
 
+	// Player Games Table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS player_games (
+			user_id INTEGER NOT NULL REFERENCES members(user_id),
+			game_id INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+			player_number INTEGER NOT NULL, -- 1 => White  2 => Black
+			elo_at_game REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
+			elo_change_from_game REAL, -- Specified only if the game was rated
+			PRIMARY KEY (user_id, game_id) -- Ensures unique link
+		);
+	`);
+
+	// Create an index for efficiently finding players in a specific game
+	db.run(`CREATE INDEX IF NOT EXISTS idx_player_games_game ON player_games (game_id);`);
+
 	// Games table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS games (
 			game_id INTEGER PRIMARY KEY,
 			date TIMESTAMP NOT NULL,
-			players TEXT NOT NULL, -- Delimited user ids, where '_' indicates a guest
-			elo TEXT, -- If game was rated, delimited elos at the time of the game
-			rating_diff TEXT, -- If game was rated, delimited elo changes from the result of the game
 			time_control TEXT NOT NULL,
 			variant TEXT NOT NULL,
 			rated BOOLEAN NOT NULL CHECK (rated IN (0, 1)), -- Ensures only 0 or 1
+			leaderboard_id INTEGER, -- Specified only if the game was rated
 			private BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
 			result TEXT NOT NULL,
 			termination TEXT NOT NULL,
@@ -210,6 +226,7 @@ export {
 	uniqueMemberKeys,
 	allMemberColumns,
 	allPlayerStatsColumns,
+	allPlayerGamesColumns,
 	allGamesColumns,
 	generateTables,
 };

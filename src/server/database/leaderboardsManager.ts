@@ -325,8 +325,10 @@ function getLeaderboardOfVariant(variant: string): Leaderboard | undefined {
 // Updated export names to be more descriptive
 export {
 	Leaderboards,
+	VariantLeaderboards,
 	addUserToLeaderboard,
 	updatePlayerLeaderboardRating,
+	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
 	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
