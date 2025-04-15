@@ -29,8 +29,16 @@ function deepCopyObject<T extends unknown>(src: T): T {
 		return copy as T; // Return the new Map with deep copied entries
 	}
 
+	// Check for Sets
 	if (src instanceof Set) {
-		return new Set(src) as T;
+		// Create a new Set instance
+		const copy = new Set();
+		// Iterate over the original set's values
+		for (const value of src) {
+			// Deep copy the value before adding it to the new set
+			copy.add(deepCopyObject(value));
+		}
+		return copy as T; // Return the new Set with deep copied values
 	}
 
 	// Check for TypedArrays (which are ArrayBuffer views and have slice)
