@@ -796,7 +796,8 @@ function executeArrowShifts() {
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 		if (shift.start) {
 			// Delete the piece from the gamefile, so that we can calculate the arrow lines correctly
-			const originalPiece = boardutil.getPieceFromCoords(gamefile.pieces, shift.start)!;
+			const originalPiece = boardutil.getPieceFromCoords(gamefile.pieces, shift.start);
+			if (originalPiece === undefined) throw Error('Arrow shift delete piece does not exist! start: ' + shift.start + ' Perhaps we are animating a move we are not viewing?');
 			boardchanges.queueDeletePiece(changes, true, originalPiece);
 		}
 		if (shift.end) {

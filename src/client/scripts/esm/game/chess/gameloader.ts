@@ -233,7 +233,8 @@ async function startEngineGame(options: {
 	});
 
 	/** A promise that resolves when the engine script has been fetched. */
-	const enginePromise: Promise<void> = enginegame.initEngineGame(options);
+	const enginePromise: Promise<void> = enginegame.initEngineGame(options)
+		.then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
 
 	/**
 	 * This resolves when BOTH the graphical and engine promises resolve,

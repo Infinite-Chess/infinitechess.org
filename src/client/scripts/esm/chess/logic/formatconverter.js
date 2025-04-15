@@ -647,6 +647,10 @@ function convertShortMovesToLong(shortmoves) {
 
 /**
  * Converts a gamefile in JSON format to single position gamefile in JSON format with deleted "moves" object
+ * 
+ * TODO: UPDATE THIS METHOD TO UTILIZE the changes arrays in the moves instead of manually checking for promotion,
+ * enpassant, and castle flags!!! This will make it future proof. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * 
  * @param {Object} longformat - Input gamefile in JSON format
  * @param {number} [halfmoves] - Number of halfmoves from starting position (Infinity: final position of game)
  * @param {boolean} [modify_input] - If false, a new object is created and returned. If true, the input object is modified (which is faster)
@@ -669,9 +673,9 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// update coordinates in starting position
 		if (move.promotion) {
-			ret.startingPosition[endString] = `${move.promotion}`;
+			ret.startingPosition[endString] = move.promotion;
 		} else {
-			ret.startingPosition[endString] = `${ret.startingPosition[startString]}`;
+			ret.startingPosition[endString] = ret.startingPosition[startString];
 		}
 		delete ret.startingPosition[startString];
 		if (ret.specialRights) {
@@ -702,7 +706,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update coords of castled piece
 		if (move.castle) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
+			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`] = ret.startingPosition[castleString];
 			delete ret.startingPosition[castleString];
 			if (ret.specialRights) delete ret.specialRights[castleString];
 		}

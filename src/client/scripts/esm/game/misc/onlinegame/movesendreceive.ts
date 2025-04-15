@@ -97,7 +97,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
 	const move = movesequence.makeMove(gamefile, moveDraft);
-	movesequence.animateMove(move, true);
+	if (gamefile.mesh.offset) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
