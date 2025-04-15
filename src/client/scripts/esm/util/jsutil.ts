@@ -337,20 +337,22 @@ function estimateMemorySizeOf(obj: any): string {
  * Use {@link parseReviver} to parse back.
  */
 function stringifyReplacer(key: string, value: any): any {
-	if (value instanceof Map) {
-		return {
-			TrueType: "Map",
+	// Stringify Maps
+	if (value instanceof Map) return {
+		$$type: "Map",
+		value: [...value]
+	};
+	// Stringify Sets
+	if (value instanceof Set) return {
+		$$type: "Set",
+		value: [...value] // Convert Set elements to an array
+	};
+	// Stringify TypedArrays
+	for (const [name, type] of Object.entries(FixedArrayInfo)) {
+		if (value instanceof type) return {
+			$$type: name,
 			value: [...value]
 		};
-	}
-		
-	for (const [name, type] of Object.entries(FixedArrayInfo)) {
-		if (value instanceof type) {
-			return {
-				TrueType: name,
-				value: [...value]
-			};
-		}
 	}
 
 	return value;
@@ -364,12 +366,10 @@ const FixedArrayInfo = {
 	"Int8Array": Int8Array,
 	"Int16Array": Int16Array,
 	"Int32Array": Int32Array,
-	"BigInt64Array": BigInt64Array,
 
 	"Uint8Array": Uint8Array,
 	"Uint16Array": Uint16Array,
 	"Uint32Array": Uint32Array,
-	"BigUint64Array": BigUint64Array,
 } as const;
 
 /** Type representing any of the TypedArray constructor types listed in FixedArrayInfo. */
@@ -381,17 +381,11 @@ type FixedArrayConstructor = typeof FixedArrayInfo[keyof typeof FixedArrayInfo];
  */
 function parseReviver(key: string, value: any): any {
 	if (typeof value === 'object' && value !== null) {
-		if (value.TrueType === 'Map') {
-			return new Map(value.value);
-		}
-
-		if (value.TrueType in FixedArrayInfo) {
-			const constructor: FixedArrayConstructor = FixedArrayInfo[value.TrueType as keyof typeof FixedArrayInfo]; // Get the constructor based on the TrueType
-			const array = new constructor(value.value.length);
-			for (let i = 0; i < array.length; i++) {
-				array[i] = value.value[i];
-			}
-			return array;
+		if (value.$$type === 'Map') return new Map(value.value); // value.value should be an array of [key, value] pairs
+		if (value.$$type === 'Set') return new Set(value.value); // value.value should be an array of elements
+		if (value.$$type in FixedArrayInfo) {
+			const constructor: FixedArrayConstructor = FixedArrayInfo[value.$$type as keyof typeof FixedArrayInfo]; // Get the constructor
+			return new constructor(value.value); // value.value should be an array of numbers
 		}
 	}
 	return value;
