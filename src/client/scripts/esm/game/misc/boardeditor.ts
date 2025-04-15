@@ -156,9 +156,8 @@ function update() {
 function queueToggleSpecialRight(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined) {
 	if (!pieceHovered) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
-	if (!pieceHovered) return;
-	const current = gamefile.specialRights[coordsKey];
-	const future = current ? undefined : true;
+	const current = gamefile.specialRights.has(coordsKey);
+	const future = !current;
 	state.createSpecialRightsState(edit, coordsKey, current, future)
 }
 
@@ -171,12 +170,14 @@ function queueAddPiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | und
 function queueRemovePiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined) {
 	if (!pieceHovered) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
+	// Remove the piece
 	boardchanges.queueDeletePiece(edit.changes, false, pieceHovered);
-	const current = gamefile!.specialRights[coordsKey];
-	state.createSpecialRightsState(edit, coordutil.getKeyFromCoords(pieceHovered.coords), current);
+	// Remove its special right
+	const current = gamefile!.specialRights.has(coordsKey);
+	state.createSpecialRightsState(edit, coordutil.getKeyFromCoords(pieceHovered.coords), current, false);
+	// If the pawn has been removed, the en passant sqare must be too.
 	if (coordutil.areCoordsEqual(pieceHovered.coords, gamefile.enpassant?.pawn)) {
-		// If the pawn has been removed, the en passant sqare must be too.
-		state.createEnPassantState(edit, gamefile.enpassant);
+		state.createEnPassantState(edit, gamefile.enpassant, undefined);
 	}
 }
 
