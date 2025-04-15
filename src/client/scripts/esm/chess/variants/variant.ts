@@ -10,6 +10,7 @@ import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
 import type { Position } from '../util/boardutil.js';
+import type { CoordsKey } from '../util/coordutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 // @ts-ignore
@@ -367,7 +368,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
 	positionString?: string,
 	startingPosition?: Position,
-	specialRights?: { [coordKey: string]: boolean }
+	specialRights?: Set<CoordsKey>
 	pawnDoublePush?: boolean,
 	castleWith?: RawType
 }) {

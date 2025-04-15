@@ -154,7 +154,7 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves:
 
 function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
 	const key = coordutil.getKeyFromCoords(coords);
-	return gamefile.specialRights[key];
+	return gamefile.specialRights.has(key);
 }
 
 /** Executes a four dimensional pawn move.  */

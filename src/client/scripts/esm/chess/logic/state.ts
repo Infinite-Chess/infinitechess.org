@@ -68,8 +68,8 @@ type StateChange = {
 	future?: EnPassant
 } | {
 	type: 'specialrights'
-	current?: true,
-	future?: true
+	current: boolean,
+	future: boolean
 	/** The coordsKey of what square was affected by this specialrights state change. */
 	coordsKey: CoordsKey
 } | {
@@ -129,7 +129,7 @@ function createEnPassantState(move: Move, current?: EnPassant, future?: EnPassan
 }
 
 /** Creates a specialrights global StateChange, queueing it by adding it to the Move. */
-function createSpecialRightsState(move: Move, coordsKey: CoordsKey, current?: true, future?: true) {
+function createSpecialRightsState(move: Move, coordsKey: CoordsKey, current: boolean, future: boolean) {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'specialrights', current, future, coordsKey };
 	move.state.global.push(newStateChange); // Special Rights is a global state
@@ -179,14 +179,14 @@ function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 	const noNewValue = (forward ? state.future : state.current) === undefined;
 	switch (state.type) {
 		case 'specialrights':
-			if (noNewValue) delete gamefile.specialRights[state.coordsKey];
-			else gamefile.specialRights[state.coordsKey] = forward ? state.future : state.current;	
+			if (!(forward ? state.future : state.current)) gamefile.specialRights.delete(state.coordsKey);
+			else gamefile.specialRights.add(state.coordsKey);	
 			break;
 		case 'check':
 			gamefile.inCheck = forward ? state.future : state.current;
 			break;
 		case 'attackers':
-			if (noNewValue) delete gamefile.attackers;
+			if (noNewValue) gamefile.attackers = [];
 			else gamefile.attackers = forward ? state.future : state.current;
 			break;
 		case 'enpassant': 

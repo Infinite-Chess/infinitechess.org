@@ -6,6 +6,8 @@
  * (unless the user clears their browser cache)
  */
 
+import jsutil from "./jsutil.js";
+
 
 /** An entry in local storage */
 interface Entry {
@@ -34,7 +36,7 @@ function saveItem(key: string, value: any, expiryMillis: number = defaultExpiryT
 	if (printSavesAndDeletes) console.log(`Saving key to local storage: ${key}`);
 	const timeExpires = Date.now() + expiryMillis;
 	const save: Entry = { value, expires: timeExpires };
-	const stringifiedSave = JSON.stringify(save);
+	const stringifiedSave = JSON.stringify(save, jsutil.stringifyReplacer);
 	localStorage.setItem(key, stringifiedSave);
 }
 
@@ -48,7 +50,7 @@ function loadItem(key: string): any {
 	if (stringifiedSave === null) return;
 	let save: Entry | any;
 	try {
-		save = JSON.parse(stringifiedSave); // { value, expires }
+		save = JSON.parse(stringifiedSave, jsutil.parseReviver); // { value, expires }
 	} catch (e) { // Value wasn't in json format, just delete it. They have to be in json because we always store the 'expiry' property.
 		deleteItem(key);
 		return;
