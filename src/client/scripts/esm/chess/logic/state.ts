@@ -186,7 +186,7 @@ function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 			gamefile.inCheck = forward ? state.future : state.current;
 			break;
 		case 'attackers':
-			if (noNewValue) delete gamefile.attackers;
+			if (noNewValue) gamefile.attackers = [];
 			else gamefile.attackers = forward ? state.future : state.current;
 			break;
 		case 'enpassant': 
