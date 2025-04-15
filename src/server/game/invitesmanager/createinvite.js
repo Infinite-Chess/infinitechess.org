@@ -12,8 +12,6 @@ import { logEvents } from '../../middleware/logEvents.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
-import gameutility from '../gamemanager/gameutility.js';
-const { getDisplayNameOfPlayer } = gameutility;
 import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
@@ -61,12 +59,6 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 
 	// Invite has all legal parameters! Create the invite...
 
-	// Who is the owner of the invite?
-	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.metadata.cookies["browser-id"] };
-	invite.owner = owner;
-
-	do { invite.id = uuid.generateID_Base36(5); } while (existingInviteHasID(invite.id));
-
 	addInvite(ws, invite, replyto);
 }
 
@@ -104,12 +96,12 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 	const invite = {};
 
 	let id;
-	do { id = uuid.generateID_Base62(IDLengthOfInvites); } while (existingInviteHasID(messageContents.id));
+	do { id = uuid.generateID_Base36(IDLengthOfInvites); } while (existingInviteHasID(id));
 	invite.id = id;
 
-	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username } : { browser: ws.metadata.cookies["browser-id"] };
+	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username, user_id: ws.metadata.memberInfo.user_id } : { browser: ws.metadata.cookies["browser-id"] };
 	invite.owner = owner;
-	invite.name = getDisplayNameOfPlayer(owner);
+	invite.name = owner.member || "(Guest)"; // Protect browser's browser-id cookie
 
 	invite.variant = messageContents.variant;
 	invite.clock = messageContents.clock;

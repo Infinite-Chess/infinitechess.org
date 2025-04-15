@@ -32,6 +32,7 @@ const coloredTypes = [
 	rawTypes.CENTAUR,
 	rawTypes.KNIGHTRIDER,
 	rawTypes.HUYGEN,
+	rawTypes.ROSE,
 	rawTypes.ROYALQUEEN,
 	rawTypes.OBSTACLE,
 ];

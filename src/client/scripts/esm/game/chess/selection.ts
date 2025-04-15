@@ -440,8 +440,8 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	movesequence.animateMove(move, true, animateMain);
 
 	movesendreceive.sendMove();
-	enginegame.submitMove();
-	boardeditor.submitMove();
+	enginegame.onMovePlayed();
+	boardeditor.onMovePlayed();
 
 	unselectPiece();
 }

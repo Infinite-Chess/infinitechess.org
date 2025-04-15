@@ -276,7 +276,7 @@ function roses(gamefile, coords, color) {
 	return individualMoves;
 
 	/**
-	 * Appends a coordinate to the individual moves list if it's not already present.
+	 * Appends a ROSE coordinate to the individual moves list if it's not already present.
 	 * If it is present, it chooses the one according to this priority:
 	 * 1. Shortest path
 	 * 2. Path that curves towards the center of play

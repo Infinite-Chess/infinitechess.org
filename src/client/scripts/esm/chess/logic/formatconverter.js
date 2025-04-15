@@ -6,6 +6,8 @@
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 
+/** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
+
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
  * by Andreas Tsevas and Naviary
@@ -225,7 +227,7 @@ function standardizeCoordString(str) {
 
 /**
  * Converts a gamefile in JSON format to Infinite Chess Notation.
- * @param {Object} longformat - The gamefile in JSON format
+ * @param {FormatConverterLong} longformat - The gamefile in JSON format
  * @param {Object} [options] - Configuration options for the output format
  * @param {number} [options.compact_moves=0] - Optional. Number between 0-2 for how compact you want the resulting ICN (0 = least compact, pretty. 1: moderately compact. 2: most compact, no 'x','+', or '#').
  * @param {boolean} [options.make_new_lines=true] - Optional. Boolean specifying whether linebreaks should be included in the output string.
@@ -435,7 +437,7 @@ function isPromotionListDefaultPromotions(promotionList) {
  * @param {string} shortformat - A string in ICN
  * @param {boolean} [reconstruct_optional_move_flags] - Deprecated. If true, method will reconstruct "type", "captured", "enpassant" and "castle" flags of moves. Default: *true*
  * @param {boolean} [trust_check_and_mate_symbols] - Deprecated. If true, method will set "check" and "mate" flags of moves based on + and # symbols. Default: *true*
- * @returns {Object} Equivalent gamefile in JSON format
+ * @returns {FormatConverterLong} Equivalent gamefile in JSON format
  */
 function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = true, trust_check_and_mate_symbols = true*/) {
 	const longformat = {};
@@ -645,6 +647,10 @@ function convertShortMovesToLong(shortmoves) {
 
 /**
  * Converts a gamefile in JSON format to single position gamefile in JSON format with deleted "moves" object
+ * 
+ * TODO: UPDATE THIS METHOD TO UTILIZE the changes arrays in the moves instead of manually checking for promotion,
+ * enpassant, and castle flags!!! This will make it future proof. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * 
  * @param {Object} longformat - Input gamefile in JSON format
  * @param {number} [halfmoves] - Number of halfmoves from starting position (Infinity: final position of game)
  * @param {boolean} [modify_input] - If false, a new object is created and returned. If true, the input object is modified (which is faster)
@@ -667,9 +673,9 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// update coordinates in starting position
 		if (move.promotion) {
-			ret.startingPosition[endString] = `${move.promotion}`;
+			ret.startingPosition[endString] = move.promotion;
 		} else {
-			ret.startingPosition[endString] = `${ret.startingPosition[startString]}`;
+			ret.startingPosition[endString] = ret.startingPosition[startString];
 		}
 		delete ret.startingPosition[startString];
 		if (ret.specialRights) {
@@ -700,7 +706,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update coords of castled piece
 		if (move.castle) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir).toString()},${move.endCoords[1].toString()}`] = `${ret.startingPosition[castleString]}`;
+			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`] = ret.startingPosition[castleString];
 			delete ret.startingPosition[castleString];
 			if (ret.specialRights) delete ret.specialRights[castleString];
 		}

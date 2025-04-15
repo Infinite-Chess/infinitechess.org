@@ -241,7 +241,7 @@ function save() {
 	docutil.copyToClipboard(output);
 }
 
-function submitMove () {
+function onMovePlayed () {
 	if (!inBoardEditor) return;
 	const gamefile = gameslot.getGamefile()!;
 	edits!.length = indexOfThisEdit!;
@@ -267,7 +267,7 @@ export default {
 	areInBoardEditor,
 	initBoardEditor,
 	closeBoardEditor,
-	submitMove,
+	onMovePlayed,
 	update,
 	setTool,
 	setPiece,

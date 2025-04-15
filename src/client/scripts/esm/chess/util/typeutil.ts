@@ -1,4 +1,4 @@
-
+ 
 /**
  * This script contains lists of all piece types and players,
  * and utility methods for working with them.
@@ -43,6 +43,7 @@ const players = {
 	NEUTRAL: 0,
 	WHITE: 1,
 	BLACK: 2,
+	// Colored players
 	RED: 3,
 	BLUE: 4,
 	YELLOW: 5,
@@ -55,7 +56,12 @@ const numTypes = Object.keys(rawTypes).length;
 const ext = {
 	N: players.NEUTRAL * numTypes,
 	W: players.WHITE * numTypes,
-	B: players.BLACK * numTypes
+	B: players.BLACK * numTypes,
+	// Colored players
+	R: players.RED * numTypes,
+	BU: players.BLUE * numTypes,
+	Y: players.YELLOW * numTypes,
+	G: players.GREEN * numTypes,
 } as const;
 
 /**
@@ -72,7 +78,7 @@ const jumpingRoyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
  * however it still is illegal to move into check.
  * 
  * Players have to voluntarily resign if they
- * belive their sliding royal is in checkmate.
+ * believe their sliding royal is in checkmate.
  */
 const slidingRoyals = [rawTypes.ROYALQUEEN];
 /**
@@ -95,7 +101,7 @@ type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
 type Player = typeof players[keyof typeof players]
 
-/** A dictionary type with all raw types for keys */
+/** A dictionary type with all types for keys */
 type TypeGroup<T> = { [t: number]: T }
 
 /** A dictionary type with all player colors for keys */

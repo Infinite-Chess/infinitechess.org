@@ -35,8 +35,8 @@ const allMemberColumns = [
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
 const allPlayerStatsColumns = [
 	'user_id',
-	'last_played_rated_game',
 	'game_history',
+	'games_starred',
 	'moves_played',
 	'game_count',
 	'game_count_rated',
@@ -46,9 +46,10 @@ const allPlayerStatsColumns = [
 	'game_count_wins',
 	'game_count_losses',
 	'game_count_draws',
-	'game_count_wins_ranked',
-	'game_count_losses_ranked',
-	'game_count_draws_ranked',
+	'game_count_aborted',
+	'game_count_wins_rated',
+	'game_count_losses_rated',
+	'game_count_draws_rated',
 	'game_count_wins_casual',
 	'game_count_losses_casual',
 	'game_count_draws_casual'
@@ -78,7 +79,7 @@ const allGamesColumns = [
 /** Creates the tables in our database if they do not exist. */
 function generateTables() {
 	// Members table
-	let createTableSQLQuery = `
+	db.run(`
 		CREATE TABLE IF NOT EXISTS members (
 			user_id INTEGER PRIMARY KEY,               
 			username TEXT UNIQUE NOT NULL COLLATE NOCASE,
@@ -94,35 +95,42 @@ function generateTables() {
 			username_history TEXT,
 			checkmates_beaten TEXT NOT NULL DEFAULT ''
 		);
-	`;
-	db.run(createTableSQLQuery);
+	`);
 
 	// Deleted Members table
-	createTableSQLQuery = `
+	db.run(`
 		CREATE TABLE IF NOT EXISTS deleted_members (
 			user_id INTEGER PRIMARY KEY,             
-			reason_deleted TEXT NOT NULL
+			reason_deleted TEXT NOT NULL -- "unverified" / "user request" / "security"
 		);
-	`;
-	// reason deleted: "unverified" / "user request" / "banned" / "inactive"
-	db.run(createTableSQLQuery);
+	`);
 
-	// Ratings table
-	createTableSQLQuery = `
-		CREATE TABLE IF NOT EXISTS ratings (
-			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
-			infinite_elo REAL NOT NULL DEFAULT 1000.0,
-			infinite_rating_deviation REAL NOT NULL DEFAULT 350.0
+	// Leaderboards table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS leaderboards (
+        	user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
+   			leaderboard_id INTEGER NOT NULL, -- Each leaderboard's id and variants are declared in the code
+			elo REAL NOT NULL DEFAULT 1000.0,
+			rating_deviation REAL NOT NULL DEFAULT 350.0,
+			-- Add other Glicko fields if needed (volatility)
+			last_rated_game_date TIMESTAMP,
+			PRIMARY KEY (user_id, leaderboard_id) -- Composite key essential
 		);
-	`;
-	db.run(createTableSQLQuery);
+	`);
+
+	// Indexes for leaderboards table
+
+	// To quickly get all leaderboards for a specific user
+	db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboards_user ON leaderboards (user_id);`);
+	// To quickly get rankings for a specific leaderboard (ESSENTIAL)
+	db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`);
 
 	// Player Stats table
-	createTableSQLQuery = `
+	db.run(`
 		CREATE TABLE IF NOT EXISTS player_stats (
 			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
-			last_played_rated_game TIMESTAMP,
 			game_history TEXT NOT NULL DEFAULT '', -- Delimited game ids
+			games_starred TEXT NOT NULL DEFAULT '', -- Delimited game ids of starred games
 			moves_played INTEGER NOT NULL DEFAULT 0,
 			game_count INTEGER NOT NULL DEFAULT 0,
 			game_count_rated INTEGER NOT NULL DEFAULT 0,
@@ -132,18 +140,18 @@ function generateTables() {
 			game_count_wins INTEGER NOT NULL DEFAULT 0,
 			game_count_losses INTEGER NOT NULL DEFAULT 0,
 			game_count_draws INTEGER NOT NULL DEFAULT 0,
-			game_count_wins_ranked INTEGER NOT NULL DEFAULT 0,
-			game_count_losses_ranked INTEGER NOT NULL DEFAULT 0,
-			game_count_draws_ranked INTEGER NOT NULL DEFAULT 0,
+			game_count_aborted INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_rated INTEGER NOT NULL DEFAULT 0,
 			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
 			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
 			game_count_draws_casual INTEGER NOT NULL DEFAULT 0
 		);
-	`;
-	db.run(createTableSQLQuery);
+	`);
 
 	// Games table
-	createTableSQLQuery = `
+	db.run(`
 		CREATE TABLE IF NOT EXISTS games (
 			game_id INTEGER PRIMARY KEY,
 			date TIMESTAMP NOT NULL,
@@ -152,15 +160,17 @@ function generateTables() {
 			rating_diff TEXT, -- If game was rated, delimited elo changes from the result of the game
 			time_control TEXT NOT NULL,
 			variant TEXT NOT NULL,
-			rated BOOLEAN NOT NULL,
-			private BOOLEAN NOT NULL,
+			rated BOOLEAN NOT NULL CHECK (rated IN (0, 1)), -- Ensures only 0 or 1
+			private BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
 			result TEXT NOT NULL,
 			termination TEXT NOT NULL,
 			movecount INTEGER NOT NULL,
 			icn TEXT NOT NULL -- Also includes clock timestamps after each move
 		);
-	`;
-	db.run(createTableSQLQuery);
+	`);
+
+	// Create an index on the date column of the games table for faster queries
+	db.run(`CREATE INDEX IF NOT EXISTS idx_games_date ON games (date DESC);`);
 
 	// Bans table
 	// createTableSQLQuery = `
@@ -171,9 +181,6 @@ function generateTables() {
 	// 	)
 	// `;
 	// db.run(createTableSQLQuery);
-
-	// Games table
-	// ...
 }
 
 /**

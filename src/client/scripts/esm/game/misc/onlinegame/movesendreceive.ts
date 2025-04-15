@@ -97,14 +97,14 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
 	const move = movesequence.makeMove(gamefile, moveDraft);
-	movesequence.animateMove(move, true);
+	if (gamefile.mesh.offset) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
 	
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
+	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
 	clock.edit(gamefile, message.clockValues);
 	guiclock.edit(gamefile);
 

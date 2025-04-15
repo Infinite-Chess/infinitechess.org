@@ -65,7 +65,7 @@ type enpassant = true;
  * The special detect functions are in charge of adding this. selection.ts will delete it and open the promotion UI.
  */
 type promoteTrigger = boolean;
-/** A special move tag for pawn promotion. This will be a string of the type of piece being promoted to: "queensW" */
+/** A special move tag for pawn promotion. This is the integer type of the piece promoted to. */
 type promotion = number;
 /** A special move tag for castling. */
 type castle = {
@@ -93,8 +93,7 @@ interface MoveDraft {
 	enpassantCreate?: enpassantCreate,
 	/** Present if the move was special-move enpassant capture. This will be `true` */
 	enpassant?: enpassant,
-	/** Present if the move was a special-move promotion. This will be
-	 * a string of the type of piece being promoted to: "queensW" */
+	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
 	promotion?: promotion,
 	/** Present if the move was a special-move casle. This may look like an
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the

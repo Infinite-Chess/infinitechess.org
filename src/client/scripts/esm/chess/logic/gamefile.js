@@ -85,23 +85,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	};
     
 	/** @type {GameRules} */
-	this.gameRules = {
-		winConditions: undefined,
-		promotionRanks: undefined,
-		promotionsAllowed: {
-			/** An array of types white can promote to, with the W/B removed from the end: `['queens','rooks']` @type {Array} */
-			[players.WHITE]: undefined,
-			/** An array of types black can promote to, with the W/B removed from the end: `['queens','rooks']` @type {Array} */
-			[players.BLACK]: undefined,
-		},
-		slideLimit: undefined,
-
-		/** An array of players @type {Player[]} */
-		turnOrder: undefined,
-
-		/** How many plies (half-moves) may pass until a draw is automatically pronounced! */
-		moveRule: undefined
-	};
+	this.gameRules = undefined;
 
 	/** All pieces on the board @type {OrganizedPieces} */
 	this.pieces = undefined;
