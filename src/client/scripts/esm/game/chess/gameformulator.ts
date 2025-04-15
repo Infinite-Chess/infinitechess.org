@@ -62,7 +62,7 @@ interface FormatConverterLong {
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	shortposition: string,
 	fullMove: number,
-	specialRights: Record<CoordsKey, true>,
+	specialRights: Set<CoordsKey>,
 	/** DOES NOT CONTAIN moveRule!!!! */
 	gameRules: GameRules,
 	moves: string[],

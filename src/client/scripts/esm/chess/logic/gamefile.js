@@ -41,7 +41,7 @@ import legalmoves from './legalmoves.js';
  * @typedef {Object} StartSnapshot
  * @property {Position} position - In key format 'x,y': type
  * @property {string} positionString
- * @property {Record<CoordsKey, true>} specialRights
+ * @property {Set<CoordsKey>} specialRights
  * @property {EnPassant | undefined} enpassant - What square coords, if legal, enpassant capture is possible in the starting position of the game.
  * @property {number | undefined} moveRuleState - The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push)
  * @property {number} fullMove - This is the full-move number at the start of the game. Used for converting to ICN notation.
@@ -156,7 +156,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.moveIndex = -1;
 	/** If enpassant is allowed at the front of the game, this defines the coordinates. @type {EnPassant | undefined} */
 	this.enpassant = startSnapshot.enpassant;
-	/** An object containing the information if each individual piece has its special move rights. @type { Record<CoordsKey, true> } */
+	/** An object containing the information if each individual piece has its special move rights. @type {Set<CoordsKey>} */
 	this.specialRights = startSnapshot.specialRights;
 	/** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,

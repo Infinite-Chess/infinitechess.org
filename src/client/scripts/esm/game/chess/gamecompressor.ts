@@ -31,7 +31,7 @@ interface AbridgedGamefile {
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	positionString: string,
 	startingPosition: Position,
-	specialRights: Record<CoordsKey, true>,
+	specialRights: Set<CoordsKey>,
 	gameRules: GameRules,
 	moves: Move[],
 	// Optional properties
@@ -57,7 +57,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 
 	let position: Position;
 	let positionString: string;
-	let specialRights: Record<CoordsKey, true>;
+	let specialRights: Set<CoordsKey>;
 	let enpassant: EnPassant | undefined;
 	let moveRuleState: number | undefined;
 	let fullMove: number;

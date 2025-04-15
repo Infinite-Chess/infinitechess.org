@@ -132,6 +132,7 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 		pieceCount++;
 		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
 		const type = position[coordsKey]!;
+		if (typeof type !== "number") throw Error(`Type inside Position is not a number! ${type} ${coordsKey}`); // Bug catcher
 		existingTypesSet.add(type);
 		if (!piecesByType.has(type)) piecesByType.set(type, []);
 		piecesByType.get(type)!.push(coords); // Push the coords

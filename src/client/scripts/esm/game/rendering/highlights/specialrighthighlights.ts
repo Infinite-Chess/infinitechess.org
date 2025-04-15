@@ -74,8 +74,8 @@ function regenModel() {
 	const model_Offset: Coords = legalmovehighlights.getOffset();
 	// Instance data
 	const squaresToHighlight: Array<number> = [];
-	for (const key in gamefile.specialRights) {
-		const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+	for (const key of gamefile.specialRights) {
+		const coords = coordutil.getCoordsFromKey(key);
 		const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
 	}

@@ -44,6 +44,7 @@ postMessage('readyok');
 self.onmessage = function(e: MessageEvent) {
 	const message = e.data;
 	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
+	// console.log("input_gamefile", jsutil.deepCopyObject(input_gamefile));
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;

@@ -276,7 +276,7 @@ function roses(gamefile, coords, color) {
 	return individualMoves;
 
 	/**
-	 * Appends a coordinate to the individual moves list if it's not already present.
+	 * Appends a ROSE coordinate to the individual moves list if it's not already present.
 	 * If it is present, it chooses the one according to this priority:
 	 * 1. Shortest path
 	 * 2. Path that curves towards the center of play
@@ -333,7 +333,7 @@ function roses(gamefile, coords, color) {
  */
 function doesPieceHaveSpecialRight(gamefile, coords) {
 	const key = coordutil.getKeyFromCoords(coords);
-	return gamefile.specialRights[key];
+	return gamefile.specialRights.has(key);
 }
 
 // Returns true if the type is a pawn and the coords it moved to is a promotion line

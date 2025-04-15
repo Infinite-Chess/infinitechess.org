@@ -12,6 +12,7 @@
 import organizedpieces from "./organizedpieces.js";
 import jsutil from "../../util/jsutil.js";
 import boardutil from "../util/boardutil.js";
+import typeutil from "../util/typeutil.js";
 
 
 // Variables -------------------------------------------------------------------------
@@ -201,7 +202,7 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const pieces = gamefile.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
-	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
+	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
@@ -232,7 +233,7 @@ function deletePiece(gamefile: gamefile, change: Change) {
 	const pieces = gamefile.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
-	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
+	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
 	if (change.piece.index === -1) throw Error("Piece has not been allocated in organizedPieces");
 
 	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range

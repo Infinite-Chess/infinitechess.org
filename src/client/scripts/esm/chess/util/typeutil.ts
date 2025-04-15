@@ -43,6 +43,7 @@ const players = {
 	NEUTRAL: 0,
 	WHITE: 1,
 	BLACK: 2,
+	// Colored players
 	RED: 3,
 	BLUE: 4,
 	YELLOW: 5,
@@ -55,7 +56,12 @@ const numTypes = Object.keys(rawTypes).length;
 const ext = {
 	N: players.NEUTRAL * numTypes,
 	W: players.WHITE * numTypes,
-	B: players.BLACK * numTypes
+	B: players.BLACK * numTypes,
+	// Colored players
+	R: players.RED * numTypes,
+	BU: players.BLUE * numTypes,
+	Y: players.YELLOW * numTypes,
+	G: players.GREEN * numTypes,
 } as const;
 
 /**
