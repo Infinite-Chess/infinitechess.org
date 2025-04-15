@@ -467,7 +467,6 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		if (!expecting_metadata && !expecting_gamerules && /^\[[a-zA-Z]/.test(string)) {
 			expecting_metadata = true;
 			metadata_key = string.slice(1);
-			if (metadata_key === "") throw new Error("Read in empty metadata key");
 			continue;
 		}
 
