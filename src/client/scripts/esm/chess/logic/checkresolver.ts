@@ -190,7 +190,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 
 	/**
 	 * By this point we know it's either a:
-	 * 1. Sliding check
+	 * 1. Sliding check from 2+ squares away
 	 * 2. Individual check, with 3+ path length
 	 */
 	
