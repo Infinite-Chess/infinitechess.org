@@ -99,7 +99,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 	initListeners();
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
-	const specialRights = {};
+	const specialRights = new Set<CoordsKey>();
 	const positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
 	const variantOptions: VariantOptions = {
 		fullMove: 1,
