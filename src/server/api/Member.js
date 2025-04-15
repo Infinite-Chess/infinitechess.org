@@ -24,14 +24,14 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	verification = JSON.parse(verification);
 
 	// Get the player's elo from the INFINITY leaderboard, IF user entry exists
-	let ranked_elo = 1000;
+	let ranked_elo = "1000?";
 	if (isPlayerInLeaderboard(user_id, Leaderboards.INFINITY)) {
 		const rating_values = getPlayerLeaderboardRating(user_id, Leaderboards.INFINITY); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
 		if (!rating_values) {
 			logEvents(`Error getting rating values for member "${claimedUsername}" on INFINITY leaderboard. Not found.`, 'errLog.txt', { print: true });
 			return res.status(500).send('Internal Server Error');
 		}
-		ranked_elo = rating_values.elo;
+		ranked_elo = String(Math.round(rating_values.elo));
 	}
 
 
