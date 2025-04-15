@@ -445,12 +445,12 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 	longformat.gameRules = {};
 
 	// variables keeping track of whether we are currently parsing metadata
-	let expecting_metadata = false;
+	let in_metadata_parsing_mode = false;
 	let metadata_key = "";
 	let metadata_value = "";
 
 	// variables keeping track of whether we are currently parsing gamerules (can only be parsed once)
-	let expecting_gamerules = false;
+	let in_gamerules_parsing_mode = false;
 	let gamerules_string = "";
 
 	while (shortformat !== "") {
@@ -464,14 +464,14 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		shortformat = shortformat.slice(index + 1);
 
 		// metadata key is read: enter metadata parsing mode, if string starts with [ and letter
-		if (!expecting_metadata && !expecting_gamerules && /^\[[a-zA-Z]/.test(string)) {
-			expecting_metadata = true;
+		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\[[a-zA-Z]/.test(string)) {
+			in_metadata_parsing_mode = true;
 			metadata_key = string.slice(1);
 			continue;
 		}
 
 		// Read metadata value, if in metadata parsing mode
-		if (expecting_metadata && !expecting_gamerules) {
+		if (in_metadata_parsing_mode && !in_gamerules_parsing_mode) {
 			// remove " from the start of string if possible
 			if (/^"/.test(string) && metadata_value === "") {
 				string = string.slice(1);
@@ -485,28 +485,28 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			else {
 				metadata_value += string.slice(0, -2);
 				longformat.metadata[metadata_key] = metadata_value;
-				expecting_metadata = false;
+				in_metadata_parsing_mode = false;
 				metadata_value = "";
 			}
 			continue;
 		}
 
 		// gamerules - start: read in string and enter gamerules parsing mode, if string starts with {
-		if (!expecting_metadata && !expecting_gamerules && /^\{/.test(string) && gamerules_string === "") {
-			expecting_gamerules = true;
+		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\{/.test(string) && gamerules_string === "") {
+			in_gamerules_parsing_mode = true;
 			gamerules_string = string;
 			string = "";
 		}
 
 		// Read gamerules continuation, if in gamerules parsing mode
-		if (!expecting_metadata && expecting_gamerules) {
+		if (!in_metadata_parsing_mode && in_gamerules_parsing_mode) {
 			if (string !== "") gamerules_string += ` ${string}`;
 
 			// gamerules_string can be parsed into JSON now: parse it in and permanently exit gamerules parsing mode
 			if (isJson(gamerules_string)) {
 				const parsedGameRules = JSON.parse(gamerules_string);
 				Object.assign(longformat.gameRules, parsedGameRules);
-				expecting_gamerules = false;
+				in_gamerules_parsing_mode = false;
 			}
 			continue;
 		}
