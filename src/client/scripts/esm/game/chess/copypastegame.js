@@ -268,9 +268,9 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	const gamefile = gameslot.getGamefile();
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-	const tooManyPieces = gamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate;
+	const tooManyPieces = gamefile.pieces.coords.size >= organizedpieces.pieceCountToDisableCheckmate;
 	if (tooManyPieces) { // TOO MANY pieces!
-		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${organizedpieces.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
+		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.pieces.coords.size} ${translations.copypaste.exceeded} ${organizedpieces.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
 	} else { // Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
 		statustext.showStatus(`${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`);
 	}

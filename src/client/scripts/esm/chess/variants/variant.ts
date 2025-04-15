@@ -367,7 +367,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
 	positionString?: string,
 	startingPosition?: Position,
-	specialRights?: { [coordKey: string]: boolean }
+	specialRights?: { [coordKey: string]: true }
 	pawnDoublePush?: boolean,
 	castleWith?: RawType
 }) {

@@ -91,7 +91,7 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: Player, 
  * Deletes all specialMove functions for pieces that aren't included in this game.
  */
 function deleteUnusedSpecialMoves(gamefile: gamefile) {
-	const existingRawTypes = gamefile.startSnapshot.existingRawTypes;
+	const existingRawTypes = gamefile.existingRawTypes;
 	for (const key in gamefile.specialMoves) {
 		const rawType = Number(key) as RawType;
 		if (!existingRawTypes.includes(rawType)) delete gamefile.specialMoves[key];
@@ -115,7 +115,7 @@ function doGameOverChecks(gamefile: gamefile) {
 function initStartingAreaBox(gamefile: gamefile) {
 	const coordsList = boardutil.getCoordsOfAllPieces(gamefile.pieces);
 	const box = math.getBoxFromCoordsList(coordsList);
-	gamefile.startSnapshot.box = box;
+	gamefile.startSnapshot!.box = box;
 }
 
 /**
@@ -159,6 +159,10 @@ function areColinearSlidesPresentInGame(pieceMovesets: TypeGroup<() => PieceMove
 	return false; // Colinears are not present
 }
 
+function getPlayerCount(gamefile: gamefile) {
+	if (gamefile.startSnapshot) return gamefile.startSnapshot.playerCount;
+	return new Set(gamefile.gameRules.turnOrder).size;
+}
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -173,5 +177,6 @@ export default {
 	deleteUnusedSpecialMoves,
 	doGameOverChecks,
 	initStartingAreaBox,
+	getPlayerCount,
 	areColinearSlidesPresentInGame,
 };

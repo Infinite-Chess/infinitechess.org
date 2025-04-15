@@ -95,7 +95,7 @@ function regenAll(gamefile: gamefile) {
 	gamefile.mesh.inverted = perspective.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
-	for (const type of gamefile.startSnapshot.existingTypes) { // pawnsW
+	for (const type of gamefile.existingTypes) { // pawnsW
 		if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
 		else gamefile.mesh.types[type] = genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
 	}

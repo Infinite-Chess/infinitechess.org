@@ -205,7 +205,7 @@ function loadLogical(loadOptions: LoadOptions) {
 	const lineCountToDisableArrows = 8;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) {
+	if (newGamefile.pieces.coords.size >= organizedpieces.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
 	} else if (newGamefile.pieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)

@@ -18,6 +18,7 @@ import type { Position } from '../../chess/variants/variant.js';
 import type gamefile from '../../chess/logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
+import type { EnPassant } from '../../chess/logic/state.js';
 
 
 /**
@@ -54,13 +55,30 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	const gameRules = jsutil.deepCopyObject(gamefile.gameRules);
 	delete gameRules.moveRule;
 
-
+	let position: Position;
+	let positionString: string;
+	let specialRights: Record<CoordsKey, true>;
+	let enpassant: EnPassant | undefined;
+	let moveRuleState: number | undefined;
+	let fullMove: number;
+	
+	if (gamefile.editor) {
+		position = Object.fromEntries(gamefile.pieces.coords);
+		specialRights = jsutil.deepCopyObject(gamefile.specialRights);
+		positionString = formatconverter.LongToShort_Position(position, specialRights);
+		enpassant = jsutil.deepCopyObject(gamefile.enpassant);
+		moveRuleState = gamefile.moveRuleState;
+		fullMove = 1;
+	} else {
+		({ position, positionString, specialRights, enpassant, moveRuleState, fullMove } = gamefile.startSnapshot!);
+	}
+	
 	let abridgedGamefile: AbridgedGamefile = {
 		metadata,
-		positionString: gamefile.startSnapshot.positionString,
-		startingPosition: gamefile.startSnapshot.position,
-		specialRights: gamefile.startSnapshot.specialRights,
-		fullMove: gamefile.startSnapshot.fullMove,
+		positionString,
+		startingPosition: position,
+		specialRights,
+		fullMove,
 		gameRules,
 		moves: gamefile.moves,
 	};
@@ -68,14 +86,14 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	// Append the optional properties, if present
 
 	// enpassant
-	if (gamefile.startSnapshot.enpassant) { // In the form: { square: Coords, pawn: Coords },
+	if (enpassant) { // In the form: { square: Coords, pawn: Coords },
 		// We need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
-		const yDistance = Math.abs(gamefile.startSnapshot.enpassant.square[1] - gamefile.startSnapshot.enpassant.pawn[1]);
-		if (yDistance === 1) abridgedGamefile.enpassant = gamefile.startSnapshot.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
+		const yDistance = Math.abs(enpassant.square[1] - enpassant.pawn[1]);
+		if (yDistance === 1) abridgedGamefile.enpassant = enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
 	}
 
 	// moveRule
-	if (gamefile.gameRules.moveRule) abridgedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState!}/${gamefile.gameRules.moveRule}`;
+	if (gamefile.gameRules.moveRule) abridgedGamefile.moveRule = `${moveRuleState!}/${gamefile.gameRules.moveRule}`;
 
 	// If we only want the current position, not the entire game
 
