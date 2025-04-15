@@ -104,7 +104,7 @@ async function callbackPaste(event) {
 	const success = pasteGame(longformat);
 
 	// Let the server know if we pasted a custom position in a private match
-	if (success & onlinegame.areInOnlineGame() & onlinegame.getIsPrivate()) websocket.sendmessage('game', 'paste');
+	if (success & onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) websocket.sendmessage('game', 'paste');
 }
 
 /**
