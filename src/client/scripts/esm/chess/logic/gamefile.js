@@ -189,8 +189,10 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.existingRawTypes = existingRawTypes;
 	
 	if (!this.editor) {
+		const box = gamefileutility.getStartingAreaBox(this);
 		this.startSnapshot = jsutil.deepCopyObject(startSnapshot);
 		this.startSnapshot.pieceCount = pieceCount;
+		this.startSnapshot.box = box;
 	}
 
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
@@ -210,9 +212,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		this.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackAttackers) this.attackers = checkResults.attackers;
 	}
-
-	// Must be BEFORE making all moves in the game, because the starting area box depends on the starting position.
-	if (!this.editor) gamefileutility.initStartingAreaBox(this);
 	
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`

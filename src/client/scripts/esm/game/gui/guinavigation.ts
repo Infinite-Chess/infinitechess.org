@@ -22,6 +22,7 @@ import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
 import selection from '../chess/selection.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 
 
 /**
@@ -224,7 +225,7 @@ function callback_Expand() {
 }
 
 function recenter() {
-	const boundingBox = gameslot.getGamefile()!.startSnapshot.box;
+	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }

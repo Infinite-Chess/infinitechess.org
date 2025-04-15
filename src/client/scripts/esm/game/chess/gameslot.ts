@@ -284,7 +284,7 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(loadedGamefile!.startSnapshot.box);
+	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!));
 	movement.setPositionToArea(centerArea);
 	movement.setBoardScale(movement.getBoardScale() * 1.75);
 	guinavigation.recenter();

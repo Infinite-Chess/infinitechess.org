@@ -297,7 +297,7 @@ function roses(gamefile, coords, color) {
 			else if (coord.path.length === newCoord.path.length) { // Path are equal length
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
-				const centerOfPlay = math.calcCenterOfBoundingBox(gamefile.startSnapshot.box);
+				const centerOfPlay = math.calcCenterOfBoundingBox(gamefileutility.getStartingAreaBox(gamefile));
 				const vectorToCenter = math.calculateVectorFromPoints(coords, centerOfPlay);
 				const existingCoordVector = math.calculateVectorFromPoints(coords, coord.path[1]);
 				const newCoordVector = math.calculateVectorFromPoints(coords, newCoord.path[1]);

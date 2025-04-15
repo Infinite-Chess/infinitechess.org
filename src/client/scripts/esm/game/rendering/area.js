@@ -265,8 +265,7 @@ function initTelFromArea(thisArea, ignoreHistory) {
  */
 function getAreaOfAllPieces(gamefile) {
 	if (!gamefile) return console.error("Cannot get the area of all pieces of an undefined game.");
-	if (!gamefile.startSnapshot.box) return console.error("Cannot get area of all pieces when gamefile has no startSnapshot.box property!");
-	return calculateFromUnpaddedBox(gamefile.startSnapshot.box);
+	return calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(gamefile));
 }
 
 export default {

@@ -110,12 +110,12 @@ function doGameOverChecks(gamefile: gamefile) {
 
 // TODO: This is a GUI only feature that will use Mesh type. MOVE TO ../../GAME WHEN POSSIBLE
 /**
- * Saves the bounding box of the game's starting position to the startSnapshot property
+ * Gets the bounding box of the game's starting position
  */
-function initStartingAreaBox(gamefile: gamefile) {
+function getStartingAreaBox(gamefile: gamefile) {
+	if (gamefile.startSnapshot) return gamefile.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(gamefile.pieces);
-	const box = math.getBoxFromCoordsList(coordsList);
-	gamefile.startSnapshot!.box = box;
+	return math.getBoxFromCoordsList(coordsList);
 }
 
 /**
@@ -176,7 +176,7 @@ export default {
 	isOpponentUsingWinCondition,
 	deleteUnusedSpecialMoves,
 	doGameOverChecks,
-	initStartingAreaBox,
+	getStartingAreaBox,
 	getPlayerCount,
 	areColinearSlidesPresentInGame,
 };

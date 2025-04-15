@@ -6,6 +6,7 @@ import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
 import jsutil from '../../util/jsutil.js';
 import { players } from '../../chess/util/typeutil.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 
 
 /**
@@ -51,7 +52,7 @@ function initModel() {
 	const squareCenter = board.gsquareCenter();
 
 	const gamefile = gameslot.getGamefile();
-	const startPositionBox = jsutil.deepCopyObject(gamefile.startSnapshot.box);
+	const startPositionBox = gamefileutility.getStartingAreaBox(gamefile);
 
 	const startX = startPositionBox.left - squareCenter - extraLength;
 	const endX = startPositionBox.right + 1 - squareCenter + extraLength;
