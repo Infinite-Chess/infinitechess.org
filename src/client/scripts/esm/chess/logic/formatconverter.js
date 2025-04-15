@@ -2,6 +2,7 @@
 
 'use strict';
 
+import jsutil from "../../util/jsutil.js";
 /* eslint-disable max-depth */
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
@@ -660,7 +661,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 	if (typeof longformat.startingPosition === 'string') throw new Error('startingPosition must be in json format!');
     
 	if (!longformat.moves || longformat.moves.length === 0) return longformat;
-	const ret = modify_input ? longformat : deepCopyObject(longformat);
+	const ret = modify_input ? longformat : jsutil.deepCopyObject(longformat);
 	const yParity = longformat.gameRules.turnOrder[0] === p.WHITE ? 1 : longformat.gameRules.turnOrder[0] === p.BLACK ? -1 : (() => { throw new Error(`Unsupported turn player ${longformat.gameRules.turnOrder[0]} when converting game to position.`); })();
 	let pawnThatDoublePushedKey = (ret.enpassant ? [ret.enpassant[0], ret.enpassant[1] - yParity].toString() : "");
 	ret.fullMove = longformat.fullMove + Math.floor(ret.moves.length / longformat.gameRules.turnOrder.length);
@@ -908,28 +909,6 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
  */
 function isStartingPositionInLongFormat(startingPosition) {
 	return typeof startingPosition !== 'string';
-}
-
-/**
- * Deep copies an entire object, no matter how deep its nested.
- * No properties will contain references to the source object.
- * Use this instead of structuredClone() when that throws an error due to nested functions.
- * 
- * SLOW. Avoid using for very massive objects.
- * @param {Object | string | number | bigint | boolean} src - The source object
- * @returns {Object | string | number | bigint | boolean} The copied object
- */
-function deepCopyObject(src) {
-	if (typeof src !== "object" || src === null) return src;
-    
-	const copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
-    
-	for (const key in src) {
-		const value = src[key];
-		copy[key] = deepCopyObject(value); // Recursively copy each property
-	}
-    
-	return copy; // Return the copied object
 }
 
 export default {
