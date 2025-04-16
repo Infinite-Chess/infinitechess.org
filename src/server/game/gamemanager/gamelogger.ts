@@ -143,6 +143,8 @@ async function updatePlayerGamesTable(game: Game, game_id: number) {
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
 
+		// TODO: Implement the following when rated games are here
+		// We can potentially get the elo_at_game entries from the rating calculation and not have to do it again here, if the game was rated
 		const elo_at_game = null;
 		const elo_change_from_game = null;
 
