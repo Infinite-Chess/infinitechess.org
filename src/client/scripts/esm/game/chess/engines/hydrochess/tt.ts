@@ -150,16 +150,14 @@ export class TranspositionTable {
 
 	/**
 	 * Probes the TT for a given hash. Returns value based on the entry if found, otherwise NO_ENTRY.
+	 * For move ordering, also returns the best move separately via getBestMove.
 	 * Implements a simple approach to probe with alpha-beta bounds.
 	 */
-	public probe(hash: number, alpha: number, beta: number, depth: number, ply: number): number {
+	public probe(hash: number, alpha: number, beta: number, depth: number, ply: number): number | MoveDraft {
 		const entry = this.table.get(hash);
 
 		// Check if entry exists and if the hash matches
 		if (entry && entry.hash === hash) {
-			// Return best move for move ordering regardless of depth
-			// (Note: We're assuming bestMove is handled by the caller, which may need to be adjusted)
-
 			if (entry.depth >= depth) {
 				// Init score
 				let score = entry.score;
@@ -180,18 +178,12 @@ export class TranspositionTable {
 					return beta;
 				}
 			}
+
+			return entry.bestMove ?? NO_ENTRY;
 		}
 
 		// If hash entry doesn't exist or insufficient depth, return NO_ENTRY
 		return NO_ENTRY;
-	}
-
-	/**
-	 * Retrieves the best move from a TT entry if available.
-	 */
-	public getBestMove(hash: number): MoveDraft | null {
-		const entry = this.table.get(hash);
-		return entry ? entry.bestMove : null;
 	}
 
 	/**

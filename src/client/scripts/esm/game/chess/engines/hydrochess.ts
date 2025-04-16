@@ -16,7 +16,6 @@ import gameformulator from '../gameformulator.js';
 import evaluation from './hydrochess/evaluation.js';
 import helpers from './hydrochess/helpers.js';
 import { TranspositionTable, TTFlag } from './hydrochess/tt.js';
-import checkdetection from '../../../chess/logic/checkdetection.js';
 
 export const MAX_PLY = 64;
 const SEARCH_TIMEOUT_MS = 4000;
@@ -89,7 +88,7 @@ self.onmessage = function(e: MessageEvent) {
 
 	// --- Post Result ---
 	const move = searchData.bestMove;
-	console.debug(`[Engine] Found best move: (${move?.startCoords}): (${move?.endCoords})`);
+	console.debug(`[Engine] Found best move: (${move?.startCoords}) to (${move?.endCoords})`);
 	postMessage(move);
 };
 
@@ -107,7 +106,7 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	data.nodes++;
 	let best_move: MoveDraft | null = null;
 	let score: number;
-	const pv_node = beta - alpha > 1;
+	const pv_node = alpha > 1;
 	let hash_flag = TTFlag.LOWER_BOUND;
 	const is_root = data.ply === 0;
 
@@ -149,10 +148,15 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 
 	// --- Transposition Table Probe ---
 	if (!is_root && !pv_node) {
-		score = transpositionTable.probe(hash, alpha, beta, depth, data.ply);
-		if (score !== NO_ENTRY) {
-			ttHits++;
-			return score;
+		const result = transpositionTable.probe(hash, alpha, beta, depth, data.ply);
+		if (typeof result === 'number') {
+			if (result !== NO_ENTRY) {
+				ttHits++;
+				return result;
+			}
+			score = result;
+		} else {
+			best_move = result;
 		}
 	}
 
@@ -243,8 +247,8 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 
 	// --- Move Ordering ---
 	legalMoves.sort((a, b) =>
-		evaluation.scoreMove(b, lf, data, pv_table, killer_moves, history_heuristic_table) -
-    evaluation.scoreMove(a, lf, data, pv_table, killer_moves, history_heuristic_table)
+		evaluation.scoreMove(b, lf, data, pv_table, killer_moves, history_heuristic_table, best_move) -
+    evaluation.scoreMove(a, lf, data, pv_table, killer_moves, history_heuristic_table, best_move)
 	);
 
 	let bestScore = -INFINITY;
@@ -399,7 +403,7 @@ function quiescenceSearch(
 
 	const scoredCaptures = captureMoves.map(move => ({
 		move: move,
-		score: evaluation.scoreMove(move, lf, data, pv_table, killer_moves, history_heuristic_table)
+		score: evaluation.scoreMove(move, lf, data, pv_table, killer_moves, history_heuristic_table, null)
 	})).sort((a, b) => b.score - a.score);
 
 	// --- Explore Noisy Moves ---
@@ -444,8 +448,8 @@ function findBestMove(lf: gamefile, searchData: SearchData) {
 	startTime = performance.now();
 
 	// Reset search-specific data before starting
-	killer_moves = Array(MAX_PLY).fill(null).map(() => [null, null]); // Clear killers
-	history_heuristic_table = new Map(); // Clear history
+	killer_moves = Array(MAX_PLY).fill(null).map(() => [null, null]);
+	history_heuristic_table = new Map();
 	pv_table = Array(MAX_PLY).fill(null).map(() => [null, null]);
 	pv_length = Array(MAX_PLY).fill(0);
 	
@@ -464,7 +468,7 @@ function findBestMove(lf: gamefile, searchData: SearchData) {
 			break;
 		}
 
-		let printString = `info depth ${depth} nodes ${searchData.nodes}`;
+		let printString = `[Engine] info depth ${depth} nodes ${searchData.nodes}`;
 		
 		if (score > -MATE_VALUE && score < -MATE_SCORE) {
 			printString += ` score mate ${-(pv_length[0]!) / 2 - 1} pv`;
@@ -476,14 +480,16 @@ function findBestMove(lf: gamefile, searchData: SearchData) {
 		
 		// Display PV moves with validation to prevent nulls
 		if (pv_length[0]! > 0) {
+			printString += " [";
 			for (let i = 0; i < pv_length[0]!; i++) {
 				const move = pv_table[0]![i];
 				if (move) {
-					printString += ` (${move.startCoords}): (${move.endCoords})`;
+					printString += `(${move.startCoords}) to (${move.endCoords}), `;
 				} else {
 					break; // Stop at the first null move
 				}
 			}
+			printString = printString.slice(0, -2) + "]";
 		}
 
 		console.debug(printString);

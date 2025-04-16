@@ -12,16 +12,25 @@ import { SearchData } from "../hydrochess.js"; // Assuming MAX_DEPTH is exported
 const PIECE_VALUES: { [key: number]: number } = {
 	[rawTypes.PAWN]: 100,
 	[rawTypes.KNIGHT]: 300,
-	[rawTypes.BISHOP]: 400,
-	[rawTypes.ROOK]: 500,
-	[rawTypes.QUEEN]: 900,
+	[rawTypes.BISHOP]: 450,
+	[rawTypes.ROOK]: 700,
+	[rawTypes.QUEEN]: 1200,
 	[rawTypes.KING]: 20000, 
 };
 
-const DEVELOPMENT_BONUS = 10;
+const DEVELOPMENT_BONUS = 6;
 const CENTRALITY_BONUS = 5;
-const BACK_RANK_INFILTRATION_BONUS = 50;
-const KING_PROXIMITY_BONUS_FACTOR = 10;
+const BACK_RANK_BONUS = 25;
+
+// Distance bonuses for different pieces
+const QUEEN_KNIGHT_PROXIMITY_BONUS = 30; // Max bonus for queens/knights being close to opponent king
+
+// Pawn advancement bonuses
+const PAWN_RANK_BONUS = 10; // Points per rank advanced
+const PASSED_PAWN_RANK_BONUS = 25; // Points per rank for passed pawns
+
+// King safety bonus
+const PAWN_SHIELD_BONUS = 20; // Points per pawn adjacent to king
 
 const MVV_LVA: number[][] = [
 	[105, 205, 305, 405, 505, 605,],
@@ -55,14 +64,19 @@ function getHistoryKey(pieceType: number, endCoords: Coords): string {
  * @param pv_table The PV table for the current search.
  * @param killer_moves The killer moves table for the current search.
  * @param history_table The map storing history heuristic scores.
+ * @param tt_best_move Optional - best move from the transposition table.
  * @returns A score for the move.
  */
-function scoreMove(move: MoveDraft, lf: gamefile, data: SearchData, pv_table: (MoveDraft | null | undefined)[][], killer_moves: Array<Array<MoveDraft | null>>, history_table: Map<string, number>): number {
+function scoreMove(move: MoveDraft, lf: gamefile, data: SearchData, pv_table: (MoveDraft | null | undefined)[][], killer_moves: Array<Array<MoveDraft | null>>, history_table: Map<string, number>, tt_best_move?: MoveDraft | null): number {
+	// PV move gets highest priority
 	if (data.ply === 0 && data.score_pv && helpers.movesAreEqual(move, pv_table[0]![data.ply])) {
 		data.score_pv = false;
-		return 16000; // Highest priority
+		return 20000; // highest priority
 	}
-	
+	// TT best move gets second highest priority
+	if (tt_best_move && helpers.movesAreEqual(move, tt_best_move)) {
+		return 16000; // second highest priority
+	}
 	let score = 0;
 	const promoted = move.promotion;
 	const movedPiece = boardutil.getTypeFromCoords(lf.pieces, move.startCoords)!;
@@ -95,20 +109,20 @@ function scoreMove(move: MoveDraft, lf: gamefile, data: SearchData, pv_table: (M
 }
 
 /**
- * Evaluates the current position from the perspective of the player to move.
- * Considers material, piece development, centrality, back-rank infiltration, king proximity,
- * and piece safety to prevent hanging pieces.
+ * Evaluates the current position from white's perspective.
+ * Calculates scores for both white and black pieces separately, then returns the difference.
+ * All evaluations are done in absolute terms for each side, not relative to current player.
  * @param lf The logical gamefile state.
- * @returns The evaluation score for the player's position.
+ * @returns The evaluation score from white's perspective (positive is good for white, negative is good for black).
  */
 function evaluate(lf: gamefile): number {
 	let score = 0;
 	const pieces: OrganizedPieces = lf.pieces;
 	const allPieceCoords = boardutil.getCoordsOfAllPieces(pieces);
-	const currentPlayer = lf.whosTurn;
 
-	let playerKingCoords: Coords | undefined = undefined;
-	let opponentKingCoords: Coords | undefined = undefined;
+	// King coordinates for both sides
+	let whiteKingCoords: Coords | undefined = undefined;
+	let blackKingCoords: Coords | undefined = undefined;
 
 	// Find Kings first
 	for (const [type, range] of pieces.typeRanges) {
@@ -116,17 +130,25 @@ function evaluate(lf: gamefile): number {
 			for (let idx = range.start; idx < range.end; idx++) {
 				if (boardutil.isIdxUndefinedPiece(pieces, idx)) continue;
 				const coords = boardutil.getCoordsFromIdx(pieces, idx);
-				if (typeutil.getColorFromType(type) === currentPlayer) {
-					playerKingCoords = coords;
+				if (typeutil.getColorFromType(type) === players.WHITE) {
+					whiteKingCoords = coords;
 				} else {
-					opponentKingCoords = coords;
+					blackKingCoords = coords;
 				}
 			}
-			if (playerKingCoords && opponentKingCoords) break; 
+			if (whiteKingCoords && blackKingCoords) break; 
 		}
 	}
 
+	// Initialize pawn coordinate arrays for both colors
+	const whitePawnCoords: Coords[] = [];
+	const blackPawnCoords: Coords[] = [];
+
 	// --- Evaluate Pieces --- 
+	// Track piece positions by type and color
+	const whitePieceCoords: Map<number, Coords[]> = new Map();
+	const blackPieceCoords: Map<number, Coords[]> = new Map();
+
 	for (const coords of allPieceCoords) {
 		const piece = boardutil.getPieceFromCoords(pieces, coords);
 		if (!piece) continue;
@@ -136,6 +158,27 @@ function evaluate(lf: gamefile): number {
 		const pieceColor = typeutil.getColorFromType(piece.type);
 
 		let pieceScore = 0;
+
+		// Track pieces by type and color for later evaluations
+		if (pieceColor === players.WHITE) {
+			if (!whitePieceCoords.has(pieceRawType)) {
+				whitePieceCoords.set(pieceRawType, []);
+			}
+			whitePieceCoords.get(pieceRawType)!.push(coords);
+			
+			if (pieceRawType === rawTypes.PAWN) {
+				whitePawnCoords.push(coords);
+			}
+		} else {
+			if (!blackPieceCoords.has(pieceRawType)) {
+				blackPieceCoords.set(pieceRawType, []);
+			}
+			blackPieceCoords.get(pieceRawType)!.push(coords);
+			
+			if (pieceRawType === rawTypes.PAWN) {
+				blackPawnCoords.push(coords);
+			}
+		}
 
 		// 1. Material Value
 		pieceScore += pieceValue;
@@ -148,45 +191,132 @@ function evaluate(lf: gamefile): number {
 			}
 		}
 
-		// 3. Centrality Bonus (closer to center) - Apply only to Pawns and Knights
-		if (pieceRawType === rawTypes.PAWN || pieceRawType === rawTypes.KNIGHT) {
+		// 3. Centrality Bonus (closer to center) - Apply only to Knights
+		if (pieceRawType === rawTypes.KNIGHT) {
 			// Assuming a 10x10 board, center is roughly (4.5, 4.5)
 			const distToCenter = Math.sqrt(Math.pow(coords[0] - 4.5, 2) + Math.pow(coords[1] - 4.5, 2));
 			// Bonus inversely proportional to distance (max bonus at center, 0 at corners)
 			pieceScore += Math.max(0, CENTRALITY_BONUS * (1 - distToCenter / Math.sqrt(2 * 4.5 * 4.5)));
 		}
 
-		// 4. Back Rank Infiltration (Queens, Rooks, Bishops)
-		if (pieceRawType === rawTypes.QUEEN || pieceRawType === rawTypes.ROOK || pieceRawType === rawTypes.BISHOP) {
-			const opponentBackRankStart = (pieceColor === players.WHITE) ? 8 : 1;
-			
-			if (pieceColor === players.WHITE && coords[1] >= opponentBackRankStart) {
-				pieceScore += BACK_RANK_INFILTRATION_BONUS;
-			} else if (pieceColor === players.BLACK && coords[1] <= opponentBackRankStart) {
-				pieceScore += BACK_RANK_INFILTRATION_BONUS;
+		// 4. Piece-specific evaluations
+		// Calculate distance to opposite color king
+		const oppositeKingCoords = pieceColor === players.WHITE ? blackKingCoords! : whiteKingCoords!;
+		const distToOppositeKing = Math.sqrt(
+			Math.pow(coords[0] - oppositeKingCoords[0], 2) + 
+			Math.pow(coords[1] - oppositeKingCoords[1], 2)
+		);
+
+		// 4.1 Queen - prefers to be CLOSER to opponent king
+		if (pieceRawType === rawTypes.QUEEN) {
+			// Closer is better (but not too close - optimal around 2-3 squares)
+			// Scale from 0 (far away) to QUEEN_KNIGHT_PROXIMITY_BONUS (close)
+			const distanceScale = Math.max(0, 10 - distToOppositeKing) / 10;
+			pieceScore += distanceScale * QUEEN_KNIGHT_PROXIMITY_BONUS;
+
+			// Extra bonus for being on opponent's back rank
+			const opponentBackRank = (pieceColor === players.WHITE) ? 8 : 1;
+			if ((pieceColor === players.WHITE && coords[1] >= opponentBackRank) || 
+				(pieceColor === players.BLACK && coords[1] <= opponentBackRank)) {
+				pieceScore += BACK_RANK_BONUS;
 			}
 		}
 
-		// 5. Proximity to Opponent King (Bonus for being closer) - Apply only to Pawns and Knights
-		if ((pieceRawType === rawTypes.PAWN || pieceRawType === rawTypes.KNIGHT) && opponentKingCoords) {
-			// Calculate Euclidean distance manually
-			const distToOpponentKing = Math.sqrt(Math.pow(coords[0] - opponentKingCoords[0], 2) + Math.pow(coords[1] - opponentKingCoords[1], 2));
-			// Max distance on 10x10 is sqrt(9^2 + 9^2) ~= 12.7
-			// Bonus is higher when distance is smaller
-			pieceScore += Math.max(0, KING_PROXIMITY_BONUS_FACTOR * (13 - distToOpponentKing));
+		// 4.2 Knight - prefers to be closer to opponent king but not extreme
+		else if (pieceRawType === rawTypes.KNIGHT) {
+			// Closer is better but cap at moderate distance (optimal around 3-4 squares)
+			const distanceScale = Math.max(0, 8 - distToOppositeKing) / 8;
+			pieceScore += distanceScale * (QUEEN_KNIGHT_PROXIMITY_BONUS / 3); // Third of the queen
+		}
+
+		// 4.3 Pawn advancement (basic evaluation without passed pawn check yet)
+		else if (pieceRawType === rawTypes.PAWN) {
+			// Calculate pawn advancement
+			const startRank = pieceColor === players.WHITE ? 2 : 7;
+			
+			// How many ranks has the pawn advanced?
+			const ranksAdvanced = Math.abs(coords[1] - startRank);
+			
+			// For now, just give base advancement bonus - we'll check passed pawns separately
+			pieceScore += ranksAdvanced * PAWN_RANK_BONUS;
 		}
 		
-		// Add/Subtract piece score based on color
-		if (pieceColor === currentPlayer) {
+		// Add piece score to the appropriate color's total
+		if (pieceColor === players.WHITE) {
 			score += pieceScore;
 		} else {
 			score -= pieceScore;
 		}
 	}
 
-	// TODO: Add other evaluation terms: King safety, pawn structure, passed pawns, piece coordination, etc.
+	// 5. Passed pawn evaluation (now that we have all pawns collected)
+	const isPassedPawn = (pawnCoords: Coords, opponentPawns: Coords[], pawnColor: Player): boolean => {
+		const file = pawnCoords[0];
+		
+		for (const oppCoords of opponentPawns) {
+			const oppFile = oppCoords[0];
+			const oppRank = oppCoords[1];
+			
+			// Same or adjacent file
+			if (Math.abs(oppFile - file) <= 1) {
+				// Check if opponent pawn is ahead based on color
+				if ((pawnColor === players.WHITE && oppRank > pawnCoords[1]) || 
+					(pawnColor === players.BLACK && oppRank < pawnCoords[1])) {
+					return false;
+				}
+			}
+		}
+		return true;
+	};
 
-	return score;
+	// Add bonus for white passed pawns
+	for (const pawnCoord of whitePawnCoords) {
+		const startRank = 2; // White pawns start on rank 2
+		const ranksAdvanced = Math.abs(pawnCoord[1] - startRank);
+		
+		if (isPassedPawn(pawnCoord, blackPawnCoords, players.WHITE)) {
+			score += ranksAdvanced * (PASSED_PAWN_RANK_BONUS - PAWN_RANK_BONUS);
+		}
+	}
+
+	// Add bonus for black passed pawns
+	for (const pawnCoord of blackPawnCoords) {
+		const startRank = 7; // Black pawns start on rank 7
+		const ranksAdvanced = Math.abs(pawnCoord[1] - startRank);
+		
+		if (isPassedPawn(pawnCoord, whitePawnCoords, players.BLACK)) {
+			score -= ranksAdvanced * (PASSED_PAWN_RANK_BONUS - PAWN_RANK_BONUS);
+		}
+	}
+	
+	// 6. King Safety - Evaluate pawn shield
+	const countAdjacentPawns = (kingCoords: Coords, pawnCoords: Coords[]): number => {
+		let count = 0;
+		for (const pawnCoord of pawnCoords) {
+			// Check if pawn is adjacent to king (maximum distance of 1 in any direction)
+			const distX = Math.abs(pawnCoord[0] - kingCoords[0]);
+			const distY = Math.abs(pawnCoord[1] - kingCoords[1]);
+			
+			if (distX <= 1 && distY <= 1) {
+				count++;
+			}
+		}
+		return count;
+	};
+
+	// White king safety
+	if (whiteKingCoords) {
+		const pawnShieldCount = countAdjacentPawns(whiteKingCoords, whitePawnCoords);
+		score += pawnShieldCount * PAWN_SHIELD_BONUS;
+	}
+
+	// Black king safety
+	if (blackKingCoords) {
+		const pawnShieldCount = countAdjacentPawns(blackKingCoords, blackPawnCoords);
+		score -= pawnShieldCount * PAWN_SHIELD_BONUS;
+	}
+
+	return lf.whosTurn === players.WHITE ? score : -score;
 }
 
 /**
