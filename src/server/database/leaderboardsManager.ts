@@ -44,7 +44,7 @@ type Leaderboard = typeof Leaderboards[keyof typeof Leaderboards];
 const VariantLeaderboards: Record<string, Leaderboard> = {
 	'Classical': Leaderboards.INFINITY,
 	'Confined_Classical': Leaderboards.INFINITY,
-	'Classical+': Leaderboards.INFINITY,
+	'Classical_Plus': Leaderboards.INFINITY,
 	'CoaIP': Leaderboards.INFINITY,
 	'CoaIP_HO': Leaderboards.INFINITY,
 	'Knighted_Chess': Leaderboards.INFINITY,
