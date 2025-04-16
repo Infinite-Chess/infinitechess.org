@@ -131,44 +131,6 @@ function generateTables() {
 	// To quickly get rankings for a specific leaderboard (ESSENTIAL)
 	db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`);
 
-	// Player Stats table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS player_stats (
-			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
-			moves_played INTEGER NOT NULL DEFAULT 0,
-			game_count INTEGER NOT NULL DEFAULT 0,
-			game_count_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_casual INTEGER NOT NULL DEFAULT 0,
-			game_count_public INTEGER NOT NULL DEFAULT 0,
-			game_count_private INTEGER NOT NULL DEFAULT 0,
-			game_count_wins INTEGER NOT NULL DEFAULT 0,
-			game_count_losses INTEGER NOT NULL DEFAULT 0,
-			game_count_draws INTEGER NOT NULL DEFAULT 0,
-			game_count_aborted INTEGER NOT NULL DEFAULT 0,
-			game_count_wins_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_losses_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_draws_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
-			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
-			game_count_draws_casual INTEGER NOT NULL DEFAULT 0
-		);
-	`);
-
-	// Player Games Table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS player_games (
-			user_id INTEGER NOT NULL REFERENCES members(user_id), -- Account deletion does not delete rows in this table
-			game_id INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-			player_number INTEGER NOT NULL, -- 1 => White  2 => Black
-			elo_at_game REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
-			elo_change_from_game REAL, -- Specified only if the game was rated
-			PRIMARY KEY (user_id, game_id) -- Ensures unique link
-		);
-	`);
-
-	// Create an index for efficiently finding players in a specific game
-	db.run(`CREATE INDEX IF NOT EXISTS idx_player_games_game ON player_games (game_id);`);
-
 	// Games table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS games (
@@ -197,6 +159,44 @@ function generateTables() {
 
 	// Create an index on the date column of the games table for faster queries
 	db.run(`CREATE INDEX IF NOT EXISTS idx_games_date ON games (date DESC);`);
+
+	// Player Games Table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS player_games (
+			user_id INTEGER NOT NULL REFERENCES members(user_id), -- Account deletion does not delete rows in this table
+			game_id INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+			player_number INTEGER NOT NULL, -- 1 => White  2 => Black
+			elo_at_game REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
+			elo_change_from_game REAL, -- Specified only if the game was rated
+			PRIMARY KEY (user_id, game_id) -- Ensures unique link
+		);
+	`);
+
+	// Create an index for efficiently finding players in a specific game
+	db.run(`CREATE INDEX IF NOT EXISTS idx_player_games_game ON player_games (game_id);`);
+
+	// Player Stats table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS player_stats (
+			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
+			moves_played INTEGER NOT NULL DEFAULT 0,
+			game_count INTEGER NOT NULL DEFAULT 0,
+			game_count_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_public INTEGER NOT NULL DEFAULT 0,
+			game_count_private INTEGER NOT NULL DEFAULT 0,
+			game_count_wins INTEGER NOT NULL DEFAULT 0,
+			game_count_losses INTEGER NOT NULL DEFAULT 0,
+			game_count_draws INTEGER NOT NULL DEFAULT 0,
+			game_count_aborted INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_casual INTEGER NOT NULL DEFAULT 0
+		);
+	`);
 
 	// Bans table
 	// createTableSQLQuery = `
