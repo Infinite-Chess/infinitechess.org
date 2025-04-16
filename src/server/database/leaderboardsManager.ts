@@ -321,13 +321,8 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
  */
 function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
 	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`;
-	if (isPlayerInLeaderboard(user_id, leaderboard_id)) {
-		const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
-		if (rating_values?.elo === undefined) {
-			logEvents(`Error getting rating values for member with ID "${user_id}" on leaderboard ${leaderboard_id}. Not found.`, 'errLog.txt', { print: true });
-		}
-		else ranked_elo = String(Math.round(rating_values.elo));
-	}
+	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
+	if (rating_values?.elo !== undefined) ranked_elo = String(Math.round(rating_values.elo));
 
 	return ranked_elo;
 }
