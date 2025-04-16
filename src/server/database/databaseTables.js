@@ -167,7 +167,7 @@ function generateTables() {
 			user_id INTEGER NOT NULL REFERENCES members(user_id), -- Account deletion does not delete rows in this table
 			game_id INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number INTEGER NOT NULL, -- 1 => White  2 => Black
-			score REAL CHECK (score IN (0.0, 0.5, 1.0) OR score IS NULL), -- 1 => Win   0.5 => Draw   0 => Loss   null => Aborted
+			score REAL, -- 1 => Win   0.5 => Draw   0 => Loss   null => Aborted
 			elo_at_game REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
 			elo_change_from_game REAL, -- Specified only if the game was rated
 			PRIMARY KEY (user_id, game_id) -- Ensures unique link
