@@ -98,7 +98,7 @@ interface EnPassant {
 
 
 /** Creates a check local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createCheckState(move: Move, current: inCheck, future: inCheck, gamefile: gamefile) {
+function createCheckState(move: Move | NullMove, current: inCheck, future: inCheck, gamefile: gamefile) {
 	const newStateChange: StateChange = { type: 'check', current, future };
 	move.state.local.push(newStateChange); // Check is a local state
 	// Check states are immediately applied to the gamefile
@@ -106,7 +106,7 @@ function createCheckState(move: Move, current: inCheck, future: inCheck, gamefil
 }
 
 /** Creates an attackers local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createAttackersState(move: Move, current: attackers, future: attackers, gamefile: gamefile) {
+function createAttackersState(move: Move | NulMove, current: attackers, future: attackers, gamefile: gamefile) {
 	const newStateChange: StateChange = { type: 'attackers', current, future };
 	move.state.local.push(newStateChange); // Attackers is a local state
 	// Attackers states are immediately applied to the gamefile

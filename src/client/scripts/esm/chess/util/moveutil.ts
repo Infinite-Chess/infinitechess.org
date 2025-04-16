@@ -47,7 +47,7 @@ interface DepricatedMove {
  * Returns the move one forward from the current position we're viewing, if it exists.
  * This is also the move we would execute if we forward the game 1 step.
  */
-function getMoveOneForward(gamefile: gamefile): Move | undefined {
+function getMoveOneForward(gamefile: gamefile): Move | NullMove | undefined {
 	const moveIndex = gamefile.moveIndex;
 	const incrementedIndex = moveIndex + 1;
 	return getMoveFromIndex(gamefile.moves, incrementedIndex);
@@ -88,7 +88,7 @@ function getLastMove(moves: Move[]): Move | undefined {
 /**
  * Returns the move we're currently viewing in the provided gamefile.
  */
-function getCurrentMove(gamefile: gamefile): Move | undefined {
+function getCurrentMove(gamefile: gamefile): Move | NullMove | undefined {
 	const index = gamefile.moveIndex;
 	if (index < 0) return;
 	return gamefile.moves[index];
@@ -97,7 +97,7 @@ function getCurrentMove(gamefile: gamefile): Move | undefined {
 /**
  * Gets the move from the moves list at the specified index
  */
-function getMoveFromIndex(moves: Move[], index: number): Move {
+function getMoveFromIndex(moves: Move[], index: number): Move | NullMove {
 	if (isIndexOutOfRange(moves, index)) throw Error("Cannot get next move when index overflow");
 	return moves[index]!;
 }

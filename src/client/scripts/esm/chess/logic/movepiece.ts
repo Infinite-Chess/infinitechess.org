@@ -131,6 +131,30 @@ interface Move extends MoveDraft {
 	}
 }
 
+/**
+ * A null/passing move made by engines during their search calculation.
+ * 
+ * The only info this needs is how the gamefile state changes.
+*/
+interface NullMove {
+	/** Whether the move is a null move. */
+	isNull: true,
+	/** The index this move was generated for. This can act as a safety net
+	 * so we don't accidentally make the move on the wrong index of the game. */
+	generateIndex: number,
+	/** The state of the move is used to know how to modify specific gamefile
+	 * properties when forwarding/rewinding this move. */
+	state: MoveState,
+	flags: {
+		/** Whether the move delivered check. */
+		check: boolean,
+		/** Whether the move delivered mate (or the killing move). */
+		mate: boolean,
+		/** Whether the move caused a capture */
+		capture: boolean,
+	}
+}
+
 
 // Move Generating --------------------------------------------------------------------------------------------------
 
@@ -251,7 +275,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
-function makeMove(gamefile: gamefile, move: Move) {
+function makeMove(gamefile: gamefile, move: Move | NullMove) {
 	gamefile.moves.push(move);
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
@@ -273,15 +297,18 @@ function makeMove(gamefile: gamefile, move: Move) {
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: gamefile, move: Move, forward = true, { global = false } = {}) {
+function applyMove(gamefile: gamefile, move: Move | NullMove, forward = true, { global = false } = {}) {
 	gamefile.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
 	const indexToApply = gamefile.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
-	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
+
+	if (move.isNull) return; // Null moves don't have changes to make
+
+	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
 /**
@@ -295,7 +322,7 @@ function updateTurn(gamefile: gamefile) {
  * Tests if the gamefile is currently in check,
  * then creates and set's the game state to reflect that.
  */
-function createCheckState(gamefile: gamefile, move: Move) {
+function createCheckState(gamefile: gamefile, move: Move | NullMove) {
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
@@ -459,6 +486,7 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 
 export type {
 	Move,
+	NullMove,
 	MoveDraft,
 	CoordsSpecial,
 	enpassantCreate,
