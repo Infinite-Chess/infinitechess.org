@@ -80,15 +80,17 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 	if (!ICN) return { success: false, reason: `ICN undefined when logging game, cannot log or increment player stats! Game: ${gameutility.getSimplifiedGameString(game)}` };
 
 	const terminationCode = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).condition;
+	const game_rated: 0 | 1 = (game.rated ? 1 : 0);
 	const leaderboard_id = (game.rated && VariantLeaderboards[game.variant] !== undefined ? VariantLeaderboards[game.variant]! : null);
+	const game_private: 0 | 1 = (game.publicity !== 'public' ? 1 : 0);
 
 	const gameToLog = {
 		date: dateSqliteString,
 		time_control: game.clock as string,
 		variant: game.variant as string,
-		rated: (game.rated ? 1 : 0),
+		rated: game_rated,
 		leaderboard_id: leaderboard_id,
-		private: (game.publicity !== 'public' ? 1 : 0),
+		private: game_private,
 		result: metadata.Result as string,
 		termination: terminationCode,
 		movecount: game.moves.length,

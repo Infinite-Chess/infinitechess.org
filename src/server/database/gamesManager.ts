@@ -23,10 +23,10 @@ interface GamesRecord {
     time_control?: string;
     variant?: string;
 	/** 0 => false  1 => true */
-    rated?: number;
+    rated?: 0 | 1;
 	leaderboard_id?: number | null;
 	/** 0 => false  1 => true */
-    private?: number;
+    private?: 0 | 1;
     result?: string;
     termination?: string;
     movecount?: number;
@@ -50,10 +50,10 @@ function addGameToGamesTable(
         time_control: string,
         variant: string,
 		/** 0 => false  1 => true */
-        rated: number,
+        rated: 0 | 1,
 		leaderboard_id: number | null,
 		/** 0 => false  1 => true */
-        private: number,
+        private: 0 | 1,
         result: string,
         termination: string,
         movecount: number,
