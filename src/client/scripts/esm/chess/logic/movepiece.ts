@@ -210,6 +210,31 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	return move;
 }
 
+/** Generates a Null Move used by engines. */
+function generateNullMove(gamefile: gamefile) {
+	const nullMove = {
+		isNull: true,
+		generateIndex: gamefile.moveIndex + 1,
+		state: { local: [], global: [] },
+		flags: {
+			// These will be set later, but we need a default value
+			check: false,
+			mate: false,
+			capture: false,
+		}
+	}
+
+	/**
+	 * Delete the current enpassant state.
+	 * If any specialMove function adds a new EnPassant state,
+	 * this one's future value will be overwritten
+	 */
+	state.createEnPassantState(nullMove, gamefile.enpassant, undefined);
+	queueIncrementMoveRuleStateChange(gamefile, move);
+
+	return nullMove;
+}
+
 /**
  * Calculates all of a move's board changes, and "queues" them,
  * adding them to the move's Changes list.
@@ -260,11 +285,11 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
+function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move | NullMove) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (move.flags.capture || typeutil.getRawType(move.type) === rawTypes.PAWN) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? gamefile.moveRuleState + 1 : 0;
 	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
@@ -499,6 +524,7 @@ export type {
 
 export default {
 	generateMove,
+	generateNullMove,
 	makeMove,
 	updateTurn,
 	goToMove,

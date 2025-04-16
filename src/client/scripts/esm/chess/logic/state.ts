@@ -118,7 +118,7 @@ function createAttackersState(move: Move | NulMove, current: attackers, future: 
 
 
 /** Creates an enpassant global StateChange, queueing it by adding it to the Move. */
-function createEnPassantState(move: Move, current?: EnPassant, future?: EnPassant) {
+function createEnPassantState(move: Move | NullMove, current?: EnPassant, future?: EnPassant) {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'enpassant', current, future };
 	// Check to make sure there isn't already an enpassant state change,
