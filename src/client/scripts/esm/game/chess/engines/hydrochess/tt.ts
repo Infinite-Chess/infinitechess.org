@@ -29,8 +29,8 @@ interface TTEntry {
 // Helper Function
 /**
  * Normalizes a coordinate for hashing. Keeps values within HASH_COORD_BOUND.
- * Maps values outside the bound into HASH_MODULO_BUCKETS buckets based on
- * their difference from the bound, preserving relative position modulo BUCKETS.
+ * Maps values outside the bound into HASH_MODULO_BUCKETS based on
+ * their difference from the bound, while *mostly* preserving relative position.
  */
 function normalizeCoordForHash(coord: number): number {
 	const absCoord = Math.abs(coord);
@@ -41,9 +41,9 @@ function normalizeCoordForHash(coord: number): number {
 		const sign = Math.sign(coord); // 1 or -1
 		// Calculate the difference from the bound
 		const delta = coord - (sign * HASH_COORD_BOUND);
-		// Calculate the bucket using modulo. JS % operator preserves sign.
+		// Calculate the bucket using modulo
 		const bucket = delta % HASH_MODULO_BUCKETS;
-		// Map to a value just outside the bound, based on the bucket.
+		// Map to a value just outside the bound, based on the bucket
 		return sign * HASH_COORD_BOUND + bucket;
 	}
 }
@@ -69,7 +69,7 @@ export class TranspositionTable {
 	 * Ignores special moves for simplicity/speed.
 	 */
 	public static generateHash(board: gamefile): number {
-		let hashValue = 0; // Initialize as a number
+		let hashValue = 0;
 
 		// Iterate using the boardutil helper
 		const allCoords = boardutil.getCoordsOfAllPieces(board.pieces);
@@ -95,8 +95,6 @@ export class TranspositionTable {
 
 		// 4. XOR in the Player Turn:
 		hashValue ^= board.whosTurn;
-
-		// console.debug("Modulo Normalized Hash: ", hashValue >>> 0);
 		return hashValue >>> 0; // Return as unsigned 32-bit integer
 	}
 

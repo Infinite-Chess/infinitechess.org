@@ -1,4 +1,3 @@
-
 /**
  * Implements a relatively simple chess engine for infinite chess.
  * This engine incorporates common techniques found in traditional chess bots,
@@ -10,7 +9,6 @@
 // @ts-ignore
 import type { gamefile } from '../../../chess/logic/gamefile.js';
 import type { MoveDraft } from '../../../chess/logic/movepiece.js';
-import type { Player } from '../../../chess/util/typeutil.js';
 import typeutil, { rawTypes } from '../../../chess/util/typeutil.js';
 import boardutil from '../../../chess/util/boardutil.js';
 import movepiece from '../../../chess/logic/movepiece.js';
@@ -19,26 +17,36 @@ import evaluation from './hydrochess/evaluation.js';
 import helpers from './hydrochess/helpers.js';
 import { TranspositionTable, TTFlag } from './hydrochess/tt.js';
 import checkdetection from '../../../chess/logic/checkdetection.js';
-import jsutil from '../../../util/jsutil.js';
 
-const MAX_DEPTH = 64;
+export const MAX_PLY = 64;
 const SEARCH_TIMEOUT_MS = 4000;
-const MATE_SCORE = 1000000;
-const QUIESCENCE_MAX_DEPTH = 4;
+const INFINITY = 32000;
+const MATE_VALUE = INFINITY - 150;
+const MATE_SCORE = INFINITY - 300;
+const NO_ENTRY = INFINITY - 500;
+const TIME_UP = 32000 + 500;
+
 const NMP_R = 3;
-const NMP_MIN_DEPTH = 3;
-const RAZORING_MARGIN = 300;
 const LMR_MIN_DEPTH = 3;
-const LMR_MOVE_COUNT_THRESHOLD = 3;
 const LMR_REDUCTION = 1;
+let startTime = performance.now();
+
+let STOP = false;
 
 const transpositionTable = new TranspositionTable(64); // in MB
 let ttHits = 0;
+let killer_moves: Array<Array<MoveDraft | null>> = Array(MAX_PLY).fill(null).map(() => [null, null]);
+let history_heuristic_table: Map<string, number> = new Map();
+let pv_table: (MoveDraft | null | undefined)[][] = Array(MAX_PLY).fill(null).map(() => [null, null]);
+let pv_length: number[] = Array(MAX_PLY).fill(0);
 
-interface SearchData {
+export interface SearchData {
   nodes: number;
+  ply: number;
   bestMove: MoveDraft | null;
   startDepth: number;
+  score_pv: boolean;
+  follow_pv: boolean;
 }
 
 /**
@@ -72,20 +80,16 @@ self.onmessage = function(e: MessageEvent) {
 	// --- Start Calculation ---
 	console.debug(`[Engine] Calculating move for ${weAre === 1 ? 'white' : 'black'}`);
 	ttHits = 0; // Reset TT hits counter
-	const startTime = performance.now();
 
-	const bestMove: MoveDraft | null = findBestMove(current_gamefile);
-	const endTime = performance.now();
-	const duration = (endTime - startTime).toFixed(2);
+	const start = performance.now();
+	findBestMove(current_gamefile);
+	const duration = (performance.now() - start).toFixed(2);
 	console.debug(`[Engine] Calculation took ${duration} ms. TT Hits: ${ttHits}`);
 
 	// --- Post Result ---
-	if (bestMove) {
-		console.debug(`[Engine] Found best move: ${JSON.stringify(bestMove)}`);
-		postMessage(bestMove);
-	} else {
-		console.error("[Engine] No legal moves found.");
-	}
+	const move = pv_table[0]![0];
+	console.debug(`[Engine] Found best move: (${move?.startCoords}): (${move?.endCoords})`);
+	postMessage(move);
 };
 
 /**
@@ -94,30 +98,56 @@ self.onmessage = function(e: MessageEvent) {
  * @param depth The current search depth.
  * @param alpha The alpha value for pruning.
  * @param beta The beta value for pruning.
- * @param player The player whose turn it is.
- * @param startTime The time the search started.
  * @param data Object to store search data (nodes, best move).
- * @param ply Distance from the root node (used for mate scoring and NMP condition).
- * @param pvMoveFromID The PV move from the previous iteration (only relevant at ply 0).
+ * @param null_move Whether to perform null move pruning.
  * @returns The evaluation score for the current position.
  */
-function negamax(lf: gamefile, depth: number, alpha: number, beta: number, player: Player, startTime: number, data: SearchData, ply: number, pvMoveFromID: MoveDraft | null): number {
+function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data: SearchData, null_move: boolean): number {
 	data.nodes++;
+	let best_move: MoveDraft | null = null;
+	let score: number;
+	const pv_node = beta - alpha > 1;
+	let hash_flag = TTFlag.LOWER_BOUND;
+	const is_root = data.ply === 0;
 
-	// Timeout check
-	if (performance.now() - startTime > SEARCH_TIMEOUT_MS) {
-		return beta;
+	if (data.ply >= MAX_PLY) {
+		return evaluation.evaluate(lf);
 	}
 
-	const alphaOrig = alpha;
+	// TODO: check for fifty-move rule
+
+	pv_length[data.ply] = data.ply;
+
+	if (!is_root) {
+		// TODO: threefold check
+
+		// mate distance pruning
+		if (alpha < -MATE_VALUE) {
+			alpha = -MATE_VALUE;
+		} if (beta > MATE_VALUE - 1) {
+			beta = MATE_VALUE - 1;
+		} if (alpha >= beta) {
+			return alpha;
+		}
+	}
+	
+	// --- Base Case: Depth Reached or Terminal Node ---
+	if (depth <= 0) {
+		return quiescenceSearch(lf, alpha, beta, data);
+	}
+
+	const opponent = typeutil.invertPlayer(lf.whosTurn);
+	const isInCheck = checkdetection.isPlayerInCheck(lf, lf.whosTurn);
+
+	if (isInCheck) {
+		depth++;
+	}
+
 	const hash = TranspositionTable.generateHash(lf);
 
 	// --- Transposition Table Probe ---
-	const ttEntry = transpositionTable.probe(hash, depth, ply);
-	let ttBestMove: MoveDraft | null = null;
-
+	const ttEntry = transpositionTable.probe(hash, depth, data.ply);
 	if (ttEntry) {
-		ttBestMove = ttEntry.bestMove;
 		if (ttEntry.depth >= depth) {
 			ttHits++;
 			if (ttEntry.flag === TTFlag.EXACT) {
@@ -133,276 +163,323 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, playe
 		}
 	}
 
-	// --- Base Case: Depth Reached or Terminal Node ---
-	if (depth === 0) {
-		return quiescenceSearch(lf, QUIESCENCE_MAX_DEPTH, alpha, beta, player, data, startTime);
+
+	// every 2047 nodes
+	if (data.nodes % 2047 === 0 && stop_search()) {
+		return 0;
 	}
 
-	const opponent = typeutil.invertPlayer(player);
-	const isInCheck = checkdetection.isPlayerInCheck(lf, player);
+	// static evaluation
+	const evalScore = evaluation.evaluate(lf);
 
-	// --- Null Move Pruning (NMP) ---
-	// Conditions: Not in check, depth is sufficient, not in zugzwang (heuristic)
-	if (!isInCheck && depth >= NMP_MIN_DEPTH && ply > 0) {
-		// Simple heuristic: Assume not zugzwang if player has pieces other than pawns/king
-		const has_major_or_minor_pieces = boardutil.getPieceCountOfGame(lf.pieces, {
-			ignoreColors: new Set([opponent]),
-			ignoreRawTypes: new Set([rawTypes.PAWN, rawTypes.KING])
-		}) > 0;
+	if (!isInCheck && !pv_node) {
+		// evaluation pruning
+		if (depth < 3 && Math.abs(beta - 1) > -49000 + 100) {
+			if (evalScore - 100 * depth >= beta) {
+				return evalScore - 100;
+			}
+		}
 
-		if (has_major_or_minor_pieces) {
-			// Make a null move (just switch turn)
-			const originalTurn = lf.whosTurn;
-			lf.whosTurn = opponent;
-			const nullScore = -negamax(lf, depth - 1 - NMP_R, -beta, -beta + 1, opponent, startTime, data, ply + 1, null);
-			// Undo null move
-			lf.whosTurn = originalTurn;
+		// you can do razoring and fp here if you want
 
-			if (nullScore >= beta) {
-				return beta;
+		// --- Null Move Pruning (NMP) ---
+		if (null_move) {
+			// Simple heuristic: Assume not zugzwang if player has pieces other than pawns/king
+			const has_major_or_minor_pieces = boardutil.getPieceCountOfGame(lf.pieces, {
+				ignoreColors: new Set([opponent]),
+				ignoreRawTypes: new Set([rawTypes.PAWN, rawTypes.KING])
+			}) > 0;
+
+			if (has_major_or_minor_pieces) {
+				data.ply += 1;
+				// Make a null move (just switch turn)
+				const originalTurn = lf.whosTurn;
+				lf.whosTurn = opponent;
+				const nullScore = -negamax(lf, depth - 1 - NMP_R, -beta, -beta + 1, data, false);
+				// Undo null move
+				lf.whosTurn = originalTurn;
+				data.ply -= 1;
+
+				// return if time is up
+				if (STOP) {
+					return NO_ENTRY;
+				}
+
+				if (nullScore >= beta) {
+					return beta;
+				}
+			}
+		}
+
+		// --- Razoring (Static Futility Pruning) ---
+		const score = evalScore + 100;
+		if (score < beta) {
+			if (depth === 1) {
+				const new_score = quiescenceSearch(lf, alpha, beta, data);
+				if (new_score < beta) {
+					return Math.max(new_score, score);
+				}
 			}
 		}
 	}
 
-	// --- Razoring (Static Futility Pruning) ---
-	if (depth === 1 && !isInCheck) {
-		const static_eval = evaluation.evaluatePosition(lf, player);
-		if (static_eval + RAZORING_MARGIN <= alpha) {
-			return alpha;
-		}
+	const fp_margin = evalScore + 97 * depth;
+
+	// Timeout check
+	if (stop_search()) {
+		return TIME_UP;
 	}
 
+
 	// --- Generate and Order Moves ---
-	const legalMoves = helpers.generateLegalMoves(lf, player);
+	const legalMoves = helpers.generateLegalMoves(lf, lf.whosTurn);
+
+	if (data.follow_pv) {
+		helpers.enable_pv_scoring(legalMoves, pv_table, data);
+	}
 
 	// --- Move Ordering ---
 	legalMoves.sort((a, b) =>
-		evaluation.scoreMove(b, lf, ttBestMove, pvMoveFromID, ply) -
-    evaluation.scoreMove(a, lf, ttBestMove, pvMoveFromID, ply)
+		evaluation.scoreMove(b, lf, data, pv_table, killer_moves, history_heuristic_table) -
+    evaluation.scoreMove(a, lf, data, pv_table, killer_moves, history_heuristic_table)
 	);
 
 	// Check for terminal nodes (checkmate/stalemate)
 	if (legalMoves.length === 0) {
 		if (isInCheck) {
-			return -MATE_SCORE + ply; // Checkmate
+			return -MATE_VALUE + data.ply; // Checkmate
 		} else {
 			return 0; // Stalemate
 		}
 	}
 
-	let bestScore = -Infinity; // Re-initialize bestScore
-	let bestMoveForTT: MoveDraft | null = null; // Best move found *at this node*
+	let bestScore = -INFINITY;
+	let skip_quiet = false;
+	let moves_searched = 0;
 
 	// --- Search Loop (PVS) ---
-	let isFirstMove = true;
 	for (let i = 0; i < legalMoves.length; i++) {
 		const currentMoveDraft = legalMoves[i]!;
 		const fullMove = movepiece.generateMove(lf, currentMoveDraft); // Generate full move first
-		movepiece.makeMove(lf, fullMove); // Make move on the *original* lf (will be rewound)
-		const nextPlayer = typeutil.invertPlayer(player); // Use typeutil.invertPlayer
-		let score;
 
-		if (isFirstMove) {
-			// Full window search for the first move (expected PV move)
-			score = -negamax(lf, depth - 1, -beta, -alpha, nextPlayer, startTime, data, ply + 1, null); // Pass the modified lf
-			isFirstMove = false;
-		} else {
-			// --- Late Move Reduction (LMR) --- (Attempt reduction before null-window search)
-			let reduction = 0;
-			const isCapture = !!fullMove.flags.capture;
-			const givesCheck = checkdetection.isPlayerInCheck(lf, nextPlayer); 
-			
-			if (depth >= LMR_MIN_DEPTH &&
-				i >= LMR_MOVE_COUNT_THRESHOLD &&
-				!isInCheck && // Don't reduce if in check
-				!givesCheck &&
-				!isCapture &&
-				!fullMove.promotion
-			) {
-				reduction = LMR_REDUCTION; // Apply standard reduction
-				// TODO: More sophisticated reduction based on move history/etc.
-			}
+		if (!fullMove) {
+			console.error("[Engine] Failed to generate full move for draft:", currentMoveDraft);
+			continue; // Skip invalid move generation
+		}
 
-			// Null window search (scout search) with potential reduction
-			score = -negamax(lf, depth - 1 - reduction, -alpha - 1, -alpha, nextPlayer, startTime, data, ply + 1, null); // Pass the modified lf
+		const is_quiet = !fullMove.flags.capture;
+		if (is_quiet && skip_quiet) {
+			continue;
+		}
 
-			// If LMR was applied AND null window search failed high, re-search without reduction first
-			if (reduction > 0 && score > alpha) {
-				score = -negamax(lf, depth - 1, -alpha - 1, -alpha, nextPlayer, startTime, data, ply + 1, null); // Pass the modified lf
-			}
+		const is_killer = helpers.movesAreEqual(killer_moves[0]![data.ply], currentMoveDraft) || helpers.movesAreEqual(killer_moves[1]![data.ply], currentMoveDraft);
 
-			// If null window search failed high (even after removing reduction),
-			// it means this move might be better than the current best (alpha).
-			// Re-search with the full window [-beta, -alpha] to get the exact score.
-			if (score > alpha && score < beta) { // Check score < beta avoids redundant search if it's going to fail high anyway
-				score = -negamax(lf, depth - 1, -beta, -alpha, nextPlayer, startTime, data, ply + 1, null); // Pass the modified lf
+		if (!is_root && bestScore > -INFINITY) {
+			if (depth < 8 && is_quiet && !is_killer && fp_margin <= alpha && Math.abs(alpha) < INFINITY - 100) {
+				skip_quiet = true;
+				continue;
 			}
 		}
 
-		movepiece.rewindMove(lf); // Rewind the move on the original board
+		movepiece.makeMove(lf, fullMove); // Make the move
+		data.ply += 1;
 
-		// Update best score and move
+		// full depth search
+		if (moves_searched === 0) {
+			score = -negamax(lf, depth - 1, -beta, -alpha, data, true);
+		} else {
+			if (moves_searched >= LMR_MIN_DEPTH && depth >= LMR_REDUCTION && !isInCheck && is_quiet && !fullMove.promotion) {
+				score = -negamax(lf, depth - 2, -alpha - 1, -alpha, data, true);
+			} else {
+				score = alpha + 1;
+			}
+
+			if (score > alpha) {
+				score = -negamax(lf, depth - 1, -alpha - 1, -alpha, data, true);
+				if (score > alpha && score < beta) {
+					score = -negamax(lf, depth - 1, -beta, -alpha, data, true);
+				}
+			}
+		}
+
+		movepiece.rewindMove(lf);
+		data.ply--;
+
+		if (stop_search()) {
+			return TIME_UP;
+		}
+
+		moves_searched++;
+
 		if (score > bestScore) {
 			bestScore = score;
 		}
 
 		// Alpha-Beta Pruning
 		if (score > alpha) {
+			hash_flag = TTFlag.EXACT;
+			best_move = currentMoveDraft;
+			bestScore = score;
 			alpha = score;
-			bestMoveForTT = currentMoveDraft; // Update the best move found at this node
-			// If it's the root node, update the globally best move for the *iteration*
-			if (ply === 0) {
-				data.bestMove = currentMoveDraft;
+
+			if (is_quiet) {
+				helpers.updateHistoryScore(lf, currentMoveDraft, depth, history_heuristic_table);
+			}
+
+			// write PV move
+			pv_table[data.ply]![data.ply] = currentMoveDraft;
+			// loop over the next ply
+			for (let i = data.ply + 1; i < pv_length[data.ply]! + 1; i++) {
+				pv_table[data.ply]![i] = pv_table[data.ply + 1]![i];
+			}
+
+			// adjust pv length
+			pv_length[data.ply] = pv_length[data.ply + 1]!;
+
+			if (score >= beta) {
+				// store hash entry with the score equal to beta
+				transpositionTable.store(hash, depth, TTFlag.UPPER_BOUND, beta, best_move, data.ply);
+
+				if (is_quiet) {
+					// store killer moves
+					killer_moves[1]![data.ply] = killer_moves[0]![data.ply]!;
+					killer_moves[0]![data.ply] = currentMoveDraft;
+				}
+
+				return beta;
 			}
 		}
-
-		if (alpha >= beta) {
-			// Beta-cutoff: This move is too good, opponent won't allow it.
-			// Store potentially good move (killer heuristic can be added later)
-			break;
-		}
-
-		// Check for timeout frequently within the loop
-		if (performance.now() - startTime > SEARCH_TIMEOUT_MS) {
-			return beta;
-		}
 	}
 
-	// --- Transposition Table Store ---
-	let ttFlag: TTFlag;
-	if (bestScore <= alphaOrig) {
-		ttFlag = TTFlag.UPPER_BOUND; // Failed low
-	} else if (bestScore >= beta) {
-		ttFlag = TTFlag.LOWER_BOUND; // Failed high (beta cutoff)
-	} else {
-		ttFlag = TTFlag.EXACT; // Score is within the (alpha, beta) window
-	}
-
-	// Store in TT only if the move is considered reliable
-	if (bestMoveForTT || ttFlag === TTFlag.EXACT || ttFlag === TTFlag.LOWER_BOUND) { // Avoid storing useless upper bounds without a move?
-		transpositionTable.store(hash, depth, ttFlag, bestScore, bestMoveForTT, ply);
-	}
-
-	return bestScore; // Return the best score found for this node
+	transpositionTable.store(hash, depth, hash_flag, alpha, best_move, data.ply);
+	return alpha;
 }
 
 /**
- * Quiescence Search: Extends the search depth for "noisy" moves (captures)
+ * Quiescence search explores only 'noisy' moves (captures, promotions, checks - currently only captures)
  * to avoid the horizon effect in tactical situations.
  */
 function quiescenceSearch(
 	lf: gamefile,
-	qDepth: number,
 	alpha: number,
 	beta: number,
-	player: Player,
-	searchData: SearchData,
-	startTime: number
+	data: SearchData
 ): number {
-	searchData.nodes++;
+	data.nodes++;
+	const evalScore = evaluation.evaluate(lf);
+
+	if (evalScore >= beta) {
+		return beta;
+	} else if (evalScore > alpha) {
+		alpha = evalScore;
+	}
+
+	if (data.ply >= MAX_PLY) {
+		return evalScore;
+	}
 
 	// Timeout check
-	if (performance.now() - startTime > SEARCH_TIMEOUT_MS) {
-		return beta;
+	if (data.nodes % 2047 === 0 && stop_search()) {
+		return TIME_UP;
 	}
 
-	const stand_pat = evaluation.evaluatePosition(lf, player);
-
-	if (stand_pat >= beta) {
-		return beta;
-	}
-
-	alpha = Math.max(alpha, stand_pat);
-
-	if (qDepth <= 0) {
-		return alpha;
-	}
-
-	const opponent = typeutil.invertPlayer(player);
-	const allMoves = helpers.generateLegalMoves(lf, player);
+	const allMoves = helpers.generateLegalMoves(lf, lf.whosTurn);
 
 	const captureMoves = allMoves.filter(move => {
 		const targetPiece = boardutil.getPieceFromCoords(lf.pieces, move.endCoords);
-		return targetPiece !== undefined && typeutil.getColorFromType(targetPiece.type) !== player;
+		return targetPiece !== undefined && typeutil.getColorFromType(targetPiece.type) !== lf.whosTurn;
 	});
 
 	const scoredCaptures = captureMoves.map(move => ({
 		move: move,
-		score: evaluation.scoreMove(move, lf, null, null, Infinity)
+		score: evaluation.scoreMove(move, lf, data, pv_table, killer_moves, history_heuristic_table)
 	})).sort((a, b) => b.score - a.score);
 
 	// --- Explore Noisy Moves ---
 	for (const { move } of scoredCaptures) {
 		const fullMove = movepiece.generateMove(lf, move);
 		movepiece.makeMove(lf, fullMove);
-		const score = -quiescenceSearch(lf, qDepth - 1, -beta, -alpha, opponent, searchData, startTime);
+		data.ply++;
+		const score = -quiescenceSearch(lf, -beta, -alpha, data);
+		data.ply--;
 		movepiece.rewindMove(lf);
 
-		if (score >= beta) {
-			return beta;
+		if (STOP) {
+			return TIME_UP;
 		}
-		alpha = Math.max(alpha, score);
+
+		if (score > alpha) {
+			alpha = score;
+			if (score >= beta) {
+				return beta;
+			}
+		}
 	}
 
 	return alpha;
 }
 
+function stop_search() {
+	if (STOP || performance.now() > startTime + SEARCH_TIMEOUT_MS) {
+		return true;
+	}
+	return false;
+}
+
 /**
- * Performs an iterative deepening search.
- * @param lf The starting logical gamefile state.
- * @returns The best MoveDraft found, or null if no move is found or timeout occurs.
+ * Iterative deepening search driver.
+ * Calls negamax for increasing depths until timeout or max depth is reached.
+ * @param lf The current game state.
  */
-function findBestMove(lf: gamefile): MoveDraft | null {
-	const startTime = performance.now();
-	let bestMoveOverall: MoveDraft | null = null;
-	let pvMove: MoveDraft | null = null; // Principal Variation move from previous iteration
-	const player = lf.whosTurn;
-	let lastCompletedDepth = 0;
+function findBestMove(lf: gamefile) {
+	STOP = false;
+	startTime = performance.now();
 
-	const initialLfCopy = jsutil.deepCopyObject(lf);
+	// Reset search-specific data before starting
+	killer_moves = Array(MAX_PLY).fill(null).map(() => [null, null]); // Clear killers
+	history_heuristic_table = new Map(); // Clear history
+	pv_table = Array(MAX_PLY).fill(null).map(() => [null, null]);
+	pv_length = Array(MAX_PLY).fill(0);
 
-	console.debug(`[Engine] Starting search for ${typeutil.strcolors[player]}`);
-	for (let depth = 1; depth <= MAX_DEPTH; depth++) {
-		const searchData: SearchData = { nodes: 0, bestMove: null, startDepth: depth };
-		const score = negamax(initialLfCopy, depth, -MATE_SCORE, MATE_SCORE, player, startTime, searchData, 0, pvMove);
+	const searchData: SearchData = { nodes: 0, bestMove: null, startDepth: 0, ply: 0, score_pv: false, follow_pv: true };
 
-		const elapsedTime = performance.now() - startTime;
-
-		// Check timeout *after* negamax call for the depth returns
-		if (elapsedTime > SEARCH_TIMEOUT_MS && lastCompletedDepth > 0) {
-			console.debug(`[Engine] Timeout reached at depth ${depth}. Using best move from depth ${lastCompletedDepth}.`);
+	// Iterative deepening loop
+	for (let depth = 1; depth <= MAX_PLY; depth++) {
+		if (stop_search()) {
 			break;
 		}
 
-		// Check if negamax returned due to timeout *during* its execution
-		// Simple check: if time exceeded and no best move found at root, maybe timeout?
-		if (elapsedTime > SEARCH_TIMEOUT_MS && !searchData.bestMove && lastCompletedDepth > 0) {
-			console.debug(`[Engine] Search likely interrupted by timeout at depth ${depth}. Using best move from depth ${lastCompletedDepth}.`);
+		searchData.follow_pv = true;
+		
+		helpers.decayHistoryScores(history_heuristic_table); // Decay scores at the start of each depth iteration
+		const score = negamax(lf, depth, -INFINITY, INFINITY, searchData, true);
+
+		if (stop_search()) {
 			break;
 		}
 
-		if (searchData.bestMove) {
-			bestMoveOverall = searchData.bestMove;
-			pvMove = searchData.bestMove; // Update PV move for next iteration
-			lastCompletedDepth = depth;
-			console.debug(`[Engine] Depth ${depth} complete. Score: ${score}. Best move: ${JSON.stringify(pvMove)}. Nodes: ${searchData.nodes}. Time: ${elapsedTime.toFixed(0)}ms`);
-		} else if (elapsedTime <= SEARCH_TIMEOUT_MS) {
-			// Maybe mate/stalemate if no move found and no timeout
-			console.debug(`[Engine] Depth ${depth} complete. No move found (Mate/Stalemate?). Score: ${score}. Nodes: ${searchData.nodes}. Time: ${elapsedTime.toFixed(0)}ms`);
-			// Stop if definitive mate/stalemate score found
-			if (score === 0 || score <= -MATE_SCORE + MAX_DEPTH) { // Allow for ply depth in mate score
+		let printString = `info depth ${depth} nodes ${searchData.nodes}`;
+		if (score > -MATE_VALUE && score < -MATE_SCORE) {
+			printString += ` score mate ${pv_length[0]! / 2 - 1} pv`;
+		} else if (score > MATE_SCORE && score < MATE_VALUE) {
+			printString += ` score mate ${pv_length[0]! / 2 + 1} pv`;
+		} else {
+			printString += ` score cp ${Math.round(score)} pv`;
+		}
+		
+		// loop over moves in PV
+		for (let i = 0; i < pv_length[0]!; i++) {
+			const move = pv_table[0]![i];
+			if (move) {
+				printString += ` (${move.startCoords}): (${move.endCoords})`;
+			} else {
+				printString += ' null';
 				break;
 			}
 		}
 
-		// --- Check for Mate Score ---
-		if (score >= MATE_SCORE - MAX_DEPTH || score <= -MATE_SCORE + MAX_DEPTH) {
-			console.debug(`[Engine] Mate score detected at depth ${depth}. Stopping search.`);
-			break; // Stop searching if mate is found
-		}
+		console.debug(printString);
 	}
 
-	const totalTime = performance.now() - startTime;
-	console.debug(`[Engine] Search finished. Final best move: ${JSON.stringify(bestMoveOverall)}. Depth reached: ${lastCompletedDepth}. Total time: ${totalTime.toFixed(0)}ms`);
-	return bestMoveOverall;
+	transpositionTable.incrementAge();
 }

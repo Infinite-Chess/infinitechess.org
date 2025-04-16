@@ -9,9 +9,11 @@ import type { Player } from '../../../../chess/util/typeutil.js';
 import legalmoves from "../../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import specialdetect from "../../../../chess/logic/specialdetect.js";
+import { SearchData } from "../hydrochess.js";
 
 const WIGGLE_ROOM = 3; // How far off the direct path to check for nearby pieces
 const MAX_ENGINE_SLIDE_CHECK = 50; // Absolute max distance to check for infinite sliders
+const HISTORY_MAX_VALUE = 1_000_000; // Prevent overflow/extreme values
 
 /**
  * Collects the valid move distances along a sliding direction, respecting blocking pieces.
@@ -208,8 +210,62 @@ function movesAreEqual(move1: MoveDraft | null | undefined, move2: MoveDraft | n
 	);
 }
 
+/** Helper function to generate a key for the history table */
+function getHistoryKey(pieceType: number, endCoords: Coords): string {
+	// Simple string key, could use hashing for potentially better distribution/performance
+	return `${pieceType}-${endCoords[0]}-${endCoords[1]}`;
+}
+
+/** Helper function to update the history score for a move */
+function updateHistoryScore(
+	lf: gamefile,
+	move: MoveDraft,
+	depth: number,
+	history_heuristic_table: Map<string, number> 
+) {
+	const movingPiece = boardutil.getPieceFromCoords(lf.pieces, move.startCoords);
+	if (!movingPiece) return; // Piece not found (shouldn't happen in normal flow)
+	const movingPieceType = movingPiece.type;
+	const key = getHistoryKey(movingPieceType, move.endCoords);
+	const currentScore = history_heuristic_table.get(key) || 0;
+	const increment = depth * depth; // Weight by depth squared
+	// Use Math.min to prevent score from growing excessively large
+	history_heuristic_table.set(key, Math.min(currentScore + increment, HISTORY_MAX_VALUE));
+}
+
+/** Helper function to decay history scores */
+function decayHistoryScores(
+	history_heuristic_table: Map<string, number> 
+) {
+	for (const [key, score] of history_heuristic_table.entries()) {
+		// Decay by dividing (integer division effectively)
+		const newScore = Math.floor(score / 2);
+		if (newScore === 0) {
+			history_heuristic_table.delete(key); // Remove entries that decay to zero
+		} else {
+			history_heuristic_table.set(key, newScore);
+		}
+	}
+}
+
+function enable_pv_scoring(moves: MoveDraft[], pv_table: (MoveDraft | null | undefined)[][], data: SearchData) {
+	data.follow_pv = false;
+
+	for (const move of moves) {
+		if (movesAreEqual(move, pv_table[0]![data.ply])) {
+			data.follow_pv = true;
+			data.score_pv = true;
+			break;
+		}
+	}
+}
+
 export default {
 	collectSlidingDistances,
 	generateLegalMoves,
-	movesAreEqual
+	movesAreEqual,
+	getHistoryKey,
+	updateHistoryScore,
+	decayHistoryScores,
+	enable_pv_scoring,
 };
