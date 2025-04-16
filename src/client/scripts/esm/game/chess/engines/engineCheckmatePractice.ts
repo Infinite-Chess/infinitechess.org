@@ -353,7 +353,7 @@ function initEvalWeightsAndSearchProperties() {
 	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal_Flee
 	trapFleeDictionary = {
 		"1K2HA1B-1k": [3, 8, 10],
-		"1K3HA-1k": [3, 12, 10],
+		"1K3HA-1k": [3, 14, 10],
 	};
 
 	if (checkmateSelectedID in trapFleeDictionary) {
