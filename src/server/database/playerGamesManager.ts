@@ -138,6 +138,10 @@ function getPlayerGamesData(user_id: number, game_id: number, columns: string[])
 
 /**
  * Updates multiple column values in the player_games table for a given user.
+ * 
+ * Maybe useful to have? SHOULD NEVER BE USED THOUGH EXCEPT FOR EXTREME CIRCUMSTANCES.
+ * All added games should have correct values from the start.
+ * 
  * @param user_id - The user ID of the player_games.
  * @param game_id - The game_id of the game
  * @param columnsAndValues - An object containing column-value pairs to update.
