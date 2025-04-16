@@ -20,15 +20,13 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 interface GamesRecord {
     game_id?: number;
     date?: string;
-    players?: string;
-    elo?: string;
-    rating_diff?: string;
     time_control?: string;
     variant?: string;
 	/** 0 => false  1 => true */
-    rated?: number;
+    rated?: 0 | 1;
+	leaderboard_id?: number | null;
 	/** 0 => false  1 => true */
-    private?: number;
+    private?: 0 | 1;
     result?: string;
     termination?: string;
     movecount?: number;
@@ -49,15 +47,13 @@ type ModifyGameQueryResult = { success: true; result: RunResult } | { success: f
 function addGameToGamesTable(
 	options: {
         date: string,
-        players: string,
-        elo: string | null,
-        rating_diff: string | null,
         time_control: string,
         variant: string,
 		/** 0 => false  1 => true */
-        rated: number,
+        rated: 0 | 1,
+		leaderboard_id: number | null,
 		/** 0 => false  1 => true */
-        private: number,
+        private: 0 | 1,
         result: string,
         termination: string,
         movecount: number,
@@ -71,18 +67,16 @@ function addGameToGamesTable(
 	INSERT INTO games (
 		game_id,
         date,
-        players,
-        elo,
-        rating_diff,
         time_control,
         variant,
         rated,
+		leaderboard_id,
         private,
         result,
         termination,
         movecount,
         icn
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 
 	try {
@@ -91,12 +85,10 @@ function addGameToGamesTable(
             [
                 game_id,
                 options.date,
-                options.players,
-                options.elo,
-                options.rating_diff,
                 options.time_control,
                 options.variant,
                 options.rated,
+				options.leaderboard_id,
                 options.private,
                 options.result,
                 options.termination,
@@ -172,7 +164,7 @@ function isGameIdTaken(game_id: number): boolean {
 /**
  * Fetches specified columns of a single game from the games table based on game_id
  * @param game_id - The game_id of the game
- * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'players']).
+ * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
 function getGameData(game_id: number, columns: string[]): GamesRecord | undefined {

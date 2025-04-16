@@ -26,6 +26,9 @@ interface LeaderboardEntry {
 /** The result of add/update operations */
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
 
+/** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
+const DEFAULT_LEADERBOARD_ELO = 1000;
+
 const Leaderboards = {
 	/**
 	 * The main leaderboard for all same-ish, infinity, variants.
@@ -38,7 +41,7 @@ const Leaderboards = {
 type Leaderboard = typeof Leaderboards[keyof typeof Leaderboards];
 
 /** Maps variants to the leaderboard they belong to, if they have one. */
-const VariantLeaderboards: Record<string, number> = {
+const VariantLeaderboards: Record<string, Leaderboard> = {
 	'Classical': Leaderboards.INFINITY,
 	'Confined_Classical': Leaderboards.INFINITY,
 	'Classical+': Leaderboards.INFINITY,
@@ -311,6 +314,20 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 
 
 /**
+ * Gets a string containing the display value for the rating of a player on a specific leaderboard.
+ * @param user_id - The id for the user
+ * @param leaderboard_id - The id for the specific leaderboard.
+ * @returns The player's leaderboard display string
+ */
+function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
+	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`; // Fallback if they aren't in the leaderboard
+	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
+	if (rating_values?.elo !== undefined) ranked_elo = String(Math.round(rating_values.elo));
+
+	return ranked_elo;
+}
+
+/**
  * Returns the leaderboard a variant is a part of, if it's a part of one.
  * This can be used to ask if we are allowed to play ranked on that variant.
  */
@@ -325,11 +342,13 @@ function getLeaderboardOfVariant(variant: string): Leaderboard | undefined {
 // Updated export names to be more descriptive
 export {
 	Leaderboards,
+	VariantLeaderboards,
 	addUserToLeaderboard,
 	updatePlayerLeaderboardRating,
+	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
 	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
-	getLeaderboardOfVariant,
+	getDisplayEloOfPlayerInLeaderboard
 };
