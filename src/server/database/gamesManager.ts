@@ -20,7 +20,8 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 interface GamesRecord {
     game_id?: number;
     date?: string;
-    time_control?: string;
+	base_time_seconds?: number | null;
+	increment_seconds?: number | null;
     variant?: string;
 	/** 0 => false  1 => true */
     rated?: 0 | 1;
@@ -29,7 +30,7 @@ interface GamesRecord {
     private?: 0 | 1;
     result?: string;
     termination?: string;
-    movecount?: number;
+    move_count?: number;
     icn?: string;
 }
 
@@ -47,7 +48,8 @@ type ModifyGameQueryResult = { success: true; result: RunResult } | { success: f
 function addGameToGamesTable(
 	options: {
         date: string,
-        time_control: string,
+		base_time_seconds: number | null,
+		increment_seconds: number | null,
         variant: string,
 		/** 0 => false  1 => true */
         rated: 0 | 1,
@@ -56,7 +58,7 @@ function addGameToGamesTable(
         private: 0 | 1,
         result: string,
         termination: string,
-        movecount: number,
+        move_count: number,
         icn: string
     }): ModifyGameQueryResult {
 
@@ -67,16 +69,17 @@ function addGameToGamesTable(
 	INSERT INTO games (
 		game_id,
         date,
-        time_control,
+		base_time_seconds,
+		increment_seconds,
         variant,
         rated,
 		leaderboard_id,
         private,
         result,
         termination,
-        movecount,
+        move_count,
         icn
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 
 	try {
@@ -85,14 +88,15 @@ function addGameToGamesTable(
             [
                 game_id,
                 options.date,
-                options.time_control,
+				options.base_time_seconds,
+				options.increment_seconds,
                 options.variant,
                 options.rated,
 				options.leaderboard_id,
                 options.private,
                 options.result,
                 options.termination,
-                options.movecount,
+                options.move_count,
                 options.icn
             ]
 		);

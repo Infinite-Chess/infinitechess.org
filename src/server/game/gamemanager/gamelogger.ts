@@ -21,6 +21,8 @@ import { logEvents } from '../../middleware/logEvents.js';
 import gameutility from './gameutility.js';
 // @ts-ignore
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
+// @ts-ignore
+import clockutil from '../../../client/scripts/esm/chess/util/clockutil.js';
 
 
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
@@ -42,8 +44,8 @@ import type { Game } from '../TypeDefinitions.js';
  * @param {Game} game - The game to log
  */
 async function logGame(game: Game) {
-	const movecount = game.moves.length; // Moves is a required property of game
-	if (movecount === 0) return; // Don't log games with zero moves
+	const move_count = game.moves.length; // Moves is a required property of game
+	if (move_count === 0) return; // Don't log games with zero moves
 
 	// Convert the Date of the game to Sqlite string
 	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated);
@@ -83,17 +85,19 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 	const game_rated: 0 | 1 = (game.rated ? 1 : 0);
 	const leaderboard_id = VariantLeaderboards[game.variant] ?? null; // Include the leaderboard_id even if the game wasn't rated, so we can still filter
 	const game_private: 0 | 1 = (game.publicity !== 'public' ? 1 : 0);
+	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(game.clock);
 
 	const gameToLog = {
 		date: dateSqliteString,
-		time_control: game.clock as string,
+		base_time_seconds,
+		increment_seconds,
 		variant: game.variant as string,
 		rated: game_rated,
 		leaderboard_id,
 		private: game_private,
 		result: metadata.Result as string,
 		termination: terminationCode,
-		movecount: game.moves.length,
+		move_count: game.moves.length,
 		icn: ICN
 	};
 

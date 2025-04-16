@@ -66,14 +66,15 @@ const allPlayerGamesColumns = [
 const allGamesColumns = [
 	'game_id',
 	'date',
-	'time_control',
+	'base_time_seconds',
+	'increment_seconds',
 	'variant',
 	'rated',
 	'leaderboard_id',
 	'private',
 	'result',
 	'termination',
-	'movecount',
+	'move_count',
 	'icn'
 ];
 
@@ -173,15 +174,24 @@ function generateTables() {
 		CREATE TABLE IF NOT EXISTS games (
 			game_id INTEGER PRIMARY KEY,
 			date TIMESTAMP NOT NULL,
-			time_control TEXT NOT NULL,
+			base_time_seconds INTEGER, -- null if untimed
+			increment_seconds INTEGER, -- null if untimed
 			variant TEXT NOT NULL,
 			rated BOOLEAN NOT NULL CHECK (rated IN (0, 1)), -- Ensures only 0 or 1
 			leaderboard_id INTEGER, -- Specified only if the variant belongs to a leaderboard, ignoring whether the game was rated
 			private BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
 			result TEXT NOT NULL,
 			termination TEXT NOT NULL,
-			movecount INTEGER NOT NULL,
+			move_count INTEGER NOT NULL,
 			icn TEXT NOT NULL -- Also includes clock timestamps after each move
+
+			-- Add a CHECK constraint to ensure consistency:
+			-- EITHER both are NULL (untimed) OR both are NOT NULL and >= 0 (timed)
+			CHECK (
+				(base_time_seconds IS NULL AND increment_seconds IS NULL)
+				OR
+				(base_time_seconds > 0 AND increment_seconds >= 0)
+			)
 		);
 	`);
 
