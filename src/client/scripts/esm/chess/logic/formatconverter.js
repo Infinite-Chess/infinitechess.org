@@ -505,7 +505,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			// gamerules_string can be parsed into JSON now: parse it in and permanently exit gamerules parsing mode
 			if (isJson(gamerules_string)) {
 				const parsedGameRules = JSON.parse(gamerules_string);
-				Object.assign(longformat.gameRules, parsedGameRules);
+				longformat.gameRules = {...longformat.gameRules, ...parsedGameRules};
 				in_gamerules_parsing_mode = false;
 			}
 			continue;
