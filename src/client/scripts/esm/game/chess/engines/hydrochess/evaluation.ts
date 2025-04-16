@@ -95,16 +95,17 @@ function scoreMove(move: MoveDraft, lf: gamefile, data: SearchData, pv_table: (M
 }
 
 /**
- * Evaluates the current position for a given player.
- * Considers material, piece development, centrality, back-rank infiltration, and king proximity.
+ * Evaluates the current position from the perspective of the player to move.
+ * Considers material, piece development, centrality, back-rank infiltration, king proximity,
+ * and piece safety to prevent hanging pieces.
  * @param lf The logical gamefile state.
- * @param player The player for whom to evaluate the position.
  * @returns The evaluation score for the player's position.
  */
 function evaluate(lf: gamefile): number {
 	let score = 0;
 	const pieces: OrganizedPieces = lf.pieces;
 	const allPieceCoords = boardutil.getCoordsOfAllPieces(pieces);
+	const currentPlayer = lf.whosTurn;
 
 	let playerKingCoords: Coords | undefined = undefined;
 	let opponentKingCoords: Coords | undefined = undefined;
@@ -115,7 +116,7 @@ function evaluate(lf: gamefile): number {
 			for (let idx = range.start; idx < range.end; idx++) {
 				if (boardutil.isIdxUndefinedPiece(pieces, idx)) continue;
 				const coords = boardutil.getCoordsFromIdx(pieces, idx);
-				if (typeutil.getColorFromType(type) === lf.whosTurn) {
+				if (typeutil.getColorFromType(type) === currentPlayer) {
 					playerKingCoords = coords;
 				} else {
 					opponentKingCoords = coords;
@@ -159,9 +160,9 @@ function evaluate(lf: gamefile): number {
 		if (pieceRawType === rawTypes.QUEEN || pieceRawType === rawTypes.ROOK || pieceRawType === rawTypes.BISHOP) {
 			const opponentBackRankStart = (pieceColor === players.WHITE) ? 8 : 1;
 			
-			if (pieceColor === players.WHITE && coords[1] < opponentBackRankStart) {
+			if (pieceColor === players.WHITE && coords[1] >= opponentBackRankStart) {
 				pieceScore += BACK_RANK_INFILTRATION_BONUS;
-			} else if (pieceColor === players.BLACK && coords[1] > opponentBackRankStart) {
+			} else if (pieceColor === players.BLACK && coords[1] <= opponentBackRankStart) {
 				pieceScore += BACK_RANK_INFILTRATION_BONUS;
 			}
 		}
@@ -176,7 +177,7 @@ function evaluate(lf: gamefile): number {
 		}
 		
 		// Add/Subtract piece score based on color
-		if (pieceColor === lf.whosTurn) {
+		if (pieceColor === currentPlayer) {
 			score += pieceScore;
 		} else {
 			score -= pieceScore;

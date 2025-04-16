@@ -3,6 +3,8 @@ import type { gamefile } from "../../../../chess/logic/gamefile.js";
 // @ts-ignore
 import type { MoveDraft } from "../../../../chess/logic/movepiece.js";
 import boardutil from "../../../../chess/util/boardutil.js";
+import { MATE_SCORE, NO_ENTRY } from "../hydrochess.js";
+
 
 // Evaluation flags
 export enum TTFlag {
@@ -11,7 +13,6 @@ export enum TTFlag {
 	UPPER_BOUND, // Fail-high, score is at most this value
 }
 
-const MIN_MATE_SCORE = 40000;
 const HASH_COORD_BOUND = 150; // Bound for coordinate normalization in hashing
 const HASH_MODULO_BUCKETS = 8; // Number of buckets for coords outside the bound
 
@@ -100,7 +101,7 @@ export class TranspositionTable {
 
 	/**
 	 * Stores an entry in the TT.
-	 * Uses a simple replacement strategy: replace if new entry is deeper or if the slot is empty/older.
+	 * Implements a simple replacement strategy.
 	 */
 	public store(
 		hash: number,
@@ -111,55 +112,78 @@ export class TranspositionTable {
 		ply: number
 	): void {
 		const existingEntry = this.table.get(hash);
+		let replace = false;
 
-		// Adjust score back to raw mate score if necessary before storing
-		let storeScore = score;
-		if (Math.abs(score) >= MIN_MATE_SCORE) {
-			storeScore = score > 0 ? score + ply : score - ply; // Reverse the ply adjustment
+		// Determine if we should replace the existing entry
+		if (!existingEntry) {
+			// No existing entry, always replace
+			replace = true;
+		} else if (existingEntry.hash === hash) {
+			// Same position hash, replace if depth is comparable or exact flag
+			replace = (existingEntry.depth >= 3 && depth >= existingEntry.depth - 3) || flag === TTFlag.EXACT;
+		} else {
+			// Different position hash, replace if old age or better depth
+			replace = existingEntry.age !== this.currentAge || depth >= existingEntry.depth;
 		}
 
-		// Replacement strategy: Always replace, or replace deeper/newer entries
-		// Simple strategy: Replace if new entry is deeper or if same depth, replace
-		if (!existingEntry || depth >= existingEntry.depth) {
+		if (replace) {
+			// Adjust mate scores based on ply
+			let adjustedScore = score;
+			if (score < -MATE_SCORE) {
+				adjustedScore -= ply;
+			} else if (score > MATE_SCORE) {
+				adjustedScore += ply;
+			}
+
+			// Store the entry
 			this.table.set(hash, {
-				hash, // Store hash for collision checks
+				hash,
 				depth,
 				flag,
-				score: storeScore, // Store the (potentially raw) mate score
+				score: adjustedScore,
 				bestMove,
-				age: this.currentAge, // For aging/replacement strategies
-				ply, // Store ply for later adjustment
+				age: this.currentAge,
+				ply
 			});
 		}
 	}
 
 	/**
-	 * Probes the TT for a given hash. Returns the entry if hash matches.
-	 * Score is ply-adjusted only if depth is sufficient.
+	 * Probes the TT for a given hash. Returns value based on the entry if found, otherwise NO_ENTRY.
+	 * Implements a simple approach to probe with alpha-beta bounds.
 	 */
-	public probe(hash: number, depth: number, ply: number): TTEntry | null {
+	public probe(hash: number, alpha: number, beta: number, depth: number, ply: number): number {
 		const entry = this.table.get(hash);
 
 		// Check if entry exists and if the hash matches
-		if (entry && entry.hash === hash) { 
-			// Check if the stored depth is sufficient for a potential score cutoff
+		if (entry && entry.hash === hash) {
+			// Return best move for move ordering regardless of depth
+			// (Note: We're assuming bestMove is handled by the caller, which may need to be adjusted)
+
 			if (entry.depth >= depth) {
+				// Init score
 				let score = entry.score;
-				// Adjust mate scores based on the *current* ply
-				if (Math.abs(score) >= MIN_MATE_SCORE) { 
-					score = score > 0 ? score - ply : score + ply;
+
+				// Adjust mating scores
+				if (score < -MATE_SCORE) {
+					score += ply;
+				} else if (score > MATE_SCORE) {
+					score -= ply;
 				}
-				// console.debug(`[TT Probe] Deep Hit! Hash ${hash}, depth ${entry.depth}>=${depth}, flag ${TTFlag[entry.flag]}, adj score ${score}`); // DEBUG
-				// Return a copy with the ply-adjusted score for immediate use by the caller
-				return { ...entry, score: score }; 
-			} else {
-				// Shallow hit - return the original entry, caller can use bestMove for ordering
-				// console.debug(`[TT Probe] Shallow Hit. Hash ${hash}, depth ${entry.depth} < ${depth}. Use bestMove for ordering.`); // DEBUG
-				return entry; // Return the original entry without score adjustment
+
+				// Match hash flag
+				if (entry.flag === TTFlag.EXACT) {
+					return score;
+				} else if (entry.flag === TTFlag.LOWER_BOUND && score <= alpha) {
+					return alpha;
+				} else if (entry.flag === TTFlag.UPPER_BOUND && score >= beta) {
+					return beta;
+				}
 			}
 		}
-		// Miss
-		return null;
+
+		// If hash entry doesn't exist or insufficient depth, return NO_ENTRY
+		return NO_ENTRY;
 	}
 
 	/**

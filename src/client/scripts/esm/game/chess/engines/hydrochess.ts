@@ -22,9 +22,9 @@ export const MAX_PLY = 64;
 const SEARCH_TIMEOUT_MS = 4000;
 const INFINITY = 32000;
 const MATE_VALUE = INFINITY - 150;
-const MATE_SCORE = INFINITY - 300;
-const NO_ENTRY = INFINITY - 500;
-const TIME_UP = 32000 + 500;
+export const MATE_SCORE = INFINITY - 300;
+export const NO_ENTRY = INFINITY - 500;
+const TIME_UP = INFINITY + 500;
 
 const NMP_R = 3;
 const LMR_MIN_DEPTH = 3;
@@ -33,7 +33,7 @@ let startTime = performance.now();
 
 let STOP = false;
 
-const transpositionTable = new TranspositionTable(64); // in MB
+const transpositionTable = new TranspositionTable(32); // in MB
 let ttHits = 0;
 let killer_moves: Array<Array<MoveDraft | null>> = Array(MAX_PLY).fill(null).map(() => [null, null]);
 let history_heuristic_table: Map<string, number> = new Map();
@@ -81,13 +81,14 @@ self.onmessage = function(e: MessageEvent) {
 	console.debug(`[Engine] Calculating move for ${weAre === 1 ? 'white' : 'black'}`);
 	ttHits = 0; // Reset TT hits counter
 
+	const searchData: SearchData = { nodes: 0, bestMove: null, startDepth: 0, ply: 0, score_pv: false, follow_pv: true };
 	const start = performance.now();
-	findBestMove(current_gamefile);
+	findBestMove(current_gamefile, searchData);
 	const duration = (performance.now() - start).toFixed(2);
 	console.debug(`[Engine] Calculation took ${duration} ms. TT Hits: ${ttHits}`);
 
 	// --- Post Result ---
-	const move = pv_table[0]![0];
+	const move = searchData.bestMove;
 	console.debug(`[Engine] Found best move: (${move?.startCoords}): (${move?.endCoords})`);
 	postMessage(move);
 };
@@ -116,6 +117,7 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 
 	// TODO: check for fifty-move rule
 
+	// Initialize PV length for this ply
 	pv_length[data.ply] = data.ply;
 
 	if (!is_root) {
@@ -137,7 +139,7 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	}
 
 	const opponent = typeutil.invertPlayer(lf.whosTurn);
-	const isInCheck = checkdetection.isPlayerInCheck(lf, lf.whosTurn);
+	const isInCheck = lf.inCheck;
 
 	if (isInCheck) {
 		depth++;
@@ -146,23 +148,13 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	const hash = TranspositionTable.generateHash(lf);
 
 	// --- Transposition Table Probe ---
-	const ttEntry = transpositionTable.probe(hash, depth, data.ply);
-	if (ttEntry) {
-		if (ttEntry.depth >= depth) {
+	if (!is_root && !pv_node) {
+		score = transpositionTable.probe(hash, alpha, beta, depth, data.ply);
+		if (score !== NO_ENTRY) {
 			ttHits++;
-			if (ttEntry.flag === TTFlag.EXACT) {
-				return ttEntry.score;
-			} else if (ttEntry.flag === TTFlag.LOWER_BOUND) {
-				alpha = Math.max(alpha, ttEntry.score);
-			} else if (ttEntry.flag === TTFlag.UPPER_BOUND) {
-				beta = Math.min(beta, ttEntry.score);
-			}
-			if (alpha >= beta) {
-				return ttEntry.score;
-			}
+			return score;
 		}
 	}
-
 
 	// every 2047 nodes
 	if (data.nodes % 2047 === 0 && stop_search()) {
@@ -173,14 +165,16 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	const evalScore = evaluation.evaluate(lf);
 
 	if (!isInCheck && !pv_node) {
-		// evaluation pruning
-		if (depth < 3 && Math.abs(beta - 1) > -49000 + 100) {
-			if (evalScore - 100 * depth >= beta) {
-				return evalScore - 100;
+		// reverse futility pruning
+		// Don't prune if beta is near mate scores to avoid missing forced mates
+		if (depth < 3 && Math.abs(beta) < MATE_SCORE) {
+			// Calculate margin based on depth - deeper depth means more margin needed
+			const margin = 120 * depth;
+			if (evalScore - margin >= beta) {
+				// Return a more accurate score - avoid returning scores above beta
+				return Math.min(evalScore, beta);
 			}
 		}
-
-		// you can do razoring and fp here if you want
 
 		// --- Null Move Pruning (NMP) ---
 		if (null_move) {
@@ -234,6 +228,15 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	// --- Generate and Order Moves ---
 	const legalMoves = helpers.generateLegalMoves(lf, lf.whosTurn);
 
+	// Check for terminal nodes (checkmate/stalemate)
+	if (legalMoves.length === 0) {
+		if (isInCheck) {
+			return -MATE_VALUE + data.ply; // Checkmate
+		} else {
+			return 0; // Stalemate
+		}
+	}
+
 	if (data.follow_pv) {
 		helpers.enable_pv_scoring(legalMoves, pv_table, data);
 	}
@@ -243,15 +246,6 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 		evaluation.scoreMove(b, lf, data, pv_table, killer_moves, history_heuristic_table) -
     evaluation.scoreMove(a, lf, data, pv_table, killer_moves, history_heuristic_table)
 	);
-
-	// Check for terminal nodes (checkmate/stalemate)
-	if (legalMoves.length === 0) {
-		if (isInCheck) {
-			return -MATE_VALUE + data.ply; // Checkmate
-		} else {
-			return 0; // Stalemate
-		}
-	}
 
 	let bestScore = -INFINITY;
 	let skip_quiet = false;
@@ -284,18 +278,23 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 		movepiece.makeMove(lf, fullMove); // Make the move
 		data.ply += 1;
 
+		// PVS Search		
 		// full depth search
 		if (moves_searched === 0) {
 			score = -negamax(lf, depth - 1, -beta, -alpha, data, true);
 		} else {
+			// Late Move Reduction - search with reduced depth first
 			if (moves_searched >= LMR_MIN_DEPTH && depth >= LMR_REDUCTION && !isInCheck && is_quiet && !fullMove.promotion) {
 				score = -negamax(lf, depth - 2, -alpha - 1, -alpha, data, true);
 			} else {
-				score = alpha + 1;
+				score = alpha + 1; // Force a full search
 			}
 
+			// If the reduced search exceeded alpha, do a normal search
 			if (score > alpha) {
+				// Null window search first
 				score = -negamax(lf, depth - 1, -alpha - 1, -alpha, data, true);
+				// If good move found but didn't exceed beta, do a full-window search
 				if (score > alpha && score < beta) {
 					score = -negamax(lf, depth - 1, -beta, -alpha, data, true);
 				}
@@ -326,22 +325,27 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 				helpers.updateHistoryScore(lf, currentMoveDraft, depth, history_heuristic_table);
 			}
 
-			// write PV move
+			// Update PV table - store this move as the first in the PV
 			pv_table[data.ply]![data.ply] = currentMoveDraft;
-			// loop over the next ply
-			for (let i = data.ply + 1; i < pv_length[data.ply]! + 1; i++) {
-				pv_table[data.ply]![i] = pv_table[data.ply + 1]![i];
+
+			// Copy moves from deeper ply's PV table to this ply's PV table
+			for (let nextPly = data.ply + 1; nextPly < MAX_PLY; nextPly++) {
+				if (pv_table[data.ply + 1] && pv_table[data.ply + 1]![nextPly]) {
+					pv_table[data.ply]![nextPly] = pv_table[data.ply + 1]![nextPly];
+				} else {
+					break;
+				}
 			}
 
-			// adjust pv length
+			// Update PV length to include the moves we just copied
 			pv_length[data.ply] = pv_length[data.ply + 1]!;
 
 			if (score >= beta) {
-				// store hash entry with the score equal to beta
+				// Store hash entry with the score equal to beta
 				transpositionTable.store(hash, depth, TTFlag.UPPER_BOUND, beta, best_move, data.ply);
 
 				if (is_quiet) {
-					// store killer moves
+					// Store killer moves
 					killer_moves[1]![data.ply] = killer_moves[0]![data.ply]!;
 					killer_moves[0]![data.ply] = currentMoveDraft;
 				}
@@ -366,8 +370,11 @@ function quiescenceSearch(
 	data: SearchData
 ): number {
 	data.nodes++;
+
+	// Get static evaluation
 	const evalScore = evaluation.evaluate(lf);
 
+	// Stand-pat: If static evaluation exceeds beta, return beta
 	if (evalScore >= beta) {
 		return beta;
 	} else if (evalScore > alpha) {
@@ -421,6 +428,7 @@ function quiescenceSearch(
 
 function stop_search() {
 	if (STOP || performance.now() > startTime + SEARCH_TIMEOUT_MS) {
+		STOP = true;
 		return true;
 	}
 	return false;
@@ -431,7 +439,7 @@ function stop_search() {
  * Calls negamax for increasing depths until timeout or max depth is reached.
  * @param lf The current game state.
  */
-function findBestMove(lf: gamefile) {
+function findBestMove(lf: gamefile, searchData: SearchData) {
 	STOP = false;
 	startTime = performance.now();
 
@@ -440,9 +448,7 @@ function findBestMove(lf: gamefile) {
 	history_heuristic_table = new Map(); // Clear history
 	pv_table = Array(MAX_PLY).fill(null).map(() => [null, null]);
 	pv_length = Array(MAX_PLY).fill(0);
-
-	const searchData: SearchData = { nodes: 0, bestMove: null, startDepth: 0, ply: 0, score_pv: false, follow_pv: true };
-
+	
 	// Iterative deepening loop
 	for (let depth = 1; depth <= MAX_PLY; depth++) {
 		if (stop_search()) {
@@ -459,26 +465,33 @@ function findBestMove(lf: gamefile) {
 		}
 
 		let printString = `info depth ${depth} nodes ${searchData.nodes}`;
+		
 		if (score > -MATE_VALUE && score < -MATE_SCORE) {
-			printString += ` score mate ${pv_length[0]! / 2 - 1} pv`;
+			printString += ` score mate ${-(pv_length[0]!) / 2 - 1} pv`;
 		} else if (score > MATE_SCORE && score < MATE_VALUE) {
 			printString += ` score mate ${pv_length[0]! / 2 + 1} pv`;
 		} else {
 			printString += ` score cp ${Math.round(score)} pv`;
 		}
 		
-		// loop over moves in PV
-		for (let i = 0; i < pv_length[0]!; i++) {
-			const move = pv_table[0]![i];
-			if (move) {
-				printString += ` (${move.startCoords}): (${move.endCoords})`;
-			} else {
-				printString += ' null';
-				break;
+		// Display PV moves with validation to prevent nulls
+		if (pv_length[0]! > 0) {
+			for (let i = 0; i < pv_length[0]!; i++) {
+				const move = pv_table[0]![i];
+				if (move) {
+					printString += ` (${move.startCoords}): (${move.endCoords})`;
+				} else {
+					break; // Stop at the first null move
+				}
 			}
 		}
 
 		console.debug(printString);
+		
+		// Set bestMove after each iteration - ensures we always have the best move even if time runs out
+		if (pv_table[0] && pv_table[0][0]) {
+			searchData.bestMove = pv_table[0][0];
+		}
 	}
 
 	transpositionTable.incrementAge();
