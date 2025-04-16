@@ -923,5 +923,6 @@ export default {
 	generateSpecialRights,
 	convertShortMovesToLong,
 	longToShortMoves,
-	ShortToInt_Piece
+	ShortToInt_Piece,
+	IntToShort_Piece
 };
