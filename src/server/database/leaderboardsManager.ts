@@ -41,7 +41,7 @@ const Leaderboards = {
 type Leaderboard = typeof Leaderboards[keyof typeof Leaderboards];
 
 /** Maps variants to the leaderboard they belong to, if they have one. */
-const VariantLeaderboards: Record<string, number> = {
+const VariantLeaderboards: Record<string, Leaderboard> = {
 	'Classical': Leaderboards.INFINITY,
 	'Confined_Classical': Leaderboards.INFINITY,
 	'Classical+': Leaderboards.INFINITY,
@@ -320,7 +320,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
  * @returns The player's leaderboard display string
  */
 function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
-	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`;
+	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`; // Fallback if they aren't in the leaderboard
 	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
 	if (rating_values?.elo !== undefined) ranked_elo = String(Math.round(rating_values.elo));
 
@@ -350,6 +350,5 @@ export {
 	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
-	getLeaderboardOfVariant,
 	getDisplayEloOfPlayerInLeaderboard
 };

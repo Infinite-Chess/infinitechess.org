@@ -61,7 +61,7 @@ async function logGame(game: Game) {
 	// TODO: Compute rating change in different file and update leaderboard
 
 	// 3. Enter the game into the player_games table
-	await updatePlayerGamesTable(game, results.game_id); // TODO: Add support for rated games in here
+	await updatePlayerGamesTable(game, results.game_id); // TODO: Add support for rated games in here (pass in elo_at_game and elo_change_from_game)
 
 	// 4. Update the player_stats table
 	await updatePlayerStatsTable(game, results.game_id, victor);
@@ -81,7 +81,7 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 
 	const terminationCode = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).condition;
 	const game_rated: 0 | 1 = (game.rated ? 1 : 0);
-	const leaderboard_id = (game.rated && VariantLeaderboards[game.variant] !== undefined ? VariantLeaderboards[game.variant]! : null);
+	const leaderboard_id = VariantLeaderboards[game.variant] ?? null; // Include the leaderboard_id even if the game wasn't rated, so we can still filter
 	const game_private: 0 | 1 = (game.publicity !== 'public' ? 1 : 0);
 
 	const gameToLog = {
@@ -89,7 +89,7 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 		time_control: game.clock as string,
 		variant: game.variant as string,
 		rated: game_rated,
-		leaderboard_id: leaderboard_id,
+		leaderboard_id,
 		private: game_private,
 		result: metadata.Result as string,
 		termination: terminationCode,
@@ -152,8 +152,8 @@ async function updatePlayerGamesTable(game: Game, game_id: number) {
 			user_id: user_id,
 			game_id: game_id,
 			player_number: player,
-			elo_at_game: elo_at_game,
-			elo_change_from_game: elo_change_from_game
+			elo_at_game,
+			elo_change_from_game
 		};
 
 		// Add game to player_games table in database

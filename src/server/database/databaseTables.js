@@ -156,7 +156,7 @@ function generateTables() {
 	// Player Games Table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS player_games (
-			user_id INTEGER NOT NULL REFERENCES members(user_id),
+			user_id INTEGER NOT NULL REFERENCES members(user_id), -- Account deletion does not delete rows in this table
 			game_id INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number INTEGER NOT NULL, -- 1 => White  2 => Black
 			elo_at_game REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
@@ -176,7 +176,7 @@ function generateTables() {
 			time_control TEXT NOT NULL,
 			variant TEXT NOT NULL,
 			rated BOOLEAN NOT NULL CHECK (rated IN (0, 1)), -- Ensures only 0 or 1
-			leaderboard_id INTEGER, -- Specified only if the game was rated
+			leaderboard_id INTEGER, -- Specified only if the variant belongs to a leaderboard, ignoring whether the game was rated
 			private BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
 			result TEXT NOT NULL,
 			termination TEXT NOT NULL,

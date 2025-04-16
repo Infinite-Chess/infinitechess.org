@@ -3,7 +3,6 @@
  */
 
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-import { type Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 // @ts-ignore
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 // @ts-ignore
@@ -12,6 +11,7 @@ import db from './database.js';
 import { allPlayerGamesColumns } from './databaseTables.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ function addGameToPlayerGamesTable(
 
 	try {
 		// Execute the query with the provided values
-		const result = db.run(query, 
+		const result = db.run(query,
 			[
 				options.user_id,
 				options.game_id,
@@ -137,7 +137,7 @@ function getPlayerGamesData(user_id: number, game_id: number, columns: string[])
 }
 
 /**
- * Gets all player_games entries for all members logged for a specific game
+ * Gets all player_games entries for all members logged for a specific game, in order of player_number.
  * @param game_id - The game_id of the game
  * @returns - an array of PlayerGamesRecord information about the members in a game
  */
