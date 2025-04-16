@@ -22,6 +22,7 @@ interface PlayerGamesRecord {
 	user_id?: number;
 	game_id?: number;
 	player_number?: Player;
+	score?: number | null;
 	elo_at_game?: number | null;
 	elo_change_from_game?: number | null;
 }
@@ -42,6 +43,7 @@ function addGameToPlayerGamesTable(
 		user_id: number,
 		game_id: number,
 		player_number: Player,
+		score?: number | null,
 		elo_at_game: number | null,
 		elo_change_from_game: number | null,
 	}): ModifyQueryResult {
@@ -51,9 +53,10 @@ function addGameToPlayerGamesTable(
 		user_id,
 		game_id,
 		player_number,
+		score,
 		elo_at_game,
 		elo_change_from_game
-	) VALUES (?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?)
 	`;
 
 	try {
@@ -63,6 +66,7 @@ function addGameToPlayerGamesTable(
 				options.user_id,
 				options.game_id,
 				options.player_number,
+				options.score,
 				options.elo_at_game,
 				options.elo_change_from_game
 			]

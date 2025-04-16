@@ -63,7 +63,7 @@ async function logGame(game: Game) {
 	// TODO: Compute rating change in different file and update leaderboard
 
 	// 3. Enter the game into the player_games table
-	await updatePlayerGamesTable(game, results.game_id); // TODO: Add support for rated games in here (pass in elo_at_game and elo_change_from_game)
+	await updatePlayerGamesTable(game, results.game_id, victor); // TODO: Add support for rated games in here (pass in elo_at_game and elo_change_from_game)
 
 	// 4. Update the player_stats table
 	await updatePlayerStatsTable(game, results.game_id, victor);
@@ -141,11 +141,13 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
  * For each member, add an entry into player_games according to the results of this game.
  * If the game was ranked, also update the leaderboards table accordingly.
  */
-async function updatePlayerGamesTable(game: Game, game_id: number) {
+async function updatePlayerGamesTable(game: Game, game_id: number, victor: Player | undefined) {
 	for (const playerStr in game.players) {
 		const player: Player = Number(playerStr) as Player;
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
+
+		const score = victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0;
 
 		// TODO: Implement the following when rated games are here
 		// We can potentially get the elo_at_game entries from the rating calculation and not have to do it again here, if the game was rated
@@ -156,6 +158,7 @@ async function updatePlayerGamesTable(game: Game, game_id: number) {
 			user_id: user_id,
 			game_id: game_id,
 			player_number: player,
+			score,
 			elo_at_game,
 			elo_change_from_game
 		};
