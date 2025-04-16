@@ -137,6 +137,32 @@ function getPlayerGamesData(user_id: number, game_id: number, columns: string[])
 }
 
 /**
+ * Gets all player_games entries for all members logged for a specific game
+ * @param game_id - The game_id of the game
+ * @returns - an array of PlayerGamesRecord information about the members in a game
+ */
+function getPlayersInGame(game_id: number): PlayerGamesRecord[] {
+
+	// Construct SQL query
+	const query = `
+		SELECT user_id, player_number, elo_at_game, elo_change_from_game
+		FROM player_games
+		WHERE game_id = ?
+		ORDER BY player_number ASC -- Optional: order for consistency
+	`;
+
+	try {
+		const entries = db.all(query, [game_id]) as PlayerGamesRecord[];
+		return entries;
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEvents(`Error getting all player_games entries for game "${game_id}": ${message}`, 'errLog.txt', { print: true });
+		return []; // Return an empty array on error
+	}
+}
+
+
+/**
  * Updates multiple column values in the player_games table for a given user.
  * 
  * Maybe useful to have? SHOULD NEVER BE USED THOUGH EXCEPT FOR EXTREME CIRCUMSTANCES.
@@ -200,6 +226,7 @@ function updatePlayerGamesColumns(user_id: number, game_id: number, columnsAndVa
 export {
 	addGameToPlayerGamesTable,
 	getPlayerGamesData,
+	getPlayersInGame,
 	// Commented out to emphasize this should not ever have to be used:
 	// updatePlayerGamesColumns,
 };	
