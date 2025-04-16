@@ -26,6 +26,9 @@ interface LeaderboardEntry {
 /** The result of add/update operations */
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
 
+/** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
+const DEFAULT_LEADERBOARD_ELO = 1000;
+
 const Leaderboards = {
 	/**
 	 * The main leaderboard for all same-ish, infinity, variants.
@@ -311,6 +314,25 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 
 
 /**
+ * Gets a string containing the display value for the rating of a player on a specific leaderboard.
+ * @param user_id - The id for the user
+ * @param leaderboard_id - The id for the specific leaderboard.
+ * @returns The player's leaderboard display string
+ */
+function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
+	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`;
+	if (isPlayerInLeaderboard(user_id, leaderboard_id)) {
+		const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
+		if (rating_values?.elo === undefined) {
+			logEvents(`Error getting rating values for member with ID "${user_id}" on leaderboard ${leaderboard_id}. Not found.`, 'errLog.txt', { print: true });
+		}
+		else ranked_elo = String(Math.round(rating_values.elo));
+	}
+
+	return ranked_elo;
+}
+
+/**
  * Returns the leaderboard a variant is a part of, if it's a part of one.
  * This can be used to ask if we are allowed to play ranked on that variant.
  */
@@ -334,4 +356,5 @@ export {
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
 	getLeaderboardOfVariant,
+	getDisplayEloOfPlayerInLeaderboard
 };
