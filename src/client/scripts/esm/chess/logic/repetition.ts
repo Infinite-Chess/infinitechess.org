@@ -40,9 +40,9 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 
 	let equalPositionsFound: number = 0;
 
-	let startIndex: number = moveList.length - 1;
+	const startIndex: number = moveList.length - 1;
 	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
-	outer: while (const index = startIndex; index >= 0, index--) { // WILL BE -1 if we've reached the beginning of the game!
+	outer: for (let index = startIndex; index >= 0; index--) { // WILL BE -1 if we've reached the beginning of the game!
 		const move = moveList[index];
 		if (move.isNull) continue;
 

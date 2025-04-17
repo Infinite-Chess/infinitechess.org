@@ -9,7 +9,7 @@
 
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
-import type { Move, MoveDraft } from "../../chess/logic/movepiece.js";
+import type { Move, MoveDraft, NullMove } from "../../chess/logic/movepiece.js";
 
 
 import gameslot from "./gameslot.js";
@@ -94,7 +94,7 @@ function rewindMove(gamefile: gamefile) {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
-	if (!lastMove.isNull) return;
+	if (lastMove.isNull) return;
 	boardchanges.runChanges(gamefile, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
@@ -115,7 +115,7 @@ function rewindMove(gamefile: gamefile) {
  * 
  * But it does change the check state.
  */
-function viewMove(gamefile: gamefile, move: Move, forward = true) {
+function viewMove(gamefile: gamefile, move: Move | NullMove, forward = true) {
 	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
 	if (move.isNull) return;
 	boardchanges.runChanges(gamefile, move.changes, meshChanges, forward); // Apply the graphical changes.

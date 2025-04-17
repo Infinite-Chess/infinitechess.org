@@ -109,6 +109,8 @@ interface MoveDraft {
  * state before and after the move, etc.
  */
 interface Move extends MoveDraft {
+	/** Whether the move is a null move. */
+	isNull: false,
 	/** The type of piece moved */
 	type: number,
 	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
@@ -172,6 +174,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	// Initialize the state, and change list, as empty for now.
 	const move: Move = {
 		...moveDraft,
+		isNull: false,
 		type: piece.type,
 		changes: [],
 		generateIndex: gamefile.moveIndex + 1,
@@ -212,7 +215,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 
 /** Generates a Null Move used by engines. */
 function generateNullMove(gamefile: gamefile) {
-	const nullMove = {
+	const nullMove: NullMove = {
 		isNull: true,
 		generateIndex: gamefile.moveIndex + 1,
 		state: { local: [], global: [] },
@@ -222,7 +225,7 @@ function generateNullMove(gamefile: gamefile) {
 			mate: false,
 			capture: false,
 		}
-	}
+	};
 
 	/**
 	 * Delete the current enpassant state.
@@ -230,7 +233,7 @@ function generateNullMove(gamefile: gamefile) {
 	 * this one's future value will be overwritten
 	 */
 	state.createEnPassantState(nullMove, gamefile.enpassant, undefined);
-	queueIncrementMoveRuleStateChange(gamefile, move);
+	queueIncrementMoveRuleStateChange(gamefile, nullMove);
 
 	return nullMove;
 }

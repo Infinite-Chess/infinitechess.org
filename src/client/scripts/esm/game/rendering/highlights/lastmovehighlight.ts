@@ -23,7 +23,7 @@ import type gamefile from '../../../chess/logic/gamefile.js';
 
 function highlightLastMove(gamefile: gamefile) {
 	const lastMove = moveutil.getCurrentMove(gamefile);
-	if (!lastMove) return; // Don't render if last move is undefined.
+	if (!lastMove || lastMove.isNull) return; // Don't render if last move is undefined.
 
 	const color = preferences.getLastMoveHighlightColor();
 

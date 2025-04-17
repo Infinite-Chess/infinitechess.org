@@ -235,13 +235,13 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
-	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
+	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
 	// Generate the mesh of every piece type
 	piecemodels.regenAll(loadedGamefile!);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
-	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
+	if (lastmove !== undefined && !lastmove.isNull) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
 		if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
 		movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
