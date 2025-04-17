@@ -109,6 +109,8 @@ interface MoveDraft {
  * state before and after the move, etc.
  */
 interface Move extends MoveDraft {
+	/** Whether the move is a null move. */
+	isNull: false,
 	/** The type of piece moved */
 	type: number,
 	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
@@ -121,6 +123,30 @@ interface Move extends MoveDraft {
 	generateIndex: number,
 	/** The move in most compact notation: `8,7>8,8Q` */
 	compact: string,
+	flags: {
+		/** Whether the move delivered check. */
+		check: boolean,
+		/** Whether the move delivered mate (or the killing move). */
+		mate: boolean,
+		/** Whether the move caused a capture */
+		capture: boolean,
+	}
+}
+
+/**
+ * A null/passing move made by engines during their search calculation.
+ * 
+ * The only info this needs is how the gamefile state changes.
+*/
+interface NullMove {
+	/** Whether the move is a null move. */
+	isNull: true,
+	/** The index this move was generated for. This can act as a safety net
+	 * so we don't accidentally make the move on the wrong index of the game. */
+	generateIndex: number,
+	/** The state of the move is used to know how to modify specific gamefile
+	 * properties when forwarding/rewinding this move. */
+	state: MoveState,
 	flags: {
 		/** Whether the move delivered check. */
 		check: boolean,
@@ -148,6 +174,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	// Initialize the state, and change list, as empty for now.
 	const move: Move = {
 		...moveDraft,
+		isNull: false,
 		type: piece.type,
 		changes: [],
 		generateIndex: gamefile.moveIndex + 1,
@@ -186,6 +213,31 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	return move;
 }
 
+/** Generates a Null Move used by engines. */
+function generateNullMove(gamefile: gamefile) {
+	const nullMove: NullMove = {
+		isNull: true,
+		generateIndex: gamefile.moveIndex + 1,
+		state: { local: [], global: [] },
+		flags: {
+			// These will be set later, but we need a default value
+			check: false,
+			mate: false,
+			capture: false,
+		}
+	};
+
+	/**
+	 * Delete the current enpassant state.
+	 * If any specialMove function adds a new EnPassant state,
+	 * this one's future value will be overwritten
+	 */
+	state.createEnPassantState(nullMove, gamefile.enpassant, undefined);
+	queueIncrementMoveRuleStateChange(gamefile, nullMove);
+
+	return nullMove;
+}
+
 /**
  * Calculates all of a move's board changes, and "queues" them,
  * adding them to the move's Changes list.
@@ -218,17 +270,17 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 		if (change.action === 'move') {
 			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights.has(startCoordsKey), false);
 		} else if (change.action === 'capture') {
 			// Delete the special rights off the start coords AND the capture coords, if there are ones.
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights[startCoordsKey], undefined);
+			state.createSpecialRightsState(move, startCoordsKey, gamefile.specialRights.has(startCoordsKey), false);
 			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
-			state.createSpecialRightsState(move, captureCoordsKey, gamefile.specialRights[captureCoordsKey], undefined);
+			state.createSpecialRightsState(move, captureCoordsKey, gamefile.specialRights.has(captureCoordsKey), false);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.
 			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, coordsKey, gamefile.specialRights[coordsKey], undefined);
+			state.createSpecialRightsState(move, coordsKey, gamefile.specialRights.has(coordsKey), false);
 		}
 	});
 }
@@ -236,11 +288,11 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
+function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move | NullMove) {
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = (move.flags.capture || typeutil.getRawType(move.type) === rawTypes.PAWN) ? 0 : gamefile.moveRuleState + 1;
+	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? gamefile.moveRuleState + 1 : 0;
 	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
 }
 
@@ -251,7 +303,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move) {
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
-function makeMove(gamefile: gamefile, move: Move) {
+function makeMove(gamefile: gamefile, move: Move | NullMove) {
 	gamefile.moves.push(move);
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
@@ -273,15 +325,18 @@ function makeMove(gamefile: gamefile, move: Move) {
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: gamefile, move: Move, forward = true, { global = false } = {}) {
+function applyMove(gamefile: gamefile, move: Move | NullMove, forward = true, { global = false } = {}) {
 	gamefile.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
 	const indexToApply = gamefile.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
-	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
+
+	if (move.isNull) return; // Null moves don't have changes to make
+
+	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
 /**
@@ -295,7 +350,7 @@ function updateTurn(gamefile: gamefile) {
  * Tests if the gamefile is currently in check,
  * then creates and set's the game state to reflect that.
  */
-function createCheckState(gamefile: gamefile, move: Move) {
+function createCheckState(gamefile: gamefile, move: Move | NullMove) {
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
@@ -459,6 +514,7 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 
 export type {
 	Move,
+	NullMove,
 	MoveDraft,
 	CoordsSpecial,
 	enpassantCreate,
@@ -471,6 +527,7 @@ export type {
 
 export default {
 	generateMove,
+	generateNullMove,
 	makeMove,
 	updateTurn,
 	goToMove,

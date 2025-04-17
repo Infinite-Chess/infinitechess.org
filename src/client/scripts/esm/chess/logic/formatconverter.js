@@ -2,6 +2,7 @@
 
 'use strict';
 
+import jsutil from "../../util/jsutil.js";
 /* eslint-disable max-depth */
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
@@ -441,47 +442,17 @@ function isPromotionListDefaultPromotions(promotionList) {
  */
 function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = true, trust_check_and_mate_symbols = true*/) {
 	const longformat = {};
+	longformat.metadata = {};
 	longformat.gameRules = {};
 
-	// Extra gamerules, included inside { }, MUST BE PARSED BEFORE the metadata,
-	// because they may include more [ and ], which is what the metadata parser eats!
-	const indexOfGameRulesStart = shortformat.indexOf('{');
-	if (indexOfGameRulesStart !== -1) {
-		const indexOfGameRulesEnd = shortformat.lastIndexOf('}');
-		if (indexOfGameRulesEnd === -1) throw new Error("Unclosed extra gamerules!");
+	// variables keeping track of whether we are currently parsing metadata
+	let in_metadata_parsing_mode = false;
+	let metadata_key = "";
+	let metadata_value = "";
 
-		const stringifiedExtraGamerules = shortformat.substring(indexOfGameRulesStart, indexOfGameRulesEnd + 1);
-		// Splice the extra gamerules out of the ICN, so that its nested [ and ] don't break the metadata parser
-		shortformat = shortformat.substring(0, indexOfGameRulesStart) + shortformat.substring(indexOfGameRulesEnd + 1, shortformat.length);
-        
-		if (!isJson(stringifiedExtraGamerules)) throw new Error(`Extra optional arguments not in valid JSON format: ${stringifiedExtraGamerules}`);
-
-		const parsedGameRules = JSON.parse(stringifiedExtraGamerules);
-		Object.assign(longformat.gameRules, parsedGameRules); // Copy over the parsed gamerules to the longformat
-	}
-
-	// metadata handling. Don't put ": " in metadata fields.
-	const metadata = {};
-	while (shortformat.indexOf("[") > -1) {
-		const start_index = shortformat.indexOf("[");
-		const end_index = shortformat.indexOf("]");
-		if (end_index === -1) throw new Error("Unclosed [ detected");
-		const metadatastring = shortformat.slice(start_index + 1,end_index);
-		shortformat = `${shortformat.slice(0,start_index)}${shortformat.slice(end_index + 1)}`;
-        
-		// new metadata format [Metadata "value"]
-		if (/^[^\s:]*\s+"/.test(metadatastring)) {
-			const split_index = metadatastring.search(/\s"/);
-			metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index + 2, -1);
-		}
-		// old metadata format [Metadata: value]
-		else {
-			const split_index = metadatastring.indexOf(": ");
-			if (split_index > -1) metadata[metadatastring.slice(0,split_index)] = metadatastring.slice(split_index + 2);
-			else metadata[metadatastring] = "";
-		}
-	}
-	longformat.metadata = metadata;
+	// variables keeping track of whether we are currently parsing gamerules (can only be parsed once)
+	let in_gamerules_parsing_mode = false;
+	let gamerules_string = "";
 
 	while (shortformat !== "") {
 		if (/\s/.test(shortformat[0])) {
@@ -492,6 +463,54 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		if (index === -1) index = shortformat.length;
 		let string = shortformat.slice(0,index);
 		shortformat = shortformat.slice(index + 1);
+
+		// metadata key is read: enter metadata parsing mode, if string starts with [ and letter
+		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\[[a-zA-Z]/.test(string)) {
+			in_metadata_parsing_mode = true;
+			metadata_key = string.slice(1);
+			continue;
+		}
+
+		// Read metadata value, if in metadata parsing mode
+		if (in_metadata_parsing_mode) {
+			// remove " from the start of string if possible
+			if (/^"/.test(string) && metadata_value === "") {
+				string = string.slice(1);
+			}
+
+			// metadata_value is not fully parsed in yet
+			if (!/"\]$/.test(string)) {
+				metadata_value += `${string} `;
+			}
+			// metadata_value is fully parsed in now: set metadata and exit metadata parsing mode
+			else {
+				metadata_value += string.slice(0, -2);
+				longformat.metadata[metadata_key] = metadata_value;
+				in_metadata_parsing_mode = false;
+				metadata_value = "";
+			}
+			continue;
+		}
+
+		// gamerules - start: read in string and enter gamerules parsing mode, if string starts with {
+		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\{/.test(string) && gamerules_string === "") {
+			in_gamerules_parsing_mode = true;
+			gamerules_string = string;
+			string = ""; // this line is used instead of continue; so that we immediately enter the gamerules continuation below and check if isJson(gamerules_string)
+		}
+
+		// Read gamerules continuation, if in gamerules parsing mode
+		if (in_gamerules_parsing_mode) {
+			if (string !== "") gamerules_string += ` ${string}`;
+
+			// gamerules_string can be parsed into JSON now: parse it in and permanently exit gamerules parsing mode
+			if (isJson(gamerules_string)) {
+				const parsedGameRules = JSON.parse(gamerules_string);
+				longformat.gameRules = {...longformat.gameRules, ...parsedGameRules};
+				in_gamerules_parsing_mode = false;
+			}
+			continue;
+		}
 
 		// turn order
 		if (!longformat.gameRules.turnOrder && /^[a-z]{1,2}(:[a-z]{1,2})*$/.test(string)) {
@@ -660,7 +679,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 	if (typeof longformat.startingPosition === 'string') throw new Error('startingPosition must be in json format!');
     
 	if (!longformat.moves || longformat.moves.length === 0) return longformat;
-	const ret = modify_input ? longformat : deepCopyObject(longformat);
+	const ret = modify_input ? longformat : jsutil.deepCopyObject(longformat);
 	const yParity = longformat.gameRules.turnOrder[0] === p.WHITE ? 1 : longformat.gameRules.turnOrder[0] === p.BLACK ? -1 : (() => { throw new Error(`Unsupported turn player ${longformat.gameRules.turnOrder[0]} when converting game to position.`); })();
 	let pawnThatDoublePushedKey = (ret.enpassant ? [ret.enpassant[0], ret.enpassant[1] - yParity].toString() : "");
 	ret.fullMove = longformat.fullMove + Math.floor(ret.moves.length / longformat.gameRules.turnOrder.length);
@@ -679,8 +698,8 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		}
 		delete ret.startingPosition[startString];
 		if (ret.specialRights) {
-			delete ret.specialRights[startString];
-			delete ret.specialRights[endString];
+			ret.specialRights.delete(startString);
+			ret.specialRights.delete(endString);
 		}
 
 		// update move rule
@@ -694,7 +713,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// delete captured piece en passant
 		if (move.enpassant) {
 			delete ret.startingPosition[pawnThatDoublePushedKey];
-			if (ret.specialRights) delete ret.specialRights[pawnThatDoublePushedKey];
+			if (ret.specialRights) ret.specialRights.delete(pawnThatDoublePushedKey);
 		}
 
 		// update en passant
@@ -708,7 +727,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
 			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`] = ret.startingPosition[castleString];
 			delete ret.startingPosition[castleString];
-			if (ret.specialRights) delete ret.specialRights[castleString];
+			if (ret.specialRights) ret.specialRights.delete(castleString);
 		}
 
 		// save move coords for potential en passant
@@ -764,14 +783,14 @@ function ShortToLong_CompactMove(shortmove) {
 /**
  * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
  * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param {Object} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @param {Set} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
  * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
  */
-function LongToShort_Position(position, specialRights = {}) {
+function LongToShort_Position(position, specialRights = new Set()) {
 	let shortposition = "";
 	if (!position) return shortposition; // undefined position --> no string
 	for (const coordinate in position) {
-		if (specialRights[coordinate]) {
+		if (specialRights.has(coordinate)) {
 			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}+|`;
 		} else {
 			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}|`;
@@ -805,15 +824,15 @@ function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith
  * @returns {Object} The specialRights gamefile property, in the form 'x,y':true, where true means the piece at that location has their special move ability (pawn double push, castling rights..)
  */
 function generateSpecialRights(position, pawnDoublePush, castleWith) {
-	const specialRights = {};
+	const specialRights = new Set();
 	const kingsFound = {}; // Running list of kings discovered, 'x,y': player
 	const castleWithsFound = {}; // Running list of pieces found that are able to castle (e.g. rooks), 'x,y': player
 
 	for (const key in position) {
 		const thisPiece = position[key]; // e.g. "pawnsW"
-		if (pawnDoublePush && typeutil.getRawType(thisPiece) === r.PAWN) specialRights[key] = true;
+		if (pawnDoublePush && typeutil.getRawType(thisPiece) === r.PAWN) specialRights.add(key);
 		else if (castleWith && typeutil.getRawType(thisPiece) === r.KING) {
-			specialRights[key] = true;
+			specialRights.add(key);
 			kingsFound[key] = typeutil.getColorFromType(thisPiece);
 		}
 		else if (castleWith && typeutil.getRawType(thisPiece) === castleWith) {
@@ -832,7 +851,7 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their players don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
 			if (xDist < 3) continue; // Not ateast 3 squares away
-			specialRights[coord] = true; // Same row and color as the king! This piece can castle.
+			specialRights.add(coord); // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
 			// need to see if it's on the same rank as any other king
 			continue outerFor;
@@ -857,7 +876,7 @@ function getCoordsFromString(key) {
  */
 function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 	const startingPosition = {};
-	const specialRights = {};
+	const specialRights = new Set();
 	const letter_regex = /[a-zA-Z]/;
 	const MAX_INDEX = shortposition.length - 1;
 	let index = 0;
@@ -879,7 +898,7 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 			if (shortposition[index + end_index] === "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
 				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
-				specialRights[standardizeCoordString(coordString)] = true;
+				specialRights.add(standardizeCoordString(coordString));
 				index += end_index + 2;
 			} else {
 				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = ShortToInt_Piece(shortpiece);
@@ -889,7 +908,7 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 			if (shortposition.slice(-1) === "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
 				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
-				specialRights[standardizeCoordString(coordString)] = true;
+				specialRights.add(standardizeCoordString(coordString));
 				index = MAX_INDEX;
 			} else {
 				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = ShortToInt_Piece(shortpiece);
@@ -908,28 +927,6 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
  */
 function isStartingPositionInLongFormat(startingPosition) {
 	return typeof startingPosition !== 'string';
-}
-
-/**
- * Deep copies an entire object, no matter how deep its nested.
- * No properties will contain references to the source object.
- * Use this instead of structuredClone() when that throws an error due to nested functions.
- * 
- * SLOW. Avoid using for very massive objects.
- * @param {Object | string | number | bigint | boolean} src - The source object
- * @returns {Object | string | number | bigint | boolean} The copied object
- */
-function deepCopyObject(src) {
-	if (typeof src !== "object" || src === null) return src;
-    
-	const copy = Array.isArray(src) ? [] : {}; // Create an empty array or object
-    
-	for (const key in src) {
-		const value = src[key];
-		copy[key] = deepCopyObject(value); // Recursively copy each property
-	}
-    
-	return copy; // Return the copied object
 }
 
 export default {

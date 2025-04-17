@@ -9,6 +9,8 @@ import { addGameToGamesTable } from '../../database/gamesManager.js';
 import { getPlayerStatsData, updatePlayerStatsColumns } from "../../database/playerStatsManager.js";
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { VariantLeaderboards } from '../../database/leaderboardsManager.js';
+import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 // @ts-ignore
@@ -19,6 +21,8 @@ import { logEvents } from '../../middleware/logEvents.js';
 import gameutility from './gameutility.js';
 // @ts-ignore
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
+// @ts-ignore
+import clockutil from '../../../client/scripts/esm/chess/util/clockutil.js';
 
 
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
@@ -40,8 +44,8 @@ import type { Game } from '../TypeDefinitions.js';
  * @param {Game} game - The game to log
  */
 async function logGame(game: Game) {
-	const movecount = game.moves.length; // Moves is a required property of game
-	if (movecount === 0) return; // Don't log games with zero moves
+	const move_count = game.moves.length; // Moves is a required property of game
+	if (move_count === 0) return; // Don't log games with zero moves
 
 	// Convert the Date of the game to Sqlite string
 	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated);
@@ -54,11 +58,15 @@ async function logGame(game: Game) {
 		return;
 	}
 
-	// 2. Update the ratings table
-	// TODO: Implement this in a separate file
+	// 2. Update the leaderboards table
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor;
+	// TODO: Compute rating change in different file and update leaderboard
 
-	// 3. Update the player stats table
-	updatePlayerStatsTable(game, results.game_id, dateSqliteString);
+	// 3. Enter the game into the player_games table
+	await updatePlayerGamesTable(game, results.game_id, victor); // TODO: Add support for rated games in here (pass in elo_at_game and elo_change_from_game)
+
+	// 4. Update the player_stats table
+	await updatePlayerStatsTable(game, results.game_id, victor);
 
 }
 
@@ -73,42 +81,23 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 	const ICN = await getICNOfGame(game, metadata);
 	if (!ICN) return { success: false, reason: `ICN undefined when logging game, cannot log or increment player stats! Game: ${gameutility.getSimplifiedGameString(game)}` };
 
-	let playersString: string = ''; // this will look like "632366,_" for example
-	// Sort the players in ascending order, just in case. The players delimited string is expected to list the players in order.
-	const sortedPlayers = Object.keys(game.players).sort((a, b) => Number(a) - Number(b));
-	for (const player of sortedPlayers) {
-		if (playersString !== '') playersString += ','; // Add the delimiter between players
-		const user_id = game.players[player].identifier.user_id;
-		playersString += user_id !== undefined ? user_id : '_'; // '_' symbolizes Guest
-	}
-
-	// If game was rated, compute the elo change of the players
-	// Also get the eloString and rating_diffString for the games table
-	const eloString: string | null = null;
-	const rating_diffString: string | null = null;
-	if (game.rated) {
-		// TODO: Compute new ELOs of players according to game result when implementing ranked
-		throw Error('Cannot log rated games yet, ELO calculation not implemented.');
-		// Grab the elos and rating differences of the players from the METADATA WhiteElo and WhiteRatingDiff...
-		// eloString = '1000,1000';
-		// rating_diffString = '0,0';
-	}
-
 	const terminationCode = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).condition;
-
+	const game_rated: 0 | 1 = (game.rated ? 1 : 0);
+	const leaderboard_id = VariantLeaderboards[game.variant] ?? null; // Include the leaderboard_id even if the game wasn't rated, so we can still filter
+	const game_private: 0 | 1 = (game.publicity !== 'public' ? 1 : 0);
+	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(game.clock);
 
 	const gameToLog = {
 		date: dateSqliteString,
-		players: playersString,
-		elo: eloString,
-		rating_diff: rating_diffString,
-		time_control: game.clock as string,
+		base_time_seconds,
+		increment_seconds,
 		variant: game.variant as string,
-		rated: (game.rated ? 1 : 0),
-		private: (game.publicity !== 'public' ? 1 : 0),
+		rated: game_rated,
+		leaderboard_id,
+		private: game_private,
 		result: metadata.Result as string,
 		termination: terminationCode,
-		movecount: game.moves.length,
+		move_count: game.moves.length,
 		icn: ICN
 	};
 
@@ -149,12 +138,48 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 }
 
 /**
- * Update's each member's game stats in the player stats table according to the results of this game.
- * Such as game count, wins, losses, game_history, etc.
+ * For each member, add an entry into player_games according to the results of this game.
+ * If the game was ranked, also update the leaderboards table accordingly.
  */
-function updatePlayerStatsTable(game: Game, game_id: number, dateSqliteString: string) {
+async function updatePlayerGamesTable(game: Game, game_id: number, victor: Player | undefined) {
+	for (const playerStr in game.players) {
+		const player: Player = Number(playerStr) as Player;
+		const user_id = game.players[playerStr].identifier.user_id;
+		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
 
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor;
+		const score = victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0;
+
+		// TODO: Implement the following when rated games are here
+		// We can potentially get the elo_at_game entries from the rating calculation and not have to do it again here, if the game was rated
+		const elo_at_game = null;
+		const elo_change_from_game = null;
+
+		const options = {
+			user_id: user_id,
+			game_id: game_id,
+			player_number: player,
+			score,
+			elo_at_game,
+			elo_change_from_game
+		};
+
+		// Add game to player_games table in database
+		const results = addGameToPlayerGamesTable(options);
+		if (!results.success) {
+			await logEvents('Failed to add game to player_games table after game. Check unloggedGames log.', 'errLog.txt', { print: true });
+			const errText = `Error when adding game to player_games when logging game: ${results.reason}  Member "${game.players[playerStr].identifier.member}", user_id "${user_id}". Their color: ${playerStr}. Game ID: ${game_id}. The game: ${gameutility.getSimplifiedGameString(game)}`;
+			await logEvents(errText, 'unloggedGames.txt');
+			continue;
+		}
+	}
+}
+
+/**
+ * Update's each member's game stats in the player stats table according to the results of this game.
+ * Such as game count, wins, losses, etc.
+ */
+async function updatePlayerStatsTable(game: Game, game_id: number, victor: Player | undefined) {
+
 	const playerMoveCounts: PlayerGroup<number> = getPlayerMoveCountsInGame(game);
 
 	// update player_stats entries for each logged in player
@@ -168,7 +193,7 @@ function updatePlayerStatsTable(game: Game, game_id: number, dateSqliteString: s
 		const publicityString = game.publicity;
 		const ratedString = (game.rated ? "rated" : "casual");
 
-		const read_and_modify_columns = ["game_history", "moves_played"];
+		const read_and_modify_columns = ["moves_played"];
 		const read_and_increment_columns = victor !== undefined ?
 											[ "game_count", `game_count_${ratedString}`, `game_count_${publicityString}`,
 											  `game_count_${outcomeString}`, `game_count_${outcomeString}_${ratedString}`]
@@ -182,10 +207,6 @@ function updatePlayerStatsTable(game: Game, game_id: number, dateSqliteString: s
 			continue; // Continue updating next player's stats, they may not be deleted.
 		}
 
-		// Update game history string
-		if (player_stats.game_history === '') player_stats.game_history = `${game_id}`; // First game, no delimiter needed.
-		else player_stats.game_history += `,${game_id}`; // Include the delimiter
-
 		// Update moves_played
 		player_stats.moves_played! += playerMoveCounts[player]!;
 
@@ -197,9 +218,9 @@ function updatePlayerStatsTable(game: Game, game_id: number, dateSqliteString: s
 		const results = updatePlayerStatsColumns(user_id, player_stats);
 
 		if (!results.success) {
-			logEvents('Failed to increment player stats after game. Check unloggedGames log.', 'errLog.txt', { print: true });
+			await logEvents('Failed to increment player stats after game. Check unloggedGames log.', 'errLog.txt', { print: true });
 			const errText = `Error when UPDATING player stats when logging game: ${results.reason}  Member "${game.players[playerStr].identifier.member}", user_id "${user_id}". Their color: ${playerStr}. Game ID: ${game_id}. The game: ${gameutility.getSimplifiedGameString(game)}`;
-			logEvents(errText, 'unloggedGames.txt');
+			await logEvents(errText, 'unloggedGames.txt');
 			continue;
 		}
 	}

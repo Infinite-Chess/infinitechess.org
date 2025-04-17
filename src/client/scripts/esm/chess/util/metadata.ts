@@ -24,7 +24,7 @@ interface MetaData {
 	 * 
 	 * If the game is untimed, this should be `"-"`
 	 */
-	TimeControl: string,
+	TimeControl: `${number}+${number}` | '-',
 	/** The round number (between players? idk. This is a pgn-required metadata, but it has no application to infinitechess.org right now) */
 	Round: '-',
 	/** The UTC date of the game, in the format `"YYYY.MM.DD"` */

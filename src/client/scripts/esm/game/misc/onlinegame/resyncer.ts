@@ -84,7 +84,9 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	// just re-submit our move!
 	const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
 	const finalMoveIsOurMove = gamefile.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === onlinegame.getOurColor();
-	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1) || gamefile.moves.length > 1 && moves.length > 0 && gamefile.moves[gamefile.moves.length - 2].compact === moves[moves.length - 1];
+	const previousMove = gamefile.moves.length > 1 ? gamefile.moves[gamefile.moves.length - 2] : undefined;
+	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1)
+		|| (gamefile.moves.length > 1 && moves.length > 0 && !previousMove!.isNull && previousMove!.compact === moves[moves.length - 1]);
 	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
 		console.log("Sending our move again after resyncing..");
 		movesendreceive.sendMove();
@@ -105,8 +107,8 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	while (true) { // Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
 		if (i === -1) break; // Beginning of game
 		const thisGamefileMove = gamefile.moves[i];
-		if (thisGamefileMove) { // The move is defined
-			if (thisGamefileMove.compact === moves[i]) break; // The moves MATCH
+		if (thisGamefileMove && !thisGamefileMove.isNull) { // The move is defined
+			if (thisGamefileMove.compact! === moves[i]) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
 			movesequence.rewindMove(gamefile);
 			console.log("Rewound one INCORRECT move while resyncing to online game.");

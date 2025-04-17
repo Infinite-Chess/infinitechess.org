@@ -19,8 +19,6 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 /** Structure of a player_stats record. This is all allowed columns of a user_id. */
 interface PlayerStatsRecord {
 	user_id?: number;
-    game_history?: string;
-	games_starred?: string;
     moves_played?: number;
     game_count?: number;
     game_count_rated?: number;
@@ -184,7 +182,6 @@ function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStats
 
 
 export {
-	PlayerStatsRecord,
 	addUserToPlayerStatsTable,
 	getPlayerStatsData,
 	updatePlayerStatsColumns
