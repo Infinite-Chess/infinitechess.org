@@ -23,6 +23,7 @@ import gamecompressor from './gamecompressor.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 import gameformulator from './gameformulator.js';
 import websocket from '../websocket.js';
+import boardutil from '../../chess/util/boardutil.js';
 // Import End
 
 "use strict";
@@ -268,9 +269,10 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	const gamefile = gameslot.getGamefile();
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-	const tooManyPieces = gamefile.pieces.coords.size >= organizedpieces.pieceCountToDisableCheckmate;
+	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
+	const tooManyPieces = pieceCount >= organizedpieces.pieceCountToDisableCheckmate;
 	if (tooManyPieces) { // TOO MANY pieces!
-		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.pieces.coords.size} ${translations.copypaste.exceeded} ${organizedpieces.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
+		statustext.showStatus(`${translations.copypaste.piece_count} ${pieceCount} ${translations.copypaste.exceeded} ${organizedpieces.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
 	} else { // Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
 		statustext.showStatus(`${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`);
 	}

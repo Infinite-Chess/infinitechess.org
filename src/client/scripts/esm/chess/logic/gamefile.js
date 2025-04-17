@@ -146,7 +146,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	// Init things related to the variant, and the startSnapshot of the position
 	initvariant.setupVariantGamerules(this, metadata, variantOptions); // Initiates gameRules, and pieceMovesets
-	const startSnapshot = initvariant.getStartSnapshotFromOptions(this, metadata, variantOptions);
+	const startSnapshot = initvariant.genStartSnapshot(this, metadata, variantOptions);
 	
 	/** The number of half-moves played since the last capture or pawn push. */
 	this.moveRuleState = startSnapshot.moveRuleState;
@@ -189,10 +189,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.existingRawTypes = existingRawTypes;
 	
 	if (!this.editor) {
-		const box = gamefileutility.getStartingAreaBox(this);
 		this.startSnapshot = jsutil.deepCopyObject(startSnapshot);
 		this.startSnapshot.pieceCount = pieceCount;
-		this.startSnapshot.box = box;
+		this.startSnapshot.box = gamefileutility.getStartingAreaBox(this);
 	}
 
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.

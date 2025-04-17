@@ -64,7 +64,7 @@ function initPieceMovesets(gamefile, metadata) {
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
  */
-function getStartSnapshotFromOptions(gamefile, metadata, options) {
+function genStartSnapshot(gamefile, metadata, options) {
 	let fullMove;
 	let enpassant;
 	let moveRuleState;
@@ -149,5 +149,5 @@ function getStartSnapshotFromOptions(gamefile, metadata, options) {
 
 export default {
 	setupVariantGamerules,
-	getStartSnapshotFromOptions,
+	genStartSnapshot,
 };

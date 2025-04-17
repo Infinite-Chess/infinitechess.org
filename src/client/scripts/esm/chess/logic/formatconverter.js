@@ -803,7 +803,7 @@ function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith
  * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
  * @param {boolean} pawnDoublePush - Whether pawns are allowed to double push
  * @param {RawType | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
- * @returns {Record<CoordsKey, true>} The specialRights gamefile property, in the form 'x,y':true, where true means the piece at that location has their special move ability (pawn double push, castling rights..)
+ * @returns {Set<CoordsKey>} The specialRights gamefile property, in the form 'x,y':true, where true means the piece at that location has their special move ability (pawn double push, castling rights..)
  */
 function generateSpecialRights(position, pawnDoublePush, castleWith) {
 	const specialRights = new Set();

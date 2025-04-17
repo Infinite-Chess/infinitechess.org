@@ -62,7 +62,9 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	let moveRuleState: number | undefined;
 	let fullMove: number;
 	
-	if (gamefile.editor) {
+	if (gamefile.startSnapshot) {
+		({ position, positionString, specialRights, enpassant, moveRuleState, fullMove } = gamefile.startSnapshot);
+	} else {
 		position = {};
 		gamefile.pieces.coords.forEach((value: number, key: CoordsKey) => {
 			position[key] = gamefile.pieces.types[value];
@@ -72,8 +74,6 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 		enpassant = jsutil.deepCopyObject(gamefile.enpassant);
 		moveRuleState = gamefile.moveRuleState;
 		fullMove = 1;
-	} else {
-		({ position, positionString, specialRights, enpassant, moveRuleState, fullMove } = gamefile.startSnapshot!);
 	}
 	
 	let abridgedGamefile: AbridgedGamefile = {
@@ -83,7 +83,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 		specialRights,
 		fullMove,
 		gameRules,
-		moves: gamefile.editor ? [] : gamefile.moves,
+		moves: gamefile.moves,
 	};
 
 	// Append the optional properties, if present
