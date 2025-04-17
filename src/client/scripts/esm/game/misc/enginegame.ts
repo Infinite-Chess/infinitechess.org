@@ -94,8 +94,7 @@ function initEngineGame(options: {
 			if (e.data === 'readyok') resolve(); // Engine is ready!
 		};
 		engineWorker!.onerror = (e: ErrorEvent) => {
-			console.error("Worker failed to load:", e);
-			reject(new Error("Worker failed to load."));
+			reject(new Error("Worker failed to load: " + e.message));
 		};
 	}).then((result: any) => {
 		// After the promise resolves, we know the worker is ready
