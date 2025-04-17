@@ -492,7 +492,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// gamerules - start: read in string and enter gamerules parsing mode, if string starts with {
-		if (!in_gamerules_parsing_mode && /^\{/.test(string) && gamerules_string === "") {
+		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\{/.test(string) && gamerules_string === "") {
 			in_gamerules_parsing_mode = true;
 			gamerules_string = string;
 			string = ""; // this line is used instead of continue; so that we immediately enter the gamerules continuation below and check if isJson(gamerules_string)
