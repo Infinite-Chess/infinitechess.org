@@ -98,7 +98,7 @@ function detectKoth(gamefile) {
 
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (!lastMove) return false;
+	if (!lastMove || lastMove.isNull) return false;
 	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return false;
 
 	let kingInCenter = false;
@@ -135,7 +135,7 @@ function detectMoveRule(gamefile) {
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(gamefile) {
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (!lastMove) return false;
+	if (!lastMove.isNull) return false;
 
 	const capturedTypes = new Set();
 

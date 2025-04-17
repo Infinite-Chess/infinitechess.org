@@ -17,6 +17,7 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('../../util/math.js').Vec2} Vec2 */
 /** @typedef {import('../../util/math.js').BoundingBox} BoundingBox */
 /** @typedef {import('./movepiece.js').Move} Move */
+/** @typedef {import('./movepiece.js').NullMove} NullMove */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModel} BufferModel */
 /** @typedef {import('../../game/rendering/buffermodel.js').BufferModelInstanced} BufferModelInstanced */
 /** @typedef {import('../variants/gamerules.js').GameRules} GameRules */
@@ -150,7 +151,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	
 	/** The number of half-moves played since the last capture or pawn push. */
 	this.moveRuleState = startSnapshot.moveRuleState;
-	/** The move list. @type {Move[]} */
+	/** The move list. @type {(Move | NullMove)[]} */
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
 	this.moveIndex = -1;

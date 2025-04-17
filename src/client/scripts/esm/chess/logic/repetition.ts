@@ -40,10 +40,11 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 
 	let equalPositionsFound: number = 0;
 
-	let index: number = moveList.length - 1;
-	let indexOfLastEqualPositionFound: number = index + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
-	outer: while (index >= 0) {
+	const startIndex: number = moveList.length - 1;
+	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
+	outer: for (let index = startIndex; index >= 0; index--) { // WILL BE -1 if we've reached the beginning of the game!
 		const move = moveList[index];
+		if (move.isNull) continue;
 
 		// Did this move include a one-way action? Pawn push, special right loss..
 		// If so, no further equal positions, terminate the loop.
@@ -118,10 +119,6 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 
 		// console.log('Surplus:', surplus);
 		// console.log('Deficit:', deficit);
-
-		// Prep for next iteration, decrement index.
-		// WILL BE -1 if we've reached the beginning of the game!
-		index--;
 	}
 
 	// Loop is finished. How many equal positions did we find?
