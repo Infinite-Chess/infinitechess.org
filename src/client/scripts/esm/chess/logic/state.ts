@@ -6,7 +6,7 @@
 
 
 // @ts-ignore
-import type { Move, path } from "./movepiece.js";
+import type { Move, NullMove, path } from "./movepiece.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
 import { Coords } from "./movesets.js";
@@ -98,7 +98,7 @@ interface EnPassant {
 
 
 /** Creates a check local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createCheckState(move: Move, current: inCheck, future: inCheck, gamefile: gamefile) {
+function createCheckState(move: Move | NullMove, current: inCheck, future: inCheck, gamefile: gamefile) {
 	const newStateChange: StateChange = { type: 'check', current, future };
 	move.state.local.push(newStateChange); // Check is a local state
 	// Check states are immediately applied to the gamefile
@@ -106,7 +106,7 @@ function createCheckState(move: Move, current: inCheck, future: inCheck, gamefil
 }
 
 /** Creates an attackers local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createAttackersState(move: Move, current: attackers, future: attackers, gamefile: gamefile) {
+function createAttackersState(move: Move | NullMove, current: attackers, future: attackers, gamefile: gamefile) {
 	const newStateChange: StateChange = { type: 'attackers', current, future };
 	move.state.local.push(newStateChange); // Attackers is a local state
 	// Attackers states are immediately applied to the gamefile
@@ -118,7 +118,7 @@ function createAttackersState(move: Move, current: attackers, future: attackers,
 
 
 /** Creates an enpassant global StateChange, queueing it by adding it to the Move. */
-function createEnPassantState(move: Move, current?: EnPassant, future?: EnPassant) {
+function createEnPassantState(move: Move | NullMove, current?: EnPassant, future?: EnPassant) {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'enpassant', current, future };
 	// Check to make sure there isn't already an enpassant state change,
@@ -136,7 +136,7 @@ function createSpecialRightsState(move: Move, coordsKey: CoordsKey, current: boo
 }
 
 /** Creates a moverule global StateChange, queueing it by adding it to the Move. */
-function createMoveRuleState(move: Move, current: number, future: number) {
+function createMoveRuleState(move: Move | NullMove, current: number, future: number) {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'moverulestate', current, future };
 	move.state.global.push(newStateChange); // Special Rights is a global state
@@ -152,7 +152,7 @@ function createMoveRuleState(move: Move, current: number, future: number) {
  */
 function applyMove(
 	gamefile: gamefile,
-	move: Move,
+	move: Move | NullMove,
 	/** Whether we're playing this move forward or backward. */
 	forward: boolean,
 	/**
