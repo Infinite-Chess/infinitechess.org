@@ -386,15 +386,15 @@ function playSound_drum() {
 	return playSound(soundName, { volume: 0.7 });
 }
 
-function playSound_tick({ volume = undefined, fadeInDuration = undefined, offset = undefined } = {}) {
+function playSound_tick({ volume = undefined as undefined|number, fadeInDuration = undefined as undefined|number, offset = undefined  as undefined|number } = {}) {
 	return playSound('tick', { volume, offset, fadeInDuration }); // Default volume: 0.07
 }
 
-function playSound_ticking({ fadeInDuration = undefined, offset = undefined } = {}) {
+function playSound_ticking({ fadeInDuration = undefined as undefined|number , offset = undefined as undefined|number } = {}) {
 	return playSound('ticking', { volume: 0.18, offset, fadeInDuration });
 }
 
-function playSound_viola_c3({ volume = undefined } = {}) {
+function playSound_viola_c3({ volume = undefined as undefined|number } = {}) {
 	return playSound('viola_staccato_c3', { volume });
 }
 
