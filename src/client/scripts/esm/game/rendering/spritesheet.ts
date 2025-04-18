@@ -71,7 +71,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, gamefile: game
 
 	// Filter our voids from all types in the game.
 	// @ts-ignore
-	const types: number[] = gamefile.startSnapshot.existingTypes.filter(type => !typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type)));
+	const types: number[] = gamefile.existingTypes.filter(type => !typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type)));
 
 	// Convert each SVG element to an Image
 	const readyImages: HTMLImageElement[] = types.map(t => imagecache.getPieceImage(t));
