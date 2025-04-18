@@ -1,11 +1,21 @@
 
-// Import Start
-import thread from '../../util/thread.js';
-// Import End
-
 "use strict";
 
 /** This script controls the playing of our sound effects. */
+
+type AudioBufferWithGainNode = AudioBufferSourceNode & {
+	gainNode: GainNode
+}
+
+interface SoundObject {
+	source: AudioBufferWithGainNode,
+	sourceReverb?: AudioBufferWithGainNode,
+	stop: () => void
+	// eslint-disable-next-line no-unused-vars
+	fadeOut: (durationMilis: number) => void
+}
+
+type SoundTimeSnippet = readonly [number, number]
 
 /** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */
 const soundStamps = {
@@ -27,12 +37,14 @@ const soundStamps = {
 	marimba_c2_soft: [42.82, 44.82],
 	base_staccato_c2: [44.82, 46.82],
 	// draw_offer: [46.89, 48.526]   Only present for the sound spritesheet in dev-utils that includes the draw offer sound
-};
+} as const;
+
+type SoundName = keyof typeof soundStamps
 
 /** @type {AudioContext} */
-let audioContext;
+let audioContext: AudioContext;
 /** @type {AudioBuffer} */
-let audioDecodedBuffer;
+let audioDecodedBuffer: AudioBuffer;
 
 const bellDist = 1_000_000; // Distance to start playing the bell gong!
 const minReverbDist = 15; // 15 Reverb will *start increasing in volume
@@ -57,9 +69,8 @@ const dampenThresholdMillis = 60;
 
 /**
  * Returns our Audio Context
- * @returns {AudioContext}
  */
-function getAudioContext() { return audioContext; }
+function getAudioContext(): AudioContext { return audioContext; }
 
 /**
  * Sets our audio context and decodedBuffer. This is called from our in-line javascript inside the html.
@@ -68,16 +79,17 @@ function getAudioContext() { return audioContext; }
  * inside the document, because I need to grab the buffer.
  * And we put the javascript inline in the html to start it loading quicker,
  * because otherwise our sound only starts loading AFTER everything single script has loaded.
- * @param {AudioContext} audioCtx 
- * @param {AudioBuffer} decodedBuffer 
+ * @param audioCtx 
+ * @param decodedBuffer 
  */
-function initAudioContext(audioCtx, decodedBuffer) {
+function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer) {
 	audioContext = audioCtx;
 	audioDecodedBuffer = decodedBuffer;
 }
 
-function playSound(soundName, { volume = 1, delay = 0, offset = 0, fadeInDuration, reverbVolume, reverbDuration } = {}) {
+function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fadeInDuration = null as null|number, reverbVolume = null as null|number, reverbDuration = null as null|number} = {}): SoundObject | void {
 	// A reverb volume of 3.5 and a duration of 1.5 seconds most-closely matches my audio file!
+	// @ts-ignore
 	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound 
     
 	if (!audioContext) return console.error(`Can't play sound ${soundName} when audioContext isn't initialized yet. (Still loading)`);
@@ -93,14 +105,13 @@ function playSound(soundName, { volume = 1, delay = 0, offset = 0, fadeInDuratio
     
 	const startAt = currentTime + delay;
 
-	const soundObject = {
+	const soundObject: SoundObject = {
 		/** The source of the audio, with its attached `gainNode`. @type {AudioBufferSourceNode} */
-		source: undefined,
+		source: createBufferSource(volume),
 		/** The source of the reverb-only part of the audio, if specified, with its attached `gainNode`. @type {AudioBufferSourceNode} */
 		sourceReverb: undefined,
 		/**
          * Stops the sound from playing. Could create static pops, if that happens use fadeOut() instead.
-         * @param {number} durationMillis - The duration of the fade out
          */
 		stop: () => {
 			soundObject.source.stop();
@@ -117,36 +128,32 @@ function playSound(soundName, { volume = 1, delay = 0, offset = 0, fadeInDuratio
 	};
 
 	// 1. We need an audio "source" to play our main sound effect
-    
-	const source = createBufferSource(volume);
-	source.start(startAt, startTime, duration);
-	soundObject.source = source;
+	soundObject.source.start(startAt, startTime, duration);
 
 	// 2. If reverb is specified, we also need a source for that effect!
 	// We will play them both!
 	if (!reverbVolume) return fadeInAndReturn(); // No reverb effect if volume is falsey or zero :)
-	if (reverbDuration === undefined) return console.error("Need to specify a reverb duration.");
-	const sourceReverb = createBufferSource(reverbVolume, 1, reverbDuration);
-	sourceReverb.start(startAt, startTime, duration);
-	soundObject.sourceReverb = sourceReverb;
+	if (reverbDuration === null) throw Error("Need to specify a reverb duration.");
+	soundObject.sourceReverb = createBufferSource(reverbVolume, 1, reverbDuration);
+	soundObject.sourceReverb.start(startAt, startTime, duration);
 
 	return fadeInAndReturn();
 
 	function fadeInAndReturn() {
-		if (fadeInDuration === undefined) return soundObject; // No fade-in effect
+		if (fadeInDuration === null) return soundObject; // No fade-in effect
 		fadeIn(soundObject.source, volume, fadeInDuration);
-		if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume, fadeInDuration);
+		if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume!, fadeInDuration);
 		return soundObject;
 	}
 }
 
-function getSoundStamp(soundName) {
+function getSoundStamp(soundName: SoundName): SoundTimeSnippet {
 	const stamp = soundStamps[soundName];
 	if (stamp) return stamp;
 	else throw new Error(`Cannot return sound stamp for strange new sound ${soundName}!`);
 }
 
-function getStampDuration(stamp) { // [ startTimeSecs, endTimeSecs ]
+function getStampDuration(stamp: SoundTimeSnippet) { // [ startTimeSecs, endTimeSecs ]
 	return stamp[1] - stamp[0];
 }
 
@@ -155,23 +162,24 @@ function getStampDuration(stamp) { // [ startTimeSecs, endTimeSecs ]
 /**
  * Creates a new buffer source. These play our audio. Multiple sources can play multiple sounds at once.
  * Attaches the gain node to the source as the property `gainNode`.
- * @param {number} volume - The volume the gain node will be set at
- * @param {number} playbackRate - How fast the audio is player. Lower = slower & lower pitch. Higher = faster & higher pitch.
- * @param {number} [reverbDurationSecs] Optional. If specified, the sound will be transformed into a reverb. This is the duration of that reverb in seconds.
- * @returns {AudioBufferSourceNode} The source
+ * @param volume - The volume the gain node will be set at
+ * @param playbackRate - How fast the audio is player. Lower = slower & lower pitch. Higher = faster & higher pitch.
+ * @param [reverbDurationSecs] Optional. If specified, the sound will be transformed into a reverb. This is the duration of that reverb in seconds.
+ * @returns The source
  */
-function createBufferSource(volume, playbackRate = 1, reverbDurationSecs) {
+function createBufferSource(volume: number, playbackRate = 1, reverbDurationSecs?: number): AudioBufferWithGainNode {
 	const source = audioContext.createBufferSource();
 	if (!audioDecodedBuffer) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.");
 	source.buffer = audioDecodedBuffer; // Assuming `decodedBuffer` is defined elsewhere
 
 	// What nodes do we want?
 
-	const nodes = [];
+	const nodes: (GainNode|ConvolverNode)[] = [];
 
 	// Gain (Volume) node
 	const gain = generateGainNode(audioContext, volume);
 	nodes.push(gain);
+	// @ts-ignore
 	source.gainNode = gain; // Attach to the source object so that it can be faded out/in on demand.
 
 	// Reverb node (if specified)
@@ -186,11 +194,11 @@ function createBufferSource(volume, playbackRate = 1, reverbDurationSecs) {
 
 	connectSourceToDestinationWithNodes(source, audioContext, nodes);
 
-	return source;
+	return source as AudioBufferWithGainNode;
 }
 
 // Reverb node
-function generateConvolverNode(audioContext, durationSecs) {
+function generateConvolverNode(audioContext: AudioContext, durationSecs: number) {
 	const impulse = impulseResponse(durationSecs);
 	return new ConvolverNode(audioContext, {buffer:impulse});
 }
@@ -201,7 +209,7 @@ function generateConvolverNode(audioContext, durationSecs) {
  * @param {number} volume 
  * @returns {GainNode}
  */
-function generateGainNode(audioContext, volume) {
+function generateGainNode(audioContext: AudioContext, volume: number): GainNode {
 	if (volume > 4) {
 		console.error(`Gain was DANGEROUSLY set to ${volume}!!!! Resetting to 1.`);
 		volume = 1;
@@ -212,7 +220,7 @@ function generateGainNode(audioContext, volume) {
 }
 
 // The mathematical function used by the convolver (reverb) node used to calculate the reverb effect!
-function impulseResponse(duration) { // Duration in seconds, decay
+function impulseResponse(duration: number) { // Duration in seconds, decay
 	const decay = 2;
 	const sampleRate = audioContext.sampleRate;
 	const length = sampleRate * duration;
@@ -224,13 +232,12 @@ function impulseResponse(duration) { // Duration in seconds, decay
 
 // After an audio source buffer is created, it must be connected to the destination for us to hear sound!
 // Optionally, we can include nodes for modying the sound! Gain (volume), reverb...
-function connectSourceToDestinationWithNodes(source, context, nodeList) { // nodeList is optional
+function connectSourceToDestinationWithNodes(source: AudioBufferSourceNode, context: AudioContext, nodeList: (GainNode|ConvolverNode)[]) { // nodeList is optional
 
-	let currentConnection = source; // Start at the beginning
+	let currentConnection: AudioBufferSourceNode | GainNode | ConvolverNode = source; // Start at the beginning
 
-	for (let i = 0; i < nodeList.length; i++) {
+	for (const thisNode of nodeList) {
 		// Connect the current connection to this node!
-		const thisNode = nodeList[i];
 		currentConnection.connect(thisNode);
 		// Prep for next iteration
 		currentConnection = thisNode;
@@ -246,11 +253,11 @@ function connectSourceToDestinationWithNodes(source, context, nodeList) { // nod
 
 /**
  * Fades in the audio by gradually increasing the volume.
- * @param {AudioBufferSourceNode} source - The audio source node to fade in, WITH ITS `gainNode` property attached.
- * @param {number} targetVolume - The final volume level.
- * @param {number} fadeDuration - The duration of the fade-in effect in milliseconds.
+ * @param source - The audio source node to fade in, WITH ITS `gainNode` property attached.
+ * @param targetVolume - The final volume level.
+ * @param fadeDuration - The duration of the fade-in effect in milliseconds.
  */
-function fadeIn(source, targetVolume, fadeDuration) {
+function fadeIn(source: AudioBufferWithGainNode, targetVolume: number, fadeDuration: number) {
 	if (!source?.gainNode) throw new Error("Source or gain node not provided");
 	const currentTime = audioContext.currentTime;
 	source.gainNode.gain.setValueAtTime(0, currentTime);
@@ -261,11 +268,11 @@ function fadeIn(source, targetVolume, fadeDuration) {
  * Fades out the audio source over a specified duration.
  * This can be used to prevent static pops when abruptly stopping audio.
  * This will be useful for fading out music, and can be tweaked to fade in music.
- * @param {AudioBufferSourceNode} source - The audio source node to fade out, WITH ITS `gainNode` property attached.
- * @param {number} durationMillis - The duration of the fade-out effect in milliseconds.
+ * @param source - The audio source node to fade out, WITH ITS `gainNode` property attached.
+ * @param durationMillis - The duration of the fade-out effect in milliseconds.
  */
-function fadeOut(source, durationMillis) {
-	if (!source?.gainNode) throw new Error("Source or gain node not provided");
+function fadeOut(source: AudioBufferWithGainNode, durationMillis: number) {
+	if (!source?.gainNode) throw new Error("Source or gain node not provided"); // Hopefully This should be caught by TS
 
 	const durationSecs = durationMillis / 1000;
 	const currentTime = audioContext.currentTime;
@@ -285,7 +292,7 @@ function fadeOut(source, durationMillis) {
 
 // Sounds
 
-function playSound_move(distanceMoved) {
+function playSound_move(distanceMoved: number) {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -302,7 +309,7 @@ function playSound_move(distanceMoved) {
 	const volume = 1 * dampener;
 	// eslint-disable-next-line prefer-const
 	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
-	reverbVolume *= dampener;
+	if ( reverbVolume !== null ) reverbVolume *= dampener;
 	playSound('move', { volume, reverbVolume, reverbDuration, delay });
 
 	if (bell) {
@@ -311,7 +318,7 @@ function playSound_move(distanceMoved) {
 	}
 }
 
-function playSound_capture(distanceMoved) {
+function playSound_capture(distanceMoved: number) {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -325,7 +332,7 @@ function playSound_capture(distanceMoved) {
 	const volume = 1 * dampener;
 	// eslint-disable-next-line prefer-const
 	let { reverbVolume, reverbDuration } = calculateReverbVolDurFromDistance(distanceMoved);
-	reverbVolume *= dampener;
+	if (reverbVolume !== null) reverbVolume *= dampener;
 	playSound('capture', { volume, reverbVolume, reverbDuration });
 
 	if (distanceMoved >= bellDist) {
@@ -335,12 +342,12 @@ function playSound_capture(distanceMoved) {
 }
 
 // Returns { reverbVol, reverbDur } from provided distance Chebyshev distance the piece moved;
-function calculateReverbVolDurFromDistance(distanceMoved) {
+function calculateReverbVolDurFromDistance(distanceMoved : number) {
 	const x = (distanceMoved - minReverbDist) / (maxReverbDist - minReverbDist); // 0-1
 	if (x <= 0) return { reverbVolume: null, reverbDuration: null };
 	else if (x >= 1) return { reverbVolume: maxReverbVol, reverbDuration };
 
-	function equation(x) { return x; } // Linear for now
+	function equation(x: number) { return x; } // Linear for now
 
 	const y = equation(x);
 
@@ -353,11 +360,11 @@ function playSound_gamestart() {
 	return playSound('gamestart', { volume: 0.4 });
 }
 
-function playSound_win(delay) {
+function playSound_win(delay?: number) {
 	return playSound('win', { volume: 0.7, delay });
 }
 
-function playSound_draw(delay) {
+function playSound_draw(delay?: number) {
 	return playSound('draw', { volume: 0.7, delay });
 }
 
@@ -365,7 +372,7 @@ function playSound_draw(delay) {
 //     return playSound('draw_offer', { volume: 0.7, delay })
 // }
 
-function playSound_loss(delay) {
+function playSound_loss(delay?: number) {
 	return playSound('loss', { volume: 0.7, delay });
 }
 
@@ -375,19 +382,19 @@ function playSound_lowtime() {
 
 function playSound_drum() {
 	const oneOrTwo = Math.random() > 0.5 ? 1 : 2; // Randomly choose which drum. They sound ever slightly different.
-	const soundName = `drum${oneOrTwo}`;
+	const soundName = `drum${oneOrTwo}` as 'drum1' | 'drum2';
 	return playSound(soundName, { volume: 0.7 });
 }
 
-function playSound_tick({ volume, fadeInDuration, offset } = {}) {
+function playSound_tick({ volume = undefined, fadeInDuration = undefined, offset = undefined } = {}) {
 	return playSound('tick', { volume, offset, fadeInDuration }); // Default volume: 0.07
 }
 
-function playSound_ticking({ fadeInDuration, offset } = {}) {
+function playSound_ticking({ fadeInDuration = undefined, offset = undefined } = {}) {
 	return playSound('ticking', { volume: 0.18, offset, fadeInDuration });
 }
 
-function playSound_viola_c3({ volume } = {}) {
+function playSound_viola_c3({ volume = undefined } = {}) {
 	return playSound('viola_staccato_c3', { volume });
 }
 
@@ -397,13 +404,17 @@ function playSound_violin_c4() {
 
 function playSound_marimba() {
 	const soft = Math.random() > 0.15 ? '_soft' : '';
-	const audioName = `marimba_c2${soft}`;
+	const audioName = `marimba_c2${soft}` as 'marimba_c2' | 'marimba_c2_soft';
 	return playSound(audioName, { volume: 0.4 });
 }
 
 function playSound_base() {
 	return playSound('base_staccato_c2', { volume: 0.8 });
 }
+
+export type {
+	SoundObject
+};
 
 export default {
 	getAudioContext,
@@ -424,6 +435,16 @@ export default {
 	playSound_marimba,
 	playSound_base
 };
+
+declare global {
+	
+	// eslint-disable-next-line no-var, no-unused-vars
+	var sound: {
+		getAudioContext: () => AudioContext,
+		// eslint-disable-next-line no-unused-vars
+		initAudioContext: (audioCtx: AudioContext, decodedBuffer: AudioBuffer) => void
+	};
+}
 
 // We set this variable on the global object so that htmlscript can access them within the html document.
 // Only funcs necesary to htmlscript are here, if you need sound.js import it please
