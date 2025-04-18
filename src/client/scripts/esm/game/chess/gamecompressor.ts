@@ -12,7 +12,7 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { Move } from '../../chess/logic/movepiece.js';
+import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { Position } from '../../chess/variants/variant.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
@@ -62,7 +62,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 		specialRights: gamefile.startSnapshot.specialRights,
 		fullMove: gamefile.startSnapshot.fullMove,
 		gameRules,
-		moves: gamefile.moves,
+		moves: gamefile.moves.map((move: Move | NullMove) => !move.isNull ? move : (() => { throw Error("Cannot abridge gamefile with null moves!"); })()), // Tells typescript we're confident it doesn't have null moves
 	};
 
 	// Append the optional properties, if present

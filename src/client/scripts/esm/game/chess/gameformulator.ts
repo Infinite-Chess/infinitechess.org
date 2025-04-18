@@ -83,7 +83,7 @@ function ICNToGamefile(ICN: string): gamefile {
 	const variantOptions: VariantOptions = {
 		fullMove: longformat.fullMove,
 		moveRule: longformat.moveRule,
-		positionString: longformat.shortposition,
+		positionString: longformat.shortposition!,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
 		gameRules: longformat.gameRules
