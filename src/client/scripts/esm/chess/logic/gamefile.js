@@ -10,7 +10,6 @@ import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 import checkdetection from './checkdetection.js';
-import { players } from '../util/typeutil.js';
 import legalmoves from './legalmoves.js';
 // Type Definitions...
 
@@ -35,6 +34,7 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
 /** @typedef {import('../util/typeutil.js').Players} Players */
 /** @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup */
+/** @typedef {import('../util/typeutil.js').PlayerGroup} PlayerGroup */
 /** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
 /** @typedef {import('./clock.js').ClockData} ClockData*/
 

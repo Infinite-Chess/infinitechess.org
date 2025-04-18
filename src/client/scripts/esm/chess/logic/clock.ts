@@ -9,6 +9,7 @@
 import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
+import typeutil from '../util/typeutil.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';
 import type { PlayerGroup } from '../util/typeutil.js';
@@ -177,7 +178,7 @@ function endGame(gamefile: gamefile) {
  * @param gamefile
  * @returns undefined if clocks still have time, otherwise it's the color who won.
 */
-function update(gamefile: gamefile): string | undefined {
+function update(gamefile: gamefile): Player | undefined {
 	if (gamefile.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile)) return;
 	
 	const clocks = gamefile.clocks!;
@@ -188,10 +189,11 @@ function update(gamefile: gamefile): string | undefined {
 
 	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
-	for (const [color,time] of Object.entries(clocks.currentTime)) {
+	for (const [playerStr,time] of Object.entries(clocks.currentTime)) {
+		const player: Player = Number(playerStr) as Player;
 		if (time as number <= 0) {
-			clocks.currentTime[color] = 0;
-			return color;
+			clocks.currentTime[playerStr] = 0;
+			return typeutil.invertPlayer(player); // The color who won on time
 		}
 	}
 
