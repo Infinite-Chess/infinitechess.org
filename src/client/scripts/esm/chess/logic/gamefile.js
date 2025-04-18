@@ -35,6 +35,7 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
 /** @typedef {import('../util/typeutil.js').Players} Players */
 /** @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup */
+/** @typedef {import('../util/typeutil.js').PlayerGroup} PlayerGroup */
 /** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
 
 'use strict'; 
@@ -123,7 +124,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** The clocks of the game, if the game is timed. */
 	this.clocks = {
-		/** The time each player has remaining, in milliseconds. @type {{ [color in Player]?: number | undefined }}*/
+		/** The time each player has remaining, in milliseconds. @type {PlayerGroup<number>}*/
 		currentTime: {
 			[players.WHITE]: undefined,
 			[players.BLACK]: undefined,
