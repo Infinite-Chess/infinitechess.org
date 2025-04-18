@@ -6,6 +6,7 @@ import jsutil from "../../util/jsutil.js";
 /* eslint-disable max-depth */
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
+import { metadata_key_ordering, piece_codes, piece_codes_raw, player_codes } from "./icnconverter.js";
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
 
@@ -22,82 +23,6 @@ import typeutil from "../util/typeutil.js";
 /** Regex for numbers in scientific notation from https://stackoverflow.com/questions/638565/parsing-scientific-notation-sensibly */
 const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
 
-const playersDict = {
-	[p.NEUTRAL]: "n", // I dont think we need this, good to have in case
-	[p.WHITE]: "w",
-	[p.BLACK]: "b",
-	[p.RED]: "r",
-	[p.BLUE]: "bu",
-	[p.YELLOW]: "y",
-	[p.GREEN]: "g",
-};
-
-const pieceDictionary = {
-	[r.KING + e.W]: "K", [r.KING + e.B]: "k",
-	[r.PAWN + e.W]: "P", [r.PAWN + e.B]: "p",
-	[r.KNIGHT + e.W]: "N", [r.KNIGHT + e.B]: "n",
-	[r.BISHOP + e.W]: "B", [r.BISHOP + e.B]: "b",
-	[r.ROOK + e.W]: "R", [r.ROOK + e.B]: "r",
-	[r.QUEEN + e.W]: "Q", [r.QUEEN + e.B]: "q",
-	[r.AMAZON + e.W]: "AM", [r.AMAZON + e.B]: "am",
-	[r.HAWK + e.W]: "HA", [r.HAWK + e.B]: "ha",
-	[r.CHANCELLOR + e.W]: "CH", [r.CHANCELLOR + e.B]: "ch",
-	[r.ARCHBISHOP + e.W]: "AR", [r.ARCHBISHOP + e.B]: "ar",
-	[r.GUARD + e.W]: "GU", [r.GUARD + e.B]: "gu",
-	[r.CAMEL + e.W]: "CA", [r.CAMEL + e.B]: "ca",
-	[r.GIRAFFE + e.W]: "GI", [r.GIRAFFE + e.B]: "gi",
-	[r.ZEBRA + e.W]: "ZE", [r.ZEBRA + e.B]: "ze",
-	[r.CENTAUR + e.W]: "CE", [r.CENTAUR + e.B]: "ce",
-	[r.ROYALQUEEN + e.W]: "RQ", [r.ROYALQUEEN + e.B]: "rq",
-	[r.ROYALCENTAUR + e.W]: "RC", [r.ROYALCENTAUR + e.B]: "rc",
-	[r.KNIGHTRIDER + e.W]: "NR", [r.KNIGHTRIDER + e.B]: "nr",
-	[r.HUYGEN + e.W]: "HU", [r.HUYGEN + e.B]: "hu",
-	[r.ROSE + e.W]: "RO", [r.ROSE + e.B]: "ro",
-	[r.OBSTACLE + e.N]: "ob",
-	[r.VOID + e.N]: "vo"
-};
-
-const pieceDefaults = {
-	[r.KING]: "k",
-	[r.PAWN]: "p",
-	[r.KNIGHT]: "n",
-	[r.BISHOP]: "b",
-	[r.ROOK]: "r",
-	[r.QUEEN]: "q",
-	[r.AMAZON]: "am",
-	[r.HAWK]: "ha",
-	[r.CHANCELLOR]: "ch",
-	[r.ARCHBISHOP]: "ar",
-	[r.GUARD]: "gu",
-	[r.CAMEL]: "ca",
-	[r.GIRAFFE]: "gi",
-	[r.ZEBRA]: "ze",
-	[r.CENTAUR]: "ce",
-	[r.ROYALQUEEN]: "rq",
-	[r.ROYALCENTAUR]: "rc",
-	[r.KNIGHTRIDER]: "nr",
-	[r.HUYGEN]: "hu",
-	[r.ROSE]: "ro",
-	[r.OBSTACLE]: "ob",
-	[r.VOID]: "vo"
-};
-
-const metadata_key_ordering = [
-    "Event",
-    "Site",
-    "Variant",
-    "Round",
-    "UTCDate",
-    "UTCTime",
-    "TimeControl",
-    "White",
-    "Black",
-    "WhiteID",
-    "BlackID",
-    "Result",
-    "Termination"
-];
-
 const defaultPromotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 
 function invertDictionary(json) {
@@ -108,14 +33,14 @@ function invertDictionary(json) {
 	return inv;
 }
 
-const invertedpieceDictionary = invertDictionary(pieceDictionary);
-const invertedplayersDict = invertDictionary(playersDict);
+const invertedpieceDictionary = invertDictionary(piece_codes);
+const invertedplayersDict = invertDictionary(player_codes);
 
 function IntToShort_Piece(intpiece) {
-	let short = pieceDictionary[intpiece];
+	let short = piece_codes[intpiece];
 	if (short === undefined) {
 		const [raw, c] = typeutil.splitType(intpiece);
-		short = String(c) + pieceDefaults[raw];
+		short = String(c) + piece_codes_raw[raw];
 	}
 	return short;
 }
@@ -256,8 +181,8 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	// Turn order
 	if (!longformat.gameRules.turnOrder) throw new Error("turnOrder gamerule MUST be present when compressing a game.");
 	const turnOrderArray = longformat.gameRules.turnOrder.map(player => {
-		if (!(player in playersDict)) throw new Error(`Invalid color '${player}' when parsing turn order when copying game!`);
-		return playersDict[player];
+		if (!(player in player_codes)) throw new Error(`Invalid color '${player}' when parsing turn order when copying game!`);
+		return player_codes[player];
 	});
 	let turn_order = turnOrderArray.join(':'); // 'w:b'
 	if (turn_order === 'w:b') turn_order = 'w'; // Short for 'w:b'
