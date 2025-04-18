@@ -237,7 +237,12 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: { promotionsAllowed: repeatPromotionsAllowedForEachColor([r.CHANCELLOR, r.KNIGHTRIDER, r.ARCHBISHOP, r.AMAZON]) }
 	},
 	Omega: {
-		positionString: 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3|Q-1,-3|P2,-3|K0,-4',
+		positionString: {
+			// May 15, 2024, 12:00AM - Pawns could no longer double push, that was a bug.
+			1715731200000: 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3|Q-1,-3|P2,-3|K0,-4',
+			// Pawns could originally double push, as a bug.
+			0: 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3+|Q-1,-3|P2,-3+|K0,-4'
+		},
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings
 	},
 	Omega_Squared: {
