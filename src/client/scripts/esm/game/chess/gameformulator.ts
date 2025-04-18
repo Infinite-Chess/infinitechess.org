@@ -60,7 +60,7 @@ interface FormatConverterLong {
 	metadata: MetaData,
 	startingPosition: Position,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	shortposition: string,
+	shortposition?: string,
 	fullMove: number,
 	specialRights: Set<CoordsKey>,
 	/** DOES NOT CONTAIN moveRule!!!! */
