@@ -50,7 +50,7 @@ type TimeVariantProperty<T> = T | {
 /** A single variant entry object in the variant dictionary */
 interface Variant {
 	positionString?: TimeVariantProperty<string>,
-	generator?: {
+	generator?: TimeVariantProperty<{
 		algorithm: () => Position,
 		rules: {
 			pawnDoublePush: boolean,
@@ -366,9 +366,12 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 
 	} else if (variantEntry.generator) {
 
+		const generator = 'algorithm' in variantEntry.generator ? variantEntry.generator
+			: getApplicableTimestampEntry(variantEntry.generator, { UTCDate, UTCTime });
+
 		// Generate the starting position
-		startingPosition = variantEntry.generator.algorithm();
-		return getStartSnapshotPosition({ startingPosition, ...variantEntry.generator.rules }); // { `position`, `positionString`, `specialRights` }
+		startingPosition = generator.algorithm();
+		return getStartSnapshotPosition({ startingPosition, ...generator.rules }); // { `position`, `positionString`, `specialRights` }
 
 	} else throw new Error(`Variant entry "${Variant}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`);
 }
