@@ -190,13 +190,12 @@ function isJson(str: string): boolean {
 
 /**
  * Returns a new object with the keys being the values of the provided object, and the values being the keys.
- * @param obj - The object to invert
- * @returns The inverted object
+ * THE VALUES WILL ALWAYS BE STRINGS. This is because the keys of an object are always strings.
  */
-function invertObj<K extends string | number, V extends string | number | symbol>(obj: Record<K, V>): Record<V, K> {
-	const inv = {} as Record<V, K>;
+function invertObj(obj: Record<string,string>): Record<string,string> {
+	const inv: Record<string,string> = {};
 	for (const key in obj) {
-		inv[obj[key]] = key;
+		inv[obj[key]!] = key;
 	}
 	return inv;
 }

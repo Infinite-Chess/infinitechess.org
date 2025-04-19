@@ -30,7 +30,7 @@ const player_codes = {
 	[p.YELLOW]: "y",
 	[p.GREEN]: "g",
 };
-const player_codes_inverted = jsutil.invertObj<number,string>(player_codes);
+const player_codes_inverted = jsutil.invertObj(player_codes);
 
 /** 1-2 letter codes for the standard white, black, and neutral pieces. */
 const piece_codes = {
@@ -58,7 +58,7 @@ const piece_codes = {
 	[r.OBSTACLE + e.N]: "ob",
 	[r.VOID + e.N]: "vo"
 };
-const piece_codes_inverted = jsutil.invertObj<number,string>(piece_codes);
+const piece_codes_inverted = jsutil.invertObj(piece_codes);
 
 /** The codes for raw, color-less piece types. */
 const piece_codes_raw = {
@@ -86,7 +86,7 @@ const piece_codes_raw = {
 	[r.OBSTACLE]: "ob",
 	[r.VOID]: "vo"
 };
-const piece_codes_raw_inverted = jsutil.invertObj<RawType,string>(piece_codes_raw);
+const piece_codes_raw_inverted = jsutil.invertObj(piece_codes_raw);
 
 /** The desired ordering metadata should be placed in the ICN */
 const metadata_key_ordering = [
@@ -126,7 +126,7 @@ const default_promotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
  * [52] queen(black) => 'q'
  * [68] king(red) => '3k'
  */
-function getAbbrFromType(type: number) {
+function getAbbrFromType(type: number): string {
 	let short = piece_codes[type];
 	if (!short) {
 		const [raw, c] = typeutil.splitType(type);
@@ -137,7 +137,7 @@ function getAbbrFromType(type: number) {
 
 /**
  * Gets the integer piece type from a 1-2 letter piece abbreviation.
- * Capitolized abbrev's are white, lowercase are black.
+ * Capitolized abbrev's are white, lowercase are black, or neutral.
  * It may contain a proceeding number, overriding the player color.
  * 
  * 'P' => [43] pawn(white)
@@ -148,21 +148,20 @@ function getTypeFromAbbr(abbr: string) {
 	const results = /(\d*)([a-zA-Z]+)/.exec(abbr);
 	if (results === null) throw Error("Piece abbreviation is in invalid form: " + abbr);
 
-	let characters = results[2]; // 'nr'
+	const characters: string = results[2]!; // 'nr'
 
-	let type: number;
+	let typeStr: string | undefined;
 
-	if (!results[1]) type = piece_codes_inverted[characters]; // No player number override is present
-	else { // Player number override present
-		const rawType: RawType = piece_codes_raw_inverted[characters.toLowerCase()];
-		if (rawType === undefined) throw Error("Unknown raw piece abbreviation: " + abbr)
+	if (results[1] === '') { // No player number override is present
+		typeStr = piece_codes_inverted[characters];
+		if (typeStr === undefined) throw Error("Unknown piece abbreviation: " + abbr);
+		return Number(typeStr);
+	} else { // Player number override present
+		const rawTypeStr = piece_codes_raw_inverted[characters.toLowerCase()];
+		if (rawTypeStr === undefined) throw Error("Unknown raw piece abbreviation: " + abbr);
 		const player = Number(results[1]) as Player;
-		type = typeutil.buildType(rawType, player);
+		return typeutil.buildType(Number(rawTypeStr) as RawType, player);
 	}
-
-	if (type === undefined) throw Error("Unknown piece abbreviation: " + abbr);
-
-	return type;
 }
 
 
@@ -181,17 +180,16 @@ function getTypeFromAbbr(abbr: string) {
 export {
 	// Dictionaries
 	player_codes,
+	player_codes_inverted,
 	piece_codes,
 	piece_codes_inverted,
 	piece_codes_raw,
 	piece_codes_raw_inverted,
 	metadata_key_ordering,
 	default_promotions,
-
-	getAbbrFromType,
-	getTypeFromAbbr,
 };
 
 export default {
-
+	getAbbrFromType,
+	getTypeFromAbbr,
 };
