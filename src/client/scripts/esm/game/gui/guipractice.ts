@@ -12,10 +12,9 @@ import validcheckmates from '../../chess/util/validcheckmates.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../chess/util/typeutil.js';
 import typeutil from '../../chess/util/typeutil.js';
+import icnconverter from '../../chess/logic/icnconverter.js';
 // @ts-ignore
 import style from './style.js';
-// @ts-ignore
-import formatconverter from '../../chess/logic/formatconverter.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -141,7 +140,7 @@ function createPracticeHTML() {
 			for (const entry of piecelist) {
 				const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
 				const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-				const longPiece = formatconverter.ShortToInt_Piece(shortPiece);
+				const longPiece = icnconverter.getTypeFromAbbr(shortPiece);
 
 				for (let j = 0; j < amount; j++) {
 					const pieceDiv = document.createElement('div');

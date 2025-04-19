@@ -3,11 +3,12 @@
 'use strict';
 
 import jsutil from "../../util/jsutil.js";
-/* eslint-disable max-depth */
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
+import icnconverter, { default_promotions, metadata_key_ordering, player_codes, player_codes_inverted } from "./icnconverter.js";
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
+/** @typedef {import("../util/coordutil.js").CoordsKey} CoordsKey */
 
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
@@ -22,135 +23,9 @@ import typeutil from "../util/typeutil.js";
 /** Regex for numbers in scientific notation from https://stackoverflow.com/questions/638565/parsing-scientific-notation-sensibly */
 const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
 
-const playersDict = {
-	[p.NEUTRAL]: "n", // I dont think we need this, good to have in case
-	[p.WHITE]: "w",
-	[p.BLACK]: "b",
-	[p.RED]: "r",
-	[p.BLUE]: "bu",
-	[p.YELLOW]: "y",
-	[p.GREEN]: "g",
-};
 
-const pieceDictionary = {
-	[r.KING + e.W]: "K", [r.KING + e.B]: "k",
-	[r.PAWN + e.W]: "P", [r.PAWN + e.B]: "p",
-	[r.KNIGHT + e.W]: "N", [r.KNIGHT + e.B]: "n",
-	[r.BISHOP + e.W]: "B", [r.BISHOP + e.B]: "b",
-	[r.ROOK + e.W]: "R", [r.ROOK + e.B]: "r",
-	[r.QUEEN + e.W]: "Q", [r.QUEEN + e.B]: "q",
-	[r.AMAZON + e.W]: "AM", [r.AMAZON + e.B]: "am",
-	[r.HAWK + e.W]: "HA", [r.HAWK + e.B]: "ha",
-	[r.CHANCELLOR + e.W]: "CH", [r.CHANCELLOR + e.B]: "ch",
-	[r.ARCHBISHOP + e.W]: "AR", [r.ARCHBISHOP + e.B]: "ar",
-	[r.GUARD + e.W]: "GU", [r.GUARD + e.B]: "gu",
-	[r.CAMEL + e.W]: "CA", [r.CAMEL + e.B]: "ca",
-	[r.GIRAFFE + e.W]: "GI", [r.GIRAFFE + e.B]: "gi",
-	[r.ZEBRA + e.W]: "ZE", [r.ZEBRA + e.B]: "ze",
-	[r.CENTAUR + e.W]: "CE", [r.CENTAUR + e.B]: "ce",
-	[r.ROYALQUEEN + e.W]: "RQ", [r.ROYALQUEEN + e.B]: "rq",
-	[r.ROYALCENTAUR + e.W]: "RC", [r.ROYALCENTAUR + e.B]: "rc",
-	[r.KNIGHTRIDER + e.W]: "NR", [r.KNIGHTRIDER + e.B]: "nr",
-	[r.HUYGEN + e.W]: "HU", [r.HUYGEN + e.B]: "hu",
-	[r.ROSE + e.W]: "RO", [r.ROSE + e.B]: "ro",
-	[r.OBSTACLE + e.N]: "ob",
-	[r.VOID + e.N]: "vo"
-};
 
-const pieceDefaults = {
-	[r.KING]: "k",
-	[r.PAWN]: "p",
-	[r.KNIGHT]: "n",
-	[r.BISHOP]: "b",
-	[r.ROOK]: "r",
-	[r.QUEEN]: "q",
-	[r.AMAZON]: "am",
-	[r.HAWK]: "ha",
-	[r.CHANCELLOR]: "ch",
-	[r.ARCHBISHOP]: "ar",
-	[r.GUARD]: "gu",
-	[r.CAMEL]: "ca",
-	[r.GIRAFFE]: "gi",
-	[r.ZEBRA]: "ze",
-	[r.CENTAUR]: "ce",
-	[r.ROYALQUEEN]: "rq",
-	[r.ROYALCENTAUR]: "rc",
-	[r.KNIGHTRIDER]: "nr",
-	[r.HUYGEN]: "hu",
-	[r.ROSE]: "ro",
-	[r.OBSTACLE]: "ob",
-	[r.VOID]: "vo"
-};
 
-const metadata_key_ordering = [
-    "Event",
-    "Site",
-    "Variant",
-    "Round",
-    "UTCDate",
-    "UTCTime",
-    "TimeControl",
-    "White",
-    "Black",
-    "WhiteID",
-    "BlackID",
-    "Result",
-    "Termination"
-];
-
-const defaultPromotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
-
-function invertDictionary(json) {
-	const inv = {};
-	for (const key in json) {
-		inv[json[key]] = key;
-	}
-	return inv;
-}
-
-const invertedpieceDictionary = invertDictionary(pieceDictionary);
-const invertedplayersDict = invertDictionary(playersDict);
-
-function IntToShort_Piece(intpiece) {
-	let short = pieceDictionary[intpiece];
-	if (short === undefined) {
-		const [raw, c] = typeutil.splitType(intpiece);
-		short = String(c) + pieceDefaults[raw];
-	}
-	return short;
-}
-
-function ShortToInt_Piece(shortpiece) {
-	const results = /(\d*)([a-zA-Z]+)/.exec(shortpiece);
-	const UNKERR = new Error("Unknown piece type detected: " + shortpiece);
-	if (results === null) throw UNKERR;
-
-	let lowerType = results[2];
-	if (results[1] !== "") lowerType = lowerType.toLowerCase(); // If the player is specified, make it lowercase (neutrals don't have uppercase entries in dictionary)
-
-	if (invertedpieceDictionary[lowerType] === undefined) throw UNKERR;
-
-	let type = Number(invertedpieceDictionary[lowerType]);
-	if (results[1] !== "") { // Overwrite the player that owns it
-		const player = Number(results[1]);
-		type = typeutil.buildType(typeutil.getRawType(type), player);
-	}
-	return type;
-}
-
-/**
- * Checks if a string can be parsed to JSON
- * @param {string} str - Input string
- * @returns {boolean} True if string is in JSON format, else false
- */
-function isJson(str) {
-	try {
-		JSON.parse(str);
-	} catch {
-		return false;
-	}
-	return true;
-}
 
 /**
  * This function brings the input number into a standard format that is not in scientific notation
@@ -256,8 +131,8 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	// Turn order
 	if (!longformat.gameRules.turnOrder) throw new Error("turnOrder gamerule MUST be present when compressing a game.");
 	const turnOrderArray = longformat.gameRules.turnOrder.map(player => {
-		if (!(player in playersDict)) throw new Error(`Invalid color '${player}' when parsing turn order when copying game!`);
-		return playersDict[player];
+		if (!(player in player_codes)) throw new Error(`Invalid color '${player}' when parsing turn order when copying game!`);
+		return player_codes[player];
 	});
 	let turn_order = turnOrderArray.join(':'); // 'w:b'
 	if (turn_order === 'w:b') turn_order = 'w'; // Short for 'w:b'
@@ -288,7 +163,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				if (promotionListWhite && !isPromotionListDefaultPromotions(promotionListWhite)) {
 					shortformat += ";";
 					for (const longpiece of promotionListWhite) {
-						shortformat += `${IntToShort_Piece(longpiece + e.W)},`;
+						shortformat += `${icnconverter.getAbbrFromType(longpiece + e.W)},`;
 					}
 					shortformat = shortformat.slice(0, -1);
 				}
@@ -301,7 +176,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				if (promotionListBlack && !isPromotionListDefaultPromotions(promotionListBlack)) {
 					shortformat += ";";
 					for (const longpiece of promotionListBlack) {
-						shortformat += `${IntToShort_Piece(longpiece + e.B)},`;
+						shortformat += `${icnconverter.getAbbrFromType(longpiece + e.B)},`;
 					}
 					shortformat = shortformat.slice(0, -1);
 				}
@@ -392,7 +267,7 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 		} else { // compact_moves > 0
 			shortmoves += (i === 0 ? "" : "|");
 		}
-		shortmoves += (longmove.type && (compact_moves === 0 || compact_moves === 1) ? IntToShort_Piece(longmove.type) : "");
+		shortmoves += (longmove.type && (compact_moves === 0 || compact_moves === 1) ? icnconverter.getAbbrFromType(longmove.type) : "");
 		shortmoves += longmove.startCoords.toString();
 		shortmoves += (compact_moves === 0 ? " " : "");
 		shortmoves += (longmove.flags.capture && (compact_moves === 0 || compact_moves === 1) ? "x" : ">");
@@ -401,7 +276,7 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 		shortmoves += (compact_moves === 0 ? " " : "");
 		if (longmove.promotion) {
 			shortmoves += (compact_moves === 0 || compact_moves === 1 ? "=" : "");
-			shortmoves += IntToShort_Piece(longmove.promotion);
+			shortmoves += icnconverter.getAbbrFromType(longmove.promotion);
 		}
 		if (longmove.flags.mate && (compact_moves === 0 || compact_moves === 1)) {
 			shortmoves += "#";
@@ -429,8 +304,8 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
  * @returns {boolean}
  */
 function isPromotionListDefaultPromotions(promotionList) {
-	if (promotionList.length !== defaultPromotions.length) return false;
-	return defaultPromotions.every(promotion => promotionList.includes(promotion));
+	if (promotionList.length !== default_promotions.length) return false;
+	return default_promotions.every(promotion => promotionList.includes(promotion));
 }
 
 /**
@@ -504,7 +379,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			if (string !== "") gamerules_string += ` ${string}`;
 
 			// gamerules_string can be parsed into JSON now: parse it in and permanently exit gamerules parsing mode
-			if (isJson(gamerules_string)) {
+			if (jsutil.isJson(gamerules_string)) {
 				const parsedGameRules = JSON.parse(gamerules_string);
 				longformat.gameRules = {...longformat.gameRules, ...parsedGameRules};
 				in_gamerules_parsing_mode = false;
@@ -518,8 +393,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
 			const turnOrderArray = string.split(':'); // ['w','b']
 			longformat.gameRules.turnOrder = [...turnOrderArray.map(playerabbrev => {
-				if (!(playerabbrev in invertedplayersDict)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
-				return Number(invertedplayersDict[playerabbrev]);
+				if (!(playerabbrev in player_codes_inverted)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
+				return Number(player_codes_inverted[playerabbrev]);
 			})];
 			continue;
 		}
@@ -572,8 +447,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 			longformat.gameRules.promotionsAllowed = {
 				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
-				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : [],
-				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : []
+				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? default_promotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(icnconverter.getTypeFromAbbr(abv))) : [],
+				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? default_promotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(icnconverter.getTypeFromAbbr(abv))) : []
 			};
 
 			continue;
@@ -747,7 +622,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
  * @returns {string} Output string in compact ICN notation
  */
 function LongToShort_CompactMove(longmove) {
-	const promotedPiece = (longmove.promotion ? IntToShort_Piece(longmove.promotion) : "");
+	const promotedPiece = (longmove.promotion ? icnconverter.getAbbrFromType(longmove.promotion) : "");
 	return `${longmove.startCoords.toString()}>${longmove.endCoords.toString()}${promotedPiece}`;
 }
 
@@ -770,7 +645,7 @@ function ShortToLong_CompactMove(shortmove) {
 		if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
 	});
 	// ShortToInt_Piece() will already throw an error if the piece abbreviation is invalid.
-	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToInt_Piece(shortmove.match(/[a-zA-Z]+$/)[0]) : "");
+	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? icnconverter.getTypeFromAbbr(shortmove.match(/[a-zA-Z]+$/)[0]) : "");
 	const longmove = { compact: shortmove };
 	longmove.startCoords = coords[0];
 	longmove.endCoords = coords[1];
@@ -782,22 +657,18 @@ function ShortToLong_CompactMove(shortmove) {
 
 /**
  * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param {Set} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @param {Record<CoordsKey,number>} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
+ * @param {Set<CoordsKey>} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
  * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
  */
-function LongToShort_Position(position, specialRights = new Set()) {
+function LongToShort_Position(position, specialRights) {
 	let shortposition = "";
 	if (!position) return shortposition; // undefined position --> no string
+	let firstPiece = true;
 	for (const coordinate in position) {
-		if (specialRights.has(coordinate)) {
-			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}+|`;
-		} else {
-			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}|`;
-		}
+		shortposition += (firstPiece ? '' : '|') + icnconverter.getAbbrFromType(position[coordinate]) + coordinate + (specialRights.has(coordinate) ? '+' : '');
+		firstPiece = false;
 	}
-
-	if (shortposition.length !== 0) shortposition = shortposition.slice(0,-1); // Trim off the final |
 	return shortposition;
 }
 
@@ -897,21 +768,21 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 		if (end_index !== -1) {
 			if (shortposition[index + end_index] === "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
-				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(coordString)] = icnconverter.getTypeFromAbbr(shortpiece);
 				specialRights.add(standardizeCoordString(coordString));
 				index += end_index + 2;
 			} else {
-				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = icnconverter.getTypeFromAbbr(shortpiece);
 				index += end_index + 1;
 			}
 		} else {
 			if (shortposition.slice(-1) === "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
-				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(coordString)] = icnconverter.getTypeFromAbbr(shortpiece);
 				specialRights.add(standardizeCoordString(coordString));
 				index = MAX_INDEX;
 			} else {
-				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = icnconverter.getTypeFromAbbr(shortpiece);
 				index = MAX_INDEX;
 			}
 		}
@@ -941,5 +812,4 @@ export default {
 	generateSpecialRights,
 	convertShortMovesToLong,
 	longToShortMoves,
-	ShortToInt_Piece
 };

@@ -25,6 +25,7 @@ import validatorama from "../../util/validatorama.js";
 import validcheckmates from '../../chess/util/validcheckmates.js';
 import docutil from '../../util/docutil.js';
 import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
+import icnconverter from '../../chess/logic/icnconverter.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -160,7 +161,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 	for (const entry of piecelist) {
 		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
 		const strpiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-		const piece: number = formatconverter.ShortToInt_Piece(strpiece);
+		const piece: number = icnconverter.getTypeFromAbbr(strpiece);
 
 		// place amount many pieces of type piece
 		while (amount !== 0) {
