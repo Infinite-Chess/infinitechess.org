@@ -9,6 +9,7 @@ import typeutil from "../util/typeutil.js";
 import { default_promotions, metadata_key_ordering, piece_codes, piece_codes_inverted, piece_codes_raw, piece_codes_raw_inverted, player_codes } from "./icnconverter.js";
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
+/** @typedef {import("../util/coordutil.js").CoordsKey} CoordsKey */
 
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
@@ -657,22 +658,18 @@ function ShortToLong_CompactMove(shortmove) {
 
 /**
  * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param {Set} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @param {Record<CoordsKey,number>} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
+ * @param {Set<CoordsKey>} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
  * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
  */
-function LongToShort_Position(position, specialRights = new Set()) {
+function LongToShort_Position(position, specialRights) {
 	let shortposition = "";
 	if (!position) return shortposition; // undefined position --> no string
+	let firstPiece = true;
 	for (const coordinate in position) {
-		if (specialRights.has(coordinate)) {
-			shortposition += `${getAbbrFromType(position[coordinate])}${coordinate}+|`;
-		} else {
-			shortposition += `${getAbbrFromType(position[coordinate])}${coordinate}|`;
-		}
+		shortposition += (firstPiece ? '' : '|') + getAbbrFromType(position[coordinate]) + coordinate + (specialRights.has(coordinate) ? '+' : '');
+		firstPiece = false;
 	}
-
-	if (shortposition.length !== 0) shortposition = shortposition.slice(0,-1); // Trim off the final |
 	return shortposition;
 }
 
