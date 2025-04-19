@@ -116,6 +116,8 @@ const metadata_key_ordering = [
  */
 const default_promotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 
+const pieceAbbrevRegex = /\d*[A-Za-z]+/; // '3Q' => Player-3 queen (red)
+
 
 // Getting Abbreviations --------------------------------------------------------------------------------
 
@@ -173,22 +175,26 @@ function getTypeFromAbbr(abbr: string) {
 
 
 /**
- * Converts a move draft into the most minimal string form: '1,7>2,8Q'
+ * Converts a move draft into the most minimal string form: '1,7>2,8=Q'
+ * 
+ * THE `=` IS REQUIRED because in future multiplayer games we will
+ * have promotion to colored pieces, so we need to be able to distinguish
+ * the player number from the end-Y coordinate! "1,7>2,8=3Q" => Red queen
  * 
  * {@link getShortFormMoveFromMove} is also capable of this, but less efficient.
  */
 function getCompactMoveFromDraft(moveDraft: MoveDraft): string {
 	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
 	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
-	const promotedPieceAbbr = moveDraft.promotion !== undefined ? getAbbrFromType(moveDraft.promotion) : "";
+	const promotedPieceStr = moveDraft.promotion !== undefined ? "=" + getAbbrFromType(moveDraft.promotion) : "";
 
-	return startCoordsKey + ">" + endCoordsKey + promotedPieceAbbr; // 'a,b>c,dX'
+	return startCoordsKey + ">" + endCoordsKey + promotedPieceStr; // 'a,b>c,dX'
 }
 
 /**
  * Converts a move into shortform notation, with various styling options available.
  * 
- * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8Q'
+ * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
  * spaces => Spaces between segments of a move => 'P1,7 x 2,8 =Q +'
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
  */
@@ -220,8 +226,7 @@ function getShortFormMoveFromMove(move: Move, options: { compact: boolean, space
 	// 4th segment: Specify the promoted piece, if present
 	if (move.promotion !== undefined) {
 		const promotedPieceAbbr = getAbbrFromType(move.promotion);
-		if (options.compact) segments.push(promotedPieceAbbr); // Q
-		else segments.push("=" + promotedPieceAbbr); // =Q
+		segments.push("=" + promotedPieceAbbr); // =Q
 	}
 
 	// 5th segment: Append the check/mate flags '#' or '+'
@@ -295,7 +300,7 @@ function getClkEmbededCommandSequence(timeRemainMillis: number): string {
  * Converts a gamefile's moves list into shortform, ready to place into the ICN.
  * Various styling options are available:
  * 
- * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8Q'
+ * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
  * spaces => Spaces between segments of a move. => 'P1,7 x 2,8 =Q +'
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
  * move_numbers => Include move numbers, prettifying the notation. This makes turnOrder, fullmove, and make_new_lines required.
@@ -395,6 +400,7 @@ export {
 	piece_codes_raw_inverted,
 	metadata_key_ordering,
 	default_promotions,
+	pieceAbbrevRegex,
 };
 
 export default {

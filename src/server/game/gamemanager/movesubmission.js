@@ -17,6 +17,7 @@ import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { pieceAbbrevRegex } from '../../../client/scripts/esm/chess/logic/icnconverter.js';
 
 /**
  * Type Definitions
@@ -99,23 +100,37 @@ function submitMove(ws, game, messageContents) {
 
 
 /**
- * Returns true if their submitted move is in the format `x,y>x,y=N`.
+ * Returns true if their submitted move is in the format `x,y>x,y=3N`.
  * @param {string} move - Their move submission.
  * @returns {boolean} *true* If the move is correctly formatted.
  */
 function doesMoveCheckOut(move) {
 	if (typeof move !== 'string') return false;
-	// Is the move in the correct format? "x,y>x,y=N"
-	const coordinates = move.split('>');
-	if (coordinates.length !== 2) return false;
-	const startCoordComponents = coordinates[0].split(',');
-	const endCoordComponents = coordinates[1].split(',');
-	if (startCoordComponents.length !== 2) return false;
-	if (endCoordComponents.length < 2) return false;
-	if (isNaN(Number(startCoordComponents[0]))) return false;
-	if (isNaN(Number(startCoordComponents[1]))) return false;
-	if (isNaN(Number(endCoordComponents[0]))) return false;
-	// Right now, don't test the 2nd component of the endCoord, because we haven't split it off the promotion piece.
+
+	// Is the move in the correct format? "x,y>x,yN"
+
+	// DOESN'T HAVE CAPTURE GROUPS
+	// const moveRegex = new RegExp(`^-?\\d+,-?\\d+>-?\\d+,-?\\d+(?:=${pieceAbbrevRegex.source})?$`);
+	// return moveRegex.test(move);
+
+	// With capture groups
+	const moveRegex = new RegExp(`^(?<sx>-?\\d+),(?<sy>-?\\d+)>(?<ex>-?\\d+),(?<ey>-?\\d+)(?:=${pieceAbbrevRegex.source})?$`);
+
+	// first test structure & capture the four coords
+	const matches = move.match(moveRegex);
+	if (!matches) return false; // Didn't pass the regex
+
+	// Make sure no captured number overflows to Infinity.
+	// The other client can't handle that!
+	// Delete when we allow infinite move distance.
+	const { sx, sy, ex, ey } = matches.groups;
+	if (
+		!Number.isFinite(Number(sx)) ||
+		!Number.isFinite(Number(sy)) ||
+		!Number.isFinite(Number(ex)) ||
+		!Number.isFinite(Number(ey))
+	) return false;
+
 	return true;
 }
 
