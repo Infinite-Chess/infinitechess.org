@@ -72,10 +72,8 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	if (longformat.moveRule) shortformat += `${longformat.moveRule.toString()} `;
 
 	// full move counter
-	let fullmove = 1;
 	if (longformat.fullMove) {
 		shortformat += `${longformat.fullMove} `;
-		fullmove = Number(longformat.fullMove);
 	}
 
 	// promotion lines, currently assumes that "promotionRanks" is always defined as a list of length 2, if it is defined
