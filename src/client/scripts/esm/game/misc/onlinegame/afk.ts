@@ -12,7 +12,6 @@
  */
 
 import onlinegame from "./onlinegame.js";
-import clock from "../../../chess/logic/clock.js";
 import gameslot from "../../chess/gameslot.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import moveutil from "../../../chess/util/moveutil.js";
@@ -112,10 +111,10 @@ function rescheduleAlertServerWeAFK() {
 	clearTimeout(timeoutID);
 	const gamefile = gameslot.getGamefile()!;
 	// TEMPORARY: Timed resignable games cannot be auto-resigned from going afk (to make tournament games more fair)
-	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) || onlinegame.getIsPrivate() && clock.isGameUntimed(gamefile) || !clock.isGameUntimed(gamefile) && moveutil.isGameResignable(gamefile)) return;
+	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) || onlinegame.getIsPrivate() && gamefile.untimed || !gamefile.untimed && moveutil.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
 	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(gamefile) ? timeUntilAFKSecs_Abortable
-										: clock.isGameUntimed(gamefile) ? timeUntilAFKSecs_Untimed
+										: gamefile.untimed ? timeUntilAFKSecs_Untimed
 										: timeUntilAFKSecs;
 	timeoutID = setTimeout(tellServerWeAFK, timeUntilAlertServerWeAFKSecs * 1000);
 }
