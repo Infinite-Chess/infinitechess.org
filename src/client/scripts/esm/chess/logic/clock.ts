@@ -106,6 +106,8 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 		currentTime: {}
 	};
 
+	gamefile.clocks = clocks;
+
 	// Edit the closk if we're re-loading an online game
 	if (currentTimes) edit(gamefile, currentTimes);
 	else { // No current time specified, start both players with the default.
@@ -113,8 +115,6 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 			clocks.currentTime[color] = clocks.startTime.millis;
 		});
 	}
-
-	gamefile.clocks = clocks;
 }
 
 /**
@@ -153,13 +153,13 @@ function push(gamefile: gamefile) {
 	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 	const clocks = gamefile.clocks!;
 
-	clocks.colorTicking = gamefile.whosTurn;
-
 	// Add increment if the last move has a clock ticking
 	if (clocks.timeAtTurnStart !== undefined) {
 		const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
+
+	clocks.colorTicking = gamefile.whosTurn;
 
 	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
 	clocks.timeAtTurnStart = Date.now();
@@ -210,13 +210,6 @@ function printClocks(gamefile: gamefile) {
 	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);
 }
 
-/**
- * Returns true if the current game is untimed (infinite clocks) 
- */
-function isGameUntimed(gamefile: gamefile): boolean {
-	return gamefile.untimed;
-}
-
 export default {
 	set,
 	edit,
@@ -224,7 +217,6 @@ export default {
 	update,
 	push,
 	printClocks,
-	isGameUntimed,
 };
 
 export type {

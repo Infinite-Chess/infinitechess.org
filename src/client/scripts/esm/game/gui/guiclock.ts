@@ -24,28 +24,51 @@ const element_timers: PlayerGroup<{timer: HTMLElement, container: HTMLElement}> 
 };
 
 /** All variables related to the lowtime tick notification at 1 minute remaining. */
-const lowtimeNotif = {
+const lowtimeNotif: {
+	playersNotified: Set<Player>,
+	timeoutID?: ReturnType<typeof setTimeout>
+	timeToStartFromEnd: number
+	clockMinsRequiredToUse: number
+} = {
 	/** Contains the players that have had the ticking sound play */
-	playersNotified: new Set() as Set<Player>,
+	playersNotified: new Set(),
 	/** The timer that, when ends, will play the lowtime ticking audio cue. */
-	timeoutID: undefined as undefined|number,
+	timeoutID: undefined,
 	/** The amount of milliseconds before losing on time at which the lowtime tick notification will be played. */
 	timeToStartFromEnd: 65615,
 	/** The minimum start time required to give a lowtime notification at 1 minute remaining. */
 	clockMinsRequiredToUse: 2,
 };
 /** All variables related to the 10s countdown when you're almost out of time. */
-const countdown = {
+const countdown: {
 	drum: {
-		timeoutID: undefined as undefined|number,
+		timeoutID?: ReturnType<typeof setTimeout>
+	},
+	tick: {
+		timeoutID?: ReturnType<typeof setTimeout>
+		sound?: SoundObject
+		timeToStartFromEnd: number
+		fadeInDuration: number
+		fadeOutDuration: number
+	}
+	ticking: {
+		timeoutID?: ReturnType<typeof setTimeout>
+		sound?: SoundObject
+		timeToStartFromEnd: number
+		fadeInDuration: number
+		fadeOutDuration: number
+	}
+} = {
+	drum: {
+		timeoutID: undefined,
 	},
 	tick: {
 		/**
          * The current sound object, if specified, that is playing our tick sound effects right before the 10s countdown.
          * This can be used to stop the sound from playing.
          */
-		sound: undefined as undefined|SoundObject|void,
-		timeoutID: undefined as undefined|number,
+		sound: undefined,
+		timeoutID: undefined,
 		timeToStartFromEnd: 15625,
 		fadeInDuration: 300,
 		fadeOutDuration: 100,
@@ -55,8 +78,8 @@ const countdown = {
          * The current sound object, if specified, that is playing our ticking sound effects during the 10s countdown.
          * This can be used to stop the sound from playing.
          */
-		sound: undefined as undefined|SoundObject|void,
-		timeoutID: undefined as undefined|number,
+		sound: undefined,
+		timeoutID: undefined,
 		timeToStartFromEnd: 10380,
 		fadeInDuration: 300,
 		fadeOutDuration: 100,
@@ -208,7 +231,7 @@ function rescheduleMinuteTick(gamefile: gamefile) {
 	const timeRemainAtTurnStart = gamefile.clocks!.timeRemainAtTurnStart!;
 	const timeRemain = timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd; // Time remaining until sound it should start playing
 	if (timeRemain < 0) return;
-	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.clocks!.colorTicking) as unknown as number;
+	lowtimeNotif.timeoutID = setTimeout(playMinuteTick, timeRemain, gamefile.clocks!.colorTicking) as unknown as ReturnType<typeof setTimeout>;
 }
 
 function playMinuteTick(color: Player) {
@@ -263,7 +286,7 @@ function rescheduleDrum(gamefile: gamefile) {
 		timeNextDrum += addTimeNextDrum;
 		secsRemaining -= addTimeNextDrum / 1000;
 	}
-	countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeNextDrum, gamefile, secsRemaining) as unknown as number;
+	countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeNextDrum, gamefile, secsRemaining);
 }
 
 function rescheduleTicking(gamefile: gamefile) {
@@ -272,7 +295,7 @@ function rescheduleTicking(gamefile: gamefile) {
 	if (onlinegame.areInOnlineGame() && gamefile.clocks!.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 	if (gamefile.clocks!.timeAtTurnStart! < 10000) return;
 	const timeRemain = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]! - countdown.ticking.timeToStartFromEnd;
-	if (timeRemain > 0) countdown.ticking.timeoutID = setTimeout(playTickingEffect, timeRemain) as unknown as number;
+	if (timeRemain > 0) countdown.ticking.timeoutID = setTimeout(playTickingEffect, timeRemain) as unknown as ReturnType<typeof setTimeout>;
 	else {
 		const offset = -timeRemain;
 		playTickingEffect(offset);
@@ -285,7 +308,7 @@ function rescheduleTick(gamefile: gamefile) {
 	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks!.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 	const timeRemain = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]! - countdown.tick.timeToStartFromEnd;
-	if (timeRemain > 0) countdown.tick.timeoutID = setTimeout(playTickEffect, timeRemain) as unknown as number;
+	if (timeRemain > 0) countdown.tick.timeoutID = setTimeout(playTickEffect, timeRemain) as unknown as ReturnType<typeof setTimeout>;
 	else {
 		const offset = -timeRemain;
 		playTickEffect(offset);
@@ -303,7 +326,7 @@ function playDrumAndQueueNext(gamefile: gamefile, secsRemaining: number) {
 	const newSecsRemaining = secsRemaining - 1;
 	if (newSecsRemaining === 0) return; // Stop
 	const timeUntilNextDrum = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]! - newSecsRemaining * 1000;
-	countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeUntilNextDrum, gamefile, newSecsRemaining) as unknown as number;
+	countdown.drum.timeoutID = setTimeout(playDrumAndQueueNext, timeUntilNextDrum, gamefile, newSecsRemaining);
 }
 
 function playTickingEffect(offset: number) {

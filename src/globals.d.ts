@@ -10,6 +10,11 @@ declare global {
 		ping: CustomEvent<number>;
 		'socket-closed': CustomEvent<void>;
 	}
+
+	let sound: {
+		getAudioContext: () => AudioContext,
+		initAudioContext: (audioCtx: AudioContext, decodedBuffer: AudioBuffer) => void
+	};
 }
 
 export {}; // Ensures this file is treated as a module
