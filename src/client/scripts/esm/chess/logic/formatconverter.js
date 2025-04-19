@@ -9,6 +9,7 @@ import icnconverter, { default_promotions, metadata_key_ordering, player_codes, 
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
 /** @typedef {import("../util/coordutil.js").CoordsKey} CoordsKey */
+/** @typedef {import("./movepiece.js").Move} Move */
 
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
@@ -148,7 +149,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	// full move counter
 	let fullmove = 1;
 	if (longformat.fullMove) {
-		shortformat += `${longformat.fullMove.toString()} `;
+		shortformat += `${longformat.fullMove} `;
 		fullmove = Number(longformat.fullMove);
 	}
 
@@ -236,66 +237,17 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	}
 
 	// moves
-	if (longformat.moves) shortformat += longToShortMoves(longformat.moves, { turnOrderArray, fullmove, compact_moves, make_new_lines });
-
-	return shortformat;
-}
-
-/**
- * Converts moves from either the format `[{ startCoords, endCoords }, ...]` or `['1,2>3,4','5,6>7,8N']`
- * to short string format `1,2>3,4|5,6>7,8N`
- * @param {Object} longmoves 
- * @param {Object} options - Additional options
- * @param {string} options.turnOrderArray - ['w','b']
- * @param {string} options.fullmove
- * @param {string} options.make_new_lines
- * @param {string} options.compact_moves
- */
-function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines, compact_moves }) {
-	// If the moves are provided like: ['1,2>3,4','5,6>7,8N'], then quick return!
-	if (typeof longmoves[0] === 'string') return longmoves.join('|');
-
-	let turnIndex = 0;
-	let shortmoves = "";
-	for (let i = 0; i < longmoves.length; i++) {
-		const longmove = longmoves[i];
-		if (compact_moves === 0) {
-			if (turnIndex === 0) {
-				shortmoves += (!make_new_lines && i !== 0 ? " " : "");
-				shortmoves += fullmove + ". ";
-			} else shortmoves += " | ";
-		} else { // compact_moves > 0
-			shortmoves += (i === 0 ? "" : "|");
-		}
-		shortmoves += (longmove.type && (compact_moves === 0 || compact_moves === 1) ? icnconverter.getAbbrFromType(longmove.type) : "");
-		shortmoves += longmove.startCoords.toString();
-		shortmoves += (compact_moves === 0 ? " " : "");
-		shortmoves += (longmove.flags.capture && (compact_moves === 0 || compact_moves === 1) ? "x" : ">");
-		shortmoves += (compact_moves === 0 ? " " : "");
-		shortmoves += longmove.endCoords.toString();
-		shortmoves += (compact_moves === 0 ? " " : "");
-		if (longmove.promotion) {
-			shortmoves += (compact_moves === 0 || compact_moves === 1 ? "=" : "");
-			shortmoves += icnconverter.getAbbrFromType(longmove.promotion);
-		}
-		if (longmove.flags.mate && (compact_moves === 0 || compact_moves === 1)) {
-			shortmoves += "#";
-		} else if (longmove.flags.check && (compact_moves === 0 || compact_moves === 1)) {
-			shortmoves += "+";
-		}
-		shortmoves = shortmoves.trimEnd();
-
-		// Prep for next iteration by adjusting the turn index
-		turnIndex++;
-		if (turnIndex > turnOrderArray.length - 1) { // Wrap around back to first turn
-			turnIndex = 0;
-			fullmove += 1;
-			if (i !== longmoves.length - 1 && compact_moves === 0) {
-				shortmoves += (make_new_lines ? "\n" : " |");
-			}
+	if (longformat.moves) {
+		// If the moves are provided like: ['1,2>3,4','5,6>7,8N'], then quick return!
+		// THE SERVER SIDE sends them in this format!
+		if (typeof longformat.moves[0] === 'string') shortformat += longformat.moves.join('|');
+		else { // Add the moves the usual way, parsing the gamefile's Move[]
+			const annotationLevel = compact_moves === 0 ? 2 : compact_moves === 1 ? 1 : 0;
+			shortformat += icnconverter.getShortFormMovesFromMoves(longformat.moves, longformat.gameRules.turnOrder, fullmove, annotationLevel); 
 		}
 	}
-	return shortmoves.trimEnd();
+
+	return shortformat;
 }
 
 /**
@@ -617,16 +569,6 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 }
 
 /**
- * Converts a single move in JSON format to most-compact (excludes 'x','+','#') ICN notation: 'a,b>c,dX'
- * @param {Object} longmove - Input move in JSON format
- * @returns {string} Output string in compact ICN notation
- */
-function LongToShort_CompactMove(longmove) {
-	const promotedPiece = (longmove.promotion ? icnconverter.getAbbrFromType(longmove.promotion) : "");
-	return `${longmove.startCoords.toString()}>${longmove.endCoords.toString()}${promotedPiece}`;
-}
-
-/**
  * Converts a single compact move "a,b>c,dX" in ICN notation to JSON format.
  * Doesn't reconstruct captured, enpassant, or castle flags, but DOES reconstruct promotion flag.
  * 
@@ -665,8 +607,11 @@ function LongToShort_Position(position, specialRights) {
 	let shortposition = "";
 	if (!position) return shortposition; // undefined position --> no string
 	let firstPiece = true;
-	for (const coordinate in position) {
-		shortposition += (firstPiece ? '' : '|') + icnconverter.getAbbrFromType(position[coordinate]) + coordinate + (specialRights.has(coordinate) ? '+' : '');
+	for (const coordsKey in position) {
+		const pieceDelimiter = firstPiece ? "" : "|";
+		const pieceAbbr = icnconverter.getAbbrFromType(position[coordsKey]);
+		const specialRightsString = specialRights.has(coordsKey) ? '+' : '';
+		shortposition += pieceDelimiter + pieceAbbr + coordsKey + specialRightsString;
 		firstPiece = false;
 	}
 	return shortposition;
@@ -804,12 +749,10 @@ export default {
 	LongToShort_Format,
 	ShortToLong_Format,
 	GameToPosition,
-	LongToShort_CompactMove,
 	ShortToLong_CompactMove,
 	LongToShort_Position,
 	LongToShort_Position_FromGamerules,
 	getStartingPositionAndSpecialRightsFromShortPosition,
 	generateSpecialRights,
 	convertShortMovesToLong,
-	longToShortMoves,
 };

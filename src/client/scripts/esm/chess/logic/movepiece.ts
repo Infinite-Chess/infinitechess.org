@@ -19,6 +19,7 @@ import boardchanges from './boardchanges.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
+import icnconverter from './icnconverter.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -131,6 +132,18 @@ interface Move extends MoveDraft {
 		/** Whether the move caused a capture */
 		capture: boolean,
 	}
+	/**
+	 * Any comment made on the move, specified in the ICN.
+	 * These will go back into the ICN when copying the game.
+	 */
+	comment?: string,
+	/**
+	 * How much time the player had left after they made their move, in millis.
+	 * 
+	 * Server is always boss, we cannot set this until after the
+	 * server responds back with the updated clock information.
+	 */
+	clk?: number,
 }
 
 /**
@@ -179,7 +192,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		changes: [],
 		generateIndex: gamefile.moveIndex + 1,
 		state: { local: [], global: [] },
-		compact: formatconverter.LongToShort_CompactMove(moveDraft),
+		compact: icnconverter.getCompactMoveFromDraft(moveDraft),
 		flags: {
 			// These will be set later, but we need a default value
 			check: false,

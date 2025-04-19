@@ -49,7 +49,9 @@ function areCoordsIntegers(coords: Coords): boolean {
  * Returns the key string of the coordinates: [x,y] => 'x,y'
  */
 function getKeyFromCoords(coords: Coords): CoordsKey {
-	return `${coords[0]},${coords[1]}`;
+	// Casting to BigInt and back to a string avoids scientific notation.
+	// toFixed(0) doesn't work for numbers above 10^21
+	return `${BigInt(coords[0])},${BigInt(coords[1])}` as CoordsKey;
 }
 
 /**
