@@ -172,7 +172,11 @@ function getTypeFromAbbr(abbr: string) {
 // Compacting Single Moves -------------------------------------------------------------------------------
 
 
-/** Converts a move into the most minimal string form: '1,7>2,8Q' */
+/**
+ * Converts a move draft into the most minimal string form: '1,7>2,8Q'
+ * 
+ * {@link getShortFormMoveFromMove} is also capable of this, but less efficient.
+ */
 function getCompactMoveFromDraft(moveDraft: MoveDraft): string {
 	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
 	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
@@ -182,37 +186,50 @@ function getCompactMoveFromDraft(moveDraft: MoveDraft): string {
 }
 
 /**
- * Converts a move into a balanced string form: 'P1,7x2,8=Q+'
- * This adds the piece abbreviation, 'x' for captures, '='
- * for promotions, and '+' or '#' for check/mate.
+ * Converts a move into shortform notation, with various styling options available.
  * 
- * Non-prettified: 'P1,7x2,8=Q+{[%clk 0:09:56.7] White captures en passant}'
- * Prettified: 'P1,7 x 2,8 =Q + {[%clk 0:09:56.7] White captures en passant}'
+ * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8Q'
+ * spaces => Spaces between segments of a move => 'P1,7 x 2,8 =Q +'
+ * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
  */
-function getShortFormMoveFromMove(move: Move, prettify?: true): string {
-	/** Each "segment" of the entire move is separated by a space, when prettify is true */
+function getShortFormMoveFromMove(move: Move, options: { compact: boolean, spaces: boolean, comments: boolean }): string {
+	if (options.compact && !options.spaces && !options.comments) console.warn("getCompactMoveFromDraft() is more efficient to get the most-compact form of a move.");
+
+	// TESTING. Randomly give the move either a comment or a clk value.
+	// if (Math.random() < 0.3) move.comment = "Comment example";
+	// if (Math.random() < 0.3) move.clk = Math.random() * 100000;
+	
+	/** Each "segment" of the entire move will be separated by a space, if spaces is true */
 	const segments: string[] = [];
 
 	// 1st segment: piece abbreviation + start coords
-	const pieceAbbr = getAbbrFromType(move.type);
 	const startCoordsKey = coordutil.getKeyFromCoords(move.startCoords);
-	segments.push(pieceAbbr + startCoordsKey);
+	if (options.compact) segments.push(startCoordsKey); // '1,2'
+	else {
+		const pieceAbbr = getAbbrFromType(move.type);
+		segments.push(pieceAbbr + startCoordsKey); // 'P1,2'
+	}
 
 	// 2nd segment: If it was a capture, use 'x' instead of '>'
-	segments.push(move.flags.capture ? "x" : ">");
+	if (options.compact) segments.push(">");
+	else segments.push(move.flags.capture ? "x" : ">");
 
 	// 3rd segment: end coords
 	segments.push(coordutil.getKeyFromCoords(move.endCoords));
 
 	// 4th segment: Specify the promoted piece, if present
-	if (move.promotion !== undefined) segments.push("=" + getAbbrFromType(move.promotion));
+	if (move.promotion !== undefined) {
+		const promotedPieceAbbr = getAbbrFromType(move.promotion);
+		if (options.compact) segments.push(promotedPieceAbbr); // Q
+		else segments.push("=" + promotedPieceAbbr); // =Q
+	}
 
 	// 5th segment: Append the check/mate flags '#' or '+'
-	if (move.flags.mate || move.flags.check) segments.push(move.flags.mate ? "#" : "+");
+	if (!options.compact && (move.flags.mate || move.flags.check)) segments.push(move.flags.mate ? "#" : "+");
 
 	// 6th segment: Comment, if present, with the clk embedded command sequence
 	// For example: {[%clk 0:09:56.7] White captures en passant}
-	if (move.comment || move.clk !== undefined) {
+	if (options.comments && (move.comment || move.clk !== undefined)) {
 		/**
 		 * Everything in a comment that has to be separated by a space.
 		 * This should include all embeded command sequences, like [%clk 0:09:56.7]
@@ -220,17 +237,17 @@ function getShortFormMoveFromMove(move: Move, prettify?: true): string {
 		 */
 		const parts: string[] = [];
 		// Include the clk embeded command sequence, if the player's clock snapshot is present on the move.
-		if (move.clk !== undefined) parts.push(getClkEmbededCommandSequence(move.clk));
+		if (move.clk !== undefined) parts.push(getClkEmbededCommandSequence(move.clk)); // '[%clk 0:09:56.7]'
 		// Append the comment, if present
-		if (move.comment) parts.push(move.comment);
+		if (move.comment) parts.push(move.comment); // 'White captures en passant'
 
 		// Join the parts with a space and push to the segments of the move
-		segments.push("{" + parts.join(" ") + "}");
+		segments.push("{" + parts.join(" ") + "}"); // '{[%clk 0:09:56.7] White captures en passant}'
 	}
 
-	// Return the shortform move, adding a space between all segments, if prettify is true
-	const segmentDelimiter = prettify ? " " : "";
-	return segments.join(segmentDelimiter); // 'P1,7 x 2,8 =Q + {[%clk 0:09:56.7] White captures en passant}' | 'P1,7x2,8=Q+{[%clk 0:09:56.7] White captures en passant}'
+	// Return the shortform move, adding a space between all segments, if spaces is true
+	const segmentDelimiter = options.spaces ? " " : "";
+	return segments.join(segmentDelimiter); // 'P1,7 x 2,8 =Q + {[%clk 0:09:56.7] White captures en passant}' | 'P1,7x2,8=Q+{[%clk 0:09:56.7] White captures en passant}' | '1,7>2,8Q{[%clk 0:09:56.7]}' | '1,7>2,8Q'
 }
 
 /**
@@ -274,36 +291,45 @@ function getClkEmbededCommandSequence(timeRemainMillis: number): string {
 // Compacting Move Lists --------------------------------------------------------------------------------
 
 
-function getShortFormMovesFromMoves(moves: Move[], turnOrder: Player[], fullmove: number, annotationLevel: 0 | 1 | 2): string {
-	console.log("Getting moves with annotation level: " + annotationLevel);
-	
-	if (annotationLevel === 0) return getShortFormMovesFromMoves_Annote0(moves); // Minimal form: '1,2>3,4|5,6>7,8Q'
-	if (annotationLevel === 1) return getShortFormMovesFromMoves_Annote1(moves); // Balanced form: 'N2,1x1,3+|Q2,1>3,4#'
-	return getShortFormMovesFromMoves_Annote2(moves, turnOrder, fullmove, true); // Beautiful form with move numbers, new lines, and comments!
-}
+/**
+ * Converts a gamefile's moves list into shortform, ready to place into the ICN.
+ * Various styling options are available:
+ * 
+ * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8Q'
+ * spaces => Spaces between segments of a move. => 'P1,7 x 2,8 =Q +'
+ * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
+ * move_numbers => Include move numbers, prettifying the notation. This makes turnOrder, fullmove, and make_new_lines required.
+ * make_new_lines => Include new lines between move numbers (only when move_numbers = true)
+ */
+function getShortFormMovesFromMoves(moves: Move[], options: { compact: boolean; spaces: boolean; comments: boolean; } & ({ move_numbers: false } | { move_numbers: true, turnOrder: Player[], fullmove: number, make_new_lines: boolean })): string {
+	// console.log("Getting shortform moves with options:", options);
 
-/** Converts a gamefile's moves list to the most minimal and compact string notation `1,2>3,4|5,6>7,8N` */
-function getShortFormMovesFromMoves_Annote0(moves: Move[]): string {
-	return moves.map(move => move.compact).join("|");
+	// Converts a gamefile's moves list to the most minimal and compact string notation `1,2>3,4|5,6>7,8N`
+	if (options.compact && !options.spaces && !options.comments && !options.move_numbers) return moves.map(move => move.compact).join("|"); // Most efficient, as the Move already has the compact form.
+
+	if (!options.move_numbers) {
+		const shortforms = moves.map(move => getShortFormMoveFromMove(move, options));
+		const moveDelimiter = options.spaces ? " | " : "|";
+		return shortforms.join(moveDelimiter);
+	}
+
+	// Include move_numbers with the notation
+	return getShortFormMovesFromMoves_MoveNumbers(moves, options); // Beautiful form with move numbers, new lines, and comments!
 }
 
 /**
- * Converts a gamefile's moves list to a compact string notation,
- * with piece abbreviations, 'x', '+', and '#' markers
- * (e.g. 'N2,1x1,3+|Q2,1>3,4#')
+ * Converts a gamefile's moves list to a NUMBERED shortform notation.
+ * Various styling options are available:
+ * 
+ * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8Q'
+ * spaces => Spaces between segments of a move. => 'P1,7 x 2,8 =Q +'
+ * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
+ * make_new_lines => Include new lines between move numbers
  */
-function getShortFormMovesFromMoves_Annote1(moves: Move[]): string {
-	return moves.map((move) => getShortFormMoveFromMove(move)).join("|");
-}
-
-/**
- * Converts a gamefile's moves list to a beautiful string notation,
- * with move numbers, new lines, comments, piece abbreviations, 'x', '+', and '#' markers!
- */
-function getShortFormMovesFromMoves_Annote2(moves: Move[], turnOrder: Player[], fullmove: number, make_new_lines?: true): string {
+function getShortFormMovesFromMoves_MoveNumbers(moves: Move[], options: { turnOrder: Player[], fullmove: number, compact: boolean, spaces: boolean, comments: boolean, make_new_lines: boolean }): string {
 
 	/**
-	 * Display the moves like such:
+	 * Example preview: (compact = false, spaces = true, comments = true, fullmove = 1)
 	 * 
 	 * 1. P4,2 > 4,4  | p4,7 > 4,6
 	 * 2. P4,4 > 4,5  | p3,7 > 3,5
@@ -318,21 +344,24 @@ function getShortFormMovesFromMoves_Annote2(moves: Move[], turnOrder: Player[], 
 	 * 11. P8,2 > 8,4 ?! | q0,4 > 4,4 # {Bad game from both players}
 	 */
 
+	/** If true, we can read move.compact */
+	const mostCompactForm = options.compact && !options.spaces && !options.comments;
+
 	const moveLines: string[] = [];
 	let currentLine: string = '';
 	moves.forEach((move, i) => {
-		const turnIndex = i % turnOrder.length;
+		const turnIndex = i % options.turnOrder.length;
 
 		// If turn index is 0, start out with the move number
-		if (turnIndex === 0) currentLine += `${Math.floor(i / turnOrder.length) + fullmove}. `;
+		if (turnIndex === 0) currentLine += `${Math.floor(i / options.turnOrder.length) + options.fullmove}. `;
 		// Else add the move delimiter
 		else currentLine += " | ";
 
-		// Add the prettified move to the current line
-		currentLine += getShortFormMoveFromMove(move, true);
+		// Add the shortform move to the current line
+		currentLine += mostCompactForm ? move.compact : getShortFormMoveFromMove(move, options);
 
 		// If turn index is the last player, push the current line and start a new one.
-		if (turnIndex === turnOrder.length - 1) {
+		if (turnIndex === options.turnOrder.length - 1) {
 			moveLines.push(currentLine);
 			currentLine = '';
 		}
@@ -341,7 +370,7 @@ function getShortFormMovesFromMoves_Annote2(moves: Move[], turnOrder: Player[], 
 	// If the last line is not empty, push it to the lines.
 	if (currentLine !== '') moveLines.push(currentLine);
 
-	const linesDelimiter = make_new_lines ? "\n" : " ";
+	const linesDelimiter = options.make_new_lines ? "\n" : " ";
 	return moveLines.join(linesDelimiter);
 }
 

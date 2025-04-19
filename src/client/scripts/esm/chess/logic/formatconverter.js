@@ -242,8 +242,17 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 		// THE SERVER SIDE sends them in this format!
 		if (typeof longformat.moves[0] === 'string') shortformat += longformat.moves.join('|');
 		else { // Add the moves the usual way, parsing the gamefile's Move[]
-			const annotationLevel = compact_moves === 0 ? 2 : compact_moves === 1 ? 1 : 0;
-			shortformat += icnconverter.getShortFormMovesFromMoves(longformat.moves, longformat.gameRules.turnOrder, fullmove, annotationLevel); 
+			const options = {
+				compact: false,
+				spaces: false,
+				comments: false,
+				move_numbers: false,
+				// Required if adding move numbers:
+				// make_new_lines: true,
+				// turnOrder: longformat.gameRules.turnOrder,
+				// fullmove
+			};
+			shortformat += icnconverter.getShortFormMovesFromMoves(longformat.moves, options);
 		}
 	}
 
