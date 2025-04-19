@@ -27,81 +27,6 @@ const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
 
 
 
-
-/**
- * This function brings the input number into a standard format that is not in scientific notation
- * @param {string} str - A string representing a number, may be in scientific notation or not, e.g. "2.0e32"
- * @returns {string} - A string with the number expanded to not use scientific notation, e.g. "200000000000000000000000000000000"
- */
-function standardizeNumberString(str) {
-	let coefficient;
-	let exponent;
-	if (!/e/i.test(str)) {
-		// If string does not contain "e" or "E", it is not in scientific notation and exponent = 0
-		coefficient = str;
-		exponent = 0;
-	} else {
-		[coefficient, exponent] = str.toLowerCase().split('e');
-    	exponent = Number(exponent);
-	}
-
-	// Handle decimal in coefficient
-	if (coefficient.includes('.')) {
-		const [intPart, decimalPart] = coefficient.split('.');
-		const decimalLength = decimalPart.length;
-
-		// Remove the decimal point and adjust the exponent
-		coefficient = `${intPart}${decimalPart}`;
-		exponent -= decimalLength;
-	}
-
-	// Calculate the expanded number
-	if (exponent >= 0) {
-		return (BigInt(coefficient) * BigInt(10) ** BigInt(exponent)).toString();
-	} else {
-		// Cut off and remember leading sign
-		let leadingsign = "";
-		if (coefficient[0] === '+') coefficient = coefficient.slice(1);
-		else if (coefficient[0] === '-') {
-			coefficient = coefficient.slice(1);
-			leadingsign = "-";
-		}
-
-		// If exponent is negative, we need to move the decimal point to the left
-		const absExp = Math.abs(exponent);
-		let returnstring;
-		if (absExp >= coefficient.length) {
-			const zeros = "0".repeat(absExp - coefficient.length);
-			returnstring = `0.${zeros}${coefficient}`;
-		} else {
-			const index = coefficient.length - absExp;
-			returnstring = `${coefficient.slice(0, index)}.${coefficient.slice(index)}`;
-		}
-
-		// Formatting cleanup
-		returnstring = returnstring.replace(/^0+/, ''); // trim unneeded zeroes at the start
-		if (returnstring[0] === ".") returnstring = "0" + returnstring; // add leading zero before . if needed
-		returnstring = returnstring.replace(/0+$/, ''); // trim unneeded zeroes at the end
-		returnstring = returnstring.replace(/\.$/, ''); // trim . at the end
-
-		return `${leadingsign}${returnstring}`;
-	}
-}
-
-/**
- * This function brings the input coordinate into a standard format that is not in scientific notation
- * @param {string} str - A string representing a coordinate, may be in scientific notation or not, e.g. "2.0e32,-01.0e0"
- * @returns {string} - A string with the coordinate expanded to not use scientific notation, e.g. "200000000000000000000000000000000,-1"
- */
-function standardizeCoordString(str) {
-	if (str.includes(',')) {
-		const [coord0, coord1] = str.split(',');
-		return `${standardizeNumberString(coord0)},${standardizeNumberString(coord1)}`;
-	} else {
-		throw Error("Expected ',' in coordinate string"); // If string does not contain ",", it is not a coordinate string
-	}
-}
-
 /**
  * Converts a gamefile in JSON format to Infinite Chess Notation.
  * @param {FormatConverterLong} longformat - The gamefile in JSON format
@@ -470,6 +395,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 	return longformat;
 }
 
+// Converts moves list in ICN to => ['1,2>3,4','5,6>7,8N']
 function convertShortMovesToLong(shortmoves) {
 	const longmoves = [];
 
@@ -722,21 +648,21 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 		if (end_index !== -1) {
 			if (shortposition[index + end_index] === "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
-				startingPosition[standardizeCoordString(coordString)] = icnconverter.getTypeFromAbbr(shortpiece);
-				specialRights.add(standardizeCoordString(coordString));
+				startingPosition[coordString] = icnconverter.getTypeFromAbbr(shortpiece);
+				specialRights.add(coordString);
 				index += end_index + 2;
 			} else {
-				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = icnconverter.getTypeFromAbbr(shortpiece);
+				startingPosition[shortposition.slice(index + piecelength, index + end_index)] = icnconverter.getTypeFromAbbr(shortpiece);
 				index += end_index + 1;
 			}
 		} else {
 			if (shortposition.slice(-1) === "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
-				startingPosition[standardizeCoordString(coordString)] = icnconverter.getTypeFromAbbr(shortpiece);
-				specialRights.add(standardizeCoordString(coordString));
+				startingPosition[coordString] = icnconverter.getTypeFromAbbr(shortpiece);
+				specialRights.add(coordString);
 				index = MAX_INDEX;
 			} else {
-				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = icnconverter.getTypeFromAbbr(shortpiece);
+				startingPosition[shortposition.slice(index + piecelength)] = icnconverter.getTypeFromAbbr(shortpiece);
 				index = MAX_INDEX;
 			}
 		}
