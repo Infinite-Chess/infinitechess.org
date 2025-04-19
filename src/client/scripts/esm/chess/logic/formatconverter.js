@@ -6,7 +6,7 @@ import jsutil from "../../util/jsutil.js";
 /* eslint-disable max-depth */
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
-import { metadata_key_ordering, piece_codes, piece_codes_raw, player_codes } from "./icnconverter.js";
+import { default_promotions, metadata_key_ordering, piece_codes, piece_codes_inverted, piece_codes_raw, piece_codes_raw_inverted, player_codes } from "./icnconverter.js";
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
 
@@ -23,59 +23,9 @@ import { metadata_key_ordering, piece_codes, piece_codes_raw, player_codes } fro
 /** Regex for numbers in scientific notation from https://stackoverflow.com/questions/638565/parsing-scientific-notation-sensibly */
 const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
 
-const defaultPromotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 
-function invertDictionary(json) {
-	const inv = {};
-	for (const key in json) {
-		inv[json[key]] = key;
-	}
-	return inv;
-}
 
-const invertedpieceDictionary = invertDictionary(piece_codes);
-const invertedplayersDict = invertDictionary(player_codes);
 
-function IntToShort_Piece(intpiece) {
-	let short = piece_codes[intpiece];
-	if (short === undefined) {
-		const [raw, c] = typeutil.splitType(intpiece);
-		short = String(c) + piece_codes_raw[raw];
-	}
-	return short;
-}
-
-function ShortToInt_Piece(shortpiece) {
-	const results = /(\d*)([a-zA-Z]+)/.exec(shortpiece);
-	const UNKERR = new Error("Unknown piece type detected: " + shortpiece);
-	if (results === null) throw UNKERR;
-
-	let lowerType = results[2];
-	if (results[1] !== "") lowerType = lowerType.toLowerCase(); // If the player is specified, make it lowercase (neutrals don't have uppercase entries in dictionary)
-
-	if (invertedpieceDictionary[lowerType] === undefined) throw UNKERR;
-
-	let type = Number(invertedpieceDictionary[lowerType]);
-	if (results[1] !== "") { // Overwrite the player that owns it
-		const player = Number(results[1]);
-		type = typeutil.buildType(typeutil.getRawType(type), player);
-	}
-	return type;
-}
-
-/**
- * Checks if a string can be parsed to JSON
- * @param {string} str - Input string
- * @returns {boolean} True if string is in JSON format, else false
- */
-function isJson(str) {
-	try {
-		JSON.parse(str);
-	} catch {
-		return false;
-	}
-	return true;
-}
 
 /**
  * This function brings the input number into a standard format that is not in scientific notation
@@ -213,7 +163,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				if (promotionListWhite && !isPromotionListDefaultPromotions(promotionListWhite)) {
 					shortformat += ";";
 					for (const longpiece of promotionListWhite) {
-						shortformat += `${IntToShort_Piece(longpiece + e.W)},`;
+						shortformat += `${getAbbrFromType(longpiece + e.W)},`;
 					}
 					shortformat = shortformat.slice(0, -1);
 				}
@@ -226,7 +176,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				if (promotionListBlack && !isPromotionListDefaultPromotions(promotionListBlack)) {
 					shortformat += ";";
 					for (const longpiece of promotionListBlack) {
-						shortformat += `${IntToShort_Piece(longpiece + e.B)},`;
+						shortformat += `${getAbbrFromType(longpiece + e.B)},`;
 					}
 					shortformat = shortformat.slice(0, -1);
 				}
@@ -317,7 +267,7 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 		} else { // compact_moves > 0
 			shortmoves += (i === 0 ? "" : "|");
 		}
-		shortmoves += (longmove.type && (compact_moves === 0 || compact_moves === 1) ? IntToShort_Piece(longmove.type) : "");
+		shortmoves += (longmove.type && (compact_moves === 0 || compact_moves === 1) ? getAbbrFromType(longmove.type) : "");
 		shortmoves += longmove.startCoords.toString();
 		shortmoves += (compact_moves === 0 ? " " : "");
 		shortmoves += (longmove.flags.capture && (compact_moves === 0 || compact_moves === 1) ? "x" : ">");
@@ -326,7 +276,7 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
 		shortmoves += (compact_moves === 0 ? " " : "");
 		if (longmove.promotion) {
 			shortmoves += (compact_moves === 0 || compact_moves === 1 ? "=" : "");
-			shortmoves += IntToShort_Piece(longmove.promotion);
+			shortmoves += getAbbrFromType(longmove.promotion);
 		}
 		if (longmove.flags.mate && (compact_moves === 0 || compact_moves === 1)) {
 			shortmoves += "#";
@@ -354,8 +304,8 @@ function longToShortMoves(longmoves, { turnOrderArray, fullmove, make_new_lines,
  * @returns {boolean}
  */
 function isPromotionListDefaultPromotions(promotionList) {
-	if (promotionList.length !== defaultPromotions.length) return false;
-	return defaultPromotions.every(promotion => promotionList.includes(promotion));
+	if (promotionList.length !== default_promotions.length) return false;
+	return default_promotions.every(promotion => promotionList.includes(promotion));
 }
 
 /**
@@ -429,7 +379,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			if (string !== "") gamerules_string += ` ${string}`;
 
 			// gamerules_string can be parsed into JSON now: parse it in and permanently exit gamerules parsing mode
-			if (isJson(gamerules_string)) {
+			if (jsutil.isJson(gamerules_string)) {
 				const parsedGameRules = JSON.parse(gamerules_string);
 				longformat.gameRules = {...longformat.gameRules, ...parsedGameRules};
 				in_gamerules_parsing_mode = false;
@@ -443,8 +393,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
 			const turnOrderArray = string.split(':'); // ['w','b']
 			longformat.gameRules.turnOrder = [...turnOrderArray.map(playerabbrev => {
-				if (!(playerabbrev in invertedplayersDict)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
-				return Number(invertedplayersDict[playerabbrev]);
+				if (!(playerabbrev in player_codes_inverted)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
+				return Number(player_codes_inverted[playerabbrev]);
 			})];
 			continue;
 		}
@@ -497,8 +447,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 			longformat.gameRules.promotionsAllowed = {
 				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
-				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? defaultPromotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : [],
-				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? defaultPromotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(ShortToInt_Piece(abv))) : []
+				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? default_promotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(getTypeFromAbbr(abv))) : [],
+				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? default_promotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(getTypeFromAbbr(abv))) : []
 			};
 
 			continue;
@@ -672,7 +622,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
  * @returns {string} Output string in compact ICN notation
  */
 function LongToShort_CompactMove(longmove) {
-	const promotedPiece = (longmove.promotion ? IntToShort_Piece(longmove.promotion) : "");
+	const promotedPiece = (longmove.promotion ? getAbbrFromType(longmove.promotion) : "");
 	return `${longmove.startCoords.toString()}>${longmove.endCoords.toString()}${promotedPiece}`;
 }
 
@@ -695,7 +645,7 @@ function ShortToLong_CompactMove(shortmove) {
 		if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
 	});
 	// ShortToInt_Piece() will already throw an error if the piece abbreviation is invalid.
-	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? ShortToInt_Piece(shortmove.match(/[a-zA-Z]+$/)[0]) : "");
+	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? getTypeFromAbbr(shortmove.match(/[a-zA-Z]+$/)[0]) : "");
 	const longmove = { compact: shortmove };
 	longmove.startCoords = coords[0];
 	longmove.endCoords = coords[1];
@@ -716,9 +666,9 @@ function LongToShort_Position(position, specialRights = new Set()) {
 	if (!position) return shortposition; // undefined position --> no string
 	for (const coordinate in position) {
 		if (specialRights.has(coordinate)) {
-			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}+|`;
+			shortposition += `${getAbbrFromType(position[coordinate])}${coordinate}+|`;
 		} else {
-			shortposition += `${IntToShort_Piece(position[coordinate])}${coordinate}|`;
+			shortposition += `${getAbbrFromType(position[coordinate])}${coordinate}|`;
 		}
 	}
 
@@ -822,21 +772,21 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 		if (end_index !== -1) {
 			if (shortposition[index + end_index] === "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
-				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(coordString)] = getTypeFromAbbr(shortpiece);
 				specialRights.add(standardizeCoordString(coordString));
 				index += end_index + 2;
 			} else {
-				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength, index + end_index))] = getTypeFromAbbr(shortpiece);
 				index += end_index + 1;
 			}
 		} else {
 			if (shortposition.slice(-1) === "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
-				startingPosition[standardizeCoordString(coordString)] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(coordString)] = getTypeFromAbbr(shortpiece);
 				specialRights.add(standardizeCoordString(coordString));
 				index = MAX_INDEX;
 			} else {
-				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = ShortToInt_Piece(shortpiece);
+				startingPosition[standardizeCoordString(shortposition.slice(index + piecelength))] = getTypeFromAbbr(shortpiece);
 				index = MAX_INDEX;
 			}
 		}
@@ -866,5 +816,5 @@ export default {
 	generateSpecialRights,
 	convertShortMovesToLong,
 	longToShortMoves,
-	ShortToInt_Piece
+	ShortToInt_Piece: getTypeFromAbbr
 };

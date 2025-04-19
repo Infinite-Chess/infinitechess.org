@@ -7,8 +7,10 @@
  * still human-readable, but taking less space to describe positions.
  */
 
-import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
+import jsutil from "../../util/jsutil.js";
+import { rawTypes as r, ext as e, players as p, RawType, Player } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
+
 
 
 // Dictionaries -----------------------------------------------------------------------
@@ -22,11 +24,13 @@ const player_codes = {
 	[p.NEUTRAL]: "n", // I dont think we need this, good to have in case
 	[p.WHITE]: "w",
 	[p.BLACK]: "b",
+	// Colored players
 	[p.RED]: "r",
 	[p.BLUE]: "bu",
 	[p.YELLOW]: "y",
 	[p.GREEN]: "g",
 };
+const player_codes_inverted = jsutil.invertObj<number,string>(player_codes);
 
 /** 1-2 letter codes for the standard white, black, and neutral pieces. */
 const piece_codes = {
@@ -54,6 +58,7 @@ const piece_codes = {
 	[r.OBSTACLE + e.N]: "ob",
 	[r.VOID + e.N]: "vo"
 };
+const piece_codes_inverted = jsutil.invertObj<number,string>(piece_codes);
 
 /** The codes for raw, color-less piece types. */
 const piece_codes_raw = {
@@ -81,6 +86,7 @@ const piece_codes_raw = {
 	[r.OBSTACLE]: "ob",
 	[r.VOID]: "vo"
 };
+const piece_codes_raw_inverted = jsutil.invertObj<RawType,string>(piece_codes_raw);
 
 /** The desired ordering metadata should be placed in the ICN */
 const metadata_key_ordering = [
@@ -99,9 +105,76 @@ const metadata_key_ordering = [
     "Termination"
 ];
 
+/**
+ * The default promotions allowed, if the ICN does not specify.
+ * If, when converting a game into ICN, the promotionsAllowed
+ * gamerule matches this, then we won't specify custom promotions in the ICN.
+ */
+const default_promotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 
-/** Regex for numbers in scientific notation from https://stackoverflow.com/questions/638565/parsing-scientific-notation-sensibly */
-const scientificNumberRegex = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
+
+// Helper Functions --------------------------------------------------------------------------------
+
+
+/**
+ * Gets the 1-2 letter abbreviation of the given piece type.
+ * White pieces are capitalized, black pieces are lowercase.
+ * If a piece is neither white nor black, its player number
+ * will be placed before its abbreviation, overriding the color.
+ * 
+ * [43] pawn(white) => 'P'
+ * [52] queen(black) => 'q'
+ * [68] king(red) => '3k'
+ */
+function getAbbrFromType(type: number) {
+	let short = piece_codes[type];
+	if (!short) {
+		const [raw, c] = typeutil.splitType(type);
+		short = String(c) + piece_codes_raw[raw];
+	}
+	return short;
+}
+
+/**
+ * Gets the integer piece type from a 1-2 letter piece abbreviation.
+ * Capitolized abbrev's are white, lowercase are black.
+ * It may contain a proceeding number, overriding the player color.
+ * 
+ * 'P' => [43] pawn(white)
+ * 'q' => [52] queen(black)
+ * '3k' => [68] king(red)
+ */
+function getTypeFromAbbr(abbr: string) {
+	const results = /(\d*)([a-zA-Z]+)/.exec(abbr);
+	if (results === null) throw Error("Piece abbreviation is in invalid form: " + abbr);
+
+	let characters = results[2]; // 'nr'
+
+	let type: number;
+
+	if (!results[1]) type = piece_codes_inverted[characters]; // No player number override is present
+	else { // Player number override present
+		const rawType: RawType = piece_codes_raw_inverted[characters.toLowerCase()];
+		if (rawType === undefined) throw Error("Unknown raw piece abbreviation: " + abbr)
+		const player = Number(results[1]) as Player;
+		type = typeutil.buildType(rawType, player);
+	}
+
+	if (type === undefined) throw Error("Unknown piece abbreviation: " + abbr);
+
+	return type;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 // TEMPORARY!! Delete when formatconverter has been cleaned out, its methods rewritten and migrated to here.
@@ -109,8 +182,14 @@ export {
 	// Dictionaries
 	player_codes,
 	piece_codes,
+	piece_codes_inverted,
 	piece_codes_raw,
+	piece_codes_raw_inverted,
 	metadata_key_ordering,
+	default_promotions,
+
+	getAbbrFromType,
+	getTypeFromAbbr,
 };
 
 export default {
