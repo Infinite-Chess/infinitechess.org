@@ -439,7 +439,7 @@ const translationToVariant = jsutil.invertObj(variantToTranslation);
 
 const MetaDataRequiredValues = {
 	Variant: ['Classical', 'Confined_Classical', 'Classical_Plus', 'CoaIP', 'CoaIP_HO', 'Knighted_Chess', 'Pawndard', 'Knightline', 'Core', 'Standarch', 'Pawn_Horde', 'Space_Classic', 'Space', 'Obstocean', 'Abundance', 'Chess', '4x4x4x4_Chess', '5D_Chess', 'Omega', 'Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', 'Amazon_Chandelier', 'Containment', 'Classical_Limit_7', 'CoaIP_Limit_7', 'Classical_KOTH', 'CoaIP_KOTH'],
-	Result: ['1-0', '0-1', '1/2-1/2', '0-0'],
+	Result: ['1-0', '0-1', '1/2-1/2', '*'],
 	Termination: ['Aborted', 'Checkmate', 'Stalemate', 'Threefold repetition', 'Resignation', 'Insufficient material', 'Royal capture', 'All pieces captured', 'King of the hill', 'Time forfeit', 'Agreement', '50-move rule', 'Abandoned'],
 	Event: null,
 	Site: ['https://www.infinitechess.org/'],
