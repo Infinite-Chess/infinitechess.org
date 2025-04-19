@@ -213,7 +213,7 @@ function updateTextContent(gamefile: gamefile) {
 	if (gamefile.untimed) return;
 	for (const [color, clockElements] of Object.entries(element_timers)) {
 		const player = Number(color) as Player;
-		const text = clockutil.getTextContentFromTimeRemain(gamefile.clocks!.currentTime[player]);
+		const text = clockutil.getTextContentFromTimeRemain(gamefile.clocks!.currentTime[player]!);
 		clockElements.timer.textContent = text;
 	}
 }

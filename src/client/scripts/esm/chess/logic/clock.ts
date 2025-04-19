@@ -92,7 +92,7 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 		return;
 	}
 	// { minutes, increment }
-	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock);
+	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock)!;
 
 	const clocks: ClockData = {
 		startTime: {
@@ -100,10 +100,11 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 			millis: timeutil.minutesToMillis(clockPartsSplit.minutes),
 			increment: clockPartsSplit.increment
 		},
-		colorTicking: gamefile.whosTurn,
-		timeAtTurnStart: -1,
-		timeRemainAtTurnStart: -1,
-		currentTime: {}
+		currentTime: {},
+		
+		colorTicking: undefined,
+		timeAtTurnStart: undefined,
+		timeRemainAtTurnStart: undefined
 	};
 
 	gamefile.clocks = clocks;
@@ -150,16 +151,16 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
  */
 function push(gamefile: gamefile) {
 	if (gamefile.untimed) return;
-	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
+	if (!moveutil.isGameResignable(gamefile)) return console.log("bee"); // Don't push unless atleast 2 moves have been played
 	const clocks = gamefile.clocks!;
+
+	clocks.colorTicking = gamefile.whosTurn;
 
 	// Add increment if the last move has a clock ticking
 	if (clocks.timeAtTurnStart !== undefined) {
 		const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
-
-	clocks.colorTicking = gamefile.whosTurn;
 
 	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
 	clocks.timeAtTurnStart = Date.now();
