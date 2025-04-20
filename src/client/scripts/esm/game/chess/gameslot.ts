@@ -36,6 +36,7 @@ import guigameinfo from "../gui/guigameinfo.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import selection from "./selection.js";
 import imagecache from "../../chess/rendering/imagecache.js";
+import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
@@ -204,7 +205,7 @@ function loadLogical(loadOptions: LoadOptions) {
 	const lineCountToDisableArrows = 8;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) {
+	if (boardutil.getPieceCountOfGame(newGamefile.pieces) >= organizedpieces.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
 	} else if (newGamefile.pieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
@@ -283,7 +284,7 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(loadedGamefile!.startSnapshot.box);
+	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!));
 	movement.setPositionToArea(centerArea);
 	movement.setBoardScale(movement.getBoardScale() * 1.75);
 	guinavigation.recenter();

@@ -37,6 +37,21 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
 /** @typedef {import('./clock.js').ClockData} ClockData*/
 
+/**
+ * Information about the beginning of the game (position, positionString, specialRights, turn)
+ * @typedef {Object} StartSnapshot
+ * @property {Map<CoordsKey, number>} position - In key format 'x,y': type
+ * @property {string} positionString
+ * @property {Set<CoordsKey>} specialRights
+ * @property {EnPassant | undefined} enpassant - What square coords, if legal, enpassant capture is possible in the starting position of the game.
+ * @property {number | undefined} moveRuleState - The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push)
+ * @property {number} fullMove - This is the full-move number at the start of the game. Used for converting to ICN notation.
+ * @property {number} playerCount - The number of players in this game (the number of unique players in the turn order)
+ * @property {number} pieceCount - The count of pieces the game started with.
+ * @property {BoundingBox} box - The bounding box surrounding the starting position, without padding.
+ *                               For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }
+ */
+
 'use strict'; 
 
 /**
@@ -56,35 +71,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** Information about the game @type {MetaData} */
 	this.metadata = metadata;
-    
-	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
-	this.startSnapshot = {
-		/** In key format 'x,y': type @type {Map<CoordsKey, number>} */
-		position: undefined,
-		/** @type {string} */
-		positionString: undefined,
-		/** @type {Set<CoordsKey>} */
-		specialRights: undefined,
-		/** What square coords, if legal, enpassant capture is possible in the starting position of the game. @type {EnPassant | undefined }*/
-		enpassant: undefined,
-		/** The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push) */
-		moveRuleState: undefined,
-		/** This is the full-move number at the start of the game. Used for converting to ICN notation. @type {number} */
-		fullMove: undefined,
-		/** The number of players in this game (the number of unique players in the turn order) @type {number} */
-		playerCount: undefined,
-		/** The count of pieces the game started with. @type {number} */
-		pieceCount: undefined,
-		/** The bounding box surrounding the starting position, without padding.
-		 * For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }`
-         * @type {BoundingBox} */
-		box: undefined,
-		/** An array of all piece types that are in this game. Including their color information.` @type {number[]} */
-		existingTypes: undefined,
-		/** An array of all RAW piece types that are in this game. @type {RawType[]} */
-		existingRawTypes: undefined,
-	};
-    
+
+	/** Information about the beginning of the game. This isn't present in editor games.
+	 * Use the current state of the board instead. @type {StartSnapshot | undefined} */
+	this.startSnapshot = undefined;
+	
 	/** @type {GameRules} */
 	this.gameRules = undefined;
 
@@ -131,17 +122,19 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	// JSDoc stuff over...
 
 	// Init things related to the variant, and the startSnapshot of the position
-	initvariant.setupVariant(this, metadata, variantOptions); // Initiates startSnapshot, gameRules, and pieceMovesets
+	initvariant.setupVariantGamerules(this, metadata, variantOptions); // Initiates gameRules, and pieceMovesets
+	const startSnapshot = initvariant.genStartSnapshot(this, metadata, variantOptions);
+	
 	/** The number of half-moves played since the last capture or pawn push. */
-	this.moveRuleState = this.gameRules.moveRule ? this.startSnapshot.moveRuleState : undefined;
+	this.moveRuleState = startSnapshot.moveRuleState;
 	/** The move list. @type {(Move | NullMove)[]} */
 	this.moves = [];
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
 	this.moveIndex = -1;
 	/** If enpassant is allowed at the front of the game, this defines the coordinates. @type {EnPassant | undefined} */
-	this.enpassant = jsutil.deepCopyObject(this.startSnapshot.enpassant);
-	/** An object containing the information if each individual piece has its special move rights. @type {Set<CoordsKey>}*/
-	this.specialRights = new Set(this.startSnapshot.specialRights);
+	this.enpassant = startSnapshot.enpassant;
+	/** An object containing the information if each individual piece has its special move rights. @type {Set<CoordsKey>} */
+	this.specialRights = startSnapshot.specialRights;
 	/** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
      * which is whos turn it was at the *beginning* of the game. @type {Player}*/
@@ -159,7 +152,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.gameConclusion = false;
 
 	const { pieces, pieceCount, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
-		this.startSnapshot.position,
+		startSnapshot.position,
 		this.pieceMovesets,
 		this.gameRules.turnOrder,
 		this.gameRules.promotionsAllowed,
@@ -167,9 +160,18 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	);
 
 	this.pieces = pieces;
-	this.startSnapshot.pieceCount = pieceCount;
-	this.startSnapshot.existingTypes = existingTypes;
-	this.startSnapshot.existingRawTypes = existingRawTypes;
+	/** An array of all piece types that are in this game. Including their color information.` @type {number[]} */
+	this.existingTypes = existingTypes;
+	/** An array of all RAW piece types that are in this game. @type {RawType[]} */
+	this.existingRawTypes = existingRawTypes;
+	
+	if (!this.editor) {
+		// startSnapshot is only available in non-editor games,
+		// since it would be changing constantly with every board edit.
+		this.startSnapshot = jsutil.deepCopyObject(startSnapshot);
+		this.startSnapshot.pieceCount = pieceCount;
+		this.startSnapshot.box = gamefileutility.getStartingAreaBox(this);
+	}
 
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	this.colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(this.pieceMovesets, this.pieces.slides);
@@ -188,9 +190,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 		this.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackAttackers) this.attackers = checkResults.attackers;
 	}
-
-	// Must be BEFORE making all moves in the game, because the starting area box depends on the starting position.
-	gamefileutility.initStartingAreaBox(this);
 	
 	movepiece.makeAllMovesInGame(this, moves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`

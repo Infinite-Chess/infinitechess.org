@@ -6,6 +6,7 @@
 
 
 import jsutil from '../../util/jsutil.js';
+import icnconverter from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
 
@@ -13,6 +14,7 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { MetaData } from '../../chess/util/metadata.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
+import type { EnPassant } from '../../chess/logic/state.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 // @ts-ignore
@@ -53,13 +55,33 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	const gameRules = jsutil.deepCopyObject(gamefile.gameRules);
 	delete gameRules.moveRule;
 
-
+	let position: Map<CoordsKey, number>;
+	let positionString: string;
+	let specialRights: Set<CoordsKey>;
+	let enpassant: EnPassant | undefined;
+	let moveRuleState: number | undefined;
+	let fullMove: number;
+	
+	if (gamefile.startSnapshot) {
+		({ position, positionString, specialRights, enpassant, moveRuleState, fullMove } = gamefile.startSnapshot);
+	} else {
+		position = new Map<CoordsKey, number>();
+		gamefile.pieces.coords.forEach((value: number, key: CoordsKey) => {
+			position.set(key, gamefile.pieces.types[value]);
+		});
+		specialRights = jsutil.deepCopyObject(gamefile.specialRights);
+		positionString = icnconverter.getShortFormPosition(position, specialRights);
+		enpassant = jsutil.deepCopyObject(gamefile.enpassant);
+		moveRuleState = gamefile.moveRuleState;
+		fullMove = 1;
+	}
+	
 	let abridgedGamefile: AbridgedGamefile = {
 		metadata,
-		positionString: gamefile.startSnapshot.positionString,
-		startingPosition: gamefile.startSnapshot.position,
-		specialRights: gamefile.startSnapshot.specialRights,
-		fullMove: gamefile.startSnapshot.fullMove,
+		positionString,
+		startingPosition: position,
+		specialRights,
+		fullMove,
 		gameRules,
 		moves: gamefile.moves.map((move: Move | NullMove) => !move.isNull ? move : (() => { throw Error("Cannot abridge gamefile with null moves!"); })()), // Tells typescript we're confident it doesn't have null moves
 	};
@@ -67,14 +89,14 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	// Append the optional properties, if present
 
 	// enpassant
-	if (gamefile.startSnapshot.enpassant) { // In the form: { square: Coords, pawn: Coords },
+	if (enpassant) { // In the form: { square: Coords, pawn: Coords },
 		// We need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
-		const yDistance = Math.abs(gamefile.startSnapshot.enpassant.square[1] - gamefile.startSnapshot.enpassant.pawn[1]);
-		if (yDistance === 1) abridgedGamefile.enpassant = gamefile.startSnapshot.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
+		const yDistance = Math.abs(enpassant.square[1] - enpassant.pawn[1]);
+		if (yDistance === 1) abridgedGamefile.enpassant = enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
 	}
 
 	// moveRule
-	if (gamefile.gameRules.moveRule) abridgedGamefile.moveRule = `${gamefile.startSnapshot.moveRuleState!}/${gamefile.gameRules.moveRule}`;
+	if (gamefile.gameRules.moveRule) abridgedGamefile.moveRule = `${moveRuleState!}/${gamefile.gameRules.moveRule}`;
 
 	// If we only want the current position, not the entire game
 
