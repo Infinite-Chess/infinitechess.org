@@ -120,7 +120,7 @@ interface Move extends MoveDraft {
 	/** The index this move was generated for. This can act as a safety net
 	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
-	/** The move in most compact notation: `8,7>8,8Q` */
+	/** The move in most compact notation: `8,7>8,8=Q` */
 	compact: string,
 	flags: {
 		/** Whether the move delivered check. */

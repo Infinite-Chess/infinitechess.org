@@ -147,7 +147,7 @@ const default_win_conditions: PlayerGroup<string[]> = { [p.WHITE]: ['checkmate']
 const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder"]);
 
 
-// Regular Expressions ------------------------------------------------------------------------
+// Regular Expressions ------------------------------------------------------------------------------------
 
 
 const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with leading 0's like "000005"
@@ -167,7 +167,7 @@ const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`
 const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${promotionRegexSource}$`);
 
 /**
- * A regex for dynamically matching any all forms of a move in ICN.
+ * A regex for dynamically matching all forms of a move in ICN.
  * The move may optionally include a piece abbreviation, spaces between segments,
  * a separator of ">" or "x", check/mate flags "+" or "#", symbols !?, ?!, !!, and a comment.
  * 
@@ -175,7 +175,6 @@ const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})
  */
 const moveRegexSource = 
 	`(${pieceAbbrevRegexSource})?` + // Optional starting piece abbreviation "P"
-    ` ?` + // Optional space
     `(?<startCoordsKey>${coordsKeyRegexSource})` + // Starting coordinates
     ` ?` + // Optional space
     `[>x]` + // Separator
@@ -279,7 +278,7 @@ function getCompactMoveFromDraft(moveDraft: MoveDraft): string {
  * 
  * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
  * spaces => Spaces between segments of a move => 'P1,7 x 2,8 =Q +'
- * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
+ * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7] Capture, promotion, and a check!}'
  */
 function getShortFormMoveFromMove(move: Move, options: { compact: boolean, spaces: boolean, comments: boolean }): string {
 	if (options.compact && !options.spaces && !options.comments) console.warn("getCompactMoveFromDraft() is more efficient to get the most-compact form of a move.");
@@ -309,7 +308,7 @@ function getShortFormMoveFromMove(move: Move, options: { compact: boolean, space
 	// 4th segment: Specify the promoted piece, if present
 	if (move.promotion !== undefined) {
 		const promotedPieceAbbr = getAbbrFromType(move.promotion);
-		segments.push("=" + promotedPieceAbbr); // =Q
+		segments.push("=" + promotedPieceAbbr); // =Q  "=" REQUIRED
 	}
 
 	// 5th segment: Append the check/mate flags '#' or '+'
@@ -338,7 +337,7 @@ function getShortFormMoveFromMove(move: Move, options: { compact: boolean, space
 	return segments.join(segmentDelimiter); // 'P1,7 x 2,8 =Q + {[%clk 0:09:56.7] White captures en passant}' | 'P1,7x2,8=Q+{[%clk 0:09:56.7] White captures en passant}' | '1,7>2,8Q{[%clk 0:09:56.7]}' | '1,7>2,8Q'
 }
 
-/** Parses a shorform move IN THE MOST COMPACT FORM '1,7>2,8=Q' to a readable move draft. */
+/** Parses a shortform move IN THE MOST COMPACT FORM '1,7>2,8=Q' to a readable move draft. */
 function parseCompactMove(compactMove: string): { startCoords: Coords, endCoords: Coords, promotion?: number } {
 	const match = moveRegexCompact.exec(compactMove);
 	if (match === null) throw Error("Invalid compact move: " + compactMove);
@@ -356,7 +355,8 @@ function parseMoveFromShortFormMove(shortFormMove: string): ParsedMove {
 /**
  * Takes the result.groups of a regex match and parses them into a move.
  * 
- * Throws an error if the coordinates would become Infinity when cast to a javascript number.
+ * Throws an error if the coordinates would become Infinity when cast to
+ * a javascript number, or if the promoted piece abbreviation is invalid.
  */
 function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMoveGroups): ParsedMove {
 	const startCoordsKey = capturedGroups!.startCoordsKey;
@@ -402,7 +402,7 @@ function getClkEmbededCommandSequence(timeRemainMillis: number): string {
 	const roundedUpMillis = Math.ceil(timeRemainMillis / 100) * 100;
 
 	// Now calculate H:MM:SS.D based on the rounded-up value.
-	// Note: Division by 1000 should now naturally handle the "carry-over" to seconds.
+	// Note: Division by 1000 should naturally handle the "carry-over" to seconds.
 	const totalSecondsRounded = Math.floor(roundedUpMillis / 1000);
 	const hours = Math.floor(totalSecondsRounded / 3600);
 	const minutes = Math.floor((totalSecondsRounded % 3600) / 60);
@@ -438,7 +438,7 @@ function getClkEmbededCommandSequence(timeRemainMillis: number): string {
 function getShortFormMovesFromMoves(moves: Move[], options: { compact: boolean; spaces: boolean; comments: boolean; } & ({ move_numbers: false } | { move_numbers: true, turnOrder: Player[], fullmove: number, make_new_lines: boolean })): string {
 	// console.log("Getting shortform moves with options:", options);
 
-	// Converts a gamefile's moves list to the most minimal and compact string notation `1,2>3,4|5,6>7,8N`
+	// Converts a gamefile's moves list to the most minimal and compact string notation `1,2>3,4|5,6>7,8=N`
 	if (options.compact && !options.spaces && !options.comments && !options.move_numbers) return moves.map(move => move.compact).join("|"); // Most efficient, as the Move already has the compact form.
 
 	if (!options.move_numbers) {
