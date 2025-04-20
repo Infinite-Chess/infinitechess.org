@@ -12,7 +12,6 @@
  */
 
 
-import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { GameUpdateMessage } from "./onlinegamerouter.js";
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile.js";
@@ -25,11 +24,10 @@ import selection from "../../chess/selection.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
+import movesequence from "../../chess/movesequence.js";
+import icnconverter from "../../../chess/logic/icnconverter.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import formatconverter from "../../../chess/logic/formatconverter.js";
-import movesequence from "../../chess/movesequence.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -122,8 +120,8 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	const opponentColor = onlinegame.getOpponentColor();
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
-		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const moveDraft: MoveDraft = formatconverter.ShortToLong_CompactMove(thisShortmove) as MoveDraft;
+		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
+		const moveDraft = icnconverter.parseCompactMove(thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;

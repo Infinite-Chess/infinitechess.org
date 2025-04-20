@@ -16,6 +16,31 @@ import typeutil from "../util/typeutil.js";
 import type { Move, MoveDraft } from "./movepiece.js";
 
 
+// Type Definitions -------------------------------------------------------------------
+
+
+/**
+ * An un-parsed comment on a move. This may contain embeded command sequences.
+ * However it won't include the opening "{" or closing "}" braces.
+ */
+type Comment = string;
+
+/** The named capture groups of a shortform move. */
+type NamedCaptureMoveGroups = {
+	startCoordsKey: CoordsKey,
+	endCoordsKey: CoordsKey,
+	/** The piece abbreviation of the promoted piece, if present. */
+	promotionAbbr?: string,
+	comment?: Comment
+};
+
+/** All information parsed from a move in any dynamic shortform notation. */
+type ParsedMove = {
+	/** Start and end coords, plus the ONLY special move isn't given from the end coords. */
+	moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number },
+	comment?: Comment
+};
+
 
 // Dictionaries -----------------------------------------------------------------------
 
@@ -125,16 +150,20 @@ const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winCo
 
 const pieceAbbrevRegexSource = '\\d*[A-Za-z]+'; // '3Q' => Player-3 queen (red)
 const coordsKeyRegexSource = '-?\\d+,-?\\d+'; // '-1,2'
-
 const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`; // '=Q' => Promotion to queen
 
-/** A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q' */
+/**
+ * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
+ * The start coords, end coords, and promotion abbrev are all captured into named groups.
+ */
 const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${promotionRegexSource}$`);
 
 /**
  * A regex for dynamically matching any all forms of a move in ICN.
  * The move may optionally include a piece abbreviation, spaces between segments,
  * a separator of ">" or "x", check/mate flags "+" or "#", and a comment.
+ * 
+ * It captures start coords, end coords, promotion abbrev, and comment into named groups.
  */
 const moveRegexSource = 
 	`(${pieceAbbrevRegexSource})?` + // Optional starting piece abbreviation "P"
@@ -299,6 +328,52 @@ function getShortFormMoveFromMove(move: Move, options: { compact: boolean, space
 	return segments.join(segmentDelimiter); // 'P1,7 x 2,8 =Q + {[%clk 0:09:56.7] White captures en passant}' | 'P1,7x2,8=Q+{[%clk 0:09:56.7] White captures en passant}' | '1,7>2,8Q{[%clk 0:09:56.7]}' | '1,7>2,8Q'
 }
 
+/** Parses a shorform move IN THE MOST COMPACT FORM '1,7>2,8=Q' to a readable move draft. */
+function parseCompactMove(compactMove: string): { startCoords: Coords, endCoords: Coords, promotion?: number } {
+	const match = moveRegexCompact.exec(compactMove);
+	if (match === null) throw Error("Invalid compact move: " + compactMove);
+	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups).moveDraft;
+}
+
+/** Parses a shortform move in any dynamic format to a readable json. */
+function parseMoveFromShortFormMove(shortFormMove: string): ParsedMove {
+	const moveRegex = new RegExp(`^${moveRegexSource}$`);
+	const match = moveRegex.exec(shortFormMove);
+	if (match === null) throw Error("Invalid shortform move: " + shortFormMove);
+	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
+}
+
+/**
+ * Takes the result.groups of a regex match and parses them into a move.
+ * 
+ * Throws an error if the coordinates would become Infinity when cast to a javascript number.
+ */
+function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMoveGroups): ParsedMove {
+	const startCoordsKey = capturedGroups!.startCoordsKey;
+	const endCoordsKey = capturedGroups!.endCoordsKey;
+	const promotionAbbr = capturedGroups!.promotionAbbr;
+	const comment = capturedGroups!.comment;
+
+	const startCoords = coordutil.getCoordsFromKey(startCoordsKey);
+	const endCoords = coordutil.getCoordsFromKey(endCoordsKey);
+
+	// Make sure neither coords are Infinity
+	if (!isFinite(startCoords[0]) || !isFinite(startCoords[1]) || !isFinite(endCoords[0]) || !isFinite(endCoords[1])) {
+		throw Error(`Move coordinate must not be Infinite. ${JSON.stringify(capturedGroups)}`);
+	}
+
+	const moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number } = {
+		startCoords,
+		endCoords
+	};
+	if (promotionAbbr) moveDraft.promotion = getTypeFromAbbr(promotionAbbr);
+
+	const parsedMove: ParsedMove = { moveDraft };
+	if (comment) parsedMove.comment = comment;
+
+	return parsedMove;
+}
+
 /**
  * Takes a time in milliseconds a player has remaining on
  * their clock, converts it to an embeded command sequence
@@ -423,45 +498,18 @@ function getShortFormMovesFromMoves_MoveNumbers(moves: Move[], options: { turnOr
 	return moveLines.join(linesDelimiter);
 }
 
-/** All information parsed from a move in any dynamic shortform notation. */
-type ParsedMove = {
-	/** Start and end coords, plus the ONLY special move isn't given from the end coords. */
-	moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number },
-	/**
-	 * The un-parsed comment. This may contain embeded command sequences.
-	 * However it won't include the opening "{" or closing "}" braces.
-	*/
-	comment?: string
-};
-
-// Converts moves list in ICN to => ['1,2>3,4','5,6>7,8=N']
+/** Parses the shortform moves of an ICN into a JSON readable format. */
 function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
 	// console.log("Parsing shortform moves:", shortformMoves);
 
 	const moves: ParsedMove[] = [];
 	const moveRegex = new RegExp(moveRegexSource, "g");
-	let match: RegExpExecArray | null;
 
 	// Since the moveRegex has the global flag, exec() will return the next match each time.
 	// NO STRING SPLITTING REQUIRED
+	let match: RegExpExecArray | null;
 	while ((match = moveRegex.exec(shortformMoves)) !== null) {
-		const startCoordsKey = match.groups!['startCoordsKey']! as CoordsKey;
-		const endCoordsKey = match.groups!['endCoordsKey']! as CoordsKey;
-		const promotionAbbr = match.groups!['promotionAbbr'];
-		const comment = match.groups!['comment'];
-
-		const startCoords = coordutil.getCoordsFromKey(startCoordsKey);
-		const endCoords = coordutil.getCoordsFromKey(endCoordsKey);
-		const moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number } = {
-			startCoords,
-			endCoords
-		};
-		if (promotionAbbr) moveDraft.promotion = getTypeFromAbbr(promotionAbbr);
-
-		const parsedMove: ParsedMove = { moveDraft };
-		if (comment) parsedMove.comment = comment;
-
-		moves.push(parsedMove);
+		moves.push(getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups));
 	}
 
 	// console.log("Parsed moves:", moves);
@@ -491,8 +539,6 @@ export {
 	default_promotions,
 	default_win_conditions,
 	excludedGameRules,
-
-	moveRegexCompact,
 };
 
 export default {
@@ -502,6 +548,7 @@ export default {
 	getTypeFromAbbr,
 	getCompactMoveFromDraft,
 
+	parseCompactMove,
 	getShortFormMovesFromMoves,
 	parseShortFormMoves,
 };

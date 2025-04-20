@@ -29,8 +29,6 @@ import math from '../../util/math.js';
 // @ts-ignore
 import checkdetection from './checkdetection.js';
 // @ts-ignore
-import formatconverter from './formatconverter.js';
-// @ts-ignore
 import wincondition from './wincondition.js';
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
@@ -414,7 +412,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 
 	let moveDraft: MoveDraft;
 	try {
-		moveDraft = formatconverter.ShortToLong_CompactMove(shortmove); // { startCoords, endCoords, promotion }
+		moveDraft = icnconverter.parseCompactMove(shortmove);
 	} catch (error) {
 		console.error(error);
 		console.error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);

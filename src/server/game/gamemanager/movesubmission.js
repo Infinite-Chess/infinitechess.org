@@ -17,15 +17,14 @@ import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { moveRegexCompact } from '../../../client/scripts/esm/chess/logic/icnconverter.js';
-import coordutil from '../../../client/scripts/esm/chess/util/coordutil.js';
+import icnconverter from '../../../client/scripts/esm/chess/logic/icnconverter.js';
 
 /**
  * Type Definitions
  * @typedef {import('../TypeDefinitions.js').Game} Game
+ * @typedef {import('../../../client/scripts/esm/chess/util/coordutil.js').Coords} Coords
+ * @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket
  */
-
-/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 /**
  * 
@@ -109,22 +108,14 @@ function doesMoveCheckOut(move) {
 	if (typeof move !== 'string') return false;
 
 	// Is the move in the correct format? "x,y>x,y=N"
-
-	// first test structure & capture the four coords
-	const matches = move.match(moveRegexCompact);
-	if (!matches) return false; // Didn't pass the regex
-
-	// Make sure no captured number overflows to Infinity.
-	// The other client can't handle that!
-	// Delete when we allow infinite move distance.
-	const startCoords = coordutil.getCoordsFromKey(matches.groups.startCoordsKey);
-	const endCoords = coordutil.getCoordsFromKey(matches.groups.endCoordsKey);
-	if (
-		!Number.isFinite(startCoords[0]) ||
-		!Number.isFinite(startCoords[1]) ||
-		!Number.isFinite(endCoords[0]) ||
-		!Number.isFinite(endCoords[1])
-	) return false;
+	try {
+		// THIS AUTOMATICALLY CHECKS if any coordinate would
+		// become Infinity when cast to a number!
+		icnconverter.parseCompactMove(move);
+	} catch (e) {
+		// It either didn't pass the regex, or one of the coordinates is Infinity.
+		return false;
+	}
 
 	return true;
 }

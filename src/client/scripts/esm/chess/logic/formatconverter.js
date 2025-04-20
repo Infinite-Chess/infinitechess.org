@@ -460,35 +460,6 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 }
 
 /**
- * Converts a single compact move "a,b>c,dX" in ICN notation to JSON format.
- * Doesn't reconstruct captured, enpassant, or castle flags, but DOES reconstruct promotion flag.
- * 
- * **Throws and error** if the move is in an invalid format.
- * @param {string} shortmove - Input move as string
- * @returns {Object} Output move as JSON: { startCoords, endCoords, promotion: type }
- */
-function ShortToLong_CompactMove(shortmove) {
-	let coords = shortmove.match(RegExp(`${scientificNumberRegex},${scientificNumberRegex}`, "g")); // ['1,2','3,4']
-	// Make sure the move contains exactly 2 coordinates.
-	if (coords.length !== 2) throw new Error(`Short move does not contain 2 valid coordinates: ${JSON.stringify(coords)}`);
-	coords = coords.map((movestring) => { return getCoordsFromString(movestring); }); // [[1,2],[3,4]]
-	// Make sure the parsed number is not Infinity
-	coords.forEach((coords) => { // coords = [1,2]
-		if (!isFinite(coords[0])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
-		if (!isFinite(coords[1])) throw new Error(`Move coordinate must not be Infinite. coords: ${coords}`);
-	});
-	// ShortToInt_Piece() will already throw an error if the piece abbreviation is invalid.
-	const promotedPiece = (/[a-zA-Z]+$/.test(shortmove) ? icnconverter.getTypeFromAbbr(shortmove.match(/[a-zA-Z]+$/)[0]) : "");
-	const longmove = { compact: shortmove };
-	longmove.startCoords = coords[0];
-	longmove.endCoords = coords[1];
-	if (promotedPiece !== "") {
-		longmove.promotion = promotedPiece;
-	}
-	return longmove;
-}
-
-/**
  * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
  * @param {Record<CoordsKey,number>} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
  * @param {Set<CoordsKey>} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
@@ -640,7 +611,6 @@ export default {
 	LongToShort_Format,
 	ShortToLong_Format,
 	GameToPosition,
-	ShortToLong_CompactMove,
 	LongToShort_Position,
 	LongToShort_Position_FromGamerules,
 	getStartingPositionAndSpecialRightsFromShortPosition,

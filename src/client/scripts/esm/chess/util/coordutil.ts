@@ -17,8 +17,8 @@ type Coords = [number,number];
  * 
  * This is often used as the key for a piece in piece lists.
  * 
- * This is NOT compatible with "e" notation, so things will crash when
- * coordinates go above Number.MAX_SAFE_INTEGER
+ * This will never be in scientific notation. However, moves beyond
+ * Number.MAX_SAFE_INTEGER can't be expressed exactly.
  */
 type CoordsKey = `${number},${number}`;
     
