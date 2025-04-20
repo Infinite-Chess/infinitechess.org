@@ -25,6 +25,7 @@ import type { GameRules } from '../../chess/variants/gamerules.js';
  * All unimportant data is excluded.
  */
 interface AbridgedGamefile {
+	/** The Variant metadata should be the CODE of the variant, not a translation. */
 	metadata: MetaData,
 	fullMove: number,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
@@ -49,7 +50,6 @@ interface AbridgedGamefile {
 function compressGamefile(gamefile: gamefile, copySinglePosition?: true): AbridgedGamefile {
 
 	const metadata = jsutil.deepCopyObject(gamefile.metadata);
-	if (metadata.Variant) metadata.Variant = translations[metadata.Variant]; // Convert the variant metadata code to spoken language if translation is available
 
 	const gameRules = jsutil.deepCopyObject(gamefile.gameRules);
 	delete gameRules.moveRule;

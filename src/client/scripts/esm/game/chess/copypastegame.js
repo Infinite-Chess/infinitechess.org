@@ -47,6 +47,9 @@ function copyGame(copySinglePosition) {
 	const Variant = gamefile.metadata.Variant;
 
 	const primedGamefile = gamecompressor.compressGamefile(gamefile, copySinglePosition);
+	// Convert the variant metadata code to spoken language if translation is available
+	if (primedGamefile.metadata.Variant) primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant];
+	
 	const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_Fourth';
 	const specifyPosition = !largeGame;
 	const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
