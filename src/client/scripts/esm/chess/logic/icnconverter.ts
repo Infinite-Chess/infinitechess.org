@@ -218,8 +218,8 @@ function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
 function getAbbrFromType(type: number): string {
 	let short = piece_codes[type];
 	if (!short) {
-		const [raw, c] = typeutil.splitType(type);
-		short = String(c) + piece_codes_raw[raw];
+		const [r, p] = typeutil.splitType(type);
+		short = String(p) + piece_codes_raw[r];
 	}
 	return short;
 }
