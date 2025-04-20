@@ -4,13 +4,14 @@ import { rawTypes as r, ext as e } from '../util/typeutil.js';
 /** 
  * Type Definitions 
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../util/coordutil.js').CoordsKey} CoordsKey
 */
 
 'use strict';
 
 /**
  * Generates the Omega^4 position example
- * @returns {Map<string, number>} The position in Map format
+ * @returns {Map<CoordsKey, number>} The position in Map format
  */
 function genPositionOfOmegaFourth() {
 	const dist = 500; // Generate Omega^4 up to a distance of 50 tiles away
