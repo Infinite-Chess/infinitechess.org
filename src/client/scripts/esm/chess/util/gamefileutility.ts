@@ -159,6 +159,7 @@ function areColinearSlidesPresentInGame(pieceMovesets: TypeGroup<() => PieceMove
 	return false; // Colinears are not present
 }
 
+/** Returns the number of players in the game (unique players in the turnOrder). */
 function getPlayerCount(gamefile: gamefile) {
 	if (gamefile.startSnapshot) return gamefile.startSnapshot.playerCount;
 	return new Set(gamefile.gameRules.turnOrder).size;

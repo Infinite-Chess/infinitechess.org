@@ -6,6 +6,7 @@
 
 
 import jsutil from '../../util/jsutil.js';
+import icnconverter from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import formatconverter from '../../chess/logic/formatconverter.js';
 
@@ -13,11 +14,11 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { MetaData } from '../../chess/util/metadata.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
+import type { EnPassant } from '../../chess/logic/state.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
-import type { EnPassant } from '../../chess/logic/state.js';
 
 
 /**
@@ -54,7 +55,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	const gameRules = jsutil.deepCopyObject(gamefile.gameRules);
 	delete gameRules.moveRule;
 
-	let position: Position;
+	let position: Map<CoordsKey, number>;
 	let positionString: string;
 	let specialRights: Set<CoordsKey>;
 	let enpassant: EnPassant | undefined;
@@ -64,12 +65,12 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	if (gamefile.startSnapshot) {
 		({ position, positionString, specialRights, enpassant, moveRuleState, fullMove } = gamefile.startSnapshot);
 	} else {
-		position = {};
+		position = new Map<CoordsKey, number>();
 		gamefile.pieces.coords.forEach((value: number, key: CoordsKey) => {
-			position[key] = gamefile.pieces.types[value];
+			position.set(key, gamefile.pieces.types[value]);
 		});
 		specialRights = jsutil.deepCopyObject(gamefile.specialRights);
-		positionString = formatconverter.LongToShort_Position(position, specialRights);
+		positionString = icnconverter.getShortFormPosition(position, specialRights);
 		enpassant = jsutil.deepCopyObject(gamefile.enpassant);
 		moveRuleState = gamefile.moveRuleState;
 		fullMove = 1;

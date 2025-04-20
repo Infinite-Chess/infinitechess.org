@@ -4,7 +4,6 @@ import board from './board.js';
 import movement from './movement.js';
 import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
-import jsutil from '../../util/jsutil.js';
 import { players } from '../../chess/util/typeutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 

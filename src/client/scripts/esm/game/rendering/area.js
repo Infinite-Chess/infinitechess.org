@@ -9,6 +9,7 @@ import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
 import guinavigation from '../gui/guinavigation.js';
 import guigameinfo from '../gui/guigameinfo.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 // Import End
 
 /** 

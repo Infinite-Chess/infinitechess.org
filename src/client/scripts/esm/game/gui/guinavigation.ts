@@ -5,6 +5,7 @@ import movesequence from '../chess/movesequence.js';
 import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -22,7 +23,6 @@ import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
 import selection from '../chess/selection.js';
-import gamefileutility from '../../chess/util/gamefileutility.js';
 
 
 /**

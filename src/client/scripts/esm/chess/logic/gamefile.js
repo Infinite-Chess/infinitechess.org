@@ -166,6 +166,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.existingRawTypes = existingRawTypes;
 	
 	if (!this.editor) {
+		// startSnapshot is only available in non-editor games,
+		// since it would be changing constantly with every board edit.
 		this.startSnapshot = jsutil.deepCopyObject(startSnapshot);
 		this.startSnapshot.pieceCount = pieceCount;
 		this.startSnapshot.box = gamefileutility.getStartingAreaBox(this);
