@@ -21,7 +21,7 @@ import jsutil from '../../../util/jsutil.js';
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
 import type { MoveDraft } from "../../../chess/logic/movepiece";
-import type { Coords } from "../../../chess/util/coordutil";
+import type { Coords, CoordsKey } from "../../../chess/util/coordutil";
 import type { Vec2 } from "../../../util/math";
 import type { Position } from '../../../chess/util/boardutil.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
@@ -1271,7 +1271,7 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? r.KING + e.B : r.ROYALCENTAUR + e.B);
 					for (let i = 0; i < piecelist.length; i++) {
 						if (new_piecelist[i] !== 0) {
-							piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
+							piecesOrganizedByKey[new_coordlist[i]!.toString() as CoordsKey] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
 						}
 					}
 					const emptyPieceMovesets = {}; // <--- Is this gonna be an issue?

@@ -175,7 +175,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 
 				// check if square is occupied and white bishop parity is fulfilled
 				if (!(key in startingPosition) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
-					startingPosition[key] = piece;
+					startingPosition[key as CoordsKey] = piece;
 					amount -= 1;
 				}
 			} else {
@@ -211,7 +211,7 @@ function squareNotInSight(square: CoordsKey, startingPosition: Position): boolea
 	for (const key in startingPosition) {
 		const [x, y]: number[] = coordutil.getCoordsFromKey(key as CoordsKey);
 		if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
-		if (startingPosition[key] === r.KNIGHTRIDER + e.W) {
+		if (startingPosition[key as CoordsKey] === r.KNIGHTRIDER + e.W) {
 			if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
 				return false;
 			}
