@@ -147,6 +147,8 @@ const default_win_conditions: PlayerGroup<string[]> = { [p.WHITE]: ['checkmate']
 const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder"]);
 
 
+// Regular Expressions ------------------------------------------------------------------------
+
 
 const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with leading 0's like "000005"
 const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1,2'
@@ -200,7 +202,7 @@ function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
 }
 
 
-// Getting Abbreviations --------------------------------------------------------------------------------
+// Getting & Parsing Abbreviations --------------------------------------------------------------------------------
 
 
 /**
@@ -252,7 +254,7 @@ function getTypeFromAbbr(pieceAbbr: string): number {
 }
 
 
-// Compacting Single Moves -------------------------------------------------------------------------------
+// Compacting & Parsing Single Moves -------------------------------------------------------------------------------
 
 
 /**
@@ -420,7 +422,7 @@ function getClkEmbededCommandSequence(timeRemainMillis: number): string {
 }
 
 
-// Compacting Move Lists --------------------------------------------------------------------------------
+// Compacting & Parsing Move Lists --------------------------------------------------------------------------------
 
 
 /**
