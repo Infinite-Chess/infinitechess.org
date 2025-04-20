@@ -122,7 +122,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
 
-	/** True if the game is not timed. @type {Boolean}*/
+	/** True if the game is not timed. @type {boolean}*/
 	this.untimed = undefined;
 	/** The clocks of the game, if the game is timed. @type {ClockData | undefined} */
 	this.clocks = undefined;

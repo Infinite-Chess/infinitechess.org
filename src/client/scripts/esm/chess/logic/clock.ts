@@ -10,9 +10,9 @@ import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil from '../util/typeutil.js';
+import type { PlayerGroup } from '../util/typeutil.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';
-import type { PlayerGroup } from '../util/typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
@@ -55,7 +55,6 @@ type ClockData = {
 		/** The increment used, in milliseconds. */
 		increment: number
 	}
-
 } & ({
 	/** We need this separate from gamefile's "whosTurn", because when we are
 	 * in an online game and we make a move, we want our Clock to continue
@@ -67,8 +66,14 @@ type ClockData = {
 	/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch.*/
 	timeAtTurnStart: number,
 } | {
+	/** We need this separate from gamefile's "whosTurn", because when we are
+	 * in an online game and we make a move, we want our Clock to continue
+	 * ticking until we receive the Clock information back from the server!*/
 	colorTicking: undefined
+	/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
+	 * When set to undefined no clocks are ticking*/
 	timeRemainAtTurnStart: undefined
+	/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch.*/
 	timeAtTurnStart: undefined
 })
 
@@ -151,7 +156,7 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
  */
 function push(gamefile: gamefile) {
 	if (gamefile.untimed) return;
-	if (!moveutil.isGameResignable(gamefile)) return console.log("bee"); // Don't push unless atleast 2 moves have been played
+	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
 	const clocks = gamefile.clocks!;
 
 	clocks.colorTicking = gamefile.whosTurn;

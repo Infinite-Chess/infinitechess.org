@@ -3,9 +3,7 @@
 
 /** This script controls the playing of our sound effects. */
 
-type AudioBufferWithGainNode = AudioBufferSourceNode & {
-	gainNode: GainNode
-}
+type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode }
 
 interface SoundObject {
 	source: AudioBufferWithGainNode,
@@ -39,11 +37,9 @@ const soundStamps = {
 	// draw_offer: [46.89, 48.526]   Only present for the sound spritesheet in dev-utils that includes the draw offer sound
 } as const;
 
-type SoundName = keyof typeof soundStamps
+type SoundName = keyof typeof soundStamps;
 
-/** @type {AudioContext} */
 let audioContext: AudioContext;
-/** @type {AudioBuffer} */
 let audioDecodedBuffer: AudioBuffer;
 
 const bellDist = 1_000_000; // Distance to start playing the bell gong!
@@ -67,9 +63,7 @@ const dampenThresholdMillis = 60;
 
 // Functions
 
-/**
- * Returns our Audio Context
- */
+/** Returns our Audio Context */
 function getAudioContext(): AudioContext { return audioContext; }
 
 /**
@@ -87,9 +81,8 @@ function initAudioContext(audioCtx: AudioContext, decodedBuffer: AudioBuffer) {
 	audioDecodedBuffer = decodedBuffer;
 }
 
-function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fadeInDuration = 0, reverbVolume = 0, reverbDuration = 0} = {}): SoundObject | undefined {
+function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fadeInDuration = 0, reverbVolume = 0, reverbDuration = 0 } = {}): SoundObject | undefined {
 	// A reverb volume of 3.5 and a duration of 1.5 seconds most-closely matches my audio file!
-	// @ts-ignore
 	if (!htmlscript.hasUserGesturedAtleastOnce()) return; // Skip playing this sound 
     
 	if (!audioContext) throw Error(`Can't play sound ${soundName} when audioContext isn't initialized yet. (Still loading)`);
@@ -142,7 +135,7 @@ function playSound(soundName: SoundName, { volume = 1, delay = 0, offset = 0, fa
 	function fadeInAndReturn() {
 		if (!fadeInDuration) return soundObject; // No fade-in effect
 		fadeIn(soundObject.source, volume, fadeInDuration);
-		if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume!, fadeInDuration);
+		if (soundObject.sourceReverb) fadeIn(soundObject.sourceReverb, reverbVolume, fadeInDuration);
 		return soundObject;
 	}
 }
@@ -167,7 +160,7 @@ function getStampDuration(stamp: SoundTimeSnippet) { // [ startTimeSecs, endTime
  * @param [reverbDurationSecs] Optional. If specified, the sound will be transformed into a reverb. This is the duration of that reverb in seconds.
  * @returns The source
  */
-function createBufferSource(volume: number, playbackRate = 1, reverbDurationSecs?: number): AudioBufferWithGainNode {
+function createBufferSource(volume: number, playbackRate: number = 1, reverbDurationSecs?: number): AudioBufferWithGainNode {
 	const source = audioContext.createBufferSource();
 	if (!audioDecodedBuffer) throw new Error("audioDecodedBuffer should never be undefined! This usually happens when soundspritesheet.mp3 starts loading but the document finishes loading in the middle of the audio loading.");
 	source.buffer = audioDecodedBuffer; // Assuming `decodedBuffer` is defined elsewhere
@@ -420,7 +413,7 @@ function playSound_violin_c4() {
 }
 
 function playSound_marimba() {
-	const audioName = Math.random() > 0.15 ? 'marimba_c2' : 'marimba_c2_soft';
+	const audioName = Math.random() > 0.15 ? 'marimba_c2_soft' : 'marimba_c2';
 	return playSound(audioName, { volume: 0.4 });
 }
 
