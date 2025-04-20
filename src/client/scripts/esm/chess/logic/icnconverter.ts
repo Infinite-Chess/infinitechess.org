@@ -161,7 +161,7 @@ const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})
 /**
  * A regex for dynamically matching any all forms of a move in ICN.
  * The move may optionally include a piece abbreviation, spaces between segments,
- * a separator of ">" or "x", check/mate flags "+" or "#", and a comment.
+ * a separator of ">" or "x", check/mate flags "+" or "#", symbols !?, ?!, !!, and a comment.
  * 
  * It captures start coords, end coords, promotion abbrev, and comment into named groups.
  */
@@ -178,6 +178,8 @@ const moveRegexSource =
     ` ?` + // Optional space
     `[+#]?` + // Optional check/checkmate
     ` ?` + // Optional space
+	`(?:[!?]{1,2})?` + // Optional symbols: !?, ?!, !!
+	` ?` + // Optional space
     `(?:\\{(?<comment>[^}]+)\\})?` // Optional comment (not-greedy). Comments should NOT contain a closing brace "}".
 ;            
 
