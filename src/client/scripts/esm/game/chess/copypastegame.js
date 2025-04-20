@@ -38,6 +38,8 @@ import boardutil from '../../chess/util/boardutil.js';
  */
 const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeControl','Event','Site','Round'];
 
+const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth'];
+
 /**
  * Copies the current game to the clipboard in ICN notation.
  * This callback is called when the "Copy Game" button is pressed.
@@ -51,8 +53,9 @@ function copyGame(copySinglePosition) {
 	// Convert the variant metadata code to spoken language if translation is available
 	if (primedGamefile.metadata.Variant) primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant];
 	
-	const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_Fourth';
-	const specifyPosition = !largeGame;
+	const largeGame = variantsTooBigToCopyPositionToICN.includes(Variant);
+	// Also specify the position if we're copying a single position, so the starting position will be different.
+	const specifyPosition = !largeGame || copySinglePosition;
 	const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
         
 	docutil.copyToClipboard(shortformat);
