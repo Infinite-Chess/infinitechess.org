@@ -40,19 +40,20 @@ function setupVariantGamerules(gamefile, metadata, options) {
 		gamefile.gameRules = variant.getGameRulesOfVariant(metadata);
 	}
 
-	initPieceMovesets(gamefile, metadata);
+	initPieceMovesets(gamefile, metadata, options?.gameRules.slideLimit);
 }
 
 /**
  * Sets the pieceMovesets and specialMoves functions of the gamefile.
  * @param {gamefile} gamefile - The gamefile
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- */
-function initPieceMovesets(gamefile, metadata) {
+ * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
+*/
+function initPieceMovesets(gamefile, metadata, slideLimit) {
 	// The movesets and methods for detecting and executing special moves
 	// are attached to the gamefile. This is because different variants
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
-	gamefile.pieceMovesets = variant.getMovesetsOfVariant(metadata);
+	gamefile.pieceMovesets = variant.getMovesetsOfVariant(metadata, slideLimit);
 	gamefile.specialMoves = variant.getSpecialMovesOfVariant(metadata);
 }
 

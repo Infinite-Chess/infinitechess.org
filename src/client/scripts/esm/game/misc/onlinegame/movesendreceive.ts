@@ -18,12 +18,11 @@ import selection from "../../chess/selection.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import movesequence from "../../chess/movesequence.js";
+import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import specialdetect from "../../../chess/logic/specialdetect.js";
-// @ts-ignore
-import formatconverter from "../../../chess/logic/formatconverter.js";
 // @ts-ignore
 import guiclock from "../../gui/guiclock.js";
 // @ts-ignore
@@ -76,7 +75,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	// Convert the move from compact short format "x,y>x,yN"
 	let moveDraft: MoveDraft; // { startCoords, endCoords, promotion }
 	try {
-		moveDraft = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
+		moveDraft = icnconverter.parseCompactMove(message.move); // { startCoords, endCoords, promotion }
 	} catch {
 		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
 		const reason = 'Incorrectly formatted.';

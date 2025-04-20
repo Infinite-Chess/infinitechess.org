@@ -72,10 +72,11 @@ function kings(gamefile, coords, color) {
 
 	const leftDist = x - left;
 	const rightDist = right - x;
-	const leftCoord = [left, y];
-	const rightCoord = [right, y];
-	const leftPieceType = boardutil.getTypeFromCoords(gamefile.pieces, leftCoord);
-	const rightPieceType = boardutil.getTypeFromCoords(gamefile.pieces, rightCoord);
+	// GAME IS NOT COMPATIBLE WITH INFINITE COORDS
+	const leftCoord = left === -Infinity ? undefined : [left, y];
+	const rightCoord = right === Infinity ? undefined : [right, y];
+	const leftPieceType = leftCoord ? boardutil.getTypeFromCoords(gamefile.pieces, leftCoord) : undefined;
+	const rightPieceType = rightCoord ? boardutil.getTypeFromCoords(gamefile.pieces, rightCoord) : undefined;
 	const leftColor = leftPieceType !== undefined ? typeutil.getColorFromType(leftPieceType) : undefined;
 	const rightColor = rightPieceType !== undefined ? typeutil.getColorFromType(rightPieceType) : undefined;
 

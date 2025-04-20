@@ -19,6 +19,7 @@ import boardchanges from './boardchanges.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
+import icnconverter from './icn/icnconverter.js';
 // @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
@@ -27,8 +28,6 @@ import specialdetect from './specialdetect.js';
 import math from '../../util/math.js';
 // @ts-ignore
 import checkdetection from './checkdetection.js';
-// @ts-ignore
-import formatconverter from './formatconverter.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
 
@@ -121,7 +120,7 @@ interface Move extends MoveDraft {
 	/** The index this move was generated for. This can act as a safety net
 	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
-	/** The move in most compact notation: `8,7>8,8Q` */
+	/** The move in most compact notation: `8,7>8,8=Q` */
 	compact: string,
 	flags: {
 		/** Whether the move delivered check. */
@@ -131,6 +130,18 @@ interface Move extends MoveDraft {
 		/** Whether the move caused a capture */
 		capture: boolean,
 	}
+	/**
+	 * Any comment made on the move, specified in the ICN.
+	 * These will go back into the ICN when copying the game.
+	 */
+	comment?: string,
+	/**
+	 * How much time the player had left after they made their move, in millis.
+	 * 
+	 * Server is always boss, we cannot set this until after the
+	 * server responds back with the updated clock information.
+	 */
+	clk?: number,
 }
 
 /**
@@ -179,7 +190,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		changes: [],
 		generateIndex: gamefile.moveIndex + 1,
 		state: { local: [], global: [] },
-		compact: formatconverter.LongToShort_CompactMove(moveDraft),
+		compact: icnconverter.getCompactMoveFromDraft(moveDraft),
 		flags: {
 			// These will be set later, but we need a default value
 			check: false,
@@ -401,7 +412,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 
 	let moveDraft: MoveDraft;
 	try {
-		moveDraft = formatconverter.ShortToLong_CompactMove(shortmove); // { startCoords, endCoords, promotion }
+		moveDraft = icnconverter.parseCompactMove(shortmove);
 	} catch (error) {
 		console.error(error);
 		console.error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);

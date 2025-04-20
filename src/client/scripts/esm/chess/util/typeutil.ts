@@ -38,6 +38,8 @@ const rawTypes = {
 	PAWN: 21
 } as const;
 
+const neutralRawTypes: RawType[] = [rawTypes.VOID, rawTypes.OBSTACLE];
+
 /** All player colors suppored in the game. Multiply the raw type by this to get the colored type. */
 const players = {
 	NEUTRAL: 0,
@@ -72,7 +74,7 @@ const ext = {
 const strtypes = ['void', 'obstacle', 'king', 'giraffe', 'camel', 'zebra', 'knightrider', 'amazon', 'queen', 'royalQueen', 'hawk', 'chancellor', 'archbishop', 'centaur', 'royalCentaur', 'rose', 'knight', 'guard', 'huygen', 'rook', 'bishop', 'pawn'] as const;
 
 /** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
-const jumpingRoyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
+const jumpingRoyals: RawType[] = [rawTypes.KING, rawTypes.ROYALCENTAUR];
 /**
  * A list of the royals that the checkmate algorithm cannot detect when they are in checkmate,
  * however it still is illegal to move into check.
@@ -80,12 +82,12 @@ const jumpingRoyals = [rawTypes.KING, rawTypes.ROYALCENTAUR];
  * Players have to voluntarily resign if they
  * believe their sliding royal is in checkmate.
  */
-const slidingRoyals = [rawTypes.ROYALQUEEN];
+const slidingRoyals: RawType[] = [rawTypes.ROYALQUEEN];
 /**
  * A list of the royal pieces, without the color appended.
  * THIS SHOULD NOT CONTAIN DUPLICATES
  */
-const royals = [...jumpingRoyals, ...slidingRoyals];
+const royals: RawType[] = [...jumpingRoyals, ...slidingRoyals];
 
 /**
  * The string representations of each player color.
@@ -181,6 +183,7 @@ export type {
 
 export {
 	rawTypes,
+	neutralRawTypes,
 	ext,
 	numTypes,
 	players,

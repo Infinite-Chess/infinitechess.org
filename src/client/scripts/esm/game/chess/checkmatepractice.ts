@@ -25,6 +25,7 @@ import validatorama from "../../util/validatorama.js";
 import validcheckmates from '../../chess/util/validcheckmates.js';
 import docutil from '../../util/docutil.js';
 import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
+import icnconverter from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
@@ -160,7 +161,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 	for (const entry of piecelist) {
 		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
 		const strpiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-		const piece: number = formatconverter.ShortToInt_Piece(strpiece);
+		const piece: number = icnconverter.getTypeFromAbbr(strpiece);
 
 		// place amount many pieces of type piece
 		while (amount !== 0) {
@@ -174,7 +175,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 
 				// check if square is occupied and white bishop parity is fulfilled
 				if (!(key in startingPosition) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
-					startingPosition[key] = piece;
+					startingPosition[key as CoordsKey] = piece;
 					amount -= 1;
 				}
 			} else {
@@ -210,7 +211,7 @@ function squareNotInSight(square: CoordsKey, startingPosition: Position): boolea
 	for (const key in startingPosition) {
 		const [x, y]: number[] = coordutil.getCoordsFromKey(key as CoordsKey);
 		if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
-		if (startingPosition[key] === r.KNIGHTRIDER + e.W) {
+		if (startingPosition[key as CoordsKey] === r.KNIGHTRIDER + e.W) {
 			if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
 				return false;
 			}

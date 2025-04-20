@@ -60,7 +60,7 @@ interface FormatConverterLong {
 	metadata: MetaData,
 	startingPosition: Position,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	shortposition: string,
+	shortposition?: string,
 	fullMove: number,
 	specialRights: Set<CoordsKey>,
 	/** DOES NOT CONTAIN moveRule!!!! */
@@ -83,14 +83,15 @@ function ICNToGamefile(ICN: string): gamefile {
 	const variantOptions: VariantOptions = {
 		fullMove: longformat.fullMove,
 		moveRule: longformat.moveRule,
-		positionString: longformat.shortposition,
+		positionString: longformat.shortposition!,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
 		gameRules: longformat.gameRules
 	};
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
+	// EXPECT THE ICN'S Variant metadata to be the variant code!
+	// longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
 
 	// if (longformat.enpassant) { // Coords: [x,y]
 	// 	// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }

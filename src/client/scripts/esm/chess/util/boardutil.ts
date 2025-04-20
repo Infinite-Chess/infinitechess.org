@@ -10,7 +10,7 @@ import jsutil from "../../util/jsutil.js";
 // Type Definitions -----------------------------------------------------------------------------------------
 
 import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces.js";
-import type { Coords } from "./coordutil.js";
+import type { Coords, CoordsKey } from "./coordutil.js";
 import type { RawType, Player } from "./typeutil.js";
 
 interface Piece {
@@ -30,7 +30,7 @@ interface Piece {
  * A position in keys format. Entries look like: `"5,2": r.PAWN + e.W`
  */
 interface Position {
-	[coordKey: string]: number
+	[coordKey: CoordsKey]: number
 }
 
 /** A unique identifier for a single line of pieces. `C|X` */

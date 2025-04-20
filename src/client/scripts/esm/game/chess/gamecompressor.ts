@@ -12,7 +12,7 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { Move } from '../../chess/logic/movepiece.js';
+import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { Position } from '../../chess/variants/variant.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
@@ -26,6 +26,7 @@ import type { EnPassant } from '../../chess/logic/state.js';
  * All unimportant data is excluded.
  */
 interface AbridgedGamefile {
+	/** The Variant metadata should be the CODE of the variant, not a translation. */
 	metadata: MetaData,
 	fullMove: number,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
@@ -50,7 +51,6 @@ interface AbridgedGamefile {
 function compressGamefile(gamefile: gamefile, copySinglePosition?: true): AbridgedGamefile {
 
 	const metadata = jsutil.deepCopyObject(gamefile.metadata);
-	if (metadata.Variant) metadata.Variant = translations[metadata.Variant]; // Convert the variant metadata code to spoken language if translation is available
 
 	const gameRules = jsutil.deepCopyObject(gamefile.gameRules);
 	delete gameRules.moveRule;
@@ -83,7 +83,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 		specialRights,
 		fullMove,
 		gameRules,
-		moves: gamefile.moves,
+		moves: gamefile.moves.map((move: Move | NullMove) => !move.isNull ? move : (() => { throw Error("Cannot abridge gamefile with null moves!"); })()), // Tells typescript we're confident it doesn't have null moves
 	};
 
 	// Append the optional properties, if present
