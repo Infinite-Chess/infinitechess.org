@@ -10,7 +10,6 @@ import clock from './clock.js';
 import wincondition from './wincondition.js';
 import gamerules from '../variants/gamerules.js';
 import checkdetection from './checkdetection.js';
-import { players } from '../util/typeutil.js';
 import legalmoves from './legalmoves.js';
 // Type Definitions...
 
@@ -37,6 +36,7 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup */
 /** @typedef {import('../util/typeutil.js').PlayerGroup} PlayerGroup */
 /** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
+/** @typedef {import('./clock.js').ClockData} ClockData*/
 
 'use strict'; 
 
@@ -122,35 +122,11 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** Contains the methods for executing special moves for this game. */
 	this.specialMoves = undefined;
 
-	/** The clocks of the game, if the game is timed. */
-	this.clocks = {
-		/** The time each player has remaining, in milliseconds. @type {PlayerGroup<number>}*/
-		currentTime: {
-			[players.WHITE]: undefined,
-			[players.BLACK]: undefined,
-		},
+	/** True if the game is not timed. @type {boolean}*/
+	this.untimed = undefined;
+	/** The clocks of the game, if the game is timed. @type {ClockData | undefined} */
+	this.clocks = undefined;
 
-		/** Contains information about the start time of the game. */
-		startTime: {
-			/** The number of minutes both sides started with. @type {undefined | number} */
-			minutes: undefined,
-			/** The number of miliseconds both sides started with. @type {undefined | number}  */
-			millis: undefined,
-			/** The increment used, in milliseconds. @type {undefined | number} */
-			increment: undefined,
-		},
-		/** We need this separate from gamefile's "whosTurn", because when we are
-		 * in an online game and we make a move, we want our Clock to continue
-		 * ticking until we receive the Clock information back from the server! @type {Player} */
-		colorTicking: undefined,
-		/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-		 * When set to undefined no clocks are ticking @type {number | undefined} */
-		timeRemainAtTurnStart: undefined,
-		/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch. @type {number | undefined} */
-		timeAtTurnStart: undefined,
-		/** True if the game is not timed. @type {Boolean}*/
-		untimed: undefined,
-	};
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	this.editor = editor;
 	// JSDoc stuff over...

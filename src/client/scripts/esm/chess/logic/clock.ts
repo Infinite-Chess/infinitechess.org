@@ -10,6 +10,7 @@ import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil from '../util/typeutil.js';
+import type { PlayerGroup } from '../util/typeutil.js';
 // @ts-ignore
 import clockutil from '../util/clockutil.js';
 
@@ -41,6 +42,40 @@ interface ClockValues {
 	timeColorTickingLosesAt?: number,
 };
 
+type ClockData = {
+	/** The time each player has remaining, in milliseconds.*/
+	currentTime: PlayerGroup<number>
+
+	/** Contains information about the start time of the game. */
+	startTime: {
+		/** The number of minutes both sides started with. */
+		minutes: number
+		/** The number of miliseconds both sides started with.  */
+		millis: number
+		/** The increment used, in milliseconds. */
+		increment: number
+	}
+} & ({
+	/** We need this separate from gamefile's "whosTurn", because when we are
+	 * in an online game and we make a move, we want our Clock to continue
+	 * ticking until we receive the Clock information back from the server!*/
+	colorTicking: Player,
+	/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
+	 * When set to undefined no clocks are ticking*/
+	timeRemainAtTurnStart: number,
+	/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch.*/
+	timeAtTurnStart: number,
+} | {
+	/** We need this separate from gamefile's "whosTurn", because when we are
+	 * in an online game and we make a move, we want our Clock to continue
+	 * ticking until we receive the Clock information back from the server!*/
+	colorTicking: undefined
+	/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
+	 * When set to undefined no clocks are ticking*/
+	timeRemainAtTurnStart: undefined
+	/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch.*/
+	timeAtTurnStart: undefined
+})
 
 // Functions -----------------------------------------------------------------------
 
@@ -56,20 +91,28 @@ interface ClockValues {
  */
 function set(gamefile: gamefile, currentTimes?: ClockValues) {
 	const clock = gamefile.metadata.TimeControl; // "600+5"
-	const clocks = gamefile.clocks;
-
-	clocks.startTime.minutes = undefined;
-	clocks.startTime.millis = undefined;
-	clocks.startTime.increment = undefined;
-
-	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock); // { minutes, increment }
-	if (clockPartsSplit !== null) {
-		clocks.startTime.minutes = clockPartsSplit.minutes;
-		clocks.startTime.millis = timeutil.minutesToMillis(clocks.startTime.minutes!);
-		clocks.startTime.increment = clockPartsSplit.increment;
+	gamefile.untimed = clockutil.isClockValueInfinite(clock);
+	if (gamefile.untimed) {
+		gamefile.clocks = undefined;
+		return;
 	}
+	// { minutes, increment }
+	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock)!;
 
-	clocks.colorTicking = gamefile.whosTurn;
+	const clocks: ClockData = {
+		startTime: {
+			minutes: clockPartsSplit.minutes,
+			millis: timeutil.minutesToMillis(clockPartsSplit.minutes),
+			increment: clockPartsSplit.increment
+		},
+		currentTime: {},
+		
+		colorTicking: undefined,
+		timeAtTurnStart: undefined,
+		timeRemainAtTurnStart: undefined
+	};
+
+	gamefile.clocks = clocks;
 
 	// Edit the closk if we're re-loading an online game
 	if (currentTimes) edit(gamefile, currentTimes);
@@ -78,8 +121,6 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 			clocks.currentTime[color] = clocks.startTime.millis;
 		});
 	}
-
-	clocks.untimed = clockutil.isClockValueInfinite(clock);
 }
 
 /**
@@ -88,8 +129,8 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
  * @param [clockValues] - An object containing the updated clock values.
  */
 function edit(gamefile: gamefile, clockValues?: ClockValues) {
-	if (!clockValues) return; // Likely a no-timed game
-	const clocks = gamefile.clocks;
+	if (!clockValues || gamefile.untimed) return; // Likely a no-timed game
+	const clocks = gamefile.clocks!;
 
 	const colorTicking = gamefile.whosTurn;
 
@@ -114,9 +155,9 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
  * Call after flipping whosTurn. Flips colorTicking in local games.
  */
 function push(gamefile: gamefile) {
-	const clocks = gamefile.clocks;
-	if (clocks.untimed) return;
+	if (gamefile.untimed) return;
 	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
+	const clocks = gamefile.clocks!;
 
 	clocks.colorTicking = gamefile.whosTurn;
 
@@ -131,9 +172,11 @@ function push(gamefile: gamefile) {
 }
 
 function endGame(gamefile: gamefile) {
-	const clocks = gamefile.clocks;
+	if (gamefile.untimed) return;
+	const clocks = gamefile.clocks!;
 	clocks.timeRemainAtTurnStart = undefined;
 	clocks.timeAtTurnStart = undefined;
+	clocks.colorTicking = undefined;
 }
 
 /**
@@ -142,13 +185,15 @@ function endGame(gamefile: gamefile) {
  * @returns undefined if clocks still have time, otherwise it's the color who won.
 */
 function update(gamefile: gamefile): Player | undefined {
-	const clocks = gamefile.clocks;
-	if (clocks.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile) || clocks.timeAtTurnStart === undefined) return;
+	if (gamefile.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile)) return;
+	
+	const clocks = gamefile.clocks!;
+	if (clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
 
-	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart! - timePassedSinceTurnStart);
+	clocks.currentTime[clocks.colorTicking] = Math.ceil(clocks.timeRemainAtTurnStart - timePassedSinceTurnStart);
 
 	for (const [playerStr,time] of Object.entries(clocks.currentTime)) {
 		const player: Player = Number(playerStr) as Player;
@@ -161,20 +206,27 @@ function update(gamefile: gamefile): Player | undefined {
 	return; // Without this, typescript complains not all code paths return a value.
 }
 
+/**
+ * Returns the true time remaining for the player whos clock is ticking.
+ * Independant of reading clocks.currentTime, because that isn't updated
+ * every frame if the user unfocuses the window.
+ */
+function getColorTickingTrueTimeRemaining(gamefile: gamefile): number | undefined {
+	if (gamefile.untimed) return;
+	const clocks = gamefile.clocks!;
+	if (clocks.colorTicking === undefined) return;
+	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
+	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
+}
+
 function printClocks(gamefile: gamefile) {
-	const clocks = gamefile.clocks;
+	if (gamefile.untimed) return console.log("Game is untimed.");
+	const clocks = gamefile.clocks!;
 	for (const color in clocks.currentTime) {
 		console.log(`${color} time: ${clocks.currentTime[color]}`);
 	}
 	console.log(`timeRemainAtTurnStart: ${clocks.timeRemainAtTurnStart}`);
 	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);
-}
-
-/**
- * Returns true if the current game is untimed (infinite clocks) 
- */
-function isGameUntimed(gamefile: gamefile): boolean {
-	return gamefile.clocks.untimed;
 }
 
 export default {
@@ -183,10 +235,11 @@ export default {
 	endGame,
 	update,
 	push,
+	getColorTickingTrueTimeRemaining,
 	printClocks,
-	isGameUntimed,
 };
 
 export type {
 	ClockValues,
+	ClockData
 };
