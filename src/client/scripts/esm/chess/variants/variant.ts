@@ -22,6 +22,7 @@ import fourdimensionalgenerator from './fourdimensionalgenerator.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
 import { rawTypes as r, players as p } from '../util/typeutil.js';
+import icnconverter from '../logic/icn/icnconverter.js';
 // @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
 // @ts-ignore
@@ -408,7 +409,7 @@ function getStartSnapshotPosition({ positionString, startingPosition, specialRig
 	} else if (startingPosition && specialRights) {
 		positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
 	} else if (startingPosition) {
-		specialRights = formatconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
+		specialRights = icnconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
 		positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
 	} else throw new Error("Not enough information to calculate the positionString, position, and specialRights of variant.");
 

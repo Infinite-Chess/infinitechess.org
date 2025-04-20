@@ -8,6 +8,7 @@
  */
 
 import jsutil from "../../../util/jsutil.js";
+import { Position } from "../../util/boardutil.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
@@ -526,6 +527,65 @@ function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
 	return moves;
 }
 
+// Converting Positions ------------------------------------------------------------------------------------------
+
+
+
+
+/**
+ * Generates the specialRights property of a gamefile, given the provided position and gamerules.
+ * Only gives pieces that can castle their right if they are on the same rank, and color, as the king, and atleast 3 squares away
+ * 
+ * This can be manually used to compress the starting position of variants of InfiniteChess.org to shrink the size of the code
+ * @param position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
+ * @param pawnDoublePush - Whether pawns are allowed to double push
+ * @param castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
+ * @returns The specialRights gamefile property, a set where entries are coordsKeys 'x,y', where the piece at that location has their special move ability (pawn double push, castling rights..)
+ */
+function generateSpecialRights(position: Position, pawnDoublePush: boolean, castleWith?: RawType): Set<CoordsKey> {
+	// Make sure castleWith is with a valid piece to castle with
+	if (castleWith !== undefined && castleWith !== r.ROOK && castleWith !== r.GUARD) throw Error(`Cannot allow castling with ${typeutil.debugType(castleWith)}!.`);
+
+	const specialRights = new Set<CoordsKey>();
+	if (pawnDoublePush === false && castleWith === undefined) return specialRights; // Early exit
+
+	/** Running list of kings discovered, 'x,y': player */
+	const kingsFound: Record<CoordsKey, Player> = {};
+	/** Running list of pieces found that are able to castle (e.g. rooks), 'x,y': Player */
+	const castleWithsFound: Record<CoordsKey, Player> = {};
+
+	for (const key in position) {
+		const thisPiece = position[key as CoordsKey]!; // [43] pawn(white)
+		const [rawType, player] = typeutil.splitType(thisPiece);
+		if (pawnDoublePush && rawType === r.PAWN) specialRights.add(key as CoordsKey);
+		else if (castleWith && typeutil.jumpingRoyals.includes(rawType)) {
+			specialRights.add(key as CoordsKey);
+			kingsFound[key as CoordsKey] = player;
+		}
+		else if (castleWith && rawType === castleWith) {
+			castleWithsFound[key as CoordsKey] = player;
+		}
+	}
+
+	// Only give the pieces that can castle their special move ability
+	// if they are the same row and color as a king!
+	if (Object.keys(kingsFound).length === 0) return specialRights; // Nothing can castle, return now.
+	outerFor: for (const coord in castleWithsFound) { // 'x,y': player
+		const coords = coordutil.getCoordsFromKey(coord as CoordsKey); // [x,y]
+		for (const kingCoord in kingsFound) { // 'x,y': player
+			const kingCoords = coordutil.getCoordsFromKey(kingCoord as CoordsKey); // [x,y]
+			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
+			if (castleWithsFound[coord as CoordsKey] !== kingsFound[kingCoord as CoordsKey]) continue; // Their players don't match
+			const xDist = Math.abs(coords[0] - kingCoords[0]);
+			if (xDist < 3) continue; // Not ateast 3 squares away
+			specialRights.add(coord as CoordsKey); // Same row and color as the king! This piece can castle.
+			// We already know this piece can castle, we don't
+			// need to see if it's on the same rank as any other king
+			continue outerFor;
+		}
+	}
+	return specialRights;
+}
 
 
 
@@ -533,7 +593,7 @@ function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
 
 
 
-
+// Exports --------------------------------------------------------------------------------------------------------
 
 
 // TEMPORARY!! Delete when formatconverter has been cleaned out, its methods rewritten and migrated to here.
@@ -561,4 +621,6 @@ export default {
 	parseCompactMove,
 	getShortFormMovesFromMoves,
 	parseShortFormMoves,
+
+	generateSpecialRights,
 };

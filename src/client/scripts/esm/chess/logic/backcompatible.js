@@ -4,6 +4,7 @@ import formatconverter from './formatconverter.js';
 import moveutil from '../util/moveutil.js';
 import jsutil from '../../util/jsutil.js';
 import { players } from '../util/typeutil.js';
+import icnconverter from './icn/icnconverter.js';
 // Import End
 
 'use script';
@@ -44,7 +45,7 @@ function getLongformatInNewNotation(longformat) {
 	converted.fullMove = 1;
 	if (longformat.startingPosition) {
 		converted.startingPosition = longformat.startingPosition;
-		converted.specialRights = formatconverter.generateSpecialRights(longformat.startingPosition, pawnDoublePush, castleWith);
+		converted.specialRights = icnconverter.generateSpecialRights(longformat.startingPosition, pawnDoublePush, castleWith);
 	}
 	let turnOrder = [players.WHITE, players.BLACK];
 	if (longformat.moves?.length > 0) {

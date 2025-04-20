@@ -488,55 +488,8 @@ function LongToShort_Position(position, specialRights) {
  * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
  */
 function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith) {
-	const specialRights = generateSpecialRights(position, pawnDoublePush, castleWith);
+	const specialRights = icnconverter.generateSpecialRights(position, pawnDoublePush, castleWith);
 	return LongToShort_Position(position, specialRights); // Now we have the information we need!
-}
-
-/**
- * Generates the specialRights property of a gamefile, given the provided position and gamerules.
- * Only gives pieces that can castle their right if they are on the same rank, and color, as the king, and atleast 3 squares away
- * 
- * This can be manually used to compress the starting position of variants of InfiniteChess.org to shrink the size of the code
- * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param {boolean} pawnDoublePush - Whether pawns are allowed to double push
- * @param {RawType | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
- * @returns {Object} The specialRights gamefile property, in the form 'x,y':true, where true means the piece at that location has their special move ability (pawn double push, castling rights..)
- */
-function generateSpecialRights(position, pawnDoublePush, castleWith) {
-	const specialRights = new Set();
-	const kingsFound = {}; // Running list of kings discovered, 'x,y': player
-	const castleWithsFound = {}; // Running list of pieces found that are able to castle (e.g. rooks), 'x,y': player
-
-	for (const key in position) {
-		const thisPiece = position[key]; // e.g. "pawnsW"
-		if (pawnDoublePush && typeutil.getRawType(thisPiece) === r.PAWN) specialRights.add(key);
-		else if (castleWith && typeutil.getRawType(thisPiece) === r.KING) {
-			specialRights.add(key);
-			kingsFound[key] = typeutil.getColorFromType(thisPiece);
-		}
-		else if (castleWith && typeutil.getRawType(thisPiece) === castleWith) {
-			castleWithsFound[key] = typeutil.getColorFromType(thisPiece);
-		}
-	}
-
-	// Only give the pieces that can castle their special move ability
-	// if they are the same row and color as a king!
-	if (Object.keys(kingsFound).length === 0) return specialRights; // Nothing can castle, return now.
-	outerFor: for (const coord in castleWithsFound) { // 'x,y': player
-		const coords = coordutil.getCoordsFromKey(coord); // [x,y]
-		for (const kingCoord in kingsFound) { // 'x,y': player
-			const kingCoords = coordutil.getCoordsFromKey(kingCoord); // [x,y]
-			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
-			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their players don't match
-			const xDist = Math.abs(coords[0] - kingCoords[0]);
-			if (xDist < 3) continue; // Not ateast 3 squares away
-			specialRights.add(coord); // Same row and color as the king! This piece can castle.
-			// We already know this piece can castle, we don't
-			// need to see if it's on the same rank as any other king
-			continue outerFor;
-		}
-	}
-	return specialRights;
 }
 
 /**
@@ -608,5 +561,4 @@ export default {
 	LongToShort_Position,
 	LongToShort_Position_FromGamerules,
 	getStartingPositionAndSpecialRightsFromShortPosition,
-	generateSpecialRights,
 };
