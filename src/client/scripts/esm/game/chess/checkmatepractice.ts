@@ -29,8 +29,6 @@ import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
-// @ts-ignore
-import formatconverter from '../../chess/logic/formatconverter.js';
 
 // Variables ----------------------------------------------------------------------------
 
