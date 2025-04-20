@@ -244,7 +244,7 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 		 * If not, the ICN was likely tampered.
 		 * Erase the enpassant property! (or just don't transfer it over)
 		 */
-		const pieceOnExpectedSquare = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+		const pieceOnExpectedSquare = longformat.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
 		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === rawTypes.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
 			// Valid pawn to capture via enpassant is present
 			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
