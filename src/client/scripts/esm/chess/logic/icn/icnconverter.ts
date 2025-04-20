@@ -155,19 +155,23 @@ const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with
 const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1,2'
 
 /**
- * A regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
- * Captures the piece abbreviation, and the player number overide if present.
+ * Returns a regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
+ * Optionally captures the piece abbreviation, and the player
+ * number if present, using custom capture group names.
  * Disallows negatives, or leading 0's
+ * 
+ * This prevents duplicate capture group names when a bigger regex contains
+ * multiple smaller pieceAbbrev regexes, as we can make them different.
+ * @param playerCapture - The name of the player capture group. If null, it won't be captured.
+ * @param abbrevCapture - The name of the abbrev capture group. If null, it won't be captured.
  */
-const pieceAbbrevRegexSource = '(?<player>0|[1-9]\\d*)?(?<abbr>[A-Za-z]+)';
-/**
- * Non-capturing version of {@link pieceAbbrevRegexSource}. We need this so that
- * we don't have duplicate capture group names when we use it in the move regex.
- * The leading piece abbrev of moves doesn't need to be captured.
- */
-const pieceAbbrevRegexSource_NonCapturing = `(?:0|[1-9]\\d*)?(?:[A-Za-z]+)`;
+function getPieceAbbrevRegex(playerCapture: string | null, abbrevCapture: string| null): string {
+	const playerGroup = playerCapture !== null ? `<${playerCapture}>` : ":";
+	const abbrevGroup = abbrevCapture !== null ? `<${abbrevCapture}>` : ":";
+	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`;
+}
 
-const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`; // '=Q' => Promotion to queen
+const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegex('player', 'abbrev')}))?`; // '=Q' => Promotion to queen
 
 /**
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
@@ -183,7 +187,7 @@ const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})
  * It captures start coords, end coords, promotion abbrev, and comment into named groups.
  */
 const moveRegexSource = 
-	`(${pieceAbbrevRegexSource_NonCapturing})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
+	`(${getPieceAbbrevRegex(null, null)})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
     `(?<startCoordsKey>${coordsKeyRegexSource})` + // Starting coordinates
     ` ?` + // Optional space
     `[>x]` + // Separator
@@ -242,20 +246,20 @@ function getAbbrFromType(type: number): string {
  * '3k' => [68] king(red)
  */
 function getTypeFromAbbr(pieceAbbr: string): number {
-	const results = new RegExp(`^${pieceAbbrevRegexSource}$`).exec(pieceAbbr);
+	const results = new RegExp(`^${getPieceAbbrevRegex('player', 'abbrev')}$`).exec(pieceAbbr);
 	if (results === null) throw Error("Piece abbreviation is in invalid form: " + pieceAbbr);
 
-	const abbr = results.groups!['abbr']!;
+	const abbrev = results.groups!['abbrev']!;
 	const playerStr = results.groups!['player'];
 
 	let typeStr: string | undefined;
 
 	if (playerStr === undefined) { // No player number override is present
-		typeStr = piece_codes_inverted[abbr];
+		typeStr = piece_codes_inverted[abbrev];
 		if (typeStr === undefined) throw Error("Unknown piece abbreviation: " + pieceAbbr);
 		return Number(typeStr);
 	} else { // Player number override present
-		const rawTypeStr = piece_codes_raw_inverted[abbr.toLowerCase()];
+		const rawTypeStr = piece_codes_raw_inverted[abbrev.toLowerCase()];
 		if (rawTypeStr === undefined) throw Error("Unknown raw piece abbreviation: " + pieceAbbr);
 		return typeutil.buildType(Number(rawTypeStr) as RawType, Number(playerStr) as Player);
 	}
