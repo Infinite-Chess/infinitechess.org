@@ -113,7 +113,8 @@ function doesMoveCheckOut(move) {
 		// become Infinity when cast to a number!
 		icnconverter.parseCompactMove(move);
 	} catch (e) {
-		// It either didn't pass the regex, or one of the coordinates is Infinity.
+		// It either didn't pass the regex, or one of the coordinates is Infinity,
+		// OR the promoted piece abbreviation was invalid.
 		return false;
 	}
 

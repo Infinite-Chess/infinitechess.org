@@ -148,8 +148,9 @@ const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winCo
 
 
 
-const pieceAbbrevRegexSource = '\\d*[A-Za-z]+'; // '3Q' => Player-3 queen (red)
-const coordsKeyRegexSource = '-?\\d+,-?\\d+'; // '-1,2'
+const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with leading 0's like "000005"
+const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1,2'
+const pieceAbbrevRegexSource = '(?:0|[1-9]\\d*)?[A-Za-z]+'; // '3Q' => Player-3 queen (red)   Disallows negatives, or leading 0's
 const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`; // '=Q' => Promotion to queen
 
 /**
