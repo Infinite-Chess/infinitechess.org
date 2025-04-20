@@ -153,12 +153,20 @@ const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winCo
 
 const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with leading 0's like "000005"
 const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1,2'
+
 /**
  * A regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
  * Captures the piece abbreviation, and the player number overide if present.
  * Disallows negatives, or leading 0's
  */
 const pieceAbbrevRegexSource = '(?<player>0|[1-9]\\d*)?(?<abbr>[A-Za-z]+)';
+/**
+ * Non-capturing version of {@link pieceAbbrevRegexSource}. We need this so that
+ * we don't have duplicate capture group names when we use it in the move regex.
+ * The leading piece abbrev of moves doesn't need to be captured.
+ */
+const pieceAbbrevRegexSource_NonCapturing = `(?:0|[1-9]\\d*)?(?:[A-Za-z]+)`;
+
 const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`; // '=Q' => Promotion to queen
 
 /**
@@ -175,7 +183,7 @@ const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})
  * It captures start coords, end coords, promotion abbrev, and comment into named groups.
  */
 const moveRegexSource = 
-	`(${pieceAbbrevRegexSource})?` + // Optional starting piece abbreviation "P"
+	`(${pieceAbbrevRegexSource_NonCapturing})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
     `(?<startCoordsKey>${coordsKeyRegexSource})` + // Starting coordinates
     ` ?` + // Optional space
     `[>x]` + // Separator
