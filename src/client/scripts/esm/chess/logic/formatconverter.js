@@ -523,9 +523,9 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 	// if they are the same row and color as a king!
 	if (Object.keys(kingsFound).length === 0) return specialRights; // Nothing can castle, return now.
 	outerFor: for (const coord in castleWithsFound) { // 'x,y': player
-		const coords = coordutil.getCoordsFromString(coord); // [x,y]
+		const coords = coordutil.getCoordsFromKey(coord); // [x,y]
 		for (const kingCoord in kingsFound) { // 'x,y': player
-			const kingCoords = coordutil.getCoordsFromString(kingCoord); // [x,y]
+			const kingCoords = coordutil.getCoordsFromKey(kingCoord); // [x,y]
 			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
 			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their players don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
