@@ -6,7 +6,7 @@ import type { Coords } from "../../../../chess/util/coordutil.js";
 import { MoveDraft } from "../../../../chess/logic/movepiece.js"; 
 import { OrganizedPieces } from "../../../../chess/logic/organizedpieces.js";
 import helpers from "./helpers.js";
-import { SearchData } from "./engine.js"; // Assuming MAX_DEPTH is exported
+import { SearchData } from "../hydrochess.js"; // Assuming MAX_DEPTH is exported
 // import checkdetection, { Attacker } from "../../../../chess/logic/checkdetection.js";
 
 const PIECE_VALUES: { [key: number]: number } = {

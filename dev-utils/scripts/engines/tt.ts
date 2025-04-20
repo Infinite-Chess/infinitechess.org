@@ -1,9 +1,10 @@
 // @ts-ignore
-import type { gamefile } from "../../../../chess/logic/gamefile.js";
+import type { gamefile } from "../../../../../../../chess/logic/gamefile.js";
 // @ts-ignore
-import type { MoveDraft } from "../../../../chess/logic/movepiece.js";
-import boardutil from "../../../../chess/util/boardutil.js";
-import { MATE_SCORE, NO_ENTRY } from "./engine.js";
+import type { MoveDraft } from "../../../../../../../chess/logic/movepiece.js";
+import boardutil from "../../../../../../../chess/util/boardutil.js";
+// @ts-ignore
+import { MATE_SCORE, NO_ENTRY } from "../../../../hydrochess.js";
 
 
 // Evaluation flags

@@ -8,17 +8,17 @@
 
 // @ts-ignore
 import type { gamefile } from '../../../chess/logic/gamefile.js';
-import type { MoveDraft } from '../../../chess/logic/movepiece.js';
-import typeutil, { rawTypes } from '../../../chess/util/typeutil.js';
-import boardutil from '../../../chess/util/boardutil.js';
-import movepiece from '../../../chess/logic/movepiece.js';
-import gameformulator from '../gameformulator.js';
-import evaluation from './hydrochess/evaluation.js';
-import helpers from './hydrochess/helpers.js';
-import { TranspositionTable, TTFlag } from './hydrochess/tt.js';
+import type { MoveDraft } from '../../../../chess/logic/movepiece.js';
+import typeutil, { rawTypes } from '../../../../chess/util/typeutil.js';
+import boardutil from '../../../../chess/util/boardutil.js';
+import movepiece from '../../../../chess/logic/movepiece.js';
+import gameformulator from '../../gameformulator.js';
+import evaluation from './evaluation.js';
+import helpers from './helpers.js';
+import { TranspositionTable, TTFlag } from './tt.js';
 
 export const MAX_PLY = 64;
-const SEARCH_TIMEOUT_MS = 4000;
+const SEARCH_TIMEOUT_MS = 10000;
 const INFINITY = 32000;
 const MATE_VALUE = INFINITY - 150;
 export const MATE_SCORE = INFINITY - 300;
@@ -106,7 +106,7 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	data.nodes++;
 	let best_move: MoveDraft | null = null;
 	let score: number;
-	const pv_node = alpha > 1;
+	const pv_node = beta - alpha > 1;
 	let hash_flag = TTFlag.LOWER_BOUND;
 	const is_root = data.ply === 0;
 
@@ -207,18 +207,19 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 					return beta;
 				}
 			}
-		}
 
-		// --- Razoring (Static Futility Pruning) ---
-		const score = evalScore + 100;
-		if (score < beta) {
-			if (depth === 1) {
-				const new_score = quiescenceSearch(lf, alpha, beta, data);
-				if (new_score < beta) {
-					return Math.max(new_score, score);
+			// --- Razoring (Static Futility Pruning) ---
+			const score = evalScore + 100;
+			if (score < beta) {
+				if (depth === 1) {
+					const new_score = quiescenceSearch(lf, alpha, beta, data);
+					if (new_score < beta) {
+						return Math.max(new_score, score);
+					}
 				}
 			}
 		}
+
 	}
 
 	const fp_margin = evalScore + 97 * depth;

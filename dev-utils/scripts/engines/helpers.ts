@@ -1,15 +1,23 @@
 // @ts-ignore
-import type { gamefile } from "../../../../chess/logic/gamefile.js";
-import type { Coords } from "../../../../chess/util/coordutil.js";
-import boardutil from "../../../../chess/util/boardutil.js";
-import typeutil, { rawTypes } from "../../../../chess/util/typeutil.js";
-import type { MoveDraft } from "../../../../chess/logic/movepiece.js";
-import type { Player } from '../../../../chess/util/typeutil.js';
+import type { gamefile } from "../../../../../../../chess/logic/gamefile.js";
+import type { Coords } from "../../../../../../../chess/util/coordutil.js";
+import boardutil from "../../../../../../../chess/util/boardutil.js";
+import typeutil, { rawTypes } from "../../../../../../../chess/util/typeutil.js";
+import type { MoveDraft } from "../../../../../../../chess/logic/movepiece.js";
+import type { Player } from '../../../../../../../chess/util/typeutil.js';
 // @ts-ignore
-import legalmoves from "../../../../chess/logic/legalmoves.js";
+import legalmoves from "../../../../../../../chess/logic/legalmoves.js";
 // @ts-ignore
-import specialdetect from "../../../../chess/logic/specialdetect.js";
-import { SearchData } from "./engine.js";
+import specialdetect from "../../../../../../../chess/logic/specialdetect.js";
+
+interface SearchData {
+  nodes: number;
+  ply: number;
+  bestMove: MoveDraft | null;
+  startDepth: number;
+  score_pv: boolean;
+  follow_pv: boolean;
+}
 
 const WIGGLE_ROOM = 3; // How far off the direct path to check for nearby pieces
 const MAX_ENGINE_SLIDE_CHECK = 50; // Absolute max distance to check for infinite sliders

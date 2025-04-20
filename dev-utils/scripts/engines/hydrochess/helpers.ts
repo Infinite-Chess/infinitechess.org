@@ -9,7 +9,7 @@ import type { Player } from '../../../../chess/util/typeutil.js';
 import legalmoves from "../../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import specialdetect from "../../../../chess/logic/specialdetect.js";
-import { SearchData } from "./engine.js";
+import { SearchData } from "../hydrochess.js";
 
 const WIGGLE_ROOM = 3; // How far off the direct path to check for nearby pieces
 const MAX_ENGINE_SLIDE_CHECK = 50; // Absolute max distance to check for infinite sliders
