@@ -3,6 +3,7 @@
 'use strict';
 
 import jsutil from "../../util/jsutil.js";
+import coordutil from "../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 import icnconverter, { default_promotions, default_win_conditions, excludedGameRules, metadata_key_ordering, player_codes, player_codes_inverted } from "./icnconverter.js";
@@ -522,9 +523,9 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 	// if they are the same row and color as a king!
 	if (Object.keys(kingsFound).length === 0) return specialRights; // Nothing can castle, return now.
 	outerFor: for (const coord in castleWithsFound) { // 'x,y': player
-		const coords = getCoordsFromString(coord); // [x,y]
+		const coords = coordutil.getCoordsFromString(coord); // [x,y]
 		for (const kingCoord in kingsFound) { // 'x,y': player
-			const kingCoords = getCoordsFromString(kingCoord); // [x,y]
+			const kingCoords = coordutil.getCoordsFromString(kingCoord); // [x,y]
 			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
 			if (castleWithsFound[coord] !== kingsFound[kingCoord]) continue; // Their players don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
@@ -536,15 +537,6 @@ function generateSpecialRights(position, pawnDoublePush, castleWith) {
 		}
 	}
 	return specialRights;
-}
-
-/**
- * Returns a length-2 array of the provided coordinates
- * @param {string} key - 'x,y'
- * @return {number[]} The coordinates of the piece, [x,y]
- */
-function getCoordsFromString(key) {
-	return key.split(',').map(Number);
 }
 
 /**
