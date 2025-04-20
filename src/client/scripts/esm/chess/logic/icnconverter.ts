@@ -150,7 +150,12 @@ const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winCo
 
 const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with leading 0's like "000005"
 const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1,2'
-const pieceAbbrevRegexSource = '(?:0|[1-9]\\d*)?[A-Za-z]+'; // '3Q' => Player-3 queen (red)   Disallows negatives, or leading 0's
+/**
+ * A regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
+ * Captures the piece abbreviation, and the player number overide if present.
+ * Disallows negatives, or leading 0's
+ */
+const pieceAbbrevRegexSource = '(?<player>0|[1-9]\\d*)?(?<abbr>[A-Za-z]+)';
 const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`; // '=Q' => Promotion to queen
 
 /**
@@ -226,23 +231,23 @@ function getAbbrFromType(type: number): string {
  * 'q' => [52] queen(black)
  * '3k' => [68] king(red)
  */
-function getTypeFromAbbr(abbr: string) {
-	const results = /(\d*)([a-zA-Z]+)/.exec(abbr);
-	if (results === null) throw Error("Piece abbreviation is in invalid form: " + abbr);
+function getTypeFromAbbr(pieceAbbr: string): number {
+	const results = new RegExp(`^${pieceAbbrevRegexSource}$`).exec(pieceAbbr);
+	if (results === null) throw Error("Piece abbreviation is in invalid form: " + pieceAbbr);
 
-	const characters: string = results[2]!; // 'nr'
+	const abbr = results.groups!['abbr']!;
+	const playerStr = results.groups!['player'];
 
 	let typeStr: string | undefined;
 
-	if (results[1] === '') { // No player number override is present
-		typeStr = piece_codes_inverted[characters];
-		if (typeStr === undefined) throw Error("Unknown piece abbreviation: " + abbr);
+	if (playerStr === undefined) { // No player number override is present
+		typeStr = piece_codes_inverted[abbr];
+		if (typeStr === undefined) throw Error("Unknown piece abbreviation: " + pieceAbbr);
 		return Number(typeStr);
 	} else { // Player number override present
-		const rawTypeStr = piece_codes_raw_inverted[characters.toLowerCase()];
-		if (rawTypeStr === undefined) throw Error("Unknown raw piece abbreviation: " + abbr);
-		const player = Number(results[1]) as Player;
-		return typeutil.buildType(Number(rawTypeStr) as RawType, player);
+		const rawTypeStr = piece_codes_raw_inverted[abbr.toLowerCase()];
+		if (rawTypeStr === undefined) throw Error("Unknown raw piece abbreviation: " + pieceAbbr);
+		return typeutil.buildType(Number(rawTypeStr) as RawType, Number(playerStr) as Player);
 	}
 }
 

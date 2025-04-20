@@ -553,6 +553,8 @@ function getCoordsFromString(key) {
  * @returns {Object} An object containing 2 properties: startingPosition, and specialRights
  */
 function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
+	// console.log("Parsing shortposition:", shortposition);
+	
 	const startingPosition = {};
 	const specialRights = new Set();
 	const letter_regex = /[a-zA-Z]/;
