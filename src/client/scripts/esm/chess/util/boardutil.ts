@@ -40,6 +40,10 @@ type LineKey = `${number}|${number}`
  * @returns The number of pieces in the gamefile.
  */
 function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreRawTypes }: { ignoreColors?: Set<Player>, ignoreRawTypes?: Set<RawType> } = {}): number {
+	// Early exit optimization: If ignoreColors and ignoreRawTypes are not specified,
+	// return the size of o.coords, since that has zero undefineds.
+	if (!ignoreColors && !ignoreRawTypes) return o.coords.size;
+
 	let count = 0; // Running count list
 
 	for (const [type, range] of o.typeRanges) {
@@ -81,6 +85,7 @@ function getPieceCountOfType(o: OrganizedPieces, type: number): number {
 	return getPieceCountOfTypeRange(typeList);
 }
 
+/** Excludes undefined placeholders */
 function getPieceCountOfTypeRange(range: TypeRange) {
 	return (range.end - range.start) - range.undefineds.length;
 }
