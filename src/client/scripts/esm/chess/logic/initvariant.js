@@ -32,12 +32,14 @@ function setupVariantGamerules(gamefile, metadata, options) {
 		if (options.moveRule) {
 			const [, max] = options.moveRule.split('/');
 			options.gameRules.moveRule = Number(max);
+			// moveRuleState is set in genStartSnapshot()
 		}
 		gamefile.gameRules = options.gameRules;
 	}
 	else {
 		// Default (built-in variant, not pasted)
 		gamefile.gameRules = variant.getGameRulesOfVariant(metadata);
+		// moveRuleState is set in genStartSnapshot()
 	}
 
 	initPieceMovesets(gamefile, metadata, options?.gameRules.slideLimit);
@@ -66,28 +68,34 @@ function initPieceMovesets(gamefile, metadata, slideLimit) {
  * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
  */
 function genStartSnapshot(gamefile, metadata, options) {
-	let fullMove;
 	let enpassant;
 	let moveRuleState;
 	let positionString;
 	let position;
 	let specialRights;
 	
-	if (options) {
-		({ fullMove, enpassant, positionString, specialRights } = options);
+	// Even IF options are provided. If the pasted game doesn't contain position information
+	// then we still have to grab it from the Variant metadata!
+	if (!options?.startingPosition) {
+		({ positionString, position, specialRights } = variant.getStartingPositionOfVariant(metadata)); 
+	} else {
+		positionString = options.positionString;
 		position = options.startingPosition;
-		if (options.moveRule) {
+		specialRights = options.specialRights;
+	}
+
+	if (options) {
+		enpassant = options.enpassant;
+		if (options.moveRule) { // "X/100"
 			const [state] = options.moveRule.split('/');
 			moveRuleState = Number(state);
+			// gameRules.moveRule is set in setupVariantGamerules()
 		}
 	} else {
-		({ positionString, position, specialRights } = variant.getStartingPositionOfVariant(metadata)); 
 		// Every variant has the exact same initial moveRuleState value.
 		if (gamefile.gameRules.moveRule) moveRuleState = 0;
-		fullMove = 1; // Every variant has the exact same fullMove value.
+		// gameRules.moveRule is set in setupVariantGamerules()
 	}
-	
-	const playerCount = new Set(gamefile.gameRules.turnOrder).size;
 	
 	return {
 		position,
@@ -95,8 +103,8 @@ function genStartSnapshot(gamefile, metadata, options) {
 		specialRights,
 		enpassant,
 		moveRuleState,
-		fullMove,
-		playerCount,
+		playerCount: new Set(gamefile.gameRules.turnOrder).size,
+		fullMove: options?.fullMove ?? 1, // Every variant has the exact same fullMove value.
 	};
 }
 
