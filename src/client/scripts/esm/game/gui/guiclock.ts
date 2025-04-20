@@ -5,6 +5,7 @@ import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import { players } from "../../chess/util/typeutil.js";
+import clock from "../../chess/logic/clock.js";
 
 import type { SoundObject } from "../misc/sound.js";
 import type { Player, PlayerGroup } from "../../chess/util/typeutil.js";
@@ -272,7 +273,10 @@ function push(gamefile: gamefile) {
 function rescheduleDrum(gamefile: gamefile) {
 	clearTimeout(countdown.drum.timeoutID);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks!.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
-	const timeUntil10SecsRemain = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]! - 10000;
+	// We have to use this instead of reading the current clock values
+	// because those aren't updated every frame when the page isn't focused!!
+	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(gamefile)!;
+	const timeUntil10SecsRemain = playerTrueTimeRemaining - 10000;
 	let timeNextDrum = timeUntil10SecsRemain;
 	let secsRemaining = 10;
 	if (timeNextDrum < 0) {
@@ -289,7 +293,10 @@ function rescheduleTicking(gamefile: gamefile) {
 	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks!.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 	if (gamefile.clocks!.timeAtTurnStart! < 10000) return;
-	const timeRemain = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]! - countdown.ticking.timeToStartFromEnd;
+	// We have to use this instead of reading the current clock values
+	// because those aren't updated every frame when the page isn't focused!!
+	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(gamefile)!;
+	const timeRemain = playerTrueTimeRemaining - countdown.ticking.timeToStartFromEnd;
 	if (timeRemain > 0) countdown.ticking.timeoutID = setTimeout(() => playTickingEffect(0), timeRemain);
 	else {
 		const offset = -timeRemain;
@@ -302,7 +309,10 @@ function rescheduleTick(gamefile: gamefile) {
 	clearTimeout(countdown.tick.timeoutID);
 	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
 	if (onlinegame.areInOnlineGame() && gamefile.clocks!.colorTicking !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
-	const timeRemain = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]! - countdown.tick.timeToStartFromEnd;
+	// We have to use this instead of reading the current clock values
+	// because those aren't updated every frame when the page isn't focused!!
+	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(gamefile)!;
+	const timeRemain = playerTrueTimeRemaining - countdown.tick.timeToStartFromEnd;
 	if (timeRemain > 0) countdown.tick.timeoutID = setTimeout(() => playTickEffect(0), timeRemain);
 	else {
 		const offset = -timeRemain;
@@ -314,13 +324,16 @@ function playDrumAndQueueNext(gamefile: gamefile, secsRemaining: number) {
 	if (secsRemaining === undefined) return console.error("Cannot play drum without secsRemaining");
 	sound.playSound_drum();
 
-	const timeRemain = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]!;
-	if (timeRemain < 1500) return;
+	// We have to use this instead of reading the current clock values
+	// because those aren't updated every frame when the page isn't focused!!
+	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(gamefile)!;
+
+	if (playerTrueTimeRemaining < 1500) return;
 
 	// Schedule next drum...
 	const newSecsRemaining = secsRemaining - 1;
 	if (newSecsRemaining === 0) return; // Stop
-	const timeUntilNextDrum = gamefile.clocks!.currentTime[gamefile.clocks!.colorTicking!]! - newSecsRemaining * 1000;
+	const timeUntilNextDrum = playerTrueTimeRemaining - newSecsRemaining * 1000;
 	countdown.drum.timeoutID = setTimeout(() => playDrumAndQueueNext(gamefile, newSecsRemaining), timeUntilNextDrum);
 }
 

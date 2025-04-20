@@ -206,6 +206,19 @@ function update(gamefile: gamefile): Player | undefined {
 	return; // Without this, typescript complains not all code paths return a value.
 }
 
+/**
+ * Returns the true time remaining for the player whos clock is ticking.
+ * Independant of reading clocks.currentTime, because that isn't updated
+ * every frame if the user unfocuses the window.
+ */
+function getColorTickingTrueTimeRemaining(gamefile: gamefile): number | undefined {
+	if (gamefile.untimed) return;
+	const clocks = gamefile.clocks!;
+	if (clocks.colorTicking === undefined) return;
+	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
+	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
+}
+
 function printClocks(gamefile: gamefile) {
 	if (gamefile.untimed) return console.log("Game is untimed.");
 	const clocks = gamefile.clocks!;
@@ -222,6 +235,7 @@ export default {
 	endGame,
 	update,
 	push,
+	getColorTickingTrueTimeRemaining,
 	printClocks,
 };
 
