@@ -8,7 +8,6 @@
  */
 
 import jsutil from "../../../util/jsutil.js";
-import { Position } from "../../util/boardutil.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
@@ -547,11 +546,26 @@ function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
 // Converting Positions ------------------------------------------------------------------------------------------
 
 
-
+/**
+ * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
+ * @param position - The starting position of the gamefile, in the form 'x,y': number
+ * @param specialRights - Optional. The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @returns The position of the game in compressed form, where each piece with a + has its special move ability (.e.g., "P5,6+|k15,-56|Q5000,1")
+ */
+function getShortFormPosition(position: Map<CoordsKey, number>, specialRights: Set<CoordsKey>): string {
+	const pieces: string[] = []; // ['P1,2+','P2,2+', ...]
+	for (const [coordsKey, type] of position) {
+		const pieceAbbr = getAbbrFromType(type);
+		const specialRightsString = specialRights.has(coordsKey as CoordsKey) ? '+' : '';
+		pieces.push(pieceAbbr + coordsKey + specialRightsString);
+	}
+	// Using join avoids overhead of repeatedly creating and copying large intermediate strings.
+	return pieces.join("|");
+}
 
 /**
  * Generates the specialRights property of a gamefile, given the provided position and gamerules.
- * Only gives pieces that can castle their right if they are on the same rank, and color, as the king, and atleast 3 squares away
+ * Only gives pieces that can castle their right if they are on the same rank, and color, as the king, and at least 3 squares away
  * 
  * This can be manually used to compress the starting position of variants of InfiniteChess.org to shrink the size of the code
  * @param position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
@@ -559,7 +573,7 @@ function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
  * @param castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
  * @returns The specialRights gamefile property, a set where entries are coordsKeys 'x,y', where the piece at that location has their special move ability (pawn double push, castling rights..)
  */
-function generateSpecialRights(position: Position, pawnDoublePush: boolean, castleWith?: RawType): Set<CoordsKey> {
+function generateSpecialRights(position: Map<CoordsKey, number>, pawnDoublePush: boolean, castleWith?: RawType): Set<CoordsKey> {
 	// Make sure castleWith is with a valid piece to castle with
 	if (castleWith !== undefined && castleWith !== r.ROOK && castleWith !== r.GUARD) throw Error(`Cannot allow castling with ${typeutil.debugType(castleWith)}!.`);
 
@@ -571,16 +585,15 @@ function generateSpecialRights(position: Position, pawnDoublePush: boolean, cast
 	/** Running list of pieces found that are able to castle (e.g. rooks), 'x,y': Player */
 	const castleWithsFound: Record<CoordsKey, Player> = {};
 
-	for (const key in position) {
-		const thisPiece = position[key as CoordsKey]!; // [43] pawn(white)
+	for (const [key, thisPiece] of position.entries()) {
 		const [rawType, player] = typeutil.splitType(thisPiece);
-		if (pawnDoublePush && rawType === r.PAWN) specialRights.add(key as CoordsKey);
-		else if (castleWith && typeutil.jumpingRoyals.includes(rawType)) {
-			specialRights.add(key as CoordsKey);
-			kingsFound[key as CoordsKey] = player;
-		}
-		else if (castleWith && rawType === castleWith) {
-			castleWithsFound[key as CoordsKey] = player;
+		if (pawnDoublePush && rawType === r.PAWN) {
+			specialRights.add(key);
+		} else if (castleWith && typeutil.jumpingRoyals.includes(rawType)) {
+			specialRights.add(key);
+			kingsFound[key] = player;
+		} else if (castleWith && rawType === castleWith) {
+			castleWithsFound[key] = player;
 		}
 	}
 
@@ -594,7 +607,7 @@ function generateSpecialRights(position: Position, pawnDoublePush: boolean, cast
 			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
 			if (castleWithsFound[coord as CoordsKey] !== kingsFound[kingCoord as CoordsKey]) continue; // Their players don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
-			if (xDist < 3) continue; // Not ateast 3 squares away
+			if (xDist < 3) continue; // Not at least 3 squares away
 			specialRights.add(coord as CoordsKey); // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
 			// need to see if it's on the same rank as any other king
@@ -639,5 +652,6 @@ export default {
 	getShortFormMovesFromMoves,
 	parseShortFormMoves,
 
+	getShortFormPosition,
 	generateSpecialRights,
 };

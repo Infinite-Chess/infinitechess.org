@@ -152,7 +152,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	// position
 	if (specifyPosition) {
 		if (isStartingPositionInLongFormat(longformat.startingPosition)) {
-			shortformat += LongToShort_Position(longformat.startingPosition, longformat.specialRights);
+			shortformat += icnconverter.getShortFormPosition(longformat.startingPosition, longformat.specialRights);
 		} else { // Already in short format!
 			shortformat += longformat.startingPosition;
 		}
@@ -411,11 +411,11 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// update coordinates in starting position
 		if (move.promotion) {
-			ret.startingPosition[endString] = move.promotion;
+			ret.startingPosition.set(endString, move.promotion);
 		} else {
-			ret.startingPosition[endString] = ret.startingPosition[startString];
+			ret.startingPosition.set(endString, ret.startingPosition.get(startString));
 		}
-		delete ret.startingPosition[startString];
+		ret.startingPosition.delete(startString);
 		if (ret.specialRights) {
 			ret.specialRights.delete(startString);
 			ret.specialRights.delete(endString);
@@ -431,7 +431,7 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 
 		// delete captured piece en passant
 		if (move.enpassant) {
-			delete ret.startingPosition[pawnThatDoublePushedKey];
+			ret.startingPosition.delete(pawnThatDoublePushedKey);
 			if (ret.specialRights) ret.specialRights.delete(pawnThatDoublePushedKey);
 		}
 
@@ -444,8 +444,8 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		// update coords of castled piece
 		if (move.castle) {
 			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition[`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`] = ret.startingPosition[castleString];
-			delete ret.startingPosition[castleString];
+			ret.startingPosition.set(`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`, ret.startingPosition.get(castleString));
+			ret.startingPosition.delete(castleString);
 			if (ret.specialRights) ret.specialRights.delete(castleString);
 		}
 
@@ -461,46 +461,26 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 }
 
 /**
- * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param {Record<CoordsKey,number>} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param {Set<CoordsKey>} [specialRights] - Optional. The special rights of each piece in the gamefile, in the form 'x,y':true, where true means the piece at that coordinate can perform their special move (pawn double push, castling rights..)
- * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
- */
-function LongToShort_Position(position, specialRights) {
-	let shortposition = "";
-	if (!position) return shortposition; // undefined position --> no string
-	let firstPiece = true;
-	for (const coordsKey in position) {
-		const pieceDelimiter = firstPiece ? "" : "|";
-		const pieceAbbr = icnconverter.getAbbrFromType(position[coordsKey]);
-		const specialRightsString = specialRights.has(coordsKey) ? '+' : '';
-		shortposition += pieceDelimiter + pieceAbbr + coordsKey + specialRightsString;
-		firstPiece = false;
-	}
-	return shortposition;
-}
-
-/**
  * Accepts a gamefile's starting position, pawnDoublePush and castleWith gamerules, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param {Object} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
+ * @param {Map<CoordsKey, number} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
  * @param {boolean} pawnDoublePush - Whether pawns are allowed to double push
  * @param {string | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"),
  * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
  */
 function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith) {
 	const specialRights = icnconverter.generateSpecialRights(position, pawnDoublePush, castleWith);
-	return LongToShort_Position(position, specialRights); // Now we have the information we need!
+	return icnconverter.getShortFormPosition(position, specialRights); // Now we have the information we need!
 }
 
 /**
  * Takes the position in compressed short form and returns the startingPosition and specialRights properties of the gamefile
  * @param {string} shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
- * @returns {Object} An object containing 2 properties: startingPosition, and specialRights
+ * @returns {{ startingPosition: Map<CoordsKey, number>, specialRights: Set<CoordsKey>}}
  */
 function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 	// console.log("Parsing shortposition:", shortposition);
 	
-	const startingPosition = {};
+	const startingPosition = new Map();
 	const specialRights = new Set();
 	const letter_regex = /[a-zA-Z]/;
 	const MAX_INDEX = shortposition.length - 1;
@@ -522,27 +502,27 @@ function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
 		if (end_index !== -1) {
 			if (shortposition[index + end_index] === "+") {
 				const coordString = shortposition.slice(index + piecelength, index + end_index);
-				startingPosition[coordString] = icnconverter.getTypeFromAbbr(shortpiece);
+				startingPosition.set(coordString, icnconverter.getTypeFromAbbr(shortpiece));
 				specialRights.add(coordString);
 				index += end_index + 2;
 			} else {
-				startingPosition[shortposition.slice(index + piecelength, index + end_index)] = icnconverter.getTypeFromAbbr(shortpiece);
+				startingPosition.set(shortposition.slice(index + piecelength, index + end_index), icnconverter.getTypeFromAbbr(shortpiece));
 				index += end_index + 1;
 			}
 		} else {
 			if (shortposition.slice(-1) === "+") {
 				const coordString = shortposition.slice(index + piecelength, -1);
-				startingPosition[coordString] = icnconverter.getTypeFromAbbr(shortpiece);
+				startingPosition.set(coordString, icnconverter.getTypeFromAbbr(shortpiece));
 				specialRights.add(coordString);
 				index = MAX_INDEX;
 			} else {
-				startingPosition[shortposition.slice(index + piecelength)] = icnconverter.getTypeFromAbbr(shortpiece);
+				startingPosition.set(shortposition.slice(index + piecelength), icnconverter.getTypeFromAbbr(shortpiece));
 				index = MAX_INDEX;
 			}
 		}
 	}
 
-	return {startingPosition, specialRights};
+	return { startingPosition, specialRights };
 }
 
 /**
@@ -558,7 +538,6 @@ export default {
 	LongToShort_Format,
 	ShortToLong_Format,
 	GameToPosition,
-	LongToShort_Position,
 	LongToShort_Position_FromGamerules,
 	getStartingPositionAndSpecialRightsFromShortPosition,
 };

@@ -26,13 +26,6 @@ interface Piece {
 	index: number,
 }
 
-/**
- * A position in keys format. Entries look like: `"5,2": r.PAWN + e.W`
- */
-interface Position {
-	[coordKey: CoordsKey]: number
-}
-
 /** A unique identifier for a single line of pieces. `C|X` */
 type LineKey = `${number}|${number}`
 
@@ -238,7 +231,6 @@ function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
 export type {
 	Piece,
 	LineKey,
-	Position
 };
 
 export default {

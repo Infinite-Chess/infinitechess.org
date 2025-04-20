@@ -26,7 +26,6 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
-/** @typedef {import('../util/boardutil.js').Position} Position*/
 /** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
@@ -60,7 +59,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
     
 	/** Information about the beginning of the game (position, positionString, specialRights, turn) */
 	this.startSnapshot = {
-		/** In key format 'x,y': type @type {Position} */
+		/** In key format 'x,y': type @type {Map<CoordsKey, number>} */
 		position: undefined,
 		/** @type {string} */
 		positionString: undefined,

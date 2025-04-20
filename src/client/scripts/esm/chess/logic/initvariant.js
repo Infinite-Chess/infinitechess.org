@@ -3,8 +3,8 @@
  * This script prepares our variant when a game is constructed
  */
 
-import formatconverter from './formatconverter.js';
 import variant from '../variants/variant.js';
+import icnconverter from './icn/icnconverter.js';
 
 /** 
  * Type Definitions 
@@ -68,7 +68,7 @@ function initStartSnapshotAndGamerulesFromOptions(gamefile, metadata, options) {
 		positionString = result.positionString;
 		position = result.position;
 		specialRights = result.specialRights;
-	} else positionString = formatconverter.LongToShort_Position(options.startingPosition, options.specialRights);
+	} else positionString = icnconverter.getShortFormPosition(options.startingPosition, options.specialRights);
 
 	gamefile.startSnapshot = {
 		position,
