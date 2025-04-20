@@ -7,13 +7,13 @@
  * still human-readable, but taking less space to describe positions.
  */
 
-import jsutil from "../../util/jsutil.js";
-import coordutil, { Coords, CoordsKey } from "../util/coordutil.js";
-import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../util/typeutil.js";
-import typeutil from "../util/typeutil.js";
+import jsutil from "../../../util/jsutil.js";
+import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
+import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
+import typeutil from "../../util/typeutil.js";
 
 
-import type { Move, MoveDraft } from "./movepiece.js";
+import type { Move, MoveDraft } from "../movepiece.js";
 
 
 // Type Definitions -------------------------------------------------------------------

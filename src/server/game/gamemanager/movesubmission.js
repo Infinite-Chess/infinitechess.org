@@ -17,7 +17,7 @@ import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import icnconverter from '../../../client/scripts/esm/chess/logic/icnconverter.js';
+import icnconverter from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 
 /**
  * Type Definitions

@@ -6,7 +6,7 @@ import jsutil from "../../util/jsutil.js";
 import coordutil from "../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
-import icnconverter, { default_promotions, default_win_conditions, excludedGameRules, metadata_key_ordering, player_codes, player_codes_inverted } from "./icnconverter.js";
+import icnconverter, { default_promotions, default_win_conditions, excludedGameRules, metadata_key_ordering, player_codes, player_codes_inverted } from "./icn/icnconverter.js";
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
 /** @typedef {import("../util/coordutil.js").CoordsKey} CoordsKey */
