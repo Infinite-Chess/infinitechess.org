@@ -172,7 +172,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				// Required if adding move numbers:
 				// make_new_lines: true,
 				// turnOrder: longformat.gameRules.turnOrder,
-				// fullmove
+				// fullmove: longformat.fullMove,
 			};
 			shortformat += icnconverter.getShortFormMovesFromMoves(longformat.moves, options);
 		}
