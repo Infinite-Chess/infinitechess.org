@@ -5,7 +5,7 @@
 import jsutil from "../../util/jsutil.js";
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
-import icnconverter, { default_promotions, metadata_key_ordering, player_codes, player_codes_inverted } from "./icnconverter.js";
+import icnconverter, { default_promotions, default_win_conditions, excludedGameRules, metadata_key_ordering, player_codes, player_codes_inverted } from "./icnconverter.js";
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
 /** @typedef {import("../util/coordutil.js").CoordsKey} CoordsKey */
@@ -84,7 +84,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				shortformat += longformat.gameRules.promotionRanks[p.WHITE].join(',');
 				const promotionListWhite = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.WHITE] : null);
 				// Only add the legal promotions to the ICN if they aren't the default
-				if (promotionListWhite && !isPromotionListDefaultPromotions(promotionListWhite)) {
+				if (promotionListWhite && !icnconverter.isPromotionListDefaultPromotions(promotionListWhite)) {
 					shortformat += ";";
 					for (const longpiece of promotionListWhite) {
 						shortformat += `${icnconverter.getAbbrFromType(longpiece + e.W)},`;
@@ -97,7 +97,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 				shortformat += longformat.gameRules.promotionRanks[p.BLACK].join(',');
 				const promotionListBlack = (longformat.gameRules.promotionsAllowed ? longformat.gameRules.promotionsAllowed[p.BLACK] : null);
 				// Only add the legal promotions to the ICN if they aren't the default
-				if (promotionListBlack && !isPromotionListDefaultPromotions(promotionListBlack)) {
+				if (promotionListBlack && !icnconverter.isPromotionListDefaultPromotions(promotionListBlack)) {
 					shortformat += ";";
 					for (const longpiece of promotionListBlack) {
 						shortformat += `${icnconverter.getAbbrFromType(longpiece + e.B)},`;
@@ -139,7 +139,6 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	}
 
 	// Extra gamerules not used will be stringified into the ICN
-	const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder"]);
 	const extraGameRules = {};
 	let added_extras = false;
 	for (const key in longformat.gameRules) {
@@ -180,16 +179,6 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	}
 
 	return shortformat;
-}
-
-/**
- * Tests if the provided array of legal promotions is the default set of promotions.
- * @param {number[]} promotionList 
- * @returns {boolean}
- */
-function isPromotionListDefaultPromotions(promotionList) {
-	if (promotionList.length !== default_promotions.length) return false;
-	return default_promotions.every(promotion => promotionList.includes(promotion));
 }
 
 /**
@@ -379,49 +368,18 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		//moves - conversion stops here
 		if (RegExp(`^(([0-9]+\\.$)|([a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+))`).test(string)) {
 			const shortmoves = (string + "  " + shortformat).trimEnd();
-			const moves = convertShortMovesToLong(shortmoves);
-			if (moves.length > 0) longformat.moves = moves;
-			if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] }; // Default win conditions if none specified
+			const parsedMoves = icnconverter.parseShortFormMoves(shortmoves); // { moveDraft, comment }[]
+			if (parsedMoves.length > 0) longformat.moves = parsedMoves.map(parsedMove => icnconverter.getCompactMoveFromDraft(parsedMove.moveDraft));
+			if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
 			longformat.gameRules.turnOrder = longformat.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
 			longformat.fullMove = longformat.fullMove ?? 1;
 			return longformat;
 		}
 	}
-	if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] }; // Default win conditions if none specified
+	if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
 	longformat.gameRules.turnOrder = longformat.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
 	longformat.fullMove = longformat.fullMove ?? 1;
 	return longformat;
-}
-
-// Converts moves list in ICN to => ['1,2>3,4','5,6>7,8N']
-function convertShortMovesToLong(shortmoves) {
-	const longmoves = [];
-
-	shortmoves.replace(/[!?=]/g,"");
-	while (shortmoves.indexOf("{") > -1) {
-		const start_index = shortmoves.indexOf("{");
-		const end_index = shortmoves.indexOf("}");
-		if (end_index === -1) throw new Error("Unclosed { found.");
-		shortmoves = shortmoves.slice(0,start_index) + "|" + shortmoves.slice(end_index + 1);
-	}
-	shortmoves = shortmoves.match(RegExp(`[a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+[\\s]*${scientificNumberRegex},${scientificNumberRegex}[^\\|\\.0-9]*`, "g"));
-
-	if (!shortmoves) return longmoves;
-
-	for (let i = 0; i < shortmoves.length; i++) {
-		const coords = shortmoves[i].match(RegExp(`${scientificNumberRegex},${scientificNumberRegex}`, "g"));
-		const startString = coords[0];
-		const endString = coords[1];
-
-		const suffix_index = shortmoves[i].lastIndexOf(endString) + endString.length;
-		const suffix = shortmoves[i].slice(suffix_index).trimStart().trimEnd();
-
-		// simplified longmoves (comment out next 2 lines and uncomment block below to get back old behavior)
-		const promotedPiece = ( /[a-zA-Z]+/.test(suffix) ? suffix.match(/[a-zA-Z]+/)[0] : "");
-		longmoves.push(`${startString}>${endString}${promotedPiece}`);
-	}
-
-	return longmoves;
 }
 
 /**
@@ -687,5 +645,4 @@ export default {
 	LongToShort_Position_FromGamerules,
 	getStartingPositionAndSpecialRightsFromShortPosition,
 	generateSpecialRights,
-	convertShortMovesToLong,
 };

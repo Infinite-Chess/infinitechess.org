@@ -8,8 +8,8 @@
  */
 
 import jsutil from "../../util/jsutil.js";
-import coordutil from "../util/coordutil.js";
-import { rawTypes as r, ext as e, players as p, RawType, Player } from "../util/typeutil.js";
+import coordutil, { Coords, CoordsKey } from "../util/coordutil.js";
+import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 
 
@@ -116,7 +116,51 @@ const metadata_key_ordering = [
  */
 const default_promotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 
-const pieceAbbrevRegex = /\d*[A-Za-z]+/; // '3Q' => Player-3 queen (red)
+const default_win_conditions: PlayerGroup<string[]> = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] };
+
+/** Gamerules that will not be stringified into the ICN */
+const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder"]);
+
+
+
+const pieceAbbrevRegexSource = '\\d*[A-Za-z]+'; // '3Q' => Player-3 queen (red)
+const coordsKeyRegexSource = '-?\\d+,-?\\d+'; // '-1,2'
+
+const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`; // '=Q' => Promotion to queen
+
+/** A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q' */
+const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${promotionRegexSource}$`);
+
+/**
+ * A regex for dynamically matching any all forms of a move in ICN.
+ * The move may optionally include a piece abbreviation, spaces between segments,
+ * a separator of ">" or "x", check/mate flags "+" or "#", and a comment.
+ */
+const moveRegexSource = 
+	`(${pieceAbbrevRegexSource})?` + // Optional starting piece abbreviation "P"
+    ` ?` + // Optional space
+    `(?<startCoordsKey>${coordsKeyRegexSource})` + // Starting coordinates
+    ` ?` + // Optional space
+    `[>x]` + // Separator
+    ` ?` + // Optional space
+    `(?<endCoordsKey>${coordsKeyRegexSource})` + // Ending coordinates
+    ` ?` + // Optional space
+    promotionRegexSource + // Optional promotion ("=" REQUIRED)
+    ` ?` + // Optional space
+    `[+#]?` + // Optional check/checkmate
+    ` ?` + // Optional space
+    `(?:\\{(?<comment>[^}]+)\\})?` // Optional comment (not-greedy). Comments should NOT contain a closing brace "}".
+;            
+
+
+// Helper Functions ---------------------------------------------------------------------------------
+
+
+/** Tests if the provided array of legal promotions is the default set of promotions. */
+function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
+	if (promotionList.length !== default_promotions.length) return false;
+	return default_promotions.every(promotion => promotionList.includes(promotion));
+}
 
 
 // Getting Abbreviations --------------------------------------------------------------------------------
@@ -379,6 +423,51 @@ function getShortFormMovesFromMoves_MoveNumbers(moves: Move[], options: { turnOr
 	return moveLines.join(linesDelimiter);
 }
 
+/** All information parsed from a move in any dynamic shortform notation. */
+type ParsedMove = {
+	/** Start and end coords, plus the ONLY special move isn't given from the end coords. */
+	moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number },
+	/**
+	 * The un-parsed comment. This may contain embeded command sequences.
+	 * However it won't include the opening "{" or closing "}" braces.
+	*/
+	comment?: string
+};
+
+// Converts moves list in ICN to => ['1,2>3,4','5,6>7,8=N']
+function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
+	// console.log("Parsing shortform moves:", shortformMoves);
+
+	const moves: ParsedMove[] = [];
+	const moveRegex = new RegExp(moveRegexSource, "g");
+	let match: RegExpExecArray | null;
+
+	// Since the moveRegex has the global flag, exec() will return the next match each time.
+	// NO STRING SPLITTING REQUIRED
+	while ((match = moveRegex.exec(shortformMoves)) !== null) {
+		const startCoordsKey = match.groups!['startCoordsKey']! as CoordsKey;
+		const endCoordsKey = match.groups!['endCoordsKey']! as CoordsKey;
+		const promotionAbbr = match.groups!['promotionAbbr'];
+		const comment = match.groups!['comment'];
+
+		const startCoords = coordutil.getCoordsFromKey(startCoordsKey);
+		const endCoords = coordutil.getCoordsFromKey(endCoordsKey);
+		const moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number } = {
+			startCoords,
+			endCoords
+		};
+		if (promotionAbbr) moveDraft.promotion = getTypeFromAbbr(promotionAbbr);
+
+		const parsedMove: ParsedMove = { moveDraft };
+		if (comment) parsedMove.comment = comment;
+
+		moves.push(parsedMove);
+	}
+
+	// console.log("Parsed moves:", moves);
+	return moves;
+}
+
 
 
 
@@ -400,16 +489,19 @@ export {
 	piece_codes_raw_inverted,
 	metadata_key_ordering,
 	default_promotions,
-	pieceAbbrevRegex,
+	default_win_conditions,
+	excludedGameRules,
+
+	moveRegexCompact,
 };
 
 export default {
+	isPromotionListDefaultPromotions,
+
 	getAbbrFromType,
 	getTypeFromAbbr,
 	getCompactMoveFromDraft,
 
 	getShortFormMovesFromMoves,
-	// getShortFormMovesFromMoves_Annote0,
-	// getShortFormMovesFromMoves_Annote1,
-	// getShortFormMovesFromMoves_Annote2,
+	parseShortFormMoves,
 };

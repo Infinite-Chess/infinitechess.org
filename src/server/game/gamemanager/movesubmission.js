@@ -17,7 +17,8 @@ import { pushGameClock, setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { pieceAbbrevRegex } from '../../../client/scripts/esm/chess/logic/icnconverter.js';
+import { moveRegexCompact } from '../../../client/scripts/esm/chess/logic/icnconverter.js';
+import coordutil from '../../../client/scripts/esm/chess/util/coordutil.js';
 
 /**
  * Type Definitions
@@ -107,28 +108,22 @@ function submitMove(ws, game, messageContents) {
 function doesMoveCheckOut(move) {
 	if (typeof move !== 'string') return false;
 
-	// Is the move in the correct format? "x,y>x,yN"
-
-	// DOESN'T HAVE CAPTURE GROUPS
-	// const moveRegex = new RegExp(`^-?\\d+,-?\\d+>-?\\d+,-?\\d+(?:=${pieceAbbrevRegex.source})?$`);
-	// return moveRegex.test(move);
-
-	// With capture groups
-	const moveRegex = new RegExp(`^(?<sx>-?\\d+),(?<sy>-?\\d+)>(?<ex>-?\\d+),(?<ey>-?\\d+)(?:=${pieceAbbrevRegex.source})?$`);
+	// Is the move in the correct format? "x,y>x,y=N"
 
 	// first test structure & capture the four coords
-	const matches = move.match(moveRegex);
+	const matches = move.match(moveRegexCompact);
 	if (!matches) return false; // Didn't pass the regex
 
 	// Make sure no captured number overflows to Infinity.
 	// The other client can't handle that!
 	// Delete when we allow infinite move distance.
-	const { sx, sy, ex, ey } = matches.groups;
+	const startCoords = coordutil.getCoordsFromKey(matches.groups.startCoordsKey);
+	const endCoords = coordutil.getCoordsFromKey(matches.groups.endCoordsKey);
 	if (
-		!Number.isFinite(Number(sx)) ||
-		!Number.isFinite(Number(sy)) ||
-		!Number.isFinite(Number(ex)) ||
-		!Number.isFinite(Number(ey))
+		!Number.isFinite(startCoords[0]) ||
+		!Number.isFinite(startCoords[1]) ||
+		!Number.isFinite(endCoords[0]) ||
+		!Number.isFinite(endCoords[1])
 	) return false;
 
 	return true;
