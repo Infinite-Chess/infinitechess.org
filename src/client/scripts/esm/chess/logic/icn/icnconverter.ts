@@ -166,6 +166,11 @@ const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1
  * @param abbrevCapture - The name of the abbrev capture group. If null, it won't be captured.
  */
 function getPieceAbbrevRegex(playerCapture: string | null, abbrevCapture: string| null): string {
+	// Capture group names must not contain special characters used in regex.
+	const captureGroupNameRegex = /^[$_A-Za-z][$\w]*$/;
+	if (playerCapture !== null && !captureGroupNameRegex.test(playerCapture)) throw Error("Invalid playerCapture group name: " + playerCapture);
+	if (abbrevCapture !== null && !captureGroupNameRegex.test(abbrevCapture)) throw Error("Invalid abbrevCapture group name: " + abbrevCapture);
+	
 	const playerGroup = playerCapture !== null ? `<${playerCapture}>` : ":";
 	const abbrevGroup = abbrevCapture !== null ? `<${abbrevCapture}>` : ":";
 	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`;
