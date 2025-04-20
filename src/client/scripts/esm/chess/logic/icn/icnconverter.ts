@@ -175,7 +175,7 @@ function getPieceAbbrevRegexSource(playerCapture: string | null, abbrevCapture: 
 	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`;
 }
 
-const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource('player', 'abbrev')}))?`; // '=Q' => Promotion to queen
+const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource(null, null)}))?`; // '=Q' => Promotion to queen
 
 /**
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
