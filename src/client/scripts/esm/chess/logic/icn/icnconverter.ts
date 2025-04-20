@@ -165,7 +165,7 @@ const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1
  * @param playerCapture - The name of the player capture group. If null, it won't be captured.
  * @param abbrevCapture - The name of the abbrev capture group. If null, it won't be captured.
  */
-function getPieceAbbrevRegex(playerCapture: string | null, abbrevCapture: string| null): string {
+function getPieceAbbrevRegexSource(playerCapture: string | null, abbrevCapture: string| null): string {
 	// Capture group names must not contain special characters used in regex.
 	const captureGroupNameRegex = /^[$_A-Za-z][$\w]*$/;
 	if (playerCapture !== null && !captureGroupNameRegex.test(playerCapture)) throw Error("Invalid playerCapture group name: " + playerCapture);
@@ -176,7 +176,7 @@ function getPieceAbbrevRegex(playerCapture: string | null, abbrevCapture: string
 	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`;
 }
 
-const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegex('player', 'abbrev')}))?`; // '=Q' => Promotion to queen
+const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource('player', 'abbrev')}))?`; // '=Q' => Promotion to queen
 
 /**
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
@@ -192,7 +192,7 @@ const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})
  * It captures start coords, end coords, promotion abbrev, and comment into named groups.
  */
 const moveRegexSource = 
-	`(${getPieceAbbrevRegex(null, null)})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
+	`(${getPieceAbbrevRegexSource(null, null)})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
     `(?<startCoordsKey>${coordsKeyRegexSource})` + // Starting coordinates
     ` ?` + // Optional space
     `[>x]` + // Separator
@@ -251,11 +251,11 @@ function getAbbrFromType(type: number): string {
  * '3k' => [68] king(red)
  */
 function getTypeFromAbbr(pieceAbbr: string): number {
-	const results = new RegExp(`^${getPieceAbbrevRegex('player', 'abbrev')}$`).exec(pieceAbbr);
+	const results = new RegExp(`^${getPieceAbbrevRegexSource('player', 'abbrev')}$`).exec(pieceAbbr);
 	if (results === null) throw Error("Piece abbreviation is in invalid form: " + pieceAbbr);
 
-	const abbrev = results.groups!['abbrev']!;
 	const playerStr = results.groups!['player'];
+	const abbrev = results.groups!['abbrev']!;
 
 	let typeStr: string | undefined;
 
