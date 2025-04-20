@@ -5,7 +5,6 @@
 
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
-import type { Position } from '../../chess/variants/variant.js';
 import type { VariantOptions } from './gameslot.js';
 import type { Player } from '../../chess/util/typeutil.js';
 
@@ -30,8 +29,6 @@ import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import winconutil from '../../chess/util/winconutil.js';
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
-// @ts-ignore
-import formatconverter from '../../chess/logic/formatconverter.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -101,7 +98,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
 	const specialRights = new Set<CoordsKey>();
-	const positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
+	const positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 	const variantOptions: VariantOptions = {
 		fullMove: 1,
 		startingPosition,
@@ -143,14 +140,14 @@ function closeListeners() {
  * @param checkmateID - a string containing the ID of the selected checkmate practice problem
  * @returns a starting position object corresponding to that ID
  */
-function generateCheckmateStartingPosition(checkmateID: string): Position {
+function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, number> {
 	// error if user somehow submitted invalid checkmate ID
 	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmateID)) throw Error("User tried to play invalid checkmate practice.");
 
 	// place the black king not so far away for specific variants
 	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
 
-	const startingPosition: Position = {}; // the position to be generated
+	const startingPosition = new Map<CoordsKey, number>(); // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
 	let whitebishopparity: number = Math.floor(Math.random() * 2); // square color of first white bishop batch
 	
@@ -171,11 +168,11 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				// randomly generate white piece coordinates in square around origin
 				const x: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
 				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
-				const key: string = coordutil.getKeyFromCoords([x,y]);
+				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
-				if (!(key in startingPosition) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
-					startingPosition[key as CoordsKey] = piece;
+				if (!startingPosition.has(key) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
+					startingPosition.set(key, piece);
 					amount -= 1;
 				}
 			} else {
@@ -184,8 +181,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 17 : 35)) - (blackroyalnearer ? 9 : 17);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 				// check if square is occupied or potentially threatened
-				if (!(key in startingPosition) && squareNotInSight(key, startingPosition)) {
-					startingPosition[key] = piece;
+				if (!startingPosition.has(key) && squareNotInSight(key, startingPosition)) {
+					startingPosition.set(key, piece);
 					amount -= 1;
 					blackpieceplaced = true;
 				}
@@ -200,18 +197,18 @@ function generateCheckmateStartingPosition(checkmateID: string): Position {
 }
 
 /**
- * This method checks that the input square is not on the same row, column or diagonal as any key in the startingPosition object
+ * This method checks that the input square is not on the same row, column or diagonal as any key in the startingPosition Map
  * It also checks that it is not attacked by a knightrider
  * @param square - square of black piece
- * @param startingPosition - startingPosition JSON containing all white pieces
+ * @param startingPosition - startingPosition Map containing all white pieces
  * @returns true or false, depending on if the square is in sight or not
  */
-function squareNotInSight(square: CoordsKey, startingPosition: Position): boolean {
+function squareNotInSight(square: CoordsKey, startingPosition: Map<CoordsKey, number>): boolean {
 	const [sx, sy]: number[] = coordutil.getCoordsFromKey(square);
-	for (const key in startingPosition) {
-		const [x, y]: number[] = coordutil.getCoordsFromKey(key as CoordsKey);
+	for (const [key, value] of startingPosition) {
+		const [x, y]: number[] = coordutil.getCoordsFromKey(key);
 		if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
-		if (startingPosition[key as CoordsKey] === r.KNIGHTRIDER + e.W) {
+		if (value === r.KNIGHTRIDER + e.W) {
 			if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
 				return false;
 			}

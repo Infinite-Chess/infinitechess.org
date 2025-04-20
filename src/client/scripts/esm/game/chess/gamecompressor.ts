@@ -13,7 +13,6 @@ import formatconverter from '../../chess/logic/formatconverter.js';
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { MetaData } from '../../chess/util/metadata.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
-import type { Position } from '../../chess/variants/variant.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 // @ts-ignore
@@ -31,7 +30,7 @@ interface AbridgedGamefile {
 	fullMove: number,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	positionString: string,
-	startingPosition: Position,
+	startingPosition: Map<CoordsKey, number>,
 	specialRights: Set<CoordsKey>,
 	gameRules: GameRules,
 	moves: Move[],

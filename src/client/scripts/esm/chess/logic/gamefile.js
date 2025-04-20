@@ -26,7 +26,6 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('./clock.js').ClockValues} ClockValues */
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
-/** @typedef {import('../util/boardutil.js').Position} Position*/
 /** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('./state.js').EnPassant} EnPassant */
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
@@ -41,7 +40,7 @@ import legalmoves from './legalmoves.js';
 /**
  * Information about the beginning of the game (position, positionString, specialRights, turn)
  * @typedef {Object} StartSnapshot
- * @property {Position} position - In key format 'x,y': type
+ * @property {Map<CoordsKey, number>} position - In key format 'x,y': type
  * @property {string} positionString
  * @property {Set<CoordsKey>} specialRights
  * @property {EnPassant | undefined} enpassant - What square coords, if legal, enpassant capture is possible in the starting position of the game.

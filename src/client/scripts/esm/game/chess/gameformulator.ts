@@ -16,7 +16,6 @@ import type { AbridgedGamefile } from './gamecompressor.js';
 import type { Move } from '../../chess/logic/movepiece.js';
 import type { VariantOptions } from './gameslot.js';
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { Position } from '../../chess/util/boardutil.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
 
@@ -45,7 +44,7 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 		const firstTurn = compressedGame.gameRules.turnOrder[0];
 		const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
 		const pawnExpectedSquare = [compressedGame.enpassant[0], compressedGame.enpassant[1] - yParity] as Coords;
-		const pieceOnExpectedSquare: number | undefined = compressedGame.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+		const pieceOnExpectedSquare: number | undefined = compressedGame.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
 
 		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
 			variantOptions.enpassant = { square: compressedGame.enpassant, pawn: pawnExpectedSquare };
@@ -58,7 +57,7 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 /** The game JSON format the formatconvert returns from ShortToLong_Format(). */
 interface FormatConverterLong {
 	metadata: MetaData,
-	startingPosition: Position,
+	startingPosition: Map<CoordsKey, number>,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	shortposition?: string,
 	fullMove: number,

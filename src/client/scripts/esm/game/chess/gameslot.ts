@@ -11,7 +11,6 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
-import type { Position } from "../../chess/variants/variant.js";
 import type { Player } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
@@ -115,7 +114,7 @@ interface VariantOptions {
 	 * The key of the object is the coordinates of the piece as a string,
 	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
 	 */
-	startingPosition: Position
+	startingPosition: Map<CoordsKey, number>
 	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
 	specialRights: Set<CoordsKey>,
 }
@@ -225,7 +224,7 @@ function loadLogical(loadOptions: LoadOptions) {
 async function loadGraphical(loadOptions: LoadOptions) {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(loadedGamefile);
+	guiclock.set(loadedGamefile!);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
 	await imagecache.initImagesForGame(loadedGamefile!);

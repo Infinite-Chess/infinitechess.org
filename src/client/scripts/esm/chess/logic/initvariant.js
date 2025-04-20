@@ -3,8 +3,8 @@
  * This script prepares our variant when a game is constructed
  */
 
-import formatconverter from './formatconverter.js';
 import variant from '../variants/variant.js';
+import icnconverter from './icn/icnconverter.js';
 
 /** 
  * Type Definitions 

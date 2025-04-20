@@ -8,7 +8,6 @@
  */
 
 import jsutil from "../../../util/jsutil.js";
-import { Position } from "../../util/boardutil.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
@@ -155,19 +154,28 @@ const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with
 const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1,2'
 
 /**
- * A regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
- * Captures the piece abbreviation, and the player number overide if present.
+ * Returns a regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
+ * Optionally captures the piece abbreviation, and the player
+ * number if present, using custom capture group names.
  * Disallows negatives, or leading 0's
+ * 
+ * This prevents duplicate capture group names when a bigger regex contains
+ * multiple smaller pieceAbbrev regexes, as we can make them different.
+ * @param playerCapture - The name of the player capture group. If null, it won't be captured.
+ * @param abbrevCapture - The name of the abbrev capture group. If null, it won't be captured.
  */
-const pieceAbbrevRegexSource = '(?<player>0|[1-9]\\d*)?(?<abbr>[A-Za-z]+)';
-/**
- * Non-capturing version of {@link pieceAbbrevRegexSource}. We need this so that
- * we don't have duplicate capture group names when we use it in the move regex.
- * The leading piece abbrev of moves doesn't need to be captured.
- */
-const pieceAbbrevRegexSource_NonCapturing = `(?:0|[1-9]\\d*)?(?:[A-Za-z]+)`;
+function getPieceAbbrevRegexSource(playerCapture: string | null, abbrevCapture: string| null): string {
+	// Capture group names must not contain special characters used in regex.
+	const captureGroupNameRegex = /^[$_A-Za-z][$\w]*$/;
+	if (playerCapture !== null && !captureGroupNameRegex.test(playerCapture)) throw Error("Invalid playerCapture group name: " + playerCapture);
+	if (abbrevCapture !== null && !captureGroupNameRegex.test(abbrevCapture)) throw Error("Invalid abbrevCapture group name: " + abbrevCapture);
+	
+	const playerGroup = playerCapture !== null ? `<${playerCapture}>` : ":";
+	const abbrevGroup = abbrevCapture !== null ? `<${abbrevCapture}>` : ":";
+	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`;
+}
 
-const promotionRegexSource = `(?:=(?<promotionAbbr>${pieceAbbrevRegexSource}))?`; // '=Q' => Promotion to queen
+const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource('player', 'abbrev')}))?`; // '=Q' => Promotion to queen
 
 /**
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
@@ -183,7 +191,7 @@ const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})
  * It captures start coords, end coords, promotion abbrev, and comment into named groups.
  */
 const moveRegexSource = 
-	`(${pieceAbbrevRegexSource_NonCapturing})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
+	`(${getPieceAbbrevRegexSource(null, null)})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
     `(?<startCoordsKey>${coordsKeyRegexSource})` + // Starting coordinates
     ` ?` + // Optional space
     `[>x]` + // Separator
@@ -242,20 +250,20 @@ function getAbbrFromType(type: number): string {
  * '3k' => [68] king(red)
  */
 function getTypeFromAbbr(pieceAbbr: string): number {
-	const results = new RegExp(`^${pieceAbbrevRegexSource}$`).exec(pieceAbbr);
+	const results = new RegExp(`^${getPieceAbbrevRegexSource('player', 'abbrev')}$`).exec(pieceAbbr);
 	if (results === null) throw Error("Piece abbreviation is in invalid form: " + pieceAbbr);
 
-	const abbr = results.groups!['abbr']!;
 	const playerStr = results.groups!['player'];
+	const abbrev = results.groups!['abbrev']!;
 
 	let typeStr: string | undefined;
 
 	if (playerStr === undefined) { // No player number override is present
-		typeStr = piece_codes_inverted[abbr];
+		typeStr = piece_codes_inverted[abbrev];
 		if (typeStr === undefined) throw Error("Unknown piece abbreviation: " + pieceAbbr);
 		return Number(typeStr);
 	} else { // Player number override present
-		const rawTypeStr = piece_codes_raw_inverted[abbr.toLowerCase()];
+		const rawTypeStr = piece_codes_raw_inverted[abbrev.toLowerCase()];
 		if (rawTypeStr === undefined) throw Error("Unknown raw piece abbreviation: " + pieceAbbr);
 		return typeutil.buildType(Number(rawTypeStr) as RawType, Number(playerStr) as Player);
 	}
@@ -538,11 +546,26 @@ function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
 // Converting Positions ------------------------------------------------------------------------------------------
 
 
-
+/**
+ * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
+ * @param position - The starting position of the gamefile, in the form 'x,y': number
+ * @param specialRights - Optional. The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
+ * @returns The position of the game in compressed form, where each piece with a + has its special move ability (.e.g., "P5,6+|k15,-56|Q5000,1")
+ */
+function getShortFormPosition(position: Map<CoordsKey, number>, specialRights: Set<CoordsKey>): string {
+	const pieces: string[] = []; // ['P1,2+','P2,2+', ...]
+	for (const [coordsKey, type] of position) {
+		const pieceAbbr = getAbbrFromType(type);
+		const specialRightsString = specialRights.has(coordsKey as CoordsKey) ? '+' : '';
+		pieces.push(pieceAbbr + coordsKey + specialRightsString);
+	}
+	// Using join avoids overhead of repeatedly creating and copying large intermediate strings.
+	return pieces.join("|");
+}
 
 /**
  * Generates the specialRights property of a gamefile, given the provided position and gamerules.
- * Only gives pieces that can castle their right if they are on the same rank, and color, as the king, and atleast 3 squares away
+ * Only gives pieces that can castle their right if they are on the same rank, and color, as the king, and at least 3 squares away
  * 
  * This can be manually used to compress the starting position of variants of InfiniteChess.org to shrink the size of the code
  * @param position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
@@ -550,7 +573,7 @@ function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
  * @param castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
  * @returns The specialRights gamefile property, a set where entries are coordsKeys 'x,y', where the piece at that location has their special move ability (pawn double push, castling rights..)
  */
-function generateSpecialRights(position: Position, pawnDoublePush: boolean, castleWith?: RawType): Set<CoordsKey> {
+function generateSpecialRights(position: Map<CoordsKey, number>, pawnDoublePush: boolean, castleWith?: RawType): Set<CoordsKey> {
 	// Make sure castleWith is with a valid piece to castle with
 	if (castleWith !== undefined && castleWith !== r.ROOK && castleWith !== r.GUARD) throw Error(`Cannot allow castling with ${typeutil.debugType(castleWith)}!.`);
 
@@ -562,16 +585,15 @@ function generateSpecialRights(position: Position, pawnDoublePush: boolean, cast
 	/** Running list of pieces found that are able to castle (e.g. rooks), 'x,y': Player */
 	const castleWithsFound: Record<CoordsKey, Player> = {};
 
-	for (const key in position) {
-		const thisPiece = position[key as CoordsKey]!; // [43] pawn(white)
+	for (const [key, thisPiece] of position.entries()) {
 		const [rawType, player] = typeutil.splitType(thisPiece);
-		if (pawnDoublePush && rawType === r.PAWN) specialRights.add(key as CoordsKey);
-		else if (castleWith && typeutil.jumpingRoyals.includes(rawType)) {
-			specialRights.add(key as CoordsKey);
-			kingsFound[key as CoordsKey] = player;
-		}
-		else if (castleWith && rawType === castleWith) {
-			castleWithsFound[key as CoordsKey] = player;
+		if (pawnDoublePush && rawType === r.PAWN) {
+			specialRights.add(key);
+		} else if (castleWith && typeutil.jumpingRoyals.includes(rawType)) {
+			specialRights.add(key);
+			kingsFound[key] = player;
+		} else if (castleWith && rawType === castleWith) {
+			castleWithsFound[key] = player;
 		}
 	}
 
@@ -585,7 +607,7 @@ function generateSpecialRights(position: Position, pawnDoublePush: boolean, cast
 			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
 			if (castleWithsFound[coord as CoordsKey] !== kingsFound[kingCoord as CoordsKey]) continue; // Their players don't match
 			const xDist = Math.abs(coords[0] - kingCoords[0]);
-			if (xDist < 3) continue; // Not ateast 3 squares away
+			if (xDist < 3) continue; // Not at least 3 squares away
 			specialRights.add(coord as CoordsKey); // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
 			// need to see if it's on the same rank as any other king
@@ -630,5 +652,6 @@ export default {
 	getShortFormMovesFromMoves,
 	parseShortFormMoves,
 
+	getShortFormPosition,
 	generateSpecialRights,
 };

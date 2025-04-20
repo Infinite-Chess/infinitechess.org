@@ -9,7 +9,6 @@ import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
-import type { Position } from '../util/boardutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
@@ -52,7 +51,7 @@ type TimeVariantProperty<T> = T | {
 interface Variant {
 	positionString?: TimeVariantProperty<string>,
 	generator?: TimeVariantProperty<{
-		algorithm: () => Position,
+		algorithm: () => Map<CoordsKey, number>,
 		rules: {
 			pawnDoublePush: boolean,
 			castleWith?: RawType
@@ -358,7 +357,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	let positionString: string;
-	let startingPosition: Position;
+	let startingPosition: Map<CoordsKey, number>;
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString) {
@@ -395,7 +394,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
  */
 function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
 	positionString?: string,
-	startingPosition?: Position,
+	startingPosition?: Map<CoordsKey, number>,
 	specialRights?: Set<CoordsKey>
 	pawnDoublePush?: boolean,
 	castleWith?: RawType
@@ -407,13 +406,11 @@ function getStartSnapshotPosition({ positionString, startingPosition, specialRig
 			specialRights = positionAndRights.specialRights;
 		}
 	} else if (startingPosition && specialRights) {
-		positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
+		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 	} else if (startingPosition) {
 		specialRights = icnconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
-		positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
+		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 	} else throw new Error("Not enough information to calculate the positionString, position, and specialRights of variant.");
-
-	// console.log({ positionString, position: startingPosition, specialRights });
 
 	return { positionString, position: startingPosition, specialRights };
 }
@@ -639,6 +636,5 @@ export default {
 };
 
 export type {
-	Position,
 	SpecialMoveFunction,
 };
