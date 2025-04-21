@@ -69,7 +69,7 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	if (longformat.enpassant) shortformat += `${longformat.enpassant.toString()} `;
 
 	// X move rule
-	if (longformat.moveRule) shortformat += `${longformat.moveRule.toString()} `;
+	if (longformat.move_rule) shortformat += `${longformat.move_rule.toString()} `;
 
 	// full move counter
 	if (longformat.fullMove) {
@@ -279,8 +279,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// X move rule
-		if (!longformat.moveRule && /^([0-9]+\/[0-9]+)$/.test(string)) {
-			longformat.moveRule = string;
+		if (!longformat.move_rule && /^([0-9]+\/[0-9]+)$/.test(string)) {
+			longformat.move_rule = string;
 			continue;
 		}
 
@@ -421,11 +421,11 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 		}
 
 		// update move rule
-		if (ret.moveRule) {
-			const parts = ret.moveRule.split("/").map(Number); // [X,100]
+		if (ret.move_rule) {
+			const parts = ret.move_rule.split("/").map(Number); // [X,100]
 			// If the move is one-way, reset the draw by 50 move rule counter.
-			if (move.flags.capture || rawType === r.PAWN) ret.moveRule = `0/${parts[1]}`; // One-way action. Reset counter until draw by 50 move rule.
-			else ret.moveRule = `${parts[0] + 1}/${parts[1]}`;
+			if (move.flags.capture || rawType === r.PAWN) ret.move_rule = `0/${parts[1]}`; // One-way action. Reset counter until draw by 50 move rule.
+			else ret.move_rule = `${parts[0] + 1}/${parts[1]}`;
 		}
 
 		// delete captured piece en passant

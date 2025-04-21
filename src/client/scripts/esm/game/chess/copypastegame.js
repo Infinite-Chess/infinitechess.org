@@ -125,7 +125,7 @@ function verifyLongformat(longformat) {
      * metadata
      * turn
      * enpassant
-     * moveRule
+     * move_rule
      * fullMove
      * startingPosition
      * specialRights
@@ -182,7 +182,7 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	/** longformat properties:
      * metadata
      * enpassant: Coords
-     * moveRule
+     * move_rule
      * fullMove
      * shortposition
      * startingPosition
@@ -226,10 +226,10 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	delete longformat.metadata.Termination; // New format
 
 	// The variant options passed into the variant loader needs to contain the following properties:
-	// `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
+	// `fullMove`, `enpassant`, `move_rule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
 	const variantOptions = {
 		fullMove: longformat.fullMove,
-		moveRule: longformat.moveRule,
+		move_rule: longformat.move_rule,
 		positionString: longformat.shortposition,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,

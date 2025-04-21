@@ -29,8 +29,8 @@ import icnconverter from './icn/icnconverter.js';
 function setupVariantGamerules(gamefile, metadata, options) {
 	if (options) {
 		// Ignores the "Variant" metadata, and just uses the specified gameRules
-		if (options.moveRule) {
-			const [, max] = options.moveRule.split('/');
+		if (options.move_rule) {
+			const [, max] = options.move_rule.split('/');
 			options.gameRules.moveRule = Number(max);
 			// moveRuleState is set in genStartSnapshot()
 		}
@@ -65,7 +65,7 @@ function initPieceMovesets(gamefile, metadata, slideLimit) {
  * All options are a snapshot of the starting position, before any moves are forwarded.
  * @param {gamefile} gamefile - The gamefile to initialize
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
+ * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `move_rule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
  */
 function genStartSnapshot(gamefile, metadata, options) {
 	let enpassant;
@@ -86,8 +86,8 @@ function genStartSnapshot(gamefile, metadata, options) {
 
 	if (options) {
 		enpassant = options.enpassant;
-		if (options.moveRule) { // "X/100"
-			const [state] = options.moveRule.split('/');
+		if (options.move_rule) { // "X/100"
+			const [state] = options.move_rule.split('/');
 			moveRuleState = Number(state);
 			// gameRules.moveRule is set in setupVariantGamerules()
 		}

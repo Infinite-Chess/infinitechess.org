@@ -303,8 +303,8 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move | Null
 	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? gamefile.moveRuleState + 1 : 0;
-	state.createMoveRuleState(move, gamefile.moveRuleState, newMoveRule);
+	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? gamefile.moveRuleState! + 1 : 0;
+	state.createMoveRuleState(move, gamefile.moveRuleState!, newMoveRule);
 }
 
 

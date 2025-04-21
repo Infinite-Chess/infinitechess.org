@@ -37,7 +37,7 @@ interface AbridgedGamefile {
 	moves: Move[],
 	// Optional properties
 	enpassant?: Coords,
-	moveRule?: `${number}/${number}`,
+	move_rule?: `${number}/${number}`,
 }
 
 
@@ -96,7 +96,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 	}
 
 	// moveRule
-	if (gamefile.gameRules.moveRule) abridgedGamefile.moveRule = `${moveRuleState!}/${gamefile.gameRules.moveRule}`;
+	if (gamefile.gameRules.moveRule) abridgedGamefile.move_rule = `${moveRuleState!}/${gamefile.gameRules.moveRule}`;
 
 	// If we only want the current position, not the entire game
 
@@ -123,7 +123,7 @@ function turnMoveIntoSinglePosition(abridgedGamefile: AbridgedGamefile, desiredM
 		moves: abridgedGamefile.moves,
 		// Optional properties
 		enpassant: abridgedGamefile.enpassant,
-		moveRule: abridgedGamefile.moveRule,
+		move_rule: abridgedGamefile.move_rule,
 	};
 
 	return formatconverter.GameToPosition(primedGamefile, desiredMove + 1); // Convert -1 based to 0 based

@@ -105,8 +105,8 @@ interface VariantOptions {
 	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
 	enpassant?: EnPassant,
 	gameRules: GameRules,
-	/** If the move moveRule gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
-	moveRule?: `${number}/${number}`,
+	/** If the move move_rule gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
+	move_rule?: `${number}/${number}`,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	positionString: string,
 	/**

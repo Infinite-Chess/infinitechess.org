@@ -114,11 +114,11 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | undefined> {
 	// We need to prime the gamefile for the format converter to get the ICN of the game.
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
+	const move_rule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
 	delete gameRules.moveRule;
 	const primedGamefile = {
 		metadata,
-		moveRule,
+		move_rule,
 		fullMove: 1,
 		moves: game.moves,
 		gameRules
@@ -349,10 +349,10 @@ async function migrateGameLogsToDatabase() {
 			else game.players[2].identifier = { browser: 'examplebrowserid' };
 
 			game.gameRules = longformat.gameRules;
-			// Pass on the moveRule to the gameRules object
-			if (longformat.moveRule) {
-				const max = longformat.moveRule.split('/').map(Number)[1]; // The number of plies until termination by moverule
-				if (max !== 100) throw Error(`Move rule "${longformat.moveRule}" not valid!`);
+			// Pass on the move_rule to the gameRules object
+			if (longformat.move_rule) {
+				const max = longformat.move_rule.split('/').map(Number)[1]; // The number of plies until termination by moverule
+				if (max !== 100) throw Error(`Move rule "${longformat.move_rule}" not valid!`);
 				game.gameRules.moveRule = max;
 			}
 
