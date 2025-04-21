@@ -401,7 +401,7 @@ function getStartSnapshotPosition({ positionString, startingPosition, specialRig
 }) {
 	if (positionString) {
 		if (!startingPosition) {
-			const positionAndRights = formatconverter.getStartingPositionAndSpecialRightsFromShortPosition(positionString);
+			const positionAndRights = icnconverter.generatePositionFromShortForm(positionString);
 			startingPosition = positionAndRights.startingPosition;
 			specialRights = positionAndRights.specialRights;
 		}

@@ -3,7 +3,6 @@
 'use strict';
 
 import jsutil from "../../util/jsutil.js";
-import coordutil from "../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 import icnconverter, { default_promotions, default_win_conditions, excludedGameRules, metadata_key_ordering, player_codes, player_codes_inverted } from "./icn/icnconverter.js";
@@ -359,7 +358,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 
 		// position
 		if (!longformat.startingPosition && RegExp(`^([0-9]*[a-zA-z]+${scientificNumberRegex},${scientificNumberRegex}\\+?($|\\|))`).test(string)) {
-			const { startingPosition, specialRights } = getStartingPositionAndSpecialRightsFromShortPosition(string);
+			const { startingPosition, specialRights } = icnconverter.generatePositionFromShortForm(string);
 			longformat.specialRights = specialRights;
 			longformat.startingPosition = startingPosition;
 			longformat.shortposition = string;
@@ -461,71 +460,6 @@ function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
 }
 
 /**
- * Accepts a gamefile's starting position, pawnDoublePush and castleWith gamerules, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param {Map<CoordsKey, number} position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param {boolean} pawnDoublePush - Whether pawns are allowed to double push
- * @param {string | undefined} castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"),
- * @returns {string} The position of the game in compressed form, where each piece with a + has its special move ability
- */
-function LongToShort_Position_FromGamerules(position, pawnDoublePush, castleWith) {
-	const specialRights = icnconverter.generateSpecialRights(position, pawnDoublePush, castleWith);
-	return icnconverter.getShortFormPosition(position, specialRights); // Now we have the information we need!
-}
-
-/**
- * Takes the position in compressed short form and returns the startingPosition and specialRights properties of the gamefile
- * @param {string} shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
- * @returns {{ startingPosition: Map<CoordsKey, number>, specialRights: Set<CoordsKey>}}
- */
-function getStartingPositionAndSpecialRightsFromShortPosition(shortposition) {
-	// console.log("Parsing shortposition:", shortposition);
-	
-	const startingPosition = new Map();
-	const specialRights = new Set();
-	const letter_regex = /[a-zA-Z]/;
-	const MAX_INDEX = shortposition.length - 1;
-	let index = 0;
-	let end_index = 0;
-	while (index < MAX_INDEX) {
-		let shortpiece = shortposition[index];
-		let piecelength = 1;
-		while (true) {
-			const current_char = shortposition[index + piecelength];
-			if (letter_regex.test(current_char)) {
-				shortpiece += current_char;
-				piecelength++;
-			} else {
-				break;
-			}
-		}
-		end_index = shortposition.slice(index).search(/(\+($|\|))|\|/); // end of current piece coordinates, counted from index
-		if (end_index !== -1) {
-			if (shortposition[index + end_index] === "+") {
-				const coordString = shortposition.slice(index + piecelength, index + end_index);
-				startingPosition.set(coordString, icnconverter.getTypeFromAbbr(shortpiece));
-				specialRights.add(coordString);
-				index += end_index + 2;
-			} else {
-				startingPosition.set(shortposition.slice(index + piecelength, index + end_index), icnconverter.getTypeFromAbbr(shortpiece));
-				index += end_index + 1;
-			}
-		} else {
-			if (shortposition.slice(-1) === "+") {
-				const coordString = shortposition.slice(index + piecelength, -1);
-				startingPosition.set(coordString, icnconverter.getTypeFromAbbr(shortpiece));
-				specialRights.add(coordString);
-				index = MAX_INDEX;
-			} else {
-				startingPosition.set(shortposition.slice(index + piecelength), icnconverter.getTypeFromAbbr(shortpiece));
-				index = MAX_INDEX;
-			}
-		}
-	}
-
-	return { startingPosition, specialRights };
-}
-
-/**
  * Tests if the provided startingPosition is in long (json) format.
  * @param {object | string} startingPosition - The startingPosition to test
  * @returns {boolean} *true* if the startingPosition is in long (json) format
@@ -538,6 +472,4 @@ export default {
 	LongToShort_Format,
 	ShortToLong_Format,
 	GameToPosition,
-	LongToShort_Position_FromGamerules,
-	getStartingPositionAndSpecialRightsFromShortPosition,
 };

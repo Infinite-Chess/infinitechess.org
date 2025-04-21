@@ -172,8 +172,15 @@ function getPieceAbbrevRegexSource(playerCapture: string | null, abbrevCapture: 
 	
 	const playerGroup = playerCapture !== null ? `<${playerCapture}>` : ":";
 	const abbrevGroup = abbrevCapture !== null ? `<${abbrevCapture}>` : ":";
-	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`;
+	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`; // Disallows negatives, or leading 0's
 }
+
+/**
+ * A regex for matching a single piece entry in a shortform position in ICN.
+ * For example, 'P1,2+' => Pawn at 1,2 with special right.
+ * It captures the piece abbreviation, coords key, and special right into named groups.
+ */
+const pieceEntryRegexSource = `(?<pieceAbbr>${getPieceAbbrevRegexSource(null, null)})(?<coordsKey>${coordsKeyRegexSource})(?<specialRight>\\+)?`; // 'P1,2+' => Pawn at 1,2 with special right
 
 const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource(null, null)}))?`; // '=Q' => Promotion to queen
 
@@ -205,7 +212,7 @@ const moveRegexSource =
 	`(?:[!?]{1,2})?` + // Optional symbols: !?, ?!, !!
 	` ?` + // Optional space
     `(?:\\{(?<comment>[^}]+)\\})?` // Optional comment (not-greedy). Comments should NOT contain a closing brace "}".
-;            
+;
 
 
 // Helper Functions ---------------------------------------------------------------------------------
@@ -543,6 +550,7 @@ function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
 	return moves;
 }
 
+
 // Converting Positions ------------------------------------------------------------------------------------------
 
 
@@ -617,6 +625,36 @@ function generateSpecialRights(position: Map<CoordsKey, number>, pawnDoublePush:
 	return specialRights;
 }
 
+/**
+ * Takes the position in compressed short form and returns the startingPosition and specialRights properties of the gamefile
+ * @param shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
+ */
+function generatePositionFromShortForm(shortposition: string): { startingPosition: Map<CoordsKey, number>, specialRights: Set<CoordsKey> } {
+	// console.log("Parsing shortposition:", shortposition);
+
+	const startingPosition = new Map<CoordsKey, number>();
+	const specialRights = new Set<CoordsKey>();
+
+	const pieceRegex = new RegExp(pieceEntryRegexSource, "g"); // named groups are: pieceAbbr, coordsKey, specialRight
+
+	// Since the moveRegex has the global flag, exec() will return the next match each time.
+	// NO STRING SPLITTING REQUIRED
+	let match: RegExpExecArray | null;
+	while ((match = pieceRegex.exec(shortposition)) !== null) {
+		const pieceAbbr = match.groups!['pieceAbbr']!;
+		const coordsKey = match.groups!['coordsKey']! as CoordsKey;
+		const hasSpecialRight = match.groups!['specialRight'] === "+";
+
+		const pieceType = getTypeFromAbbr(pieceAbbr);
+
+		startingPosition.set(coordsKey, pieceType);
+		if (hasSpecialRight) specialRights.add(coordsKey);
+	}
+
+	// console.log("Parsed position:", startingPosition);
+
+	return { startingPosition, specialRights };
+}
 
 
 
@@ -654,4 +692,5 @@ export default {
 
 	getShortFormPosition,
 	generateSpecialRights,
+	generatePositionFromShortForm,
 };
