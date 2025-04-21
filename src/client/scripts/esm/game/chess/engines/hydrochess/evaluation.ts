@@ -100,7 +100,7 @@ export class EvaluationState {
 			if (pieceColor === players.WHITE) {
 				const pieceArray = this.whitePieceCoords.get(pieceRawType);
 				if (pieceArray) {
-					pieceArray.push([...coords]); // Store a copy to avoid reference issues
+					pieceArray.push([coords[0], coords[1]]); // Store coords directly without spread operator
 				}
 				
 				// Track pawn files for white
@@ -110,7 +110,7 @@ export class EvaluationState {
 				
 				// Store king position for white
 				if (pieceRawType === rawTypes.KING) {
-					this.whiteKingCoords = [...coords];
+					this.whiteKingCoords = [coords[0], coords[1]];
 				}
 
 				// Material score (positive for white)
@@ -119,7 +119,7 @@ export class EvaluationState {
 				// Similar processing for black pieces
 				const pieceArray = this.blackPieceCoords.get(pieceRawType);
 				if (pieceArray) {
-					pieceArray.push([...coords]);
+					pieceArray.push([coords[0], coords[1]]);
 				}
 
 				// Track pawn files for black
@@ -129,7 +129,7 @@ export class EvaluationState {
 				
 				// Store king position for black
 				if (pieceRawType === rawTypes.KING) {
-					this.blackKingCoords = [...coords];
+					this.blackKingCoords = [coords[0], coords[1]];
 				}
 
 				// Material score (negative for black)
@@ -275,7 +275,10 @@ export class EvaluationState {
 		for (let f = Math.max(0, file - 1); f <= Math.min(15, file + 1); f++) {
 			// Check if there are any opposing pawns on this file that are ahead
 			for (const opposingPawnCoord of opposingPawnCoords) {
-				const [oFile, oRank] = opposingPawnCoord;
+				// Access coordinates directly without destructuring
+				const oFile = opposingPawnCoord[0];
+				const oRank = opposingPawnCoord[1];
+				
 				if (oFile === f) {
 					if (isWhitePawn && oRank > rank) { // Black pawn ahead of white pawn
 						return true; // Blocked

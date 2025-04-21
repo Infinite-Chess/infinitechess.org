@@ -15,6 +15,8 @@ const WIGGLE_ROOM = 3; // How far off the direct path to check for nearby pieces
 const MAX_ENGINE_SLIDE_CHECK = 50; // Absolute max distance to check for infinite sliders
 const HISTORY_MAX_VALUE = 1_000_000; // Prevent overflow/extreme values
 
+const distancesToCheck = new Set<number>();
+
 /**
  * Collects the valid move distances along a sliding direction, respecting blocking pieces.
  *
@@ -32,7 +34,7 @@ function collectSlidingDistances(
 	maxSteps: number,     // Maximum steps allowed (Infinity for infinite sliders)
 	minSteps: number      // Minimum steps allowed (usually <= 0, must be >= 1)
 ): Set<number> {
-	const distancesToCheck = new Set<number>();
+	distancesToCheck.clear();
 
 	// --- Calculate limit based on nearby pieces --- 
 	const [startX, startY] = startCoords;
