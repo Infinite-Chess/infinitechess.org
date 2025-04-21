@@ -32,13 +32,12 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 	const variantOptions: VariantOptions = {
 		fullMove: compressedGame.fullMove,
 		gameRules: compressedGame.gameRules,
-		move_rule: compressedGame.move_rule,
 		positionString: compressedGame.positionString,
 		startingPosition: compressedGame.startingPosition,
 		specialRights: compressedGame.specialRights,
 	};
 	// Optional properties
-	if (compressedGame.move_rule) variantOptions.move_rule = compressedGame.move_rule;
+	if (compressedGame.moveRuleState) variantOptions.moveRuleState = compressedGame.moveRuleState;
 	if (compressedGame.enpassant) { // Coords: [x,y]
 		// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
 		const firstTurn = compressedGame.gameRules.turnOrder[0];
@@ -61,12 +60,12 @@ interface FormatConverterLong {
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	shortposition?: string,
 	fullMove: number,
-	specialRights: Set<CoordsKey>,
 	/** DOES NOT CONTAIN moveRule!!!! */
 	gameRules: GameRules,
 	moves: string[],
-	// Optional properties...
-	move_rule?: `${number}/${number}`,
+	// The 3 global game states
+	specialRights: Set<CoordsKey>,
+	moveRuleState?: number,
 	enpassant?: Coords,
 }
 
@@ -81,7 +80,7 @@ function ICNToGamefile(ICN: string): gamefile {
 
 	const variantOptions: VariantOptions = {
 		fullMove: longformat.fullMove,
-		move_rule: longformat.move_rule,
+		moveRuleState: longformat.moveRuleState,
 		positionString: longformat.shortposition!,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,

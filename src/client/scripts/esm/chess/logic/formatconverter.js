@@ -69,7 +69,11 @@ function LongToShort_Format(longformat, { compact_moves = 0, make_new_lines = tr
 	if (longformat.enpassant) shortformat += `${longformat.enpassant.toString()} `;
 
 	// X move rule
-	if (longformat.move_rule) shortformat += `${longformat.move_rule.toString()} `;
+	if (longformat.gameRules.moveRule !== undefined || longformat.moveRuleState !== undefined) {
+		if (longformat.moveRuleState === undefined) throw Error("moveRuleState must be present when convering a game with moveRule to shortform!");
+		if (longformat.gameRules.moveRule === undefined) throw Error("moveRule must be present when convering a game with moveRuleState to shortform!");
+		shortformat += `${longformat.moveRuleState}/${longformat.gameRules.moveRule} `;
+	}
 
 	// full move counter
 	if (longformat.fullMove) {
@@ -279,8 +283,10 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// X move rule
-		if (!longformat.move_rule && /^([0-9]+\/[0-9]+)$/.test(string)) {
-			longformat.move_rule = string;
+		if (longformat.moveRuleState === undefined && /^([0-9]+\/[0-9]+)$/.test(string)) {
+			const [state, rule] = string.split("/");
+			longformat.moveRuleState = Number(state);
+			longformat.gameRules.moveRule = Number(rule);
 			continue;
 		}
 
@@ -383,83 +389,6 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 }
 
 /**
- * Converts a gamefile in JSON format to single position gamefile in JSON format with deleted "moves" object
- * 
- * TODO: UPDATE THIS METHOD TO UTILIZE the changes arrays in the moves instead of manually checking for promotion,
- * enpassant, and castle flags!!! This will make it future proof. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * 
- * @param {Object} longformat - Input gamefile in JSON format
- * @param {number} [halfmoves] - Number of halfmoves from starting position (Infinity: final position of game)
- * @param {boolean} [modify_input] - If false, a new object is created and returned. If true, the input object is modified (which is faster)
- * @returns {Object} Output gamefile in JSON format
- */
-function GameToPosition(longformat, halfmoves = 0, modify_input = false) {
-	if (typeof longformat.startingPosition === 'string') throw new Error('startingPosition must be in json format!');
-    
-	if (!longformat.moves || longformat.moves.length === 0) return longformat;
-	const ret = modify_input ? longformat : jsutil.deepCopyObject(longformat);
-	const yParity = longformat.gameRules.turnOrder[0] === p.WHITE ? 1 : longformat.gameRules.turnOrder[0] === p.BLACK ? -1 : (() => { throw new Error(`Unsupported turn player ${longformat.gameRules.turnOrder[0]} when converting game to position.`); })();
-	let pawnThatDoublePushedKey = (ret.enpassant ? [ret.enpassant[0], ret.enpassant[1] - yParity].toString() : "");
-	ret.fullMove = longformat.fullMove + Math.floor(ret.moves.length / longformat.gameRules.turnOrder.length);
-	for (let i = 0; i < Math.min(halfmoves, ret.moves.length); i++) {
-		const move = ret.moves[i];
-		const rawType = typeutil.getRawType(move.type);
-
-		const startString = move.startCoords.toString();
-		const endString = move.endCoords.toString();
-
-		// update coordinates in starting position
-		if (move.promotion) {
-			ret.startingPosition.set(endString, move.promotion);
-		} else {
-			ret.startingPosition.set(endString, ret.startingPosition.get(startString));
-		}
-		ret.startingPosition.delete(startString);
-		if (ret.specialRights) {
-			ret.specialRights.delete(startString);
-			ret.specialRights.delete(endString);
-		}
-
-		// update move rule
-		if (ret.move_rule) {
-			const parts = ret.move_rule.split("/").map(Number); // [X,100]
-			// If the move is one-way, reset the draw by 50 move rule counter.
-			if (move.flags.capture || rawType === r.PAWN) ret.move_rule = `0/${parts[1]}`; // One-way action. Reset counter until draw by 50 move rule.
-			else ret.move_rule = `${parts[0] + 1}/${parts[1]}`;
-		}
-
-		// delete captured piece en passant
-		if (move.enpassant) {
-			ret.startingPosition.delete(pawnThatDoublePushedKey);
-			if (ret.specialRights) ret.specialRights.delete(pawnThatDoublePushedKey);
-		}
-
-		// update en passant
-		// TODO: Doesn't the move object contain the enpassantCreate special flag? Let's read that instead
-		if (rawType === r.PAWN && Math.abs(move.endCoords[1] - move.startCoords[1]) === 2) {
-			ret.enpassant = [move.endCoords[0], (move.startCoords[1] + move.endCoords[1]) / 2];
-		} else delete ret.enpassant;
-
-		// update coords of castled piece
-		if (move.castle) {
-			const castleString = move.castle.coord[0].toString() + "," + move.castle.coord[1].toString();
-			ret.startingPosition.set(`${(Number(move.endCoords[0]) - move.castle.dir)},${move.endCoords[1]}`, ret.startingPosition.get(castleString));
-			ret.startingPosition.delete(castleString);
-			if (ret.specialRights) ret.specialRights.delete(castleString);
-		}
-
-		// save move coords for potential en passant
-		pawnThatDoublePushedKey = endString;
-
-		// Rotate the turn order, moving the first player to the back
-		ret.gameRules.turnOrder.push(ret.gameRules.turnOrder.shift());
-	}
-	delete ret.moves;
-	ret.moves = [];
-	return ret;
-}
-
-/**
  * Tests if the provided startingPosition is in long (json) format.
  * @param {object | string} startingPosition - The startingPosition to test
  * @returns {boolean} *true* if the startingPosition is in long (json) format
@@ -471,5 +400,4 @@ function isStartingPositionInLongFormat(startingPosition) {
 export default {
 	LongToShort_Format,
 	ShortToLong_Format,
-	GameToPosition,
 };

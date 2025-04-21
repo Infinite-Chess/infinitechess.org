@@ -16,6 +16,27 @@ import { CoordsKey } from "../util/coordutil.js";
 // Type Definitions ------------------------------------------------------------------------------------
 
 
+
+/** State of a specific move your are VIEWING. */
+interface LocalGameState {
+	inCheck: gamefile['inCheck']
+	attackers: gamefile['attackers']
+}
+
+/**
+ * State of a game that DOESN'T change depending on what move your VIEWING,
+ * but DO change when new moves are made, or rewound (deleted).
+ * 
+ * They represent the state of the game at the FRONT.
+ */
+interface GlobalGameState {
+	specialRights: gamefile['specialRights']
+	enpassant?: gamefile['enpassant']
+	moveRuleState?: gamefile['moveRuleState']
+}
+
+
+
 // TODO: Move to gamefile type definition (right now it's not in typescript)
 type inCheck = false | Coords[];
 // TODO: Move to gamefile type definition (right now it's not in typescript)
@@ -102,7 +123,7 @@ function createCheckState(move: Move | NullMove, current: inCheck, future: inChe
 	const newStateChange: StateChange = { type: 'check', current, future };
 	move.state.local.push(newStateChange); // Check is a local state
 	// Check states are immediately applied to the gamefile
-	applyState(gamefile, newStateChange, true);
+	applyLocalState(gamefile, newStateChange, true);
 }
 
 /** Creates an attackers local StateChange, adding it to the Move and immediately applying it to the gamefile. */
@@ -110,7 +131,7 @@ function createAttackersState(move: Move | NullMove, current: attackers, future:
 	const newStateChange: StateChange = { type: 'attackers', current, future };
 	move.state.local.push(newStateChange); // Attackers is a local state
 	// Attackers states are immediately applied to the gamefile
-	applyState(gamefile, newStateChange, true);
+	applyLocalState(gamefile, newStateChange, true);
 }
 
 
@@ -152,7 +173,7 @@ function createMoveRuleState(move: Move | NullMove, current: number, future: num
  */
 function applyMove(
 	gamefile: gamefile,
-	move: Move | NullMove,
+	moveState: MoveState,
 	/** Whether we're playing this move forward or backward. */
 	forward: boolean,
 	/**
@@ -163,31 +184,45 @@ function applyMove(
 	 */
 	{ globalChange = false } = {}
 ) {
-	for (const change of move.state.local) {
-		applyState(gamefile, change, forward);
-	}
-	if (!globalChange) return;
-	for (const change of move.state.global) {
-		applyState(gamefile, change, forward);
+	applyLocalStateChanges(gamefile, moveState.local, forward);
+	if (globalChange) applyGlobalStateChanges(gamefile, moveState.global, forward);
+}
+
+function applyLocalStateChanges(gamefile: LocalGameState, changes: Array<StateChange>, forward: boolean) {
+	for (const state of changes) {
+		applyLocalState(gamefile, state, forward);
 	}
 }
 
-/**
- * Applies the state of a move to the gamefile, whether forward or backward.
- */
-function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
+function applyGlobalStateChanges(gamefile: GlobalGameState, changes: Array<StateChange>, forward: boolean) { /** The reason we don't include the whole gamefile is so that {@link gamecompressor.GameToPosition} can also use applyMove(). */
+	for (const state of changes) {
+		applyGlobalState(gamefile, state, forward);
+	}
+}
+
+/** Applies a move's local state change to the gamefile, forward or backward. */
+function applyLocalState(gamefile: LocalGameState, state: StateChange, forward: boolean) {
 	const noNewValue = (forward ? state.future : state.current) === undefined;
 	switch (state.type) {
-		case 'specialrights':
-			if (!(forward ? state.future : state.current)) gamefile.specialRights.delete(state.coordsKey);
-			else gamefile.specialRights.add(state.coordsKey);	
-			break;
 		case 'check':
 			gamefile.inCheck = forward ? state.future : state.current;
 			break;
 		case 'attackers':
 			if (noNewValue) gamefile.attackers = [];
 			else gamefile.attackers = forward ? state.future : state.current;
+			break;
+		default:
+			throw new Error(`State ${state.type} is not a local state change.`);
+	}
+}
+
+/** Applies a move's global state change to the gamefile, forward or backward. */
+function applyGlobalState(gamefile: GlobalGameState, state: StateChange, forward: boolean) {
+	const noNewValue = (forward ? state.future : state.current) === undefined;
+	switch (state.type) {
+		case 'specialrights':
+			if (!(forward ? state.future : state.current)) gamefile.specialRights.delete(state.coordsKey);
+			else gamefile.specialRights.add(state.coordsKey);	
 			break;
 		case 'enpassant': 
 			if (noNewValue) delete gamefile.enpassant;
@@ -196,6 +231,8 @@ function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 		case 'moverulestate':
 			gamefile.moveRuleState = forward ? state.future : state.current;
 			break;
+		default:
+			throw new Error(`State ${state.type} is not a global state change.`);
 	}
 }
 
@@ -204,8 +241,8 @@ function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 
 
 export default {
-	applyState,
 	applyMove,
+	applyGlobalStateChanges,
 	createCheckState,
 	createAttackersState,
 	createEnPassantState,

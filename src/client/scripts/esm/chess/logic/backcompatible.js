@@ -30,7 +30,7 @@ function getLongformatInNewNotation(longformat) {
 	/** What properties do we need in the new format?
      * metadata
      * enpassant
-     * move_rule
+     * moveRuleState
      * fullMove
      * startingPosition
      * specialRights

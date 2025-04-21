@@ -144,7 +144,7 @@ const default_promotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 const default_win_conditions: PlayerGroup<string[]> = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] };
 
 /** Gamerules that will not be stringified into the ICN */
-const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder"]);
+const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder", "moveRule"]);
 
 
 // Regular Expressions ------------------------------------------------------------------------------------
@@ -655,10 +655,6 @@ function generatePositionFromShortForm(shortposition: string): { startingPositio
 
 	return { startingPosition, specialRights };
 }
-
-
-
-
 
 
 // Exports --------------------------------------------------------------------------------------------------------

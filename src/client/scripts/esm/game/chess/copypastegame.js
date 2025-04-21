@@ -125,7 +125,7 @@ function verifyLongformat(longformat) {
      * metadata
      * turn
      * enpassant
-     * move_rule
+     * moveRuleState
      * fullMove
      * startingPosition
      * specialRights
@@ -182,7 +182,7 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	/** longformat properties:
      * metadata
      * enpassant: Coords
-     * move_rule
+     * moveRuleState
      * fullMove
      * shortposition
      * startingPosition
@@ -226,10 +226,10 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	delete longformat.metadata.Termination; // New format
 
 	// The variant options passed into the variant loader needs to contain the following properties:
-	// `fullMove`, `enpassant`, `move_rule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
+	// `fullMove`, `enpassant`, `moveRuleState`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
 	const variantOptions = {
 		fullMove: longformat.fullMove,
-		move_rule: longformat.move_rule,
+		moveRuleState: longformat.moveRuleState,
 		positionString: longformat.shortposition,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
@@ -251,7 +251,7 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === rawTypes.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
 			// Valid pawn to capture via enpassant is present
 			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
-		}
+		} else console.warn("Pasted game doesn't have a pawn on the expected square for enpassant! Enpassant option will be ignored.");
 	}
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {

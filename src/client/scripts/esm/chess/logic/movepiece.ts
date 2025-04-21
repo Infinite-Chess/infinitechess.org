@@ -343,7 +343,7 @@ function applyMove(gamefile: gamefile, move: Move | NullMove, forward = true, { 
 	const indexToApply = gamefile.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
-	state.applyMove(gamefile, move, forward, { globalChange: global }); // Apply the State of the move
+	state.applyMove(gamefile, move.state, forward, { globalChange: global }); // Apply the State of the move
 
 	if (move.isNull) return; // Null moves don't have changes to make
 
@@ -520,6 +520,18 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 }
 
 
+// Helpers -----------------------------------------------------------------------------------
+
+
+/** Throws an error if any move is null, casting the gamefile's moves to a Move[] in the process. */
+function ensureMovesNotNull(moves: (Move | NullMove)[]): Move[] {
+	return moves.map((move: Move | NullMove) => {
+		if (!move.isNull) return move;
+		else throw Error("Should not be null moves in game!");
+	});
+}
+
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 
@@ -547,4 +559,5 @@ export default {
 	rewindMove,
 	simulateMoveWrapper,
 	getSimulatedConclusion,
+	ensureMovesNotNull,
 };

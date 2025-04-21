@@ -367,6 +367,15 @@ function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<Raw
 	// console.log(o);
 }
 
+/** Generates a position with the coordinates as the key, and the piece type as the value. */
+function generatePositionFromPieces(o: OrganizedPieces): Map<CoordsKey, number> {
+	const position = new Map<CoordsKey, number>();
+	for (const [coordsKey, idx] of o.coords) {
+		position.set(coordsKey, o.types[idx]!);
+	}
+	return position;
+}
+
 
 // Processing and Removing Pieces in space -------------------------------------------------
 
@@ -592,6 +601,7 @@ export default {
 	pieceCountToDisableCheckmate,
 	processInitialPosition,
 	regenerateLists,
+	generatePositionFromPieces,
 	registerPieceInSpace,
 	removePieceFromSpace,
 	getTypeUndefinedsBehavior,
