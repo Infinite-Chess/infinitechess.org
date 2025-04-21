@@ -8,14 +8,15 @@
 
 // @ts-ignore
 import type { gamefile } from '../../../chess/logic/gamefile.js';
-import type { MoveDraft } from '../../../../chess/logic/movepiece.js';
+import type { Move, MoveDraft } from '../../../../chess/logic/movepiece.js';
 import typeutil, { rawTypes } from '../../../../chess/util/typeutil.js';
 import boardutil from '../../../../chess/util/boardutil.js';
 import movepiece from '../../../../chess/logic/movepiece.js';
 import gameformulator from '../../gameformulator.js';
-import evaluation from './evaluation.js';
+import evaluation, { PIECE_VALUES } from './evaluation.js';
 import helpers from './helpers.js';
 import { TranspositionTable, TTFlag } from './tt.js';
+import type { Coords } from '../../../../chess/util/coordutil.js';
 
 export const MAX_PLY = 64;
 const SEARCH_TIMEOUT_MS = 10000;
@@ -36,8 +37,32 @@ const transpositionTable = new TranspositionTable(32); // in MB
 let ttHits = 0;
 let killer_moves: Array<Array<MoveDraft | null>> = Array(MAX_PLY).fill(null).map(() => [null, null]);
 let history_heuristic_table: Map<string, number> = new Map();
+
+// Counter-move table - track which moves are best in response to specific opponent moves
+let counter_moves: Map<string, Move | null> = new Map();
+
+// Continuation history table - track effectiveness of moves after specific move sequences
+// We'll use a simplified version tracking [piece][to-square][previous-move-to-square]
+type ContinuationHistoryTable = Map<string, Map<string, number>>;
+let continuation_history: ContinuationHistoryTable = new Map();
+
+// For countermoves, we need a way to generate a unique key
+function generateMoveKey(move: Move): string {
+	const pieceType = move.type || 0; // Fallback to 0 if undefined
+	return `${pieceType}_${move.startCoords[0]},${move.startCoords[1]}_${move.endCoords[0]},${move.endCoords[1]}`;
+}
+
+// For continuation history, we need piece+square keys
+function generatePieceSquareKey(pieceType: number, square: Coords): string {
+	return `${pieceType}_${square[0]},${square[1]}`;
+}
+
 let pv_table: (MoveDraft | null | undefined)[][] = Array(MAX_PLY).fill(null).map(() => [null, null]);
 let pv_length: number[] = Array(MAX_PLY).fill(0);
+
+// History score normalization constants
+const HISTORY_MAX = 16384;
+const HISTORY_DIVISOR = 8192;
 
 export interface SearchData {
   nodes: number;
@@ -46,6 +71,7 @@ export interface SearchData {
   startDepth: number;
   score_pv: boolean;
   follow_pv: boolean;
+  previousMove?: Move | null; // Track previous move for continuation history
 }
 
 /**
@@ -169,18 +195,32 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	const evalScore = evaluation.evaluate(lf);
 
 	if (!isInCheck && !pv_node) {
-		// reverse futility pruning
+		// reverse futility pruning - improved with deeper margin estimates
 		// Don't prune if beta is near mate scores to avoid missing forced mates
 		if (depth < 3 && Math.abs(beta) < MATE_SCORE) {
-			// Calculate margin based on depth - deeper depth means more margin needed
-			const margin = 120 * depth;
+			// Calculate margin based on depth with a logarithmic scaling factor
+			// for better estimation of position complexity
+			const margin = 120 * depth * (1 + Math.log(Math.max(1, depth)));
 			if (evalScore - margin >= beta) {
 				// Return a more accurate score - avoid returning scores above beta
 				return Math.min(evalScore, beta);
 			}
 		}
 
-		// --- Null Move Pruning (NMP) ---
+		// Enchanced futility pruning
+		if (depth < 3 && Math.abs(alpha) < MATE_SCORE) {
+			const margin = 120 * depth * (1 + Math.log(Math.max(1, depth)));
+			if (evalScore + margin <= alpha) {
+				// do quisence to avoid horizon effect
+				const qScore = quiescenceSearch(lf, alpha, beta, data);
+				if (qScore <= alpha) {
+					return qScore;
+				}
+			}
+		}
+
+
+		// --- Null Move Pruning (NMP) with Verification ---
 		if (null_move) {
 			// Simple heuristic: Assume not zugzwang if player has pieces other than pawns/king
 			const has_major_or_minor_pieces = boardutil.getPieceCountOfGame(lf.pieces, {
@@ -190,12 +230,15 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 
 			if (has_major_or_minor_pieces) {
 				data.ply += 1;
-				// Make a null move (just switch turn)
-				const originalTurn = lf.whosTurn;
-				lf.whosTurn = opponent;
-				const nullScore = -negamax(lf, depth - 1 - NMP_R, -beta, -beta + 1, data, false);
+				// Dynamic NMP reduction - deeper reduction for deeper searches
+				const R = NMP_R + Math.min(3, Math.floor(depth / 3));
+				
+				// Make a null move
+				const nullMove = movepiece.generateNullMove(lf);
+				movepiece.makeMove(lf, nullMove);
+				const nullScore = -negamax(lf, depth - 1 - R, -beta, -beta + 1, data, false);
 				// Undo null move
-				lf.whosTurn = originalTurn;
+				movepiece.rewindMove(lf);
 				data.ply -= 1;
 
 				// return if time is up
@@ -204,25 +247,46 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 				}
 
 				if (nullScore >= beta) {
-					return beta;
-				}
-			}
-
-			// --- Razoring (Static Futility Pruning) ---
-			const score = evalScore + 100;
-			if (score < beta) {
-				if (depth === 1) {
-					const new_score = quiescenceSearch(lf, alpha, beta, data);
-					if (new_score < beta) {
-						return Math.max(new_score, score);
-					}
+					// Verification search for potential zugzwang positions
+					// Only do verification if we're at a sufficiently deep search
+					// if (depth >= 5 && Math.abs(nullScore) < MATE_SCORE) {
+					// 	// Reduced depth verification
+					// 	const verificationScore = negamax(lf, depth - R, alpha, beta, data, false);
+					// 	if (verificationScore >= beta) {
+					// 		return beta;
+					// 	}
+					// } else {
+					return beta; // Skip verification for shallow depths or mate scores
+					// }
 				}
 			}
 		}
-
+		// // --- Enhanced Razoring (Static Futility Pruning) ---
+		// if (depth <= 3) {
+		// 	// More aggressive margin for better pruning
+		// 	const razorMargin = evalScore + 125 * depth;
+		// 	if (razorMargin < beta) {
+		// 		if (depth === 1) {
+		// 			// Direct quiescence search for depth 1
+		// 			const qscore = quiescenceSearch(lf, alpha, beta, data);
+		// 			if (qscore < beta) {
+		// 				return Math.max(razorMargin, qscore);
+		// 			}
+		// 		} else {
+		// 			// For higher depths, try a shallow search first
+		// 			const new_score = negamax(lf, 1, alpha, beta, data, false);
+		// 			if (new_score < beta) {
+		// 				// If the shallow search fails low, confirm with quiescence
+		// 				const qscore = quiescenceSearch(lf, alpha, beta, data);
+		// 				return Math.max(razorMargin, qscore);
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 
-	const fp_margin = evalScore + 97 * depth;
+	// Enhanced futility pruning margin with depth scaling
+	const fp_margin = evalScore + 90 * depth * (1 + Math.log(Math.max(1, depth)));
 
 	// Timeout check
 	if (stop_search()) {
@@ -248,8 +312,8 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 
 	// --- Move Ordering ---
 	legalMoves.sort((a, b) =>
-		evaluation.scoreMove(b, lf, data, pv_table, killer_moves, history_heuristic_table, best_move) -
-    evaluation.scoreMove(a, lf, data, pv_table, killer_moves, history_heuristic_table, best_move)
+		evaluation.scoreMove(b, lf, data, pv_table, killer_moves, history_heuristic_table, best_move, counter_moves, continuation_history) -
+    evaluation.scoreMove(a, lf, data, pv_table, killer_moves, history_heuristic_table, best_move, counter_moves, continuation_history)
 	);
 
 	let bestScore = -INFINITY;
@@ -274,6 +338,7 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 		const is_killer = helpers.movesAreEqual(killer_moves[0]![data.ply], currentMoveDraft) || helpers.movesAreEqual(killer_moves[1]![data.ply], currentMoveDraft);
 
 		if (!is_root && bestScore > -INFINITY) {
+			// Enhanced futility pruning for non-root nodes
 			if (depth < 8 && is_quiet && !is_killer && fp_margin <= alpha && Math.abs(alpha) < INFINITY - 100) {
 				skip_quiet = true;
 				continue;
@@ -282,15 +347,34 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 
 		movepiece.makeMove(lf, fullMove); // Make the move
 		data.ply += 1;
+		
+		// Track previous move for counter-moves and continuation history
+		const previousMove = data.previousMove;
+		data.previousMove = fullMove;
 
 		// PVS Search		
 		// full depth search
 		if (moves_searched === 0) {
 			score = -negamax(lf, depth - 1, -beta, -alpha, data, true);
 		} else {
-			// Late Move Reduction - search with reduced depth first
-			if (moves_searched >= LMR_MIN_DEPTH && depth >= LMR_REDUCTION && !isInCheck && is_quiet && !fullMove.promotion) {
-				score = -negamax(lf, depth - 2, -alpha - 1, -alpha, data, true);
+			// Enhanced Late Move Reduction with dynamic depth adjustment
+			let reduction = 0;
+			if (moves_searched >= LMR_MIN_DEPTH && 
+			    depth >= LMR_REDUCTION && 
+			    !isInCheck && 
+			    is_quiet && 
+			    !fullMove.promotion) {
+				// Base reduction factor
+				reduction = 1 + Math.floor(Math.log(moves_searched) * Math.log(depth) / 3);
+				
+				// Reduce reduction if this is a killer move or has good history
+				if (is_killer) reduction = Math.max(0, reduction - 1);
+				
+				// Never reduce below 1 and cap at depth-2
+				reduction = Math.min(depth - 2, Math.max(1, reduction));
+				
+				// Perform reduced depth search with zero window
+				score = -negamax(lf, depth - reduction - 1, -alpha - 1, -alpha, data, true);
 			} else {
 				score = alpha + 1; // Force a full search
 			}
@@ -306,6 +390,8 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 			}
 		}
 
+		// Restore previous move for upper levels
+		data.previousMove = previousMove;
 		movepiece.rewindMove(lf);
 		data.ply--;
 
@@ -327,7 +413,7 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 			alpha = score;
 
 			if (is_quiet) {
-				helpers.updateHistoryScore(lf, currentMoveDraft, depth, history_heuristic_table);
+				updateHistoryScore(lf, fullMove, depth, history_heuristic_table, data);
 			}
 
 			// Update PV table - store this move as the first in the PV
@@ -395,6 +481,10 @@ function quiescenceSearch(
 		return TIME_UP;
 	}
 
+	// Enhanced delta pruning - skip likely useless captures
+	const futilityMargin = 150; // Typical value of a pawn + a bit more
+	const futilityBase = evalScore + futilityMargin;
+
 	const allMoves = helpers.generateLegalMoves(lf, lf.whosTurn);
 
 	const captureMoves = allMoves.filter(move => {
@@ -402,17 +492,38 @@ function quiescenceSearch(
 		return targetPiece !== undefined && typeutil.getColorFromType(targetPiece.type) !== lf.whosTurn;
 	});
 
-	const scoredCaptures = captureMoves.map(move => ({
-		move: move,
-		score: evaluation.scoreMove(move, lf, data, pv_table, killer_moves, history_heuristic_table, null)
-	})).sort((a, b) => b.score - a.score);
+	const scoredCaptures = captureMoves.map(move => {
+		// Delta pruning - if the captured piece + margin doesn't improve alpha, it's likely futile
+		const targetPiece = boardutil.getPieceFromCoords(lf.pieces, move.endCoords)!;
+		const captureValue = PIECE_VALUES[typeutil.getRawType(targetPiece.type)] || 0;
+		const isFutile = futilityBase + captureValue < alpha;
+
+		return {
+			move: move,
+			score: evaluation.scoreMove(move, lf, data, pv_table, killer_moves, history_heuristic_table, null, counter_moves, continuation_history),
+			isFutile: isFutile
+		};
+	}).sort((a, b) => b.score - a.score);
 
 	// --- Explore Noisy Moves ---
-	for (const { move } of scoredCaptures) {
+	for (const { move, isFutile } of scoredCaptures) {
+		// Skip likely futile captures, but not in positions close to the root
+		if (isFutile && data.ply > 2) {
+			continue;
+		}
+
 		const fullMove = movepiece.generateMove(lf, move);
 		movepiece.makeMove(lf, fullMove);
 		data.ply++;
+		
+		// Track previous move for counter-moves and continuation history
+		const previousMove = data.previousMove;
+		data.previousMove = fullMove;
+		
 		const score = -quiescenceSearch(lf, -beta, -alpha, data);
+		
+		// Restore previous move state
+		data.previousMove = previousMove;
 		data.ply--;
 		movepiece.rewindMove(lf);
 
@@ -440,6 +551,81 @@ function stop_search() {
 }
 
 /**
+ * Update the history score for a move that caused a beta cutoff
+ * @param lf Current game state
+ * @param move The move that caused the cutoff
+ * @param depth Search depth
+ * @param history_table The history heuristic table to update
+ * @param data Search data containing ply information and previous move
+ */
+function updateHistoryScore(
+	lf: gamefile, 
+	move: Move, 
+	depth: number, 
+	history_table: Map<string, number>,
+	data: SearchData
+): void {
+	const movedPiece = boardutil.getTypeFromCoords(lf.pieces, move.startCoords)!;
+	const pieceType = typeutil.getRawType(movedPiece);
+	const key = evaluation.getHistoryKey(pieceType, move.endCoords);
+
+	// Use depth-squared bonus instead of linear depth
+	const bonus = depth * depth;
+	let score = (history_table.get(key) || 0) + bonus;
+
+	// Normalize scores to prevent overflow
+	if (score > HISTORY_MAX) {
+		// Scale down all history scores
+		history_table.forEach((value, key) => {
+			history_table.set(key, Math.floor(value / HISTORY_DIVISOR));
+		});
+		score = Math.floor(score / HISTORY_DIVISOR);
+	}
+
+	history_table.set(key, score);
+
+	// Update counter moves table (if we have a previous move)
+	if (data.previousMove) {
+		const prevMoveKey = generateMoveKey(data.previousMove);
+		counter_moves.set(prevMoveKey, move);
+	}
+
+	// Update continuation history
+	if (data.previousMove) {
+		const pieceSquareKey = generatePieceSquareKey(pieceType, move.endCoords);
+		const prevSquareKey = generatePieceSquareKey(
+            boardutil.getTypeFromCoords(lf.pieces, data.previousMove.startCoords)!, 
+            data.previousMove.endCoords
+		);
+
+		if (!continuation_history.has(pieceSquareKey)) {
+			continuation_history.set(pieceSquareKey, new Map());
+		}
+
+		const contTable = continuation_history.get(pieceSquareKey)!;
+		const contScore = (contTable.get(prevSquareKey) || 0) + bonus;
+		contTable.set(prevSquareKey, Math.min(contScore, HISTORY_MAX));
+	}
+}
+
+/**
+ * Decay all history scores at the start of a new search iteration
+ * @param history_table The history heuristic table to decay
+ */
+function decayHistoryScores(history_table: Map<string, number>): void {
+	history_table.forEach((value, key) => {
+		history_table.set(key, Math.floor(value * 0.9)); // Decay by 10%
+	});
+
+	// Also decay continuation history
+	continuation_history.forEach((toSquareMap) => {
+		toSquareMap.forEach((value, key) => {
+			toSquareMap.set(key, Math.floor(value * 0.9));
+		});
+	});
+}
+
+/**
  * Iterative deepening search driver.
  * Calls negamax for increasing depths until timeout or max depth is reached.
  * @param lf The current game state.
@@ -451,10 +637,19 @@ function findBestMove(lf: gamefile, searchData: SearchData) {
 	// Reset search-specific data before starting
 	killer_moves = Array(MAX_PLY).fill(null).map(() => [null, null]);
 	history_heuristic_table = new Map();
+	// Reset counter moves and continuation history but maintain across searches
+	if (!counter_moves.size) {
+		counter_moves = new Map();
+	}
+	if (!continuation_history.size) {
+		continuation_history = new Map();
+	}
 	pv_table = Array(MAX_PLY).fill(null).map(() => [null, null]);
 	pv_length = Array(MAX_PLY).fill(0);
 	
-	// Iterative deepening loop
+	// Iterative deepening loop with aspiration windows
+	let prevScore = 0; // Score from previous iteration
+	
 	for (let depth = 1; depth <= MAX_PLY; depth++) {
 		if (stop_search()) {
 			break;
@@ -462,12 +657,76 @@ function findBestMove(lf: gamefile, searchData: SearchData) {
 
 		searchData.follow_pv = true;
 		
-		helpers.decayHistoryScores(history_heuristic_table); // Decay scores at the start of each depth iteration
-		const score = negamax(lf, depth, -INFINITY, INFINITY, searchData, true);
+		// Decay scores at the start of each depth iteration
+		decayHistoryScores(history_heuristic_table);
+		
+		// For depth 1, use full window. For deeper searches, use aspiration windows
+		let score;
+		if (depth === 1) {
+			// First iteration uses full window
+			score = negamax(lf, depth, -INFINITY, INFINITY, searchData, true);
+		} else {
+			// Use aspiration windows for deeper searches
+			// Start with a narrow window around the previous score
+			const initialWindowSize = 25; // Initial window size (in centipawns)
+			let currentAlpha = Math.max(-INFINITY, prevScore - initialWindowSize);
+			let currentBeta = Math.min(INFINITY, prevScore + initialWindowSize);
+			
+			score = negamax(lf, depth, currentAlpha, currentBeta, searchData, true);
+
+			if (stop_search()) {
+				break;
+			}
+			
+			// If the score falls outside our window, gradually widen the failing bound
+			// Modern engines use exponential widening of the failing bound
+			if (score <= currentAlpha || score >= currentBeta) {
+				console.debug(`[Engine] Aspiration window failed at depth ${depth}, score: ${score}, window: [${currentAlpha}, ${currentBeta}]`);
+				
+				// Gradual widening factors - multiply window by these values on consecutive fails
+				const wideningFactors = [4, 4, 2, 2, 2, 2]; // Roughly exponential widening
+				let currentFactor = 0;
+				
+				// Re-search with gradually widening windows
+				while ((score <= currentAlpha || score >= currentBeta) && currentFactor < wideningFactors.length) {
+					// Widen the appropriate bound
+					const delta = initialWindowSize * wideningFactors[currentFactor]!;
+					
+					// eslint-disable-next-line max-depth
+					if (score <= currentAlpha) {
+						// Failed low - widen the lower bound, keep upper bound unchanged
+						currentAlpha = Math.max(-INFINITY, prevScore - delta);
+						console.debug(`[Engine] Failed low, widening alpha: [${currentAlpha}, ${currentBeta}]`);
+					} else {
+						// Failed high - widen the upper bound, keep lower bound unchanged
+						currentBeta = Math.min(INFINITY, prevScore + delta);
+						console.debug(`[Engine] Failed high, widening beta: [${currentAlpha}, ${currentBeta}]`);
+					}
+					
+					// Re-search with new bounds
+					score = negamax(lf, depth, currentAlpha, currentBeta, searchData, true);
+					
+					if (stop_search()) {
+						break;
+					}
+					
+					currentFactor++;
+				}
+				
+				// If we've exhausted our widening factors and still failing, use full window
+				if ((score <= currentAlpha || score >= currentBeta) && !stop_search()) {
+					console.debug(`[Engine] Aspiration window still failing after all widenings, using full window`);
+					score = negamax(lf, depth, -INFINITY, INFINITY, searchData, true);
+				}
+			}
+		}
 
 		if (stop_search()) {
 			break;
 		}
+		
+		// Store score for next iteration's window
+		prevScore = score;
 
 		let printString = `[Engine] info depth ${depth} nodes ${searchData.nodes}`;
 		

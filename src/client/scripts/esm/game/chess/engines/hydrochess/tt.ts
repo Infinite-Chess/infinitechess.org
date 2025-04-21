@@ -27,7 +27,7 @@ interface TTEntry {
 	ply: number; // Ply when entry was stored
 }
 
-// Helper Function
+// Helper Functions
 /**
  * Normalizes a coordinate for hashing. Keeps values within HASH_COORD_BOUND.
  * Maps values outside the bound into HASH_MODULO_BUCKETS based on
@@ -49,25 +49,52 @@ function normalizeCoordForHash(coord: number): number {
 	}
 }
 
+/**
+ * Enhanced bit mixing for hash values to improve distribution.
+ * Based on Thomas Wang's 32-bit mix function.
+ */
+function mixBits(n: number): number {
+	n = ((n >> 16) ^ n) * 0x45d9f3b;
+	n = ((n >> 16) ^ n) * 0x45d9f3b;
+	n = (n >> 16) ^ n;
+	return n >>> 0; // Convert to unsigned 32-bit
+}
+
+/**
+ * Find next power of 2 that is >= the input value
+ */
+function nextPowerOfTwo(n: number): number {
+	--n;
+	n |= n >>> 1;
+	n |= n >>> 2;
+	n |= n >>> 4;
+	n |= n >>> 8;
+	n |= n >>> 16;
+	return n + 1;
+}
+
 export class TranspositionTable {
 	private table: Map<number, TTEntry>;
 	private size: number;
+	private mask: number; // Bit mask for power-of-2 size
 	private currentAge: number;
 
 	constructor(sizeInMB: number = 64) {
 		// Estimate size: Assume an entry is roughly 100 bytes (adjust as needed)
-		// This is a very rough estimate, should consider profiling later.
-		// hash (number, 4), depth (4), flag (1), score (4), bestMove (~10-20?), age (4)
-		this.size = Math.floor((sizeInMB * 1024 * 1024) / 100);
+		// Calculate raw size based on memory allocation
+		const rawSize = Math.floor((sizeInMB * 1024 * 1024) / 100);
+		
+		// Round to next power of 2 for optimal hash distribution
+		this.size = nextPowerOfTwo(rawSize);
+		this.mask = this.size - 1; // For optimized modulo with bitwise AND
 		this.table = new Map<number, TTEntry>();
 		this.currentAge = 0;
-		console.debug(`[Engine] Initialized TT with estimated capacity: ${this.size} entries`);
+		console.debug(`[Engine] Initialized TT with capacity: ${this.size} entries (power of 2)`);
 	}
 
 	/**
-	 * Generates a simple hash based on piece positions and turn.
-	 * Uses normalized coordinates and bitwise operations for speed.
-	 * Ignores special moves for simplicity/speed.
+	 * Generates an enhanced hash based on piece positions and turn.
+	 * Uses normalized coordinates, bitwise operations, and bit mixing for improved distribution.
 	 */
 	public static generateHash(board: gamefile): number {
 		let hashValue = 0;
@@ -81,27 +108,25 @@ export class TranspositionTable {
 			const normX = normalizeCoordForHash(coords[0]);
 			const normY = normalizeCoordForHash(coords[1]);
 
-			// 1. Hash Normalized Coordinates:
-			// Combine x and y using bitwise operations.
-			// Shift normY to avoid simple collisions between (x, y) and (y, x).
-			// Use bitwise AND with 0xFFFF for safety/consistency, although normalized values are small.
+			// 1. Hash Normalized Coordinates with improved bit mixing:
+			// Combine x and y using bitwise operations with better distribution
 			const coordHash = (normX & 0xFFFF) ^ ((normY & 0xFFFF) << 16);
 
-			// 2. Combine Piece Type and Coordinate Hash:
-			const pieceHash = piece.type ^ coordHash;
+			// 2. Combine Piece Type and Coordinate Hash with further mixing:
+			const pieceHash = mixBits(piece.type ^ coordHash);
 
 			// 3. XOR into the Main Hash:
 			hashValue ^= pieceHash;
 		}
 
-		// 4. XOR in the Player Turn:
+		// 4. XOR in the Player Turn and apply final mixing:
 		hashValue ^= board.whosTurn;
-		return hashValue >>> 0; // Return as unsigned 32-bit integer
+		return mixBits(hashValue);
 	}
 
 	/**
 	 * Stores an entry in the TT.
-	 * Implements a simple replacement strategy.
+	 * Implements an enhanced replacement strategy considering depth, age, and node type.
 	 */
 	public store(
 		hash: number,
@@ -111,7 +136,9 @@ export class TranspositionTable {
 		bestMove: MoveDraft | null,
 		ply: number
 	): void {
-		const existingEntry = this.table.get(hash);
+		// Use masked hash for improved distribution with power-of-2 size
+		const maskedHash = hash & this.mask;
+		const existingEntry = this.table.get(maskedHash);
 		let replace = false;
 
 		// Determine if we should replace the existing entry
@@ -119,11 +146,26 @@ export class TranspositionTable {
 			// No existing entry, always replace
 			replace = true;
 		} else if (existingEntry.hash === hash) {
-			// Same position hash, replace if depth is comparable or exact flag
-			replace = (existingEntry.depth >= 3 && depth >= existingEntry.depth - 3) || flag === TTFlag.EXACT;
+			// Same position, prioritize deeper searches and exact scores
+			if (flag === TTFlag.EXACT) {
+				replace = true; // Always replace with exact scores
+			} else if (existingEntry.flag !== TTFlag.EXACT) {
+				// If current entry is not exact, prioritize deeper searches
+				replace = depth >= existingEntry.depth;
+			}
 		} else {
-			// Different position hash, replace if old age or better depth
-			replace = existingEntry.age !== this.currentAge || depth >= existingEntry.depth;
+			// Different position (hash collision), use a more sophisticated replacement strategy
+			// Consider: age, depth, and node type
+			const ageDiff = this.currentAge - existingEntry.age;
+			const depthDiff = depth - existingEntry.depth;
+			
+			// Replace if: 
+			// 1. Older entry by at least 2 ages, or
+			// 2. Similar age but deeper search, or
+			// 3. Much deeper search regardless of age
+			replace = (ageDiff >= 2) || 
+				       (ageDiff >= 1 && depthDiff >= 0) ||
+				       (depthDiff >= 3);
 		}
 
 		if (replace) {
@@ -136,7 +178,7 @@ export class TranspositionTable {
 			}
 
 			// Store the entry
-			this.table.set(hash, {
+			this.table.set(maskedHash, {
 				hash,
 				depth,
 				flag,
@@ -154,7 +196,8 @@ export class TranspositionTable {
 	 * Implements a simple approach to probe with alpha-beta bounds.
 	 */
 	public probe(hash: number, alpha: number, beta: number, depth: number, ply: number): number | MoveDraft {
-		const entry = this.table.get(hash);
+		const maskedHash = hash & this.mask;
+		const entry = this.table.get(maskedHash);
 
 		// Check if entry exists and if the hash matches
 		if (entry && entry.hash === hash) {
@@ -200,10 +243,30 @@ export class TranspositionTable {
 	 */
 	public incrementAge(): void {
 		this.currentAge++;
+		
+		// Periodic cleanup of old entries to avoid excessive memory usage
+		if (this.currentAge % 20 === 0 && this.table.size > this.size * 0.9) {
+			this.agePruning();
+		}
 	}
-
-	// Add methods for getting statistics if needed (e.g., hit rate)
-	public getEntryCount(): number {
-		return this.table.size;
+	
+	/**
+	 * Removes entries that are too old to be useful
+	 */
+	private agePruning(): void {
+		const keysToDelete: number[] = [];
+		
+		this.table.forEach((entry, key) => {
+			// Remove entries that are at least 5 ages old
+			if (this.currentAge - entry.age >= 5) {
+				keysToDelete.push(key);
+			}
+		});
+		
+		keysToDelete.forEach(key => {
+			this.table.delete(key);
+		});
+		
+		console.debug(`[Engine] TT age pruning: removed ${keysToDelete.length} old entries`);
 	}
 }
