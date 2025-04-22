@@ -9,11 +9,12 @@
 
 import jsutil from "../../../util/jsutil.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
+import { MetaData } from "../../util/metadata.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
 
 
-import type { Move, MoveDraft } from "../movepiece.js";
+import type { MoveDraft, promotion } from "../movepiece.js";
 
 
 // Type Definitions -------------------------------------------------------------------
@@ -32,7 +33,39 @@ type NamedCaptureMoveGroups = {
 	/** The piece abbreviation of the promoted piece, if present. */
 	promotionAbbr?: string,
 	comment?: Comment
+	moves?: Move[],
 };
+
+interface Move {
+	startCoords: Coords,
+	endCoords: Coords,
+	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
+	promotion?: promotion,
+	/** The type of piece moved */
+	type: number,
+	/** The move in most compact notation: `8,7>8,8=Q` */
+	compact: string,
+	flags: {
+		/** Whether the move delivered check. */
+		check: boolean,
+		/** Whether the move delivered mate (or the killing move). */
+		mate: boolean,
+		/** Whether the move caused a capture */
+		capture: boolean,
+	}
+	/**
+	 * Any comment made on the move, specified in the ICN.
+	 * These will go back into the ICN when copying the game.
+	 */
+	comment?: string,
+	/**
+	 * How much time the player had left after they made their move, in millis.
+	 * 
+	 * Server is always boss, we cannot set this until after the
+	 * server responds back with the updated clock information.
+	 */
+	clk?: number,
+}
 
 /** All information parsed from a move in any dynamic shortform notation. */
 type ParsedMove = {
@@ -58,8 +91,10 @@ const player_codes = {
 	[p.BLUE]: "bu",
 	[p.YELLOW]: "y",
 	[p.GREEN]: "g",
-};
+} as const;
 const player_codes_inverted = jsutil.invertObj(player_codes);
+
+type PlayerCode = typeof player_codes[keyof typeof player_codes];
 
 /** 1-2 letter codes for the standard white, black, and neutral pieces. */
 const piece_codes = {
@@ -118,7 +153,7 @@ const piece_codes_raw = {
 const piece_codes_raw_inverted = jsutil.invertObj(piece_codes_raw);
 
 /** The desired ordering metadata should be placed in the ICN */
-const metadata_key_ordering = [
+const metadata_ordering = [
     "Event",
     "Site",
     "Variant",
@@ -141,7 +176,7 @@ const metadata_key_ordering = [
  */
 const default_promotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 
-const default_win_conditions: PlayerGroup<string[]> = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] };
+const default_win_condition = 'checkmate';
 
 /** Gamerules that will not be stringified into the ICN */
 const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder", "moveRule"]);
@@ -258,7 +293,7 @@ function getAbbrFromType(type: number): string {
  */
 function getTypeFromAbbr(pieceAbbr: string): number {
 	const results = new RegExp(`^${getPieceAbbrevRegexSource('player', 'abbrev')}$`).exec(pieceAbbr);
-	if (results === null) throw Error("Piece abbreviation is in invalid form: " + pieceAbbr);
+	if (results === null) throw Error(`Piece abbreviation is in invalid form: (${pieceAbbr})`);
 
 	const playerStr = results.groups!['player'];
 	const abbrev = results.groups!['abbrev']!;
@@ -267,14 +302,274 @@ function getTypeFromAbbr(pieceAbbr: string): number {
 
 	if (playerStr === undefined) { // No player number override is present
 		typeStr = piece_codes_inverted[abbrev];
-		if (typeStr === undefined) throw Error("Unknown piece abbreviation: " + pieceAbbr);
+		if (typeStr === undefined) throw Error(`Unknown piece abbreviation: (${pieceAbbr})`);
 		return Number(typeStr);
-	} else { // Player number override present
+	} else { // Player number override present   '3Q'
 		const rawTypeStr = piece_codes_raw_inverted[abbrev.toLowerCase()];
-		if (rawTypeStr === undefined) throw Error("Unknown raw piece abbreviation: " + pieceAbbr);
+		if (rawTypeStr === undefined) throw Error(`Unknown raw piece abbreviation: (${pieceAbbr})`);
 		return typeutil.buildType(Number(rawTypeStr) as RawType, Number(playerStr) as Player);
 	}
 }
+
+
+// Main Functions Converting Games To and From ICN -----------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Converts a gamefile in JSON format to Infinite Chess Notation.
+ * @param {FormatConverterLong} longformat - The gamefile in JSON format
+ * @param {Object} [options] - Configuration options for the output format
+ * @param {number} [options.compact_moves=0] - Optional. Number between 0-2 for how compact you want the resulting ICN (0 = least compact, pretty. 1: moderately compact. 2: most compact, no 'x','+', or '#').
+ * @param {boolean} [options.make_new_lines=true] - Optional. Boolean specifying whether linebreaks should be included in the output string.
+ * @param {boolean} [options.specifyPosition=true] - Optional. If false, the ICN won't contain the starting position, that can be deduced from the Variant and Date metadata. This is useful for compressing server logs.
+ * @returns The ICN of the gamefile as a string
+ */
+function LongToShort_Format(longformat: {
+	metadata: MetaData
+	gameRules: {
+		turnOrder: Player[]
+		winConditions: PlayerGroup<string[]>
+		moveRule?: number
+		promotionRanks?: PlayerGroup<number[]>
+		promotionsAllowed?: PlayerGroup<RawType[]>
+	}
+	fullMove: number,
+	global_state: {
+		enpassant?: Coords
+		moveRuleState?: number
+	}
+	moves?: Move[]
+}, options: { compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean }): string {
+
+	/** Each of these will be joined at the end. */
+	const segments: string[] = [];
+
+	// Each section gets an extra line of spacing if make_new_lines is true
+
+
+	// =================================== Section 1: Metadata ===================================
+
+
+	const metadataSegments: string[] = [];
+
+
+	// Appended in the correct order given by metadata_key_ordering
+	const metadataCopy = jsutil.deepCopyObject(longformat.metadata);
+	for (const metadata_name of metadata_ordering) {
+		if (metadataCopy[metadata_name] === undefined) continue;
+		metadataSegments.push(`[${metadata_name} "${metadataCopy[metadata_name]}"]`);
+		delete metadataCopy[metadata_name];
+	}
+	// Are there any remaining we missed?
+	if (Object.keys(metadataCopy).length > 0) throw Error("metadata_ordering is missing metadata keys: " + Object.keys(metadataCopy).join(", "));
+
+
+	// =================================== Section 2: Position ===================================
+
+
+	const positionSegments: string[] = [];
+
+	/**
+	 * The ordering goes:
+	 * 
+	 * Turn order
+	 * Move rule
+	 * Full move counter
+	 * Promotion lines
+	 * Win conditions
+	 * Extra gamerules
+	 * Position
+	 * 
+	 * As an example:
+	 * 
+	 * w 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
+	 */
+
+
+	// Turn order
+	const turnOrderArray: PlayerCode[] = longformat.gameRules.turnOrder.map(player => {
+		if (!(player in player_codes)) throw new Error(`No player code found for player (${player})!`);
+		return player_codes[player];
+	});
+	let turn_order = turnOrderArray.join(':'); // 'w:b'
+	if (turn_order === 'w:b') turn_order = 'w'; // Short for 'w:b'
+	else if (turn_order === 'b:w') turn_order = 'b'; // Short for 'b:w'
+	positionSegments.push(turn_order);
+
+
+	// En passant
+	if (longformat.global_state.enpassant) positionSegments.push(coordutil.getKeyFromCoords(longformat.global_state.enpassant)); // '1,3'
+
+
+	// 50 Move Rule
+	if (longformat.gameRules.moveRule !== undefined || longformat) {
+		// Make sure both moveRule and moveRuleState are present
+		if (longformat.global_state.moveRuleState === undefined) throw Error("moveRuleState must be present when convering a game with moveRule to shortform!");
+		if (longformat.gameRules.moveRule === undefined) throw Error("moveRule must be present when convering a game with moveRuleState to shortform!");
+
+		positionSegments.push(`${longformat.global_state.moveRuleState}/${longformat.gameRules.moveRule}`); // '0/100'
+	}
+
+
+	// Full move counter
+	positionSegments.push(String(longformat.fullMove));
+
+
+	// Promotion lines
+	if (longformat.gameRules.promotionRanks || longformat.gameRules.promotionsAllowed) {
+		// Make sure both promotionRanks and promotionsAllowed are present
+		if (!longformat.gameRules.promotionRanks) throw Error("promotionRanks must be present when converting a game with promotionsAllowed to shortform!");
+		if (!longformat.gameRules.promotionsAllowed) throw Error("promotionsAllowed must be present when converting a game with promotionRanks to shortform!");
+
+		const promotionRanksCopy = jsutil.deepCopyObject(longformat.gameRules.promotionRanks);
+		const promotionsAllowedCopy = jsutil.deepCopyObject(longformat.gameRules.promotionsAllowed);
+
+		const playerSegments: string[] = []; // ['8,17','1,10']
+		for (const player of longformat.gameRules.turnOrder) {
+			const playerSegment: string[] = []; // ['8,17','n,r,b,q']
+
+			const ranks = promotionRanksCopy[player] ?? [];
+			if (ranks.length === 0) {
+				playerSegments.push('');
+				continue;
+			}
+			const ranksString = ranks.join(',');
+
+			const promotions: RawType[] = promotionsAllowedCopy[player] ?? [];
+			if (promotions.length === 0) throw Error(`Player was given promotion ranks, but no promotions allowed! (${player}: ${ranksString})`);
+			if (!isPromotionListDefaultPromotions(promotions)) {
+				const promotionsAbbrevs = promotions.map(type => piece_codes_raw[type]).join(','); // 'n,r,b,q'
+				playerSegment.push(promotionsAbbrevs);
+			}
+
+			playerSegments.push(playerSegment.join(';')); 
+			delete promotionRanksCopy[player]; // Remove the player from the object
+			delete promotionsAllowedCopy[player]; // Remove the player from the object
+		}
+		positionSegments.push('(' + playerSegments.join('|') + ')'); // '(8,17|1,10)'
+
+		// Check if there are any remaining players not accounted for
+		if (Object.keys(promotionRanksCopy).length > 0) throw Error("Not all players with promotion ranks had a turn in the turn order! " + Object.keys(promotionRanksCopy).join(", "));
+		if (Object.keys(promotionsAllowedCopy).length > 0) throw Error("Not all players with promotions allowed had a turn in the turn order! " + Object.keys(promotionsAllowedCopy).join(", "));
+	}
+
+
+	// Win conditions
+	const playerWinConSegments: string[] = []; // ['checkmate','checkmate|allpiecescaptured']
+	// Sort by ascending player number
+	const sortedPlayers = (Object.keys(longformat.gameRules.winConditions).map(Number) as Player[]).sort((a, b) => a - b);
+	console.log("Are players sorted?:", sortedPlayers);
+	for (const player of sortedPlayers) {
+		playerWinConSegments.push(longformat.gameRules.winConditions[player]!.join(',')); // 'checkmate,allpiecescaptured'
+	}
+	const allPlayersMatchWinConditions = playerWinConSegments.every(segment => segment === playerWinConSegments[0]);
+	if (allPlayersMatchWinConditions) {
+		if (playerWinConSegments[0] !== default_win_condition) positionSegments.push(playerWinConSegments[0]); // 'royalcapture'
+		// Else all players have checkmate, no need to specify!
+	} else {
+		positionSegments.push('(' + playerWinConSegments.join('|') + ')'); // '(checkmate|checkmate,allpiecescaptured)'
+	}
+
+
+
+
+	
+
+
+	// Extra gamerules not used will be stringified into the ICN
+	const extraGameRules = {};
+	let added_extras = false;
+	for (const key in longformat.gameRules) {
+		if (excludedGameRules.has(key)) continue;
+		extraGameRules[key] = longformat.gameRules[key];
+		added_extras = true;
+	}
+	if (added_extras) segments += `${JSON.stringify(extraGameRules)} `;
+
+	// position
+	if (specifyPosition) {
+		if (isStartingPositionInLongFormat(longformat.startingPosition)) {
+			segments += icnconverter.getShortFormPosition(longformat.startingPosition, longformat.specialRights);
+		} else { // Already in short format!
+			segments += longformat.startingPosition;
+		}
+		if (longformat.moves) segments += `${segmentDelimiter}${segmentDelimiter}`; // Add more spacing for the next part
+	}
+
+
+
+
+
+	
+
+	// =================================== Section 3: Moves ===================================
+
+
+
+
+
+
+	// moves
+	if (longformat.moves) {
+		// If the moves are provided like: ['1,2>3,4','5,6>7,8N'], then quick return!
+		// THE SERVER SIDE sends them in this format!
+		if (typeof longformat.moves[0] === 'string') segments += longformat.moves.join('|');
+		else { // Add the moves the usual way, parsing the gamefile's Move[]
+			const options = {
+				compact: false,
+				spaces: false,
+				comments: false,
+				move_numbers: false,
+				// Required if adding move numbers:
+				// make_new_lines: true,
+				// turnOrder: longformat.gameRules.turnOrder,
+				// fullmove: longformat.fullMove,
+			};
+			segments += icnconverter.getShortFormMovesFromMoves(longformat.moves, options);
+		}
+	}
+
+
+
+	// ========================================================================================
+
+	// Combine them all, with an extra line if make_new_lines is true
+
+
+	const segmentDelimiter = options.make_new_lines ? "\n\n" : " ";
+	return segments.join(segmentDelimiter); // 'w 0/100 1 (8,17|1,10) (checkmate|checkmate,allpiecescaptured) {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+'
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Compacting & Parsing Single Moves -------------------------------------------------------------------------------
@@ -294,7 +589,7 @@ function getCompactMoveFromDraft(moveDraft: MoveDraft): string {
 	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
 	const promotedPieceStr = moveDraft.promotion !== undefined ? "=" + getAbbrFromType(moveDraft.promotion) : "";
 
-	return startCoordsKey + ">" + endCoordsKey + promotedPieceStr; // 'a,b>c,dX'
+	return startCoordsKey + ">" + endCoordsKey + promotedPieceStr; // 'a,b>c,d=X'
 }
 
 /**
@@ -669,7 +964,7 @@ export {
 	piece_codes_inverted,
 	piece_codes_raw,
 	piece_codes_raw_inverted,
-	metadata_key_ordering,
+	metadata_ordering as metadata_key_ordering,
 	default_promotions,
 	default_win_conditions,
 	excludedGameRules,

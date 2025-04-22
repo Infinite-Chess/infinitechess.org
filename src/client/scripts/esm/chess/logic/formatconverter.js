@@ -3,7 +3,7 @@
 'use strict';
 
 import jsutil from "../../util/jsutil.js";
-import { rawTypes as r, ext as e, players as p } from "../util/typeutil.js";
+import { ext as e, players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 import icnconverter, { default_promotions, default_win_conditions, excludedGameRules, metadata_key_ordering, player_codes, player_codes_inverted } from "./icn/icnconverter.js";
 
