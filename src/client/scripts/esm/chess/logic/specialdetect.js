@@ -203,20 +203,20 @@ function getEnPassantGamefileProperty(moveStartCoords, moveEndCoords) {
  */
 // If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant(gamefile, individualMoves, coords, color) {
-	if (gamefile.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
+	if (gamefile.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.pieces, gamefile.enpassant.pawn);
+	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.pieces, gamefile.state.global.enpassant.pawn);
 	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
-	const xDifference = gamefile.enpassant.square[0] - coords[0];
+	const xDifference = gamefile.state.global.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
 	const yParity = color === players.WHITE ? 1 : -1;
-	if (coords[1] + yParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
+	if (coords[1] + yParity !== gamefile.state.global.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare = coordutil.copyCoords(gamefile.enpassant.square);
+	const enPassantSquare = coordutil.copyCoords(gamefile.state.global.enpassant.square);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
@@ -334,7 +334,7 @@ function roses(gamefile, coords, color) {
  */
 function doesPieceHaveSpecialRight(gamefile, coords) {
 	const key = coordutil.getKeyFromCoords(coords);
-	return gamefile.specialRights.has(key);
+	return gamefile.state.global.specialRights.has(key);
 }
 
 // Returns true if the type is a pawn and the coords it moved to is a promotion line

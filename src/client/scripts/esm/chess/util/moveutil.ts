@@ -48,7 +48,7 @@ interface DepricatedMove {
  * This is also the move we would execute if we forward the game 1 step.
  */
 function getMoveOneForward(gamefile: gamefile): Move | NullMove | undefined {
-	const moveIndex = gamefile.moveIndex;
+	const moveIndex = gamefile.state.local.moveIndex;
 	const incrementedIndex = moveIndex + 1;
 	return getMoveFromIndex(gamefile.moves, incrementedIndex);
 }
@@ -57,7 +57,7 @@ function getMoveOneForward(gamefile: gamefile): Move | NullMove | undefined {
  * Returns *true* if it is legal to forward the provided gamefile by 1 move, *false* if we're at the front of the game.
  */
 function isIncrementingLegal(gamefile: gamefile): boolean {
-	const incrementedIndex = gamefile.moveIndex + 1;
+	const incrementedIndex = gamefile.state.local.moveIndex + 1;
 	return !isIndexOutOfRange(gamefile.moves, incrementedIndex);
 }
 
@@ -65,7 +65,7 @@ function isIncrementingLegal(gamefile: gamefile): boolean {
  * Returns *true* if it is legal to rewind the provided gamefile by 1 move, *false* if we're at the beginning of the game.
  */
 function isDecrementingLegal(gamefile: gamefile): boolean {
-	const decrementedIndex = gamefile.moveIndex - 1;
+	const decrementedIndex = gamefile.state.local.moveIndex - 1;
 	return !isIndexOutOfRange(gamefile.moves, decrementedIndex);
 }
 
@@ -89,7 +89,7 @@ function getLastMove(moves: (Move | NullMove)[]): Move | NullMove | undefined {
  * Returns the move we're currently viewing in the provided gamefile.
  */
 function getCurrentMove(gamefile: gamefile): Move | NullMove | undefined {
-	const index = gamefile.moveIndex;
+	const index = gamefile.state.local.moveIndex;
 	if (index < 0) return;
 	return gamefile.moves[index];
 }
@@ -106,7 +106,7 @@ function getMoveFromIndex(moves: (Move | NullMove)[], index: number): Move | Nul
  * Tests if the provided gamefile is viewing the front of the game, or the latest move.
  */
 function areWeViewingLatestMove(gamefile: gamefile): boolean {
-	const moveIndex = gamefile.moveIndex;
+	const moveIndex = gamefile.state.local.moveIndex;
 	return isIndexTheLastMove(gamefile.moves, moveIndex);
 }
 

@@ -91,7 +91,7 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 		return { opponentPlayedIllegalMove: false };
 	}
 
-	const originalMoveIndex = gamefile.moveIndex;
+	const originalMoveIndex = gamefile.state.local.moveIndex;
 	movesequence.viewFront(gamefile);
 	let aChangeWasMade = false;
 

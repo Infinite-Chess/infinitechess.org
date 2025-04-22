@@ -42,7 +42,7 @@ function isGameOver(gamefile: gamefile): boolean {
  * Returns true if the currently-viewed position of the game file is in check
  */
 function isCurrentViewedPositionInCheck(gamefile: gamefile): boolean {
-	return gamefile.inCheck !== false;
+	return gamefile.state.local.inCheck !== false;
 }
 
 /**
@@ -50,7 +50,7 @@ function isCurrentViewedPositionInCheck(gamefile: gamefile): boolean {
  * in check in the currently-viewed position.
  */
 function getCheckCoordsOfCurrentViewedPosition(gamefile: gamefile): Coords[] {
-	return gamefile.inCheck || []; // Return an empty array if we're not in check.
+	return gamefile.state.local.inCheck || []; // Return an empty array if we're not in check.
 }
 
 /**

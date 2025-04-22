@@ -22,22 +22,13 @@ import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { path } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
+import type { Attacker } from './state.js';
 // @ts-ignore
 import type { gamefile } from './gamefile.js';
 
 
 // Types -------------------------------------------------------------------
 
-
-/** A single piece attacking/checking a royal */
-interface Attacker {
-	/** The coordinates of the attacker */
-	coords: Coords,
-	/** Whether the check is from a sliding movement (not individual, NOR special with a `path` attribute) */
-	slidingCheck: boolean,
-	/** Optionally, if it's an individual (non-slidingCheck), the path this piece takes to check the royal (e.g. Rose piece) */
-	path?: path
-}
 
 
 // Functions ----------------------------------------------------------------
@@ -298,5 +289,5 @@ export default {
 };
 
 export type {
-	Attacker
+
 };

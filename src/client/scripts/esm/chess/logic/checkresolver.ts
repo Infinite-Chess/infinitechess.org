@@ -148,14 +148,14 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	if (royalCoords.length === 0) return false; // Exit if nothing in check
 	if (!checkdetection.isPlayerInCheck(gamefile, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
-	const attackerCount = gamefile.attackers.length;
+	const attackerCount = gamefile.state.local.attackers.length;
 	if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!");
 
 	// To know how to address the check, we have to know where the check is coming from.
 	// For now, add legal blocks for the first attacker, not the others. Since legal blocks
 	// are added as extra individual moves, they will be simulated afterward. And if
 	// the inCheck property comes back as false, then it will block ALL attackers!
-	const attacker = gamefile.attackers[0]; // { coords, slidingCheck }
+	const attacker = gamefile.state.local.attackers[0]; // { coords, slidingCheck }
 
 	// Does this piece have a sliding moveset that will either...
 

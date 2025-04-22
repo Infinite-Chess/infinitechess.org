@@ -4,7 +4,6 @@
  */
 
 import variant from '../variants/variant.js';
-import icnconverter from './icn/icnconverter.js';
 
 /** 
  * Type Definitions 
@@ -56,6 +55,7 @@ function initPieceMovesets(gamefile, metadata, slideLimit) {
  * @param {gamefile} gamefile - The gamefile to initialize
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
+ * @returns {StartSnapshot} The starting snapshot of the game.
  */
 function genStartSnapshot(gamefile, metadata, options) {
 	let enpassant;
@@ -93,6 +93,7 @@ function genStartSnapshot(gamefile, metadata, options) {
 		moveRuleState,
 		playerCount: new Set(gamefile.gameRules.turnOrder).size,
 		fullMove: options?.fullMove ?? 1, // Every variant has the exact same fullMove value.
+		pieceCount: position.size,
 	};
 }
 

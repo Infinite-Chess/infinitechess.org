@@ -112,8 +112,6 @@ const pieceCountToDisableCheckmate = 50_000;
  */
 function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
 	pieces: OrganizedPieces,
-	/** The total number of pieces in the starting position. */
-	pieceCount: number,
 	/**
 	 * All existing types in the game, with their color information.
 	 * This may include pieces not in the starting position,
@@ -126,12 +124,10 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 	// Organize the pieces by type
 
 	const piecesByType: Map<number, Coords[]> = new Map();
-	let pieceCount = 0;
 	const existingTypesSet = new Set<number>();
 	if (!(position instanceof Map)) throw Error("Position is not a map!");
 	for (const [coordsKey, type] of position) {
 		if (typeof type !== "number") throw Error(`Type inside Position is not a number! ${type} ${coordsKey}`); // Bug catcher
-		pieceCount++;
 		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
 		existingTypesSet.add(type);
 		if (!piecesByType.has(type)) piecesByType.set(type, []);
@@ -168,7 +164,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 
 	// Allocate the space needed for the XPositions, YPositions, and types arrays
 
-	const totalSlotsNeeded = pieceCount + Object.values(listExtrasByType).reduce((a, b) => a + b, 0);
+	const totalSlotsNeeded = position.size + Object.values(listExtrasByType).reduce((a, b) => a + b, 0);
 	// console.log("Total piece count: " + pieceCount);
 	// console.log(`Total slots needed: ${totalSlotsNeeded}`);
 
@@ -244,7 +240,6 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 			slides,
 			hippogonalsPresent: areHippogonalsPresentInGame(slides),
 		},
-		pieceCount,
 		existingTypes,
 		existingRawTypes,
 	};

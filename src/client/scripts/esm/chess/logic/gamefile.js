@@ -27,15 +27,14 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('../util/coordutil.js').Coords} Coords */
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
 /** @typedef {import('../util/typeutil.js').Player} Player*/
-/** @typedef {import('./state.js').EnPassant} EnPassant */
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
-/** @typedef {import('./checkdetection.js').Attacker} Attacker */
 /** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
 /** @typedef {import('../util/typeutil.js').Players} Players */
 /** @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup */
 /** @typedef {import('../util/typeutil.js').PlayerGroup} PlayerGroup */
 /** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
-/** @typedef {import('./clock.js').ClockData} ClockData*/
+/** @typedef {import('./clock.js').ClockData} ClockData */
+/** @typedef {import('./state.js').GameState} GameState */
 
 /**
  * Information about the beginning of the game (position, positionString, specialRights, turn)
@@ -47,7 +46,7 @@ import legalmoves from './legalmoves.js';
  * @property {number | undefined} moveRuleState - The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push)
  * @property {number} fullMove - This is the full-move number at the start of the game. Used for converting to ICN notation.
  * @property {number} playerCount - The number of players in this game (the number of unique players in the turn order)
- * @property {number} pieceCount - The count of pieces the game started with.
+ * @property {number} pieceCount - The total number of pieces in the starting position.
  * @property {BoundingBox} box - The bounding box surrounding the starting position, without padding.
  *                               For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }
  */
@@ -117,41 +116,44 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	/** The clocks of the game, if the game is timed. @type {ClockData | undefined} */
 	this.clocks = undefined;
 
+	// JSDoc stuff over...
+
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	this.editor = editor;
-	// JSDoc stuff over...
 
 	// Init things related to the variant, and the startSnapshot of the position
 	initvariant.setupVariantGamerules(this, metadata, variantOptions); // Initiates gameRules, and pieceMovesets
 	const startSnapshot = initvariant.genStartSnapshot(this, metadata, variantOptions);
+	// startSnapshot is only available in non-editor games,
+	// since it would be changing constantly with every board edit.
+	if (!this.editor) this.startSnapshot = startSnapshot;
+
+	/** Holds properties that change over the duration of the game. @type {GameState} */
+	this.state = {
+		local: {
+			moveIndex: -1,
+			inCheck: false,
+			attackers: [],
+		},
+		global: {
+			specialRights: jsutil.deepCopyObject(startSnapshot.specialRights),
+			enpassant: jsutil.deepCopyObject(startSnapshot.enpassant),
+			moveRuleState: jsutil.deepCopyObject(startSnapshot.moveRuleState),
+		}
+	};
 	
-	/** The number of half-moves played since the last capture or pawn push. */
-	this.moveRuleState = startSnapshot.moveRuleState;
 	/** The move list. @type {(Move | NullMove)[]} */
 	this.moves = [];
-	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
-	this.moveIndex = -1;
-	/** If enpassant is allowed at the front of the game, this defines the coordinates. @type {EnPassant | undefined} */
-	this.enpassant = startSnapshot.enpassant;
-	/** An object containing the information if each individual piece has its special move rights. @type {Set<CoordsKey>} */
-	this.specialRights = startSnapshot.specialRights;
 	/** Whos turn it currently is at the FRONT of the game.
      * This is to be distinguished from the `turn` property in the startSnapshot,
      * which is whos turn it was at the *beginning* of the game. @type {Player}*/
 	this.whosTurn = this.gameRules.turnOrder[0];
-	/** If the currently-viewed move is in check, this will be a list of coordinates
-     * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {Coords[] | false} */
-	this.inCheck = false;
-	/** List of maximum 2 pieces currently checking whoever's turn is next,
-     * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!
-     * Only used to calculate legal moves, and checkmate. @type {Attacker[]}*/
-	this.attackers = undefined;
 	/** If 3-Check is enabled, this is a running count of checks given: `{ white: 0, black: 0 }` */
 	this.checksGiven = undefined;
 	/** @type {false | string} */
 	this.gameConclusion = false;
 
-	const { pieces, pieceCount, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
+	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
 		startSnapshot.position,
 		this.pieceMovesets,
 		this.gameRules.turnOrder,
@@ -164,15 +166,9 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	this.existingTypes = existingTypes;
 	/** An array of all RAW piece types that are in this game. @type {RawType[]} */
 	this.existingRawTypes = existingRawTypes;
-	
-	if (!this.editor) {
-		// startSnapshot is only available in non-editor games,
-		// since it would be changing constantly with every board edit.
-		this.startSnapshot = jsutil.deepCopyObject(startSnapshot);
-		this.startSnapshot.pieceCount = pieceCount;
-		this.startSnapshot.box = gamefileutility.getStartingAreaBox(this);
-	}
 
+	startSnapshot.box = gamefileutility.getStartingAreaBox(this);
+	
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	this.colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(this.pieceMovesets, this.pieces.slides);
 	this.vicinity = legalmoves.genVicinity(this.pieceMovesets);
@@ -187,8 +183,8 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 	{ // Set the game's `inCheck` and `attackers` properties at the front of the game.
 		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(this, this.whosTurn, 'checkmate');
 		const checkResults = checkdetection.detectCheck(this, this.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
-		this.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackAttackers) this.attackers = checkResults.attackers;
+		this.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
+		if (trackAttackers) this.state.local.attackers = checkResults.attackers;
 	}
 	
 	movepiece.makeAllMovesInGame(this, moves);

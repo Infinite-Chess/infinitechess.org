@@ -74,7 +74,7 @@ function regenModel() {
 	const model_Offset: Coords = legalmovehighlights.getOffset();
 	// Instance data
 	const squaresToHighlight: Array<number> = [];
-	for (const key of gamefile.specialRights) {
+	for (const key of gamefile.state.global.specialRights) {
 		const coords = coordutil.getCoordsFromKey(key);
 		const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
@@ -101,7 +101,7 @@ function renderSpecialRights() {
 
 function renderEnPassant() {
 	const gamefile = gameslot.getGamefile()!;
-	if (!gamefile.enpassant) return; // No enpassant gamefile property
+	if (!gamefile.state.global.enpassant) return; // No enpassant gamefile property
 
 
 	const boardPos: Coords = movement.getBoardPos();
@@ -116,8 +116,8 @@ function renderEnPassant() {
 	const data = ENPASSANT.SHAPE_FUNC(ENPASSANT.COLOR);
 	const model = createModel(data, 2, "TRIANGLES", true);
 	const transformedPosition: Vec3 = [
-		position[0] + gamefile.enpassant.square[0],
-		position[1] + gamefile.enpassant.square[1],
+		position[0] + gamefile.state.global.enpassant.square[0],
+		position[1] + gamefile.state.global.enpassant.square[1],
 		position[2]
 	];
 	model.render(transformedPosition, scale);

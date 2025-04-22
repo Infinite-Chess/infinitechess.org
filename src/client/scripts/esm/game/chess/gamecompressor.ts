@@ -107,9 +107,9 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 
 		startingPosition = organizedpieces.generatePositionFromPieces(gamefile.pieces);
 		// For game state.   Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
-		specialRights = jsutil.deepCopyObject(gamefile.specialRights);
-		enpassant = jsutil.deepCopyObject(gamefile.enpassant);
-		moveRuleState = jsutil.deepCopyObject(gamefile.moveRuleState);
+		specialRights = jsutil.deepCopyObject(gamefile.state.global.specialRights);
+		enpassant = jsutil.deepCopyObject(gamefile.state.global.enpassant);
+		moveRuleState = jsutil.deepCopyObject(gamefile.state.global.moveRuleState);
 		// For abridgement
 		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 		fullMove = 1;
@@ -132,7 +132,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 
 	// Modify the state if we're applying moves to match a single position
 	if (copySinglePosition) {
-		gamestate = GameToPosition(gamestate, movesCopy, gamefile.moveIndex + 1); // Convert -1 based to 0 based
+		gamestate = GameToPosition(gamestate, movesCopy, gamefile.state.local.moveIndex + 1); // Convert -1 based to 0 based
 		// Recalc positionString, because it will be different
 		positionString = icnconverter.getShortFormPosition(gamestate.position, gamestate.state_global.specialRights);
 	}

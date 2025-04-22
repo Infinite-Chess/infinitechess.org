@@ -128,7 +128,7 @@ function detectKoth(gamefile) {
  */
 function detectMoveRule(gamefile) {
 	if (!gamefile.gameRules.moveRule) return false; // No move-rule being used
-	if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
+	if (gamefile.state.global.moveRuleState === gamefile.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
 	return false;
 }
 

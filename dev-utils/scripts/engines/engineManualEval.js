@@ -27,8 +27,8 @@ const engineManualEval = (function() {
         // so we will properly attach the `rewindInfo` property if its not defined
         if (move.rewindInfo == null) {
             const rewindInfo = {};
-            rewindInfo.inCheck = structuredClone(gamefile.inCheck);
-            if (gamefile.attackers) rewindInfo.attackers = structuredClone(gamefile.attackers);
+            rewindInfo.inCheck = structuredClone(gamefile.state.local.inCheck);
+            if (gamefile.state.local.attackers) rewindInfo.attackers = structuredClone(gamefile.state.local.attackers);
             move.rewindInfo = rewindInfo;
         }
         const capturedPiece = gamefileutility.getPieceAtCoords(gamefile, move.endCoords);
@@ -49,17 +49,17 @@ const engineManualEval = (function() {
         organizedlines.organizePiece(capturedPiece.type, move.endCoords, gamefile);
 
         // store the move in the gamefile's movelist
-        gamefile.moveIndex++;
+        gamefile.state.local.moveIndex++;
         gamefile.moves.push(move);
         // flip the turn
         gamefile.whosTurn = math.getOppositeColor(gamefile.whosTurn);
 
         // detect checks and update gamefile accordingly
-        const whosTurnItWasAtMoveIndex = gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.moveIndex);
+        const whosTurnItWasAtMoveIndex = gamefileutility.getWhosTurnAtMoveIndex(gamefile, gamefile.state.local.moveIndex);
         const checkResults = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, true); // { check: boolean, royalsInCheck: Coords[], attackers: Attacker[] }
-        gamefile.inCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
-        gamefile.attackers = checkResults.attackers;
-        if (gamefile.inCheck) movesscript.flagLastMoveAsCheck(gamefile);
+        gamefile.state.local.inCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
+        gamefile.state.local.attackers = checkResults.attackers;
+        if (gamefile.state.local.inCheck) movesscript.flagLastMoveAsCheck(gamefile);
         gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
     }
 
