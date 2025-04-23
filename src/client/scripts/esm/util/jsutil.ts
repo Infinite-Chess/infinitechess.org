@@ -419,6 +419,11 @@ function areSetsEqual(set1: Set<any>, set2: Set<any>): boolean {
 	return true;
 }
 
+/** Helper that returns the keys of T as (keyof T)[] */
+function typedKeys<T extends object>(obj: T): Array<keyof T> {
+	return Object.keys(obj) as Array<keyof T>;
+}
+
 
 export default {
 	binarySearch,
@@ -439,4 +444,5 @@ export default {
 	parseReviver,
 	ensureJSONString,
 	areSetsEqual,
+	typedKeys,
 };

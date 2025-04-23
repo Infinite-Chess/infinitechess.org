@@ -11,11 +11,13 @@ import jsutil from "../../../util/jsutil.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
-import commandsequence from "./commandsequence.js";
+import icncommentutils, { CommandObject } from "./icncommentutils.js";
 
 
 import type { MetaData } from "../../util/metadata.js";
 import type { GlobalGameState } from "../state.js";
+// @ts-ignore
+import type { GameRules } from "../../variants/gamerules.js";
 
 
 // Type Definitions -------------------------------------------------------------------
@@ -60,7 +62,7 @@ interface _Move extends _MoveDraft {
 	 * Server is always boss, we cannot set this until after the
 	 * server responds back with the updated clock information.
 	 */
-	clk?: number,
+	clockStamp?: number,
 }
 
 /** Information pullable from the most compact shortform move "1,7>2,8=Q" */
@@ -157,7 +159,7 @@ const piece_codes_raw = {
 const piece_codes_raw_inverted = jsutil.invertObj(piece_codes_raw);
 
 /** The desired ordering metadata should be placed in the ICN */
-const metadata_ordering = [
+const metadata_ordering: (keyof MetaData)[] = [
     "Event",
     "Site",
     "Variant",
@@ -412,7 +414,7 @@ function LongToShort_Format(longformat: {
 
 
 	// En passant
-	if (longformat.global_state.enpassant) positionSegments.push(coordutil.getKeyFromCoords(longformat.global_state.enpassant)); // '1,3'
+	if (longformat.global_state.enpassant) positionSegments.push(coordutil.getKeyFromCoords(longformat.global_state.enpassant.square)); // '1,3'
 
 
 	// 50 Move Rule
@@ -480,7 +482,7 @@ function LongToShort_Format(longformat: {
 	}
 	const allPlayersMatchWinConditions = playerWinConSegments.every(segment => segment === playerWinConSegments[0]);
 	if (allPlayersMatchWinConditions) {
-		if (playerWinConSegments[0] !== default_win_condition) positionSegments.push(playerWinConSegments[0]); // 'royalcapture'
+		if (playerWinConSegments[0]! !== default_win_condition) positionSegments.push(playerWinConSegments[0]!); // 'royalcapture'
 		// Else all players have checkmate, no need to specify!
 	} else {
 		positionSegments.push('(' + playerWinConSegments.join('|') + ')'); // '(checkmate|checkmate,allpiecescaptured)'
@@ -488,8 +490,8 @@ function LongToShort_Format(longformat: {
 
 
 	// Extra gamerules - Will be stringified into the ICN
-	const extraGameRules = {};
-	for (const key in longformat.gameRules) {
+	const extraGameRules: Partial<GameRules> = {};
+	for (const key of jsutil.typedKeys(longformat.gameRules)) {
 		if (excludedGameRules.has(key)) continue;
 		extraGameRules[key] = longformat.gameRules[key];
 	}
@@ -559,7 +561,7 @@ function LongToShort_Format(longformat: {
  * 
  * {@link getShortFormMoveFromMove} is also capable of this, but less efficient.
  */
-function getCompactMoveFromDraft(moveDraft: MoveDraft): string {
+function getCompactMoveFromDraft(moveDraft: _MoveDraft): string {
 	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
 	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
 	const promotedPieceStr = moveDraft.promotion !== undefined ? "=" + getAbbrFromType(moveDraft.promotion) : "";
@@ -615,20 +617,18 @@ function getShortFormMoveFromMove(move: _Move, options: { compact: boolean, spac
 
 	// 6th segment: Comment, if present, with the clk embedded command sequence
 	// For example: {[%clk 0:09:56.7] White captures en passant}
-	if (options.comments && (move.comment || move.clk !== undefined)) {
+	if (options.comments && (move.comment || move.clockStamp !== undefined)) {
 		/**
 		 * Everything in a comment that has to be separated by a space.
 		 * This should include all embeded command sequences, like [%clk 0:09:56.7]
-		 * More info: https://www.enpassant.dk/chess/palview/enhancedpgn.htm
+		 * 
 		 */
-		const parts: string[] = [];
-		// Include the clk embeded command sequence, if the player's clock snapshot is present on the move.
-		if (move.clk !== undefined) parts.push(commandsequence.getClkEmbededCommandSequence(move.clk)); // '[%clk 0:09:56.7]'
-		// Append the comment, if present
-		if (move.comment) parts.push(move.comment); // 'White captures en passant'
+		const cmdObjs: CommandObject[] = [];
+		// Include the clk embeded command sequence, if the player's clockStamp is present on the move.
+		if (move.clockStamp !== undefined) cmdObjs.push(icncommentutils.createClkCommandObject(move.clockStamp)); // '[%clk 0:09:56.7]'
 
-		// Join the parts with a space and push to the segments of the move
-		segments.push("{" + parts.join(" ") + "}"); // '{[%clk 0:09:56.7] White captures en passant}'
+		const fullComment = icncommentutils.combineCommentAndCommands(cmdObjs, move.comment); // '[%clk 0:09:56.7] White captures en passant'
+		if (fullComment) segments.push("{" + fullComment + "}"); // '{[%clk 0:09:56.7] White captures en passant}'
 	}
 
 	// Return the shortform move, adding a space between all segments, if spaces is true

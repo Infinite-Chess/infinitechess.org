@@ -141,7 +141,7 @@ interface Move extends MoveDraft {
 	 * Server is always boss, we cannot set this until after the
 	 * server responds back with the updated clock information.
 	 */
-	clk?: number,
+	clockStamp?: number,
 }
 
 /**
