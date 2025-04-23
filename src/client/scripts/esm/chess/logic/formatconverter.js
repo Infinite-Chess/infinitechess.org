@@ -3,9 +3,9 @@
 'use strict';
 
 import jsutil from "../../util/jsutil.js";
-import { ext as e, players as p } from "../util/typeutil.js";
+import { players as p } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
-import icnconverter, { default_promotions, default_win_conditions, excludedGameRules, metadata_key_ordering, player_codes, player_codes_inverted } from "./icn/icnconverter.js";
+import icnconverter, { default_promotions, player_codes_inverted } from "./icn/icnconverter.js";
 
 /** @typedef {import("../../game/chess/gameformulator.js").FormatConverterLong} FormatConverterLong */
 /** @typedef {import("../util/coordutil.js").CoordsKey} CoordsKey */
@@ -227,15 +227,6 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 	longformat.gameRules.turnOrder = longformat.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
 	longformat.fullMove = longformat.fullMove ?? 1;
 	return longformat;
-}
-
-/**
- * Tests if the provided startingPosition is in long (json) format.
- * @param {object | string} startingPosition - The startingPosition to test
- * @returns {boolean} *true* if the startingPosition is in long (json) format
- */
-function isStartingPositionInLongFormat(startingPosition) {
-	return typeof startingPosition !== 'string';
 }
 
 export default {

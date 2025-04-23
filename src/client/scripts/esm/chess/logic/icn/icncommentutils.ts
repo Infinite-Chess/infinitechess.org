@@ -4,6 +4,9 @@
  * that go into the comments of moves in Infinite Chess Notation.
  * 
  * An example of a clock embeded sequence is '[%clk 0:01:57.3]'
+ * 
+ * More info on embeded command sequences:
+ * https://www.enpassant.dk/chess/palview/enhancedpgn.htm
  */
 
 
@@ -50,19 +53,13 @@ interface ExtractedCommentData {
  * string suitable for a PGN comment field (without outer curly braces "{}").
  * @param [comment] Optional. The human-readable comment string. Can be empty or contain only whitespace. (e.g. "Sacrifice!!!")
  * @param cmdObjs An array of CommandObject instances. Can be empty.
- * @returns A combined string with formatted commands followed by the comment.
+ * @returns A combined string with formatted commands followed by the comment (e.g. "[%clk 0:01:57.3] Sacrifice!!!").
  */
-function combineCommentAndCommands(comment?: string, cmdObjs: CommandObject[]): string {
+function combineCommentAndCommands(cmdObjs: CommandObject[], comment?: string): string {
 	/** All parts going into the comment, including command sequences and the human-readable comment. */
 	const parts: string[] = [];
-
-	// 1. Format each command object into its string representation "[%cmd value]"
 	parts.push(...cmdObjs.map(formatCommandSequence));
-
-	// 2. Trim whitespace from the input comment.
 	if (comment && comment.trim().length > 0) parts.push(comment.trim());
-
-	// 3. Join them all together (this only adds spaces between if there's multiple elements)
 	return parts.join(' ');
 }
 
@@ -89,14 +86,14 @@ function formatCommandSequence(cmdObj: CommandObject): string {
  */
 function extractCommandsFromComment(commentString: string): ExtractedCommentData {
 	const commands: CommandObject[] = [];
-	const commandRegex = /\[%(\w+) ([^\]]+)\]/g; // The 'g' flag makes it find all occurrences globally.
+	const commandRegex = /\[%(\w+)\s+([^\]]+)\]/g; // The 'g' flag makes it find all occurrences globally.
 
 	// First, extract all commands and store them.
 	// We use matchAll for a more robust way to get all matches and capture groups.
 	const matches = commentString.matchAll(commandRegex);
 	for (const match of matches) {
-		const commandName = match[1]; // e.g., "clk"
-		const commandValue = match[2]; // e.g., "0:09:56.7"
+		const commandName = match[1]! as Command; // e.g., "clk"
+		const commandValue = match[2]!; // e.g., "0:09:56.7"
 		// Validate the command name
 		if (!validCommands.includes(commandName)) throw Error(`Invalid command sequence found in comment: [%${commandName} ...]`);
 		commands.push({ command: commandName, value: commandValue });
@@ -198,7 +195,7 @@ function getMillisFromClkTimeValue(clkValueString: string): number {
 }
 
 
-// Exports ----------------------------------------------------------------------
+// Exports ----------------------------------------------------------------------------
 
 
 export default {
@@ -210,7 +207,7 @@ export default {
 };
 
 export type {
-	// Command,
-	// CommandObject,
+	Command,
+	CommandObject,
 	ExtractedCommentData,
-}
+};
