@@ -10,7 +10,7 @@ import gamefile from '../../chess/logic/gamefile.js';
 
 import type { VariantOptions } from './gameslot.js';
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { _Move_In, LongFormatIn } from '../../chess/logic/icn/icnconverter.js';
+import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
 
@@ -34,22 +34,6 @@ function formulateGame(longformIn: LongFormatIn) {
 	return new gamefile(longformIn.metadata, { moves, variantOptions });
 }
 
-/** The game JSON format the formatconvert returns from ShortToLong_Format(). */
-interface FormatConverterLong {
-	metadata: MetaData,
-	startingPosition: Map<CoordsKey, number>,
-	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	shortposition?: string,
-	fullMove: number,
-	/** DOES NOT CONTAIN moveRule!!!! */
-	gameRules: GameRules,
-	moves: string[],
-	// The 3 global game states
-	specialRights: Set<CoordsKey>,
-	moveRuleState?: number,
-	enpassant?: Coords,
-}
-
 /**
  * Converts an ICN directly to a gamefile.
  * Throws an error in these cases:
@@ -57,30 +41,28 @@ interface FormatConverterLong {
  * * Game contains an illegal move
  */
 function ICNToGamefile(ICN: string): gamefile {
-	const longformat: FormatConverterLong = icnconverter.ShortToLong_Format(ICN);
+	const longformOut: LongFormatOut = icnconverter.ShortToLong_Format(ICN);
 
 	const variantOptions: VariantOptions = {
-		fullMove: longformat.fullMove,
-		startingPosition: longformat.startingPosition,
-		state_global: {
-			specialRights: longformat.specialRights,
-			// ACTUALLY, WE SHOULD NEVER expect an enpassant property in the starting position of ANY game log! No variant starts with enpassant possible.
-			// enpassant: longformat.enpassant,
-			moveRuleState: longformat.moveRuleState,
-		},
-		gameRules: longformat.gameRules
+		gameRules: longformOut.gameRules,
+		fullMove: longformOut.fullMove,
+		startingPosition: longformOut.position,
+		state_global: longformOut.state_global,
 	};
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
 	// EXPECT THE ICN'S Variant metadata to be the variant code!
-	longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
+	longformOut.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
+
+	// TEMPORARY: Convert he LongFormatOut's moves into the gamefile's constructor's move's format's form's form for fo
+	const moves: string[] = longformOut.moves?.map(m => m.compact) ?? [];
 
 	/**
 	 * This automatically forwards all moves to the front of the game.
 	 * It will throw an Error if there's any move with a startCoords that doesn't have any piece on it!
 	 * Some illegal moves may pass, but those aren't what we care about. We care about crashing moves!
 	 */
-	return new gamefile(longformat.metadata, { moves: longformat.moves, variantOptions });
+	return new gamefile(longformOut.metadata, { moves, variantOptions });
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant?: string) {
