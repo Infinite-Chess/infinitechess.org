@@ -23,11 +23,27 @@ import type { GameRules } from "../../variants/gamerules.js";
 // Type Definitions -------------------------------------------------------------------
 
 
-/**
- * An un-parsed comment on a move. This may contain embeded command sequences.
- * However it won't include the opening "{" or closing "}" braces.
- */
-type Comment = string;
+interface LongFormatIn extends LongFormatBase {
+	moves?: _Move_In[]
+}
+
+interface LongFormatOut extends LongFormatBase {
+	moves?: _Move_Out[]
+}
+
+interface LongFormatBase {
+	metadata: MetaData
+	position?: Map<CoordsKey, number>
+	gameRules: {
+		turnOrder: Player[]
+		winConditions: PlayerGroup<string[]>
+		moveRule?: number
+		promotionRanks?: PlayerGroup<number[]>
+		promotionsAllowed?: PlayerGroup<RawType[]>
+	}
+	fullMove: number,
+	global_state: GlobalGameState
+}
 
 /** The named capture groups of a shortform move. */
 type NamedCaptureMoveGroups = {
@@ -35,14 +51,17 @@ type NamedCaptureMoveGroups = {
 	endCoordsKey: CoordsKey,
 	/** The piece abbreviation of the promoted piece, if present. */
 	promotionAbbr?: string,
-	comment?: Comment
+	/**
+	 * An un-parsed comment on a move. This may contain embeded command sequences.
+	 * However it won't include the opening "{" or closing "}" braces.
+	 */
+	comment?: string
 };
 
-interface _Move extends _MoveDraft {
+/** Same as {@link _Move_In}, but with additional information we may want to prettify the shortform with. */
+interface _Move_In extends _Move_Out {
 	/** The type of piece moved */
 	type?: number,
-	/** The move in most compact notation: `8,7>8,8=Q` */
-	compact: string,
 	flags?: {
 		/** Whether the move delivered check. */
 		check: boolean,
@@ -51,35 +70,28 @@ interface _Move extends _MoveDraft {
 		/** Whether the move caused a capture */
 		capture: boolean,
 	}
+}
+
+/** Information pullable from moves in shortform notation. */
+/** The move in most compact notation: `8,7>8,8=Q` */
+interface _Move_Out extends _Move_Compact {
+	compact: string,
 	/**
-	 * Any comment made on the move, specified in the ICN.
-	 * These will go back into the ICN when copying the game.
+	 * Any human-readable comment made on the move, specified in the ICN.
+	 * This will go back into the ICN when copying the game.
 	 */
-	comment?: Comment,
-	/**
-	 * How much time the player had left after they made their move, in millis.
-	 * 
-	 * Server is always boss, we cannot set this until after the
-	 * server responds back with the updated clock information.
-	 */
+	comment?: string,
+	/** How much time the player had left after they made their move, in millis. */
 	clockStamp?: number,
 }
 
-/** Information pullable from the most compact shortform move "1,7>2,8=Q" */
-interface _MoveDraft {
+/** Minimum information of a move needed to generate its most compact shortform. */
+interface _Move_Compact {
 	startCoords: Coords,
 	endCoords: Coords,
 	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
 	promotion?: number,
 }
-
-/** All information parsed from a move in any dynamic shortform notation. */
-type ParsedMove = {
-	/** Start and end coords, plus the ONLY special move that isn't given from the end coords. */
-	moveDraft: _MoveDraft,
-	comment?: Comment
-};
-
 
 // Dictionaries -----------------------------------------------------------------------
 
@@ -229,7 +241,7 @@ const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource(n
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
  * The start coords, end coords, and promotion abbrev are all captured into named groups.
  */
-const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${promotionRegexSource}$`);
+// const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${promotionRegexSource}$`);
 
 /**
  * A regex for dynamically matching all forms of a move in ICN.
@@ -338,25 +350,10 @@ function getTypeFromAbbr(pieceAbbr: string): number {
  * * move_numbers => Include move numbers, prettifying the notation.
  * * make_new_lines => Include line breaks in the ICN, between metadata, and between move numbers.
  */
-function LongToShort_Format(longformat: {
-	metadata: MetaData
-	position?: Map<CoordsKey, number>
-	gameRules: {
-		turnOrder: Player[]
-		winConditions: PlayerGroup<string[]>
-		moveRule?: number
-		promotionRanks?: PlayerGroup<number[]>
-		promotionsAllowed?: PlayerGroup<RawType[]>
-	}
-	fullMove: number,
-	global_state: GlobalGameState
-	moves?: _Move[]
-}, options: { skipPosition?: true, compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean}): string {
+function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: true, compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean}): string {
 
-	/** Each of these will be joined at the end. */
+	/** Will contain the Metadata, Positon, and Move sections. */
 	const segments: string[] = [];
-
-	// Each section gets an extra line of spacing if make_new_lines is true
 
 
 	// =================================== Section 1: Metadata ===================================
@@ -561,11 +558,15 @@ function LongToShort_Format(longformat: {
  * 
  * {@link getShortFormMoveFromMove} is also capable of this, but less efficient.
  */
-function getCompactMoveFromDraft(moveDraft: _MoveDraft): string {
+function getCompactMoveFromDraft(moveDraft: _Move_Compact): string {
 	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
 	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
-	const promotedPieceStr = moveDraft.promotion !== undefined ? "=" + getAbbrFromType(moveDraft.promotion) : "";
+	const promotionAbbr = moveDraft.promotion !== undefined ? getAbbrFromType(moveDraft.promotion) : undefined;
+	return getCompactMoveFromParts(startCoordsKey, endCoordsKey, promotionAbbr);
+}
 
+function getCompactMoveFromParts(startCoordsKey: string, endCoordsKey: string, promotionAbbr?: string) {
+	const promotedPieceStr = promotionAbbr ? "=" + promotionAbbr : "";
 	return startCoordsKey + ">" + endCoordsKey + promotedPieceStr; // 'a,b>c,d=X'
 }
 
@@ -577,7 +578,7 @@ function getCompactMoveFromDraft(moveDraft: _MoveDraft): string {
  * spaces => Spaces between segments of a move => 'P1,7 x 2,8 =Q +'
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7] Capture, promotion, and a check!}'
  */
-function getShortFormMoveFromMove(move: _Move, options: { compact: boolean, spaces: boolean, comments: boolean }): string {
+function getShortFormMoveFromMove(move: _Move_In, options: { compact: boolean, spaces: boolean, comments: boolean }): string {
 	if (options.compact && !options.spaces && !options.comments) console.warn("getCompactMoveFromDraft() is more efficient to get the most-compact form of a move.");
 	if (!options.compact) {
 		if (move.type === undefined) throw Error(`Move.type must be present when compact = false! (${move.compact})`);
@@ -637,14 +638,14 @@ function getShortFormMoveFromMove(move: _Move, options: { compact: boolean, spac
 }
 
 /** Parses a shortform move IN THE MOST COMPACT FORM '1,7>2,8=Q' to a readable move draft. */
-function parseCompactMove(compactMove: string): { startCoords: Coords, endCoords: Coords, promotion?: number } {
-	const match = moveRegexCompact.exec(compactMove);
-	if (match === null) throw Error("Invalid compact move: " + compactMove);
-	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups).moveDraft;
-}
+// function parseCompactMove(compactMove: string): { startCoords: Coords, endCoords: Coords, promotion?: number } {
+// 	const match = moveRegexCompact.exec(compactMove);
+// 	if (match === null) throw Error("Invalid compact move: " + compactMove);
+// 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
+// }
 
 /** Parses a shortform move in any dynamic format to a readable json. */
-function parseMoveFromShortFormMove(shortFormMove: string): ParsedMove {
+function parseMoveFromShortFormMove(shortFormMove: string): _Move_Out {
 	const moveRegex = new RegExp(`^${moveRegexSource}$`);
 	const match = moveRegex.exec(shortFormMove);
 	if (match === null) throw Error("Invalid shortform move: " + shortFormMove);
@@ -657,7 +658,7 @@ function parseMoveFromShortFormMove(shortFormMove: string): ParsedMove {
  * Throws an error if the coordinates would become Infinity when cast to
  * a javascript number, or if the promoted piece abbreviation is invalid.
  */
-function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMoveGroups): ParsedMove {
+function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMoveGroups): _Move_Out {
 	const startCoordsKey = capturedGroups!.startCoordsKey;
 	const endCoordsKey = capturedGroups!.endCoordsKey;
 	const promotionAbbr = capturedGroups!.promotionAbbr;
@@ -671,14 +672,20 @@ function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMo
 		throw Error(`Move coordinate must not be Infinite. ${JSON.stringify(capturedGroups)}`);
 	}
 
-	const moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number } = {
+	const parsedMove: _Move_Out = {
 		startCoords,
-		endCoords
+		endCoords,
+		compact: getCompactMoveFromParts(startCoordsKey, endCoordsKey, promotionAbbr),
 	};
-	if (promotionAbbr) moveDraft.promotion = getTypeFromAbbr(promotionAbbr);
-
-	const parsedMove: ParsedMove = { moveDraft };
-	if (comment) parsedMove.comment = comment;
+	if (promotionAbbr) parsedMove.promotion = getTypeFromAbbr(promotionAbbr);
+	if (comment) {
+		// Parse the human readable comment from the embeded command sequences
+		const parsedComment = icncommentutils.extractCommandsFromComment(comment);
+		parsedMove.comment = parsedComment.comment;
+		parsedComment.commands.forEach(cmdObj => {
+			if (cmdObj.command === 'clk') parsedMove.clockStamp = icncommentutils.getMillisFromClkTimeValue(cmdObj.value);
+		})
+	}
 
 	return parsedMove;
 }
@@ -698,7 +705,7 @@ function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMo
  * move_numbers => Include move numbers, prettifying the notation. This makes turnOrder, fullmove, and make_new_lines required.
  * make_new_lines => Include new lines between move numbers (only when move_numbers = true)
  */
-function getShortFormMovesFromMoves(moves: _Move[], options: { compact: boolean; spaces: boolean; comments: boolean; } & ({ move_numbers: false } | { move_numbers: true, turnOrder: Player[], fullmove: number, make_new_lines: boolean })): string {
+function getShortFormMovesFromMoves(moves: _Move_In[], options: { compact: boolean; spaces: boolean; comments: boolean; } & ({ move_numbers: false } | { move_numbers: true, turnOrder: Player[], fullmove: number, make_new_lines: boolean })): string {
 	// console.log("Getting shortform moves with options:", options);
 
 	// Converts a gamefile's moves list to the most minimal and compact string notation `1,2>3,4|5,6>7,8=N`
@@ -723,7 +730,7 @@ function getShortFormMovesFromMoves(moves: _Move[], options: { compact: boolean;
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
  * make_new_lines => Include new lines between move numbers
  */
-function getShortFormMovesFromMoves_MoveNumbers(moves: _Move[], options: { turnOrder: Player[], fullmove: number, compact: boolean, spaces: boolean, comments: boolean, make_new_lines: boolean }): string {
+function getShortFormMovesFromMoves_MoveNumbers(moves: _Move_In[], options: { turnOrder: Player[], fullmove: number, compact: boolean, spaces: boolean, comments: boolean, make_new_lines: boolean }): string {
 
 	/**
 	 * Example preview: (compact = false, spaces = true, comments = true, fullmove = 1)
@@ -772,10 +779,10 @@ function getShortFormMovesFromMoves_MoveNumbers(moves: _Move[], options: { turnO
 }
 
 /** Parses the shortform moves of an ICN into a JSON readable format. */
-function parseShortFormMoves(shortformMoves: string): ParsedMove[] {
+function parseShortFormMoves(shortformMoves: string): _Move_Out[] {
 	// console.log("Parsing shortform moves:", shortformMoves);
 
-	const moves: ParsedMove[] = [];
+	const moves: _Move_Out[] = [];
 	const moveRegex = new RegExp(moveRegexSource, "g");
 
 	// Since the moveRegex has the global flag, exec() will return the next match each time.
@@ -920,7 +927,7 @@ export default {
 	getTypeFromAbbr,
 	getCompactMoveFromDraft,
 
-	parseCompactMove,
+	parseMoveFromShortFormMove,
 	getShortFormMovesFromMoves,
 	parseShortFormMoves,
 

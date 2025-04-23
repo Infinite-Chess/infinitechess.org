@@ -71,14 +71,14 @@ function genStartSnapshot(gamefile, metadata, options) {
 	} else {
 		positionString = options.positionString;
 		position = options.startingPosition;
-		specialRights = options.specialRights;
+		specialRights = options.global_state.specialRights;
 	}
 
 	if (options) {
-		enpassant = options.enpassant;
+		enpassant = options.global_state.enpassant;
 		if (options.gameRules.moveRule) {
-			if (options.moveRuleState === undefined) throw Error("moveRuleState is required with gameRule moveRule");
-			moveRuleState = options.moveRuleState;
+			if (options.global_state.moveRuleState === undefined) throw Error("moveRuleState is required with gameRule moveRule");
+			moveRuleState = options.global_state.moveRuleState;
 		}
 	} else {
 		// Every variant has the exact same initial moveRuleState value.

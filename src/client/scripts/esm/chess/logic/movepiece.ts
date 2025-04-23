@@ -412,7 +412,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 
 	let moveDraft: MoveDraft;
 	try {
-		moveDraft = icnconverter.parseCompactMove(shortmove);
+		moveDraft = icnconverter.parseMoveFromShortFormMove(shortmove);
 	} catch (error) {
 		console.error(error);
 		console.error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);

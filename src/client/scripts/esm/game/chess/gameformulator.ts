@@ -34,10 +34,10 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 		gameRules: compressedGame.gameRules,
 		positionString: compressedGame.positionString,
 		startingPosition: compressedGame.startingPosition,
-		specialRights: compressedGame.specialRights,
+		global_state: { specialRights: compressedGame.specialRights },
 	};
 	// Optional properties
-	if (compressedGame.moveRuleState) variantOptions.moveRuleState = compressedGame.moveRuleState;
+	if (compressedGame.moveRuleState) variantOptions.global_state.moveRuleState = compressedGame.moveRuleState;
 	if (compressedGame.enpassant) { // Coords: [x,y]
 		// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
 		const firstTurn = compressedGame.gameRules.turnOrder[0];
@@ -46,7 +46,7 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 		const pieceOnExpectedSquare: number | undefined = compressedGame.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
 
 		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
-			variantOptions.enpassant = { square: compressedGame.enpassant, pawn: pawnExpectedSquare };
+			variantOptions.global_state.enpassant = { square: compressedGame.enpassant, pawn: pawnExpectedSquare };
 		}
 	}
 
@@ -83,7 +83,7 @@ function ICNToGamefile(ICN: string): gamefile {
 		moveRuleState: longformat.moveRuleState,
 		positionString: longformat.shortposition!,
 		startingPosition: longformat.startingPosition,
-		specialRights: longformat.specialRights,
+		global_state: { specialRights: longformat.specialRights },
 		gameRules: longformat.gameRules
 	};
 

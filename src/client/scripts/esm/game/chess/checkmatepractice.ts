@@ -103,8 +103,8 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		fullMove: 1,
 		startingPosition,
 		positionString,
-		specialRights,
-		gameRules: variant.getBareMinimumGameRules()
+		global_state: { specialRights },
+		gameRules: variant.getBareMinimumGameRules(),
 	};
 
 	const options = {
