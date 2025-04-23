@@ -140,11 +140,11 @@ async function onMovePlayed() {
 	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-	const abridgedGame = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
+	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
 	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);
-	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig, youAreColor: engineColor });
+	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: longformIn, engineConfig: engineConfig, youAreColor: engineColor });
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 

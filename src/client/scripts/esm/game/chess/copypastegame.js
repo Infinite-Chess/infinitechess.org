@@ -49,15 +49,15 @@ function copyGame(copySinglePosition) {
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
-	const primedGamefile = gamecompressor.compressGamefile(gamefile, copySinglePosition);
+	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition);
 	// Convert the variant metadata code to spoken language if translation is available
-	if (primedGamefile.metadata.Variant) primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant];
+	if (longformatIn.metadata.Variant) longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 	
 	const largeGame = variantsTooBigToCopyPositionToICN.includes(Variant);
 	// Also specify the position if we're copying a single position, so the starting position will be different.
-	const specifyPosition = !largeGame || copySinglePosition;
-	const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
-        
+	const skipPosition = largeGame && !copySinglePosition;
+	const shortformat = icnconverter.LongToShort_Format(longformatIn, { skipPosition, compact: false, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
+    
 	docutil.copyToClipboard(shortformat);
 	statustext.showStatus(translations.copypaste.copied_game);
 }

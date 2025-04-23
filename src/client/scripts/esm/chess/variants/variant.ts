@@ -348,7 +348,7 @@ function isVariantValid(variantName: string) {
 
 /**
  * Given the Variant and Date, calculates the startingPosition,
- * positionString, and specialRights properties for the startSnapshot of the game.
+ * positionString, and specialRights properties for the game.
  * @param options - An object containing the properties `Variant`, and if desired, `Date`.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
  */

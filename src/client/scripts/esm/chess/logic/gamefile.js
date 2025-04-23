@@ -35,18 +35,15 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
 /** @typedef {import('./clock.js').ClockData} ClockData */
 /** @typedef {import('./state.js').GameState} GameState */
-/** @typedef {import('../../game/chess/gameslot.js').VariantOptions} GameState */
+/** @typedef {import('../../game/chess/gameslot.js').VariantOptions} VariantOptions */
+/** @typedef {import('./state.js').GlobalGameState} GlobalGameState */
 
 /**
  * Information about the beginning of the game (position, specialRights, turn)
  * @typedef {Object} StartSnapshot
  * @property {Map<CoordsKey, number>} position - In key format 'x,y': type
- * @property {Set<CoordsKey>} specialRights
- * @property {EnPassant | undefined} enpassant - What square coords, if legal, enpassant capture is possible in the starting position of the game.
- * @property {number | undefined} moveRuleState - The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push)
+ * @property {GlobalGameState} state_global - The global state of the game beginning
  * @property {number} fullMove - This is the full-move number at the start of the game. Used for converting to ICN notation.
- * @property {number} playerCount - The number of players in this game (the number of unique players in the turn order)
- * @property {number} pieceCount - The total number of pieces in the starting position.
  * @property {BoundingBox} box - The bounding box surrounding the starting position, without padding.
  *                               For the classical position this is `{ left: 1, bottom: 1, right: 8, top: 8 }
  */
@@ -135,11 +132,7 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 			inCheck: false,
 			attackers: [],
 		},
-		global: {
-			specialRights: jsutil.deepCopyObject(startSnapshot.specialRights),
-			enpassant: jsutil.deepCopyObject(startSnapshot.enpassant),
-			moveRuleState: jsutil.deepCopyObject(startSnapshot.moveRuleState),
-		}
+		global: jsutil.deepCopyObject(startSnapshot.state_global),
 	};
 	
 	/** The move list. @type {(Move | NullMove)[]} */

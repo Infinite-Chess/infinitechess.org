@@ -113,7 +113,7 @@ function doGameOverChecks(gamefile: gamefile) {
  * Gets the bounding box of the game's starting position
  */
 function getStartingAreaBox(gamefile: gamefile) {
-	if (gamefile.startSnapshot?.box) return gamefile.startSnapshot.box;
+	if (gamefile.startSnapshot) return gamefile.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(gamefile.pieces);
 	return math.getBoxFromCoordsList(coordsList);
 }
@@ -161,7 +161,6 @@ function areColinearSlidesPresentInGame(pieceMovesets: TypeGroup<() => PieceMove
 
 /** Returns the number of players in the game (unique players in the turnOrder). */
 function getPlayerCount(gamefile: gamefile) {
-	if (gamefile.startSnapshot) return gamefile.startSnapshot.playerCount;
 	return new Set(gamefile.gameRules.turnOrder).size;
 }
 

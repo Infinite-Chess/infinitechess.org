@@ -6,7 +6,7 @@
 
 
 import jsutil from '../../util/jsutil.js';
-import icnconverter, { LongFormatIn } from '../../chess/logic/icn/icnconverter.js';
+import icnconverter, { _Move_In, LongFormatIn } from '../../chess/logic/icn/icnconverter.js';
 import state from '../../chess/logic/state.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
@@ -15,30 +15,13 @@ import movepiece from '../../chess/logic/movepiece.js';
 
 import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { Move } from '../../chess/logic/movepiece.js';
+import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
 
-
-/**
- * A compressed version of a gamefile, suitable for the formatconverter to turn it into ICN.
- * All unimportant data is excluded.
- */
-interface AbridgedGamefile {
-	/** The Variant metadata should be the CODE of the variant, not a translation. */
-	metadata: MetaData,
-	fullMove: number,
-	startingPosition: Map<CoordsKey, number>,
-	gameRules: GameRules,
-	moves: Move[],
-	// The 3 global game states
-	specialRights: Set<CoordsKey>,
-	enpassant?: Coords,
-	moveRuleState?: number,
-}
 
 
 /**
@@ -65,7 +48,6 @@ interface SimplifiedGameState {
 }
 
 
-
 /**
  * Primes the provided gamefile to for the formatconverter to turn it into an ICN
  * @param gamefile - The gamefile
@@ -74,48 +56,30 @@ interface SimplifiedGameState {
  */
 function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFormatIn {
 
-	// ===== NEEDED FOR GAME STATE ========
-
 	let startingPosition: Map<CoordsKey, number>;
-	const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
 	let state_global: GlobalGameState;
-
-	// ======== NEEDED FOR ABRIDGEMENT ==========
-
-	const metadataCopy = jsutil.deepCopyObject(gamefile.metadata);
-	const movesCopy: Move[] = jsutil.deepCopyObject(movepiece.ensureMovesNotNull(gamefile.moves));
 	let fullMove: number;
 
 	if (gamefile.startSnapshot) {
 		startingPosition = jsutil.deepCopyObject(gamefile.startSnapshot.position);
-		// For game state
-		state_global = {
-			specialRights: jsutil.deepCopyObject(gamefile.startSnapshot.specialRights),
-			enpassant: jsutil.deepCopyObject(gamefile.startSnapshot.enpassant),
-			moveRuleState: gamefile.startSnapshot.moveRuleState,
-		}
-		// For abridgement
-		({ fullMove } = gamefile.startSnapshot);
+		state_global = jsutil.deepCopyObject(gamefile.startSnapshot.state_global);
+		fullMove = gamefile.startSnapshot.fullMove;
 	} else { // editor game,   also copySinglePosition is false
 		if (!gamefile.editor) throw Error("startSnapshot missing in non-editor mode");
 		if (gamefile.moves.length > 0) throw Error("Should not be moves present in editor mode");
 		if (copySinglePosition) throw Error('copySinglePosition has no effect in editor mode');
 
 		startingPosition = organizedpieces.generatePositionFromPieces(gamefile.pieces);
-		// For game state.   Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
-		state_global = {
-			specialRights: jsutil.deepCopyObject(gamefile.state.global.specialRights),
-			enpassant: jsutil.deepCopyObject(gamefile.state.global.enpassant),
-			moveRuleState: jsutil.deepCopyObject(gamefile.state.global.moveRuleState),
-		}
-		// For abridgement
+		// Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
+		state_global = jsutil.deepCopyObject(gamefile.state.global);
 		fullMove = 1;
 	}
 
-	/**
+	/*
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
+	const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
 	let gamestate: SimplifiedGameState = {
 		position: startingPosition,
 		turnOrder: gameRulesCopy.turnOrder,
@@ -124,31 +88,41 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFo
 	};
 
 	// Modify the state if we're applying moves to match a single position
-	if (copySinglePosition) gamestate = GameToPosition(gamestate, movesCopy, gamefile.state.local.moveIndex + 1); // Convert -1 based to 0 based
+	if (copySinglePosition) gamestate = GameToPosition(gamestate, gamefile.moves, gamefile.state.local.moveIndex + 1); // Convert -1 based to 0 based
 
 	// Start constructing the abridged gamefile
-	const abridgedGamefile: AbridgedGamefile = {
-		metadata: metadataCopy,
-		fullMove: gamestate.fullMove,
-		startingPosition: gamestate.position,
+	const long_format_in: LongFormatIn = {
+		metadata: jsutil.deepCopyObject(gamefile.metadata),
+		position: gamestate.position,
 		gameRules: gameRulesCopy,
-		moves: copySinglePosition ? [] : movesCopy, // Copy the moves list if not copying a single position
-		// The 3 global game states
-		specialRights: gamestate.state_global.specialRights,
-		// enpassant added below
-		moveRuleState: gamestate.state_global.moveRuleState !== undefined ? gamestate.state_global.moveRuleState : undefined,
+		fullMove: gamestate.fullMove,
+		state_global: gamestate.state_global,
+		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(gamefile.moves),
 	};
-	// enpassant
-	if (gamestate.state_global.enpassant) { // In the form: { square: Coords, pawn: Coords },
-		// We need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
-		const yDistance = Math.abs(gamestate.state_global.enpassant.square[1] - gamestate.state_global.enpassant.pawn[1]);
-		if (yDistance === 1) abridgedGamefile.enpassant = gamestate.state_global.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
-		else console.warn("Enpassant distance is more than 1 square, not assigning it to the ICN. Enpassant:", gamestate.state_global.enpassant);
-	}
 
-	console.log("Returning abridged game:", jsutil.deepCopyObject(abridgedGamefile));
+	console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
 
-	return abridgedGamefile;
+	return long_format_in;
+}
+
+function convertMovesToICNConverterInMove(moves: (Move | NullMove)[]): _Move_In[] {
+	const mappedMoves = moves.map((move: Move | NullMove) => {
+		if (move.isNull) throw Error("Should not be null moves in game!")
+		const move_in: _Move_In = {
+			type: move.type,
+			startCoords: move.startCoords,
+			endCoords: move.endCoords,
+			compact: move.compact,
+			flags: move.flags,
+		}
+		// Optionals
+		if (move.promotion !== undefined) move_in.promotion = move.promotion;
+		if (move.comment) move_in.comment = move.comment;
+		if (move.clockStamp !== undefined) move_in.clockStamp = move.clockStamp;
+
+		return move_in;
+	});
+	return jsutil.deepCopyObject(mappedMoves);
 }
 
 
@@ -162,7 +136,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFo
  * @param moves - The moves of the original gamefile to apply to the state
  * @param [halfmoves] - Number of halfmoves from starting position to apply to the state (Infinity: final position of game)
  */
-function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves: number = 0): SimplifiedGameState {
+function GameToPosition(longform: SimplifiedGameState, moves: (Move | NullMove)[], halfmoves: number = 0): SimplifiedGameState {
 	if (halfmoves === Infinity) halfmoves = moves.length; // If we want the final position, set halfmoves to the length of the moves array
 	if (moves.length < halfmoves) throw Error(`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`);
 	if (halfmoves === 0) return longform; // No changes needed
@@ -176,6 +150,7 @@ function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves:
 	// until we reach the desired halfmove.
 	for (let i = 0; i < halfmoves; i++) {
 		const move = moves[i]!;
+		if (move.isNull) throw Error("Should not be a null move.")
 
 		// Apply the move's state changes.
 		// state.applyMove(longform, move.state, true, { globalChange: true }); // Apply the State of the move

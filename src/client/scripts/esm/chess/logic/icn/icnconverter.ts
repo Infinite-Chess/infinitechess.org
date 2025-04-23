@@ -349,7 +349,7 @@ function getTypeFromAbbr(pieceAbbr: string): number {
  * * move_numbers => Include move numbers, prettifying the notation.
  * * make_new_lines => Include line breaks in the ICN, between metadata, and between move numbers.
  */
-function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: true, compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean}): string {
+function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: boolean, compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean}): string {
 
 	/** Will contain the Metadata, Positon, and Move sections. */
 	const segments: string[] = [];
@@ -410,7 +410,12 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 
 
 	// En passant
-	if (longformat.state_global.enpassant) positionSegments.push(coordutil.getKeyFromCoords(longformat.state_global.enpassant.square)); // '1,3'
+	if (longformat.state_global.enpassant) {
+		// Only add it SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
+		const yDistance = Math.abs(longformat.state_global.enpassant.square[1] - longformat.state_global.enpassant.pawn[1]);
+		if (yDistance === 1) positionSegments.push(coordutil.getKeyFromCoords(longformat.state_global.enpassant.square)); // '1,3'
+		else console.warn("Enpassant distance is more than 1 square, not specifying it in the ICN. Enpassant:", longformat.state_global.enpassant);
+	}
 
 
 	// 50 Move Rule
@@ -937,5 +942,6 @@ export default {
 
 export type {
 	LongFormatIn,
-	LongFormatOut
+	LongFormatOut,
+	_Move_In,
 }
