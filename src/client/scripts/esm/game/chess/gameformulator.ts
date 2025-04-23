@@ -4,20 +4,15 @@
  */
 
 
-import typeutil from '../../chess/util/typeutil.js';
-import coordutil, { Coords, CoordsKey } from '../../chess/util/coordutil.js';
-import { players as p, rawTypes as r } from '../../chess/util/typeutil.js';
+import icnconverter from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import gamefile from '../../chess/logic/gamefile.js';
 
-import type { Move } from '../../chess/logic/movepiece.js';
 import type { VariantOptions } from './gameslot.js';
 import type { MetaData } from '../../chess/util/metadata.js';
 import type { _Move_In, LongFormatIn } from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
-// @ts-ignore
-import formatconverter from '../../chess/logic/formatconverter.js';
 
 
 /**
@@ -62,7 +57,7 @@ interface FormatConverterLong {
  * * Game contains an illegal move
  */
 function ICNToGamefile(ICN: string): gamefile {
-	const longformat: FormatConverterLong = formatconverter.ShortToLong_Format(ICN);
+	const longformat: FormatConverterLong = icnconverter.ShortToLong_Format(ICN);
 
 	const variantOptions: VariantOptions = {
 		fullMove: longformat.fullMove,
@@ -78,27 +73,7 @@ function ICNToGamefile(ICN: string): gamefile {
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
 	// EXPECT THE ICN'S Variant metadata to be the variant code!
-	// longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
-
-	// if (longformat.enpassant) { // Coords: [x,y]
-	// 	// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
-	// 	const firstTurn = longformat.gameRules.turnOrder[0];
-	// 	const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
-	// 	const pawnExpectedSquare = [longformat.enpassant[0], longformat.enpassant[1] - yParity] as Coords;
-	// 	/**
-	// 	 * First make sure there IS a pawn on the square!
-	// 	 * If not, the ICN was likely tampered, throw an Error!
-	// 	 */
-	// 	const pieceOnExpectedSquare: number | undefined = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
-	// 	if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
-	// 		variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
-	// 	} else throw Error(`Invalid enpassant ${longformat.enpassant} in ICN!`);
-	// }
-	/**
-	 * ACTUALLY, WE SHOULD NEVER expect an enpassant property in the starting position of ANY
-	 * game log! No variant starts with enpassant possible.
-	 */
-	if (longformat.enpassant) throw Error('Logged game ICNs should NEVER have an enpassant property on the starting position!!');
+	longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
 
 	/**
 	 * This automatically forwards all moves to the front of the game.
@@ -115,8 +90,8 @@ function convertVariantFromSpokenLanguageToCode(Variant?: string) {
 			return translationCode;
 		}
 	}
-	// Else unknown variant, return undefined
-	return;
+	// Else the variant is probably already the code!
+	return Variant;
 }
 
 export default {

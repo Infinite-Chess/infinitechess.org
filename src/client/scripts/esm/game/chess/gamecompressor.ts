@@ -1,26 +1,23 @@
 
 /**
  * This script handles the compression of a gamefile into a more simple json format,
- * suitable for the formatconverter to turn it into ICN (Infinite Chess Notation).
+ * suitable for the icnconverter to turn it into ICN (Infinite Chess Notation).
  */
 
 
 import jsutil from '../../util/jsutil.js';
-import icnconverter, { _Move_In, LongFormatIn } from '../../chess/logic/icn/icnconverter.js';
+import { _Move_In, LongFormatIn } from '../../chess/logic/icn/icnconverter.js';
 import state from '../../chess/logic/state.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 import movepiece from '../../chess/logic/movepiece.js';
 
 
-import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
-import type { MetaData } from '../../chess/util/metadata.js';
+import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
-// @ts-ignore
-import type { GameRules } from '../../chess/variants/gamerules.js';
 
 
 
@@ -49,7 +46,7 @@ interface SimplifiedGameState {
 
 
 /**
- * Primes the provided gamefile to for the formatconverter to turn it into an ICN
+ * Primes the provided gamefile to for the icnconverter to turn it into an ICN
  * @param gamefile - The gamefile
  * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  * @returns The primed gamefile for converting into ICN format

@@ -15,7 +15,6 @@ import { getTranslation } from '../../utility/translate.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
-import formatconverter from '../../../client/scripts/esm/chess/logic/formatconverter.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';

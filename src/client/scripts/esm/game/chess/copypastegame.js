@@ -2,14 +2,13 @@
 /** 
  * Type Definitions 
  * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/icn/icnconverter.js').LongFormatOut} LongFormatOut
  */
 
 // Import Start
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import enginegame from '../misc/enginegame.js';
-import formatconverter from '../../chess/logic/formatconverter.js';
-import backcompatible from '../../chess/logic/backcompatible.js';
 import statustext from '../gui/statustext.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
@@ -24,6 +23,7 @@ import organizedpieces from '../../chess/logic/organizedpieces.js';
 import gameformulator from './gameformulator.js';
 import websocket from '../websocket.js';
 import boardutil from '../../chess/util/boardutil.js';
+import icnconverter from '../../chess/logic/icn/icnconverter.js';
 // Import End
 
 "use strict";
@@ -89,61 +89,23 @@ async function callbackPaste(event) {
 	}
 
 	// Convert clipboard text to object
-	let longformat;
+	let longformOut;
 	try {
-		longformat = JSON.parse(clipboard); // Gamefile is already primed for the constructor
-	} catch (error) {
-		try {
-			longformat = formatconverter.ShortToLong_Format(clipboard, true, true);
-		} catch (e) {
-			console.error(e);
-			statustext.showStatus(translations.copypaste.clipboard_invalid, true);
-			return;
-		}
+		longformOut = icnconverter.ShortToLong_Format(clipboard, true, true);
+	} catch (e) {
+		console.error(e);
+		statustext.showStatus(translations.copypaste.clipboard_invalid, true);
+		return;
 	}
 
-	longformat = backcompatible.getLongformatInNewNotation(longformat);
-
-	if (!verifyLongformat(longformat)) return;
+	if (!verifyWinConditions(longformOut.gameRules.winConditions)) return;
 
 	// console.log(longformat);
     
-	const success = pasteGame(longformat);
+	const success = pasteGame(longformOut);
 
 	// Let the server know if we pasted a custom position in a private match
 	if (success & onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) websocket.sendmessage('game', 'paste');
-}
-
-/**
- * Makes sure longformat has all the correct properties before we cast it to a gamefile.
- * If it doesn't, it displays an error to the user the reason why, and returns false.
- * @param {Object} longformat - The gamefile spat out by the formatconverter
- * @returns {boolean} *false* if the longformat is invalid.
- */
-function verifyLongformat(longformat) {
-	/** We need all of these properties:
-     * metadata
-     * turn
-     * enpassant
-     * moveRuleState
-     * fullMove
-     * startingPosition
-     * specialRights
-     * moves: string[] most compact notation
-     * gameRules
-     */
-
-	if (!longformat.metadata) throw new Error("formatconvert must specify metadata when copying game.");
-	if (!longformat.fullMove) throw new Error("formatconvert must specify fullMove when copying game.");
-	if (!longformat.startingPosition && !longformat.metadata.Variant) { statustext.showStatus(translations.copypaste.game_needs_to_specify, true); return false; }
-	if (longformat.startingPosition && !longformat.specialRights) throw new Error("formatconvert must specify specialRights when copying game, IF startingPosition is provided.");
-	if (!longformat.gameRules) throw new Error("Pasted game doesn't specify gameRules! This is an error of the format converter, it should always return default gameRules if it's not specified in the pasted ICN.");
-	if (!longformat.gameRules.winConditions) throw new Error("Pasted game doesn't specify winConditions! This is an error of the format converter, it should always return default win conditions if it's not specified in the pasted ICN.");
-	if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
-	if (longformat.gameRules.promotionRanks && !longformat.gameRules.promotionsAllowed) throw new Error("Pasted game specifies promotion lines, but no promotions allowed! This is an error of the format converter, it should always return default promotions if it's not specified in the pasted ICN.");
-	if (!longformat.gameRules.turnOrder) throw new Error("Pasted game doesn't specify turn order! This is either an error of the format converter (it should always return default turn order if it's not specified in the pasted ICN), or the old gamefile converter to the new format.");
-
-	return true;
 }
 
 /** For now doesn't verify if the required royalty is present. */
@@ -173,26 +135,14 @@ function verifyWinConditions(winConditions) {
  * TODO: REMOVE A LOT OF THE REDUNDANT LOGIC BETWEEN
  * THIS FUNCTION AND gameforulator.formulateGame()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * 
- * @param {Object} longformat - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
+ * @param {LongFormatOut} longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  * @returns {boolean} Whether the paste was successful
  */
-function pasteGame(longformat) { // game: { startingPosition (key-list), patterns, promotionRanks, moves, gameRules }
+function pasteGame(longformOut) {
 	console.log(translations.copypaste.pasting_game);
 
-	/** longformat properties:
-     * metadata
-     * enpassant: Coords
-     * moveRuleState
-     * fullMove
-     * shortposition
-     * startingPosition
-     * specialRights
-     * moves
-     * gameRules
-     */
-
 	// If this is false, it will have already displayed the error
-	if (!verifyGamerules(longformat.gameRules)) return false; // Failed to paste
+	if (!verifyGamerules(longformOut.gameRules)) return false; // Failed to paste
 
 	// Create a new gamefile from the longformat...
 
@@ -200,58 +150,33 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	const currentGamefile = gameslot.getGamefile();
 	const currentGameMetadata = currentGamefile.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
-		delete longformat.metadata[metadataName];
-		if (currentGameMetadata[metadataName] !== undefined) longformat.metadata[metadataName] = currentGameMetadata[metadataName];
+		delete longformOut.metadata[metadataName];
+		if (currentGameMetadata[metadataName] !== undefined) longformOut.metadata[metadataName] = currentGameMetadata[metadataName];
 	});
 	// Only keep the Date of the current game if the starting position of the pasted game isn't specified,
 	// because loading the variant version relies on that.
-	if (longformat.shortposition || longformat.startingPosition) {
-		longformat.metadata.UTCDate = currentGameMetadata.UTCDate;
-		longformat.metadata.UTCTime = currentGameMetadata.UTCTime;
-	} else if (backcompatible.isDateMetadataInOldFormat(longformat.metadata.Date)) { // Import Date metadata from pasted game, converting it if it is in an old format.
-		const { UTCDate, UTCTime } = backcompatible.convertDateMetdatatoUTCDateUTCTime(longformat.metadata.Date);
-		longformat.metadata.UTCDate = UTCDate;
-		longformat.metadata.UTCTime = UTCTime;
+	if (longformOut.position) {
+		longformOut.metadata.UTCDate = currentGameMetadata.UTCDate;
+		longformOut.metadata.UTCTime = currentGameMetadata.UTCTime;
 	}
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	longformat.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
+	longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 
-	delete longformat.metadata.Clock;
-
-	// Don't transfer the pasted game's Result and Condition metadata. For all we know,
+	// Don't transfer the pasted game's Result and Termination metadata. For all we know,
 	// the game could have ended by time, in which case we want to further analyse what could have happened.
-	delete longformat.metadata.Result;
-	delete longformat.metadata.Condition; // Old format
-	delete longformat.metadata.Termination; // New format
+	delete longformOut.metadata.Result;
+	delete longformOut.metadata.Termination;
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `startingPosition`, `specialRights`, `gameRules`.
 	const variantOptions = {
-		fullMove: longformat.fullMove,
-		moveRuleState: longformat.moveRuleState,
-		startingPosition: longformat.startingPosition,
-		specialRights: longformat.specialRights,
-		gameRules: longformat.gameRules
+		fullMove: longformOut.fullMove,
+		gameRules: longformOut.gameRules,
+		startingPosition: longformOut.startingPosition,
+		state_global: longformOut.state_global,
 	};
 
-	if (longformat.enpassant !== undefined) {
-		// longformat.enpassant is in the form: Coords
-		// need to convert it to: { square: Coords, pawn: Coords }
-		const firstTurn = longformat.gameRules.turnOrder[0];
-		const yParity = firstTurn === players.WHITE ? 1 : firstTurn === players.BLACK ? -1 : (() => { throw new Error(`Invalid first turn player ${firstTurn} when pasting a game! Can't parse enpassant option.`); })();
-		const pawnExpectedSquare = [longformat.enpassant[0], longformat.enpassant[1] - yParity];
-		/**
-		 * First make sure there IS a pawn on the square!
-		 * If not, the ICN was likely tampered.
-		 * Erase the enpassant property! (or just don't transfer it over)
-		 */
-		const pieceOnExpectedSquare = longformat.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
-		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === rawTypes.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
-			// Valid pawn to capture via enpassant is present
-			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
-		} else console.warn("Pasted game doesn't have a pawn on the expected square for enpassant! Enpassant option will be ignored.");
-	}
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
 		// Playing a custom private game! Save the pasted position in browser
@@ -264,9 +189,9 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	const privateMatchWarning = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
 
 	gameloader.pasteGame({
-		metadata: longformat.metadata,
+		metadata: longformOut.metadata,
 		additional: {
-			moves: longformat.moves,
+			moves: longformOut.moves,
 			variantOptions,
 		}
 	});

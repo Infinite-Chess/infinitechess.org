@@ -19,4 +19,5 @@ dev-utils/pieces/themes/pychess | [Pychess](https://github.com/pychess/pychess) 
 dev-utils/sounds/lichess | [Lichess](https://github.com/lichess-org/lila) | [AGPL v3.0](https://www.gnu.org/licenses/#AGPL)
 dev-utils/sounds/fesliyan_studios | [Fesliyan Studios](https://www.fesliyanstudios.com/) | No credit required, but cannot be reposted elsewhere for download
 dev-utils/scripts/gl-matrix.js | Brandon Jones and Colin MacKenzie IV | [MIT](https://opensource.org/license/mit)
-src/client/scripts/game/chess/formatconverter.js | [Andreas Tsevas](https://github.com/tsevasa) and [Naviary](https://github.com/Naviary2) | [Unlicense](https://en.wikipedia.org/wiki/Unlicense)
+src/client/scripts/esm/chess/logic/icn/icnconverter.ts | [Andreas Tsevas](https://github.com/tsevasa) and [Naviary](https://github.com/Naviary2) | [Unlicense](https://en.wikipedia.org/wiki/Unlicense)
+src/client/scripts/esm/chess/logic/icn/icncommentutils.ts | [Andreas Tsevas](https://github.com/tsevasa) and [Naviary](https://github.com/Naviary2) | [Unlicense](https://en.wikipedia.org/wiki/Unlicense)

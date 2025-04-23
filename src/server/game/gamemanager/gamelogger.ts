@@ -11,10 +11,9 @@ import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { VariantLeaderboards } from '../../database/leaderboardsManager.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
+import icnconverter from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-// @ts-ignore
-import formatconverter from '../../../client/scripts/esm/chess/logic/formatconverter.js';
 // @ts-ignore
 import { logEvents } from '../../middleware/logEvents.js';
 // @ts-ignore
@@ -125,7 +124,7 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 	// Get ICN of game
 	let ICN: string | undefined;
 	try {
-		ICN = formatconverter.LongToShort_Format(primedGamefile as FormatConverterLong, { compact_moves: 2, make_new_lines: false, specifyPosition: false });
+		ICN = icnconverter.LongToShort_Format(primedGamefile as FormatConverterLong, { compact_moves: 2, make_new_lines: false, specifyPosition: false });
 	} catch (error: unknown) {
 		const stack = error instanceof Error ? error.stack : String(error);
 		const errText = `Error when logging game and converting to ICN! The game: ${gameutility.getSimplifiedGameString(game)}. The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${stack}`;
@@ -318,7 +317,7 @@ async function migrateGameLogsToDatabase() {
 
 		// line starts with metadata
 		else if (/^\s*\[/.test(line)) {
-			const longformat = formatconverter.ShortToLong_Format(line);
+			const longformat = icnconverter.ShortToLong_Format(line);
 			const game: Partial<Game> = {};
 
 			// set all the needed properties of the Game Object, as required in TypeDefinitions.js
