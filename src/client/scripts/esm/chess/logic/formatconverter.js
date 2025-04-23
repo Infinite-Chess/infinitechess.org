@@ -122,6 +122,17 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			longformat.enpassant = [Number(string.split(",")[0]), Number(string.split(",")[1])];
 			continue;
 		}
+		// if (longformIn.enpassant) { // Coords: [x,y]
+		// 	// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
+		// 	const firstTurn = longformIn.gameRules.turnOrder[0];
+		// 	const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
+		// 	const pawnExpectedSquare = [longformIn.enpassant[0], longformIn.enpassant[1] - yParity] as Coords;
+		// 	const pieceOnExpectedSquare: number | undefined = longformIn.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
+
+		// 	if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
+		// 		variantOptions.state_global.enpassant = { square: longformIn.state_global.enpassant, pawn: pawnExpectedSquare };
+		// 	}
+		// }
 
 		// X move rule
 		if (longformat.moveRuleState === undefined && /^([0-9]+\/[0-9]+)$/.test(string)) {

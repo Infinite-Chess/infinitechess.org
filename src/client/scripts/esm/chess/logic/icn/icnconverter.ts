@@ -33,15 +33,9 @@ interface LongFormatOut extends LongFormatBase {
 
 interface LongFormatBase {
 	metadata: MetaData
-	position?: Map<CoordsKey, number>
-	gameRules: {
-		turnOrder: Player[]
-		winConditions: PlayerGroup<string[]>
-		moveRule?: number
-		promotionRanks?: PlayerGroup<number[]>
-		promotionsAllowed?: PlayerGroup<RawType[]>
-	}
-	fullMove: number,
+	position: Map<CoordsKey, number>
+	gameRules: GameRules
+	fullMove: number
 	state_global: GlobalGameState
 }
 
