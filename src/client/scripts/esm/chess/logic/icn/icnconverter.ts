@@ -213,31 +213,38 @@ const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1
  * @param playerCapture - The name of the player capture group. If null, it won't be captured.
  * @param abbrevCapture - The name of the abbrev capture group. If null, it won't be captured.
  */
-function getPieceAbbrevRegexSource(playerCapture: string | null, abbrevCapture: string| null): string {
-	// Capture group names must not contain special characters used in regex.
-	const captureGroupNameRegex = /^[$_A-Za-z][$\w]*$/;
-	if (playerCapture !== null && !captureGroupNameRegex.test(playerCapture)) throw Error("Invalid playerCapture group name: " + playerCapture);
-	if (abbrevCapture !== null && !captureGroupNameRegex.test(abbrevCapture)) throw Error("Invalid abbrevCapture group name: " + abbrevCapture);
-	
-	const playerGroup = playerCapture !== null ? `<${playerCapture}>` : ":";
-	const abbrevGroup = abbrevCapture !== null ? `<${abbrevCapture}>` : ":";
-	return `(?${playerGroup}0|[1-9]\\d*)?(?${abbrevGroup}[A-Za-z]+)`; // Disallows negatives, or leading 0's
+function getPieceAbbrevRegexSource(capturing: boolean): string {
+	const player = capturing ? '<player>' : ':';
+	const abbrev = capturing ? '<abbrev>' : ':';	
+	return `(?${player}0|[1-9]\\d*)?(?${abbrev}[A-Za-z]+)`; // Disallows negatives, or leading 0's
 }
 
 /**
  * A regex for matching a single piece entry in a shortform position in ICN.
  * For example, 'P1,2+' => Pawn at 1,2 with special right.
- * It captures the piece abbreviation, coords key, and special right into named groups.
+ * It optionally captures the piece abbreviation, coords key, and special right into named groups.
  */
-const pieceEntryRegexSource = `(?<pieceAbbr>${getPieceAbbrevRegexSource(null, null)})(?<coordsKey>${coordsKeyRegexSource})(?<specialRight>\\+)?`; // 'P1,2+' => Pawn at 1,2 with special right
+function getPieceEntryRegexSource(capturing: boolean) {
+	const pieceAbbr = capturing ? '<pieceAbbr>' : ':';
+	const coordsKey = capturing ? '<coordsKey>' : ':';
+	const specialRight = capturing ? '<specialRight>' : ':';
 
-const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource(null, null)}))?`; // '=Q' => Promotion to queen
+	return `(?${pieceAbbr}${getPieceAbbrevRegexSource(false)})(?${coordsKey}${coordsKeyRegexSource})(?${specialRight}\\+)?` // 'P1,2+' => Pawn at 1,2 with special right
+}
+
+function getPromotionRegexSource(capturing: boolean) {
+	const promotionAbbr = capturing ? '<promotionAbbr>' : ':';
+	return `(?:=(?${promotionAbbr}${getPieceAbbrevRegexSource(false)}))?`; // '=Q' => Promotion to queen
+}
+
+const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource(false)}))?`; // '=Q' => Promotion to queen
 
 /**
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
  * The start coords, end coords, and promotion abbrev are all captured into named groups.
  */
-// const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${promotionRegexSource}$`);
+// const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${getPromotionRegexSource(true)}$`);
+
 
 /**
  * A regex for dynamically matching all forms of a move in ICN.
@@ -246,22 +253,28 @@ const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource(n
  * 
  * It captures start coords, end coords, promotion abbrev, and comment into named groups.
  */
-const moveRegexSource = 
-	`(${getPieceAbbrevRegexSource(null, null)})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
-    `(?<startCoordsKey>${coordsKeyRegexSource})` + // Starting coordinates
-    ` ?` + // Optional space
-    `[>x]` + // Separator
-    ` ?` + // Optional space
-    `(?<endCoordsKey>${coordsKeyRegexSource})` + // Ending coordinates
-    ` ?` + // Optional space
-    promotionRegexSource + // Optional promotion ("=" REQUIRED)
-    ` ?` + // Optional space
-    `[+#]?` + // Optional check/checkmate
-    ` ?` + // Optional space
-	`(?:[!?]{1,2})?` + // Optional symbols: !?, ?!, !!
-	` ?` + // Optional space
-    `(?:\\{(?<comment>[^}]+)\\})?` // Optional comment (not-greedy). Comments should NOT contain a closing brace "}".
-;
+function getMoveRegexSource(capturing: boolean): string {
+	const startCoordsKey = capturing ? '<startCoordsKey>' : ':';
+	const endCoordsKey = capturing ? '<endCoordsKey>' : ':';
+	const comment = capturing ? '<comment>' : ':';
+	return (
+		`(${getPieceAbbrevRegexSource(false)})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
+		`(?${startCoordsKey}${coordsKeyRegexSource})` + // Starting coordinates
+		` ?` + // Optional space
+		`[>x]` + // Separator
+		` ?` + // Optional space
+		`(?${endCoordsKey}${coordsKeyRegexSource})` + // Ending coordinates
+		` ?` + // Optional space
+		getPromotionRegexSource(true) + // Optional promotion ("=" REQUIRED)
+		` ?` + // Optional space
+		`[+#]?` + // Optional check/checkmate
+		` ?` + // Optional space
+		`(?:[!?]{1,2})?` + // Optional symbols: !?, ?!, !!
+		` ?` + // Optional space
+		`(?:\\{(?${comment}[^}]+)\\})?` // Optional comment (not-greedy). Comments should NOT contain a closing brace "}".
+	)
+}
+
 
 
 // Helper Functions ---------------------------------------------------------------------------------
@@ -306,7 +319,7 @@ function getAbbrFromType(type: number): string {
  * '3k' => [68] king(red)
  */
 function getTypeFromAbbr(pieceAbbr: string): number {
-	const results = new RegExp(`^${getPieceAbbrevRegexSource('player', 'abbrev')}$`).exec(pieceAbbr);
+	const results = new RegExp(`^${getPieceAbbrevRegexSource(true)}$`).exec(pieceAbbr);
 	if (results === null) throw Error(`Piece abbreviation is in invalid form: (${pieceAbbr})`);
 
 	const playerStr = results.groups!['player'];
@@ -382,6 +395,7 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	 * The ordering goes:
 	 * 
 	 * Turn order
+	 * Enpassant
 	 * Move rule
 	 * Full move counter
 	 * Promotion lines
@@ -537,23 +551,67 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 
 
 
+const raw_piece_code_regex_source = '[a-z]{1,2}';
+
+
+
+const singleMetadataSource = '\\[([a-zA-Z]+) "([^"]+)"\\]'
+const metadataRegexSource = `(?<metadata>(?:${singleMetadataSource})?(?:\\s${singleMetadataSource})*)`
+
+// w 3,4 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
+
+
+
+const turnOrderRegexSource = `(?<turnOrder>${raw_piece_code_regex_source}(?::${raw_piece_code_regex_source})*)`;
+const enpassantRegexSource = `(${coordsKeyRegexSource})`;
+const moveRuleRegexSource = `${singleCoordSource}/${singleCoordSource}`;
+const fullMoveRegexSource = '[1-9]\\d*';
+
+const promotionRanksSource = `${singleCoordSource}?(?:,${singleCoordSource})*` // '8,16,24,32'
+const promotionsAllowedSource = `${raw_piece_code_regex_source}(?:,${raw_piece_code_regex_source})*` // 'q,r,b,n'
+const singlePlayerPromotionSource = `(?:${promotionRanksSource}(?:;${promotionsAllowedSource})?)?`
+const promotionsRegexSource = `\\((?<promotions>${singlePlayerPromotionSource}(?:|${singlePlayerPromotionSource})*)\\)`
+
+const singleWinConSource = '[a-z}{3,}'; // 'royalcapture'
+const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*` // 'royalcapture,koth'
+const winConditionRegexSource = `\\(?${singlePlayerWinConSource}(?:|${singlePlayerWinConSource})*\\)?` // '(checkmate|royalcapture,koth)'
+
+const nonCapturingPieceEntryRegexSource = getPieceEntryRegexSource(false);
+const positionRegexSource = `${nonCapturingPieceEntryRegexSource}(?:|${nonCapturingPieceEntryRegexSource})*`
+
+const moveDelimiter = `\s?[1-9]\\d*\\. ?| ?\\| ?` // " 14. " or " | "
+/** Matches any styled moves list (excluding only the initial "1. " */
+const movesRegexSource = `${getMoveRegexSource(false)}(?:${moveDelimiter}${getMoveRegexSource(false)})*`;
+
+/** Matches an entire ICN, capturing with named groups. */
+const ICNRegex = new RegExp(
+	metadataRegexSource + 
+	`\\s+` + // Whitespace
+	turnOrderRegexSource +
+
+);
 
 
 
 
+/** Converts a string in Infinite Chess Notation to game in JSON format */
+function ShortToLong_Format(icn: string): LongFormatOut {
+	icn = icn.trim(); // Trim whitespace from the start and end of the icn
+
+	const longformOut = {};
 
 
-/**
- * Converts a string in Infinite Chess Notation to gamefile in JSON format
- * @param {string} shortformat - A string in ICN
- * @param {boolean} [reconstruct_optional_move_flags] - Deprecated. If true, method will reconstruct "type", "captured", "enpassant" and "castle" flags of moves. Default: *true*
- * @param {boolean} [trust_check_and_mate_symbols] - Deprecated. If true, method will set "check" and "mate" flags of moves based on + and # symbols. Default: *true*
- * @returns {FormatConverterLong} Equivalent gamefile in JSON format
- */
-function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = true, trust_check_and_mate_symbols = true*/) {
-	const longformat = {};
-	longformat.metadata = {};
-	longformat.gameRules = {};
+	// =================================== Section 1: Metadata ===================================
+
+
+	// =================================== Section 2: Position ===================================
+
+	// =================================== Section 3: Moves ===================================
+
+	// ========================================================================================
+
+
+
 
 	// variables keeping track of whether we are currently parsing metadata
 	let in_metadata_parsing_mode = false;
@@ -564,15 +622,15 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 	let in_gamerules_parsing_mode = false;
 	let gamerules_string = "";
 
-	while (shortformat !== "") {
-		if (/\s/.test(shortformat[0])) {
-			shortformat = shortformat.slice(1);
+	while (icn !== "") {
+		if (/\s/.test(icn[0])) {
+			icn = icn.slice(1);
 			continue;
 		}
-		let index = shortformat.search(/\s/);
-		if (index === -1) index = shortformat.length;
-		let string = shortformat.slice(0,index);
-		shortformat = shortformat.slice(index + 1);
+		let index = icn.search(/\s/);
+		if (index === -1) index = icn.length;
+		let string = icn.slice(0,index);
+		icn = icn.slice(index + 1);
 
 		// metadata key is read: enter metadata parsing mode, if string starts with [ and letter
 		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\[[a-zA-Z]/.test(string)) {
@@ -595,7 +653,7 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			// metadata_value is fully parsed in now: set metadata and exit metadata parsing mode
 			else {
 				metadata_value += string.slice(0, -2);
-				longformat.metadata[metadata_key] = metadata_value;
+				longformOut.metadata[metadata_key] = metadata_value;
 				in_metadata_parsing_mode = false;
 				metadata_value = "";
 			}
@@ -616,18 +674,18 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			// gamerules_string can be parsed into JSON now: parse it in and permanently exit gamerules parsing mode
 			if (jsutil.isJson(gamerules_string)) {
 				const parsedGameRules = JSON.parse(gamerules_string);
-				longformat.gameRules = {...longformat.gameRules, ...parsedGameRules};
+				longformOut.gameRules = {...longformOut.gameRules, ...parsedGameRules};
 				in_gamerules_parsing_mode = false;
 			}
 			continue;
 		}
 
 		// turn order
-		if (!longformat.gameRules.turnOrder && /^[a-z]{1,2}(:[a-z]{1,2})*$/.test(string)) {
+		if (!longformOut.gameRules.turnOrder && /^[a-z]{1,2}(:[a-z]{1,2})*$/.test(string)) {
 			if (string === 'w') string = 'w:b'; // 'w' is short for 'w:b'
 			else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
 			const turnOrderArray = string.split(':'); // ['w','b']
-			longformat.gameRules.turnOrder = [...turnOrderArray.map(playerabbrev => {
+			longformOut.gameRules.turnOrder = [...turnOrderArray.map(playerabbrev => {
 				if (!(playerabbrev in player_codes_inverted)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
 				return Number(player_codes_inverted[playerabbrev]);
 			})];
@@ -635,8 +693,8 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// en passant
-		if (!longformat.enpassant && RegExp(`^(${scientificNumberRegex},${scientificNumberRegex})$`).test(string)) {
-			longformat.enpassant = [Number(string.split(",")[0]), Number(string.split(",")[1])];
+		if (!longformOut.enpassant && RegExp(`^(${scientificNumberRegex},${scientificNumberRegex})$`).test(string)) {
+			longformOut.enpassant = [Number(string.split(",")[0]), Number(string.split(",")[1])];
 			continue;
 		}
 		// if (longformIn.enpassant) { // Coords: [x,y]
@@ -670,18 +728,18 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		// }
 
 
-		
+
 		// X move rule
-		if (longformat.moveRuleState === undefined && /^([0-9]+\/[0-9]+)$/.test(string)) {
+		if (longformOut.moveRuleState === undefined && /^([0-9]+\/[0-9]+)$/.test(string)) {
 			const [state, rule] = string.split("/");
-			longformat.moveRuleState = Number(state);
-			longformat.gameRules.moveRule = Number(rule);
+			longformOut.moveRuleState = Number(state);
+			longformOut.gameRules.moveRule = Number(rule);
 			continue;
 		}
 
 		// full move counter
-		if (!longformat.fullMove && /^([0-9]+)$/.test(string)) {
-			longformat.fullMove = Number(string);
+		if (!longformOut.fullMove && /^([0-9]+)$/.test(string)) {
+			longformOut.fullMove = Number(string);
 			continue;
 		}
 
@@ -708,12 +766,12 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			const whiteRanksArray = whiteRanks.length === 0 ? [] : whiteRanks.split(','); // ['-3','4']
 			const blackRanksArray = blackRanks.length === 0 ? [] : blackRanks.split(',');
 
-			longformat.gameRules.promotionRanks = {
+			longformOut.gameRules.promotionRanks = {
 				[p.WHITE]: whiteRanksArray.map(num => Number(num)), // [-3, 4]
 				[p.BLACK]: blackRanksArray.map(num => Number(num))
 			};
 
-			longformat.gameRules.promotionsAllowed = {
+			longformOut.gameRules.promotionsAllowed = {
 				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
 				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? default_promotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(icnconverter.getTypeFromAbbr(abv))) : [],
 				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? default_promotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(icnconverter.getTypeFromAbbr(abv))) : []
@@ -736,15 +794,15 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 			 * et cetera....
 			 */
 
-			if (!longformat.gameRules.winConditions) {
-				longformat.gameRules.winConditions = {};
+			if (!longformOut.gameRules.winConditions) {
+				longformOut.gameRules.winConditions = {};
 				string = string.replace(/[()]/g,"").split("|");
 				if (string.length === 1) string.push(string[0]);
 				for (let i = 0; i < 2; i++) {
 					const color = (i === 0 ? p.WHITE : p.BLACK);
-					longformat.gameRules.winConditions[color] = [];
+					longformOut.gameRules.winConditions[color] = [];
 					for (const wincon of string[i].split(",")) {
-						longformat.gameRules.winConditions[color].push(wincon);
+						longformOut.gameRules.winConditions[color].push(wincon);
 					}
 				}
 				continue;
@@ -752,29 +810,29 @@ function ShortToLong_Format(shortformat/*, reconstruct_optional_move_flags = tru
 		}
 
 		// position
-		if (!longformat.startingPosition && RegExp(`^([0-9]*[a-zA-z]+${scientificNumberRegex},${scientificNumberRegex}\\+?($|\\|))`).test(string)) {
+		if (!longformOut.startingPosition && RegExp(`^([0-9]*[a-zA-z]+${scientificNumberRegex},${scientificNumberRegex}\\+?($|\\|))`).test(string)) {
 			const { startingPosition, specialRights } = icnconverter.generatePositionFromShortForm(string);
-			longformat.specialRights = specialRights;
-			longformat.startingPosition = startingPosition;
-			longformat.shortposition = string;
+			longformOut.specialRights = specialRights;
+			longformOut.startingPosition = startingPosition;
+			longformOut.shortposition = string;
 			continue;
 		}
 
 		//moves - conversion stops here
 		if (RegExp(`^(([0-9]+\\.$)|([a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+))`).test(string)) {
-			const shortmoves = (string + "  " + shortformat).trimEnd();
+			const shortmoves = (string + "  " + icn).trimEnd();
 			const parsedMoves = icnconverter.parseShortFormMoves(shortmoves); // { moveDraft, comment }[]
-			if (parsedMoves.length > 0) longformat.moves = parsedMoves.map(parsedMove => icnconverter.getCompactMoveFromDraft(parsedMove.moveDraft));
-			if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
-			longformat.gameRules.turnOrder = longformat.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
-			longformat.fullMove = longformat.fullMove ?? 1;
-			return longformat;
+			if (parsedMoves.length > 0) longformOut.moves = parsedMoves.map(parsedMove => icnconverter.getCompactMoveFromDraft(parsedMove.moveDraft));
+			if (!longformOut.gameRules.winConditions) longformOut.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
+			longformOut.gameRules.turnOrder = longformOut.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
+			longformOut.fullMove = longformOut.fullMove ?? 1;
+			return longformOut;
 		}
 	}
-	if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
-	longformat.gameRules.turnOrder = longformat.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
-	longformat.fullMove = longformat.fullMove ?? 1;
-	return longformat;
+	if (!longformOut.gameRules.winConditions) longformOut.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
+	longformOut.gameRules.turnOrder = longformOut.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
+	longformOut.fullMove = longformOut.fullMove ?? 1;
+	return longformOut;
 }
 
 
@@ -888,7 +946,7 @@ function getShortFormMoveFromMove(move: _Move_In, options: { compact: boolean, s
 
 /** Parses a shortform move in any dynamic format to a readable json. */
 function parseMoveFromShortFormMove(shortFormMove: string): _Move_Out {
-	const moveRegex = new RegExp(`^${moveRegexSource}$`);
+	const moveRegex = new RegExp(`^${getMoveRegexSource(true)}$`);
 	const match = moveRegex.exec(shortFormMove);
 	if (match === null) throw Error("Invalid shortform move: " + shortFormMove);
 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
@@ -1025,7 +1083,7 @@ function parseShortFormMoves(shortformMoves: string): _Move_Out[] {
 	// console.log("Parsing shortform moves:", shortformMoves);
 
 	const moves: _Move_Out[] = [];
-	const moveRegex = new RegExp(moveRegexSource, "g");
+	const moveRegex = new RegExp(getMoveRegexSource(true), "g");
 
 	// Since the moveRegex has the global flag, exec() will return the next match each time.
 	// NO STRING SPLITTING REQUIRED
@@ -1123,7 +1181,7 @@ function generatePositionFromShortForm(shortposition: string): { startingPositio
 	const startingPosition = new Map<CoordsKey, number>();
 	const specialRights = new Set<CoordsKey>();
 
-	const pieceRegex = new RegExp(pieceEntryRegexSource, "g"); // named groups are: pieceAbbr, coordsKey, specialRight
+	const pieceRegex = new RegExp(getPieceEntryRegexSource(true), "g"); // named groups are: pieceAbbr, coordsKey, specialRight
 
 	// Since the moveRegex has the global flag, exec() will return the next match each time.
 	// NO STRING SPLITTING REQUIRED
