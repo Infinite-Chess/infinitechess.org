@@ -86,7 +86,7 @@ function formatCommandSequence(cmdObj: CommandObject): string {
  */
 function extractCommandsFromComment(commentString: string): ExtractedCommentData {
 	const commands: CommandObject[] = [];
-	const commandRegex = /\[%(\w+)\s+([^\]]+)\]/g; // The 'g' flag makes it find all occurrences globally.
+	const commandRegex = /\[%(\w+) ([^\]]+)\]/g; // The 'g' flag makes it find all occurrences globally.
 
 	// First, extract all commands and store them.
 	// We use matchAll for a more robust way to get all matches and capture groups.
