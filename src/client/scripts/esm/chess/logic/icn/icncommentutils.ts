@@ -11,9 +11,9 @@
 
 
 /** All valid command sequences. */
-const commands = ['clk'] as const;
+const validCommands = ['clk'] as const;
 
-type Command = typeof commands[number];
+type Command = typeof validCommands[number];
 
 /**
  * Represents a generic command ready to be embedded,
@@ -38,7 +38,7 @@ interface ExtractedCommentData {
 	 * A record where keys are the command names (e.g., "clk", "timestamp")
 	 * and values are the corresponding argument strings associated with those commands.
 	 */
-	commands: Record<Command, string>;
+	commands: CommandObject[];
 }
 
 
@@ -88,7 +88,7 @@ function formatCommandSequence(cmdObj: CommandObject): string {
  * @returns An object containing the extracted commands and the cleaned comment text.
  */
 function extractCommandsFromComment(commentString: string): ExtractedCommentData {
-	const commands: Record<string, string> = {};
+	const commands: CommandObject[] = [];
 	const commandRegex = /\[%(\w+) ([^\]]+)\]/g; // The 'g' flag makes it find all occurrences globally.
 
 	// First, extract all commands and store them.
@@ -97,7 +97,9 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 	for (const match of matches) {
 		const commandName = match[1]; // e.g., "clk"
 		const commandValue = match[2]; // e.g., "0:09:56.7"
-		commands[commandName] = commandValue;
+		// Validate the command name
+		if (!validCommands.includes(commandName)) throw Error(`Invalid command sequence found in comment: [%${commandName} ...]`);
+		commands.push({ command: commandName, value: commandValue });
 	}
 
 	// Second, remove all command sequences from the original string to get the raw comment.
@@ -105,13 +107,12 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 	let rawComment = commentString.replace(commandRegex, '');
 
 	// Third, clean up the resulting comment string:
-	// - Trim leading/trailing whitespace.
-	// - Replace multiple consecutive spaces (which might occur where commands were removed) with a single space.
+	// Replace multiple consecutive spaces (which might occur where commands were removed) with a single space.
 	rawComment = rawComment.trim().replace(/\s{2,}/g, ' ');
 
 	return {
 		comment: rawComment,
-		commands: commands,
+		commands,
 	};
 }
 
@@ -201,5 +202,15 @@ function getMillisFromClkTimeValue(clkValueString: string): number {
 
 
 export default {
-    getClkEmbededCommandSequence,
+	combineCommentAndCommands,
+	extractCommandsFromComment,
+
+	createClkCommandObject,
+	getMillisFromClkTimeValue,
+};
+
+export type {
+	// Command,
+	// CommandObject,
+	ExtractedCommentData,
 }
