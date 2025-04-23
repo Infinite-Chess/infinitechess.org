@@ -23,7 +23,7 @@ import variant from '../variants/variant.js';
  * All options are a snapshot of the starting position, before any moves are forwarded.
  * @param {gamefile} gamefile - The gamefile to initialize
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
+ * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
  */
 function setupVariantGamerules(gamefile, metadata, options) {
 	// Ignores the "Variant" metadata, and just uses the specified gameRules
@@ -54,31 +54,29 @@ function initPieceMovesets(gamefile, metadata, slideLimit) {
  * All options are a snapshot of the starting position, before any moves are forwarded.
  * @param {gamefile} gamefile - The gamefile to initialize
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
+ * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
  * @returns {StartSnapshot} The starting snapshot of the game.
  */
 function genStartSnapshot(gamefile, metadata, options) {
 	let enpassant;
 	let moveRuleState;
-	let positionString;
 	let position;
 	let specialRights;
 	
 	// Even IF options are provided. If the pasted game doesn't contain position information
 	// then we still have to grab it from the Variant metadata!
 	if (!options?.startingPosition) {
-		({ positionString, position, specialRights } = variant.getStartingPositionOfVariant(metadata)); 
+		({ position, specialRights } = variant.getStartingPositionOfVariant(metadata)); 
 	} else {
-		positionString = options.positionString;
 		position = options.startingPosition;
-		specialRights = options.global_state.specialRights;
+		specialRights = options.state_global.specialRights;
 	}
 
 	if (options) {
-		enpassant = options.global_state.enpassant;
+		enpassant = options.state_global.enpassant;
 		if (options.gameRules.moveRule) {
-			if (options.global_state.moveRuleState === undefined) throw Error("moveRuleState is required with gameRule moveRule");
-			moveRuleState = options.global_state.moveRuleState;
+			if (options.state_global.moveRuleState === undefined) throw Error("moveRuleState is required with gameRule moveRule");
+			moveRuleState = options.state_global.moveRuleState;
 		}
 	} else {
 		// Every variant has the exact same initial moveRuleState value.
@@ -87,7 +85,6 @@ function genStartSnapshot(gamefile, metadata, options) {
 	
 	return {
 		position,
-		positionString,
 		specialRights,
 		enpassant,
 		moveRuleState,

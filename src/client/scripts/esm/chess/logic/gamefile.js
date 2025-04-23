@@ -35,12 +35,12 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('./movesets.js').PieceMoveset} PieceMoveset */
 /** @typedef {import('./clock.js').ClockData} ClockData */
 /** @typedef {import('./state.js').GameState} GameState */
+/** @typedef {import('../../game/chess/gameslot.js').VariantOptions} GameState */
 
 /**
- * Information about the beginning of the game (position, positionString, specialRights, turn)
+ * Information about the beginning of the game (position, specialRights, turn)
  * @typedef {Object} StartSnapshot
  * @property {Map<CoordsKey, number>} position - In key format 'x,y': type
- * @property {string} positionString
  * @property {Set<CoordsKey>} specialRights
  * @property {EnPassant | undefined} enpassant - What square coords, if legal, enpassant capture is possible in the starting position of the game.
  * @property {number | undefined} moveRuleState - The state of the move-rule at the start of the game (how many plies have passed since a capture or pawn push)
@@ -58,7 +58,7 @@ import legalmoves from './legalmoves.js';
  * @param {MetaData} metadata - An object containing the property `Variant`, and optionally `UTCDate` and `UTCTime`, which can be used to extract the version of the variant. Without the date, the latest version will be used.
  * @param {Object} [options] - Options for constructing the gamefile.
  * @param {string[]} [options.moves=[]] - Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`.
- * @param {Object} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
+ * @param {VariantOptions} [options.variantOptions] - If a custom position is needed, for instance, when pasting a game, then these options should be included.
  * @param {Object} [options.gameConclusion] - The conclusion of the game, if loading an online game that has already ended.
  * @param {ClockValues} [options.clockValues] - Any already existing clock values for the gamefile
  * @param {true} [options.editor] - Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that!

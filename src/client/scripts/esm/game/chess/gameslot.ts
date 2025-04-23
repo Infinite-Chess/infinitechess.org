@@ -103,8 +103,6 @@ interface VariantOptions {
 	 */
 	fullMove: number,
 	gameRules: GameRules,
-	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	positionString: string,
 	/**
 	 * The starting position object, containing the pieces organized by key.
 	 * The key of the object is the coordinates of the piece as a string,
@@ -112,7 +110,7 @@ interface VariantOptions {
 	 */
 	startingPosition: Map<CoordsKey, number>
 	/** The 3 global game states */
-	global_state: {
+	state_global: {
 		/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
 		specialRights: Set<CoordsKey>,
 		/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */

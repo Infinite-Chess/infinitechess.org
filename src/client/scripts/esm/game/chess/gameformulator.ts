@@ -32,12 +32,11 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 	const variantOptions: VariantOptions = {
 		fullMove: compressedGame.fullMove,
 		gameRules: compressedGame.gameRules,
-		positionString: compressedGame.positionString,
 		startingPosition: compressedGame.startingPosition,
-		global_state: { specialRights: compressedGame.specialRights },
+		state_global: { specialRights: compressedGame.specialRights },
 	};
 	// Optional properties
-	if (compressedGame.moveRuleState) variantOptions.global_state.moveRuleState = compressedGame.moveRuleState;
+	if (compressedGame.moveRuleState) variantOptions.state_global.moveRuleState = compressedGame.moveRuleState;
 	if (compressedGame.enpassant) { // Coords: [x,y]
 		// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
 		const firstTurn = compressedGame.gameRules.turnOrder[0];
@@ -46,7 +45,7 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 		const pieceOnExpectedSquare: number | undefined = compressedGame.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
 
 		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
-			variantOptions.global_state.enpassant = { square: compressedGame.enpassant, pawn: pawnExpectedSquare };
+			variantOptions.state_global.enpassant = { square: compressedGame.enpassant, pawn: pawnExpectedSquare };
 		}
 	}
 
@@ -80,10 +79,13 @@ function ICNToGamefile(ICN: string): gamefile {
 
 	const variantOptions: VariantOptions = {
 		fullMove: longformat.fullMove,
-		moveRuleState: longformat.moveRuleState,
-		positionString: longformat.shortposition!,
 		startingPosition: longformat.startingPosition,
-		global_state: { specialRights: longformat.specialRights },
+		state_global: {
+			specialRights: longformat.specialRights,
+			// ACTUALLY, WE SHOULD NEVER expect an enpassant property in the starting position of ANY game log! No variant starts with enpassant possible.
+			// enpassant: longformat.enpassant,
+			moveRuleState: longformat.moveRuleState,
+		},
 		gameRules: longformat.gameRules
 	};
 

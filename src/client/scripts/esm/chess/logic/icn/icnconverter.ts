@@ -42,7 +42,7 @@ interface LongFormatBase {
 		promotionsAllowed?: PlayerGroup<RawType[]>
 	}
 	fullMove: number,
-	global_state: GlobalGameState
+	state_global: GlobalGameState
 }
 
 /** The named capture groups of a shortform move. */
@@ -73,7 +73,6 @@ interface _Move_In extends _Move_Out {
 }
 
 /** Information pullable from moves in shortform notation. */
-/** The move in most compact notation: `8,7>8,8=Q` */
 interface _Move_Out extends _Move_Compact {
 	compact: string,
 	/**
@@ -340,7 +339,7 @@ function getTypeFromAbbr(pieceAbbr: string): number {
  * @param [longformat.position] The position of the game, where the values is the integer piece type at that coordsKey. Required if options.skipPosition = false
  * @param longformat.gameRules - The required gameRules to create the ICN
  * @param longformat.fullMove - The fullMove property of the gamefile (usually 1)
- * @param longformat.global_state - The game's global state. This contains the following properties which change over the duration of a game: `specialRights`, `enpassant`, `moveRuleState`.
+ * @param longformat.state_global - The game's global state. This contains the following properties which change over the duration of a game: `specialRights`, `enpassant`, `moveRuleState`.
  * @param [longformat.moves] - If provided, they will be placed into the ICN
  * @param options - Various styling options for the resulting ICN, mostly affecting the moves section. Descriptions are below.
  * * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
@@ -411,16 +410,16 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 
 
 	// En passant
-	if (longformat.global_state.enpassant) positionSegments.push(coordutil.getKeyFromCoords(longformat.global_state.enpassant.square)); // '1,3'
+	if (longformat.state_global.enpassant) positionSegments.push(coordutil.getKeyFromCoords(longformat.state_global.enpassant.square)); // '1,3'
 
 
 	// 50 Move Rule
 	if (longformat.gameRules.moveRule !== undefined || longformat) {
 		// Make sure both moveRule and moveRuleState are present
-		if (longformat.global_state.moveRuleState === undefined) throw Error("moveRuleState must be present when convering a game with moveRule to shortform!");
+		if (longformat.state_global.moveRuleState === undefined) throw Error("moveRuleState must be present when convering a game with moveRule to shortform!");
 		if (longformat.gameRules.moveRule === undefined) throw Error("moveRule must be present when convering a game with moveRuleState to shortform!");
 
-		positionSegments.push(`${longformat.global_state.moveRuleState}/${longformat.gameRules.moveRule}`); // '0/100'
+		positionSegments.push(`${longformat.state_global.moveRuleState}/${longformat.gameRules.moveRule}`); // '0/100'
 	}
 
 
@@ -498,8 +497,8 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	// Position - P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
 	if (!options.skipPosition) {
 		if (longformat.position === undefined) throw Error("longformat.position must be specified when skipPosition = false");
-		if (longformat.global_state.specialRights === undefined) throw Error("longformat.specialRights must be specified when skipPosition = false");
-		positionSegments.push(getShortFormPosition(longformat.position, longformat.global_state.specialRights));
+		if (longformat.state_global.specialRights === undefined) throw Error("longformat.specialRights must be specified when skipPosition = false");
+		positionSegments.push(getShortFormPosition(longformat.position, longformat.state_global.specialRights));
 	} else if (!longformat.metadata.Variant || !longformat.metadata.UTCDate || !longformat.metadata.UTCTime) throw Error("longformat.metadata's Variant, UTCDate, and UTCTime must be specified when skipPosition = true");
 
 
@@ -935,3 +934,8 @@ export default {
 	generateSpecialRights,
 	generatePositionFromShortForm,
 };
+
+export type {
+	LongFormatIn,
+	LongFormatOut
+}

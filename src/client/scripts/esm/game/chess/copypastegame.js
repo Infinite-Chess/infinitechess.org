@@ -226,11 +226,10 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	delete longformat.metadata.Termination; // New format
 
 	// The variant options passed into the variant loader needs to contain the following properties:
-	// `fullMove`, `enpassant`, `moveRuleState`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
+	// `fullMove`, `enpassant`, `moveRuleState`, `startingPosition`, `specialRights`, `gameRules`.
 	const variantOptions = {
 		fullMove: longformat.fullMove,
 		moveRuleState: longformat.moveRuleState,
-		positionString: longformat.shortposition,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
 		gameRules: longformat.gameRules

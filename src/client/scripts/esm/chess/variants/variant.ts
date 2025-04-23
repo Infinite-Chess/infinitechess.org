@@ -350,7 +350,7 @@ function isVariantValid(variantName: string) {
  * Given the Variant and Date, calculates the startingPosition,
  * positionString, and specialRights properties for the startSnapshot of the game.
  * @param options - An object containing the properties `Variant`, and if desired, `Date`.
- * @returns An object containing 3 properties: `position`, `positionString`, and `specialRights`.
+ * @returns An object containing 2 properties: `position`, and `specialRights`.
  */
 function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: string, UTCDate: string, UTCTime: string }) {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
@@ -370,7 +370,8 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 			positionString = getApplicableTimestampEntry(variantEntry.positionString, { UTCDate, UTCTime });
 		}
 
-		return getStartSnapshotPosition({ positionString });
+		const { startingPosition, specialRights } = icnconverter.generatePositionFromShortForm(positionString);
+		return { position: startingPosition, specialRights };
 
 	} else if (variantEntry.generator) {
 
@@ -379,40 +380,10 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 
 		// Generate the starting position
 		startingPosition = generator.algorithm();
-		return getStartSnapshotPosition({ startingPosition, ...generator.rules }); // { `position`, `positionString`, `specialRights` }
+		const specialRights = icnconverter.generateSpecialRights(startingPosition, generator.rules.pawnDoublePush, generator.rules.castleWith);
+		return { position: startingPosition, specialRights };
 
-	} else throw new Error(`Variant entry "${Variant}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`);
-}
-
-/**
- * Given the provided information, returns the `positionString`, `position`,
- * and `specialRights` properties for the gamefile's startSnapshot.
- * @param options - An object that may contain various properties, `positionString`,
- * `startingPosition`, `specialRights`, `pawnDoublePush`, `castleWith`. You can choose to
- * specify the positionString, startingPosition & specialRights, or startingPosition
- * & pawnDoublePush & castleWith properties.
- */
-function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
-	positionString?: string,
-	startingPosition?: Map<CoordsKey, number>,
-	specialRights?: Set<CoordsKey>
-	pawnDoublePush?: boolean,
-	castleWith?: RawType
-}) {
-	if (positionString) {
-		if (!startingPosition) {
-			const positionAndRights = icnconverter.generatePositionFromShortForm(positionString);
-			startingPosition = positionAndRights.startingPosition;
-			specialRights = positionAndRights.specialRights;
-		}
-	} else if (startingPosition && specialRights) {
-		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
-	} else if (startingPosition) {
-		specialRights = icnconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
-		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
-	} else throw new Error("Not enough information to calculate the positionString, position, and specialRights of variant.");
-
-	return { positionString, position: startingPosition, specialRights };
+	} else throw Error(`Variant entry "${Variant}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`);
 }
 
 /**
