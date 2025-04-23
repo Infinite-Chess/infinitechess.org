@@ -522,12 +522,12 @@ function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): strin
 
 
 /** Throws an error if any move is null, casting the gamefile's moves to a Move[] in the process. */
-function ensureMovesNotNull(moves: (Move | NullMove)[]): Move[] {
-	return moves.map((move: Move | NullMove) => {
-		if (!move.isNull) return move;
-		else throw Error("Should not be null moves in game!");
-	});
-}
+// function ensureMovesNotNull(moves: (Move | NullMove)[]): Move[] {
+// 	return moves.map((move: Move | NullMove) => {
+// 		if (!move.isNull) return move;
+// 		else throw Error("Should not be null moves in game!");
+// 	});
+// }
 
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -557,5 +557,5 @@ export default {
 	rewindMove,
 	simulateMoveWrapper,
 	getSimulatedConclusion,
-	ensureMovesNotNull,
+	// ensureMovesNotNull,
 };
