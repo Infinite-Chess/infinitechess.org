@@ -9,12 +9,13 @@
 
 import jsutil from "../../../util/jsutil.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
-import { MetaData } from "../../util/metadata.js";
 import { rawTypes as r, ext as e, players as p, RawType, Player, PlayerGroup } from "../../util/typeutil.js";
 import typeutil from "../../util/typeutil.js";
+import commandsequence from "./commandsequence.js";
 
 
-import type { MoveDraft, promotion } from "../movepiece.js";
+import type { MetaData } from "../../util/metadata.js";
+import type { GlobalGameState } from "../state.js";
 
 
 // Type Definitions -------------------------------------------------------------------
@@ -33,19 +34,14 @@ type NamedCaptureMoveGroups = {
 	/** The piece abbreviation of the promoted piece, if present. */
 	promotionAbbr?: string,
 	comment?: Comment
-	moves?: Move[],
 };
 
-interface Move {
-	startCoords: Coords,
-	endCoords: Coords,
-	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
-	promotion?: promotion,
+interface _Move extends _MoveDraft {
 	/** The type of piece moved */
-	type: number,
+	type?: number,
 	/** The move in most compact notation: `8,7>8,8=Q` */
 	compact: string,
-	flags: {
+	flags?: {
 		/** Whether the move delivered check. */
 		check: boolean,
 		/** Whether the move delivered mate (or the killing move). */
@@ -57,7 +53,7 @@ interface Move {
 	 * Any comment made on the move, specified in the ICN.
 	 * These will go back into the ICN when copying the game.
 	 */
-	comment?: string,
+	comment?: Comment,
 	/**
 	 * How much time the player had left after they made their move, in millis.
 	 * 
@@ -67,10 +63,18 @@ interface Move {
 	clk?: number,
 }
 
+/** Information pullable from the most compact shortform move "1,7>2,8=Q" */
+interface _MoveDraft {
+	startCoords: Coords,
+	endCoords: Coords,
+	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
+	promotion?: number,
+}
+
 /** All information parsed from a move in any dynamic shortform notation. */
 type ParsedMove = {
-	/** Start and end coords, plus the ONLY special move isn't given from the end coords. */
-	moveDraft: { startCoords: Coords, endCoords: Coords, promotion?: number },
+	/** Start and end coords, plus the ONLY special move that isn't given from the end coords. */
+	moveDraft: _MoveDraft,
 	comment?: Comment
 };
 
@@ -315,32 +319,26 @@ function getTypeFromAbbr(pieceAbbr: string): number {
 // Main Functions Converting Games To and From ICN -----------------------------------------------------------------
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
- * Converts a gamefile in JSON format to Infinite Chess Notation.
- * @param {FormatConverterLong} longformat - The gamefile in JSON format
- * @param {Object} [options] - Configuration options for the output format
- * @param {number} [options.compact_moves=0] - Optional. Number between 0-2 for how compact you want the resulting ICN (0 = least compact, pretty. 1: moderately compact. 2: most compact, no 'x','+', or '#').
- * @param {boolean} [options.make_new_lines=true] - Optional. Boolean specifying whether linebreaks should be included in the output string.
- * @param {boolean} [options.specifyPosition=true] - Optional. If false, the ICN won't contain the starting position, that can be deduced from the Variant and Date metadata. This is useful for compressing server logs.
- * @returns The ICN of the gamefile as a string
+ * Converts a game in JSON format to Infinite Chess Notation.
+ * @param longformat - The game in JSON format. Required properties below.
+ * @param longformat.metadata - The metadata of the game. Variant, UTCDate, and UTCTime are required if options.skipPosition = true
+ * @param [longformat.position] The position of the game, where the values is the integer piece type at that coordsKey. Required if options.skipPosition = false
+ * @param longformat.gameRules - The required gameRules to create the ICN
+ * @param longformat.fullMove - The fullMove property of the gamefile (usually 1)
+ * @param longformat.global_state - The game's global state. This contains the following properties which change over the duration of a game: `specialRights`, `enpassant`, `moveRuleState`.
+ * @param [longformat.moves] - If provided, they will be placed into the ICN
+ * @param options - Various styling options for the resulting ICN, mostly affecting the moves section. Descriptions are below.
+ * * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
+ *     IF FALSE THEN THE MOVES must have their `type` and `flags` properties!!!
+ * * spaces => Spaces between segments of a move. => 'P1,7 x 2,8 =Q +'
+ * * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
+ * * move_numbers => Include move numbers, prettifying the notation.
+ * * make_new_lines => Include line breaks in the ICN, between metadata, and between move numbers.
  */
 function LongToShort_Format(longformat: {
 	metadata: MetaData
+	position?: Map<CoordsKey, number>
 	gameRules: {
 		turnOrder: Player[]
 		winConditions: PlayerGroup<string[]>
@@ -349,12 +347,9 @@ function LongToShort_Format(longformat: {
 		promotionsAllowed?: PlayerGroup<RawType[]>
 	}
 	fullMove: number,
-	global_state: {
-		enpassant?: Coords
-		moveRuleState?: number
-	}
-	moves?: Move[]
-}, options: { compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean }): string {
+	global_state: GlobalGameState
+	moves?: _Move[]
+}, options: { skipPosition?: true, compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean}): string {
 
 	/** Each of these will be joined at the end. */
 	const segments: string[] = [];
@@ -367,7 +362,6 @@ function LongToShort_Format(longformat: {
 
 	const metadataSegments: string[] = [];
 
-
 	// Appended in the correct order given by metadata_key_ordering
 	const metadataCopy = jsutil.deepCopyObject(longformat.metadata);
 	for (const metadata_name of metadata_ordering) {
@@ -376,7 +370,12 @@ function LongToShort_Format(longformat: {
 		delete metadataCopy[metadata_name];
 	}
 	// Are there any remaining we missed?
-	if (Object.keys(metadataCopy).length > 0) throw Error("metadata_ordering is missing metadata keys: " + Object.keys(metadataCopy).join(", "));
+	if (Object.keys(metadataCopy).length > 0) throw Error(`metadata_ordering is missing metadata keys (${Object.keys(metadataCopy).join(", ")})`);
+
+	if (metadataSegments.length > 0) {
+		const metadataDelimiter = options.make_new_lines ? '\n' : ' ';
+		segments.push(metadataSegments.join(metadataDelimiter));
+	}
 
 
 	// =================================== Section 2: Position ===================================
@@ -445,15 +444,17 @@ function LongToShort_Format(longformat: {
 
 			const ranks = promotionRanksCopy[player] ?? [];
 			if (ranks.length === 0) {
+				// They have no promotions, but still add them. For example it may look like '(8|)'
 				playerSegments.push('');
 				continue;
 			}
 			const ranksString = ranks.join(',');
+			playerSegment.push(ranksString);
 
 			const promotions: RawType[] = promotionsAllowedCopy[player] ?? [];
 			if (promotions.length === 0) throw Error(`Player was given promotion ranks, but no promotions allowed! (${player}: ${ranksString})`);
 			if (!isPromotionListDefaultPromotions(promotions)) {
-				const promotionsAbbrevs = promotions.map(type => piece_codes_raw[type]).join(','); // 'n,r,b,q'
+				const promotionsAbbrevs = promotions.map(type => piece_codes_raw[type].toUpperCase()).join(','); // 'N,R,B,Q'
 				playerSegment.push(promotionsAbbrevs);
 			}
 
@@ -486,73 +487,47 @@ function LongToShort_Format(longformat: {
 	}
 
 
-
-
-	
-
-
-	// Extra gamerules not used will be stringified into the ICN
+	// Extra gamerules - Will be stringified into the ICN
 	const extraGameRules = {};
-	let added_extras = false;
 	for (const key in longformat.gameRules) {
 		if (excludedGameRules.has(key)) continue;
 		extraGameRules[key] = longformat.gameRules[key];
-		added_extras = true;
 	}
-	if (added_extras) segments += `${JSON.stringify(extraGameRules)} `;
-
-	// position
-	if (specifyPosition) {
-		if (isStartingPositionInLongFormat(longformat.startingPosition)) {
-			segments += icnconverter.getShortFormPosition(longformat.startingPosition, longformat.specialRights);
-		} else { // Already in short format!
-			segments += longformat.startingPosition;
-		}
-		if (longformat.moves) segments += `${segmentDelimiter}${segmentDelimiter}`; // Add more spacing for the next part
-	}
+	if (Object.keys(extraGameRules).length > 0) positionSegments.push(JSON.stringify(extraGameRules));
 
 
+	// Position - P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
+	if (!options.skipPosition) {
+		if (longformat.position === undefined) throw Error("longformat.position must be specified when skipPosition = false");
+		if (longformat.global_state.specialRights === undefined) throw Error("longformat.specialRights must be specified when skipPosition = false");
+		positionSegments.push(getShortFormPosition(longformat.position, longformat.global_state.specialRights));
+	} else if (!longformat.metadata.Variant || !longformat.metadata.UTCDate || !longformat.metadata.UTCTime) throw Error("longformat.metadata's Variant, UTCDate, and UTCTime must be specified when skipPosition = true");
 
-
-
-	
 
 	// =================================== Section 3: Moves ===================================
 
 
-
-
-
-
-	// moves
 	if (longformat.moves) {
-		// If the moves are provided like: ['1,2>3,4','5,6>7,8N'], then quick return!
-		// THE SERVER SIDE sends them in this format!
-		if (typeof longformat.moves[0] === 'string') segments += longformat.moves.join('|');
-		else { // Add the moves the usual way, parsing the gamefile's Move[]
-			const options = {
-				compact: false,
-				spaces: false,
-				comments: false,
-				move_numbers: false,
-				// Required if adding move numbers:
-				// make_new_lines: true,
-				// turnOrder: longformat.gameRules.turnOrder,
-				// fullmove: longformat.fullMove,
-			};
-			segments += icnconverter.getShortFormMovesFromMoves(longformat.moves, options);
-		}
+		const move_options = {
+			compact: false,
+			spaces: false,
+			comments: false,
+			move_numbers: options.move_numbers,
+			// Required if move_numbers = true:
+			make_new_lines: options.make_new_lines,
+			turnOrder: longformat.gameRules.turnOrder,
+			fullmove: longformat.fullMove,
+		};
+		segments.push(getShortFormMovesFromMoves(longformat.moves, move_options));
 	}
-
 
 
 	// ========================================================================================
 
-	// Combine them all, with an extra line if make_new_lines is true
+	// Combine them all, with an extra line break if make_new_lines = true
 
-
-	const segmentDelimiter = options.make_new_lines ? "\n\n" : " ";
-	return segments.join(segmentDelimiter); // 'w 0/100 1 (8,17|1,10) (checkmate|checkmate,allpiecescaptured) {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+'
+	const sectionDelimiter = options.make_new_lines ? "\n\n" : " ";
+	return segments.join(sectionDelimiter); // 'w 0/100 1 (8,17|1,10) (checkmate|checkmate,allpiecescaptured) {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+'
 }
 
 
@@ -595,12 +570,17 @@ function getCompactMoveFromDraft(moveDraft: MoveDraft): string {
 /**
  * Converts a move into shortform notation, with various styling options available.
  * 
- * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
+ * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'.
+ *     IF FALSE THEN THE MOVES must have their `type` and `flags` properties!!!
  * spaces => Spaces between segments of a move => 'P1,7 x 2,8 =Q +'
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7] Capture, promotion, and a check!}'
  */
-function getShortFormMoveFromMove(move: Move, options: { compact: boolean, spaces: boolean, comments: boolean }): string {
+function getShortFormMoveFromMove(move: _Move, options: { compact: boolean, spaces: boolean, comments: boolean }): string {
 	if (options.compact && !options.spaces && !options.comments) console.warn("getCompactMoveFromDraft() is more efficient to get the most-compact form of a move.");
+	if (!options.compact) {
+		if (move.type === undefined) throw Error(`Move.type must be present when compact = false! (${move.compact})`);
+		if (move.flags === undefined) throw Error(`Move.flags must be present when compact = false! (${move.compact})`);
+	}
 
 	// TESTING. Randomly give the move either a comment or a clk value.
 	// if (Math.random() < 0.3) move.comment = "Comment example";
@@ -613,13 +593,13 @@ function getShortFormMoveFromMove(move: Move, options: { compact: boolean, space
 	const startCoordsKey = coordutil.getKeyFromCoords(move.startCoords);
 	if (options.compact) segments.push(startCoordsKey); // '1,2'
 	else {
-		const pieceAbbr = getAbbrFromType(move.type);
+		const pieceAbbr = getAbbrFromType(move.type!);
 		segments.push(pieceAbbr + startCoordsKey); // 'P1,2'
 	}
 
 	// 2nd segment: If it was a capture, use 'x' instead of '>'
 	if (options.compact) segments.push(">");
-	else segments.push(move.flags.capture ? "x" : ">");
+	else segments.push(move.flags!.capture ? "x" : ">");
 
 	// 3rd segment: end coords
 	segments.push(coordutil.getKeyFromCoords(move.endCoords));
@@ -631,7 +611,7 @@ function getShortFormMoveFromMove(move: Move, options: { compact: boolean, space
 	}
 
 	// 5th segment: Append the check/mate flags '#' or '+'
-	if (!options.compact && (move.flags.mate || move.flags.check)) segments.push(move.flags.mate ? "#" : "+");
+	if (!options.compact && (move.flags!.mate || move.flags!.check)) segments.push(move.flags!.mate ? "#" : "+");
 
 	// 6th segment: Comment, if present, with the clk embedded command sequence
 	// For example: {[%clk 0:09:56.7] White captures en passant}
@@ -643,7 +623,7 @@ function getShortFormMoveFromMove(move: Move, options: { compact: boolean, space
 		 */
 		const parts: string[] = [];
 		// Include the clk embeded command sequence, if the player's clock snapshot is present on the move.
-		if (move.clk !== undefined) parts.push(getClkEmbededCommandSequence(move.clk)); // '[%clk 0:09:56.7]'
+		if (move.clk !== undefined) parts.push(commandsequence.getClkEmbededCommandSequence(move.clk)); // '[%clk 0:09:56.7]'
 		// Append the comment, if present
 		if (move.comment) parts.push(move.comment); // 'White captures en passant'
 
@@ -703,43 +683,6 @@ function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMo
 	return parsedMove;
 }
 
-/**
- * Takes a time in milliseconds a player has remaining on
- * their clock, converts it to an embeded command sequence
- * that goes into the comment field of the move in the ICN.
- * 
- * The format is: [%clk H:MM:SS.D]
- * Where D is tenths of a second.
- */
-function getClkEmbededCommandSequence(timeRemainMillis: number): string {
-	// Convert millis to H:MM:SS:D (where D is tenths of a second)
-
-	// Handle edge case: if time is 0 or less, return 0 time.
-	if (timeRemainMillis <= 0) return "[%clk 0:00:00.0]";
-
-	// Round the total milliseconds UP to the nearest 100ms boundary.
-	const roundedUpMillis = Math.ceil(timeRemainMillis / 100) * 100;
-
-	// Now calculate H:MM:SS.D based on the rounded-up value.
-	// Note: Division by 1000 should naturally handle the "carry-over" to seconds.
-	const totalSecondsRounded = Math.floor(roundedUpMillis / 1000);
-	const hours = Math.floor(totalSecondsRounded / 3600);
-	const minutes = Math.floor((totalSecondsRounded % 3600) / 60);
-	const seconds = totalSecondsRounded % 60;
-
-	// Calculate tenths based on the rounded-up milliseconds.
-	// Since roundedUpMillis is always a multiple of 100 (except maybe for 0),
-	// the modulo and division should give a clean integer 0-9.
-	const tenths = (roundedUpMillis % 1000) / 100;
-	
-	// Convert minutes and seconds to strings and pad with leading zeros if needed.
-	const paddedMinutes = minutes.toString().padStart(2, '0');
-	const paddedSeconds = seconds.toString().padStart(2, '0');
-
-	// Format the string using the padded values
-	return `[%clk ${hours}:${paddedMinutes}:${paddedSeconds}.${tenths}]`;
-}
-
 
 // Compacting & Parsing Move Lists --------------------------------------------------------------------------------
 
@@ -749,12 +692,13 @@ function getClkEmbededCommandSequence(timeRemainMillis: number): string {
  * Various styling options are available:
  * 
  * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
+ *     IF FALSE THEN THE MOVES must have their `type` and `flags` properties!!!
  * spaces => Spaces between segments of a move. => 'P1,7 x 2,8 =Q +'
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
  * move_numbers => Include move numbers, prettifying the notation. This makes turnOrder, fullmove, and make_new_lines required.
  * make_new_lines => Include new lines between move numbers (only when move_numbers = true)
  */
-function getShortFormMovesFromMoves(moves: Move[], options: { compact: boolean; spaces: boolean; comments: boolean; } & ({ move_numbers: false } | { move_numbers: true, turnOrder: Player[], fullmove: number, make_new_lines: boolean })): string {
+function getShortFormMovesFromMoves(moves: _Move[], options: { compact: boolean; spaces: boolean; comments: boolean; } & ({ move_numbers: false } | { move_numbers: true, turnOrder: Player[], fullmove: number, make_new_lines: boolean })): string {
 	// console.log("Getting shortform moves with options:", options);
 
 	// Converts a gamefile's moves list to the most minimal and compact string notation `1,2>3,4|5,6>7,8=N`
@@ -779,7 +723,7 @@ function getShortFormMovesFromMoves(moves: Move[], options: { compact: boolean; 
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7]}'
  * make_new_lines => Include new lines between move numbers
  */
-function getShortFormMovesFromMoves_MoveNumbers(moves: Move[], options: { turnOrder: Player[], fullmove: number, compact: boolean, spaces: boolean, comments: boolean, make_new_lines: boolean }): string {
+function getShortFormMovesFromMoves_MoveNumbers(moves: _Move[], options: { turnOrder: Player[], fullmove: number, compact: boolean, spaces: boolean, comments: boolean, make_new_lines: boolean }): string {
 
 	/**
 	 * Example preview: (compact = false, spaces = true, comments = true, fullmove = 1)
@@ -966,7 +910,6 @@ export {
 	piece_codes_raw_inverted,
 	metadata_ordering as metadata_key_ordering,
 	default_promotions,
-	default_win_conditions,
 	excludedGameRules,
 };
 
