@@ -121,7 +121,7 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
-		const moveDraft = icnconverter.parseCompactMove(thisShortmove);
+		const moveDraft = icnconverter.parseMoveFromShortFormMove(thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;

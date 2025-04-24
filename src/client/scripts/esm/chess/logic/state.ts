@@ -273,6 +273,7 @@ export default {
 
 export type {
 	GameState,
+	GlobalGameState,
 	MoveState,
 	StateChange,
 	Attacker,

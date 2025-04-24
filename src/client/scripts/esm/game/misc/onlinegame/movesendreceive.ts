@@ -75,7 +75,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	// Convert the move from compact short format "x,y>x,yN"
 	let moveDraft: MoveDraft; // { startCoords, endCoords, promotion }
 	try {
-		moveDraft = icnconverter.parseCompactMove(message.move); // { startCoords, endCoords, promotion }
+		moveDraft = icnconverter.parseMoveFromShortFormMove(message.move); // { startCoords, endCoords, promotion }
 	} catch {
 		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
 		const reason = 'Incorrectly formatted.';

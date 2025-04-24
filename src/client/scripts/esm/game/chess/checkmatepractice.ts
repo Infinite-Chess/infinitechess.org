@@ -98,13 +98,11 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 
 	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
 	const specialRights = new Set<CoordsKey>();
-	const positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 	const variantOptions: VariantOptions = {
 		fullMove: 1,
 		startingPosition,
-		positionString,
-		specialRights,
-		gameRules: variant.getBareMinimumGameRules()
+		state_global: { specialRights },
+		gameRules: variant.getBareMinimumGameRules(),
 	};
 
 	const options = {
