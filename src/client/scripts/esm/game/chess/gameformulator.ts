@@ -37,7 +37,7 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 		specialRights: compressedGame.specialRights,
 	};
 	// Optional properties
-	if (compressedGame.moveRuleState) variantOptions.moveRuleState = compressedGame.moveRuleState;
+	if (compressedGame.moveRuleState !== undefined) variantOptions.moveRuleState = compressedGame.moveRuleState;
 	if (compressedGame.enpassant) { // Coords: [x,y]
 		// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
 		const firstTurn = compressedGame.gameRules.turnOrder[0];
