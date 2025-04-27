@@ -13,6 +13,7 @@ import organizedpieces from "./organizedpieces.js";
 import jsutil from "../../util/jsutil.js";
 import boardutil from "../util/boardutil.js";
 import typeutil from "../util/typeutil.js";
+import coordutil, { CoordsKey } from "../util/coordutil.js";
 
 
 // Variables -------------------------------------------------------------------------
@@ -30,6 +31,7 @@ import type { Coords } from "./movesets.js";
 import type { Piece } from "../util/boardutil.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
+
 
 /**
  * Generic type to describe any changes to the board
@@ -194,6 +196,8 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 }
 
 
+// Standard Chagne Functions --------------------------------------------------------------------------------------
+
 
 /**
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
@@ -308,6 +312,47 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 	addPiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
 }
 
+
+// Other Change Functions -----------------------------------------------------------------------------------
+
+
+/**
+ * This modifies only a Position Map<CoordsKey, number> where number is the type of piece.
+ * It does NOT modify a gamefile or its organized pieces.
+ * This also only works applying a move's changes FORWARD.
+ * 
+ * This is intended for updating a simplified board state, one that is used in gamecompressor.GameToPosition
+ */
+function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]) {
+	for (const change of changes) {
+		const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+		switch (change.action) {
+			case 'move':
+				position.delete(startCoordsKey);
+				position.set(coordutil.getKeyFromCoords(change.endCoords), change.piece.type);
+				break;
+			case 'capture':
+				position.delete(startCoordsKey);
+				position.delete(coordutil.getKeyFromCoords(change.capturedPiece.coords));
+				position.set(coordutil.getKeyFromCoords(change.endCoords), change.piece.type);
+				break;
+			case 'add':
+				position.set(startCoordsKey, change.piece.type);
+				break;
+			case 'delete':
+				position.delete(startCoordsKey);
+				break;
+			default:
+				// @ts-ignore
+				throw Error(`Unknown change action: ${change.action}`);
+		}
+	}
+}
+
+
+// Helper Functions ----------------------------------------------------------------------------------------
+
+
 /**
  * Gets every captured piece in changes
  */
@@ -329,6 +374,10 @@ function wasACapture(move: Move): boolean {
 	return move.changes.some(change => change.action === 'capture');
 }
 
+
+// Exports ----------------------------------------------------------------------------------------
+
+
 export type {
 	genericChangeFunc,
 	ActionList,
@@ -343,6 +392,7 @@ export default {
 	queueDeletePiece,
 	queueMovePiece,
 	runChanges,
+	runChanges_Position,
 
 	getCapturedPieceTypes,
 	wasACapture,

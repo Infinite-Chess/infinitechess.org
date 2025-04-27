@@ -128,7 +128,7 @@ function viewMove(gamefile: gamefile, move: Move | NullMove, forward = true) {
  * @param index the move index to goto
  */
 function viewIndex(gamefile: gamefile, index: number) {
-	movepiece.goToMove(gamefile, index, (move: Move) => viewMove(gamefile, move, index >= gamefile.moveIndex));
+	movepiece.goToMove(gamefile, index, (move: Move) => viewMove(gamefile, move, index >= gamefile.state.local.moveIndex));
 	updateGui(false);
 }
 
@@ -151,7 +151,7 @@ function viewFront(gamefile: gamefile) {
  */
 function navigateMove(gamefile: gamefile, forward: boolean): void {
 	// Determine the index of the move to apply
-	const idx = forward ? gamefile.moveIndex + 1 : gamefile.moveIndex;
+	const idx = forward ? gamefile.state.local.moveIndex + 1 : gamefile.state.local.moveIndex;
 
 	// Make sure the move exists. Normally we'd never call this method
 	// if it does, but just in case we forget to check.

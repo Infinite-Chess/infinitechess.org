@@ -9,7 +9,6 @@
 
 
 import type { Movesets } from "../logic/movesets.js";
-import type { Position } from "./variant.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 
 
@@ -97,27 +96,27 @@ function getMovementType() {
  * @param input_position - If this is a position string, populate all 2D boards with it. If it is a dictionary, populate the boards according to it
  * @returns 
  */
-function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number, input_position?: string | {[key: string] : string}) {
+function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number, input_position?: string | { [key: string]: string }): Map<CoordsKey, number> {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
-	const resultPos: Position = {};
+	const resultPos = new Map<CoordsKey, number>();
 
 	// position is string and should identically populate all 2D boards
 	if (typeof input_position === 'string') {
-		const input_position_long : Position = formatconverter.ShortToLong_Format(input_position).startingPosition;
+		const input_position_long: Map<CoordsKey, number> = formatconverter.ShortToLong_Format(input_position).startingPosition;
 		
 		// Loop through from the leftmost column that should be voids to the right most, and also vertically
 		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
 			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
 				// Only the edges of boards should be voids
 				if ((i % dim.BOARD_SPACING === 0) || (j % dim.BOARD_SPACING === 0)) {
-					resultPos[coordutil.getKeyFromCoords([i, j])] = r.VOID + e.N;
+					resultPos.set(coordutil.getKeyFromCoords([i, j]), r.VOID + e.N);
 					// Add input_position_long to the board
 					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
-						for (const key in input_position_long) {
-							const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+						for (const [key, value] of input_position_long) {
+							const coords = coordutil.getCoordsFromKey(key);
 							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
-							resultPos[newKey] = input_position_long[key as CoordsKey]!;
+							resultPos.set(newKey, value);
 						}
 					}
 				}
@@ -132,15 +131,15 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 				// Only the edges of boards should be voids
 				if ((i % dim.BOARD_SPACING === 0 || i % dim.BOARD_SPACING === 9)
 					|| (j % dim.BOARD_SPACING === 0 || j % dim.BOARD_SPACING === 9)) {
-					resultPos[coordutil.getKeyFromCoords([i, j])] = r.VOID + e.N;
+					resultPos.set(coordutil.getKeyFromCoords([i, j]), r.VOID + e.N);
 					// Add the subposition to the correct board
 					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
 						const sub_position_short = input_position[`${Math.floor(i / dim.BOARD_SPACING)},${Math.floor(j / dim.BOARD_SPACING)}`];
-						const sub_position_long = (sub_position_short ? formatconverter.ShortToLong_Format(sub_position_short).startingPosition : {});
-						for (const key in sub_position_long) {
-							const coords = coordutil.getCoordsFromKey(key as CoordsKey);
+						const sub_position_long: Map<CoordsKey, number> = sub_position_short ? formatconverter.ShortToLong_Format(sub_position_short).startingPosition : new Map();
+						for (const [key, value] of sub_position_long) {
+							const coords = coordutil.getCoordsFromKey(key);
 							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
-							resultPos[newKey] = sub_position_long[key as CoordsKey]!;
+							resultPos.set(newKey, value);
 						}
 					}
 				}

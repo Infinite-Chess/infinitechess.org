@@ -128,14 +128,14 @@ function detectKoth(gamefile) {
  */
 function detectMoveRule(gamefile) {
 	if (!gamefile.gameRules.moveRule) return false; // No move-rule being used
-	if (gamefile.moveRuleState === gamefile.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
+	if (gamefile.state.global.moveRuleState === gamefile.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
 	return false;
 }
 
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(gamefile) {
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (!lastMove.isNull) return false;
+	if (!lastMove || lastMove.isNull) return false;
 
 	const capturedTypes = new Set();
 
@@ -161,9 +161,9 @@ function wasLastMoveARoyalCapture(gamefile) {
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
 function isCheckmateCompatibleWithGame(gamefile) {
-	if (gamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
+	if (boardutil.getPieceCountOfGame(gamefile.pieces) >= organizedpieces.pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (gamefile.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
-	if (gamefile.startSnapshot.playerCount > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
+	if (gamefileutility.getPlayerCount(gamefile) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(gamefile)) return false; // This also allows the capture of the king.
 	return true; // Checkmate compatible!
 }

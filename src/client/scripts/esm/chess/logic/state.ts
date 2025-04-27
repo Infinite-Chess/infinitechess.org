@@ -5,23 +5,52 @@
  */
 
 
-// @ts-ignore
+import type { Coords } from "./movesets.js";
+import type { CoordsKey } from "../util/coordutil.js";
 import type { Move, NullMove, path } from "./movepiece.js";
-// @ts-ignore
-import type { gamefile } from "./gamefile.js";
-import { Coords } from "./movesets.js";
-import { CoordsKey } from "../util/coordutil.js";
 
 
 // Type Definitions ------------------------------------------------------------------------------------
 
 
+/** The state of a game holds variables that change over the duration of it. */
+interface GameState {
+	local: LocalGameState
+	global: GlobalGameState
+}
+
+/** State of a specific move your are VIEWING. */
+interface LocalGameState {
+	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
+	moveIndex: number
+	/** If the currently-viewed move is in check, this will be a list of coordinates
+     * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {} */
+	inCheck: Coords[] | false
+	/** List of maximum 2 pieces currently checking whoever's turn is next,
+     * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!
+     * Only used to calculate legal moves, and checkmate. @type {}*/
+	attackers: Attacker[]
+}
+
+/**
+ * State of a game that DOESN'T change depending on what move your VIEWING,
+ * but DO change when new moves are made, or rewound (deleted).
+ * 
+ * They represent the state of the game at the FRONT.
+ */
+interface GlobalGameState {
+	/** An object containing the information if each individual piece has its special move rights. */
+	specialRights: Set<CoordsKey>
+	/** If enpassant is allowed at the front of the game, this defines the coordinates. */
+	enpassant?: EnPassant
+	/** The number of half-moves played since the last capture or pawn push. */
+	moveRuleState?: number
+}
+
+
+
 // TODO: Move to gamefile type definition (right now it's not in typescript)
 type inCheck = false | Coords[];
-// TODO: Move to gamefile type definition (right now it's not in typescript)
-type attacker = { coords: Coords } & ({ slidingCheck: true } | { slidingCheck: false, path?: path });
-// TODO: Move to gamefile type definition (right now it's not in typescript)
-type attackers = attacker[];
 
 /**
  * 
@@ -60,8 +89,8 @@ type StateChange = {
 	future: inCheck
 } | {
 	type: 'attackers',
-	current: attackers,
-	future: attackers
+	current: Attacker[],
+	future: Attacker[]
 } | {
 	type: 'enpassant',
 	current?: EnPassant,
@@ -78,7 +107,20 @@ type StateChange = {
 	future: number
 }
 
-// TODO: Move to gamefile type definition (right now it's not in typescript)
+/** A single piece attacking/checking a royal */
+type Attacker = {
+	/** The coordinates of the attacker */
+	coords: Coords
+	/** Whether the check is from a sliding movement (not individual, NOR special with a `path` attribute) */
+	slidingCheck: boolean,
+} & ({
+	slidingCheck: true
+} | {
+	slidingCheck: false,
+	/** Optionally, if it's an individual (non-slidingCheck), the path this piece takes to check the royal (e.g. Rose piece) */
+	path?: path
+})
+
 interface EnPassant {
 	/** The enpassant square. */
 	square: Coords,
@@ -98,19 +140,19 @@ interface EnPassant {
 
 
 /** Creates a check local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createCheckState(move: Move | NullMove, current: inCheck, future: inCheck, gamefile: gamefile) {
+function createCheckState(move: Move | NullMove, current: inCheck, future: inCheck, gamestate: GameState) {
 	const newStateChange: StateChange = { type: 'check', current, future };
 	move.state.local.push(newStateChange); // Check is a local state
 	// Check states are immediately applied to the gamefile
-	applyState(gamefile, newStateChange, true);
+	applyLocalState(gamestate.local, newStateChange, true);
 }
 
 /** Creates an attackers local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createAttackersState(move: Move | NullMove, current: attackers, future: attackers, gamefile: gamefile) {
+function createAttackersState(move: Move | NullMove, current: Attacker[], future: Attacker[], gamestate: GameState) {
 	const newStateChange: StateChange = { type: 'attackers', current, future };
 	move.state.local.push(newStateChange); // Attackers is a local state
 	// Attackers states are immediately applied to the gamefile
-	applyState(gamefile, newStateChange, true);
+	applyLocalState(gamestate.local, newStateChange, true);
 }
 
 
@@ -151,8 +193,8 @@ function createMoveRuleState(move: Move | NullMove, current: number, future: num
  * whether forward or backward, local or global.
  */
 function applyMove(
-	gamefile: gamefile,
-	move: Move | NullMove,
+	gamestate: GameState,
+	moveState: MoveState,
 	/** Whether we're playing this move forward or backward. */
 	forward: boolean,
 	/**
@@ -163,39 +205,55 @@ function applyMove(
 	 */
 	{ globalChange = false } = {}
 ) {
-	for (const change of move.state.local) {
-		applyState(gamefile, change, forward);
-	}
-	if (!globalChange) return;
-	for (const change of move.state.global) {
-		applyState(gamefile, change, forward);
+	applyLocalStateChanges(gamestate.local, moveState.local, forward);
+	if (globalChange) applyGlobalStateChanges(gamestate.global, moveState.global, forward);
+}
+
+function applyLocalStateChanges(gamestate: LocalGameState, changes: Array<StateChange>, forward: boolean) {
+	for (const state of changes) {
+		applyLocalState(gamestate, state, forward);
 	}
 }
 
-/**
- * Applies the state of a move to the gamefile, whether forward or backward.
- */
-function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
+function applyGlobalStateChanges(gamestate: GlobalGameState, changes: Array<StateChange>, forward: boolean) { /** The reason we don't include the whole gamefile is so that {@link gamecompressor.GameToPosition} can also use applyMove(). */
+	for (const state of changes) {
+		applyGlobalState(gamestate, state, forward);
+	}
+}
+
+/** Applies a move's local state change to the gamefile, forward or backward. */
+function applyLocalState(gamestate: LocalGameState, state: StateChange, forward: boolean) {
+	const noNewValue = (forward ? state.future : state.current) === undefined;
+	switch (state.type) {
+		case 'check':
+			gamestate.inCheck = forward ? state.future : state.current;
+			break;
+		case 'attackers':
+			if (noNewValue) gamestate.attackers = [];
+			else gamestate.attackers = forward ? state.future : state.current;
+			break;
+		default:
+			throw new Error(`State ${state.type} is not a local state change.`);
+	}
+}
+
+/** Applies a move's global state change to the gamefile, forward or backward. */
+function applyGlobalState(gamestate: GlobalGameState, state: StateChange, forward: boolean) {
 	const noNewValue = (forward ? state.future : state.current) === undefined;
 	switch (state.type) {
 		case 'specialrights':
-			if (!(forward ? state.future : state.current)) gamefile.specialRights.delete(state.coordsKey);
-			else gamefile.specialRights.add(state.coordsKey);	
-			break;
-		case 'check':
-			gamefile.inCheck = forward ? state.future : state.current;
-			break;
-		case 'attackers':
-			if (noNewValue) gamefile.attackers = [];
-			else gamefile.attackers = forward ? state.future : state.current;
+			if (!(forward ? state.future : state.current)) gamestate.specialRights.delete(state.coordsKey);
+			else gamestate.specialRights.add(state.coordsKey);	
 			break;
 		case 'enpassant': 
-			if (noNewValue) delete gamefile.enpassant;
-			else gamefile.enpassant = forward ? state.future : state.current;
+			if (noNewValue) delete gamestate.enpassant;
+			else gamestate.enpassant = forward ? state.future : state.current;
 			break;
 		case 'moverulestate':
-			gamefile.moveRuleState = forward ? state.future : state.current;
+			gamestate.moveRuleState = forward ? state.future : state.current;
 			break;
+		default:
+			throw new Error(`State ${state.type} is not a global state change.`);
 	}
 }
 
@@ -204,8 +262,8 @@ function applyState(gamefile: gamefile, state: StateChange, forward: boolean) {
 
 
 export default {
-	applyState,
 	applyMove,
+	applyGlobalStateChanges,
 	createCheckState,
 	createAttackersState,
 	createEnPassantState,
@@ -214,8 +272,9 @@ export default {
 };
 
 export type {
+	GameState,
 	MoveState,
 	StateChange,
-	attackers,
+	Attacker,
 	EnPassant,
 };

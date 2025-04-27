@@ -116,22 +116,22 @@ function pawnLegalMoves(gamefile: gamefile, coords: Coords, color: Player, movet
  * @param ydistance
  */
 function addPossibleEnPassant(gamefile: gamefile, individualMoves: Coords[], coords: Coords, color: Player, xdistance: number, ydistance: number): void {
-	if (!gamefile.enpassant) return; // No enpassant flag on the game, no enpassant possible
+	if (!gamefile.state.global.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== gamefile.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.pieces, gamefile.enpassant.pawn)!;
+	const enpassantCapturedPawn = boardutil.getTypeFromCoords(gamefile.pieces, gamefile.state.global.enpassant.pawn)!;
 	const [capturedType, capturedColor] = typeutil.splitType(enpassantCapturedPawn);
 	if (capturedColor === color || capturedType === r.VOID) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
-	const xDifference = gamefile.enpassant.square[0] - coords[0];
+	const xDifference = gamefile.state.global.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== xdistance) return; // Not immediately left or right of us
 	const yDistanceParity = (color === players.WHITE ? ydistance : -ydistance);
 
-	if (coords[1] + yDistanceParity !== gamefile.enpassant.square[1]) return; // Not one in front of us
+	if (coords[1] + yDistanceParity !== gamefile.state.global.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(gamefile.enpassant.square);
+	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(gamefile.state.global.enpassant.square);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
@@ -154,7 +154,7 @@ function appendPawnMoveAndAttachPromoteFlag(gamefile: gamefile, individualMoves:
 
 function doesPieceHaveSpecialRight(gamefile: gamefile, coords: Coords) {
 	const key = coordutil.getKeyFromCoords(coords);
-	return gamefile.specialRights.has(key);
+	return gamefile.state.global.specialRights.has(key);
 }
 
 /** Executes a four dimensional pawn move.  */
@@ -162,11 +162,11 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
-	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.enpassant, move.enpassantCreate);
+	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.state.global.enpassant, move.enpassantCreate);
 
 	if (!move.enpassant && !move.promotion) return false; // No special move to execute, return false to signify we didn't move the piece.
 
-	const captureCoords = move.enpassant ? gamefile.enpassant!.pawn : move.endCoords;
+	const captureCoords = move.enpassant ? gamefile.state.global.enpassant!.pawn : move.endCoords;
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
 
 	if (capturedPiece !== undefined) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece); // Delete the piece captured

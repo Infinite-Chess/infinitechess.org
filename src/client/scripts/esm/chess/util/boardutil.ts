@@ -10,7 +10,7 @@ import jsutil from "../../util/jsutil.js";
 // Type Definitions -----------------------------------------------------------------------------------------
 
 import type { OrganizedPieces, TypeRange } from "../logic/organizedpieces.js";
-import type { Coords } from "./coordutil.js";
+import type { Coords, CoordsKey } from "./coordutil.js";
 import type { RawType, Player } from "./typeutil.js";
 
 interface Piece {
@@ -24,13 +24,6 @@ interface Piece {
 	 * This will get set to another number when it is added to the board.
 	 */
 	index: number,
-}
-
-/**
- * A position in keys format. Entries look like: `"5,2": r.PAWN + e.W`
- */
-interface Position {
-	[coordKey: string]: number
 }
 
 /** A unique identifier for a single line of pieces. `C|X` */
@@ -47,6 +40,10 @@ type LineKey = `${number}|${number}`
  * @returns The number of pieces in the gamefile.
  */
 function getPieceCountOfGame(o: OrganizedPieces, { ignoreColors, ignoreRawTypes }: { ignoreColors?: Set<Player>, ignoreRawTypes?: Set<RawType> } = {}): number {
+	// Early exit optimization: If ignoreColors and ignoreRawTypes are not specified,
+	// return the size of o.coords, since that has zero undefineds.
+	if (!ignoreColors && !ignoreRawTypes) return o.coords.size;
+
 	let count = 0; // Running count list
 
 	for (const [type, range] of o.typeRanges) {
@@ -88,6 +85,7 @@ function getPieceCountOfType(o: OrganizedPieces, type: number): number {
 	return getPieceCountOfTypeRange(typeList);
 }
 
+/** Excludes undefined placeholders */
 function getPieceCountOfTypeRange(range: TypeRange) {
 	return (range.end - range.start) - range.undefineds.length;
 }
@@ -238,7 +236,6 @@ function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
 export type {
 	Piece,
 	LineKey,
-	Position
 };
 
 export default {

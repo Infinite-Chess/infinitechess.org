@@ -9,7 +9,6 @@ import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
-import type { Position } from '../util/boardutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
@@ -22,6 +21,7 @@ import fourdimensionalgenerator from './fourdimensionalgenerator.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
 import { rawTypes as r, players as p } from '../util/typeutil.js';
+import icnconverter from '../logic/icn/icnconverter.js';
 // @ts-ignore
 import formatconverter from '../logic/formatconverter.js';
 // @ts-ignore
@@ -51,7 +51,7 @@ type TimeVariantProperty<T> = T | {
 interface Variant {
 	positionString?: TimeVariantProperty<string>,
 	generator?: TimeVariantProperty<{
-		algorithm: () => Position,
+		algorithm: () => Map<CoordsKey, number>,
 		rules: {
 			pawnDoublePush: boolean,
 			castleWith?: RawType
@@ -189,7 +189,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 	},
 	// Amazon_Chandelier: {
 	// 	positionString: 'p-1,26+|p1,26+|p-2,25+|p-1,25+|p0,25+|p1,25+|p2,25+|p-2,24+|p-1,24+|am0,24|p1,24+|p2,24+|p-2,23+|p-1,23+|p0,23+|p1,23+|p2,23+|p-2,22+|p-1,22+|p1,22+|p2,22+|p-5,21+|p-4,21+|p-3,21+|p-2,21+|p-1,21+|p1,21+|p2,21+|p3,21+|p4,21+|p5,21+|p-5,20+|q-4,20|p-3,20+|p-2,20+|p-1,20+|p1,20+|p2,20+|p3,20+|q4,20|p5,20+|p-5,19+|p-4,19+|p-3,19+|p-2,19+|p-1,19+|p1,19+|p2,19+|p3,19+|p4,19+|p5,19+|p-5,18+|p-3,18+|p-2,18+|p-1,18+|p1,18+|p2,18+|p3,18+|p5,18+|p-8,17+|p-5,17+|p-3,17+|p-2,17+|p-1,17+|p1,17+|p2,17+|p3,17+|p5,17+|p8,17+|p-11,16+|p-10,16+|gu-9,16|ha-8,16|p-7,16+|gu-6,16|p-5,16+|p-3,16+|p-2,16+|p-1,16+|p1,16+|p2,16+|p3,16+|p5,16+|gu6,16|p7,16+|ha8,16|gu9,16|p10,16+|p11,16+|p-11,15+|r-10,15|p-9,15+|p-8,15+|r-7,15|p-6,15+|p-5,15+|p-3,15+|p-2,15+|p-1,15+|p1,15+|p2,15+|p3,15+|p5,15+|p6,15+|r7,15|p8,15+|p9,15+|r10,15|p11,15+|gu-12,14|p-11,14+|p-10,14+|p-9,14+|p-8,14+|p-7,14+|p-6,14+|p-5,14+|p-3,14+|p-2,14+|p-1,14+|p1,14+|p2,14+|p3,14+|p5,14+|p6,14+|p7,14+|p8,14+|p9,14+|p10,14+|p11,14+|gu12,14|p-19,13+|p-17,13+|gu-16,13|p-14,13+|p-12,13+|p-11,13+|p-9,13+|p-8,13+|p-6,13+|p-5,13+|p-3,13+|p-2,13+|p-1,13+|p1,13+|p2,13+|p3,13+|p5,13+|p6,13+|p8,13+|p9,13+|p11,13+|p12,13+|p14,13+|gu16,13|p17,13+|p19,13+|p-19,12+|b-18,12|p-17,12+|gu-16,12|p-14,12+|b-13,12|p-12,12+|p-11,12+|p-9,12+|p-8,12+|p-6,12+|p-5,12+|p-3,12+|p-2,12+|p-1,12+|p1,12+|p2,12+|p3,12+|p5,12+|p6,12+|p8,12+|p9,12+|p11,12+|p12,12+|b13,12|p14,12+|gu16,12|p17,12+|b18,12|p19,12+|gu-20,11|p-19,11+|p-17,11+|p-14,11+|p-12,11+|p-11,11+|p-9,11+|p-8,11+|p-6,11+|p-5,11+|p-3,11+|p-2,11+|p-1,11+|p1,11+|p2,11+|p3,11+|p5,11+|p6,11+|p8,11+|p9,11+|p11,11+|p12,11+|p14,11+|p17,11+|p19,11+|gu20,11|ha-20,10|p-19,10+|p-17,10+|p-14,10+|p-12,10+|p-11,10+|p-9,10+|p-8,10+|p-6,10+|p-5,10+|p-3,10+|p-2,10+|p-1,10+|p1,10+|p2,10+|p3,10+|p5,10+|p6,10+|p8,10+|p9,10+|p11,10+|p12,10+|p14,10+|p17,10+|p19,10+|ha20,10|n-11,9|n11,9|n-10,7|gu-5,7|gu-4,7|gu4,7|gu5,7|n10,7|n-8,6|n8,6|n-6,5|n6,5|n-4,4|k0,4|n4,4|n-2,3|n2,3|n0,2|N0,-1|N-2,-2|N2,-2|N-4,-3|K0,-3|N4,-3|N-6,-4|N6,-4|N-8,-5|N8,-5|N-10,-6|GU-5,-6|GU-4,-6|GU4,-6|GU5,-6|N10,-6|N-11,-8|N11,-8|HA-20,-9|P-19,-9+|P-17,-9+|P-14,-9+|P-12,-9+|P-11,-9+|P-9,-9+|P-8,-9+|P-6,-9+|P-5,-9+|P-3,-9+|P-2,-9+|P-1,-9+|P1,-9+|P2,-9+|P3,-9+|P5,-9+|P6,-9+|P8,-9+|P9,-9+|P11,-9+|P12,-9+|P14,-9+|P17,-9+|P19,-9+|HA20,-9|GU-20,-10|P-19,-10+|P-17,-10+|P-14,-10+|P-12,-10+|P-11,-10+|P-9,-10+|P-8,-10+|P-6,-10+|P-5,-10+|P-3,-10+|P-2,-10+|P-1,-10+|P1,-10+|P2,-10+|P3,-10+|P5,-10+|P6,-10+|P8,-10+|P9,-10+|P11,-10+|P12,-10+|P14,-10+|P17,-10+|P19,-10+|GU20,-10|P-19,-11+|B-18,-11|P-17,-11+|GU-16,-11|P-14,-11+|B-13,-11|P-12,-11+|P-11,-11+|P-9,-11+|P-8,-11+|P-6,-11+|P-5,-11+|P-3,-11+|P-2,-11+|P-1,-11+|P1,-11+|P2,-11+|P3,-11+|P5,-11+|P6,-11+|P8,-11+|P9,-11+|P11,-11+|P12,-11+|B13,-11|P14,-11+|GU16,-11|P17,-11+|B18,-11|P19,-11+|P-19,-12+|P-17,-12+|GU-16,-12|P-14,-12+|P-12,-12+|P-11,-12+|P-9,-12+|P-8,-12+|P-6,-12+|P-5,-12+|P-3,-12+|P-2,-12+|P-1,-12+|P1,-12+|P2,-12+|P3,-12+|P5,-12+|P6,-12+|P8,-12+|P9,-12+|P11,-12+|P12,-12+|P14,-12+|GU16,-12|P17,-12+|P19,-12+|GU-12,-13|P-11,-13+|P-10,-13+|P-9,-13+|P-8,-13+|P-7,-13+|P-6,-13+|P-5,-13+|P-3,-13+|P-2,-13+|P-1,-13+|P1,-13+|P2,-13+|P3,-13+|P5,-13+|P6,-13+|P7,-13+|P8,-13+|P9,-13+|P10,-13+|P11,-13+|GU12,-13|P-11,-14+|R-10,-14|P-9,-14+|P-8,-14+|R-7,-14|P-6,-14+|P-5,-14+|P-3,-14+|P-2,-14+|P-1,-14+|P1,-14+|P2,-14+|P3,-14+|P5,-14+|P6,-14+|R7,-14|P8,-14+|P9,-14+|R10,-14|P11,-14+|P-11,-15+|P-10,-15+|GU-9,-15|HA-8,-15|P-7,-15+|GU-6,-15|P-5,-15+|P-3,-15+|P-2,-15+|P-1,-15+|P1,-15+|P2,-15+|P3,-15+|P5,-15+|GU6,-15|P7,-15+|HA8,-15|GU9,-15|P10,-15+|P11,-15+|P-8,-16+|P-5,-16+|P-3,-16+|P-2,-16+|P-1,-16+|P1,-16+|P2,-16+|P3,-16+|P5,-16+|P8,-16+|P-5,-17+|P-3,-17+|P-2,-17+|P-1,-17+|P1,-17+|P2,-17+|P3,-17+|P5,-17+|P-5,-18+|P-4,-18+|P-3,-18+|P-2,-18+|P-1,-18+|P1,-18+|P2,-18+|P3,-18+|P4,-18+|P5,-18+|P-5,-19+|Q-4,-19|P-3,-19+|P-2,-19+|P-1,-19+|P1,-19+|P2,-19+|P3,-19+|Q4,-19|P5,-19+|P-5,-20+|P-4,-20+|P-3,-20+|P-2,-20+|P-1,-20+|P1,-20+|P2,-20+|P3,-20+|P4,-20+|P5,-20+|P-2,-21+|P-1,-21+|P1,-21+|P2,-21+|P-2,-22+|P-1,-22+|P0,-22+|P1,-22+|P2,-22+|P-2,-23+|P-1,-23+|AM0,-23|P1,-23+|P2,-23+|P-2,-24+|P-1,-24+|P0,-24+|P1,-24+|P2,-24+|P-1,-25+|P1,-25+',
-	// 	gameruleModifications: { promotionRanks: [10,-9], promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.HAWK, r.GUARD, r.AMAZON]) }
+	// 	gameruleModifications: { promotionRanks: { [p.WHITE]: [10], [p.BLACK]: [-9] }, promotionsAllowed: repeatPromotionsAllowedForEachColor([...defaultPromotions, r.HAWK, r.GUARD, r.AMAZON]) }
 	// },
 	// Containment: {
 	// 	positionString: 'K5,-5|k5,14|Q4,-5|q4,14|HA1,-6|HA8,-6|ha1,15|ha8,15|CH-6,-6|CH15,-6|ch-6,15|ch15,15|AR-6,-5|AR15,-5|ar-6,14|ar15,14|N-1,0|N1,0|N2,0|N4,-1|N5,-1|N7,0|N8,0|N10,0|n-1,9|n1,9|n2,9|n4,10|n5,10|n7,9|n8,9|n10,9|GU-2,-2|GU1,-3|GU3,-4|GU6,-4|GU8,-3|GU11,-2|gu-2,11|gu1,12|gu3,13|gu6,13|gu8,12|gu11,11|R-5,-6|R-5,-5|R-4,-5|R-4,-6|R13,-6|R13,-5|R14,-5|R14,-6|r-5,15|r-5,14|r-4,14|r-4,15|r13,15|r13,14|r14,14|r14,15|B-5,-2|B-4,-3|B-3,-2|B12,-2|B13,-3|B14,-2|b-5,11|b-4,12|b-3,11|b12,11|b13,12|b14,11|P-9,-8+|P-9,-6+|P-9,-4+|P-9,-2+|P-9,0+|P-9,2+|P-9,4+|P-9,6+|P-9,8+|P-9,10+|P-9,12+|P-9,14+|P-9,16+|P-8,-7+|P-8,-5+|P-8,-3+|P-8,-1+|P-8,1+|P-8,3+|P-8,5+|P-8,7+|P-8,9+|P-8,11+|P-8,13+|P-8,15+|P-8,17+|P17,-8+|P17,-6+|P17,-4+|P17,-2+|P17,0+|P17,2+|P17,4+|P17,6+|P17,8+|P17,10+|P17,12+|P17,14+|P17,16+|P18,-7+|P18,-5+|P18,-3+|P18,-1+|P18,1+|P18,3+|P18,5+|P18,7+|P18,9+|P18,11+|P18,13+|P18,15+|P18,17+|P-7,-8+|P-5,-8+|P-3,-8+|P-1,-8+|P1,-8+|P3,-8+|P5,-8+|P7,-8+|P9,-8+|P11,-8+|P13,-8+|P15,-8+|P-6,-7+|P-4,-7+|P-2,-7+|P0,-7+|P2,-7+|P4,-7+|P6,-7+|P8,-7+|P10,-7+|P12,-7+|P14,-7+|P16,-7+|P-7,16+|P-5,16+|P-3,16+|P-1,16+|P1,16+|P3,16+|P5,16+|P7,16+|P9,16+|P11,16+|P13,16+|P15,16+|P-6,17+|P-4,17+|P-2,17+|P0,17+|P2,17+|P4,17+|P6,17+|P8,17+|P10,17+|P12,17+|P14,17+|P16,17+|P-7,-6+|P-7,-4+|P-7,-2+|P-6,-2+|P-6,-1+|P-5,-1+|P-5,0+|P-5,-4+|P-4,-4+|P-4,-2+|P-4,-1+|P-3,-6+|P-3,-5+|P-3,-1+|P-3,0+|P-2,0+|P-2,1+|P-1,1+|P-1,-4+|P0,-3+|P1,-2+|P0,-1+|P0,1+|P1,1+|P2,1+|P3,1+|P3,0+|P3,-3+|P3,-5+|P4,-4+|P4,1+|P5,1+|P5,-4+|P6,-5+|P6,-3+|P6,0+|P6,1+|P7,1+|P8,1+|P9,1+|P9,-1+|P8,-2+|P9,-3+|P10,-4+|P10,1+|P11,1+|P11,0+|P12,0+|P12,-1+|P12,-5+|P12,-6+|P13,-4+|P13,-2+|P13,-1+|P14,0+|P14,-1+|P14,-4+|P15,-2+|P15,-1+|P16,-1+|P16,-3+|P16,-5+|p-9,-7+|p-9,-5+|p-9,-3+|p-9,-1+|p-9,1+|p-9,3+|p-9,5+|p-9,7+|p-9,9+|p-9,11+|p-9,13+|p-9,15+|p-9,17+|p-8,-8+|p-8,-6+|p-8,-4+|p-8,-2+|p-8,0+|p-8,2+|p-8,4+|p-8,6+|p-8,8+|p-8,10+|p-8,12+|p-8,14+|p-8,16+|p17,-7+|p17,-5+|p17,-3+|p17,-1+|p17,1+|p17,3+|p17,5+|p17,7+|p17,9+|p17,11+|p17,13+|p17,15+|p17,17+|p18,-8+|p18,-6+|p18,-4+|p18,-2+|p18,0+|p18,2+|p18,4+|p18,6+|p18,8+|p18,10+|p18,12+|p18,14+|p18,16+|p-6,-8+|p-4,-8+|p-2,-8+|p0,-8+|p2,-8+|p4,-8+|p6,-8+|p8,-8+|p10,-8+|p12,-8+|p14,-8+|p16,-8+|p-7,-7+|p-5,-7+|p-3,-7+|p-1,-7+|p1,-7+|p3,-7+|p5,-7+|p7,-7+|p9,-7+|p11,-7+|p13,-7+|p15,-7+|p-6,16+|p-4,16+|p-2,16+|p0,16+|p2,16+|p4,16+|p6,16+|p8,16+|p10,16+|p12,16+|p14,16+|p16,16+|p-7,17+|p-5,17+|p-3,17+|p-1,17+|p1,17+|p3,17+|p5,17+|p7,17+|p9,17+|p11,17+|p13,17+|p15,17+|p-7,15+|p-7,13+|p-7,11+|p-6,11+|p-6,10+|p-5,10+|p-5,9+|p-5,13+|p-4,13+|p-4,11+|p-4,10+|p-3,15+|p-3,14+|p-3,10+|p-3,9+|p-2,9+|p-2,8+|p-1,8+|p-1,13+|p0,12+|p1,11+|p0,10+|p0,8+|p1,8+|p2,8+|p3,8+|p3,9+|p3,12+|p3,14+|p4,13+|p4,8+|p5,8+|p5,13+|p6,14+|p6,12+|p6,9+|p6,8+|p7,8+|p8,8+|p9,8+|p9,10+|p8,11+|p9,12+|p10,13+|p10,8+|p11,8+|p11,9+|p12,9+|p12,10+|p12,14+|p12,15+|p13,13+|p13,11+|p13,10+|p14,9+|p14,10+|p14,13+|p15,11+|p15,10+|p16,10+|p16,12+|p16,14+',
@@ -357,7 +357,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	let positionString: string;
-	let startingPosition: Position;
+	let startingPosition: Map<CoordsKey, number>;
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString) {
@@ -394,25 +394,23 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
  */
 function getStartSnapshotPosition({ positionString, startingPosition, specialRights, pawnDoublePush = false, castleWith }: {
 	positionString?: string,
-	startingPosition?: Position,
+	startingPosition?: Map<CoordsKey, number>,
 	specialRights?: Set<CoordsKey>
 	pawnDoublePush?: boolean,
 	castleWith?: RawType
 }) {
 	if (positionString) {
 		if (!startingPosition) {
-			const positionAndRights = formatconverter.getStartingPositionAndSpecialRightsFromShortPosition(positionString);
+			const positionAndRights = icnconverter.generatePositionFromShortForm(positionString);
 			startingPosition = positionAndRights.startingPosition;
 			specialRights = positionAndRights.specialRights;
 		}
 	} else if (startingPosition && specialRights) {
-		positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
+		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 	} else if (startingPosition) {
-		specialRights = formatconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
-		positionString = formatconverter.LongToShort_Position(startingPosition, specialRights);
+		specialRights = icnconverter.generateSpecialRights(startingPosition, pawnDoublePush, castleWith);
+		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 	} else throw new Error("Not enough information to calculate the positionString, position, and specialRights of variant.");
-
-	// console.log({ positionString, position: startingPosition, specialRights });
 
 	return { positionString, position: startingPosition, specialRights };
 }
@@ -538,25 +536,26 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
  * @param options.Variant - The name of the variant for which to get the moveset.
  * @param [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
  * @param [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
+ * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
  * @returns {Object} The pieceMovesets property of the gamefile.
  */
 function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
 	Variant: string,
 	UTCDate: string,
 	UTCTime: string
-}) {
+}, slideLimit?: number) {
 	// Pasted games with no variant specified use the default movesets
 	// TODO: Transfer the slide limit game rule of pasted games
-	if (Variant === undefined) return getMovesets();
+	if (Variant === undefined) return getMovesets(undefined, slideLimit);
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	if (!variantEntry.movesetGenerator) {
 		// console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
-			return getMovesets({}, getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime }).slideLimit);
+			return getMovesets({}, slideLimit ?? getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime }).slideLimit);
 		} else { // Just one movesetGenerator entry
-			return getMovesets({}, (variantEntry.gameruleModifications as GameRuleModifications)?.slideLimit);
+			return getMovesets({}, slideLimit ?? (variantEntry.gameruleModifications as GameRuleModifications)?.slideLimit);
 		}
 	}
 
@@ -567,7 +566,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 		movesetModifications = (<() => Movesets>variantEntry.movesetGenerator)();
 	}
 
-	return getMovesets(movesetModifications);
+	return getMovesets(movesetModifications, slideLimit);
 }
 
 /**
@@ -637,6 +636,5 @@ export default {
 };
 
 export type {
-	Position,
 	SpecialMoveFunction,
 };

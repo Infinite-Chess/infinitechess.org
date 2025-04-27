@@ -16,7 +16,6 @@ import type { AbridgedGamefile } from './gamecompressor.js';
 import type { Move } from '../../chess/logic/movepiece.js';
 import type { VariantOptions } from './gameslot.js';
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { Position } from '../../chess/util/boardutil.js';
 // @ts-ignore
 import type { GameRules } from '../../chess/variants/gamerules.js';
 
@@ -33,19 +32,18 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 	const variantOptions: VariantOptions = {
 		fullMove: compressedGame.fullMove,
 		gameRules: compressedGame.gameRules,
-		moveRule: compressedGame.moveRule,
 		positionString: compressedGame.positionString,
 		startingPosition: compressedGame.startingPosition,
 		specialRights: compressedGame.specialRights,
 	};
 	// Optional properties
-	if (compressedGame.moveRule) variantOptions.moveRule = compressedGame.moveRule;
+	if (compressedGame.moveRuleState) variantOptions.moveRuleState = compressedGame.moveRuleState;
 	if (compressedGame.enpassant) { // Coords: [x,y]
 		// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
 		const firstTurn = compressedGame.gameRules.turnOrder[0];
 		const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
 		const pawnExpectedSquare = [compressedGame.enpassant[0], compressedGame.enpassant[1] - yParity] as Coords;
-		const pieceOnExpectedSquare: number | undefined = compressedGame.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+		const pieceOnExpectedSquare: number | undefined = compressedGame.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
 
 		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
 			variantOptions.enpassant = { square: compressedGame.enpassant, pawn: pawnExpectedSquare };
@@ -58,16 +56,16 @@ function formulateGame(compressedGame: AbridgedGamefile) {
 /** The game JSON format the formatconvert returns from ShortToLong_Format(). */
 interface FormatConverterLong {
 	metadata: MetaData,
-	startingPosition: Position,
+	startingPosition: Map<CoordsKey, number>,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	shortposition: string,
+	shortposition?: string,
 	fullMove: number,
-	specialRights: Set<CoordsKey>,
 	/** DOES NOT CONTAIN moveRule!!!! */
 	gameRules: GameRules,
 	moves: string[],
-	// Optional properties...
-	moveRule?: `${number}/${number}`,
+	// The 3 global game states
+	specialRights: Set<CoordsKey>,
+	moveRuleState?: number,
 	enpassant?: Coords,
 }
 
@@ -82,15 +80,16 @@ function ICNToGamefile(ICN: string): gamefile {
 
 	const variantOptions: VariantOptions = {
 		fullMove: longformat.fullMove,
-		moveRule: longformat.moveRule,
-		positionString: longformat.shortposition,
+		moveRuleState: longformat.moveRuleState,
+		positionString: longformat.shortposition!,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
 		gameRules: longformat.gameRules
 	};
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
+	// EXPECT THE ICN'S Variant metadata to be the variant code!
+	// longformat.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformat.metadata.Variant) || longformat.metadata.Variant;
 
 	// if (longformat.enpassant) { // Coords: [x,y]
 	// 	// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }

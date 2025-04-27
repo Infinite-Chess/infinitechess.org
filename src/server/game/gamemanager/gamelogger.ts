@@ -114,11 +114,9 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | undefined> {
 	// We need to prime the gamefile for the format converter to get the ICN of the game.
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
-	delete gameRules.moveRule;
 	const primedGamefile = {
 		metadata,
-		moveRule,
+		moveRuleState: gameRules.moveRule !== undefined ? 0 : undefined,
 		fullMove: 1,
 		moves: game.moves,
 		gameRules
@@ -349,12 +347,6 @@ async function migrateGameLogsToDatabase() {
 			else game.players[2].identifier = { browser: 'examplebrowserid' };
 
 			game.gameRules = longformat.gameRules;
-			// Pass on the moveRule to the gameRules object
-			if (longformat.moveRule) {
-				const max = longformat.moveRule.split('/').map(Number)[1]; // The number of plies until termination by moverule
-				if (max !== 100) throw Error(`Move rule "${longformat.moveRule}" not valid!`);
-				game.gameRules.moveRule = max;
-			}
 
 			if (longformat.metadata.Termination === undefined) throw Error(`Termination metadata is undefined!`);
 			else if (longformat.metadata.Termination === "Aborted") {
@@ -439,7 +431,7 @@ const translationToVariant = jsutil.invertObj(variantToTranslation);
 
 const MetaDataRequiredValues = {
 	Variant: ['Classical', 'Confined_Classical', 'Classical_Plus', 'CoaIP', 'CoaIP_HO', 'Knighted_Chess', 'Pawndard', 'Knightline', 'Core', 'Standarch', 'Pawn_Horde', 'Space_Classic', 'Space', 'Obstocean', 'Abundance', 'Chess', '4x4x4x4_Chess', '5D_Chess', 'Omega', 'Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', 'Amazon_Chandelier', 'Containment', 'Classical_Limit_7', 'CoaIP_Limit_7', 'Classical_KOTH', 'CoaIP_KOTH'],
-	Result: ['1-0', '0-1', '1/2-1/2', '0-0'],
+	Result: ['1-0', '0-1', '1/2-1/2', '*'],
 	Termination: ['Aborted', 'Checkmate', 'Stalemate', 'Threefold repetition', 'Resignation', 'Insufficient material', 'Royal capture', 'All pieces captured', 'King of the hill', 'Time forfeit', 'Agreement', '50-move rule', 'Abandoned'],
 	Event: null,
 	Site: ['https://www.infinitechess.org/'],

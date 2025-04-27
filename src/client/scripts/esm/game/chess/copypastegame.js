@@ -23,6 +23,7 @@ import gamecompressor from './gamecompressor.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 import gameformulator from './gameformulator.js';
 import websocket from '../websocket.js';
+import boardutil from '../../chess/util/boardutil.js';
 // Import End
 
 "use strict";
@@ -37,6 +38,8 @@ import websocket from '../websocket.js';
  */
 const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeControl','Event','Site','Round'];
 
+const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth'];
+
 /**
  * Copies the current game to the clipboard in ICN notation.
  * This callback is called when the "Copy Game" button is pressed.
@@ -47,8 +50,12 @@ function copyGame(copySinglePosition) {
 	const Variant = gamefile.metadata.Variant;
 
 	const primedGamefile = gamecompressor.compressGamefile(gamefile, copySinglePosition);
-	const largeGame = Variant === 'Omega_Squared' || Variant === 'Omega_Cubed' || Variant === 'Omega_Fourth';
-	const specifyPosition = !largeGame;
+	// Convert the variant metadata code to spoken language if translation is available
+	if (primedGamefile.metadata.Variant) primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant];
+	
+	const largeGame = variantsTooBigToCopyPositionToICN.includes(Variant);
+	// Also specify the position if we're copying a single position, so the starting position will be different.
+	const specifyPosition = !largeGame || copySinglePosition;
 	const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
         
 	docutil.copyToClipboard(shortformat);
@@ -118,7 +125,7 @@ function verifyLongformat(longformat) {
      * metadata
      * turn
      * enpassant
-     * moveRule
+     * moveRuleState
      * fullMove
      * startingPosition
      * specialRights
@@ -175,7 +182,7 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	/** longformat properties:
      * metadata
      * enpassant: Coords
-     * moveRule
+     * moveRuleState
      * fullMove
      * shortposition
      * startingPosition
@@ -219,10 +226,10 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	delete longformat.metadata.Termination; // New format
 
 	// The variant options passed into the variant loader needs to contain the following properties:
-	// `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
+	// `fullMove`, `enpassant`, `moveRuleState`, `positionString`, `startingPosition`, `specialRights`, `gameRules`.
 	const variantOptions = {
 		fullMove: longformat.fullMove,
-		moveRule: longformat.moveRule,
+		moveRuleState: longformat.moveRuleState,
 		positionString: longformat.shortposition,
 		startingPosition: longformat.startingPosition,
 		specialRights: longformat.specialRights,
@@ -240,11 +247,11 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 		 * If not, the ICN was likely tampered.
 		 * Erase the enpassant property! (or just don't transfer it over)
 		 */
-		const pieceOnExpectedSquare = longformat.startingPosition[coordutil.getKeyFromCoords(pawnExpectedSquare)];
+		const pieceOnExpectedSquare = longformat.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
 		if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === rawTypes.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
 			// Valid pawn to capture via enpassant is present
 			variantOptions.enpassant = { square: longformat.enpassant, pawn: pawnExpectedSquare };
-		}
+		} else console.warn("Pasted game doesn't have a pawn on the expected square for enpassant! Enpassant option will be ignored.");
 	}
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
@@ -268,9 +275,10 @@ function pasteGame(longformat) { // game: { startingPosition (key-list), pattern
 	const gamefile = gameslot.getGamefile();
 
 	// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-	const tooManyPieces = gamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate;
+	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
+	const tooManyPieces = pieceCount >= organizedpieces.pieceCountToDisableCheckmate;
 	if (tooManyPieces) { // TOO MANY pieces!
-		statustext.showStatus(`${translations.copypaste.piece_count} ${gamefile.startSnapshot.pieceCount} ${translations.copypaste.exceeded} ${organizedpieces.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
+		statustext.showStatus(`${translations.copypaste.piece_count} ${pieceCount} ${translations.copypaste.exceeded} ${organizedpieces.pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
 	} else { // Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces
 		statustext.showStatus(`${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`);
 	}
