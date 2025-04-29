@@ -37,8 +37,7 @@ let model: BufferModelInstanced | undefined;
  * or deleted any existing ones.
  */
 function update() {
-
-	// If the pointer simulated a click, add a highlight!
+	// If the pointer simulated a right click, add a highlight!
 	if (input.getPointerClicked_Right()) {
 		const pointerWorld: Coords = input.getPointerWorldLocation() as Coords;
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
@@ -51,27 +50,9 @@ function update() {
 
 		model = regenModel();
 	}
-
-	// If middle mouse button is clicked, remove all highlights
-	if (input.isMouseDown_Middle()) Collapse();
 }
 
-/**
- * PLANNED:
- * If there are any rays, we collapse their intersections into single highlights.
- * 
- * CURRENT:
- * Erases all highlights.
- */
-function Collapse() {
-	if (highlights.length === 0) return;
-
-	highlights.length = 0;
-	model = undefined;
-}
-
-function onGameUnload() {
-	// Remove all highlights
+function clearSquares() {
 	highlights.length = 0;
 	model = undefined;
 }
@@ -95,8 +76,6 @@ function regenModel(): BufferModelInstanced | undefined {
 
 
 function render() {
-	update();
-
 	if (!model) return;
 
 	const boardPos = movement.getBoardPos();
@@ -117,6 +96,6 @@ function render() {
 
 export default {
 	update,
-	onGameUnload,
+	clearSquares,
 	render,
 };
