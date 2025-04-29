@@ -10,6 +10,7 @@ import { Color } from "../../../../util/math.js";
 import space from "../../../misc/space.js";
 import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.js";
 import instancedshapes from "../../instancedshapes.js";
+import gameslot from "../../../chess/gameslot.js";
 // @ts-ignore
 import movement from "../../movement.js";
 // @ts-ignore
@@ -17,6 +18,7 @@ import input from "../../../input.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
+import gamefile from "../../../../chess/logic/gamefile.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -67,8 +69,10 @@ function regenModel(): BufferModelInstanced | undefined {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: number[] = [];
 
+	const offset = gameslot.getGamefile()!.mesh.offset;
+
 	highlights.forEach(coords => {
-		instanceData.push(...coords);
+		instanceData.push(...coordutil.subtractCoordinates(coords, offset));
 	});
 
 	return createModel_Instanced(vertexData, instanceData, 'TRIANGLES', true);
@@ -78,10 +82,12 @@ function regenModel(): BufferModelInstanced | undefined {
 function render() {
 	if (!model) return;
 
+	const offset = gameslot.getGamefile()!.mesh.offset;
+
 	const boardPos = movement.getBoardPos();
 	const position: [number,number,number] = [
-		-boardPos[0], // Add the model's offset
-		-boardPos[1],
+        -boardPos[0] + offset[0], // Add the model's offset. 
+        -boardPos[1] + offset[1],
 		0
 	];
 	const boardScale = movement.getBoardScale();
@@ -97,5 +103,6 @@ function render() {
 export default {
 	update,
 	clearSquares,
+	regenModel,
 	render,
 };
