@@ -40,6 +40,7 @@ import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
 import boardpos from "../rendering/boardpos.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
+import annotations from "../rendering/highlights/annotations/annotations.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -278,7 +279,7 @@ function unloadGame() {
 	
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
-	drawsquares.onGameUnload(); // Clear all user-drawn highlights
+	annotations.onGameUnload(); // Clear all user-drawn highlights
 }
 
 /**

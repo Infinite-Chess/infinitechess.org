@@ -15,6 +15,7 @@ import legalmovehighlights from "./legalmovehighlights.js";
 import specialrighthighlights from "./specialrighthighlights.js";
 import boardpos from "../boardpos.js";
 import drawsquares from "./annotations/drawsquares.js";
+import annotations from "./annotations/annotations.js";
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
@@ -37,7 +38,7 @@ function render(gamefile: gamefile) {
 	checkhighlight.render(gamefile);
 	legalmovehighlights.render();
 	specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
-	drawsquares.render(); // The square highlights added by the user
+	annotations.render(); // The square highlights added by the user
 }
 
 export default {
