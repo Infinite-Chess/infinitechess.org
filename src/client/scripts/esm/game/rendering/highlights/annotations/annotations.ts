@@ -21,6 +21,11 @@ function update() {
 	if (input.isMouseDown_Middle()) Collapse();
 }
 
+/** The annotation models offset needs to match the offset of the piece meshes. */
+function onOffsetChange() {
+    drawsquares.regenModel();
+}
+
 /**
  * CURRENT:
  * Erases all highlights.
@@ -46,6 +51,7 @@ function onGameUnload() {
 
 
 export default {
-    render,
+    onOffsetChange,
     onGameUnload,
+    render,
 }
