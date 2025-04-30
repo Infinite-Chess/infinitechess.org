@@ -45,6 +45,17 @@ import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
 import frametracker from '../rendering/frametracker.js';
+// @ts-ignore
+import websocket from '../websocket.js';
+// @ts-ignore
+import camera from '../rendering/camera.js';
+// @ts-ignore
+import copypastegame from './copypastegame.js';
+// @ts-ignore
+import stats from '../gui/stats.js';
+// @ts-ignore
+import statustext from '../gui/statustext.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -117,8 +128,11 @@ function update() {
 
 	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 
-	// NEEDS TO BE BEFORE checkIfBoardGrabbed(), because clicks should prioritize teleporting to miniimages over dragging the board!
-	// AFTER: boarddrag.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	// NEEDS TO BE BEFORE miniimage.genModel(), since if a highlight is being hovered over, no miniimage's opacity should be increased.
+	annotations.update();
+
+	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
+	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	miniimage.genModel();
 	highlightline.genModel(); // Before boarddrag.checkIfBoardGrabbed() since clicks should prioritize this.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
