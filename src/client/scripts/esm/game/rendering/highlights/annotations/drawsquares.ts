@@ -91,8 +91,7 @@ function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 	const instanceData: number[] = [];
 
 	highlights.forEach(coords => {
-		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
-		const worldLoc = space.convertCoordToWorldSpace(coords);
+		const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
 		instanceData.push(...worldLoc);
 	});
 
