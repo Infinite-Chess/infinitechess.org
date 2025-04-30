@@ -18,7 +18,7 @@ import input from "../../../input.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
-import gamefile from "../../../../chess/logic/gamefile.js";
+import miniimage from "../../miniimage.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -90,10 +90,15 @@ function render() {
         -boardPos[1] + offset[1],
 		0
 	];
-	const boardScale = movement.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	// const boardScale = movement.getBoardScale();
+	// const scale: [number,number,number] = [boardScale, boardScale, 1];
+	const scale: [number,number,number] = [1, 1, 1]; // Don't scale by the zoom, because we specify a custom "size" uniform below.
 
-	model.render(position, scale);
+	// If we're zoomed out, then the size of the highlights is constant.
+	const size = movement.isScaleLess1Pixel_Virtual() ? space.convertPixelsToWorldSpace_Virtual(miniimage.MINI_IMAGE_WIDTH_VPIXELS) : movement.getBoardScale();
+	// const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.MINI_IMAGE_WIDTH_VPIXELS : movement.getBoardScale();
+
+	model.render(position, scale, { size });
 }
 
 
