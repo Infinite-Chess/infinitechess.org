@@ -72,9 +72,6 @@ function update() {
 			const dist = math.chebyshevDistance(coordsWorld, mouseWorld);
 			if (dist < miniImageHalfWidthWorld) highlightsHovered.push(coords);
 		});
-
-		// If the pointer clicked, initiate a teleport to all highlights hovered
-		if (highlightsHovered.length > 0 && input.getPointerClicked()) transition.initTransitionToCoordsList(highlightsHovered);
 	}
 }
 
@@ -130,6 +127,8 @@ function render() {
 
 export default {
 	highlights,
+	highlightsHovered,
+	
 	update,
 	clearSquares,
 	render,
