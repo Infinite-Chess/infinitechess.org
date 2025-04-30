@@ -206,14 +206,7 @@ function genModel() {
 	});
 
 	// Finally, teleport to clicked pieces
-	if (piecesClicked.length > 0) {
-		const theArea = area.calculateFromCoordsList(piecesClicked);
-
-		const endCoords: Coords = theArea.coords as Coords;
-		const endScale: number = theArea.scale;
-		const tel = { endCoords, endScale };
-		transition.teleport(tel);
-	}
+	if (piecesClicked.length > 0) transition.initTransitionToCoordsList(piecesClicked);
 
 	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 }

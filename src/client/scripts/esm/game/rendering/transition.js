@@ -98,6 +98,15 @@ function teleport(tel1, tel2, ignoreHistory) { // tel2 can be undefined, if only
 	movement.cancelBoardDrag();
 }
 
+function initTransitionToCoordsList(coordsList) {
+	const theArea = area.calculateFromCoordsList(coordsList);
+
+	const endCoords = theArea.coords;
+	const endScale = theArea.scale;
+	const tel = { endCoords, endScale };
+	teleport(tel);
+}
+
 function update() { // Animate if we are currently teleporting
 
 	if (!isTeleporting) return; // Return if not currently teleporting
@@ -272,6 +281,7 @@ function terminate() {
 export default {
 	areWeTeleporting,
 	teleport,
+	initTransitionToCoordsList,
 	update,
 	telToPrevTel,
 	eraseTelHist,

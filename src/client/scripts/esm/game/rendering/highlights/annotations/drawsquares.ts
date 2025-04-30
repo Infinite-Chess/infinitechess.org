@@ -6,26 +6,34 @@
  */
 
 import coordutil from "../../../../chess/util/coordutil.js";
-import { Color } from "../../../../util/math.js";
+import math, { Color } from "../../../../util/math.js";
 import space from "../../../misc/space.js";
 import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.js";
 import instancedshapes from "../../instancedshapes.js";
 import gameslot from "../../../chess/gameslot.js";
+import miniimage from "../../miniimage.js";
 // @ts-ignore
 import movement from "../../movement.js";
 // @ts-ignore
 import input from "../../../input.js";
+// @ts-ignore
+import transition from "../../transition.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
-import miniimage from "../../miniimage.js";
 
 
 // Variables -----------------------------------------------------------------
 
+const color = [1, 0, 0, 0.5] as Color; // Red. Should be opaque enough to be very noticeable at slightly high zoom levels.
+/** ADDITONAL (not overriding) opacity when hovering over highlights. */
+const hover_opacity = 0.5;
+
 
 /** All highlights currently on the board. */
 const highlights: Coords[] = [];
+/** All highlights currently being hovered over, if zoomed out. */
+const highlightsHovered: Coords[] = [];
 
 /** The current model of the highlights */
 let model: BufferModelInstanced | undefined;
@@ -50,7 +58,24 @@ function update() {
 		if (index !== -1) highlights.splice(index, 1); // Remove
 		else highlights.push(pointerSquare); // Add
 
-		model = regenModel();
+		model = genModel(highlights, color);
+	}
+
+	// Test if any one highlight is being hovered over
+	highlightsHovered.length = 0;
+	if (movement.isScaleLess1Pixel_Virtual() && highlights.length > 0) {
+		// Calculate the mouse's world space
+		const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
+		// Iterate through each highlight to see if the mouse world is within MINI_IMAGE_WIDTH_VPIXELS of it
+		highlights.forEach(coords => {
+			const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+			// const coordsWorld = space.convertCoordToWorldSpace(coords);
+			const dist = math.chebyshevDistance(coordsWorld, mouseWorld);
+			if (dist < miniimage.MINI_IMAGE_WIDTH_VPIXELS) highlightsHovered.push(coords);
+		});
+
+		// If the pointer clicked, initiate a teleport to all highlights hovered
+		if (highlightsHovered.length > 0 && input.getPointerClicked()) transition.initTransitionToCoordsList(highlightsHovered);
 	}
 }
 
@@ -63,9 +88,11 @@ function clearSquares() {
 // Rendering -----------------------------------------------------------------
 
 
-function regenModel(): BufferModelInstanced | undefined {
-	const color = [1, 0, 0, 0.5] as Color; // Red. Should be opaque enough to be very noticeable at slightly high zoom levels.
+function regenModel() {
+	model = genModel(highlights, color);
+}
 
+function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: number[] = [];
 
@@ -98,7 +125,21 @@ function render() {
 	const size = movement.isScaleLess1Pixel_Virtual() ? space.convertPixelsToWorldSpace_Virtual(miniimage.MINI_IMAGE_WIDTH_VPIXELS) : movement.getBoardScale();
 	// const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.MINI_IMAGE_WIDTH_VPIXELS : movement.getBoardScale();
 
-	model.render(position, scale, { size });
+
+	// Render main highlights
+	model!.render(position, scale, { size });
+
+	// Render hovered highlights
+	if (highlightsHovered.length > 0) {
+		const hoverColor = [
+			color[0],
+			color[1],
+			color[2],
+			hover_opacity
+		] as Color;
+		const model = genModel(highlightsHovered, hoverColor);
+		model.render(position, scale, { size });
+	}
 }
 
 

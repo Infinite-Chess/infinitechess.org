@@ -63,6 +63,7 @@ import copypastegame from './copypastegame.js';
 import stats from '../gui/stats.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
 
 // Functions -------------------------------------------------------------------------------
 
@@ -163,6 +164,9 @@ function updateBoard(gamefile: gamefile) {
 	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
 
 	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER movement.dragBoard() or picking up the board has a spring back effect to it
+
+	// NEEDS TO BE BEFORE miniimage.genModel(), since if a highlight is being hovered over, no miniimage's opacity should be increased.
+	annotations.update();
 
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.

@@ -39,8 +39,6 @@ function Collapse() {
 
 
 function render() {
-    update();
-
     drawsquares.render();
 }
 
@@ -53,5 +51,6 @@ function onGameUnload() {
 export default {
     onOffsetChange,
     onGameUnload,
+    update,
     render,
 }
