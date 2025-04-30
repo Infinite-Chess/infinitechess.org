@@ -31,6 +31,7 @@ interface ServerSidePreferences {
 	theme: string;
 	legal_moves: 'dots' | 'squares';
 	animations: boolean,
+	lingering_annotations: boolean,
 }
 
 /** Both client and server side preferences */
@@ -49,6 +50,7 @@ const default_premove_mode: boolean = false; // Change this to true when premove
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
+const default_lingering_annotations: boolean = false;
 
 
 /**
@@ -74,6 +76,7 @@ function loadPreferences(): void {
 		drag_enabled: default_drag_enabled,
 		premove_mode: default_premove_mode,
 		animations: default_animations,
+		lingering_annotations: default_lingering_annotations;
 	};
 
 	preferences = browserStoragePrefs;
@@ -226,6 +229,17 @@ function setPerspectiveFOV(perspective_fov: number): void {
 	preferences.perspective_fov = perspective_fov;
 	savePreferences();
 	document.dispatchEvent(new CustomEvent('fov-change'));
+}
+
+function getLingeringAnnotations() {
+	return preferences.lingering_annotations ?? default_lingering_annotations;
+}
+
+function setLingeringAnnotations(value: boolean) {
+	if (typeof value !== 'boolean') throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
+	preferences.lingering_annotations = value;
+	onChangeMade();
+	savePreferences();
 }
 
 
@@ -404,6 +418,8 @@ export default {
 	getPerspectiveFOV,
 	getDefaultPerspectiveFOV,
 	setPerspectiveFOV,
+	getLingeringAnnotations,
+	setLingeringAnnotations,
 	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,
