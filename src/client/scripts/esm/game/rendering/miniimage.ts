@@ -9,17 +9,20 @@ import type { Coords } from '../../chess/util/coordutil.js';
 
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
-import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
-import { createModel, BufferModel } from './buffermodel.js';
+import { createModel_Instanced, BufferModelInstanced } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
-import { players, rawTypes } from '../../chess/util/typeutil.js';
+import { players, TypeGroup } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
+import snapping from './highlights/snapping.js';
+import instancedshapes from './instancedshapes.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import math, { Color } from '../../util/math.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -31,8 +34,6 @@ import transition from './transition.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
-import area from './area.js';
-// @ts-ignore
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
@@ -43,39 +44,32 @@ import guipause from '../gui/guipause.js';
 // Variables --------------------------------------------------------------
 
 
-/** Width of ghost-pieces when zoomed out, in virtual pixels. */
-const MINI_IMAGE_WIDTH_VPIXELS: number = 36; // Default: 36
 const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
 const MAX_ANIM_DIST_VPIXELS = 2300;
 
 
-/** {@link MINI_IMAGE_WIDTH_VPIXELS}, but converted to world-space units. This is recalculated on every screen resize. */
-let widthWorld: number;
-/** True if currently hovering over a mini image */
-let hovering: boolean = false;
 /** True if we're disabled and not rendering mini images, such as when there's too many pieces. */
 let disabled: boolean = false; // Disabled when there's too many pieces
 
-let model: BufferModel;
+
+/** All mini images currently being hovered over, if zoomed out. */
+const imagesHovered: Coords[] = [];
+
+/**
+ * The instance data of all the mini images, where the keys are the piece type,
+ * and the values are arrays of world space coordinates of images of that type.
+ */
+let instanceData: TypeGroup<number[]> = {};
+/**
+ * {@link instanceData}, but only for images being hovered over,
+ * since those need to be rendered completely opaque.
+ */
+let instanceData_hovered: TypeGroup<number[]> = {};
 
 
-// Getters & Setters --------------------------------------------------------------
+// Toggling --------------------------------------------------------------
 
-
-function getWidthWorld(): number {
-	return widthWorld;
-}
-
-// Call after screen resize
-function recalcWidthWorld(): void {
-	// Convert width to world-space
-	widthWorld = space.convertPixelsToWorldSpace_Virtual(MINI_IMAGE_WIDTH_VPIXELS);
-}
-
-function isHovering(): boolean {
-	return hovering;
-}
 
 function isDisabled(): boolean {
 	return disabled;
@@ -101,88 +95,64 @@ function toggle(): void {
 	else statustext.showStatus(translations['rendering'].icon_rendering_on);
 }
 
+
+// Updating --------------------------------------------------------------------------
+
+
 /**
- * Generates the buffer model of the miniimages of the pieces when we're zoomed out.
- * This also detects if we click on a mini-image and if so, teleports us there.
- * 
- * This must be done in the game's update() loop, because it listens for mouse events,
- * and can start teleports.
+ * Generates the instance data for the miniimages of the pieces this frame.
+ * At the same time, this calculates what images are being hovered over.
  */
-function genModel() {
-	if (guipause.areWePaused()) return; // Exit if paused
-	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
-	if (disabled) return; // Too many pieces to render icons!
+function updateImagesHovered() {
+	imagesHovered.length = 0;
+
+	instanceData = {};
+	instanceData_hovered = {};
+
+	if (guipause.areWePaused() || !boardpos.areZoomedOut() || disabled) return;
 
 	const gamefile = gameslot.getGamefile()!;
+	const pieces = gamefile.pieces;
 
-	// Every frame we'll need to regenerate the buffer model
-	const data: number[] = [];
-	const piecesClicked: Coords[] = [];
+	// Iterate through all pieces...
 
-	// Iterate through all pieces
-	// ...
+	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
 
-	const halfWidth: number = widthWorld / 2;
-	const boardPos: Coords = boardpos.getBoardPos();
-	const boardScale: number = boardpos.getBoardScale();
-
-	// While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
+	// While we're iterating, test to see if mouse is hovering over, if so, add the same data to the hovered data.
 
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
 
-	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
-	const pieces = gamefile.pieces;
-	
-	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
-	const sortedColors = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
-	const sortedNeutrals = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
+	gamefile.existingTypes.forEach((type: number) => {
+		if (boardutil.getPieceCountOfTypeRange(pieces.typeRanges.get(type)!) === 0) return; // The type is ALL undefined placeholders
+		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
-	// Process the neutrals first so they are rendered on bottom.
-	sortedNeutrals.forEach(processType);
-	sortedColors.forEach(processType);
+		const thisInstanceData: 		number[] = [];
+		const thisInstanceData_hovered: number[] = [];
 
-	function processType(type: number) {
-		const range = pieces.typeRanges.get(type)!;
-		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
-
-		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
-
-		for (let i = range.start; i < range.end; i++) {
-			if (boardutil.isIdxUndefinedPiece(pieces, i)) continue;
-			const coords = boardutil.getCoordsFromIdx(pieces, i);
+		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
+			const coords = boardutil.getCoordsFromIdx(pieces, idx);
 			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
-			processPiece(coords, texleft, texbottom, texright, textop, 1, 1, 1);
-		}
-	}
+			processPiece(coords, thisInstanceData, thisInstanceData_hovered);
+		});
 
-	function processPiece(coords: Coords, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
-		const startX: number = (coords[0] - boardPos[0]) * boardScale - halfWidth;
-		const startY: number = (coords[1] - boardPos[1]) * boardScale - halfWidth;
-		const endX: number = startX + widthWorld;
-		const endY: number = startY + widthWorld;
+		instanceData[type] = thisInstanceData;
+		instanceData_hovered[type] = thisInstanceData_hovered;
+	});
 
-		let thisOpacity: number = MINI_IMAGE_OPACITY;
+	function processPiece(coords: Coords, instanceData: number[], instanceData_hovered: number[]) {
+		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		instanceData.push(...coordsWorld);
 
-		// Are we hovering over? If so, opacity needs to be 100%
+		// Are we hovering over? If so, add the same data to instanceData_hovered
 		if (areWatchingMousePosition) {
-			const pointerWorld = mouse.getMouseWorld();
-
-			if (pointerWorld && pointerWorld[0] > startX && pointerWorld[0] < endX && pointerWorld[1] > startY && pointerWorld[1] < endY) {
-				thisOpacity = 1;
-				hovering = true;
-				/**
-				 * If we also clicked, then teleport!
-				 * Add them to a list of pieces we're hovering over.
-				 * If we click, we teleport to a location containing them all.
-				 */
-				if (mouse.isMouseClicked(Mouse.LEFT)) piecesClicked.push(coords);
-				else if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+			const mouseWorld = mouse.getMouseWorld();
+			if (mouseWorld && math.chebyshevDistance(coordsWorld, mouseWorld) < halfWorldWidth) { // Being hovered over!
+				imagesHovered.push(coords);
+				instanceData_hovered.push(...coordsWorld);
 			}
 		}
-
-		data.push(...bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity));
 	}
 
 	// Add the animated pieces
@@ -190,19 +160,11 @@ function genModel() {
 		// Animate the main piece being animated
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		processPiece(currentCoords, texleft, texbottom, texright, textop, 1, 1, 1);
+		processPiece(currentCoords, instanceData[a.type], instanceData_hovered[a.type]);
 
 		// Animate the captured piece too, if there is one
-		if (!a.captured) return;
-		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.captured.type, rotation));
-		processPiece(a.captured.coords, texleft, texbottom, texright, textop, 1, 1, 1);
+		if (a.captured) processPiece(a.captured.coords, instanceData[a.captured.type], instanceData_hovered[a.captured.type]);
 	});
-
-	// Finally, teleport to clicked pieces
-	if (piecesClicked.length > 0) transition.initTransitionToCoordsList(piecesClicked);
-
-	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
 
@@ -210,10 +172,44 @@ function genModel() {
 
 
 function render(): void {
-	hovering = false;
-	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
-	if (disabled) return; // Too many pieces to render icons!
-	webgl.executeWithDepthFunc_ALWAYS(model.render);
+	if (!boardpos.areZoomedOut() || disabled) return;
+
+	const gamefile = gameslot.getGamefile()!;
+	const inverted = perspective.getIsViewingBlackPerspective();
+
+	const models: TypeGroup<BufferModelInstanced> = {};
+	const models_hovered: TypeGroup<BufferModelInstanced> = {};
+
+	// Create the models
+	for (const [typeStr, thisInstanceData] of Object.entries(instanceData)) {
+		const color = [1,1,1, MINI_IMAGE_OPACITY] as Color;
+		const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
+
+		const type = Number(typeStr);
+		const tex: WebGLTexture = texturecache.getTexture(type);
+		models[type] = createModel_Instanced(vertexData, new Float32Array(thisInstanceData), 'TRIANGLES', true, tex);
+		// Create the hovered model if it's non empty
+		if (instanceData_hovered[type].length > 0) {
+			const color_hovered = [1,1,1, 1] as Color; // Hovered mini images are fully opaque
+			const vertexData_hovered: number[] = instancedshapes.getDataColoredTexture(color_hovered, inverted);
+			models_hovered[type] = createModel_Instanced(vertexData_hovered, new Float32Array(instanceData_hovered[type]), 'TRIANGLES', true, tex);
+		}
+	}
+
+	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
+	const sortedNeutrals = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedColors = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
+
+	webgl.executeWithDepthFunc_ALWAYS(() => {
+		for (const neut of sortedNeutrals) {
+			models[neut]?.render();
+			models_hovered[neut]?.render();
+		}
+		for (const col of sortedColors) {
+			models[col]?.render();
+			models_hovered[col]?.render();
+		}
+	});
 }
 
 
@@ -222,13 +218,12 @@ function render(): void {
 
 export default {
 	toggle,
-	MINI_IMAGE_WIDTH_VPIXELS,
-	getWidthWorld,
-	recalcWidthWorld,
-	isHovering,
+	imagesHovered,
+	
 	isDisabled,
 	enable,
 	disable,
-	genModel,
+
+	updateImagesHovered,
 	render,
 };

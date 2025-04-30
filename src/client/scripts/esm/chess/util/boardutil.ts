@@ -151,6 +151,38 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
 	return royalCoordsList;
 }
 
+/**
+ * Efficiently iterates through every piece in a type range,
+ * skipping over undefineds placeholders, executing callback
+ * on each piece idx.
+ */
+function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (idx: number) => void) {
+	const range = o.typeRanges[type];
+	let undefinedidx = 0;
+	for (let idx = range.start; idx < range.end; idx++) {
+		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
+			undefinedidx++;
+			continue;
+		};
+		callback(idx);
+	}
+}
+
+/**
+ * Efficiently iterates through every piece in a type range,
+ * calculating if each idx is an undefined placeholder.
+ */
+function iteratePiecesInTypeRange_IncludeUndefineds(o: OrganizedPieces, type: number, callback: (idx: number, isUndefined: boolean) => void) {
+	const range = o.typeRanges[type];
+	let undefinedidx = 0;
+	for (let idx = range.start; idx < range.end; idx++) {
+		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
+			undefinedidx++;
+			callback(idx, true);
+		} else callback(idx, false);
+	}
+}
+
 function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange) {
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
@@ -242,11 +274,14 @@ export default {
 	getPieceCountOfGame,
 	getPieceCountOfColor,
 	getPieceCountOfType,
+	getPieceCountOfTypeRange,
 	getPieceCount_IncludingUndefineds,
 
 	getCoordsOfAllPieces,
 	getJumpingRoyalCoordsOfColor,
 	getRoyalCoordsOfColor,
+	iteratePiecesInTypeRange,
+	iteratePiecesInTypeRange_IncludeUndefineds,
 
 	isIdxUndefinedPiece,
 	isPieceOnCoords,

@@ -10,17 +10,18 @@ import math, { Color } from "../../../../util/math.js";
 import space from "../../../misc/space.js";
 import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.js";
 import instancedshapes from "../../instancedshapes.js";
-import miniimage from "../../miniimage.js";
 import preferences from "../../../../components/header/preferences.js";
+import snapping from "../snapping.js";
 // @ts-ignore
 import movement from "../../movement.js";
 // @ts-ignore
 import input from "../../../input.js";
 // @ts-ignore
-import transition from "../../transition.js";
+import guipause from "../../../gui/guipause.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
+import perspective from "../../perspective.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -43,7 +44,6 @@ const highlightsHovered: Coords[] = [];
  * or deleted any existing ones.
  */
 function update() {
-
 	// If the pointer simulated a right click, add a highlight!
 	if (input.getPointerClicked_Right()) {
 		const pointerWorld: Coords = input.getPointerWorldLocation() as Coords;
@@ -55,24 +55,26 @@ function update() {
 		if (index !== -1) highlights.splice(index, 1); // Remove
 		else highlights.push(pointerSquare); // Add
 	}
+}
+
+function updateHighlightsHovered() {
+	highlightsHovered.length = 0;
+	if (!movement.isScaleLess1Pixel_Virtual() || guipause.areWePaused() || highlights.length === 0) return;
+	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
 
 	// Test if any one highlight is being hovered over
-	highlightsHovered.length = 0;
-	if (movement.isScaleLess1Pixel_Virtual() && highlights.length > 0) {
 
-		// Calculate the mouse's world space
-		const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
+	// Calculate the mouse's world space
+	const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
 
-		const miniImageHalfWidthWorld = miniimage.getWidthWorld() / 2;
+	const miniImageHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
 
-		// Iterate through each highlight to see if the mouse world is within MINI_IMAGE_WIDTH_VPIXELS of it
-		highlights.forEach(coords => {
-			const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
-			// const coordsWorld = space.convertCoordToWorldSpace(coords);
-			const dist = math.chebyshevDistance(coordsWorld, mouseWorld);
-			if (dist < miniImageHalfWidthWorld) highlightsHovered.push(coords);
-		});
-	}
+	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
+	highlights.forEach(coords => {
+		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		const dist = math.chebyshevDistance(coordsWorld, mouseWorld);
+		if (dist < miniImageHalfWidthWorld) highlightsHovered.push(coords);
+	});
 }
 
 function clearSquares() {
@@ -100,13 +102,14 @@ function render() {
 	if (highlights.length === 0) return;
 
 	// If we're zoomed out, then the size of the highlights is constant.
-	const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.getWidthWorld() : movement.getBoardScale();
-	// const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.MINI_IMAGE_WIDTH_VPIXELS : movement.getBoardScale();
+	const size = movement.isScaleLess1Pixel_Virtual() ? snapping.getEntityWidthWorld() : movement.getBoardScale();
+	// const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.ENTITY_WIDTH_VPIXELS : movement.getBoardScale();
 
 	// Render main highlights
 	const color = preferences.getAnnoteSquareColor();
 
 	genModel(highlights, color).render(undefined, undefined, { size });
+	// webgl.executeWithDepthFunc_ALWAYS(genModel(highlights, color).render(undefined, undefined, { size }));
 
 	// Render hovered highlights
 	if (highlightsHovered.length > 0) {
@@ -118,6 +121,7 @@ function render() {
 			hover_opacity
 		] as Color;
 		genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size });
+		// webgl.executeWithDepthFunc_ALWAYS(genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size }));
 	}
 }
 
@@ -128,8 +132,9 @@ function render() {
 export default {
 	highlights,
 	highlightsHovered,
-	
+
 	update,
+	updateHighlightsHovered,
 	clearSquares,
 	render,
 };

@@ -137,17 +137,17 @@ function update() {
 
 	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 
-	// NEEDS TO BE BEFORE miniimage.genModel(), since if a highlight is being hovered over, no miniimage's opacity should be increased.
-	annotations.update();
-
+	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
-	miniimage.genModel();
-	// NEEDS TO BE AFTER annotations and miniimages test what entities are being hovered
-	snapping.testIfClickedEntity();
+	snapping.updateEntitiesHovered();
+	// AFTER snapping.updateEntitiesHovered()
+	annotations.update();
+
+	// After updating annotations and mini image hovers as this early exits if we're hovering.
 	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
-	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
+	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	boarddrag.checkIfBoardGrabbed();
 
 	gameloader.update(); // Updates whatever game is currently loaded.

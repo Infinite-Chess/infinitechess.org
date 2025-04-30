@@ -12,7 +12,6 @@
 
 // Import Start
 import perspective from './perspective.js';
-import miniimage from './miniimage.js';
 import stats from '../gui/stats.js';
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';

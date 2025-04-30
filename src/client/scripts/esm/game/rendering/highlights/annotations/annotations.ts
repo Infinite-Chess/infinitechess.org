@@ -12,7 +12,7 @@ import input from "../../../input.js";
 
 
 
-
+/** Adds/deletes annotations */
 function update() {
 	drawsquares.update();
 
