@@ -29,14 +29,14 @@ import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import piecemodels from '../rendering/piecemodels.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
 import input from '../input.js';
-// @ts-ignore
-import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
@@ -163,6 +163,9 @@ function updateBoard(gamefile: gamefile) {
 	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
 
 	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER movement.dragBoard() or picking up the board has a spring back effect to it
+
+	// NEEDS TO BE BEFORE miniimage.genModel(), since if a highlight is being hovered over, no miniimage's opacity should be increased.
+	annotations.update();
 
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.

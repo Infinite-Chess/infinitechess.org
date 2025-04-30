@@ -31,6 +31,7 @@ interface ServerSidePreferences {
 	theme: string;
 	legal_moves: 'dots' | 'squares';
 	animations: boolean,
+	lingering_annotations: boolean,
 }
 
 /** Both client and server side preferences */
@@ -49,6 +50,7 @@ const default_premove_mode: boolean = false; // Change this to true when premove
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
+const default_lingering_annotations: boolean = false;
 
 
 /**
@@ -74,6 +76,7 @@ function loadPreferences(): void {
 		drag_enabled: default_drag_enabled,
 		premove_mode: default_premove_mode,
 		animations: default_animations,
+		lingering_annotations: default_lingering_annotations,
 	};
 
 	preferences = browserStoragePrefs;
@@ -228,6 +231,17 @@ function setPerspectiveFOV(perspective_fov: number): void {
 	document.dispatchEvent(new CustomEvent('fov-change'));
 }
 
+function getLingeringAnnotationsMode() {
+	return preferences.lingering_annotations ?? default_lingering_annotations;
+}
+
+function setLingeringAnnotationsMode(value: boolean) {
+	if (typeof value !== 'boolean') throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
+	preferences.lingering_annotations = value;
+	onChangeMade();
+	savePreferences();
+}
+
 
 // Getters for our current theme properties --------------------------------------------------------
 
@@ -262,6 +276,16 @@ function getCheckHighlightColor(): Color {
 function getBoxOutlineColor(): Color {
 	const themeName: string = getTheme();
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
+}
+
+function getAnnoteSquareColor(): Color {
+	const themeName: string = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'annoteSquareColor');
+}
+
+function getAnnoteArrowColor(): Color {
+	const themeName: string = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'annoteArrowColor');
 }
 
 /** Returns the tint color for a piece of the given type, according to our current theme. */
@@ -404,6 +428,8 @@ export default {
 	getPerspectiveFOV,
 	getDefaultPerspectiveFOV,
 	setPerspectiveFOV,
+	getLingeringAnnotationsMode,
+	setLingeringAnnotationsMode,
 	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,
@@ -411,5 +437,7 @@ export default {
 	getLastMoveHighlightColor,
 	getCheckHighlightColor,
 	getBoxOutlineColor,
+	getAnnoteSquareColor,
+	getAnnoteArrowColor,
 	getTintColorOfType,
 };

@@ -6,14 +6,18 @@
  */
 
 import coordutil from "../../../../chess/util/coordutil.js";
-import { Color } from "../../../../util/math.js";
+import math, { Color } from "../../../../util/math.js";
 import space from "../../../misc/space.js";
 import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.js";
 import instancedshapes from "../../instancedshapes.js";
+import miniimage from "../../miniimage.js";
+import preferences from "../../../../components/header/preferences.js";
 // @ts-ignore
 import movement from "../../movement.js";
 // @ts-ignore
 import input from "../../../input.js";
+// @ts-ignore
+import transition from "../../transition.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
@@ -21,12 +25,14 @@ import type { Coords } from "../../../../chess/util/coordutil.js";
 
 // Variables -----------------------------------------------------------------
 
+/** ADDITONAL (not overriding) opacity when hovering over highlights. */
+const hover_opacity = 0.5;
+
 
 /** All highlights currently on the board. */
 const highlights: Coords[] = [];
-
-/** The current model of the highlights */
-let model: BufferModelInstanced | undefined;
+/** All highlights currently being hovered over, if zoomed out. */
+const highlightsHovered: Coords[] = [];
 
 
 // Updating -----------------------------------------------------------------
@@ -38,7 +44,7 @@ let model: BufferModelInstanced | undefined;
  */
 function update() {
 
-	// If the pointer simulated a click, add a highlight!
+	// If the pointer simulated a right click, add a highlight!
 	if (input.getPointerClicked_Right()) {
 		const pointerWorld: Coords = input.getPointerWorldLocation() as Coords;
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
@@ -48,46 +54,46 @@ function update() {
 
 		if (index !== -1) highlights.splice(index, 1); // Remove
 		else highlights.push(pointerSquare); // Add
-
-		model = regenModel();
 	}
 
-	// If middle mouse button is clicked, remove all highlights
-	if (input.isMouseDown_Middle()) Collapse();
+	// Test if any one highlight is being hovered over
+	highlightsHovered.length = 0;
+	if (movement.isScaleLess1Pixel_Virtual() && highlights.length > 0) {
+
+		// Calculate the mouse's world space
+		const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
+
+		const miniImageHalfWidthWorld = miniimage.getWidthWorld() / 2;
+
+		// Iterate through each highlight to see if the mouse world is within MINI_IMAGE_WIDTH_VPIXELS of it
+		highlights.forEach(coords => {
+			const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+			// const coordsWorld = space.convertCoordToWorldSpace(coords);
+			const dist = math.chebyshevDistance(coordsWorld, mouseWorld);
+			if (dist < miniImageHalfWidthWorld) highlightsHovered.push(coords);
+		});
+
+		// If the pointer clicked, initiate a teleport to all highlights hovered
+		if (highlightsHovered.length > 0 && input.getPointerClicked()) transition.initTransitionToCoordsList(highlightsHovered);
+	}
 }
 
-/**
- * PLANNED:
- * If there are any rays, we collapse their intersections into single highlights.
- * 
- * CURRENT:
- * Erases all highlights.
- */
-function Collapse() {
-	if (highlights.length === 0) return;
-
+function clearSquares() {
 	highlights.length = 0;
-	model = undefined;
-}
-
-function onGameUnload() {
-	// Remove all highlights
-	highlights.length = 0;
-	model = undefined;
 }
 
 
 // Rendering -----------------------------------------------------------------
 
 
-function regenModel(): BufferModelInstanced | undefined {
-	const color = [1, 0, 0, 0.5] as Color; // Red. Should be opaque enough to be very noticeable at slightly high zoom levels.
-
+function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: number[] = [];
 
 	highlights.forEach(coords => {
-		instanceData.push(...coords);
+		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		const worldLoc = space.convertCoordToWorldSpace(coords);
+		instanceData.push(...worldLoc);
 	});
 
 	return createModel_Instanced(vertexData, instanceData, 'TRIANGLES', true);
@@ -95,20 +101,28 @@ function regenModel(): BufferModelInstanced | undefined {
 
 
 function render() {
-	update();
+	if (highlights.length === 0) return;
 
-	if (!model) return;
+	// If we're zoomed out, then the size of the highlights is constant.
+	const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.getWidthWorld() : movement.getBoardScale();
+	// const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.MINI_IMAGE_WIDTH_VPIXELS : movement.getBoardScale();
 
-	const boardPos = movement.getBoardPos();
-	const position: [number,number,number] = [
-		-boardPos[0], // Add the model's offset
-		-boardPos[1],
-		0
-	];
-	const boardScale = movement.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	// Render main highlights
+	const color = preferences.getAnnoteSquareColor();
 
-	model.render(position, scale);
+	genModel(highlights, color).render(undefined, undefined, { size });
+
+	// Render hovered highlights
+	if (highlightsHovered.length > 0) {
+		const color = preferences.getAnnoteSquareColor();
+		const hoverColor = [
+			color[0],
+			color[1],
+			color[2],
+			hover_opacity
+		] as Color;
+		genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size });
+	}
 }
 
 
@@ -117,6 +131,6 @@ function render() {
 
 export default {
 	update,
-	onGameUnload,
+	clearSquares,
 	render,
 };

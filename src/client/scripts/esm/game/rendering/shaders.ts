@@ -48,6 +48,7 @@ function initPrograms() {
 		createColorProgram(),
 		createColorProgram_Instanced(),
 		createColorProgram_Instanced_Plus(),
+		createSizedColorProgram_Instanced(),
 		createTextureProgram(),
 		createColoredTextureProgram(),
 		createTextureProgram_Instanced(),
@@ -216,6 +217,71 @@ function createColorProgram_Instanced_Plus(): ShaderProgram {
 		},
 		uniformLocations: {
 			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!
+		},
+	};
+}
+
+/**
+ * Creates and returns a shader program that uses INSTANCED RENDERING
+ * to render colored squares.
+ * Instance-specific data includes position offsets.
+ * A uniform 'uSize' controls the size of all rendered squares.
+ *
+ * Base vertex data should define ONE square (e.g., centered at origin)
+ * with position (vec4) and color (vec4) attributes.
+ * Instance data buffer should contain position offsets (vec3).
+ */
+function createSizedColorProgram_Instanced(): ShaderProgram {
+	const vsSource = `#version 300 es
+        in vec4 aVertexPosition;     // Base shape vertex position (e.g., from -0.5 to 0.5)
+        in vec4 aVertexColor;        // Base shape vertex color
+        in vec3 aInstancePosition;   // Per-instance position offset (center of the shape)
+
+        uniform mat4 uTransformMatrix; // Combined model-view-projection matrix
+        uniform float uSize;    // Desired size multiplier of the shape (scales aVertexPosition)
+
+        out vec4 vColor;             // Pass color to fragment shader
+
+        void main() {
+            // Scale the base vertex position's X and Y by the shape width.
+            // Assumes Z is 0 or handled appropriately, W is 1 for position.
+            vec3 scaledLocalPosition = vec3(aVertexPosition.xy * uSize, aVertexPosition.z);
+
+            // Add the instance-specific position offset to the scaled local position.
+            vec3 finalPosition = scaledLocalPosition + aInstancePosition;
+
+            // Transform the final position.
+            gl_Position = uTransformMatrix * vec4(finalPosition, 1.0);
+
+            // Pass the vertex color through.
+            vColor = aVertexColor;
+        }
+    `;
+
+	const fsSource = `#version 300 es
+        precision lowp float;
+
+        in vec4 vColor;        // Interpolated color from vertex shader
+
+        out vec4 fragColor;    // Output fragment color
+
+        void main() {
+            fragColor = vColor; // Simply output the interpolated vertex color.
+        }
+    `;
+
+	const program = createShaderProgram(vsSource, fsSource);
+
+	return {
+		program,
+		attribLocations: {
+			position: gl.getAttribLocation(program, 'aVertexPosition'),
+			color: gl.getAttribLocation(program, 'aVertexColor'),
+			instanceposition: gl.getAttribLocation(program, 'aInstancePosition')
+		},
+		uniformLocations: {
+			transformMatrix: gl.getUniformLocation(program, 'uTransformMatrix')!,
+			size: gl.getUniformLocation(program, 'uSize')!
 		},
 	};
 }
