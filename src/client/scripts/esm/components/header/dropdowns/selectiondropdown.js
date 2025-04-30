@@ -30,6 +30,7 @@ function showCheckmarkOnSelectedOptions() {
 	dragCheckbox.checked = preferences.getDragEnabled();
 	premoveCheckbox.checked = preferences.getPremoveMode();
 	animationsCheckbox.checked = preferences.getAnimationsMode();
+	lingeringAnnotationsCheckbox.checked = preferences.getLingeringAnnotationsMode();
 }
 
 function open() {

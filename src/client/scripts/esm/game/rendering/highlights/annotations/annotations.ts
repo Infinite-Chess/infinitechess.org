@@ -6,30 +6,19 @@
  * * Rays
  */
 
-import drawsquares from "./drawsquares";
+import drawsquares from "./drawsquares.js";
 // @ts-ignore
-import input from "../../../input";
+import input from "../../../input.js";
 
 
 
 
 function update() {
-    drawsquares.update()
+	drawsquares.update();
 
 	// If middle mouse button is clicked, remove all highlights
-    // TODO: Change this to left clicking an empty region of the board
+	// TODO: Change this to left clicking an empty region of the board
 	if (input.isMouseDown_Middle()) Collapse();
-}
-
-/** The annotation models offset needs to match the offset of the piece meshes. */
-function onOffsetChange() {
-    regenAll();
-}
-
-document.addEventListener('theme-change', (event) => regenAll());
-
-function regenAll() {
-    drawsquares.regenModel();
 }
 
 /**
@@ -40,23 +29,22 @@ function regenAll() {
  * If there are any rays, we collapse their intersections into single highlights.
  */
 function Collapse() {
-    drawsquares.clearSquares();
+	drawsquares.clearSquares();
 }
 
 
 function render() {
-    drawsquares.render();
+	drawsquares.render();
 }
 
 function onGameUnload() {
-    drawsquares.clearSquares();
+	drawsquares.clearSquares();
 }
 
 
 
 export default {
-    onOffsetChange,
-    onGameUnload,
-    update,
-    render,
-}
+	onGameUnload,
+	update,
+	render,
+};

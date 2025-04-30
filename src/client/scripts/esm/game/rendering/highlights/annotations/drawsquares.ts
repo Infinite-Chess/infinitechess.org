@@ -10,8 +10,8 @@ import math, { Color } from "../../../../util/math.js";
 import space from "../../../misc/space.js";
 import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.js";
 import instancedshapes from "../../instancedshapes.js";
-import gameslot from "../../../chess/gameslot.js";
 import miniimage from "../../miniimage.js";
+import preferences from "../../../../components/header/preferences.js";
 // @ts-ignore
 import movement from "../../movement.js";
 // @ts-ignore
@@ -34,9 +34,6 @@ const highlights: Coords[] = [];
 /** All highlights currently being hovered over, if zoomed out. */
 const highlightsHovered: Coords[] = [];
 
-/** The current model of the highlights */
-let model: BufferModelInstanced | undefined;
-
 
 // Updating -----------------------------------------------------------------
 
@@ -46,6 +43,7 @@ let model: BufferModelInstanced | undefined;
  * or deleted any existing ones.
  */
 function update() {
+
 	// If the pointer simulated a right click, add a highlight!
 	if (input.getPointerClicked_Right()) {
 		const pointerWorld: Coords = input.getPointerWorldLocation() as Coords;
@@ -56,22 +54,23 @@ function update() {
 
 		if (index !== -1) highlights.splice(index, 1); // Remove
 		else highlights.push(pointerSquare); // Add
-
-		const color = preferences.getAnnoteSquareColor();
-		model = genModel(highlights, color);
 	}
 
 	// Test if any one highlight is being hovered over
 	highlightsHovered.length = 0;
 	if (movement.isScaleLess1Pixel_Virtual() && highlights.length > 0) {
+
 		// Calculate the mouse's world space
 		const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
+
+		const miniImageHalfWidthWorld = miniimage.getWidthWorld() / 2;
+
 		// Iterate through each highlight to see if the mouse world is within MINI_IMAGE_WIDTH_VPIXELS of it
 		highlights.forEach(coords => {
 			const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
 			// const coordsWorld = space.convertCoordToWorldSpace(coords);
 			const dist = math.chebyshevDistance(coordsWorld, mouseWorld);
-			if (dist < miniimage.MINI_IMAGE_WIDTH_VPIXELS) highlightsHovered.push(coords);
+			if (dist < miniImageHalfWidthWorld) highlightsHovered.push(coords);
 		});
 
 		// If the pointer clicked, initiate a teleport to all highlights hovered
@@ -81,25 +80,20 @@ function update() {
 
 function clearSquares() {
 	highlights.length = 0;
-	model = undefined;
 }
 
 
 // Rendering -----------------------------------------------------------------
 
 
-function regenModel() {
-	model = genModel(highlights, color);
-}
-
 function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: number[] = [];
 
-	const offset = gameslot.getGamefile()!.mesh.offset;
-
 	highlights.forEach(coords => {
-		instanceData.push(...coordutil.subtractCoordinates(coords, offset));
+		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		const worldLoc = space.convertCoordToWorldSpace(coords);
+		instanceData.push(...worldLoc);
 	});
 
 	return createModel_Instanced(vertexData, instanceData, 'TRIANGLES', true);
@@ -107,27 +101,16 @@ function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 
 
 function render() {
-	if (!model) return;
-
-	const offset = gameslot.getGamefile()!.mesh.offset;
-
-	const boardPos = movement.getBoardPos();
-	const position: [number,number,number] = [
-        -boardPos[0] + offset[0], // Add the model's offset. 
-        -boardPos[1] + offset[1],
-		0
-	];
-	// const boardScale = movement.getBoardScale();
-	// const scale: [number,number,number] = [boardScale, boardScale, 1];
-	const scale: [number,number,number] = [1, 1, 1]; // Don't scale by the zoom, because we specify a custom "size" uniform below.
+	if (highlights.length === 0) return;
 
 	// If we're zoomed out, then the size of the highlights is constant.
-	const size = movement.isScaleLess1Pixel_Virtual() ? space.convertPixelsToWorldSpace_Virtual(miniimage.MINI_IMAGE_WIDTH_VPIXELS) : movement.getBoardScale();
+	const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.getWidthWorld() : movement.getBoardScale();
 	// const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.MINI_IMAGE_WIDTH_VPIXELS : movement.getBoardScale();
 
-
 	// Render main highlights
-	model!.render(position, scale, { size });
+	const color = preferences.getAnnoteSquareColor();
+
+	genModel(highlights, color).render(undefined, undefined, { size });
 
 	// Render hovered highlights
 	if (highlightsHovered.length > 0) {
@@ -138,8 +121,7 @@ function render() {
 			color[2],
 			hover_opacity
 		] as Color;
-		const model = genModel(highlightsHovered, hoverColor);
-		model.render(position, scale, { size });
+		genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size });
 	}
 }
 
@@ -150,6 +132,5 @@ function render() {
 export default {
 	update,
 	clearSquares,
-	regenModel,
 	render,
 };
