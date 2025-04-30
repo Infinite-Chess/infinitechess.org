@@ -10,6 +10,7 @@ import { players } from "../../client/scripts/esm/chess/util/typeutil";
 /** @typedef {import("../../client/scripts/esm/chess/util/typeutil").Player} Player */
 /** @typedef {import("../../client/scripts/esm/chess/util/typeutil").PlayerGroup} PlayerGroup */
 /** @typedef {import("../../client/scripts/esm/chess/util/typeutil").RawType} RawType */
+/** @typedef {import("../../client/scripts/esm/chess/variants/gamerules").GameRules} GameRules */
 
 function PlayerData() {
 	/**
@@ -19,7 +20,7 @@ function PlayerData() {
 	 * If they are signed out, their identifier is `{ browser: string }`, where browser is their browser-id cookie.
 	 * 
 	 * TODO: CHANGE THE IDENTIFIER value to match the return type of socketUtility.getSignedInAndIdentifierOfSocket
-	 * @type {{ member: string } | { browser: string }}
+	 * @type {{ member: string, user_id: number } | { browser: string }}
 	 */
 	this.identifier = undefined; // CHANGE TO { signedIn: boolean, identifier: string }
 	/** Player's socket, if they are connected. @type {CustomWebSocket} */
@@ -66,11 +67,11 @@ function Game() {
 	this.id = undefined;
 	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	this.timeCreated = undefined;
-	/** Whether this game is "public" or "private". */
+	/** Whether this game is "public" or "private". @type {'public' | 'private'} */
 	this.publicity = undefined;
 	/** The variant of this game. */
 	this.variant = undefined;
-	/** The clock value (e.g. "10+5"). Untimed games are represented with a "-".*/
+	/** The clock value in s+s format (e.g. "600+4"). Untimed games are represented with a "-" */
 	this.clock = undefined;
 	/** Whether or not the game is untimed. Clock will be "-". @type {boolean} */
 	this.untimed = undefined;
@@ -82,51 +83,10 @@ function Game() {
 	this.rated = undefined;
 	/** The moves list of the game. Each move is a string that looks like `8,1>16,1`. @type {string[]} */
 	this.moves = undefined;
-	/** THe players in the game @type {PlayerGroup<PlayerData>}} */
+	/** The players in the game @type {PlayerGroup<PlayerData>}} */
 	this.players = undefined;
-	/** The gamerules of the variant. */
-	this.gameRules = {
-		/** An object containing lists of what win conditions each color can win by. This is REQUIRED. */
-		winConditions: {
-			/** A list of win conditions white can win by. REQUIRED. @type {string[]} */
-			[players.WHITE]: undefined,
-			/** A list of win conditions black can win by. REQUIRED. @type {string[]} */
-			[players.BLACK]: undefined,
-		},
-		/** A list of colors that make up one full turn cycle. REQUIRED. @type {Player[]} */
-		turnOrder: undefined,
-
-		// Gamerules that also have dedicated slots in ICN notation...
-        
-		/**
-         * A length-2 array: [rankWhitePromotes, rankBlackPromotes].
-         * If one side can't promote, their rank is `null`.
-         * If neither side can promote, this should be left as undefined.
-         * @type {{ [players.WHITE]: number[], [players.BLACK]: number[]} | undefined}
-         */
-		promotionRanks: undefined,
-		/**
-         * An object containing arrays of types white and black can promote to, if it's legal for them to promote.
-         * If one color can't promote, their list should be left undefined.
-         * If no color can promote, this should be left undefined.
-		 * @type {PlayerGroup<RawType[]> | undefined}
-         */
-		promotionsAllowed: {
-			/** What piece types white can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
-			[players.WHITE]: undefined,
-			/** What piece types black can promote to: `['rooks','queens'...]`. If they can't promote, this should be left undefined. */
-			[players.BLACK]: undefined,
-		},
-		/** How many plies (half-moves) can pass with no captures or pawn pushes until a draw is declared. */
-		moveRule: undefined,
-    
-		// Gamerules that DON'T have a dedicated slot in ICN notation...
-    
-		/** The maximum number of steps any sliding piece can take. */
-		slideLimit: undefined,
-	};
-	/** The turn order of the game. @type {Player[]} */
-	this.turnOrder = undefined;
+	/** The gamerules of the variant. @type {GameRules} */
+	this.gameRules = undefined;
 	/** Whos turn it is currently. @type {Player | undefined} */
 	this.whosTurn = undefined;
 	/** If the game is over, this is a string. For example, "1 checkmate". Otherwise false. */
@@ -152,6 +112,14 @@ function Game() {
 	/** The ID of the timer to delete the game after it has ended.
      * This can be used to cancel it in case a hacking was reported. */
 	this.deleteTimeoutID = undefined;
+
+	/**
+	 * Whether a custom position was pasted in by either player.
+	 * The game will NOT be logged, because it will crash if we try
+	 * to paste it since we don't know the starting position.
+	 * @type {boolean}
+	 */
+	this.positionPasted = undefined
 }
 
 export {

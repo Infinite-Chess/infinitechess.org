@@ -14,6 +14,7 @@ import gamecompressor from '../chess/gamecompressor.js';
 import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
+import typeutil from '../../chess/util/typeutil.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -32,6 +33,7 @@ interface EngineConfig {
 /** Whether we are currently in an engine game. */
 let inEngineGame: boolean = false;
 let ourColor: Player | undefined;
+let engineColor: Player | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
@@ -72,6 +74,7 @@ function initEngineGame(options: {
 
 	inEngineGame = true;
 	ourColor = options.youAreColor;
+	engineColor = typeutil.invertPlayer(ourColor);
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
 
@@ -91,8 +94,7 @@ function initEngineGame(options: {
 			if (e.data === 'readyok') resolve(); // Engine is ready!
 		};
 		engineWorker!.onerror = (e: ErrorEvent) => {
-			console.error("Worker failed to load:", e);
-			reject(new Error("Worker failed to load."));
+			reject(new Error("Worker failed to load: " + e.message));
 		};
 	}).then((result: any) => {
 		// After the promise resolves, we know the worker is ready
@@ -107,6 +109,7 @@ function initEngineGame(options: {
 function closeEngineGame() {
 	inEngineGame = false;
 	ourColor = undefined;
+	engineColor = undefined;
 	currentEngine = undefined;
 	engineConfig = undefined;
 	perspective.resetRotations(); // Without this, leaving an engine game of which we were black, won't reset our rotation.
@@ -130,16 +133,18 @@ function areWeColor(color: Player): boolean {
  * This method is called externally when the player submits his move in an engine game
  * It submits the gamefile to the webworker
  */
-async function submitMove() {
+async function onMovePlayed() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
+	// Make sure it's the engine's turn
+	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-	const abridgedGame = gamecompressor.compressGamefile(gamefile, true); // Compress the gamefile to send to the engine in a simpler json format
+	const abridgedGame = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
 	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);
-	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig });
+	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig, youAreColor: engineColor });
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 
@@ -165,7 +170,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
 	const move = movesequence.makeMove(gamefile, moveDraft);
-	movesequence.animateMove(move, true, true);
+	if (gamefile.mesh.offset) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
@@ -189,7 +194,7 @@ export default {
 	initEngineGame,
 	closeEngineGame,
 	areWeColor,
-	submitMove,
+	onMovePlayed,
 	onGameConclude
 };
 

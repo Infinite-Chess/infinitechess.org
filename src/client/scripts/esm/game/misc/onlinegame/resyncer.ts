@@ -12,7 +12,6 @@
  */
 
 
-import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { GameUpdateMessage } from "./onlinegamerouter.js";
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile.js";
@@ -25,11 +24,10 @@ import selection from "../../chess/selection.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
+import movesequence from "../../chess/movesequence.js";
+import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import formatconverter from "../../../chess/logic/formatconverter.js";
-import movesequence from "../../chess/movesequence.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -59,7 +57,7 @@ function handleServerGameUpdate(gamefile: gamefile, message: GameUpdateMessage) 
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
+	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
 	clock.edit(gamefile, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
@@ -84,14 +82,16 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	// just re-submit our move!
 	const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
 	const finalMoveIsOurMove = gamefile.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === onlinegame.getOurColor();
-	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1) || gamefile.moves.length > 1 && moves.length > 0 && gamefile.moves[gamefile.moves.length - 2].compact === moves[moves.length - 1];
+	const previousMove = gamefile.moves.length > 1 ? gamefile.moves[gamefile.moves.length - 2] : undefined;
+	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1)
+		|| (gamefile.moves.length > 1 && moves.length > 0 && !previousMove!.isNull && previousMove!.compact === moves[moves.length - 1]);
 	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
 		console.log("Sending our move again after resyncing..");
 		movesendreceive.sendMove();
 		return { opponentPlayedIllegalMove: false };
 	}
 
-	const originalMoveIndex = gamefile.moveIndex;
+	const originalMoveIndex = gamefile.state.local.moveIndex;
 	movesequence.viewFront(gamefile);
 	let aChangeWasMade = false;
 
@@ -105,8 +105,8 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	while (true) { // Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
 		if (i === -1) break; // Beginning of game
 		const thisGamefileMove = gamefile.moves[i];
-		if (thisGamefileMove) { // The move is defined
-			if (thisGamefileMove.compact === moves[i]) break; // The moves MATCH
+		if (thisGamefileMove && !thisGamefileMove.isNull) { // The move is defined
+			if (thisGamefileMove.compact! === moves[i]) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
 			movesequence.rewindMove(gamefile);
 			console.log("Rewound one INCORRECT move while resyncing to online game.");
@@ -120,8 +120,8 @@ function synchronizeMovesList(gamefile: gamefile, moves: string[], claimedGameCo
 	const opponentColor = onlinegame.getOpponentColor();
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
-		const thisShortmove = moves[i]; // '1,2>3,4Q'  The shortmove from the server's move list to add
-		const moveDraft: MoveDraft = formatconverter.ShortToLong_CompactMove(thisShortmove) as MoveDraft;
+		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
+		const moveDraft = icnconverter.parseCompactMove(thisShortmove);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;

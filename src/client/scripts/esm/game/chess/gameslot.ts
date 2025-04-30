@@ -11,7 +11,6 @@ import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
 import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
-import type { Position } from "../../chess/variants/variant.js";
 import type { Player } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
@@ -37,6 +36,7 @@ import guigameinfo from "../gui/guigameinfo.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import selection from "./selection.js";
 import imagecache from "../../chess/rendering/imagecache.js";
+import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
 // @ts-ignore
@@ -103,11 +103,7 @@ interface VariantOptions {
 	 * Can be higher if you copy just the positional information in a game with some moves played already.
 	 */
 	fullMove: number,
-	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-	enpassant?: EnPassant,
 	gameRules: GameRules,
-	/** If the move moveRule gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
-	moveRule?: `${number}/${number}`,
 	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
 	positionString: string,
 	/**
@@ -115,9 +111,14 @@ interface VariantOptions {
 	 * The key of the object is the coordinates of the piece as a string,
 	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
 	 */
-	startingPosition: Position
+	startingPosition: Map<CoordsKey, number>
+	// The 3 global game states
 	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
-	specialRights: { [key: CoordsKey]: true },
+	specialRights: Set<CoordsKey>,
+	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
+	enpassant?: EnPassant,
+	/** If the move moveRuleState gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
+	moveRuleState?: number,
 }
 
 
@@ -206,7 +207,7 @@ function loadLogical(loadOptions: LoadOptions) {
 	const lineCountToDisableArrows = 8;
 
 	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (newGamefile.startSnapshot.pieceCount >= organizedpieces.pieceCountToDisableCheckmate) {
+	if (boardutil.getPieceCountOfGame(newGamefile.pieces) >= organizedpieces.pieceCountToDisableCheckmate) {
 		miniimage.disable();
 		arrows.setMode(0); // Disable arrows too
 	} else if (newGamefile.pieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
@@ -225,7 +226,7 @@ function loadLogical(loadOptions: LoadOptions) {
 async function loadGraphical(loadOptions: LoadOptions) {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(loadedGamefile);
+	guiclock.set(loadedGamefile!);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
 	await imagecache.initImagesForGame(loadedGamefile!);
@@ -236,13 +237,13 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
-	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
+	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
 	// Generate the mesh of every piece type
 	piecemodels.regenAll(loadedGamefile!);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
-	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
+	if (lastmove !== undefined && !lastmove.isNull) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
 		if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
 		movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
@@ -286,7 +287,7 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(loadedGamefile!.startSnapshot.box);
+	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!));
 	movement.setPositionToArea(centerArea);
 	movement.setBoardScale(movement.getBoardScale() * 1.75);
 	guinavigation.recenter();

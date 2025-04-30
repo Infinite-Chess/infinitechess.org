@@ -19,7 +19,26 @@ function deepCopyObject<T extends unknown>(src: T): T {
     
 	// Check for Maps
 	if (src instanceof Map) {
-		return new Map([...src]) as T; // Use spread operator to copy Map
+		// Create a new Map instance
+		const copy = new Map();
+		// Iterate over the original map's entries
+		for (const [key, value] of src.entries()) {
+			// Deep copy both the key and the value before setting them in the new map
+			copy.set(deepCopyObject(key), deepCopyObject(value));
+		}
+		return copy as T; // Return the new Map with deep copied entries
+	}
+
+	// Check for Sets
+	if (src instanceof Set) {
+		// Create a new Set instance
+		const copy = new Set();
+		// Iterate over the original set's values
+		for (const value of src) {
+			// Deep copy the value before adding it to the new set
+			copy.add(deepCopyObject(value));
+		}
+		return copy as T; // Return the new Set with deep copied values
 	}
 
 	// Check for TypedArrays (which are ArrayBuffer views and have slice)
@@ -171,11 +190,10 @@ function isJson(str: string): boolean {
 
 /**
  * Returns a new object with the keys being the values of the provided object, and the values being the keys.
- * @param obj - The object to invert
- * @returns The inverted object
+ * THE VALUES WILL ALWAYS BE STRINGS. This is because the keys of an object are always strings.
  */
-function invertObj(obj: Record<string, string>): Record<string, string> {
-	const inv: Record<string, string> = {};
+function invertObj(obj: Record<string,string>): Record<string,string> {
+	const inv: Record<string,string> = {};
 	for (const key in obj) {
 		inv[obj[key]!] = key;
 	}
@@ -318,20 +336,22 @@ function estimateMemorySizeOf(obj: any): string {
  * Use {@link parseReviver} to parse back.
  */
 function stringifyReplacer(key: string, value: any): any {
-	if (value instanceof Map) {
-		return {
-			TrueType: "Map",
+	// Stringify Maps
+	if (value instanceof Map) return {
+		$$type: "Map",
+		value: [...value]
+	};
+	// Stringify Sets
+	if (value instanceof Set) return {
+		$$type: "Set",
+		value: [...value] // Convert Set elements to an array
+	};
+	// Stringify TypedArrays
+	for (const [name, type] of Object.entries(FixedArrayInfo)) {
+		if (value instanceof type) return {
+			$$type: name,
 			value: [...value]
 		};
-	}
-		
-	for (const [name, type] of Object.entries(FixedArrayInfo)) {
-		if (value instanceof type) {
-			return {
-				TrueType: name,
-				value: [...value]
-			};
-		}
 	}
 
 	return value;
@@ -345,12 +365,10 @@ const FixedArrayInfo = {
 	"Int8Array": Int8Array,
 	"Int16Array": Int16Array,
 	"Int32Array": Int32Array,
-	"BigInt64Array": BigInt64Array,
 
 	"Uint8Array": Uint8Array,
 	"Uint16Array": Uint16Array,
 	"Uint32Array": Uint32Array,
-	"BigUint64Array": BigUint64Array,
 } as const;
 
 /** Type representing any of the TypedArray constructor types listed in FixedArrayInfo. */
@@ -362,17 +380,11 @@ type FixedArrayConstructor = typeof FixedArrayInfo[keyof typeof FixedArrayInfo];
  */
 function parseReviver(key: string, value: any): any {
 	if (typeof value === 'object' && value !== null) {
-		if (value.TrueType === 'Map') {
-			return new Map(value.value);
-		}
-
-		if (value.TrueType in FixedArrayInfo) {
-			const constructor: FixedArrayConstructor = FixedArrayInfo[value.TrueType as keyof typeof FixedArrayInfo]; // Get the constructor based on the TrueType
-			const array = new constructor(value.value.length);
-			for (let i = 0; i < array.length; i++) {
-				array[i] = value.value[i];
-			}
-			return array;
+		if (value.$$type === 'Map') return new Map(value.value); // value.value should be an array of [key, value] pairs
+		if (value.$$type === 'Set') return new Set(value.value); // value.value should be an array of elements
+		if (value.$$type in FixedArrayInfo) {
+			const constructor: FixedArrayConstructor = FixedArrayInfo[value.$$type as keyof typeof FixedArrayInfo]; // Get the constructor
+			return new constructor(value.value); // value.value should be an array of numbers
 		}
 	}
 	return value;

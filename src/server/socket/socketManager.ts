@@ -77,7 +77,7 @@ function addConnectionToConnectionLists(ws: CustomWebSocket) {
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to add to the collection.
  */
-function addConnectionToList(collection: { [key: string]: string[] }, key: string | undefined, id: string) {
+function addConnectionToList(collection: { [key: string]: string[] }, key: number | string | undefined, id: string) {
 	if (key === undefined) return; // No key, no operation
 	if (!collection[key]) collection[key] = []; // Initialize the array if it doesn't exist
 	collection[key].push(id); // Add the socket ID to the list
@@ -109,7 +109,7 @@ function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, 
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to remove from the collection.
  */
-function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | undefined, id: string) {
+function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | number | undefined, id: string) {
 	if (key === undefined || !collection[key]) return; // No key or collection doesn't exist
 	const index = collection[key].indexOf(id);
 	if (index !== -1) {

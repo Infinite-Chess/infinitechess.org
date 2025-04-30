@@ -4,7 +4,7 @@
  */
 
 
-import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
+import type { Move, MoveDraft, NullMove, castle, enpassant, promotion } from '../logic/movepiece.js';
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
@@ -47,8 +47,8 @@ interface DepricatedMove {
  * Returns the move one forward from the current position we're viewing, if it exists.
  * This is also the move we would execute if we forward the game 1 step.
  */
-function getMoveOneForward(gamefile: gamefile): Move | undefined {
-	const moveIndex = gamefile.moveIndex;
+function getMoveOneForward(gamefile: gamefile): Move | NullMove | undefined {
+	const moveIndex = gamefile.state.local.moveIndex;
 	const incrementedIndex = moveIndex + 1;
 	return getMoveFromIndex(gamefile.moves, incrementedIndex);
 }
@@ -57,7 +57,7 @@ function getMoveOneForward(gamefile: gamefile): Move | undefined {
  * Returns *true* if it is legal to forward the provided gamefile by 1 move, *false* if we're at the front of the game.
  */
 function isIncrementingLegal(gamefile: gamefile): boolean {
-	const incrementedIndex = gamefile.moveIndex + 1;
+	const incrementedIndex = gamefile.state.local.moveIndex + 1;
 	return !isIndexOutOfRange(gamefile.moves, incrementedIndex);
 }
 
@@ -65,21 +65,21 @@ function isIncrementingLegal(gamefile: gamefile): boolean {
  * Returns *true* if it is legal to rewind the provided gamefile by 1 move, *false* if we're at the beginning of the game.
  */
 function isDecrementingLegal(gamefile: gamefile): boolean {
-	const decrementedIndex = gamefile.moveIndex - 1;
+	const decrementedIndex = gamefile.state.local.moveIndex - 1;
 	return !isIndexOutOfRange(gamefile.moves, decrementedIndex);
 }
 
 /**
  * Tests if the provided index is out of range of the moves list length
  */
-function isIndexOutOfRange(moves: Move[], index: number): boolean {
+function isIndexOutOfRange(moves: (Move | NullMove)[], index: number): boolean {
 	return index < -1 || index >= moves.length;
 }
 
 /**
  * Returns the very last move played in the moves list, if there is one. Otherwise, returns undefined.
  */
-function getLastMove(moves: Move[]): Move | undefined {
+function getLastMove(moves: (Move | NullMove)[]): Move | NullMove | undefined {
 	const finalIndex = moves.length - 1;
 	if (finalIndex < 0) return;
 	return moves[finalIndex];
@@ -88,8 +88,8 @@ function getLastMove(moves: Move[]): Move | undefined {
 /**
  * Returns the move we're currently viewing in the provided gamefile.
  */
-function getCurrentMove(gamefile: gamefile): Move | undefined {
-	const index = gamefile.moveIndex;
+function getCurrentMove(gamefile: gamefile): Move | NullMove | undefined {
+	const index = gamefile.state.local.moveIndex;
 	if (index < 0) return;
 	return gamefile.moves[index];
 }
@@ -97,7 +97,7 @@ function getCurrentMove(gamefile: gamefile): Move | undefined {
 /**
  * Gets the move from the moves list at the specified index
  */
-function getMoveFromIndex(moves: Move[], index: number): Move {
+function getMoveFromIndex(moves: (Move | NullMove)[], index: number): Move | NullMove {
 	if (isIndexOutOfRange(moves, index)) throw Error("Cannot get next move when index overflow");
 	return moves[index]!;
 }
@@ -106,14 +106,14 @@ function getMoveFromIndex(moves: Move[], index: number): Move {
  * Tests if the provided gamefile is viewing the front of the game, or the latest move.
  */
 function areWeViewingLatestMove(gamefile: gamefile): boolean {
-	const moveIndex = gamefile.moveIndex;
+	const moveIndex = gamefile.state.local.moveIndex;
 	return isIndexTheLastMove(gamefile.moves, moveIndex);
 }
 
 /**
  * Tests if the provided index is the index of the last move in the provided list
  */
-function isIndexTheLastMove(moves: Move[], index: number): boolean {
+function isIndexTheLastMove(moves: (Move | NullMove)[], index: number): boolean {
 	const finalIndex = moves.length - 1;
 	return index === finalIndex;
 }
@@ -150,7 +150,7 @@ function getPlyCount(moves: Move[]): number { return moves.length; }
  * @param coords - The current coordinates of the piece.
  */
 function hasPieceMoved(gamefile: gamefile, coords: Coords): boolean {
-	return gamefile.moves.some((move: Move) => coordutil.areCoordsEqual(move.endCoords, coords));
+	return gamefile.moves.some((move: Move | NullMove) => !move.isNull && coordutil.areCoordsEqual(move.endCoords, coords));
 }
 
 // COMMENTED-OUT because it's not used anywhere in the code

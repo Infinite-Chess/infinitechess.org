@@ -16,7 +16,7 @@ import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
 import movesets from "./movesets.js";
 
-import type { LineKey, Position } from "../util/boardutil.js";
+import type { LineKey } from "../util/boardutil.js";
 import type { Vec2, Vec2Key } from "../../util/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
@@ -110,10 +110,8 @@ const pieceCountToDisableCheckmate = 50_000;
  * Takes the source Position for the variant, and constructs the entire
  * organized pieces object, and returns other information inherited from it.
  */
-function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
 	pieces: OrganizedPieces,
-	/** The total number of pieces in the starting position. */
-	pieceCount: number,
 	/**
 	 * All existing types in the game, with their color information.
 	 * This may include pieces not in the starting position,
@@ -126,12 +124,11 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 	// Organize the pieces by type
 
 	const piecesByType: Map<number, Coords[]> = new Map();
-	let pieceCount = 0;
 	const existingTypesSet = new Set<number>();
-	for (const coordsKey in position) {
-		pieceCount++;
+	if (!(position instanceof Map)) throw Error("Position is not a map!");
+	for (const [coordsKey, type] of position) {
+		if (typeof type !== "number") throw Error(`Type inside Position is not a number! ${type} ${coordsKey}`); // Bug catcher
 		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
-		const type = position[coordsKey]!;
 		existingTypesSet.add(type);
 		if (!piecesByType.has(type)) piecesByType.set(type, []);
 		piecesByType.get(type)!.push(coords); // Push the coords
@@ -167,7 +164,7 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 
 	// Allocate the space needed for the XPositions, YPositions, and types arrays
 
-	const totalSlotsNeeded = pieceCount + Object.values(listExtrasByType).reduce((a, b) => a + b, 0);
+	const totalSlotsNeeded = position.size + Object.values(listExtrasByType).reduce((a, b) => a + b, 0);
 	// console.log("Total piece count: " + pieceCount);
 	// console.log(`Total slots needed: ${totalSlotsNeeded}`);
 
@@ -243,7 +240,6 @@ function processInitialPosition(position: Position, pieceMovesets: TypeGroup<() 
 			slides,
 			hippogonalsPresent: areHippogonalsPresentInGame(slides),
 		},
-		pieceCount,
 		existingTypes,
 		existingRawTypes,
 	};
@@ -366,6 +362,15 @@ function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<Raw
 	// console.log(o);
 }
 
+/** Generates a position with the coordinates as the key, and the piece type as the value. */
+function generatePositionFromPieces(o: OrganizedPieces): Map<CoordsKey, number> {
+	const position = new Map<CoordsKey, number>();
+	for (const [coordsKey, idx] of o.coords) {
+		position.set(coordsKey, o.types[idx]!);
+	}
+	return position;
+}
+
 
 // Processing and Removing Pieces in space -------------------------------------------------
 
@@ -386,6 +391,7 @@ function registerPieceInSpace(idx: number, o: {
 	const x = o.XPositions[idx];
 	const y = o.YPositions[idx];
 	const coords = [x,y] as Coords;
+	// console.log("Registering piece in space: " + idx + " coords: " + coords);
 	const key = coordutil.getKeyFromCoords(coords);
 	if (o.coords.has(key)) throw Error(`While organizing a piece, there was already an existing piece there!! ${key} idx ${idx}`);
 	o.coords.set(key, idx);
@@ -413,8 +419,9 @@ function removePieceFromSpace(idx: number, o: {
 	const x = o.XPositions![idx];
 	const y = o.YPositions![idx];
 	const coords = [x,y] as Coords;
+	// console.log("Removing piece from space: " + idx + " coords: " + coords);
 	const key = coordutil.getKeyFromCoords(coords);
-
+	if (!o.coords.has(key)) throw Error(`While removing a piece, there was no existing piece there!! ${key} idx ${idx}`);
 	o.coords.delete(key);
 	const lines = o.lines;
 	for (const [strline, linegroup] of lines) {
@@ -589,6 +596,7 @@ export default {
 	pieceCountToDisableCheckmate,
 	processInitialPosition,
 	regenerateLists,
+	generatePositionFromPieces,
 	registerPieceInSpace,
 	removePieceFromSpace,
 	getTypeUndefinedsBehavior,

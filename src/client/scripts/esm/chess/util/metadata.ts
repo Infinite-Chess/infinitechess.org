@@ -24,7 +24,7 @@ interface MetaData {
 	 * 
 	 * If the game is untimed, this should be `"-"`
 	 */
-	TimeControl: string,
+	TimeControl: `${number}+${number}` | '-',
 	/** The round number (between players? idk. This is a pgn-required metadata, but it has no application to infinitechess.org right now) */
 	Round: '-',
 	/** The UTC date of the game, in the format `"YYYY.MM.DD"` */
@@ -52,13 +52,13 @@ interface MetaData {
 /**
  * Returns the value of the game's Result metadata, depending on the victor.
  * @param victor - The victor of the game, in player number. Or none if undefined.
- * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '0-0'.
+ * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '*' (aborted).
  */
 function getResultFromVictor(victor?: Player): string {
 	if (victor === players.WHITE) return '1-0';
 	else if (victor === players.BLACK) return '0-1';
 	else if (victor === players.NEUTRAL) return '1/2-1/2';
-	else if (victor === undefined) return '0-0';
+	else if (victor === undefined) return '*';
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 

@@ -19,8 +19,6 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 /** Structure of a player_stats record. This is all allowed columns of a user_id. */
 interface PlayerStatsRecord {
 	user_id?: number;
-    last_played_rated_game?: string | null; // This cell is allowed to be null
-    game_history?: string;
     moves_played?: number;
     game_count?: number;
     game_count_rated?: number;
@@ -30,16 +28,17 @@ interface PlayerStatsRecord {
     game_count_wins?: number;
     game_count_losses?: number;
     game_count_draws?: number;
-    game_count_wins_ranked?: number;
-    game_count_losses_ranked?: number;
-    game_count_draws_ranked?: number;
+	game_count_aborted?: number;
+    game_count_wins_rated?: number;
+    game_count_losses_rated?: number;
+    game_count_draws_rated?: number;
     game_count_wins_casual?: number;
     game_count_losses_casual?: number;
     game_count_draws_casual?: number;
 }
 
 /** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
+type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -86,7 +85,7 @@ function addUserToPlayerStatsTable(user_id: number): ModifyQueryResult {
 /**
  * Fetches specified columns of a single player from the player_stats table based on user_id
  * @param user_id - The user_id of the player
- * @param columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'last_played_rated_game']).
+ * @param columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'game_count'])
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
 function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsRecord | undefined {
@@ -113,7 +112,8 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 
 		// If no row is found, return undefined
 		if (!row) {
-			logEvents(`No matches found in player stats table for user_id = ${user_id}.`, 'errLog.txt', { print: true });
+			// Don't log, it's fine if they request stats from a deleted user.
+			// logEvents(`No matches found in player stats table for user_id = ${user_id}.`, 'errLog.txt', { print: true });
 			return undefined;
 		}
 

@@ -7,7 +7,7 @@ import locale from 'date-fns/locale/index.js';
 import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-import { getPlayerRatingValues } from '../database/ratingsManager.js';
+import { Leaderboards, getDisplayEloOfPlayerInLeaderboard } from '../database/leaderboardsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEvents } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
@@ -23,14 +23,8 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	if (user_id === undefined) return res.status(404).json({ message: getTranslationForReq("server.javascript.ws-member_not_found", req) }); // Member not found
 	verification = JSON.parse(verification);
 
-	// Get the player's rating values
-	const rating_values = getPlayerRatingValues(user_id); // { user_id, infinite_elo, infinite_rating_deviation } | undefined
-	if (!rating_values) {
-		logEvents(`Error getting rating values for member "${claimedUsername}" Not found.`, 'errLog.txt', { print: true });
-		return res.status(500).send('Internal Server Error');
-	}
-	const ranked_elo = rating_values.infinite_elo;
-
+	// Get the player's display elo string from the INFINITY leaderboard
+	const ranked_elo = getDisplayEloOfPlayerInLeaderboard(user_id, Leaderboards.INFINITY);
 
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...

@@ -5,6 +5,7 @@ import movesequence from '../chess/movesequence.js';
 import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
+import gamefileutility from '../../chess/util/gamefileutility.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -224,7 +225,7 @@ function callback_Expand() {
 }
 
 function recenter() {
-	const boundingBox = gameslot.getGamefile()!.startSnapshot.box;
+	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }

@@ -42,7 +42,7 @@ function isGameOver(gamefile: gamefile): boolean {
  * Returns true if the currently-viewed position of the game file is in check
  */
 function isCurrentViewedPositionInCheck(gamefile: gamefile): boolean {
-	return gamefile.inCheck !== false;
+	return gamefile.state.local.inCheck !== false;
 }
 
 /**
@@ -50,7 +50,7 @@ function isCurrentViewedPositionInCheck(gamefile: gamefile): boolean {
  * in check in the currently-viewed position.
  */
 function getCheckCoordsOfCurrentViewedPosition(gamefile: gamefile): Coords[] {
-	return gamefile.inCheck || []; // Return an empty array if we're not in check.
+	return gamefile.state.local.inCheck || []; // Return an empty array if we're not in check.
 }
 
 /**
@@ -91,7 +91,7 @@ function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: Player, 
  * Deletes all specialMove functions for pieces that aren't included in this game.
  */
 function deleteUnusedSpecialMoves(gamefile: gamefile) {
-	const existingRawTypes = gamefile.startSnapshot.existingRawTypes;
+	const existingRawTypes = gamefile.existingRawTypes;
 	for (const key in gamefile.specialMoves) {
 		const rawType = Number(key) as RawType;
 		if (!existingRawTypes.includes(rawType)) delete gamefile.specialMoves[key];
@@ -110,12 +110,12 @@ function doGameOverChecks(gamefile: gamefile) {
 
 // TODO: This is a GUI only feature that will use Mesh type. MOVE TO ../../GAME WHEN POSSIBLE
 /**
- * Saves the bounding box of the game's starting position to the startSnapshot property
+ * Gets the bounding box of the game's starting position
  */
-function initStartingAreaBox(gamefile: gamefile) {
+function getStartingAreaBox(gamefile: gamefile) {
+	if (gamefile.startSnapshot?.box) return gamefile.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(gamefile.pieces);
-	const box = math.getBoxFromCoordsList(coordsList);
-	gamefile.startSnapshot.box = box;
+	return math.getBoxFromCoordsList(coordsList);
 }
 
 /**
@@ -159,6 +159,11 @@ function areColinearSlidesPresentInGame(pieceMovesets: TypeGroup<() => PieceMove
 	return false; // Colinears are not present
 }
 
+/** Returns the number of players in the game (unique players in the turnOrder). */
+function getPlayerCount(gamefile: gamefile) {
+	if (gamefile.startSnapshot) return gamefile.startSnapshot.playerCount;
+	return new Set(gamefile.gameRules.turnOrder).size;
+}
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -172,6 +177,7 @@ export default {
 	isOpponentUsingWinCondition,
 	deleteUnusedSpecialMoves,
 	doGameOverChecks,
-	initStartingAreaBox,
+	getStartingAreaBox,
+	getPlayerCount,
 	areColinearSlidesPresentInGame,
 };

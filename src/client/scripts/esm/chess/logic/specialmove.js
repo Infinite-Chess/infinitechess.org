@@ -59,13 +59,13 @@ function pawns(gamefile, piece, move) {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
-	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.enpassant, move.enpassantCreate);
+	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.state.global.enpassant, move.enpassantCreate);
 
 	const enpassantTag = move.enpassant; // true | undefined
 	const promotionTag = move.promotion; // promote type
 	if (!enpassantTag && !promotionTag) return false; ; // No special move to execute, return false to signify we didn't move the piece.
 
-	const captureCoords = enpassantTag ? gamefile.enpassant.pawn : move.endCoords;
+	const captureCoords = enpassantTag ? gamefile.state.global.enpassant.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
 

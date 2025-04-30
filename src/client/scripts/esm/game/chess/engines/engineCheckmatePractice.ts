@@ -21,9 +21,8 @@ import jsutil from '../../../util/jsutil.js';
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
 import type { MoveDraft } from "../../../chess/logic/movepiece";
-import type { Coords } from "../../../chess/util/coordutil";
+import type { Coords, CoordsKey } from "../../../chess/util/coordutil";
 import type { Vec2 } from "../../../util/math";
-import type { Position } from '../../../chess/util/boardutil.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type MoveDraft = import("../../chess/logic/movepiece").MoveDraft;
@@ -44,6 +43,7 @@ postMessage('readyok');
 self.onmessage = function(e: MessageEvent) {
 	const message = e.data;
 	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
+	// console.log("input_gamefile", jsutil.deepCopyObject(input_gamefile));
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;
@@ -352,7 +352,7 @@ function initEvalWeightsAndSearchProperties() {
 	// numOfPiecesForTrap, maxDistanceForTrap, maxDistanceForRoyal_Flee
 	trapFleeDictionary = {
 		"1K2HA1B-1k": [3, 8, 10],
-		"1K3HA-1k": [3, 10, 10],
+		"1K3HA-1k": [3, 14, 10],
 	};
 
 	if (checkmateSelectedID in trapFleeDictionary) {
@@ -500,7 +500,13 @@ function initEvalWeightsAndSearchProperties() {
 				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[3,-3]]},
 
 				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[-1,-3]]},
-				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[1,-3]]}
+				{bestMove: [0,-1], piecelist: [6, 5, 1], coordlist: [[0,-2],[0,2],[1,-3]]},
+
+				{bestMove: [1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[-4,-4]]},
+				{bestMove: [-1,-1], piecelist: [5, 6, 1], coordlist: [[0,2],[0,-3],[4,-4]]},
+
+				{bestMove: [0,-1], piecelist: [5, 1, 6], coordlist: [[1,2],[-1,-3],[1,-3]]},
+				{bestMove: [0,-1], piecelist: [5, 6, 1], coordlist: [[-1,2],[-1,-3],[1,-3]]}
 			];
 			break;
 		case "1K3NR-1k":
@@ -1260,11 +1266,11 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 				// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
 				// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
 				if (new_piecelist.filter(x => x === 0).length > piecelist.filter(x => x === 0).length) {
-					const piecesOrganizedByKey: Position = {};
-					piecesOrganizedByKey["0,0"] = (royal_type === "k" ? r.KING + e.B : r.ROYALCENTAUR + e.B);
+					const piecesOrganizedByKey = new Map<CoordsKey, number>();
+					piecesOrganizedByKey.set("0,0", (royal_type === "k" ? r.KING + e.B : r.ROYALCENTAUR + e.B));
 					for (let i = 0; i < piecelist.length; i++) {
 						if (new_piecelist[i] !== 0) {
-							piecesOrganizedByKey[new_coordlist[i]!.toString()] = invertedPieceNameDictionaty[new_piecelist[i]!]!;
+							piecesOrganizedByKey.set(new_coordlist[i]!.toString() as CoordsKey, invertedPieceNameDictionaty[new_piecelist[i]!]!);
 						}
 					}
 					const emptyPieceMovesets = {}; // <--- Is this gonna be an issue?
@@ -1440,7 +1446,7 @@ async function runEngine() {
 		if (!positionInBestMoveList) runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
 		// console.log(isBlackInTrap(start_piecelist, start_coordlist));
-		// console.log(get_white_candidate_moves(start_piecelist, start_coordlist));
+		// console.log(get_white_candidate_moves(false, start_piecelist, start_coordlist));
 		// console.log(globalSurvivalPlies);
 		// console.log(globallyBestVariation);
 		// console.log(enginePositionCounter);

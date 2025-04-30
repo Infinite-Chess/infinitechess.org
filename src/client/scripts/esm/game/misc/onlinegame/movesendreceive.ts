@@ -18,12 +18,11 @@ import selection from "../../chess/selection.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import movesequence from "../../chess/movesequence.js";
+import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import specialdetect from "../../../chess/logic/specialdetect.js";
-// @ts-ignore
-import formatconverter from "../../../chess/logic/formatconverter.js";
 // @ts-ignore
 import guiclock from "../../gui/guiclock.js";
 // @ts-ignore
@@ -44,7 +43,9 @@ function sendMove() {
 	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
-	const shortmove = moveutil.getLastMove(gamefile.moves)!.compact; // "x,y>x,yN"
+	const lastMove = moveutil.getLastMove(gamefile.moves)!;
+	if (lastMove.isNull) throw Error('Cannot submit null move to online game.');
+	const shortmove = lastMove.compact; // "x,y>x,yN"
 
 	const data = {
 		move: shortmove,
@@ -74,7 +75,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	// Convert the move from compact short format "x,y>x,yN"
 	let moveDraft: MoveDraft; // { startCoords, endCoords, promotion }
 	try {
-		moveDraft = formatconverter.ShortToLong_CompactMove(message.move); // { startCoords, endCoords, promotion }
+		moveDraft = icnconverter.parseCompactMove(message.move); // { startCoords, endCoords, promotion }
 	} catch {
 		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
 		const reason = 'Incorrectly formatted.';
@@ -97,14 +98,14 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
 	const move = movesequence.makeMove(gamefile, moveDraft);
-	movesequence.animateMove(move, true);
+	if (gamefile.mesh.offset) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
 	
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = clock.adjustClockValuesForPing(message.clockValues);
+	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
 	clock.edit(gamefile, message.clockValues);
 	guiclock.edit(gamefile);
 

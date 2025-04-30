@@ -366,10 +366,10 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	// more properties are added such as `rewindInfo`.
 	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 
-	const inCheckB4Forwarding = jsutil.deepCopyObject(gamefile.inCheck);
-	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.attackers);
+	const inCheckB4Forwarding = jsutil.deepCopyObject(gamefile.state.local.inCheck);
+	const attackersB4Forwarding = jsutil.deepCopyObject(gamefile.state.local.attackers);
 
-	const originalMoveIndex = gamefile.moveIndex; // Used to return to this move after we're done simulating
+	const originalMoveIndex = gamefile.state.local.moveIndex; // Used to return to this move after we're done simulating
 	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)
 	movepiece.goToMove(gamefile, gamefile.moves.length - 1, (move) => movepiece.applyMove(gamefile, move, true));
 
@@ -415,7 +415,7 @@ function isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion) {
 	// This should pass on any special moves tags at the same time.
 	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, moveDraftCopy.endCoords, colorOfPieceMoved)) { // Illegal move
 		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
-		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.inCheck)}. attackers: ${JSON.stringify(gamefile.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
+		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.state.local.inCheck)}. attackers: ${JSON.stringify(gamefile.state.local.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}
 
 	// Check the resulting game conclusion from the move and if that lines up with the opponents claim.

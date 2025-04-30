@@ -40,16 +40,17 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 
 	let equalPositionsFound: number = 0;
 
-	let index: number = moveList.length - 1;
-	let indexOfLastEqualPositionFound: number = index + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
-	outer: while (index >= 0) {
+	const startIndex: number = moveList.length - 1;
+	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
+	outer: for (let index = startIndex; index >= 0; index--) { // WILL BE -1 if we've reached the beginning of the game!
 		const move = moveList[index];
+		if (move.isNull) continue;
 
 		// Did this move include a one-way action? Pawn push, special right loss..
 		// If so, no further equal positions, terminate the loop.
 		// 'capture' move changes are handled lower down, they are one-way too.
 		if (typeutil.getRawType(move.type) === rawTypes.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
-		if (move.state.global.some((stateChange: StateChange) => stateChange.type === 'specialrights' && stateChange.future === undefined)) break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
+		if (move.state.global.some((stateChange: StateChange) => stateChange.type === 'specialrights' && stateChange.future === false)) break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
 
 		// Iterate through all move changes, adding the fluxes.
 		for (let i = 0; i < move.changes.length; i++) {
@@ -118,10 +119,6 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 
 		// console.log('Surplus:', surplus);
 		// console.log('Deficit:', deficit);
-
-		// Prep for next iteration, decrement index.
-		// WILL BE -1 if we've reached the beginning of the game!
-		index--;
 	}
 
 	// Loop is finished. How many equal positions did we find?

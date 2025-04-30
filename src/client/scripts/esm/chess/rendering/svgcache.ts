@@ -152,6 +152,15 @@ function getSVGColorPriority(color: Player): string[] {
 			return ['-white','-neutral'];
 		case 2: // Black: prioritize black svg over neutral
 			return ['-black','-neutral'];
+		// All higher player numbers are treated as tinted white pieces...
+		case 3: // Red: prioritize white svg over neutral
+			return ['-white','-neutral'];
+		case 4: // Blue: prioritize white svg over neutral
+			return ['-white','-neutral'];
+		case 5: // Yellow: prioritize white svg over neutral
+			return ['-white','-neutral'];
+		case 6: // Green: prioritize white svg over neutral
+			return ['-white','-neutral'];
 		default:
 			throw new Error(`Invalid color code: ${color}`);
 	}

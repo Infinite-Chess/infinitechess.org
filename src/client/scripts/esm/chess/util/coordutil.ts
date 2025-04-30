@@ -17,8 +17,8 @@ type Coords = [number,number];
  * 
  * This is often used as the key for a piece in piece lists.
  * 
- * This is NOT compatible with "e" notation, so things will crash when
- * coordinates go above Number.MAX_SAFE_INTEGER
+ * This will never be in scientific notation. However, moves beyond
+ * Number.MAX_SAFE_INTEGER can't be expressed exactly.
  */
 type CoordsKey = `${number},${number}`;
     
@@ -45,11 +45,11 @@ function areCoordsIntegers(coords: Coords): boolean {
 //     return Math.abs(num - Math.round(num)) < epsilon;
 // }
 
-/**
- * Returns the key string of the coordinates: [x,y] => 'x,y'
- */
+/** Returns the key string of the coordinates: [x,y] => 'x,y' */
 function getKeyFromCoords(coords: Coords): CoordsKey {
-	return `${coords[0]},${coords[1]}`;
+	// Casting to BigInt and back to a string avoids scientific notation.
+	// toFixed(0) doesn't work for numbers above 10^21
+	return `${BigInt(coords[0])},${BigInt(coords[1])}` as CoordsKey;
 }
 
 /**

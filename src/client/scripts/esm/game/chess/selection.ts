@@ -269,7 +269,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
 	movesequence.viewFront(gamefile);
 	// Also animate the last move
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
-	movesequence.animateMove(lastMove);
+	if (!lastMove.isNull) movesequence.animateMove(lastMove);
 	return true;
 }
 
@@ -438,7 +438,7 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	movesequence.animateMove(move, true, animateMain);
 
 	movesendreceive.sendMove();
-	enginegame.submitMove();
+	enginegame.onMovePlayed();
 
 	unselectPiece();
 }

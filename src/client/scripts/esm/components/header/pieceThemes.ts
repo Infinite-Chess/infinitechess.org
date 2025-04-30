@@ -15,9 +15,14 @@ type PieceColorGroup = {
 
 /** The default tints for a piece, if not provided. */
 const defaultBaseColors: PieceColorGroup = {
+	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1],
 	[players.WHITE]: [1, 1, 1, 1],
 	[players.BLACK]: [1, 1, 1, 1],
-	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1]
+	// If these are solid color, they're quite saturated
+	[players.RED]: [1, 0.17, 0.17, 1],
+	[players.BLUE]: [0.23, 0.23, 1, 1],
+	[players.YELLOW]: [1, 1, 0.1, 1],
+	[players.GREEN]: [0.1, 1, 0.1, 1],
 };
 
 /** Config for the SVGs of the pieces */
@@ -32,17 +37,25 @@ const SVGConfig: {
 	[rawTypes.VOID]: {
 		location: null, // VOID has no svg
 		colors: {
+			[players.NEUTRAL]: [0, 0, 0, 1],
 			[players.WHITE]: [1, 1, 1, 1],
 			[players.BLACK]: [0.3, 0.3, 0.3, 1],
-			[players.NEUTRAL]: [0, 0, 0, 1]
+			[players.RED]: [1, 0, 0, 1],
+			[players.BLUE]: [0, 0, 1, 1],
+			[players.YELLOW]: [1, 1, 0, 1],
+			[players.GREEN]: [0, 1, 0, 1]
 		}
 	},
 	[rawTypes.OBSTACLE]: {
 		location: "fairy/obstacle",
 		colors: {
+			[players.NEUTRAL]: [0.08, 0.08, 0.08, 1],
 			[players.WHITE]: [1, 1, 1, 1],
 			[players.BLACK]: [0, 0, 0, 1],
-			[players.NEUTRAL]: [0.08, 0.08, 0.08, 1]
+			[players.RED]: [1, 0, 0, 1],
+			[players.BLUE]: [0, 0, 1, 1],
+			[players.YELLOW]: [1, 1, 0, 1],
+			[players.GREEN]: [0, 1, 0, 1]
 		}
 	},
 	[rawTypes.KING]: { location: "classical" },

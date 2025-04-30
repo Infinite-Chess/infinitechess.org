@@ -22,7 +22,7 @@ interface MemberData {
 	seen: string;
 	username: string;
 	checkmates_beaten: string;
-	ranked_elo: number;
+	ranked_elo: string;
 	// Only present/relevant if viewing our own profile
 	email?: string;
 	verified?: boolean;
@@ -109,7 +109,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		updateCompletedCheckmatesInformation(result.checkmates_beaten);
 
 		const eloElement = document.getElementById('ranked_elo')!;
-		eloElement.textContent = String(Math.round(result.ranked_elo));
+		eloElement.textContent = result.ranked_elo;
 
 		const loggedInAs = validatorama.getOurUsername(); // Assuming returns string | null
 

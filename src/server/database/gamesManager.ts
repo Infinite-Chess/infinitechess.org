@@ -2,10 +2,9 @@
  * This script handles queries to the games table. 
  */
 
+import jsutil from '../../client/scripts/esm/util/jsutil.js';
 // @ts-ignore
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
-// @ts-ignore
-import { ensureJSONString } from '../utility/JSONUtils.js';
 // @ts-ignore
 import db from './database.js';
 // @ts-ignore
@@ -21,21 +20,22 @@ import type { RunResult } from 'better-sqlite3'; // Import necessary types
 interface GamesRecord {
     game_id?: number;
     date?: string;
-    players?: string;
-    elo?: string;
-    rating_diff?: string;
-    time_control?: string;
+	base_time_seconds?: number | null;
+	increment_seconds?: number | null;
     variant?: string;
-    rated?: boolean;
-    private?: boolean;
+	/** 0 => false  1 => true */
+    rated?: 0 | 1;
+	leaderboard_id?: number | null;
+	/** 0 => false  1 => true */
+    private?: 0 | 1;
     result?: string;
     termination?: string;
-    movecount?: number;
+    move_count?: number;
     icn?: string;
 }
 
 /** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
+type ModifyGameQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -48,18 +48,19 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 function addGameToGamesTable(
 	options: {
         date: string,
-        players: string,
-        elo: string,
-        rating_diff: string,
-        time_control: string,
+		base_time_seconds: number | null,
+		increment_seconds: number | null,
         variant: string,
-        rated: boolean,
-        private: boolean,
+		/** 0 => false  1 => true */
+        rated: 0 | 1,
+		leaderboard_id: number | null,
+		/** 0 => false  1 => true */
+        private: 0 | 1,
         result: string,
         termination: string,
-        movecount: number,
+        move_count: number,
         icn: string
-    }): ModifyQueryResult {
+    }): ModifyGameQueryResult {
 
 	// Generate a unique game ID
 	const game_id = genUniqueGameID();
@@ -68,18 +69,17 @@ function addGameToGamesTable(
 	INSERT INTO games (
 		game_id,
         date,
-        players,
-        elo,
-        rating_diff,
-        time_control,
+		base_time_seconds,
+		increment_seconds,
         variant,
         rated,
+		leaderboard_id,
         private,
         result,
         termination,
-        movecount,
+        move_count,
         icn
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 
 	try {
@@ -88,16 +88,15 @@ function addGameToGamesTable(
             [
                 game_id,
                 options.date,
-                options.players,
-                options.elo,
-                options.rating_diff,
-                options.time_control,
+				options.base_time_seconds,
+				options.increment_seconds,
                 options.variant,
                 options.rated,
+				options.leaderboard_id,
                 options.private,
                 options.result,
                 options.termination,
-                options.movecount,
+                options.move_count,
                 options.icn
             ]
 		);
@@ -169,7 +168,7 @@ function isGameIdTaken(game_id: number): boolean {
 /**
  * Fetches specified columns of a single game from the games table based on game_id
  * @param game_id - The game_id of the game
- * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'players']).
+ * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
 function getGameData(game_id: number, columns: string[]): GamesRecord | undefined {
@@ -177,11 +176,11 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
-		logEvents(`When getting game data, columns must be an array of strings! Received: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEvents(`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
 		return undefined;
 	}
 	if (!columns.every(column => typeof column === 'string' && allGamesColumns.includes(column))) {
-		logEvents(`Invalid columns requested from games table: ${ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEvents(`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
 		return undefined;
 	}
 
@@ -220,17 +219,17 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
  * @returns - A result object indicating success or failure.
  */
 // eslint-disable-next-line no-unused-vars
-function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyQueryResult {
+function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyGameQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEvents(`Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEvents(`Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
 	}
 
 	for (const column in columnsAndValues) {
 		// Validate all provided columns
 		if (!allGamesColumns.includes(column)) {
-			logEvents(`Invalid column "${column}" provided for game ID "${game_id}" when updating games columns! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEvents(`Invalid column "${column}" provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 			return { success: false, reason: 'Invalid column.' }; // Generic error message
 		}
 	}
@@ -252,13 +251,13 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
 		// Check if the update was successful
 		if (result.changes > 0) return { success: true, result };
 		else {
-			logEvents(`No changes made when updating games table columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEvents(`No changes made when updating games table columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 			return { success: false, reason: 'No changes made.' }; // Generic error message
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error updating games table columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEvents(`Error updating games table columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
 		// Return an error message
 		return { success: false, reason: `Database error.` }; // Generic error message
 	}
@@ -274,7 +273,7 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
  * @returns - A result object indicating success or failure.
  */
 // eslint-disable-next-line no-unused-vars
-function deleteGame(game_id: number): ModifyQueryResult {
+function deleteGame(game_id: number): ModifyGameQueryResult {
 	// SQL query to delete a game by its game_id
 	const query = 'DELETE FROM games WHERE game_id = ?';
 

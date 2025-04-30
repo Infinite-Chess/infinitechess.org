@@ -12,6 +12,8 @@
 import organizedpieces from "./organizedpieces.js";
 import jsutil from "../../util/jsutil.js";
 import boardutil from "../util/boardutil.js";
+import typeutil from "../util/typeutil.js";
+import coordutil, { CoordsKey } from "../util/coordutil.js";
 
 
 // Variables -------------------------------------------------------------------------
@@ -29,6 +31,7 @@ import type { Coords } from "./movesets.js";
 import type { Piece } from "../util/boardutil.js";
 // @ts-ignore
 import type { gamefile } from "./gamefile.js";
+
 
 /**
  * Generic type to describe any changes to the board
@@ -193,6 +196,8 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 }
 
 
+// Standard Chagne Functions --------------------------------------------------------------------------------------
+
 
 /**
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
@@ -201,7 +206,7 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
 function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
 	const pieces = gamefile.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
-	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
+	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
@@ -232,7 +237,7 @@ function deletePiece(gamefile: gamefile, change: Change) {
 	const pieces = gamefile.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
-	if (typedata === undefined) throw Error(`Type: "${change.piece.type}" is not expected to be in the game`);
+	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
 	if (change.piece.index === -1) throw Error("Piece has not been allocated in organizedPieces");
 
 	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
@@ -307,6 +312,47 @@ function uncapturePiece(gamefile: gamefile, change: Change) {
 	addPiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
 }
 
+
+// Other Change Functions -----------------------------------------------------------------------------------
+
+
+/**
+ * This modifies only a Position Map<CoordsKey, number> where number is the type of piece.
+ * It does NOT modify a gamefile or its organized pieces.
+ * This also only works applying a move's changes FORWARD.
+ * 
+ * This is intended for updating a simplified board state, one that is used in gamecompressor.GameToPosition
+ */
+function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]) {
+	for (const change of changes) {
+		const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
+		switch (change.action) {
+			case 'move':
+				position.delete(startCoordsKey);
+				position.set(coordutil.getKeyFromCoords(change.endCoords), change.piece.type);
+				break;
+			case 'capture':
+				position.delete(startCoordsKey);
+				position.delete(coordutil.getKeyFromCoords(change.capturedPiece.coords));
+				position.set(coordutil.getKeyFromCoords(change.endCoords), change.piece.type);
+				break;
+			case 'add':
+				position.set(startCoordsKey, change.piece.type);
+				break;
+			case 'delete':
+				position.delete(startCoordsKey);
+				break;
+			default:
+				// @ts-ignore
+				throw Error(`Unknown change action: ${change.action}`);
+		}
+	}
+}
+
+
+// Helper Functions ----------------------------------------------------------------------------------------
+
+
 /**
  * Gets every captured piece in changes
  */
@@ -328,6 +374,10 @@ function wasACapture(move: Move): boolean {
 	return move.changes.some(change => change.action === 'capture');
 }
 
+
+// Exports ----------------------------------------------------------------------------------------
+
+
 export type {
 	genericChangeFunc,
 	ActionList,
@@ -342,6 +392,7 @@ export default {
 	queueDeletePiece,
 	queueMovePiece,
 	runChanges,
+	runChanges_Position,
 
 	getCapturedPieceTypes,
 	wasACapture,
