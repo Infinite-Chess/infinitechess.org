@@ -500,6 +500,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
 	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
 		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name], value);
+		else if (name === 'size') gl.uniform1f(shader.uniformLocations[name], value);
 		else throw Error(`Uniform "${name}" is not a supported uniform we can set!`);
 	}
 }
