@@ -23,6 +23,12 @@ function update() {
 
 /** The annotation models offset needs to match the offset of the piece meshes. */
 function onOffsetChange() {
+    regenAll();
+}
+
+document.addEventListener('theme-change', (event) => regenAll());
+
+function regenAll() {
     drawsquares.regenModel();
 }
 

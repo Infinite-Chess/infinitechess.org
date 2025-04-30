@@ -278,6 +278,16 @@ function getBoxOutlineColor(): Color {
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
+function getAnnoteSquareColor(): Color {
+	const themeName: string = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'annoteSquareColor');
+}
+
+function getAnnoteArrowColor(): Color {
+	const themeName: string = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'annoteArrowColor');
+}
+
 /** Returns the tint color for a piece of the given type, according to our current theme. */
 function getTintColorOfType(type: number): Color {
 	const [r, p] = typeutil.splitType(type);
@@ -427,5 +437,7 @@ export default {
 	getLastMoveHighlightColor,
 	getCheckHighlightColor,
 	getBoxOutlineColor,
+	getAnnoteSquareColor,
+	getAnnoteArrowColor,
 	getTintColorOfType,
 };

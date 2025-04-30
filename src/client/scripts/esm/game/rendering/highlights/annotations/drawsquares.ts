@@ -25,7 +25,6 @@ import type { Coords } from "../../../../chess/util/coordutil.js";
 
 // Variables -----------------------------------------------------------------
 
-const color = [1, 0, 0, 0.5] as Color; // Red. Should be opaque enough to be very noticeable at slightly high zoom levels.
 /** ADDITONAL (not overriding) opacity when hovering over highlights. */
 const hover_opacity = 0.5;
 
@@ -58,6 +57,7 @@ function update() {
 		if (index !== -1) highlights.splice(index, 1); // Remove
 		else highlights.push(pointerSquare); // Add
 
+		const color = preferences.getAnnoteSquareColor();
 		model = genModel(highlights, color);
 	}
 
@@ -131,6 +131,7 @@ function render() {
 
 	// Render hovered highlights
 	if (highlightsHovered.length > 0) {
+		const color = preferences.getAnnoteSquareColor();
 		const hoverColor = [
 			color[0],
 			color[1],
