@@ -12,7 +12,6 @@
 
 // Import Start
 import perspective from './perspective.js';
-import miniimage from './miniimage.js';
 import stats from '../gui/stats.js';
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
@@ -201,8 +200,6 @@ function recalcCanvasVariables() {
 	movement.setScale_When1TileIs1Pixel_Physical((screenBoundingBox.right * 2) / canvas.width);
 	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * window.devicePixelRatio);
 	// console.log(`Screen width: ${camera.getScreenBoundingBox(false).right * 2}. Canvas width: ${camera.canvas.width}`)
-
-	miniimage.recalcWidthWorld();
 }
 
 // Set view matrix

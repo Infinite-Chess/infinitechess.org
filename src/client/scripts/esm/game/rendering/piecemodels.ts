@@ -15,18 +15,14 @@ import coordutil from '../../chess/util/coordutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import instancedshapes from './instancedshapes.js';
-import imagecache from '../../chess/rendering/imagecache.js';
 import math from '../../util/math.js';
 import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes } from '../../chess/util/typeutil.js';
+import texturecache from '../../chess/rendering/texturecache.js';
 // @ts-ignore
 import perspective from './perspective.js';
-// @ts-ignore
-import texture from './texture.js';
-// @ts-ignore
-import { gl } from './webgl.js';
 // @ts-ignore
 import movement from './movement.js';
 
@@ -133,12 +129,9 @@ function regenType(gamefile: gamefile, type: number) {
 function genTypeModel(gamefile: gamefile, type: number): MeshData {
 	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
 	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.pieces.typeRanges.get(type)!);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, type);
 
-	const image: HTMLImageElement = imagecache.getPieceImage(type);
-
-	const tex: WebGLTexture = texture.loadTexture(gl, image, { useMipmaps: true });
-
+	const tex = texturecache.getTexture(type);
 	return {
 		instanceData64,
 		model: createModel_Instanced_GivenAttribInfo(vertexData, new Float32Array(instanceData64), ATTRIBUTE_INFO, 'TRIANGLES', tex)
@@ -153,7 +146,7 @@ function genTypeModel(gamefile: gamefile, type: number): MeshData {
  */
 function genVoidModel(gamefile: gamefile, type: number): MeshData {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(preferences.getTintColorOfType(type));
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, gamefile.pieces.typeRanges.get(type)!);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, type);
 
 	return {
 		instanceData64,
@@ -166,23 +159,24 @@ function genVoidModel(gamefile: gamefile, type: number): MeshData {
  * The instance data contains only the offset of each piece instance, with a stride of 2.
  * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
-function getInstanceDataForTypeRange(gamefile: gamefile, pieceList: TypeRange): Float64Array {
-	const instanceData64: Float64Array = new Float64Array((pieceList.end - pieceList.start) * STRIDE_PER_PIECE); // Initialize with all 0's
+function getInstanceDataForTypeRange(gamefile: gamefile, type: number): Float64Array {
+	const range = gamefile.pieces.typeRanges.get(type)!;
+	const instanceData64: Float64Array = new Float64Array((range.end - range.start) * STRIDE_PER_PIECE); // Initialize with all 0's
 
 	let currIndex: number = 0;
-	for (let i = pieceList.start; i < pieceList.end; i++) {
-		const coords = boardutil.getCoordsFromIdx(gamefile.pieces, i); // May be [0,0] if this is an undefined placeholder
-		if (boardutil.isIdxUndefinedPiece(gamefile.pieces, i)) {
+	boardutil.iteratePiecesInTypeRange_IncludeUndefineds(gamefile.pieces, type, (idx: number, isUndefined: boolean) => {
+		if (isUndefined) {
 			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
 			instanceData64[currIndex + 1] = Infinity;
-		} else {
+		} else { // NOT undefined
+			const coords = boardutil.getCoordsFromIdx(gamefile.pieces, idx);
 			// Apply the piece mesh offset to the coordinates
 			instanceData64[currIndex] = coords[0] - gamefile.mesh.offset[0];
 			instanceData64[currIndex + 1] = coords[1] - gamefile.mesh.offset[1];
 		}
 		currIndex += STRIDE_PER_PIECE;
-	};
+	});
 
 	return instanceData64;
 }
