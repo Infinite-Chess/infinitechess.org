@@ -82,6 +82,7 @@ let darkTiles;
 			piecemodels.regenAll(gamefile);
 			// Regenerate the spritesheet with the new tinted images
 			spritesheet.initSpritesheetForGame(gl, gamefile);
+			texturecache.initTexturesForGame(gl, gamefile);
 		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();

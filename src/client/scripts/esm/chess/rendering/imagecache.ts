@@ -38,13 +38,7 @@ async function initImagesForGame(gamefile: gamefile): Promise<void> {
 
 	// 1. Determine required piece types (excluding SVG-less ones)
 	const types = gamefile.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
-
-	if (types.length === 0) {
-		console.log("No piece types with SVGs found for this game. Image cache remains empty.");
-		// Ensure cache is clean if re-initializing
-		cachedImages = {};
-		return;
-	}
+	if (types.length === 0) return console.log("No piece types with SVGs found for this game. Image cache remains empty.");
 
 	// console.log("Required piece types for image cache:", types);
 

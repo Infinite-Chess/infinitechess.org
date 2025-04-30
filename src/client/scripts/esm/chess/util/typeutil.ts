@@ -97,7 +97,7 @@ const royals: RawType[] = [...jumpingRoyals, ...slidingRoyals];
 const strcolors = ["neutral", "white", "black", "red", "blue", "yellow", "green"] as const;
 
 /** Raw piece types that don't have an SVG */
-const SVGLESS_TYPES = [rawTypes.VOID];
+const SVGLESS_TYPES: RawType[] = [rawTypes.VOID];
 
 type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
@@ -169,6 +169,10 @@ function getPlayerFromString(string: StrPlayer): Player {
 	return strcolors.indexOf(string) as Player;
 }
 
+/** 
+ * Returns the english string of a piece type.
+ * 30 => "[30] queen(white)"
+ */
 function debugType(type: number): string {
 	const [raw, c] = splitType(type);
 	return `[${type}] ${getRawTypeStr(raw)}(${strcolors[c]})`;

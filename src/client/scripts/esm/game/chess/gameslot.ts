@@ -41,6 +41,7 @@ import { players } from "../../chess/util/typeutil.js";
 import boardpos from "../rendering/boardpos.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
+import texturecache from "../../chess/rendering/texturecache.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -231,6 +232,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	await imagecache.initImagesForGame(loadedGamefile!);
 	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
+	texturecache.initTexturesForGame(gl, loadedGamefile!);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
 	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
