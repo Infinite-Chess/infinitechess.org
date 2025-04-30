@@ -31,6 +31,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import piecemodels from '../rendering/piecemodels.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import miniimage from '../rendering/miniimage.js';
+import snapping from '../rendering/highlights/snapping.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -170,6 +171,8 @@ function updateBoard(gamefile: gamefile) {
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	miniimage.genModel();
+	// NEEDS TO BE AFTER annotations and miniimages test what entities are being hovered
+	snapping.testIfClickedEntity();
 	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
