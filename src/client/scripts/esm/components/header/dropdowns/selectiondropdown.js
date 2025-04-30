@@ -14,6 +14,7 @@ const selectionDropdownTitle = document.querySelector('.selection-dropdown .drop
 const dragCheckbox = document.querySelector('.selection-option.drag input');
 const premoveCheckbox = document.querySelector('.selection-option.premove input');
 const animationsCheckbox = document.querySelector('.selection-option.animations input');
+const lingeringAnnotationsCheckbox = document.querySelector('.selection-option.lingering-annotations input');
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -47,12 +48,14 @@ function initListeners() {
 	dragCheckbox.addEventListener("click", toggleDrag);
 	premoveCheckbox.addEventListener("click", togglePremove);
 	animationsCheckbox.addEventListener('click', toggleAnimations);
+	lingeringAnnotationsCheckbox.addEventListener('click', toggleLingeringAnnotations);
 }
 function closeListeners() {
 	selectionDropdownTitle.removeEventListener('click', close);
 	dragCheckbox.removeEventListener("click", toggleDrag);
 	premoveCheckbox.removeEventListener("click", togglePremove);
 	animationsCheckbox.removeEventListener('click', toggleAnimations);
+	lingeringAnnotationsCheckbox.removeEventListener('click', toggleLingeringAnnotations);
 }
 
 function toggleDrag() {
@@ -63,6 +66,9 @@ function togglePremove() {
 }
 function toggleAnimations() {
 	preferences.setAnimationsMode(animationsCheckbox.checked);
+}
+function toggleLingeringAnnotations() {
+	preferences.setLingeringAnnotationsMode(lingeringAnnotationsCheckbox.checked);
 }
 
 function updateSwitchColor() {
