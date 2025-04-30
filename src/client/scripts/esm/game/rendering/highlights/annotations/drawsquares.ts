@@ -18,10 +18,11 @@ import movement from "../../movement.js";
 import input from "../../../input.js";
 // @ts-ignore
 import guipause from "../../../gui/guipause.js";
+// @ts-ignore
+import perspective from "../../perspective.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
-import perspective from "../../perspective.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -34,6 +35,11 @@ const hover_opacity = 0.5;
 const highlights: Coords[] = [];
 /** All highlights currently being hovered over, if zoomed out. */
 const highlightsHovered: Coords[] = [];
+/**
+ * All highlights currently being hovered over EUCLIDEAN DISTANCES to the mouse.
+ * For quickly comparing against other hovered annotes.
+ */
+const highlightsHovered_dists: number[] = [];
 
 
 // Updating -----------------------------------------------------------------
@@ -59,6 +65,8 @@ function update() {
 
 function updateHighlightsHovered() {
 	highlightsHovered.length = 0;
+	highlightsHovered_dists.length = 0;
+	
 	if (!movement.isScaleLess1Pixel_Virtual() || guipause.areWePaused() || highlights.length === 0) return;
 	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
 
@@ -72,8 +80,12 @@ function updateHighlightsHovered() {
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach(coords => {
 		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
-		const dist = math.chebyshevDistance(coordsWorld, mouseWorld);
-		if (dist < miniImageHalfWidthWorld) highlightsHovered.push(coords);
+		const dist_cheby = math.chebyshevDistance(coordsWorld, mouseWorld);
+		if (dist_cheby < miniImageHalfWidthWorld) {
+			highlightsHovered.push(coords);
+			// Upgrade the distance to euclidean
+			highlightsHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld))
+		}
 	});
 }
 
@@ -132,6 +144,7 @@ function render() {
 export default {
 	highlights,
 	highlightsHovered,
+	highlightsHovered_dists,
 
 	update,
 	updateHighlightsHovered,

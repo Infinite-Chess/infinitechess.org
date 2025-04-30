@@ -55,6 +55,12 @@ let disabled: boolean = false; // Disabled when there's too many pieces
 
 /** All mini images currently being hovered over, if zoomed out. */
 const imagesHovered: Coords[] = [];
+/**
+ * All mini images currently being hovered over EUCLIDEAN DISTANCES to the mouse.
+ * For quickly comparing against other hovered annotes.
+ */
+const imagesHovered_dists: number[] = [];
+
 
 /**
  * The instance data of all the mini images, where the keys are the piece type,
@@ -105,6 +111,7 @@ function toggle(): void {
  */
 function updateImagesHovered() {
 	imagesHovered.length = 0;
+	imagesHovered_dists.length = 0;
 
 	instanceData = {};
 	instanceData_hovered = {};
@@ -150,6 +157,8 @@ function updateImagesHovered() {
 			const mouseWorld = mouse.getMouseWorld();
 			if (mouseWorld && math.chebyshevDistance(coordsWorld, mouseWorld) < halfWorldWidth) { // Being hovered over!
 				imagesHovered.push(coords);
+				// Upgrade the distance to euclidean
+				imagesHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld));
 				instanceData_hovered.push(...coordsWorld);
 			}
 		}
@@ -219,6 +228,7 @@ function render(): void {
 export default {
 	toggle,
 	imagesHovered,
+	imagesHovered_dists,
 	
 	isDisabled,
 	enable,
