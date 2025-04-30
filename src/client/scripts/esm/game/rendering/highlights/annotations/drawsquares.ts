@@ -129,6 +129,7 @@ function render() {
 
 
 export default {
+	highlights,
 	update,
 	clearSquares,
 	render,
