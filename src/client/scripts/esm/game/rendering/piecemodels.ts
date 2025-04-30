@@ -29,7 +29,6 @@ import texture from './texture.js';
 import { gl } from './webgl.js';
 // @ts-ignore
 import movement from './movement.js';
-import annotations from './highlights/annotations/annotations.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -91,7 +90,7 @@ function regenAll(gamefile: gamefile) {
 	console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
-	setOffset(gamefile, math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE));
+	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
 	// Calculate whether the textures should be inverted or not, based on whether we're viewing black's perspective.
 	gamefile.mesh.inverted = perspective.getIsViewingBlackPerspective();
 
@@ -212,7 +211,7 @@ function shiftAll(gamefile: gamefile) {
 		return;
 	}
 
-	setOffset(gamefile, newOffset);
+	gamefile.mesh.offset = newOffset;
 
 	// Go ahead and shift each model
 	for (const meshData of Object.values(gamefile.mesh.types)) {
@@ -364,15 +363,6 @@ function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
 	const yDiff = Math.abs(boardPos[1] - offset[1]);
 	if (xDiff > REGEN_RANGE || yDiff > REGEN_RANGE) return true;
 	return false;
-}
-
-
-// Helpers --------------------------------------------------------------------------------------------
-
-
-function setOffset(gamefile: gamefile, value: Coords) {
-	gamefile.mesh.offset = value;
-	annotations.onOffsetChange();
 }
 
 

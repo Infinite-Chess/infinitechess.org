@@ -29,14 +29,14 @@ import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import piecemodels from '../rendering/piecemodels.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
 import input from '../input.js';
-// @ts-ignore
-import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
@@ -63,7 +63,6 @@ import copypastegame from './copypastegame.js';
 import stats from '../gui/stats.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-import annotations from '../rendering/highlights/annotations/annotations.js';
 
 // Functions -------------------------------------------------------------------------------
 

@@ -227,7 +227,6 @@ function render(): void {
 
 
 export default {
-	MINI_IMAGE_WIDTH_VPIXELS,
 	getWidthWorld,
 	recalcWidthWorld,
 	isHovering,

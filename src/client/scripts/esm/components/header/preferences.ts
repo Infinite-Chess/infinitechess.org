@@ -76,7 +76,7 @@ function loadPreferences(): void {
 		drag_enabled: default_drag_enabled,
 		premove_mode: default_premove_mode,
 		animations: default_animations,
-		lingering_annotations: default_lingering_annotations;
+		lingering_annotations: default_lingering_annotations,
 	};
 
 	preferences = browserStoragePrefs;
@@ -231,11 +231,11 @@ function setPerspectiveFOV(perspective_fov: number): void {
 	document.dispatchEvent(new CustomEvent('fov-change'));
 }
 
-function getLingeringAnnotations() {
+function getLingeringAnnotationsMode() {
 	return preferences.lingering_annotations ?? default_lingering_annotations;
 }
 
-function setLingeringAnnotations(value: boolean) {
+function setLingeringAnnotationsMode(value: boolean) {
 	if (typeof value !== 'boolean') throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
 	preferences.lingering_annotations = value;
 	onChangeMade();
@@ -428,8 +428,8 @@ export default {
 	getPerspectiveFOV,
 	getDefaultPerspectiveFOV,
 	setPerspectiveFOV,
-	getLingeringAnnotations,
-	setLingeringAnnotations,
+	getLingeringAnnotationsMode,
+	setLingeringAnnotationsMode,
 	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,

@@ -33,11 +33,12 @@ import type gamefile from "../../../chess/logic/gamefile";
 function render(gamefile: gamefile) {
 	highlightline.render();
 
-	if (movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're zoomed out.
-	highlightLastMove(gamefile);
-	checkhighlight.render(gamefile);
-	legalmovehighlights.render();
-	specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
+	if (!movement.isScaleLess1Pixel_Virtual()) { // Zoomed in
+		highlightLastMove(gamefile);
+		checkhighlight.render(gamefile);
+		legalmovehighlights.render();
+		specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
+	} 
 	annotations.render(); // The square highlights added by the user
 }
 
