@@ -61,6 +61,7 @@ function genModel() {
 	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor(color_options));
 	color[3] = 1;
 
+	const entityWorldWidth = snapping.getEntityWidthWorld();
 	const snapDist = entityWorldWidth / 2;
     
 	const a = perspective.distToRenderBoard;
@@ -120,7 +121,6 @@ function genModel() {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
-	const entityWorldWidth = snapping.getEntityWidthWorld();
 	const halfWidth = entityWorldWidth / 2;
 
 	const startX = closestPoint.coords[0] - halfWidth;

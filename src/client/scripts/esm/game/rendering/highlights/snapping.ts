@@ -18,7 +18,7 @@ import transition from "../transition.js";
 
 
 /** Width of entities (mini images, highlights) when zoomed out, in virtual pixels. */
-const ENTITY_WIDTH_VPIXELS: number = 36; // Default: 36
+const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 36
 
 
 // Methods --------------------------------------------------------------
