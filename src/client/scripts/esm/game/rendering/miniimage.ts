@@ -220,12 +220,12 @@ function render(): void {
 
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		for (const neut of sortedNeutrals) {
-			models[neut]?.render();
-			models_hovered[neut]?.render();
+			models[neut]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+			models_hovered[neut]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
 		}
 		for (const col of sortedColors) {
-			models[col]?.render();
-			models_hovered[col]?.render();
+			models[col]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+			models_hovered[col]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
 		}
 	});
 }
