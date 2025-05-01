@@ -154,7 +154,6 @@ function createModel_Instanced(
 ): BufferModelInstanced {
 	const usingTexture = texture !== undefined;
 	const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
-	console.log("AttribInfoInstanced", attribInfoInstanced);
 	return createModel_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, texture);
 }
 
