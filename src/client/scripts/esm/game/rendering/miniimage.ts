@@ -10,7 +10,7 @@ import type { Coords } from '../../chess/util/coordutil.js';
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import gameslot from '../chess/gameslot.js';
-import { createModel_Instanced, BufferModelInstanced } from './buffermodel.js';
+import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
 import { players, TypeGroup } from '../../chess/util/typeutil.js';
@@ -48,6 +48,18 @@ const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
 const MAX_ANIM_DIST_VPIXELS = 2300;
 
+/** The attribute info for all mini image vertex & attribute data. */
+const attribInfo: AttributeInfoInstanced = {
+	vertexDataAttribInfo: [
+		{ name: 'position', numComponents: 2 },
+		{ name: 'texcoord', numComponents: 2 },
+		{ name: 'color', numComponents: 4 }
+	],
+	instanceDataAttribInfo: [
+		{ name: 'instanceposition', numComponents: 2 }
+	]
+};
+
 
 /** True if we're disabled and not rendering mini images, such as when there's too many pieces. */
 let disabled: boolean = false; // Disabled when there's too many pieces
@@ -56,8 +68,9 @@ let disabled: boolean = false; // Disabled when there's too many pieces
 /** All mini images currently being hovered over, if zoomed out. */
 const imagesHovered: Coords[] = [];
 /**
- * All mini images currently being hovered over EUCLIDEAN DISTANCES to the mouse.
+ * All mini images currently being hovered over EUCLIDEAN DISTANCES to the mouse in world space.
  * For quickly comparing against other hovered annotes.
+ * EACH INDEX MAPS TO THE SAME INDEX IN {@link highlightsHovered}.
  */
 const imagesHovered_dists: number[] = [];
 
@@ -169,10 +182,10 @@ function updateImagesHovered() {
 		// Animate the main piece being animated
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		processPiece(currentCoords, instanceData[a.type], instanceData_hovered[a.type]);
+		processPiece(currentCoords, instanceData[a.type]!, instanceData_hovered[a.type]!);
 
 		// Animate the captured piece too, if there is one
-		if (a.captured) processPiece(a.captured.coords, instanceData[a.captured.type], instanceData_hovered[a.captured.type]);
+		if (a.captured) processPiece(a.captured.coords, instanceData[a.captured.type]!, instanceData_hovered[a.captured.type]!);
 	});
 }
 
@@ -196,12 +209,12 @@ function render(): void {
 
 		const type = Number(typeStr);
 		const tex: WebGLTexture = texturecache.getTexture(type);
-		models[type] = createModel_Instanced(vertexData, new Float32Array(thisInstanceData), 'TRIANGLES', true, tex);
+		models[type] = createModel_Instanced_GivenAttribInfo(vertexData, new Float32Array(thisInstanceData), attribInfo, 'TRIANGLES', tex);
 		// Create the hovered model if it's non empty
-		if (instanceData_hovered[type].length > 0) {
+		if (instanceData_hovered[type]!.length > 0) {
 			const color_hovered = [1,1,1, 1] as Color; // Hovered mini images are fully opaque
 			const vertexData_hovered: number[] = instancedshapes.getDataColoredTexture(color_hovered, inverted);
-			models_hovered[type] = createModel_Instanced(vertexData_hovered, new Float32Array(instanceData_hovered[type]), 'TRIANGLES', true, tex);
+			models_hovered[type] = createModel_Instanced_GivenAttribInfo(vertexData_hovered, new Float32Array(instanceData_hovered[type]!), attribInfo, 'TRIANGLES', tex);
 		}
 	}
 

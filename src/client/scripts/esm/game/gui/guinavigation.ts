@@ -215,6 +215,7 @@ function callback_Back() {
 
 function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
+	// Add the square annotation highlights, too.
 	allCoords.push(...drawsquares.highlights);
 	area.initTelFromCoordsList(allCoords);
 }

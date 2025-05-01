@@ -36,8 +36,9 @@ const highlights: Coords[] = [];
 /** All highlights currently being hovered over, if zoomed out. */
 const highlightsHovered: Coords[] = [];
 /**
- * All highlights currently being hovered over EUCLIDEAN DISTANCES to the mouse.
+ * All highlights currently being hovered over EUCLIDEAN DISTANCES to the mouse in world space.
  * For quickly comparing against other hovered annotes.
+ * EACH INDEX MAPS TO THE SAME INDEX IN {@link highlightsHovered}.
  */
 const highlightsHovered_dists: number[] = [];
 
@@ -72,19 +73,19 @@ function updateHighlightsHovered() {
 
 	// Test if any one highlight is being hovered over
 
-	// Calculate the mouse's world space
 	const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
 
-	const miniImageHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
+	const entityHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
 
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach(coords => {
-		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		// const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		const coordsWorld = space.convertCoordToWorldSpace(coords);
 		const dist_cheby = math.chebyshevDistance(coordsWorld, mouseWorld);
-		if (dist_cheby < miniImageHalfWidthWorld) {
+		if (dist_cheby < entityHalfWidthWorld) {
 			highlightsHovered.push(coords);
 			// Upgrade the distance to euclidean
-			highlightsHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld))
+			highlightsHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld));
 		}
 	});
 }
@@ -102,7 +103,8 @@ function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 	const instanceData: number[] = [];
 
 	highlights.forEach(coords => {
-		const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		const worldLoc = space.convertCoordToWorldSpace(coords);
 		instanceData.push(...worldLoc);
 	});
 
@@ -115,7 +117,6 @@ function render() {
 
 	// If we're zoomed out, then the size of the highlights is constant.
 	const size = movement.isScaleLess1Pixel_Virtual() ? snapping.getEntityWidthWorld() : movement.getBoardScale();
-	// const size = movement.isScaleLess1Pixel_Virtual() ? miniimage.ENTITY_WIDTH_VPIXELS : movement.getBoardScale();
 
 	// Render main highlights
 	const color = preferences.getAnnoteSquareColor();

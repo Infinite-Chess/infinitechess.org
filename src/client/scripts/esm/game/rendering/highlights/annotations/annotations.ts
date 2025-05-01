@@ -9,7 +9,6 @@
 import drawsquares from "./drawsquares.js";
 // @ts-ignore
 import input from "../../../input.js";
-import { Coords } from "../../../../chess/util/coordutil.js";
 
 
 
@@ -52,7 +51,3 @@ export default {
 	update,
 	render,
 };
-
-export type {
-	HoveredAnnote,
-}
