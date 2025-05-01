@@ -12,6 +12,7 @@ import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.j
 import instancedshapes from "../../instancedshapes.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
+import miniimage from "../../miniimage.js";
 // @ts-ignore
 import movement from "../../movement.js";
 // @ts-ignore
@@ -56,11 +57,41 @@ function update() {
 		const pointerWorld: Coords = input.getPointerWorldLocation() as Coords;
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
-		// Check if the square is already highlighted
-		const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, pointerSquare));
+		const isHoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
 
-		if (index !== -1) highlights.splice(index, 1); // Remove
-		else highlights.push(pointerSquare); // Add
+		if (!movement.isScaleLess1Pixel_Virtual() || !isHoveringAtleastOneEntity) { // Zoomed in OR not hovering anything. Normal behavior: toggle highlight on square.
+			// Check if the square is already highlighted
+			const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, pointerSquare));
+	
+			if (index !== -1) highlights.splice(index, 1); // Remove
+			else highlights.push(pointerSquare); // Add
+		} else { // Zoomed out AND hovering atleast one entity. Behavior: toggle highlight on closest entity to mouse.
+			// Find the closest hovered entity to the pointer
+			let closestEntity: { coords: Coords, dist: number, type: 'miniimage' | 'square', index: number } | undefined = undefined;
+			for (let i = 0; i < miniimage.imagesHovered.length; i++) {
+				const coords = miniimage.imagesHovered[i]!;
+				const dist = miniimage.imagesHovered_dists[i]!;
+				if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'miniimage', index: i };
+			}
+			for (let i = 0; i < highlightsHovered.length; i++) {
+				const coords = highlightsHovered[i]!;
+				const dist = highlightsHovered_dists[i]!;
+				if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'square', index: i };
+			}
+			if (closestEntity === undefined) throw Error("No closest entity found, this should never happen.");
+
+			// Now that we have the closest hovered entity, toggle the highlight on its coords.
+			const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, closestEntity.coords));
+			if (index !== -1) { // Already highlighted, Remove
+				highlights.splice(index, 1);
+				// Also remove from highlightsHovered. Prevents a bug where the highlight doesn't dissapear until the next frame render.
+				if (closestEntity.type === 'square') {
+					highlightsHovered.splice(closestEntity.index, 1);
+					highlightsHovered_dists.splice(closestEntity.index, 1);
+				} else throw Error("Cannot remove a highlight from highlightsHovered if it was not a square highlight.");
+			}
+			else highlights.push(closestEntity.coords); // Add
+		}
 	}
 }
 
