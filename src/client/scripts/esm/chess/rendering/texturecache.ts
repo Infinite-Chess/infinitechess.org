@@ -32,37 +32,37 @@ let textureCache: TypeGroup<WebGLTexture> = {};
 async function initTexturesForGame(gl: WebGL2RenderingContext, gamefile: gamefile): Promise<void> {
 	// Clear existing cache before initializing for a new game
 	if (Object.keys(textureCache).length > 0) throw Error("TextureCache: Cache already initialized. Call deleteTextureCache() when unloading games.");
-	console.log("Initializing texture cache for game...");
+	// console.log("Initializing texture cache for game...");
 
 	// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
 	const types = gamefile.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
 
 	if (types.length === 0) return console.log("TextureCache: No piece types with SVGs found for this game. Texture cache remains empty.");
 
-	console.log("Required piece types for texture cache:", types);
+	// console.log("Required piece types for texture cache:", types);
 
 	// 2. Iterate and create textures
-    for (const type of types) {
-        // Retrieve the pre-cached loaded image
-        const textureElement = imagecache.getPieceImage(type);
-        textureCache[type] = texture.loadTexture(gl, textureElement, { useMipmaps: true });;
-        console.log(`TextureCache: Cached texture for type ${typeutil.debugType(type)}`);
-    }
-    console.log(`TextureCache: Initialization complete. Cached ${Object.keys(textureCache).length} textures.`);
+	for (const type of types) {
+		// Retrieve the pre-cached loaded image
+		const textureElement = imagecache.getPieceImage(type);
+		textureCache[type] = texture.loadTexture(gl, textureElement, { useMipmaps: true });
+		// console.log(`TextureCache: Cached texture for type ${typeutil.debugType(type)}`);
+	}
+	// console.log(`TextureCache: Initialization complete. Cached ${Object.keys(textureCache).length} textures.`);
 }
 
 
 /**
  * Retrieves a WebGLTexture from the cache.
  * ASSUMES `initTexturesForGame` has been called successfully for the current game.
- * @param type - The numeric piece type identifier.
+ * @param type - The piece type.
  * @returns The cached WebGLTexture.
  */
 function getTexture(type: number): WebGLTexture {
 	// 1. Check cache using type directly as the key
 	const cachedTexture = textureCache[type];
 	if (cachedTexture) return cachedTexture;
-    // If not found, it implies initTexturesForGame wasn't called or failed for this type.
+	// If not found, it implies initTexturesForGame wasn't called or failed for this type.
 	else throw new Error(`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`);
 }
 
@@ -76,7 +76,7 @@ function getTexture(type: number): WebGLTexture {
  */
 function deleteTextureCache(gl: WebGL2RenderingContext): void {
 	console.log("TextureCache: Deleting all cached textures...");
-	for (const key in textureCache) gl.deleteTexture(textureCache[key]);
+	for (const key in textureCache) gl.deleteTexture(textureCache[key]!);
 	textureCache = {}; // Clear the cache object
 	console.log(`TextureCache: Deleted textures from GPU and cleared cache.`);
 }

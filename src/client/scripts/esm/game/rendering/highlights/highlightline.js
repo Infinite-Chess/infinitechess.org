@@ -59,7 +59,7 @@ function genModel() {
 	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor(color_options));
 	color[3] = 1;
 
-	const snapDist = snapping.getEntityWidthWorld() / 2;
+	const snapDist = entityWorldWidth / 2;
     
 	const a = perspective.distToRenderBoard;
 	/** @type {BoundingBox} */
@@ -118,12 +118,13 @@ function genModel() {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
-	const halfWidth = snapping.getEntityWidthWorld() / 2;
+	const entityWorldWidth = snapping.getEntityWidthWorld();
+	const halfWidth = entityWorldWidth / 2;
 
 	const startX = closestPoint.coords[0] - halfWidth;
 	const startY = closestPoint.coords[1] - halfWidth;
-	const endX = startX + snapping.getEntityWidthWorld();
-	const endY = startY + snapping.getEntityWidthWorld();
+	const endX = startX + entityWorldWidth;
+	const endY = startY + entityWorldWidth;
 
 	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, opacityOfGhostImage);
 

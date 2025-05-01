@@ -154,6 +154,7 @@ function createModel_Instanced(
 ): BufferModelInstanced {
 	const usingTexture = texture !== undefined;
 	const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
+	console.log("AttribInfoInstanced", attribInfoInstanced);
 	return createModel_Instanced_GivenAttribInfo(vertexData, instanceData, attribInfoInstanced, mode, texture);
 }
 
@@ -243,7 +244,7 @@ function createModel_Instanced_GivenAttribInfo(
 	const vertexDataStride = getStrideFromAttributeInfo(attribInfoInstanced.vertexDataAttribInfo);
 	const instanceDataStride = getStrideFromAttributeInfo(attribInfoInstanced.instanceDataAttribInfo);
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
-	if (instanceData.length % instanceDataStride !== 0) throw new Error("Instance data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
+	if (instanceData.length % instanceDataStride !== 0) throw new Error(`Instance data length (${instanceData.length}) is not divisible by stride (${instanceDataStride}) when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.`);
 
 	vertexData = ensureTypedArray(vertexData);
 	instanceData = ensureTypedArray(instanceData);

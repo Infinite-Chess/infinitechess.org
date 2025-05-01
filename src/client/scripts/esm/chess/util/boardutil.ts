@@ -156,8 +156,9 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
  * skipping over undefineds placeholders, executing callback
  * on each piece idx.
  */
+// eslint-disable-next-line no-unused-vars
 function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (idx: number) => void) {
-	const range = o.typeRanges[type];
+	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
 		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
@@ -172,8 +173,9 @@ function iteratePiecesInTypeRange(o: OrganizedPieces, type: number, callback: (i
  * Efficiently iterates through every piece in a type range,
  * calculating if each idx is an undefined placeholder.
  */
+// eslint-disable-next-line no-unused-vars
 function iteratePiecesInTypeRange_IncludeUndefineds(o: OrganizedPieces, type: number, callback: (idx: number, isUndefined: boolean) => void) {
-	const range = o.typeRanges[type];
+	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
 		if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.

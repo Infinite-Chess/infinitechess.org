@@ -169,10 +169,10 @@ function updateBoard(gamefile: gamefile) {
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	snapping.updateEntitiesHovered();
-	// AFTER snapping.updateEntitiesHovered()
+	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
 	annotations.update();
 
-	// After updating annotations and mini image hovers as this early exits if we're hovering.
+	// After updating annotations and mini image hovers, as this early exits if we're hovering.
 	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
