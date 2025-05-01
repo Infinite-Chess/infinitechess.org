@@ -8,7 +8,6 @@
 import input from '../../input.js';
 import bufferdata from '../bufferdata.js';
 import perspective from '../perspective.js';
-import miniimage from '../miniimage.js';
 import board from '../board.js';
 import transition from '../transition.js';
 import selection from '../../chess/selection.js';
@@ -22,6 +21,7 @@ import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import guipause from '../../gui/guipause.js';
+import snapping from './snapping.js';
 // Import End
 
 /**
@@ -59,7 +59,7 @@ function genModel() {
 	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor(color_options));
 	color[3] = 1;
 
-	const snapDist = miniimage.getWidthWorld() / 2;
+	const snapDist = entityWorldWidth / 2;
     
 	const a = perspective.distToRenderBoard;
 	/** @type {BoundingBox} */
@@ -106,7 +106,7 @@ function genModel() {
 
 	// In the future we'll still need to pass this point if we've got
 	// key points that would trump clicking pieces
-	if (miniimage.isHovering()) return;
+	if (snapping.isHoveringAtleastOneEntity()) return;
 
 	if (!closestPoint) return; // There were no snapping points, the mouse is not next to a line.
 	// Generate the ghost image model
@@ -118,12 +118,13 @@ function genModel() {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
 
-	const halfWidth = miniimage.getWidthWorld() / 2;
+	const entityWorldWidth = snapping.getEntityWidthWorld();
+	const halfWidth = entityWorldWidth / 2;
 
 	const startX = closestPoint.coords[0] - halfWidth;
 	const startY = closestPoint.coords[1] - halfWidth;
-	const endX = startX + miniimage.getWidthWorld();
-	const endY = startY + miniimage.getWidthWorld();
+	const endX = startX + entityWorldWidth;
+	const endY = startY + entityWorldWidth;
 
 	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, opacityOfGhostImage);
 

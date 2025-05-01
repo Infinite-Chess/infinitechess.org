@@ -226,10 +226,28 @@ function getDataTexture(inverted: boolean): number[] {
 	return bufferdata.getDataQuad_Texture(left, bottom, right, top, 0, 0, 1, 1);
 }
 
+/**
+ * Generates the vertex data for a single square draw with a colored texture, centered on [0,0]
+ * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
+ */
+function getDataColoredTexture(color: Color, inverted: boolean): number[] {
+	// let { left, right, bottom, top } = shapes.getBoundingBoxOfCoord([0,0]);
+	let left = -0.5;
+	let right = 0.5;
+	let bottom = -0.5;
+	let top = 0.5;
+	if (inverted) {
+		[left, right] = [right, left]; // Swap left and right
+		[bottom, top] = [top, bottom]; // Swap bottom and top
+	}
+	return bufferdata.getDataQuad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
+}
+
 export default {
 	getDataLegalMoveSquare,
 	getDataLegalMoveDot,
 	getDataLegalMoveCornerTris,
 	getDataPlusSign,
 	getDataTexture,
+	getDataColoredTexture,
 };

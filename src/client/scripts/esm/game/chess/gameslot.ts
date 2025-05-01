@@ -39,6 +39,7 @@ import imagecache from "../../chess/rendering/imagecache.js";
 import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
+import texturecache from "../../chess/rendering/texturecache.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -231,6 +232,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	await imagecache.initImagesForGame(loadedGamefile!);
 	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
+	texturecache.initTexturesForGame(gl, loadedGamefile!);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
 	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
@@ -257,6 +259,7 @@ function unloadGame() {
 	loadedGamefile = undefined;
 
 	imagecache.deleteImageCache();
+	texturecache.deleteTextureCache(gl);
 	selection.unselectPiece();
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
