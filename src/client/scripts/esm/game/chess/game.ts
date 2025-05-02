@@ -29,6 +29,7 @@ import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import piecemodels from '../rendering/piecemodels.js';
+import { CreateInputListener, InputListener, Mouse } from '../input2.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -66,6 +67,8 @@ import statustext from '../gui/statustext.js';
 
 // Functions -------------------------------------------------------------------------------
 
+const element_overlay: HTMLElement = document.getElementById('overlay')!;
+let listener: InputListener;
 
 function init() {
 	board.updateTheme();
@@ -76,6 +79,8 @@ function init() {
 	guititle.open();
 
 	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
+
+	listener = CreateInputListener(element_overlay);
 }
 
 // Update the game every single frame
