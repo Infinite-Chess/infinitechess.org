@@ -140,9 +140,6 @@ function isCoordinateActive(): boolean {
 }
 
 function initListeners_Navigation() {
-	element_Navigation.addEventListener("mousedown", input.doIgnoreMouseDown);
-	element_Navigation.addEventListener("touchstart", input.doIgnoreMouseDown);
-
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
@@ -169,11 +166,6 @@ function initListeners_Navigation() {
 }
 
 function closeListeners_Navigation() {
-	element_Navigation.removeEventListener("mousedown", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("mouseup", input.doIgnoreMouseDown)
-	element_Navigation.removeEventListener("touchstart", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("touchend", input.doIgnoreMouseDown)
-
 	element_Recenter.removeEventListener('click', recenter);
 	element_Expand.removeEventListener('click', callback_Expand);
 	element_Back.removeEventListener('click', callback_Back);
