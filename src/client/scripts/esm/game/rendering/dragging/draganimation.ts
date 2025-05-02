@@ -24,6 +24,8 @@ import preferences from "../../../components/header/preferences.js";
 import themes from "../../../components/header/themes.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import animation from "../animation.js";
+import { listener } from "../../chess/game.js";
+import { Mouse } from "../../input2.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
@@ -212,7 +214,7 @@ function genPieceModel(): BufferModel | undefined {
 	if (typeutil.SVGLESS_TYPES.some((type: RawType) => typeutil.getRawType(pieceType!) === type)) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
-	const touchscreenUsed = input.getPointerIsTouch();
+	const touchscreenUsed = listener.isMouseTouch(Mouse.LEFT);
 	const boardScale = movement.getBoardScale();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
@@ -251,7 +253,7 @@ function genPieceModel(): BufferModel | undefined {
  */
 function genOutlineModel(): BufferModel {
 	const data: number[] = [];
-	const pointerIsTouch = input.getPointerIsTouch();
+	const pointerIsTouch = listener.isMouseTouch(Mouse.LEFT);
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * movement.getBoardScale();
 	const color = preferences.getBoxOutlineColor();
