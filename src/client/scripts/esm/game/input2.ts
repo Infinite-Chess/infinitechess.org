@@ -35,6 +35,8 @@ interface InputListener {
     isMouseDown(button: MouseButton): boolean;
     // eslint-disable-next-line no-unused-vars
     isMouseHeld(button: MouseButton): boolean;
+	/** Returns true if the most recent pointer for a specific mouse button action is a touch (not mouse). */
+	isMouseTouch(button: MouseButton): boolean;
 	// eslint-disable-next-line no-unused-vars
 	getMousePosition(button: MouseButton): Coords | null;
 	// eslint-disable-next-line no-unused-vars
@@ -473,8 +475,13 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		atleastOneInput: () => atleastOneInputThisFrame,
 		isMouseDown: (button: MouseButton) => clickInfo[button].isDown ?? false,
 		isMouseHeld: (button: MouseButton) => clickInfo[button].isHeld ?? false,
+		isMouseTouch: (button: MouseButton) => {
+			const pointerId = clickInfo[button].pointerId;
+			if (pointerId === undefined) return false;
+			return pointers[pointerId]?.isTouch ?? true; // If it's delete then it must have been a touch.
+		},
 		getMousePosition: (button: MouseButton) => {
-			const pointerId = clickInfo[button].pointerId!;
+			const pointerId = clickInfo[button].pointerId;
 			if (pointerId === undefined) return null;
 			/**
 			 * A. Pointer exists => Return its current position. (It may not exist anymore if it was a finger that has since lifted)
@@ -483,7 +490,6 @@ function CreateInputListener(element: HTMLElement): InputListener {
 			return pointers[pointerId]?.position ?? clickInfo[button].position ?? null;
 		},
 		isMouseClicked: (button: MouseButton) => clickInfo[button].clicked,
-		// getMouseClickedPos: (button: MouseButton) => clickInfo[button].posDown ?? null,
 		isMouseDoubleClickDragged: (button: MouseButton) => clickInfo[button].doubleClickDrag,
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? null,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? null,
