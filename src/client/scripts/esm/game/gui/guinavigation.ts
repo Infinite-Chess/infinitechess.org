@@ -6,6 +6,8 @@ import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import selection from '../chess/selection.js';
+import { listener } from '../chess/game.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -22,7 +24,6 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
-import selection from '../chess/selection.js';
 
 
 /**
@@ -392,14 +393,14 @@ function update() {
 
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove() {
-	if (!input.isKeyDown('arrowleft')) return;
+	if (!listener.isKeyDown('ArrowLeft')) return;
 	if (rewindIsLocked) return;
 	rewindMove();
 }
 
 /** Tests if the right arrow key has been pressed, signaling to forward the game. */
 function testIfForwardMove() {
-	if (!input.isKeyDown('arrowright')) return;
+	if (!listener.isKeyDown('ArrowRight')) return;
 	forwardMove();
 }
 

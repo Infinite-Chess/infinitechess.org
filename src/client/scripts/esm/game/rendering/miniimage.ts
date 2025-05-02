@@ -16,6 +16,7 @@ import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
+import { listener } from '../chess/game.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -94,7 +95,7 @@ function disable(): void {
 
 
 function testIfToggled(): void {
-	if (!input.isKeyDown('p')) return;
+	if (!listener.isKeyDown('KeyP')) return;
 
 	// Toggled
 	disabled = !disabled;
