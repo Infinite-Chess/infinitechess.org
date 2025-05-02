@@ -13,8 +13,6 @@ import board from '../rendering/board.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
 // @ts-ignore
-import input from '../input.js';
-// @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
 import area from '../rendering/area.js';

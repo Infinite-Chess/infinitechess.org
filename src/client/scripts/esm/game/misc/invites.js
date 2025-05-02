@@ -262,7 +262,7 @@ const playBaseIfNewInvite = (() => {
 })();
 
 function playSoundNewOpponentInvite() {
-	if (input.isMouseSupported()) sound.playSound_base();
+	if (docutil.isMouseSupported()) sound.playSound_base();
 	else sound.playSound_viola_c3();
     
 }
