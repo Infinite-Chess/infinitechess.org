@@ -105,6 +105,7 @@ const MOUSE_POS_HISTORY_WINDOW_MILLIS = 80;
 
 /** Mouse or Finger */
 type Pointer = {
+	isTouch: boolean;
 	id: string;
 	position: Coords;
 	delta: Vec2;
@@ -169,6 +170,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 	// Immediately add the mouse pointer if the doc supports it
 	if (docutil.isMouseSupported()) {
 		pointers['mouse'] = {
+			isTouch: false,
 			id: 'mouse',
 			position: [0, 0],
 			delta: [0, 0],
@@ -384,6 +386,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		for (let i = 0; i < e.changedTouches.length; i++) {
 			const touch: Touch = e.changedTouches[i]!;
 			pointers[touch.identifier.toString()] = {
+				isTouch: true,
 				id: touch.identifier.toString(),
 				position: getRelativeMousePosition([touch.clientX, touch.clientY]),
 				delta: [0, 0],
