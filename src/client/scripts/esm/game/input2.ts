@@ -63,6 +63,8 @@ interface InputListener {
     // eslint-disable-next-line no-unused-vars
 	getPointerVel(pointerId: string): Vec2 | null;
 
+	getAllPointers(): Record<string, Pointer>;
+
     getWheelDelta(): number;
 
     // eslint-disable-next-line no-unused-vars
@@ -103,16 +105,12 @@ const MOUSE_POS_HISTORY_WINDOW_MILLIS = 80;
 
 /** Mouse or Finger */
 type Pointer = {
+	id: string;
 	position: Coords;
 	delta: Vec2;
 	positionHistory: PointerHistory;
 	velocity: Vec2;
-} & ({
-	isFinger: false;
-} | {
-	isFinger: true;
-	id: number;
-})
+};
 
 /**
  * Keeps track of the recent down position of mouse buttons.
@@ -171,7 +169,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 	// Immediately add the mouse pointer if the doc supports it
 	if (docutil.isMouseSupported()) {
 		pointers['mouse'] = {
-			isFinger: false,
+			id: 'mouse',
 			position: [0, 0],
 			delta: [0, 0],
 			positionHistory: [],
@@ -389,8 +387,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		for (let i = 0; i < e.changedTouches.length; i++) {
 			const touch: Touch = e.changedTouches[i]!;
 			pointers[touch.identifier.toString()] = {
-				isFinger: true,
-				id: touch.identifier,
+				id: touch.identifier.toString(),
 				position: getRelativeMousePosition([touch.clientX, touch.clientY]),
 				delta: [0, 0],
 				positionHistory: [],
@@ -491,6 +488,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? null,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? null,
 		getPointerVel: (pointerId: string) => pointers[pointerId]?.velocity ?? null,
+		getAllPointers: () => pointers,
 		getWheelDelta: () => wheelDelta,
 		isKeyDown: (keyCode: string) => keyDowns.includes(keyCode),
 		isKeyHeld: (keyCode: string) => keyHelds.includes(keyCode),
