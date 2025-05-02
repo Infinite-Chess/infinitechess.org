@@ -221,7 +221,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && input.getPointerDown()) { // Can DRAG this piece type
-		if (input.isKeyHeld('control')) return; // Control key force drags the board, disallowing picking up a piece.
+		if (listener.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */

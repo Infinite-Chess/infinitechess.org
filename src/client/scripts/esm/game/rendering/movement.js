@@ -13,6 +13,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
 import draganimation from './dragging/draganimation.js';
 import guipause from '../gui/guipause.js';
+import { listener } from '../chess/game.js';
 // Import End
 
 "use strict";
@@ -345,22 +346,22 @@ function detectPanning() {
 
 	let panning = false; // Any panning key pressed this frame?
 	if (input.atleast1KeyHeld()) { // Skip all if no key is pressed, saves cpu.
-		if (input.isKeyHeld('d')) {
+		if (listener.isKeyHeld('KeyD')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(0)
 			// else panVel[0] += loadbalancer.getDeltaTime() * panAccel;
 			panAccel_Perspective(0);
-		} if (input.isKeyHeld('a')) {
+		} if (listener.isKeyHeld('KeyA')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(180)
 			// else panVel[0] -= loadbalancer.getDeltaTime() * panAccel;
 			panAccel_Perspective(180);
-		} if (input.isKeyHeld('w')) {
+		} if (listener.isKeyHeld('KeyW')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(90)
 			// else panVel[1] += loadbalancer.getDeltaTime() * panAccel;
 			panAccel_Perspective(90);
-		} if (input.isKeyHeld('s')) {
+		} if (listener.isKeyHeld('KeyS')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(-90)
 			// else panVel[1] -= loadbalancer.getDeltaTime() * panAccel;
@@ -423,12 +424,12 @@ function deccelerateScaleVel() {
 // Are we pressing space/shift or scrolling?
 function detectZooming() {
 	let scaling = false;
-	if (input.isKeyHeld(' ')) {
+	if (listener.isKeyHeld('Space')) {
 		scaling = true;
 		scaleVel -= loadbalancer.getDeltaTime() * scaleAccel_Desktop;
 		if (scaleVel < -scaleVelCap) scaleVel = -scaleVelCap;
 	}
-	if (input.isKeyHeld('shift')) {
+	if (listener.isKeyHeld('ShiftLeft')) {
 		scaling = true;
 		scaleVel += loadbalancer.getDeltaTime() * scaleAccel_Desktop;
 		if (scaleVel > scaleVelCap) scaleVel = scaleVelCap;
