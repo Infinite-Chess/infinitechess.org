@@ -39,8 +39,8 @@ interface InputListener {
 	getMousePosition(button: MouseButton): Coords | null;
 	// eslint-disable-next-line no-unused-vars
 	isMouseClicked(button: MouseButton): boolean;
-	// eslint-disable-next-line no-unused-vars
-	getMouseClickedPos(button: MouseButton): Coords | null;
+	// // eslint-disable-next-line no-unused-vars
+	// getMouseClickedPos(button: MouseButton): Coords | null;
 	// eslint-disable-next-line no-unused-vars
 	isMouseDoubleClickDragged(button: MouseButton): boolean;
 
@@ -136,8 +136,16 @@ interface ClickInfo {
 	clicked: boolean;
 	/** The time the mouse button was pressed down. */
 	timeDownMillisHistory: number[];
-	/** The last position the mouse was pressed down. */
+	/**
+	 * The last position the mouse was pressed down.
+	 * ONLY USED FOR CALCULATING SIMULATED CLICKS AND DOUBLE CLICK DRAGS.
+	 */
 	posDown?: Coords;
+	/**
+	 * The last known position of the last active pointer for this mouse button.
+	 * UPDATES ON DOWN AND UP, NOT ON MOVE.
+	 */
+	position?: Coords;
 	/** Whether this frame incurred the start of a double click drag */
 	doubleClickDrag: boolean;
 }
@@ -238,6 +246,18 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		} else pointer.velocity = [0, 0];
 	}
 
+	/**
+	 * Converts the mouse coordinates to be relative to the
+	 * element bounding box instead of absolute to the whole page.
+	 */
+	function getRelativeMousePosition(coords: Coords): Coords {
+		const rect = element.getBoundingClientRect();
+		return [
+			coords[0] - rect.left,
+			coords[1] - rect.top
+		];
+	}
+
 
 	// Simulated Click Events (either mouse or finger) ------------------------------------------------------------
 
@@ -248,6 +268,8 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		targetButtonInfo.pointerId = e instanceof Touch ? e.identifier.toString() : 'mouse';
 		targetButtonInfo.isDown = true;
 		targetButtonInfo.isHeld = true;
+		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY]);
+		targetButtonInfo.position = [...relativeMousePos];
 
 		// Update click ------------
 		const previousTimeDown = targetButtonInfo.timeDownMillisHistory[targetButtonInfo.timeDownMillisHistory.length - 1];
@@ -259,8 +281,8 @@ function CreateInputListener(element: HTMLElement): InputListener {
 			// Mouse has been down atleast once before.
 			// Now we now posDown will be defined, so we can calculate the distance to that last click down.
 			const distMoved = Math.max(
-				Math.abs(targetButtonInfo.posDown![0] - e.clientX),
-				Math.abs(targetButtonInfo.posDown![1] - e.clientY)
+				Math.abs(targetButtonInfo.posDown![0] - relativeMousePos[0]),
+				Math.abs(targetButtonInfo.posDown![1] - relativeMousePos[1])
 			);
 			const MOVE_VPIXELS = e instanceof Touch ? CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS : CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS;
 			if (distMoved < MOVE_VPIXELS) { // Only register the double click drag if the mouse hasn't moved too far from its last click down.
@@ -271,7 +293,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		} // ----------------
 	
 		// Now we can update the last click down after checking for its distance to the last one.
-		targetButtonInfo.posDown = [e.clientX, e.clientY];
+		targetButtonInfo.posDown = [...relativeMousePos];
 	}
 
 	function updateClickInfoUp(targetButton: MouseButton, e: MouseEvent | Touch) {
@@ -280,6 +302,8 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		targetButtonInfo.pointerId = e instanceof Touch ? e.identifier.toString() : 'mouse';
 		targetButtonInfo.isDown = false;
 		targetButtonInfo.isHeld = false;
+		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY]);
+		targetButtonInfo.position = [...relativeMousePos];
 		// Update click --------------
 		if (!clickInfo[targetButton].posDown) return; // No click down to compare to. This can happen if you click down offscreen.
 		const mouseHistory = clickInfo[targetButton].timeDownMillisHistory;
@@ -287,8 +311,8 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		const TIME_MILLIS = e instanceof Touch ? CLICK_THRESHOLDS.TOUCH.TIME_MILLIS : CLICK_THRESHOLDS.MOUSE.TIME_MILLIS;
 		if (timePassed < TIME_MILLIS) {
 			const distMoved = Math.max(
-				Math.abs(clickInfo[targetButton].posDown[0] - e.clientX),
-				Math.abs(clickInfo[targetButton].posDown[1] - e.clientY)
+				Math.abs(clickInfo[targetButton].posDown[0] - relativeMousePos[0]),
+				Math.abs(clickInfo[targetButton].posDown[1] - relativeMousePos[1])
 			);
 			const MOVE_VPIXELS = e instanceof Touch ? CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS : CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS;
 			if (distMoved < MOVE_VPIXELS) {
@@ -321,14 +345,14 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		atleastOneInputThisFrame = true;
 		const targetPointer = pointers['mouse'];
 		if (!targetPointer) return; // Sometimes the 'mousemove' event is fired from touch events, even though the mouse pointer does not exist.
-		targetPointer.position = [e.clientX, e.clientY];
-		// Update delta
+		targetPointer.position = getRelativeMousePosition([e.clientX, e.clientY]);
+		// Update delta (Note: e.movementX/Y are relative to the document, it should be fine)
 		targetPointer.delta = [e.movementX, e.movementY];
 		// Update velocity
 		const now = Date.now();
 		targetPointer.positionHistory.push({ pos: [...targetPointer.position], time: now }); // Deep copy the mouse position to avoid modifying the original
 		recalcPointerVel(targetPointer, now);
-		// console.log("Mouse position: ", targetPointer.position);
+		// console.log("Mouse relative position: ", targetPointer.position);
 	}) as EventListener);
 
 	// Scroll wheel tracking
@@ -367,7 +391,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 			pointers[touch.identifier.toString()] = {
 				isFinger: true,
 				id: touch.identifier,
-				position: [touch.clientX, touch.clientY],
+				position: getRelativeMousePosition([touch.clientX, touch.clientY]),
 				delta: [0, 0],
 				positionHistory: [],
 				velocity: [0, 0],
@@ -385,12 +409,13 @@ function CreateInputListener(element: HTMLElement): InputListener {
 			const touch: Touch = e.changedTouches[i]!;
 			if (pointers[touch.identifier]) {
 				const targetPointer = pointers[touch.identifier]!;
+				const relativeTouchPos = getRelativeMousePosition([touch.clientX, touch.clientY]);
 				// Update delta
 				targetPointer.delta = [
-					touch.clientX - targetPointer.position[0],
-					touch.clientY - targetPointer.position[1]
+					relativeTouchPos[0] - targetPointer.position[0],
+					relativeTouchPos[1] - targetPointer.position[1]
 				];
-				targetPointer.position = [touch.clientX, touch.clientY];
+				targetPointer.position = relativeTouchPos;
 				// Update velocity
 				const now = Date.now();
 				targetPointer.positionHistory.push({ pos: [...targetPointer.position], time: now }); // Deep copy the touch position to avoid modifying the original
@@ -422,22 +447,28 @@ function CreateInputListener(element: HTMLElement): InputListener {
 	// Keyboard Events ---------------------------------------------------------------------------
 
 
-	addListener(element, 'keydown', ((e: KeyboardEvent) => {
-		if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
+	addListener(document, 'keydown', ((e: KeyboardEvent) => {
+		// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
+		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		// console.log("Key down: ", e.code);
+		// console.log("Key down: ", e.key.toLowerCase());
 		atleastOneInputThisFrame = true;
-		if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
-		if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
+		// if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
+		if (!keyDowns.includes(e.key.toLowerCase())) keyDowns.push(e.key.toLowerCase());
+		// if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
+		if (!keyHelds.includes(e.key.toLowerCase())) keyHelds.push(e.key.toLowerCase());
 	}) as EventListener);
 
 	// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
 	addListener(document, 'keyup', ((e: KeyboardEvent) => {
 		// console.log("Key up: ", e.code);
 		atleastOneInputThisFrame = true;
-		const downIndex = keyDowns.indexOf(e.code);
+		// const downIndex = keyDowns.indexOf(e.code);
+		const downIndex = keyDowns.indexOf(e.key.toLowerCase());
 		if (downIndex !== -1) keyDowns.splice(downIndex, 1);
         
-		const heldIndex = keyHelds.indexOf(e.code);
+		// const heldIndex = keyHelds.indexOf(e.code);
+		const heldIndex = keyHelds.indexOf(e.key.toLowerCase());
 		if (heldIndex !== -1) keyHelds.splice(heldIndex, 1);
 	}) as EventListener);
 
@@ -453,10 +484,14 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		getMousePosition: (button: MouseButton) => {
 			const pointerId = clickInfo[button].pointerId!;
 			if (pointerId === undefined) return null;
-			return pointers[pointerId]?.position ?? null;
+			/**
+			 * A. Pointer exists => Return its current position. (It may not exist anymore if it was a finger that has since lifted)
+			 * B. Pointer does not exist => Return its last known position since it simulated an UP/DOWN mouse click.
+			 */
+			return pointers[pointerId]?.position ?? clickInfo[button].position ?? null;
 		},
 		isMouseClicked: (button: MouseButton) => clickInfo[button].clicked,
-		getMouseClickedPos: (button: MouseButton) => clickInfo[button].posDown ?? null,
+		// getMouseClickedPos: (button: MouseButton) => clickInfo[button].posDown ?? null,
 		isMouseDoubleClickDragged: (button: MouseButton) => clickInfo[button].doubleClickDrag,
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? null,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? null,
