@@ -105,19 +105,19 @@ function update() {
 
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameDebugToggles() {
-	if (listener.isKeyDown('`')) camera.toggleDebug();
-	if (listener.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
-	if (listener.isKeyDown('m')) stats.toggleFPS();
+	if (listener.isKeyDown('Backquote')) camera.toggleDebug();
+	if (listener.isKeyDown('Digit4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (listener.isKeyDown('KeyM')) stats.toggleFPS();
 }
 
 function testInGameDebugToggles(gamefile: gamefile) {
-	if (listener.isKeyDown('2')) {
+	if (listener.isKeyDown('Digit2')) {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 	}
-	if (listener.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (listener.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
-	if (listener.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
+	if (listener.isKeyDown('Digit3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
+	if (listener.isKeyDown('Digit5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
+	if (listener.isKeyDown('Digit6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 }
 
 function updateSelectionScreen() {
@@ -127,14 +127,14 @@ function updateSelectionScreen() {
 
 // Called within update() when we are in a game (not title screen)
 function updateBoard(gamefile: gamefile) {
-	if (listener.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
-	if (listener.isKeyDown('escape')) guipause.toggle();
-	if (listener.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (listener.isKeyDown('r')) {
+	if (listener.isKeyDown('Digit1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
+	if (listener.isKeyDown('Escape')) guipause.toggle();
+	if (listener.isKeyDown('Tab')) guipause.callback_ToggleArrows();
+	if (listener.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile);
 		statustext.showStatus('Regenerated piece models.', false, 0.5);
 	}
-	if (listener.isKeyDown('n')) {
+	if (listener.isKeyDown('KeyN')) {
 		guinavigation.toggle();
 		guigameinfo.toggle();
 	}

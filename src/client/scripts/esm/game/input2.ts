@@ -451,24 +451,19 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		// console.log("Key down: ", e.code);
-		// console.log("Key down: ", e.key.toLowerCase());
 		atleastOneInputThisFrame = true;
-		// if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
-		if (!keyDowns.includes(e.key.toLowerCase())) keyDowns.push(e.key.toLowerCase());
-		// if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
-		if (!keyHelds.includes(e.key.toLowerCase())) keyHelds.push(e.key.toLowerCase());
+		if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
+		if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
 	}) as EventListener);
 
 	// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
 	addListener(document, 'keyup', ((e: KeyboardEvent) => {
 		// console.log("Key up: ", e.code);
 		atleastOneInputThisFrame = true;
-		// const downIndex = keyDowns.indexOf(e.code);
-		const downIndex = keyDowns.indexOf(e.key.toLowerCase());
+		const downIndex = keyDowns.indexOf(e.code);
 		if (downIndex !== -1) keyDowns.splice(downIndex, 1);
         
-		// const heldIndex = keyHelds.indexOf(e.code);
-		const heldIndex = keyHelds.indexOf(e.key.toLowerCase());
+		const heldIndex = keyHelds.indexOf(e.code);
 		if (heldIndex !== -1) keyHelds.splice(heldIndex, 1);
 	}) as EventListener);
 
