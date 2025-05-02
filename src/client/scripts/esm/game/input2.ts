@@ -197,8 +197,8 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		eventHandlers[eventType] = { target, handler };
 	};
 
-	/** Preps for next frame. Call at the very end of a frame. */
-	function resetEvents(): void {
+	/** Reset the input events for the next frame. Fire 'reset-listener-events' event at the very end of EVERY frame. */
+	document.addEventListener('reset-listener-events', () => {
 		// console.log("Resetting events");
 		atleastOneInputThisFrame = false;
 		// For each mouse button, reset its state
@@ -219,10 +219,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 
 		keyDowns.length = 0;
 		wheelDelta = 0;
-
-	}
-
-	document.addEventListener('reset-listener-events', resetEvents); // Reset the input events for the next frame
+	});
 
 	/** Calculates the mouse velocity based on recent mouse positions. */
 	function recalcPointerVel(pointer: Pointer, now: number) {

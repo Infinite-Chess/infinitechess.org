@@ -186,7 +186,7 @@ function genModel() {
 				 * If we click, we teleport to a location containing them all.
 				 */
 				if (listener.isMouseClicked(Mouse.LEFT)) piecesClicked.push(coords);
-				else if (input.getPointerDown()) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+				else if (listener.isMouseDown(Mouse.LEFT)) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 			}
 		}
 
