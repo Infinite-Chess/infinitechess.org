@@ -212,7 +212,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
 	if (selectionLevel === 0) return; // Can't select this piece type
-	else if (selectionLevel === 1 && input.getPointerClicked()) { // CAN select this piece type
+	else if (selectionLevel === 1 && listener.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -259,7 +259,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
 function testIfPieceMoved(gamefile: gamefile): void {
 	if (!pieceSelected) return;
-	if (!input.getPointerClicked()) return; // Pointer did not click, couldn't have moved a piece.
+	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
 	else moveGamefilePiece(gamefile, hoverSquare);

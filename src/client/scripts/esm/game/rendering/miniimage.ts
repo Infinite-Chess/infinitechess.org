@@ -17,6 +17,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import { listener } from '../chess/game.js';
+import { Mouse } from '../input2.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -184,7 +185,7 @@ function genModel() {
 				 * Add them to a list of pieces we're hovering over.
 				 * If we click, we teleport to a location containing them all.
 				 */
-				if (input.getPointerClicked()) piecesClicked.push(coords);
+				if (listener.isMouseClicked(Mouse.LEFT)) piecesClicked.push(coords);
 				else if (input.getPointerDown()) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 			}
 		}

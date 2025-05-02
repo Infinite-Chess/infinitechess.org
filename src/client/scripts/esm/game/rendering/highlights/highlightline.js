@@ -22,6 +22,8 @@ import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import guipause from '../../gui/guipause.js';
+import { listener } from '../../chess/game.js';
+import { Mouse } from '../../input2.js';
 // Import End
 
 /**
@@ -135,7 +137,7 @@ function genModel() {
 	// BUT we have to recalculate it in coords format instead of world-space
 
 	if (input.isMouseDown_Left()) input.removeMouseDown_Left(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-	if (!input.getPointerClicked()) return; // Pointer did not click, we will not teleport down to this linee
+	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, we will not teleport down to this line
 
 	const moveset = closestPoint.moveset;
 
