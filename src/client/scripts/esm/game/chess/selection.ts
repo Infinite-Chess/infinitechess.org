@@ -41,8 +41,6 @@ import guipause from '../gui/guipause.js';
 // @ts-ignore
 import legalmoves from '../../chess/logic/legalmoves.js';
 // @ts-ignore
-import input from '../input.js';
-// @ts-ignore
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';
@@ -150,8 +148,8 @@ function update() {
 		return;
 	}
 
-	const mouseCoords = listener.getMousePosition(Mouse.LEFT)!;
-	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mouseCoords, listener.element);
+	const mousePixels = listener.getMousePosition(Mouse.LEFT)!;
+	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
 	hoverSquare = space.convertWorldSpaceToCoords_Rounded(mouseWorldSpace);
 	// console.log("Hover square:", hoverSquare);
 
@@ -236,7 +234,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
-	if (input.getTouchHelds().length > 1) { // Prevent accidental dragging when trying to zoom.
+	if (Object.keys(listener.getAllPointers()).length > 1) { // Prevent accidental dragging when trying to zoom.
 		if (draganimation.getDragParity()) return unselectPiece();
 		return draganimation.dropPiece();
 	}

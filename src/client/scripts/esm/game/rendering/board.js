@@ -22,6 +22,8 @@ import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
 import guipromotion from '../gui/guipromotion.js';
 import spritesheet from './spritesheet.js';
+import { listener } from '../chess/game.js';
+import { Mouse } from '../input2.js';
 // Import End
 
 /** 
@@ -190,10 +192,12 @@ function setTile_MouseOverToUndefined() {
 function recalcTile_CrosshairOver() {
 	if (!perspective.isMouseLocked()) return;
 
-	const coords = space.convertWorldSpaceToCoords(input.getMouseWorldLocation());
+	const mousePixels = listener.getMousePosition(Mouse.LEFT);
+	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
+	const mouseCoords = space.convertWorldSpaceToCoords(mouseWorldSpace);
 
-	tile_MouseOver_Float = coords;
-	tile_MouseOver_Int = [Math.floor(coords[0] + squareCenter), Math.floor(coords[1] + squareCenter)];
+	tile_MouseOver_Float = mouseCoords;
+	tile_MouseOver_Int = [Math.floor(mouseCoords[0] + squareCenter), Math.floor(mouseCoords[1] + squareCenter)];
 }
 
 function recalcTiles_FingersOver() {
@@ -224,10 +228,12 @@ function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
 
 // Works whether the mouse is virtual (touch screen) or not
 function getTileMouseOver() {
-	const mouseWorld = input.getMouseWorldLocation(); // [x, y]
+	const mousePixels = listener.getMousePosition(Mouse.LEFT); // [x, y]
+	const mouseWorld = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
 	const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
 	const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
     
+	console.log("Tile mouse over:", tile_Int, tile_Float);
 	return { tile_Float, tile_Int };
 }
 

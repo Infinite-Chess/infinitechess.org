@@ -35,8 +35,6 @@ import perspective from "../perspective.js";
 // @ts-ignore
 import movement from "../movement.js";
 // @ts-ignore
-import input from "../../input.js";
-// @ts-ignore
 import camera from "../camera.js";
 // @ts-ignore
 import board from "../board.js";
@@ -146,7 +144,7 @@ function updateDragLocation() {
 		worldLocation = worldCoords;
 		hoveredCoords = squarePawnPromotingOn;
 		return;
-	} else worldLocation = input.getPointerWorldLocation() as Coords; // Normal drag location
+	} else worldLocation = listener.getMousePosition(Mouse.LEFT)!; // Normal drag location
 
 	hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
 }

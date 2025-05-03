@@ -14,6 +14,7 @@ import docutil from '../../util/docutil.js';
 import draganimation from './dragging/draganimation.js';
 import guipause from '../gui/guipause.js';
 import { listener } from '../chess/game.js';
+import { Mouse } from '../input2.js';
 // Import End
 
 "use strict";
@@ -184,7 +185,7 @@ function checkIfBoardDropped() {
 
 	if (boardIsGrabbed === 1) { // Mouse grabbed
 
-		if (!input.isMouseHeld_Left()) { // Dropped board
+		if (!listener.isMouseHeld(Mouse.LEFT)) { // Dropped board
 			throwBoard(); // Mouse throws the board
 			cancelBoardDrag();
 		}
@@ -266,7 +267,7 @@ function checkIfBoardDragged() {
 	if (perspective.getEnabled() || transition.areWeTeleporting() || draganimation.areDraggingPiece()) return;
 
 	if (boardIsGrabbed === 0) { // Not already grabbed
-		if (input.isMouseDown_Left()) {
+		if (listener.isMouseDown(Mouse.LEFT)) {
 			grabBoard_WithMouse();
 			input.removeMouseDown_Left(); // Remove the event so other aspects of the code don't use it
 		} else if (input.getTouchDowns().length > 0) grabBoard_WithFinger();

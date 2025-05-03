@@ -132,7 +132,6 @@ function genModel() {
 	const boardScale: number = movement.getBoardScale();
 
 	// While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
-	// We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
@@ -173,7 +172,7 @@ function genModel() {
 
 		// Are we hovering over? If so, opacity needs to be 100%
 		if (areWatchingMousePosition) {
-			const pointerWorldLocation: Coords = input.getPointerWorldLocation() as Coords;
+			const pointerWorldLocation: Coords = listener.getMousePosition(Mouse.LEFT)!;
 			const mouseWorldX: number = pointerWorldLocation[0];
 			const mouseWorldY: number = pointerWorldLocation[1];
 

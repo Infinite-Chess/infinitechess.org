@@ -2,7 +2,6 @@
 // Import Start
 import invites from './invites.js';
 import stats from '../gui/stats.js';
-import input from '../input.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 import tabnameflash from './onlinegame/tabnameflash.js';

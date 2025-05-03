@@ -35,8 +35,6 @@ import invites from '../misc/invites.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
-import input from '../input.js';
-// @ts-ignore
 import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
 import guiclock from '../gui/guiclock.js';
@@ -185,8 +183,6 @@ function render() {
 
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
-
-	input.renderMouse();
 
 	/**
 	 * What is the order of rendering?
