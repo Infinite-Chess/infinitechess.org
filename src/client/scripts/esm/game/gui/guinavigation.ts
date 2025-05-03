@@ -6,12 +6,12 @@ import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import selection from '../chess/selection.js';
+import { listener } from '../chess/game.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
 import movement from '../rendering/movement.js';
-// @ts-ignore
-import input from '../input.js';
 // @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
@@ -22,7 +22,6 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
-import selection from '../chess/selection.js';
 
 
 /**
@@ -139,9 +138,6 @@ function isCoordinateActive(): boolean {
 }
 
 function initListeners_Navigation() {
-	element_Navigation.addEventListener("mousedown", input.doIgnoreMouseDown);
-	element_Navigation.addEventListener("touchstart", input.doIgnoreMouseDown);
-
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
@@ -168,11 +164,6 @@ function initListeners_Navigation() {
 }
 
 function closeListeners_Navigation() {
-	element_Navigation.removeEventListener("mousedown", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("mouseup", input.doIgnoreMouseDown)
-	element_Navigation.removeEventListener("touchstart", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("touchend", input.doIgnoreMouseDown)
-
 	element_Recenter.removeEventListener('click', recenter);
 	element_Expand.removeEventListener('click', callback_Expand);
 	element_Back.removeEventListener('click', callback_Back);
@@ -392,14 +383,14 @@ function update() {
 
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove() {
-	if (!input.isKeyDown('arrowleft')) return;
+	if (!listener.isKeyDown('ArrowLeft')) return;
 	if (rewindIsLocked) return;
 	rewindMove();
 }
 
 /** Tests if the right arrow key has been pressed, signaling to forward the game. */
 function testIfForwardMove() {
-	if (!input.isKeyDown('arrowright')) return;
+	if (!listener.isKeyDown('ArrowRight')) return;
 	forwardMove();
 }
 

@@ -35,6 +35,8 @@ interface InputListener {
     isMouseDown(button: MouseButton): boolean;
     // eslint-disable-next-line no-unused-vars
     isMouseHeld(button: MouseButton): boolean;
+	/** Returns true if the most recent pointer for a specific mouse button action is a touch (not mouse). */
+	isMouseTouch(button: MouseButton): boolean;
 	// eslint-disable-next-line no-unused-vars
 	getMousePosition(button: MouseButton): Coords | null;
 	// eslint-disable-next-line no-unused-vars
@@ -62,6 +64,8 @@ interface InputListener {
 	 */
     // eslint-disable-next-line no-unused-vars
 	getPointerVel(pointerId: string): Vec2 | null;
+
+	getAllPointers(): Record<string, Pointer>;
 
     getWheelDelta(): number;
 
@@ -103,16 +107,13 @@ const MOUSE_POS_HISTORY_WINDOW_MILLIS = 80;
 
 /** Mouse or Finger */
 type Pointer = {
+	isTouch: boolean;
+	id: string;
 	position: Coords;
 	delta: Vec2;
 	positionHistory: PointerHistory;
 	velocity: Vec2;
-} & ({
-	isFinger: false;
-} | {
-	isFinger: true;
-	id: number;
-})
+};
 
 /**
  * Keeps track of the recent down position of mouse buttons.
@@ -171,7 +172,8 @@ function CreateInputListener(element: HTMLElement): InputListener {
 	// Immediately add the mouse pointer if the doc supports it
 	if (docutil.isMouseSupported()) {
 		pointers['mouse'] = {
-			isFinger: false,
+			isTouch: false,
+			id: 'mouse',
 			position: [0, 0],
 			delta: [0, 0],
 			positionHistory: [],
@@ -199,10 +201,12 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		eventHandlers[eventType] = { target, handler };
 	};
 
-	/** Preps for next frame. Call at the very end of a frame. */
-	function resetEvents(): void {
+	/** Reset the input events for the next frame. Fire 'reset-listener-events' event at the very end of EVERY frame. */
+	document.addEventListener('reset-listener-events', () => {
 		// console.log("Resetting events");
-		atleastOneInputThisFrame = false;
+		// We can continuously hold a key without triggering more events, so held keys should still count as an input that frame.
+		atleastOneInputThisFrame = false || keyHelds.length > 0 || Object.values(clickInfo).some(clickInfo => clickInfo.isHeld);
+		console.log("atleastOneInputThisFrame:", atleastOneInputThisFrame);
 		// For each mouse button, reset its state
 		for (const button of Object.values(clickInfo)) {
 			button.isDown = false;
@@ -221,10 +225,7 @@ function CreateInputListener(element: HTMLElement): InputListener {
 
 		keyDowns.length = 0;
 		wheelDelta = 0;
-
-	}
-
-	document.addEventListener('reset-listener-events', resetEvents); // Reset the input events for the next frame
+	});
 
 	/** Calculates the mouse velocity based on recent mouse positions. */
 	function recalcPointerVel(pointer: Pointer, now: number) {
@@ -389,8 +390,8 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		for (let i = 0; i < e.changedTouches.length; i++) {
 			const touch: Touch = e.changedTouches[i]!;
 			pointers[touch.identifier.toString()] = {
-				isFinger: true,
-				id: touch.identifier,
+				isTouch: true,
+				id: touch.identifier.toString(),
 				position: getRelativeMousePosition([touch.clientX, touch.clientY]),
 				delta: [0, 0],
 				positionHistory: [],
@@ -451,24 +452,19 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 		if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
 		// console.log("Key down: ", e.code);
-		// console.log("Key down: ", e.key.toLowerCase());
 		atleastOneInputThisFrame = true;
-		// if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
-		if (!keyDowns.includes(e.key.toLowerCase())) keyDowns.push(e.key.toLowerCase());
-		// if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
-		if (!keyHelds.includes(e.key.toLowerCase())) keyHelds.push(e.key.toLowerCase());
+		if (!keyDowns.includes(e.code)) keyDowns.push(e.code);
+		if (!keyHelds.includes(e.code)) keyHelds.push(e.code);
 	}) as EventListener);
 
 	// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
 	addListener(document, 'keyup', ((e: KeyboardEvent) => {
 		// console.log("Key up: ", e.code);
 		atleastOneInputThisFrame = true;
-		// const downIndex = keyDowns.indexOf(e.code);
-		const downIndex = keyDowns.indexOf(e.key.toLowerCase());
+		const downIndex = keyDowns.indexOf(e.code);
 		if (downIndex !== -1) keyDowns.splice(downIndex, 1);
         
-		// const heldIndex = keyHelds.indexOf(e.code);
-		const heldIndex = keyHelds.indexOf(e.key.toLowerCase());
+		const heldIndex = keyHelds.indexOf(e.code);
 		if (heldIndex !== -1) keyHelds.splice(heldIndex, 1);
 	}) as EventListener);
 
@@ -481,8 +477,13 @@ function CreateInputListener(element: HTMLElement): InputListener {
 		atleastOneInput: () => atleastOneInputThisFrame,
 		isMouseDown: (button: MouseButton) => clickInfo[button].isDown ?? false,
 		isMouseHeld: (button: MouseButton) => clickInfo[button].isHeld ?? false,
+		isMouseTouch: (button: MouseButton) => {
+			const pointerId = clickInfo[button].pointerId;
+			if (pointerId === undefined) return false;
+			return pointers[pointerId]?.isTouch ?? true; // If it's delete then it must have been a touch.
+		},
 		getMousePosition: (button: MouseButton) => {
-			const pointerId = clickInfo[button].pointerId!;
+			const pointerId = clickInfo[button].pointerId;
 			if (pointerId === undefined) return null;
 			/**
 			 * A. Pointer exists => Return its current position. (It may not exist anymore if it was a finger that has since lifted)
@@ -491,11 +492,11 @@ function CreateInputListener(element: HTMLElement): InputListener {
 			return pointers[pointerId]?.position ?? clickInfo[button].position ?? null;
 		},
 		isMouseClicked: (button: MouseButton) => clickInfo[button].clicked,
-		// getMouseClickedPos: (button: MouseButton) => clickInfo[button].posDown ?? null,
 		isMouseDoubleClickDragged: (button: MouseButton) => clickInfo[button].doubleClickDrag,
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? null,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? null,
 		getPointerVel: (pointerId: string) => pointers[pointerId]?.velocity ?? null,
+		getAllPointers: () => pointers,
 		getWheelDelta: () => wheelDelta,
 		isKeyDown: (keyCode: string) => keyDowns.includes(keyCode),
 		isKeyHeld: (keyCode: string) => keyHelds.includes(keyCode),

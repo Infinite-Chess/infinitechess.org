@@ -16,6 +16,8 @@ import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
+import { listener } from '../chess/game.js';
+import { Mouse } from '../input2.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -94,7 +96,7 @@ function disable(): void {
 
 
 function testIfToggled(): void {
-	if (!input.isKeyDown('p')) return;
+	if (!listener.isKeyDown('KeyP')) return;
 
 	// Toggled
 	disabled = !disabled;
@@ -130,7 +132,6 @@ function genModel() {
 	const boardScale: number = movement.getBoardScale();
 
 	// While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
-	// We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
@@ -171,7 +172,7 @@ function genModel() {
 
 		// Are we hovering over? If so, opacity needs to be 100%
 		if (areWatchingMousePosition) {
-			const pointerWorldLocation: Coords = input.getPointerWorldLocation() as Coords;
+			const pointerWorldLocation: Coords = listener.getMousePosition(Mouse.LEFT)!;
 			const mouseWorldX: number = pointerWorldLocation[0];
 			const mouseWorldY: number = pointerWorldLocation[1];
 
@@ -183,8 +184,8 @@ function genModel() {
 				 * Add them to a list of pieces we're hovering over.
 				 * If we click, we teleport to a location containing them all.
 				 */
-				if (input.getPointerClicked()) piecesClicked.push(coords);
-				else if (input.getPointerDown()) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+				if (listener.isMouseClicked(Mouse.LEFT)) piecesClicked.push(coords);
+				else if (listener.isMouseDown(Mouse.LEFT)) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 			}
 		}
 

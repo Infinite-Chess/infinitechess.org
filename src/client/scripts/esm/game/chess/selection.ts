@@ -41,8 +41,6 @@ import guipause from '../gui/guipause.js';
 // @ts-ignore
 import legalmoves from '../../chess/logic/legalmoves.js';
 // @ts-ignore
-import input from '../input.js';
-// @ts-ignore
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';
@@ -150,8 +148,8 @@ function update() {
 		return;
 	}
 
-	const mouseCoords = listener.getMousePosition(Mouse.LEFT)!;
-	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mouseCoords, listener.element);
+	const mousePixels = listener.getMousePosition(Mouse.LEFT)!;
+	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
 	hoverSquare = space.convertWorldSpaceToCoords_Rounded(mouseWorldSpace);
 	// console.log("Hover square:", hoverSquare);
 
@@ -212,7 +210,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
 	if (selectionLevel === 0) return; // Can't select this piece type
-	else if (selectionLevel === 1 && input.getPointerClicked()) { // CAN select this piece type
+	else if (selectionLevel === 1 && listener.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -220,8 +218,8 @@ function testIfPieceSelected(gamefile: gamefile) {
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
-	} else if (selectionLevel === 2 && input.getPointerDown()) { // Can DRAG this piece type
-		if (input.isKeyHeld('control')) return; // Control key force drags the board, disallowing picking up a piece.
+	} else if (selectionLevel === 2 && listener.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
+		if (listener.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -236,7 +234,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
-	if (input.getTouchHelds().length > 1) { // Prevent accidental dragging when trying to zoom.
+	if (Object.keys(listener.getAllPointers()).length > 1) { // Prevent accidental dragging when trying to zoom.
 		if (draganimation.getDragParity()) return unselectPiece();
 		return draganimation.dropPiece();
 	}
@@ -259,7 +257,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
 function testIfPieceMoved(gamefile: gamefile): void {
 	if (!pieceSelected) return;
-	if (!input.getPointerClicked()) return; // Pointer did not click, couldn't have moved a piece.
+	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
 	else moveGamefilePiece(gamefile, hoverSquare);
@@ -463,7 +461,7 @@ function makePromotionMove(gamefile: gamefile) {
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
-	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || input.getPointerIsTouch() || config.VIDEO_MODE) return;
+	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || config.VIDEO_MODE) return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
 	if (typeutil.SVGLESS_TYPES.some((type: RawType) => type === rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 

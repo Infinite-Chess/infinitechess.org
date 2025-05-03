@@ -52,6 +52,8 @@ import board from '../board.js';
 import shapes from '../shapes.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
+import { listener } from '../../chess/game.js';
+import { Mouse } from '../../input2.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -620,7 +622,7 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 	const worldHalfWidth = worldWidth / 2;
 
-	const mouseWorldLocation = input.getPointerWorldLocation() as Coords;
+	const mouseWorldLocation = listener.getMousePosition(Mouse.LEFT)!;
 
 	// Take the arrows draft, construct the actual
 	for (const [key, value] of Object.entries(slideArrowsDraft)) {
@@ -703,7 +705,7 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
  * This teleports you to the piece it is pointing to IF the mouse has clicked this frame.
  */
 function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
-	if (!input.isMouseDown_Left() && !input.getTouchClicked()) return; // Mouse did not click this frame
+	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Mouse did not click this frame
 
 	// Teleport in the direction of the piece's arrow, NOT straight to the piece.
 
@@ -717,7 +719,7 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 	const telCoords = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
 
 	transition.panTel(startCoords, telCoords);
-	if (input.isMouseDown_Left()) input.removeMouseDown_Left();
+	if (listener.isMouseDown(Mouse.LEFT)) input.removeMouseDown_Left();
 }
 
 
@@ -791,7 +793,7 @@ function executeArrowShifts() {
 	const changes: Change[] = [];
 
 	const worldHalfWidth = (width * movement.getBoardScale()) / 2; // The world-space width of our images
-	const mouseWorldLocation = input.getPointerWorldLocation() as Coords;
+	const mouseWorldLocation = listener.getMousePosition(Mouse.LEFT)!;
 
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 		if (shift.start) {
@@ -904,7 +906,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 		const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
 		const worldHalfWidth = worldWidth / 2;
 
-		const mouseWorldLocation = input.getPointerWorldLocation() as Coords;
+		const mouseWorldLocation = listener.getMousePosition(Mouse.LEFT)!;
 
 		const vector = slide;
 		const negVector = math.negateVector(slide);

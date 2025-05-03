@@ -22,6 +22,8 @@ import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import guipause from '../../gui/guipause.js';
+import { listener } from '../../chess/game.js';
+import { Mouse } from '../../input2.js';
 // Import End
 
 /**
@@ -65,7 +67,8 @@ function genModel() {
 	/** @type {BoundingBox} */
 	let boundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false);
     
-	const mouseLocation = input.getMouseWorldLocation();
+	const mousePixels = listener.getMousePosition(Mouse.LEFT);
+	const mouseLocation = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
 
 	let closestDistance;
 	let closestPoint;
@@ -134,8 +137,8 @@ function genModel() {
 	// If we clicked, teleport to the point on the line closest to the click location.
 	// BUT we have to recalculate it in coords format instead of world-space
 
-	if (input.isMouseDown_Left()) input.removeMouseDown_Left(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-	if (!input.getPointerClicked()) return; // Pointer did not click, we will not teleport down to this linee
+	if (listener.isMouseDown(Mouse.LEFT)) input.removeMouseDown_Left(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, we will not teleport down to this line
 
 	const moveset = closestPoint.moveset;
 
@@ -152,13 +155,9 @@ function genModel() {
 	const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, true);
 	intersectionPoints[1] = capPointAtSlideLimit(intersectionPoints[1], rightLimitPointCoord, true, lineIsVertical);
 
-	let tileMouseFingerOver;
-	if (input.getTouchClicked()) { // Set to what the finger tapped above
-		const tileMouseOver = board.getTileMouseOver(); // { tile_Float, tile_Int }
-		tileMouseFingerOver = tileMouseOver.tile_Int;
-	} else tileMouseFingerOver = board.gtile_MouseOver_Int();
+	const tileMouseOver = board.getTileMouseOver().tile_Int;
 
-	const closestCoordCoords = math.closestPointOnLine(intersectionPoints[0], intersectionPoints[1], tileMouseFingerOver).coords;
+	const closestCoordCoords = math.closestPointOnLine(intersectionPoints[0], intersectionPoints[1], tileMouseOver).coords;
 
 	const tel = { endCoords: closestCoordCoords, endScale: 1 };
 	// console.log("teleporting to " + closestCoordCoords)

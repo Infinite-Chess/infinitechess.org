@@ -13,6 +13,8 @@ import coordutil from '../../chess/util/coordutil.js';
 import docutil from '../../util/docutil.js';
 import draganimation from './dragging/draganimation.js';
 import guipause from '../gui/guipause.js';
+import { listener } from '../chess/game.js';
+import { Mouse } from '../input2.js';
 // Import End
 
 "use strict";
@@ -183,7 +185,7 @@ function checkIfBoardDropped() {
 
 	if (boardIsGrabbed === 1) { // Mouse grabbed
 
-		if (!input.isMouseHeld_Left()) { // Dropped board
+		if (!listener.isMouseHeld(Mouse.LEFT)) { // Dropped board
 			throwBoard(); // Mouse throws the board
 			cancelBoardDrag();
 		}
@@ -265,7 +267,7 @@ function checkIfBoardDragged() {
 	if (perspective.getEnabled() || transition.areWeTeleporting() || draganimation.areDraggingPiece()) return;
 
 	if (boardIsGrabbed === 0) { // Not already grabbed
-		if (input.isMouseDown_Left()) {
+		if (listener.isMouseDown(Mouse.LEFT)) {
 			grabBoard_WithMouse();
 			input.removeMouseDown_Left(); // Remove the event so other aspects of the code don't use it
 		} else if (input.getTouchDowns().length > 0) grabBoard_WithFinger();
@@ -345,22 +347,22 @@ function detectPanning() {
 
 	let panning = false; // Any panning key pressed this frame?
 	if (input.atleast1KeyHeld()) { // Skip all if no key is pressed, saves cpu.
-		if (input.isKeyHeld('d')) {
+		if (listener.isKeyHeld('KeyD')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(0)
 			// else panVel[0] += loadbalancer.getDeltaTime() * panAccel;
 			panAccel_Perspective(0);
-		} if (input.isKeyHeld('a')) {
+		} if (listener.isKeyHeld('KeyA')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(180)
 			// else panVel[0] -= loadbalancer.getDeltaTime() * panAccel;
 			panAccel_Perspective(180);
-		} if (input.isKeyHeld('w')) {
+		} if (listener.isKeyHeld('KeyW')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(90)
 			// else panVel[1] += loadbalancer.getDeltaTime() * panAccel;
 			panAccel_Perspective(90);
-		} if (input.isKeyHeld('s')) {
+		} if (listener.isKeyHeld('KeyS')) {
 			panning = true;
 			// if (perspective.getEnabled()) panAccel_Perspective(-90)
 			// else panVel[1] -= loadbalancer.getDeltaTime() * panAccel;
@@ -423,12 +425,12 @@ function deccelerateScaleVel() {
 // Are we pressing space/shift or scrolling?
 function detectZooming() {
 	let scaling = false;
-	if (input.isKeyHeld(' ')) {
+	if (listener.isKeyHeld('Space')) {
 		scaling = true;
 		scaleVel -= loadbalancer.getDeltaTime() * scaleAccel_Desktop;
 		if (scaleVel < -scaleVelCap) scaleVel = -scaleVelCap;
 	}
-	if (input.isKeyHeld('shift')) {
+	if (listener.isKeyHeld('ShiftLeft')) {
 		scaling = true;
 		scaleVel += loadbalancer.getDeltaTime() * scaleAccel_Desktop;
 		if (scaleVel > scaleVelCap) scaleVel = scaleVelCap;

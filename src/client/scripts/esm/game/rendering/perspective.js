@@ -6,7 +6,6 @@ import camera from './camera.js';
 import statustext from '../gui/statustext.js';
 import { createModel } from './buffermodel.js';
 import mat4 from './gl-matrix.js';
-import input from '../input.js';
 import selection from '../chess/selection.js';
 import frametracker from './frametracker.js';
 import config from '../config.js';
@@ -55,7 +54,7 @@ function getRotZ() { return rotZ; }
 function getIsViewingBlackPerspective() { return isViewingBlackPerspective; }
 
 function toggle() {
-	if (!input.isMouseSupported()) return statustext.showStatus(translations.rendering.perspective_mode_on_desktop);
+	if (!docutil.isMouseSupported()) return statustext.showStatus(translations.rendering.perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
