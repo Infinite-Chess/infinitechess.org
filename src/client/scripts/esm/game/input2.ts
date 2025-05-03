@@ -204,7 +204,9 @@ function CreateInputListener(element: HTMLElement): InputListener {
 	/** Reset the input events for the next frame. Fire 'reset-listener-events' event at the very end of EVERY frame. */
 	document.addEventListener('reset-listener-events', () => {
 		// console.log("Resetting events");
-		atleastOneInputThisFrame = false;
+		// We can continuously hold a key without triggering more events, so held keys should still count as an input that frame.
+		atleastOneInputThisFrame = false || keyHelds.length > 0 || Object.values(clickInfo).some(clickInfo => clickInfo.isHeld);
+		console.log("atleastOneInputThisFrame:", atleastOneInputThisFrame);
 		// For each mouse button, reset its state
 		for (const button of Object.values(clickInfo)) {
 			button.isDown = false;

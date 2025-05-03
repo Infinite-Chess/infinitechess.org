@@ -6,6 +6,7 @@ import input from '../input.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
+import { listener } from '../chess/game.js';
 // Import End
 
 'use strict';
@@ -164,12 +165,7 @@ function updateTimeForLongTasks() {
 }
 
 function updateAFK() {
-	if (activityThisFrame()) onReturnFromAFK();
-}
-
-// Returns true if there's been an user input this frame
-function activityThisFrame() {
-	return input.atleast1InputThisFrame();
+	if (listener.atleastOneInput()) onReturnFromAFK();
 }
 
 function onReturnFromAFK() {

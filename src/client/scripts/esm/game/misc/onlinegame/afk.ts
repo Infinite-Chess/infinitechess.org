@@ -16,8 +16,7 @@ import gameslot from "../../chess/gameslot.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import pingManager from "../../../util/pingManager.js";
-// @ts-ignore
-import input from "../../input.js";
+import { listener } from "../../chess/game.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
 // @ts-ignore
@@ -97,7 +96,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
 }
 
 function updateAFK() {
-	if (!input.atleast1InputThisFrame() || gamefileutility.isGameOver(gameslot.getGamefile()!)) return; // No input this frame, don't reset the timer to tell the server we are afk.
+	if (!listener.atleastOneInput() || gamefileutility.isGameOver(gameslot.getGamefile()!)) return; // No input this frame, don't reset the timer to tell the server we are afk.
 	// There has been mouse movement, restart the afk auto-resign timer.
 	if (isOurAFKAutoResignTimerRunning()) tellServerWeBackFromAFK(); // Also tell the server we are back, IF it had started an auto-resign timer!
 	rescheduleAlertServerWeAFK();
