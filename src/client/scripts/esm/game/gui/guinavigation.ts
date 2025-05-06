@@ -10,7 +10,7 @@ import selection from '../chess/selection.js';
 import { listener_document } from '../chess/game.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
-import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -216,7 +216,7 @@ function callback_Back() {
 function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
 	// Add the square annotation highlights, too.
-	allCoords.push(...drawsquares.highlights);
+	allCoords.push(...annotations.getSquares());
 	area.initTelFromCoordsList(allCoords);
 }
 

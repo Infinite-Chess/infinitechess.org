@@ -34,7 +34,7 @@ function isHoveringAtleastOneEntity() {
 }
 
 function updateEntitiesHovered() {
-	drawsquares.updateHighlightsHovered();
+	drawsquares.updateHighlightsHovered(annotations.getSquares());
 	miniimage.updateImagesHovered(); // This updates hovered images at the same time
 
 	// Test if clicked (teleport to all hovered entities)
