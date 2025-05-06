@@ -240,6 +240,8 @@ function setLingeringAnnotationsMode(value: boolean) {
 	preferences.lingering_annotations = value;
 	onChangeMade();
 	savePreferences();
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('lingering-annotations-toggle', { detail: value }));
 }
 
 
