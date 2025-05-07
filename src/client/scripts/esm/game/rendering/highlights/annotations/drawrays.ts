@@ -10,6 +10,11 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import coordutil from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
+import math, { Vec2 } from "../../../../util/math.js";
+import legalmovehighlights from "../legalmovehighlights.js";
+import instancedshapes from "../../instancedshapes.js";
+import { AttributeInfoInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
+import gameslot from "../../../chess/gameslot.js";
 // @ts-ignore
 import input from "../../../input.js";
 // @ts-ignore
@@ -18,7 +23,6 @@ import movement from "../../movement.js";
 
 import type { Coords, CoordsKey } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "./annotations.js";
-import math, { Vec2 } from "../../../../util/math.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -28,6 +32,11 @@ import math, { Vec2 } from "../../../../util/math.js";
 const VECTORS: Coords[] = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
 /** {@link VECTORS} but hippogonals. These may only be drawn in games with hippogonal riders. */
 const VECTORS_HIPPOGONAL: Coords[] = [[1,2],[-1,-2],[2,1],[-2,-1],[2,-1],[-2,1],[1,-2],[-1,2]];
+
+const ATTRIB_INFO: AttributeInfoInstanced = {
+    vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
+    instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+}
 
 
 /** This will be defined if we are CURRENTLY drawing a ray. */
@@ -79,12 +88,12 @@ function update(rays: Ray[]) {
  * @param rays - All rays currently visible on the board.
  * @returns An object containing the results, such as whether a change was made, and what rays were deleted if any.
  */
-function addDrawnRay(rays: Ray[]): { changed: boolean, deletedRays?: Ray[] } {
+function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	const pointerWorld = input.getPointerWorldLocation() as Coords;
 	let drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 	// Skip if end equals start (no arrow drawn)
-	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { changed: false };
+	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { added: false };
 
     const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
     const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.pieces.hippogonalsPresent);
@@ -101,7 +110,7 @@ function addDrawnRay(rays: Ray[]): { changed: boolean, deletedRays?: Ray[] } {
 			rays.splice(i, 1); // Remove the existing ray
             deletedRays.push(ray);
             console.log("Erasing ray.");
-            return { changed: true, deletedRays };
+            return { added: false, deletedRays };
         }
         const line2 = ray.line;
         if (math.areLinesInGeneralFormEqual(line, line2)) { // Coincident
@@ -120,11 +129,10 @@ function addDrawnRay(rays: Ray[]): { changed: boolean, deletedRays?: Ray[] } {
                 } else { // Skip adding the new one (it already exists contained in this comparing one)
                     console.log("Ray is already contained in another.");
                     if (deletedRays.length > 0) throw Error("Should not be any rays deleted if ray to be added is contained within another!");
-                    return { changed: false };
+                    return { added: false };
                 }
             } else { // Negative, they point in opposite directions
                 // Keep both
-
                 console.log("Rays point in opposite directions.");
             }
         }
@@ -134,10 +142,13 @@ function addDrawnRay(rays: Ray[]): { changed: boolean, deletedRays?: Ray[] } {
     const ray = { start: drag_start!, vector, line };
 	rays.push(ray);
     console.log("Added ray:", ray);
-	return { changed: true };
+	return { added: true, deletedRays };
 }
 
-/** Finds the VECTOR whose angle most closely matches the angle of the given targetVector. */
+/**
+ * Finds the VECTOR whose angle most closely matches the angle of the given targetVector.
+ * This helps us snap the ray's direction to a slide direction in the game.
+ */
 function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: boolean): Coords {
     const targetAngle = Math.atan2(targetVector[1], targetVector[0]);
 
@@ -176,13 +187,32 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 
 function render(rays: Ray[]) {
 	// Add the ray currently being drawn
+	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
+
+    // Early exit if no rays to draw
+    if (rays.length === 0) return;
 
 	// Construct the data
 	const color = preferences.getAnnoteSquareColor();
-    
+    const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+    const instanceData = legalmovehighlights.genData_Rays(rays);
+    const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
 
+    // Render
+	const boardPos: Coords = movement.getBoardPos();
+    const model_Offset: Coords = legalmovehighlights.getOffset();
+	const position: [number,number,number] = [
+        -boardPos[0] + model_Offset[0], // Add the model's offset
+        -boardPos[1] + model_Offset[1],
+        0
+    ];
+	const boardScale: number = movement.getBoardScale();
+	const scale: [number,number,number] = [boardScale, boardScale, 1];
+    model.render(position, scale);
 
-	// Remove the arrow currently being drawn
+	// Remove the ray currently being drawn
+    if (drawingCurrentlyDrawn.added) rays.pop();
+    if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays); // Restore the deleted rays if any
 }
 
 
