@@ -19,6 +19,7 @@ import movement from "../../movement.js";
 import type { Arrow } from "./annotations.js";
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import coordutil from "../../../../chess/util/coordutil.js";
+import snapping from "../snapping.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -67,11 +68,18 @@ function update(arrows: Arrow[]) {
 		// Test if right mouse down (start drawing)
 		if (input.isMouseHeld_Right()) {
 			const pointerWorld = input.getPointerWorldLocation() as Coords;
-			drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+			if (movement.isScaleLess1Pixel_Virtual() && snapping.isHoveringAtleastOneEntity()) {
+				// Snap to nearest hovered entity
+				const nearestEntity = snapping.getClosestEntityToMouse();
+				drag_start = coordutil.copyCoords(nearestEntity.coords);
+			} else {
+				// No snap
+				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+			}
 		}
 	} else { // Currently drawing an arrow
 		// Test if mouse released (finalize arrow)
-		if (!input.isMouseHeld_Right()) {
+		if (!input.isMouseHeld_Right() && !input.getPointerClicked_Right()) { // Prevents accidentally drawing tincy arrows while zoomed out if we intend to draw square
 			addDrawnArrow(arrows);
 			drag_start = undefined; // Reset drawing
 		}
@@ -86,7 +94,16 @@ function update(arrows: Arrow[]) {
  */
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
 	const pointerWorld = input.getPointerWorldLocation() as Coords;
-	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+	let drag_end: Coords;
+	if (movement.isScaleLess1Pixel_Virtual() && snapping.isHoveringAtleastOneEntity()) {
+		// Snap to nearest hovered entity
+		const nearestEntity = snapping.getClosestEntityToMouse();
+		drag_end = coordutil.copyCoords(nearestEntity.coords);
+	} else {
+		// No snap
+		drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+	}
+
 	// Skip if end equals start (no arrow drawn)
 	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { changed: false };
 
@@ -145,6 +162,7 @@ function getDataArrow(
 ): number[] {
 	// First we need to shift the arrow's base a little away from the center of the starting square.
 	const length_coords = math.euclideanDistance(arrow.start, arrow.end);
+	// This makes sure that base offset looks the same no matter our zoom level
 	const invMult = movement.isScaleLess1Pixel_Virtual() ? movement.getBoardScale() : 1;
 	const t = ARROW.BASE_OFFSET / (invMult * length_coords); // Proportion of the arrow length to offset the base
 	if (t >= 1) return []; // No arrow drawn if base offset is greater than the entire arrow length (else it would be drawn with negative length).

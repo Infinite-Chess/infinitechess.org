@@ -135,8 +135,9 @@ function clearAnnotes(annotes: Annotes) {
 function update() {
 	const annotes = getRelevantAnnotes();
 
-	drawsquares.update(annotes.Squares);
+	// Arrows first since it reads if there was a click, but Squares will claim the click.
 	drawarrows.update(annotes.Arrows);
+	drawsquares.update(annotes.Squares);
 
 	// If middle mouse button is clicked, remove all highlights
 	// TODO: Change this to left clicking an empty region of the board

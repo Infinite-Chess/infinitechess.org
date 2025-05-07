@@ -111,6 +111,8 @@ function update(highlights: Square[]) {
 			}
 			else highlights.push(closestEntity.coords); // Add
 		}
+		// Claim the click so other scripts don't also use it
+		input.removeMouseDown_Left(); // CHANGE TO RIGHTTTTTT
 	}
 }
 
@@ -142,7 +144,6 @@ function render(highlights: Square[]) {
 	const color = preferences.getAnnoteSquareColor();
 
 	genModel(highlights, color).render(undefined, undefined, { size });
-	// webgl.executeWithDepthFunc_ALWAYS(genModel(highlights, color).render(undefined, undefined, { size }));
 
 	// Render hovered highlights
 	if (highlightsHovered.length > 0) {
@@ -154,7 +155,6 @@ function render(highlights: Square[]) {
 			hover_opacity
 		] as Color;
 		genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size });
-		// webgl.executeWithDepthFunc_ALWAYS(genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size }));
 	}
 }
 
