@@ -11,13 +11,14 @@ import preferences from "../../../../components/header/preferences.js";
 import gameslot from "../../../chess/gameslot.js";
 import jsutil from "../../../../util/jsutil.js";
 import drawarrows from "./drawarrows.js";
+import gameloader from "../../../chess/gameloader.js";
+import drawrays from "./drawrays.js";
 // @ts-ignore
 import input from "../../../input.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Vec2 } from "../../../../util/math.js";
-import gameloader from "../../../chess/gameloader.js";
 
 
 // Type Definitions ------------------------------------------------------------
@@ -51,6 +52,8 @@ interface Arrow {
 interface Ray {
 	start: Coords
 	vector: Vec2
+	/** The line in general form (A, B, C coefficients) */
+	line: [number, number, number]
 }
 
 
@@ -138,6 +141,7 @@ function update() {
 	// Arrows first since it reads if there was a click, but Squares will claim the click.
 	drawarrows.update(annotes.Arrows);
 	drawsquares.update(annotes.Squares);
+	drawrays.update(annotes.Rays);
 
 	// If middle mouse button is clicked, remove all highlights
 	// TODO: Change this to left clicking an empty region of the board
@@ -160,7 +164,7 @@ function Collapse() {
 function render_belowPieces() {
 	const annotes = getRelevantAnnotes();
 	drawsquares.render(annotes.Squares);
-
+	drawrays.render(annotes.Rays);
 }
 
 function render_abovePieces() {

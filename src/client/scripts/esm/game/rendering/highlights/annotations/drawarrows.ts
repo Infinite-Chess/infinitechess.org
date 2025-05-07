@@ -57,13 +57,12 @@ let drag_start: Coords | undefined;
 
 
 /**
- * Tests if the user has added any new square highlights,
- * or deleted any existing ones.
+ * Tests if the user has started/finished drawing new arrows,
+ * or deleting any existing ones.
  * REQUIRES THE HOVERED HIGHLIGHTS to be updated prior to calling this!
- * @param highlights - All square highlights currently on the board.
+ * @param arrows - All arrow annotations currently on the board.
  */
 function update(arrows: Arrow[]) {
-
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
 		if (input.isMouseHeld_Right()) {
@@ -90,7 +89,7 @@ function update(arrows: Arrow[]) {
  * Adds the currently drawn arrow to the list.
  * If a matching arrow already exists, that will be removed instead.
  * @param arrows - All arrows currently visible on the board.
- * @returns true if an arrow was added.
+ * @returns An object containing the results, such as whether a change was made, and what arrow was deleted if any.
  */
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
 	const pointerWorld = input.getPointerWorldLocation() as Coords;
