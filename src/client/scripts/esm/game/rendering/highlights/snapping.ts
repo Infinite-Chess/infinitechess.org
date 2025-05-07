@@ -8,6 +8,7 @@
 import miniimage from "../miniimage.js";
 import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
+import annotations from "./annotations/annotations.js";
 // @ts-ignore
 import input from "../../input.js";
 // @ts-ignore

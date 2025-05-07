@@ -39,7 +39,7 @@ function render(gamefile: gamefile) {
 		legalmovehighlights.render();
 		specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
 	} 
-	annotations.render(); // The square highlights added by the user
+	annotations.render_belowPieces(); // The square highlights added by the user
 }
 
 export default {
