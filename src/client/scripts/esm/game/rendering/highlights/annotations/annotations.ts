@@ -59,7 +59,7 @@ interface Ray {
 /** The annotations tied to specific move plies, when lingering annotations is OFF. */
 const annotes_plies: Annotes[] = [];
 /** The main list of annotations, when lingering annotations is ON. */
-let annotes_linger: Annotes = { Squares: [], Arrows: [], Rays: [] };
+let annotes_linger: Annotes = getEmptyAnnotes();
 
 
 // Getters ---------------------------------------------------------------------
@@ -91,7 +91,13 @@ function getRays() {
  */
 function getRelevantAnnotes(): Annotes {
 	const enabled = preferences.getLingeringAnnotationsMode();
-	return enabled ? annotes_linger : annotes_plies[gameslot.getGamefile()!.state.local.moveIndex];
+	if (enabled) return annotes_linger;
+	else {
+		const moveIndex = gameslot.getGamefile()!.state.local.moveIndex;
+		// Ensure its initialized
+		if (!annotes_plies[moveIndex]) annotes_plies[moveIndex] = getEmptyAnnotes();
+		return annotes_plies[moveIndex];
+	}
 }
 
 /** Event listener for when we change the Lingering Annotations mode */
@@ -99,13 +105,18 @@ document.addEventListener('lingering-annotations-toggle', (e: CustomEvent) => {
 	const enabled: boolean = e.detail;
 	const ply = gameslot.getGamefile()!.state.local.moveIndex;
 	if (enabled) { /** Transfer annotes from the ply to {@link annotes_linger} */ 
-		annotes_linger = jsutil.deepCopyObject(annotes_plies[ply]);
+		annotes_linger = jsutil.deepCopyObject(annotes_plies[ply]!);
 	} else { /** Transfer annotes from {@link annotes_linger} to the current ply */ 
 		annotes_plies[ply] = jsutil.deepCopyObject(annotes_linger);
 		// Clear these
 		clearAnnotes(annotes_linger);
 	}
 });
+
+/** Returns an empty Annotes object. */
+function getEmptyAnnotes(): Annotes {
+	return { Squares: [], Arrows: [], Rays: [] };
+}
 
 /** Erases all the annotes of the provided annotations. */
 function clearAnnotes(annotes: Annotes) {
@@ -123,6 +134,7 @@ function update() {
 	const annotes = getRelevantAnnotes();
 
 	drawsquares.update(annotes.Squares);
+	drawarrows.update(annotes.Arrows);
 
 	// If middle mouse button is clicked, remove all highlights
 	// TODO: Change this to left clicking an empty region of the board
@@ -141,10 +153,17 @@ function Collapse() {
 	clearAnnotes(annotes);
 }
 
-
-function render() {
+/** Renders the annotations that should be rendered below the pieces */
+function render_belowPieces() {
 	const annotes = getRelevantAnnotes();
 	drawsquares.render(annotes.Squares);
+
+}
+
+function render_abovePieces() {
+	const annotes = getRelevantAnnotes();
+	drawarrows.render(annotes.Arrows);
+
 }
 
 function onGameUnload() {
@@ -163,7 +182,8 @@ export default {
 	getRays,
 
 	update,
-	render,
+	render_belowPieces,
+	render_abovePieces,
 	onGameUnload,
 };
 
@@ -171,4 +191,4 @@ export type {
 	Square,
 	Arrow,
 	Ray,
-}
+};

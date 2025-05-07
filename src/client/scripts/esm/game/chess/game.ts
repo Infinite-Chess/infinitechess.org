@@ -217,6 +217,7 @@ function render() {
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
 		arrows.render();
+		annotations.render_abovePieces();
 		perspective.renderCrosshair();
 	});
 }
