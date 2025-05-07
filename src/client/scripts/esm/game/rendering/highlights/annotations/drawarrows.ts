@@ -145,7 +145,9 @@ function getDataArrow(
 ): number[] {
 	// First we need to shift the arrow's base a little away from the center of the starting square.
 	const length_coords = math.euclideanDistance(arrow.start, arrow.end);
-	const t = ARROW.BASE_OFFSET / length_coords; // Proportion of the arrow length to offset the base
+	const invMult = movement.isScaleLess1Pixel_Virtual() ? movement.getBoardScale() : 1;
+	const t = ARROW.BASE_OFFSET / (invMult * length_coords); // Proportion of the arrow length to offset the base
+	if (t >= 1) return []; // No arrow drawn if base offset is greater than the entire arrow length (else it would be drawn with negative length).
 	const trueStartCoords = coordutil.lerpCoords(arrow.start, arrow.end, t);
 
 	// Calculate the base and tip world space coordinates
@@ -155,11 +157,11 @@ function getDataArrow(
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
 
-	const boardScale = movement.getBoardScale();
+	const size = movement.isScaleLess1Pixel_Virtual() ? 1 : movement.getBoardScale();
 
-	const bodyWidthArg = ARROW.BODY_WIDTH * boardScale;
-	const tipWidthArg = ARROW.TIP_WIDTH * boardScale;
-	const desiredTipLength = ARROW.TIP_LENGTH * boardScale;
+	const bodyWidthArg = ARROW.BODY_WIDTH * size;
+	const tipWidthArg = ARROW.TIP_WIDTH * size;
+	const desiredTipLength = ARROW.TIP_LENGTH * size;
 
 	const sx = startWorld[0];
 	const sy = startWorld[1];
