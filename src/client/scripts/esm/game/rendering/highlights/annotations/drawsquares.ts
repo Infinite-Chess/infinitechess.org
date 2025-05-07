@@ -12,7 +12,6 @@ import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.j
 import instancedshapes from "../../instancedshapes.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
-import miniimage from "../../miniimage.js";
 // @ts-ignore
 import movement from "../../movement.js";
 // @ts-ignore
