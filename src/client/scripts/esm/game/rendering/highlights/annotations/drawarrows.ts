@@ -40,11 +40,10 @@ const ARROW = {
 	 * Valid range: [0.0, 1.0]. 0.0 means no minimum proportional body length is enforced beyond
 	 * what's left after the tip takes ARROW.TIP_LENGTH. 1.0 means the arrow tries to be all body.
 	 */
-	MIN_BODY_PROPORTION: 0.3 // Example: Body should be at least 30% of total arrow length
+	MIN_BODY_PROPORTION: 0.4, // Example: Body should be at least 30% of total arrow length
+	/** Offset of the arrow's base from the starting coordinate, in percentage of 1 tile width. */
+	BASE_OFFSET: 0.35,
 };
-
-/** Values smaller than this are considered zero for drawing. */
-const ARROW_DRAW_THRESHOLD = 0.04; // Default: 0.001 
 
 
 
@@ -121,13 +120,9 @@ function render(arrows: Arrow[]) {
 
 	// Construct the data
 	const color = preferences.getAnnoteArrowColor();
-	const data: number[] = [];
-	for (const arrow of arrows) {
-		const startWorld = space.convertCoordToWorldSpace(arrow.start);
-		const endWorld = space.convertCoordToWorldSpace(arrow.end);
-		data.push(...getDataArrow(startWorld, endWorld, color));
-	}
+	const data: number[] = arrows.flatMap(arrow => getDataArrow(arrow, color));
 
+	// Render
 	createModel(data, 2, 'TRIANGLES', true).render(); // No transform needed
 
 	// Remove the arrow currently being drawn
@@ -146,10 +141,18 @@ function render(arrows: Arrow[]) {
  * @returns The vertex data for the arrow (x,y, r,g,b,a).
  */
 function getDataArrow(
-	startWorld: Coords,
-	endWorld: Coords,
+	arrow: Arrow,
 	color: Color
 ): number[] {
+	// First we need to shift the arrow's base a little away from the center of the starting square.
+	const length_coords = math.euclideanDistance(arrow.start, arrow.end);
+	const t = ARROW.BASE_OFFSET / length_coords; // Proportion of the arrow length to offset the base
+	const trueStartCoords = coordutil.lerpCoords(arrow.start, arrow.end, t);
+
+	// Calculate the base and tip world space coordinates
+	const startWorld = space.convertCoordToWorldSpace(trueStartCoords);
+	const endWorld = space.convertCoordToWorldSpace(arrow.end);
+
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
 
@@ -176,8 +179,6 @@ function getDataArrow(
 	const addTriangle = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) => {
 		vertices.push(x1, y1, r, g, b, a, x2, y2, r, g, b, a, x3, y3, r, g, b, a);
 	};
-
-	// if (length < ARROW_DRAW_THRESHOLD) return []; // Arrow is too tiny to be visible.
 
 	const ndx = dx / length; // Normalized direction vector x
 	const ndy = dy / length; // Normalized direction vector y
