@@ -135,6 +135,7 @@ function genModel(highlights: Square[], color: Color): BufferModelInstanced {
 
 
 function render(highlights: Square[]) {
+	// Early exit if no squares to draw
 	if (highlights.length === 0) return;
 
 	// If we're zoomed out, then the size of the highlights is constant.
