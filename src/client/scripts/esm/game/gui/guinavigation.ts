@@ -6,6 +6,8 @@ import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import selection from '../chess/selection.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -22,7 +24,6 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
-import selection from '../chess/selection.js';
 
 
 /**
@@ -221,6 +222,8 @@ function callback_Back() {
 
 function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
+	// Add the square annotation highlights, too.
+	allCoords.push(...annotations.getSquares());
 	area.initTelFromCoordsList(allCoords);
 }
 
