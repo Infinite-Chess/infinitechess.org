@@ -12,11 +12,11 @@ import board from '../board.js';
 import transition from '../transition.js';
 import selection from '../../chess/selection.js';
 import camera from '../camera.js';
-import math from '../../../util/math.js';
+import math, { Color } from '../../../util/math.js';
 import movement from '../movement.js';
 import { createModel } from '../buffermodel.js';
 import jsutil from '../../../util/jsutil.js';
-import coordutil from '../../../chess/util/coordutil.js';
+import coordutil, { Coords } from '../../../chess/util/coordutil.js';
 import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
@@ -43,59 +43,30 @@ const perspectiveLimitToTeleport = 50;
 
 const opacityOfGhostImage = 1;
 
+
+/** A single highlight line */
+interface Line {
+	/** The starting point coords. */
+	start: Coords
+	/** The ending point coords. */
+	end: Coords
+	/** The equation of the line in general form. */
+	coefficients: [number, number, number]
+	/** The color of the line. */
+	color: Color
+	/** The piece type that should be displayed when hovering over the line, if there is one. */
+	piece: number
+}
+
+
+
 // Also tests to see if the line is being hovered over, or clicked to transition.
 function genModel() {
-	if (guipause.areWePaused()) return; // Exit if paused
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
-	if (!selection.isAPieceSelected()) return;
 
 	const dataLines = [];
 
-	const legalmoves = jsutil.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
-	const pieceCoords = selection.getPieceSelected().coords;
-	const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
-
-	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
-	const color = jsutil.deepCopyObject(preferences.getLegalMoveHighlightColor(color_options));
-	color[3] = 1;
-
 	const entityWorldWidth = snapping.getEntityWidthWorld();
-	const snapDist = entityWorldWidth / 2;
-    
-	const a = perspective.distToRenderBoard;
-	/** @type {BoundingBox} */
-	let boundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false);
-    
-	const mouseLocation = input.getMouseWorldLocation();
 
-	let closestDistance;
-	let closestPoint;
-	for (const strline in legalmoves.sliding) {
-		const line = coordutil.getCoordsFromKey(strline);
-		const lineIsVertical = line[0] === 0;
-
-		const intersectionPoints = math.findLineBoxIntersections(worldSpaceCoords, line, boundingBox).map(intersection => intersection.coords);
-        
-		if (!intersectionPoints[0]) continue;
-		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
-		const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
-		intersectionPoints[0] = capPointAtSlideLimit(intersectionPoints[0], leftLimitPointWorld, false, lineIsVertical);
-
-		if (!intersectionPoints[1]) continue; // I hate this
-		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, true);
-		const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
-		intersectionPoints[1] = capPointAtSlideLimit(intersectionPoints[1], rightLimitPointWorld, true, lineIsVertical);
-
-		appendLineToData(dataLines, intersectionPoints[0], intersectionPoints[1], color);
-        
-		const snapPoint = math.closestPointOnLine(intersectionPoints[0], intersectionPoints[1], mouseLocation);
-		if (!closestDistance) { if (snapPoint.distance > snapDist) continue; }
-		else if (snapPoint.distance > closestDistance) {continue;}
-		closestDistance = snapPoint.distance;
-		snapPoint.moveset = legalmoves.sliding[strline];
-		snapPoint.line = line;
-		closestPoint = snapPoint;
-	};
     
 	modelLines = createModel(dataLines, 2, "LINES", true);
 
@@ -166,29 +137,24 @@ function genModel() {
 	transition.teleport(tel);
 }
 
-function appendLineToData(data, point1, point2, color) {
 
-	const [ r, g, b, a ] = color;
 
-	data.push(
-		// Vertex               Color
-		point1[0], point1[1], r, g, b, a,
-		point2[0], point2[1], r, g, b, a
-	);
+
+
+function genLinesModel(lines: Line[]) {
+	const data: number[] = lines.flatMap(line => getLineData(line));
+	return createModel(data, 2, 'TRIANGLES', true);
 }
 
-function capPointAtSlideLimit(point, slideLimit, positive, lineIsVertical) { // slideLimit = [x,y]
-	const cappingAxis = lineIsVertical ? 1 : 0;
-	if (!positive && point[cappingAxis] < slideLimit[cappingAxis]
-        || positive && point[cappingAxis] > slideLimit[cappingAxis]) return slideLimit;
-	return point;
-}
-
-function getPointOfDiagSlideLimit(pieceCoords, moveset, line, positive) { // positive is true if it's the right/top
-	const steps = positive ? moveset[1] : moveset[0];
-	const yDiff = line[1] * steps;
-	const xDiff = line[0] * steps;
-	return [pieceCoords[0] + xDiff, pieceCoords[1] + yDiff];
+function getLineData(line: Line) {
+	const startWorld = space.convertCoordToWorldSpace(line.start);
+	const endWorld = space.convertCoordToWorldSpace(line.end);
+	const [ r, g, b, a ] = line.color;
+	return [
+		//         Vertex                 Color
+		startWorld[0], startWorld[1],   r, g, b, a,
+		endWorld[0], endWorld[1],       r, g, b, a
+	];
 }
 
 // Renders the legal slide move lines, and ghost image if hovering
@@ -205,6 +171,11 @@ function render() {
 }
 
 export default {
-	genModel,
-	render
+	update,
+
+	genLinesModel,
 };
+
+export type {
+	Line,
+}

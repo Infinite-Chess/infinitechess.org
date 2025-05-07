@@ -33,6 +33,7 @@ import { CreateInputListener, InputListener, Mouse } from '../input2.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import miniimage from '../rendering/miniimage.js';
 import snapping from '../rendering/highlights/snapping.js';
+import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -178,7 +179,9 @@ function updateBoard(gamefile: gamefile) {
 	annotations.update();
 
 	// After updating annotations and mini image hovers, as this early exits if we're hovering.
-	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
+	// highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
+	selectedpiecehighlightline.update();
+	snapping.updateSnapping();
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	movement.checkIfBoardDragged();
