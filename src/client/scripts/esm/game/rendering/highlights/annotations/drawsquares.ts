@@ -98,18 +98,7 @@ function update(highlights: Square[]) {
 			else highlights.push(pointerSquare); // Add
 		} else { // Zoomed out AND hovering atleast one entity. Behavior: toggle highlight on closest entity to mouse.
 			// Find the closest hovered entity to the pointer
-			let closestEntity: { coords: Coords, dist: number, type: 'miniimage' | 'square', index: number } | undefined = undefined;
-			for (let i = 0; i < miniimage.imagesHovered.length; i++) {
-				const coords = miniimage.imagesHovered[i]!;
-				const dist = miniimage.imagesHovered_dists[i]!;
-				if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'miniimage', index: i };
-			}
-			for (let i = 0; i < highlightsHovered.length; i++) {
-				const coords = highlightsHovered[i]!;
-				const dist = highlightsHovered_dists[i]!;
-				if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'square', index: i };
-			}
-			if (closestEntity === undefined) throw Error("No closest entity found, this should never happen.");
+			const closestEntity = snapping.getClosestEntityToMouse();
 
 			// Now that we have the closest hovered entity, toggle the highlight on its coords.
 			const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, closestEntity.coords));

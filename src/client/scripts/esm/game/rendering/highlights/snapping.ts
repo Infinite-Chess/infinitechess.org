@@ -13,6 +13,7 @@ import annotations from "./annotations/annotations.js";
 import input from "../../input.js";
 // @ts-ignore
 import transition from "../transition.js";
+import { Coords } from "../../../chess/util/coordutil.js";
 
 
 // Variables --------------------------------------------------------------
@@ -32,6 +33,33 @@ function getEntityWidthWorld() {
 
 function isHoveringAtleastOneEntity() {
 	return miniimage.imagesHovered.length > 0 || drawsquares.highlightsHovered.length > 0;
+}
+
+function getClosestEntityToMouse(): { coords: Coords, dist: number, type: 'miniimage' | 'square', index: number } {
+	if (!isHoveringAtleastOneEntity()) throw Error("Should not call getClosestEntityToMouse() if isHoveringAtleastOneEntity() is false.");
+	
+	// Find the closest hovered entity to the pointer
+
+	let closestEntity: { coords: Coords, dist: number, type: 'miniimage' | 'square', index: number } | undefined = undefined;
+
+	// Pieces
+	for (let i = 0; i < miniimage.imagesHovered.length; i++) {
+		const coords = miniimage.imagesHovered[i]!;
+		const dist = miniimage.imagesHovered_dists[i]!;
+		if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'miniimage', index: i };
+	}
+
+	// Square Highlights
+	const highlightsHovered = drawsquares.highlightsHovered;
+	const highlightsHovered_dists = drawsquares.highlightsHovered_dists;
+	for (let i = 0; i < highlightsHovered.length; i++) {
+		const coords = highlightsHovered[i]!;
+		const dist = highlightsHovered_dists[i]!;
+		if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'square', index: i };
+	}
+
+	if (closestEntity === undefined) throw Error("No closest entity found, this should never happen.");
+	return closestEntity;
 }
 
 function updateEntitiesHovered() {
@@ -55,5 +83,6 @@ export default {
 	getEntityWidthWorld,
 
 	isHoveringAtleastOneEntity,
+	getClosestEntityToMouse,
 	updateEntitiesHovered,
 };
