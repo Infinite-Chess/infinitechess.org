@@ -7,7 +7,6 @@
  * Legal moves (of selected piece and hovered arrows)
  */
 
-// @ts-ignore
 import highlightline from "./highlightline.js";
 import checkhighlight from "./checkhighlight.js";
 import { highlightLastMove } from "./lastmovehighlight.js";
@@ -16,6 +15,10 @@ import specialrighthighlights from "./specialrighthighlights.js";
 import boardpos from "../boardpos.js";
 import drawsquares from "./annotations/drawsquares.js";
 import annotations from "./annotations/annotations.js";
+import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
+// @ts-ignore
+import movement from "../movement.js";
+
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
@@ -31,7 +34,7 @@ import type gamefile from "../../../chess/logic/gamefile";
  * Outline of highlights render box
  */
 function render(gamefile: gamefile) {
-	highlightline.render();
+	selectedpiecehighlightline.render();
 
 	if (!boardpos.areZoomedOut()) { // Zoomed in
 		highlightLastMove(gamefile);

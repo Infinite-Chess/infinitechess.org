@@ -28,11 +28,6 @@ import type { Ray } from "./annotations.js";
 // Variables -----------------------------------------------------------------
 
 
-/** All default vectors for which we may draw rays for (no colinears). */
-const VECTORS: Coords[] = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
-/** {@link VECTORS} but hippogonals. These may only be drawn in games with hippogonal riders. */
-const VECTORS_HIPPOGONAL: Coords[] = [[1,2],[-1,-2],[2,1],[-2,-1],[2,-1],[-2,1],[1,-2],[-1,2]];
-
 const ATTRIB_INFO: AttributeInfoInstanced = {
     vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
     instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
@@ -192,23 +187,29 @@ function render(rays: Ray[]) {
     // Early exit if no rays to draw
     if (rays.length === 0) return;
 
-	// Construct the data
-	const color = preferences.getAnnoteSquareColor();
-    const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-    const instanceData = legalmovehighlights.genData_Rays(rays);
-    const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
+    if (movement.isScaleLess1Pixel_Virtual()) {
 
-    // Render
-	const boardPos: Coords = movement.getBoardPos();
-    const model_Offset: Coords = legalmovehighlights.getOffset();
-	const position: [number,number,number] = [
-        -boardPos[0] + model_Offset[0], // Add the model's offset
-        -boardPos[1] + model_Offset[1],
-        0
-    ];
-	const boardScale: number = movement.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
-    model.render(position, scale);
+        
+
+    } else {
+        // Construct the data
+        const color = preferences.getAnnoteSquareColor();
+        const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+        const instanceData = legalmovehighlights.genData_Rays(rays);
+        const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
+    
+        // Render
+        const boardPos: Coords = movement.getBoardPos();
+        const model_Offset: Coords = legalmovehighlights.getOffset();
+        const position: [number,number,number] = [
+            -boardPos[0] + model_Offset[0], // Add the model's offset
+            -boardPos[1] + model_Offset[1],
+            0
+        ];
+        const boardScale: number = movement.getBoardScale();
+        const scale: [number,number,number] = [boardScale, boardScale, 1];
+        model.render(position, scale);
+    }
 
 	// Remove the ray currently being drawn
     if (drawingCurrentlyDrawn.added) rays.pop();
