@@ -333,13 +333,13 @@ function getTintColorOfType(type: number): Color {
 
 // 	const themeProperties = themes.themes[theme];
 	
-// 	if (input.isKeyDown('u')) {
+// 	if (inputlistenerisKeyDown('u')) {
 // 		currPropertyIndex--;
 // 		if (currPropertyIndex < 0) currPropertyIndex = allProperties.length - 1;
 // 		currProperty = allProperties[currPropertyIndex];
 // 		console.log(`Selected property: ${currProperty}`);
 // 	}
-// 	if (input.isKeyDown('i')) {
+// 	if (inputlistenerisKeyDown('i')) {
 // 		currPropertyIndex++;
 // 		if (currPropertyIndex > allProperties.length - 1) currPropertyIndex = 0;
 // 		currProperty = allProperties[currPropertyIndex];
@@ -348,52 +348,52 @@ function getTintColorOfType(type: number): Color {
 
 // 	const amount = 0.02;
 
-// 	if (input.isKeyDown('j')) {
+// 	if (inputlistenerisKeyDown('j')) {
 // 		const dig = 0;
 // 		themeProperties[currProperty][dig] += amount;
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown('m')) {
+// 	if (inputlistenerisKeyDown('m')) {
 // 		const dig = 0;
 // 		themeProperties[currProperty][dig] -= amount;
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (input.isKeyDown('k')) {
+// 	if (inputlistenerisKeyDown('k')) {
 // 		const dig = 1;
 // 		themeProperties[currProperty][dig] += amount;
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown(',')) {
+// 	if (inputlistenerisKeyDown(',')) {
 // 		const dig = 1;
 // 		themeProperties[currProperty][dig] -= amount;
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (input.isKeyDown('l')) {
+// 	if (inputlistenerisKeyDown('l')) {
 // 		const dig = 2;
 // 		themeProperties[currProperty][dig] += amount;
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown('.')) {
+// 	if (inputlistenerisKeyDown('.')) {
 // 		const dig = 2;
 // 		themeProperties[currProperty][dig] -= amount;
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (input.isKeyDown(';')) {
+// 	if (inputlistenerisKeyDown(';')) {
 // 		const dig = 3;
 // 		themeProperties[currProperty][dig] += amount;
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown('/')) {
+// 	if (inputlistenerisKeyDown('/')) {
 // 		const dig = 3;
 // 		themeProperties[currProperty][dig] -= amount;
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
@@ -401,7 +401,7 @@ function getTintColorOfType(type: number): Color {
 // 	}
 
 
-// 	if (input.isKeyDown('\\')) {
+// 	if (inputlistenerisKeyDown('\\')) {
 // 		console.log(JSON.stringify(themes.themes[theme]));
 // 	}
 

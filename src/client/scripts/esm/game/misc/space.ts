@@ -86,6 +86,19 @@ function getVisualCenterOfSquare(coords: Coords): Coords {
 	];
 }
 
+function convertPointerCoordsToWorldSpace(mouse: Coords, element: HTMLElement): Coords {
+	const screenBox = camera.getScreenBoundingBox();
+	const screenWidth = screenBox.right - screenBox.left;
+	const screenHeight = screenBox.top - screenBox.bottom;
+	const mouseWorldSpace: Coords = [
+		screenBox.left + (mouse[0] / element.clientWidth) * screenWidth,
+		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
+		screenBox.top - (mouse[1] / element.clientHeight) * screenHeight
+	];
+	// console.log('mouseWorldSpace', mouseWorldSpace);
+	return mouseWorldSpace;
+}
+
 export default {
 	convertWorldSpaceToCoords,
 	convertWorldSpaceToCoords_Rounded,
@@ -95,4 +108,5 @@ export default {
 	convertWorldSpaceToPixels_Virtual,
 	convertWorldSpaceToGrid,
 	getVisualCenterOfSquare,
+	convertPointerCoordsToWorldSpace,
 };

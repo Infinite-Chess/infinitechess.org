@@ -338,7 +338,7 @@ function initListeners_Mouse() {
 		mousePos = mouseCoords;
 		const now = Date.now();
 		pushMousePosToHistory(now, mousePos);
-		recalcMouseVel(now, mousePos);
+		recalcMouseVel(now);
 
 		// Now calculate the mouse position in world-space, not just virtual pixels
 		calcMouseWorldLocation();

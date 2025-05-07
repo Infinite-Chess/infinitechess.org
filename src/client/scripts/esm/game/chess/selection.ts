@@ -32,6 +32,8 @@ import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes, players } from '../../chess/util/typeutil.js';
+import { listener } from './game.js';
+import { Mouse } from '../input2.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -117,7 +119,7 @@ function promoteToType(type: number) { promoteTo = type; }
 // Called when '1' is pressed!
 function toggleEditMode() {
 	// Make sure it's legal
-	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
+	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener.isKeyHeld('0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
 
@@ -133,8 +135,9 @@ function disableEditMode() { editMode = false; }
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
+
 	// DISABLED BECAUSE highlight drawing uses the right click
-	// if (input.isMouseDown_Right()) return unselectPiece(); // Right-click deselects everything
+	// if (listener.isMouseDown(Mouse.RIGHT)) return unselectPiece(); // Right-click deselects everything
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
@@ -145,12 +148,15 @@ function update() {
 	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
-		if (!input.getPointerHeld()) draganimation.dropPiece(); // Drop it without moving it.
+		if (!listener.isMouseHeld(Mouse.LEFT)) draganimation.dropPiece(); // Drop it without moving it.
 		return;
 	}
 
-	// Update the hover square
-	hoverSquare = space.convertWorldSpaceToCoords_Rounded(input.getPointerWorldLocation() as Coords);
+	const mouseCoords = listener.getMousePosition(Mouse.LEFT)!;
+	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mouseCoords, listener.element);
+	hoverSquare = space.convertWorldSpaceToCoords_Rounded(mouseWorldSpace);
+	// console.log("Hover square:", hoverSquare);
+
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
 
 	// What should selection.ts do?
@@ -196,8 +202,8 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 function testIfPieceSelected(gamefile: gamefile) {
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
-	if (dragEnabled && !input.getPointerDown() && !input.getPointerClicked()) return; // If dragging is enabled, all we need is pointer down event.
-	else if (!dragEnabled && !input.getPointerClicked()) return; // When dragging is off, we actually need a pointer click.
+	if (dragEnabled && !listener.isMouseDown(Mouse.LEFT) && !listener.isMouseClicked(Mouse.LEFT)) return; // If dragging is enabled, all we need is pointer down event.
+	else if (!dragEnabled && !listener.isMouseClicked(Mouse.LEFT)) return; // When dragging is off, we actually need a pointer click.
 
 	if (movement.boardHasMomentum()) return; // Don't select a piece if the board is moving
 
@@ -236,7 +242,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 		if (draganimation.getDragParity()) return unselectPiece();
 		return draganimation.dropPiece();
 	}
-	if (input.getPointerHeld()) return; // Not dropped yet
+	if (listener.isMouseHeld(Mouse.LEFT)) return; // Not dropped yet
 
 	// The pointer has released, drop the piece.
 

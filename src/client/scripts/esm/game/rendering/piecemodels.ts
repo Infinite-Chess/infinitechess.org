@@ -321,16 +321,6 @@ function deletebufferdata(gamefile: gamefile, piece: Piece) {
  * translating and scaling them into position.
  */
 function renderAll(gamefile: gamefile) {
-	if (movement.isScaleLess1Pixel_Virtual() && !miniimage.isDisabled()) return;
-
-	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
-	if (!movement.isScaleLess1Pixel_Virtual() && isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset)) shiftAll(gamefile);
-
-	// Go ahead and render...
-
-	// Test if the rotation has changed
-	const correctInverted = perspective.getIsViewingBlackPerspective();
-	if (gamefile.mesh.inverted !== correctInverted) rotateAll(gamefile, correctInverted);
 
 	const boardPos = movement.getBoardPos();
 	const position: [number,number,number] = [ // Translate
@@ -340,6 +330,22 @@ function renderAll(gamefile: gamefile) {
     ]; // While separate these may each be big decimals, TOGETHER they should be small! No graphical glitches.
 	const boardScale = movement.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
+
+	if (movement.isScaleLess1Pixel_Virtual() && !miniimage.isDisabled()) {
+		// Only render voids
+		gamefile.mesh.types[rawTypes.VOID]?.model.render(position, scale);
+		return;
+	};
+
+	// We can render everything...
+
+	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
+	if (!movement.isScaleLess1Pixel_Virtual() && isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset)) shiftAll(gamefile);
+
+	// Test if the rotation has changed
+	const correctInverted = perspective.getIsViewingBlackPerspective();
+	if (gamefile.mesh.inverted !== correctInverted) rotateAll(gamefile, correctInverted);
+
 
 	for (const meshData of Object.values(gamefile.mesh.types)) {
 		// Use a custom tint uniform if our theme has custom colors for the players pieces
