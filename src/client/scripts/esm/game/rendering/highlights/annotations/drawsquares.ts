@@ -180,6 +180,5 @@ export default {
 
 	update,
 	updateHighlightsHovered,
-	clearSquares,
 	render,
 };

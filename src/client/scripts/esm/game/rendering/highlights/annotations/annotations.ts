@@ -10,6 +10,7 @@ import drawsquares from "./drawsquares.js";
 import preferences from "../../../../components/header/preferences.js";
 import gameslot from "../../../chess/gameslot.js";
 import jsutil from "../../../../util/jsutil.js";
+import drawarrows from "./drawarrows.js";
 // @ts-ignore
 import input from "../../../input.js";
 
@@ -147,8 +148,9 @@ function render() {
 }
 
 function onGameUnload() {
-	annotes_plies.length = [];
+	annotes_plies.length = 0;
 	clearAnnotes(annotes_linger);
+	drawarrows.stopDrawing();
 }
 
 
