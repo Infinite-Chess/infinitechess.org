@@ -24,16 +24,15 @@ import perspective from "../../perspective.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
+import type { Square } from "./annotations.js";
 
 
 // Variables -----------------------------------------------------------------
 
+
 /** ADDITONAL (not overriding) opacity when hovering over highlights. */
 const hover_opacity = 0.5;
 
-
-/** All highlights currently on the board. */
-const highlights: Coords[] = [];
 /** All highlights currently being hovered over, if zoomed out. */
 const highlightsHovered: Coords[] = [];
 /**
@@ -48,10 +47,42 @@ const highlightsHovered_dists: number[] = [];
 
 
 /**
+ * This is done PRIOR to update(), since that depends on what annotes we're currently hovering over.
+ * @param highlights - All square highlights currently on the board.
+ */
+function updateHighlightsHovered(highlights: Square[]) {
+	highlightsHovered.length = 0;
+	highlightsHovered_dists.length = 0;
+	
+	if (!movement.isScaleLess1Pixel_Virtual() || guipause.areWePaused() || highlights.length === 0) return;
+	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
+
+	// Test if any one highlight is being hovered over
+
+	const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
+
+	const entityHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
+
+	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
+	highlights.forEach(coords => {
+		// const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
+		const coordsWorld = space.convertCoordToWorldSpace(coords);
+		const dist_cheby = math.chebyshevDistance(coordsWorld, mouseWorld);
+		if (dist_cheby < entityHalfWidthWorld) {
+			highlightsHovered.push(coords);
+			// Upgrade the distance to euclidean
+			highlightsHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld));
+		}
+	});
+}
+
+/**
  * Tests if the user has added any new square highlights,
  * or deleted any existing ones.
+ * REQUIRES THE HOVERED HIGHLIGHTS to be updated prior to calling this!
+ * @param highlights - All square highlights currently on the board.
  */
-function update() {
+function update(highlights: Square[]) {
 	// If the pointer simulated a right click, add a highlight!
 	if (input.getPointerClicked_Right()) {
 		const pointerWorld: Coords = input.getPointerWorldLocation() as Coords;
@@ -95,41 +126,11 @@ function update() {
 	}
 }
 
-function updateHighlightsHovered() {
-	highlightsHovered.length = 0;
-	highlightsHovered_dists.length = 0;
-	
-	if (!movement.isScaleLess1Pixel_Virtual() || guipause.areWePaused() || highlights.length === 0) return;
-	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
-
-	// Test if any one highlight is being hovered over
-
-	const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
-
-	const entityHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
-
-	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
-	highlights.forEach(coords => {
-		// const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
-		const coordsWorld = space.convertCoordToWorldSpace(coords);
-		const dist_cheby = math.chebyshevDistance(coordsWorld, mouseWorld);
-		if (dist_cheby < entityHalfWidthWorld) {
-			highlightsHovered.push(coords);
-			// Upgrade the distance to euclidean
-			highlightsHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld));
-		}
-	});
-}
-
-function clearSquares() {
-	highlights.length = 0;
-}
-
 
 // Rendering -----------------------------------------------------------------
 
 
-function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
+function genModel(highlights: Square[], color: Color): BufferModelInstanced {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: number[] = [];
 
@@ -143,7 +144,7 @@ function genModel(highlights: Coords[], color: Color): BufferModelInstanced {
 }
 
 
-function render() {
+function render(highlights: Square[]) {
 	if (highlights.length === 0) return;
 
 	// If we're zoomed out, then the size of the highlights is constant.
@@ -174,12 +175,10 @@ function render() {
 
 
 export default {
-	highlights,
 	highlightsHovered,
 	highlightsHovered_dists,
 
 	update,
 	updateHighlightsHovered,
-	clearSquares,
 	render,
 };

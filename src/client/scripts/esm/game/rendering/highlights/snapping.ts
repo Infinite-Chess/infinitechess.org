@@ -8,6 +8,7 @@
 import miniimage from "../miniimage.js";
 import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
+import annotations from "./annotations/annotations.js";
 // @ts-ignore
 import input from "../../input.js";
 // @ts-ignore
@@ -34,7 +35,7 @@ function isHoveringAtleastOneEntity() {
 }
 
 function updateEntitiesHovered() {
-	drawsquares.updateHighlightsHovered();
+	drawsquares.updateHighlightsHovered(annotations.getSquares());
 	miniimage.updateImagesHovered(); // This updates hovered images at the same time
 
 	// Test if clicked (teleport to all hovered entities)
