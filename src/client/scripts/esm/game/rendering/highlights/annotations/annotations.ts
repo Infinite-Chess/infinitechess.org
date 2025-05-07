@@ -17,6 +17,7 @@ import input from "../../../input.js";
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Vec2 } from "../../../../util/math.js";
+import gameloader from "../../../chess/gameloader.js";
 
 
 // Type Definitions ------------------------------------------------------------
@@ -102,6 +103,7 @@ function getRelevantAnnotes(): Annotes {
 
 /** Event listener for when we change the Lingering Annotations mode */
 document.addEventListener('lingering-annotations-toggle', (e: CustomEvent) => {
+	if (!gameloader.areInAGame()) return;
 	const enabled: boolean = e.detail;
 	const ply = gameslot.getGamefile()!.state.local.moveIndex;
 	if (enabled) { /** Transfer annotes from the ply to {@link annotes_linger} */ 

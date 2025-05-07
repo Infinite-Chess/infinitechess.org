@@ -68,7 +68,6 @@ function update(arrows: Arrow[]) {
 		if (input.isMouseHeld_Right()) {
 			const pointerWorld = input.getPointerWorldLocation() as Coords;
 			drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
-			console.log('drag_start:', drag_start);
 		}
 	} else { // Currently drawing an arrow
 		// Test if mouse released (finalize arrow)
