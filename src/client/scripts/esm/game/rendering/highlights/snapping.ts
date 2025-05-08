@@ -11,16 +11,27 @@ import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
 import math, { Vec2 } from "../../../util/math.js";
+import gameslot from "../../chess/gameslot.js";
+import boardutil from "../../../chess/util/boardutil.js";
+import gamefileutility from "../../../chess/util/gamefileutility.js";
+import { createModel } from "../buffermodel.js";
+import spritesheet from "../spritesheet.js";
 // @ts-ignore
 import input from "../../input.js";
 // @ts-ignore
 import transition from "../transition.js";
+// @ts-ignore
+import movement from "../movement.js";
+// @ts-ignore
+import perspective from "../perspective.js";
+// @ts-ignore
+import board from "../board.js";
+// @ts-ignore
+import bufferdata from "../bufferdata.js";
 
 
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { Line } from "./highlightline.js";
-import gameslot from "../../chess/gameslot.js";
-import board from "../board.js";
 
 
 // Variables --------------------------------------------------------------
@@ -33,11 +44,16 @@ const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 36
 const SNAPPING_DIST: number = 1.0; // Default: 1.0
 
 
+const GHOST_IMAGE_OPACITY = 1;
+
+
 /** The current point the mouse is snapped to this frame, if it is. */
 let snap: {
 	coords: Coords,
-	/** The source that eminated the line we are snapping to. */
-	source: Coords
+	/** The type of piece to render at the snap point, if applicable */
+	type?: number,
+	/** The source that eminated the line we are snapping to, if we are snapping. */
+	source?: Coords,
 } | undefined;
 
 
@@ -108,6 +124,7 @@ function updateEntitiesHovered() {
 function updateSnapping() {
 	snap = undefined;
 
+	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
 	const selectedPieceLegalMovesLines = selectedpiecehighlightline.lines;
 	if (selectedPieceLegalMovesLines.length === 0) return; // No lines to have snap
@@ -141,19 +158,53 @@ function updateSnapping() {
 	 * existing lines, calculating what we should snap to.
 	 */
 
-	const allPrimitiveSlidesInGame = gameslot.getGamefile()!.pieces.slides.filter(vector => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
+	const gamefile = gameslot.getGamefile()!;
+	const allPrimitiveSlidesInGame = gamefile.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
+
 
 	// 1. Intersections of Rays (TODO)
+	// ...
 
 
 	// 2. Square Annotes
 
-
 	const squares = annotations.getSquares();
+	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, allPrimitiveSlidesInGame);
+	if (closestSquareSnap) {
+		snap = closestSquareSnap;
+		return;
+	}
 
-	let closestSquareSnap: { coords: Coords, dist: number, source: Coords } | undefined;
+	// 3. Pieces
 
-	for (const s of squares) {
+	const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
+	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, allPrimitiveSlidesInGame);
+	if (closestPieceSnap) {
+		snap = closestPieceSnap;
+		return;
+	}
+	
+	// 4. Origin (Center of Play)
+
+	const startingBox = gamefileutility.getStartingAreaBox(gamefile);
+	const origin = math.calcCenterOfBoundingBox(startingBox);
+	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, mouseCoords, allPrimitiveSlidesInGame);
+	if (closestOriginSnap) {
+		snap = closestOriginSnap;
+		return;
+	}
+
+	// No snap found!
+
+	// Instead, set the snap to the closest point on the line.
+	snap = { coords: closestSnap.snapPoint.coords };
+}
+
+function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, snapPoint: { coords: Coords, distance: number }}[], mouseCoords: Coords, allPrimitiveSlidesInGame: Vec2[]): { coords: Coords, dist: number, source: Coords, type?: number } | undefined {
+	
+	let closestEntitySnap: { coords: Coords, dist: number, source: Coords, type: number } | undefined;
+
+	for (const s of entities) {
 		const eminatingLines = getLinesEminatingFromPoint(s, allPrimitiveSlidesInGame);
 
 		// Calculate their intersections with each individual line close to the mouse
@@ -166,30 +217,65 @@ function updateSnapping() {
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
 				const dist = math.euclideanDistance(intersection, mouseCoords);
-				if (closestSquareSnap === undefined || dist < closestSquareSnap.dist) closestSquareSnap = { coords: intersection, dist, source: [...s] };
+				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) closestEntitySnap = { coords: intersection, dist, type: highlightLine.line.piece, source: [...s] };
 			}
 		}
 	}
 
-	if (closestSquareSnap) {
-		snap = { coords: closestSquareSnap.coords, source: closestSquareSnap.source };
+	if (closestEntitySnap) {
 		// Teleport if clicked
 		if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap]);
-		return; // Nothing below takes snapping priority over Squares
+		return closestEntitySnap; // Nothing below takes snapping priority over Squares
 	}
 
-
-	// 3. Pieces
-
-
-	
-
-
-	// 4. Origin (Center of Play)
+	return undefined; // No snap found
 }
 
 function getLinesEminatingFromPoint(coords: Coords, allLinesInGame: Vec2[]): [number, number, number][] {
 	return allLinesInGame.map(l => math.getLineGeneralFormFromCoordsAndVec(coords, l));
+}
+
+
+// Rendering --------------------------------------------------------------
+
+
+/**
+ * Snapping is in charge of rendering either a glow dot on the snap point,
+ * or a mini image of a piece on the legal move line.
+ */
+function render() {
+	if (snap === undefined) return; // No snap to render
+	if (snap.type === undefined) {
+		// Render glow dot
+		// ...
+	} else {
+		// Render mini image of piece
+		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
+		const model = generateGhostImageModel(snap.type, coordsWorld);
+		model.render();
+	}
+}
+
+function generateGhostImageModel(type: number, coords: Coords) {
+
+	const dataGhost: number[] = [];
+
+	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
+
+	const entityWorldWidth = getEntityWidthWorld();
+	const halfWidth = entityWorldWidth / 2;
+
+	const startX = coords[0] - halfWidth;
+	const startY = coords[1] - halfWidth;
+	const endX = startX + entityWorldWidth;
+	const endY = startY + entityWorldWidth;
+
+	const data = bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, GHOST_IMAGE_OPACITY);
+
+	dataGhost.push(...data);
+	
+	return createModel(dataGhost, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
 }
 
 
@@ -205,4 +291,5 @@ export default {
 	updateEntitiesHovered,
 
 	updateSnapping,
+	render,
 };
