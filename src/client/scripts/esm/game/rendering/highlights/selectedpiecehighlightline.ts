@@ -38,7 +38,7 @@ function update() {
 	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (!selection.isAPieceSelected()) return;
 
-    const pieceSelected = selection.getPieceSelected()!;
+	const pieceSelected = selection.getPieceSelected()!;
 	const pieceCoords = pieceSelected.coords;
 	// const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
 	const legalmoves = selection.getLegalMovesOfSelectedPiece()!; // CAREFUL not to modify!
@@ -50,30 +50,30 @@ function update() {
 
 	const a = perspective.distToRenderBoard / movement.getBoardScale();
 	let boundingBox: BoundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
-    console.log("Bounding box2:", boundingBox);
+	console.log("Bounding box2:", boundingBox);
 
 
 	for (const strline in legalmoves.sliding) {
-        const slideKey = strline as CoordsKey;
+		const slideKey = strline as CoordsKey;
 		const line = coordutil.getCoordsFromKey(slideKey);
 		const lineIsVertical = line[0] === 0;
 
 		const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox).map(intersection => intersection.coords);
-        if (intersectionPoints.length < 2) continue;
+		if (intersectionPoints.length < 2) continue;
         
 		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], line, false);
 		// const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
 		const start = clampPointToSlideLimit(intersectionPoints[0], leftLimitPointCoord, false, lineIsVertical);
 
 		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], line, true);
-        console.log("Is this infinite?", rightLimitPointCoord)
+		console.log("Is this infinite?", rightLimitPointCoord)
 		// const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
 		const end = clampPointToSlideLimit(intersectionPoints[1], rightLimitPointCoord, true, lineIsVertical);
-        console.log("Right capped:", end);
+		console.log("Right capped:", end);
 
-        const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, line);
+		const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, line);
 
-        lines.push({ start, end, coefficients, color, piece: pieceSelected.type });
+		lines.push({ start, end, coefficients, color, piece: pieceSelected.type });
 	};
 }
 
@@ -99,16 +99,16 @@ function clampPointToSlideLimit(point: Coords, slideLimit: Coords, positive: boo
 
 
 function render() {
-    // Early exit if no lines this frame
-    if (lines.length === 0) return;
+	// Early exit if no lines this frame
+	if (lines.length === 0) return;
 
-    highlightline.genLinesModel(lines).render();
+	highlightline.genLinesModel(lines).render();
 }
 
 
 export default {
-    lines,
+	lines,
 
 	update,
-    render,
+	render,
 }

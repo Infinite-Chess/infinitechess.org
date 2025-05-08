@@ -5,16 +5,9 @@
  */
 
 // Import Start
-import bufferdata from '../bufferdata.js';
-import perspective from '../perspective.js';
-import board from '../board.js';
-import transition from '../transition.js';
 import selection from '../../chess/selection.js';
-import camera from '../camera.js';
 import math, { Color } from '../../../util/math.js';
 import { createModel } from '../buffermodel.js';
-import jsutil from '../../../util/jsutil.js';
-import coordutil, { Coords } from '../../../chess/util/coordutil.js';
 import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
@@ -24,7 +17,21 @@ import { Mouse } from '../../input.js';
 import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
 import snapping from './snapping.js';
-// Import End
+// @ts-ignore
+import input from '../../input.js';
+// @ts-ignore
+import bufferdata from '../bufferdata.js';
+// @ts-ignore
+import perspective from '../perspective.js';
+// @ts-ignore
+import board from '../board.js';
+// @ts-ignore
+import transition from '../transition.js';
+// @ts-ignore
+import movement from '../movement.js';
+
+
+import type { Coords } from '../../../chess/util/coordutil.js';
 
 /**
  * Type Definitions

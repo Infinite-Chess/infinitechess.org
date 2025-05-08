@@ -50,8 +50,6 @@ import webgl from '../rendering/webgl.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
 // @ts-ignore
-import highlightline from '../rendering/highlights/highlightline.js';
-// @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
