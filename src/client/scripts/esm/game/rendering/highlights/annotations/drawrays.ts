@@ -29,8 +29,8 @@ import type { Ray } from "./annotations.js";
 
 
 const ATTRIB_INFO: AttributeInfoInstanced = {
-    vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
-    instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
+	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
+	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
 }
 
 
@@ -54,8 +54,8 @@ let drag_start: Coords | undefined;
  */
 function update(rays: Ray[]) {
 	if (!drag_start) {
-        // Test if double click drag (start drawing ray)
-        if (false) { // Double click drag this frame
+		// Test if double click drag (start drawing ray)
+		if (false) { // Double click drag this frame
 			const pointerWorld = input.getPointerWorldLocation() as Coords;
 			if (movement.isScaleLess1Pixel_Virtual() && snapping.isHoveringAtleastOneEntity()) {
 				// Snap to nearest hovered entity
@@ -65,14 +65,14 @@ function update(rays: Ray[]) {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			}
-            console.log("Ray drag start:", drag_start);
-        }
+			console.log("Ray drag start:", drag_start);
+		}
 	} else { // Currently drawing a ray
 		// Test if mouse released (finalize ray)
-        if (!input.isMouseHeld_Right() && !input.getPointerClicked_Right()) { // Prevents accidentally ray drawing if we intend to draw square
-            addDrawnRay(rays);
+		if (!input.isMouseHeld_Right() && !input.getPointerClicked_Right()) { // Prevents accidentally ray drawing if we intend to draw square
+			addDrawnRay(rays);
 			drag_start = undefined; // Reset drawing
-        }
+		}
 	}
 }
 
@@ -90,53 +90,53 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// Skip if end equals start (no arrow drawn)
 	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { added: false };
 
-    const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
-    const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.pieces.hippogonalsPresent);
-    const line = math.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
+	const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
+	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.pieces.hippogonalsPresent);
+	const line = math.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 
-    let deletedRays: Ray[] = [];
+	let deletedRays: Ray[] = [];
 
 	// If any existing rays are coincident, remove those.
 	for (let i = rays.length - 1; i >= 0; i--) { // Iterate backwards since we're modifying the list as we go
 		const ray = rays[i]!;
-        if (!coordutil.areCoordsEqual_noValidate(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
-        if (coordutil.areCoordsEqual_noValidate(ray.vector, vector)) {
-            // Identical, erase the existing one instead.
+		if (!coordutil.areCoordsEqual_noValidate(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
+		if (coordutil.areCoordsEqual_noValidate(ray.vector, vector)) {
+			// Identical, erase the existing one instead.
 			rays.splice(i, 1); // Remove the existing ray
-            deletedRays.push(ray);
-            console.log("Erasing ray.");
-            return { added: false, deletedRays };
-        }
-        const line2 = ray.line;
-        if (math.areLinesInGeneralFormEqual(line, line2)) { // Coincident
-            // Calculate the dot product the ray's vectors.
-            // If it's positive, they point in the same direction, otherwise opposite.
-            const dotProd = math.dotProduct(vector, ray.vector);
-            if (dotProd > 0) { // Positive, they point in same direction
-                // Which one is contained in the other?
-                const vecToComparingRayStart = coordutil.subtractCoordinates(ray.start, drag_start!);
-                const dotProd2 = math.dotProduct(vector, vecToComparingRayStart);
-                if (dotProd2 > 0) { // Positive = comparing ray is contained within the new ray
-                    // Remove this comparing ray in favor of the new one
-                    rays.splice(i, 1);
-                    deletedRays.push(ray);
-                    console.log("Removed ray in favor of new.");
-                } else { // Skip adding the new one (it already exists contained in this comparing one)
-                    console.log("Ray is already contained in another.");
-                    if (deletedRays.length > 0) throw Error("Should not be any rays deleted if ray to be added is contained within another!");
-                    return { added: false };
-                }
-            } else { // Negative, they point in opposite directions
-                // Keep both
-                console.log("Rays point in opposite directions.");
-            }
-        }
+			deletedRays.push(ray);
+			console.log("Erasing ray.");
+			return { added: false, deletedRays };
+		}
+		const line2 = ray.line;
+		if (math.areLinesInGeneralFormEqual(line, line2)) { // Coincident
+			// Calculate the dot product the ray's vectors.
+			// If it's positive, they point in the same direction, otherwise opposite.
+			const dotProd = math.dotProduct(vector, ray.vector);
+			if (dotProd > 0) { // Positive, they point in same direction
+				// Which one is contained in the other?
+				const vecToComparingRayStart = coordutil.subtractCoordinates(ray.start, drag_start!);
+				const dotProd2 = math.dotProduct(vector, vecToComparingRayStart);
+				if (dotProd2 > 0) { // Positive = comparing ray is contained within the new ray
+					// Remove this comparing ray in favor of the new one
+					rays.splice(i, 1);
+					deletedRays.push(ray);
+					console.log("Removed ray in favor of new.");
+				} else { // Skip adding the new one (it already exists contained in this comparing one)
+					console.log("Ray is already contained in another.");
+					if (deletedRays.length > 0) throw Error("Should not be any rays deleted if ray to be added is contained within another!");
+					return { added: false };
+				}
+			} else { // Negative, they point in opposite directions
+				// Keep both
+				console.log("Rays point in opposite directions.");
+			}
+		}
 	}
 
 	// Add the ray
-    const ray = { start: drag_start!, vector, line };
+	const ray = { start: drag_start!, vector, line };
 	rays.push(ray);
-    console.log("Added ray:", ray);
+	console.log("Added ray:", ray);
 	return { added: true, deletedRays };
 }
 
@@ -145,34 +145,34 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
  * This helps us snap the ray's direction to a slide direction in the game.
  */
 function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: boolean): Coords {
-    const targetAngle = Math.atan2(targetVector[1], targetVector[0]);
+	const targetAngle = Math.atan2(targetVector[1], targetVector[0]);
 
-    const searchVectors: Coords[] = searchHippogonals ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
+	const searchVectors: Coords[] = searchHippogonals ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
 
-    let minAbsoluteAngleDifference = Infinity;
-    // Initialize with the first vector
-    let closestVector: Coords = searchVectors[0]!; 
+	let minAbsoluteAngleDifference = Infinity;
+	// Initialize with the first vector
+	let closestVector: Coords = searchVectors[0]!; 
 
-    for (const predefinedVector of searchVectors) {
-        const angle = Math.atan2(predefinedVector[1], predefinedVector[0]);
-        // Calculate the difference in angles
-        let angleDifferenceRad = targetAngle - angle;
+	for (const predefinedVector of searchVectors) {
+		const angle = Math.atan2(predefinedVector[1], predefinedVector[0]);
+		// Calculate the difference in angles
+		let angleDifferenceRad = targetAngle - angle;
 
-        // Normalize angleDifferenceRad to the shortest signed angle in the range [-PI, PI].
-        // This ensures that angles like -179 deg and 179 deg are considered close (2 deg diff), not far (358 deg diff).
-        // Example: diff = 350 deg (almost 2PI). Normalized: -10 deg.
-        //          diff = -350 deg. Normalized: 10 deg.
-        angleDifferenceRad = angleDifferenceRad - (2 * Math.PI) * Math.round(angleDifferenceRad / (2 * Math.PI));
+		// Normalize angleDifferenceRad to the shortest signed angle in the range [-PI, PI].
+		// This ensures that angles like -179 deg and 179 deg are considered close (2 deg diff), not far (358 deg diff).
+		// Example: diff = 350 deg (almost 2PI). Normalized: -10 deg.
+		//          diff = -350 deg. Normalized: 10 deg.
+		angleDifferenceRad = angleDifferenceRad - (2 * Math.PI) * Math.round(angleDifferenceRad / (2 * Math.PI));
         
-        const currentAbsoluteAngleDifference = Math.abs(angleDifferenceRad);
+		const currentAbsoluteAngleDifference = Math.abs(angleDifferenceRad);
 
-        if (currentAbsoluteAngleDifference < minAbsoluteAngleDifference) {
-            minAbsoluteAngleDifference = currentAbsoluteAngleDifference;
-            closestVector = predefinedVector;
-        }
-    }
+		if (currentAbsoluteAngleDifference < minAbsoluteAngleDifference) {
+			minAbsoluteAngleDifference = currentAbsoluteAngleDifference;
+			closestVector = predefinedVector;
+		}
+	}
 
-    return closestVector;
+	return closestVector;
 }
 
 
@@ -184,36 +184,36 @@ function render(rays: Ray[]) {
 	// Add the ray currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
 
-    // Early exit if no rays to draw
-    if (rays.length === 0) return;
+	// Early exit if no rays to draw
+	if (rays.length === 0) return;
 
-    if (movement.isScaleLess1Pixel_Virtual()) {
+	if (movement.isScaleLess1Pixel_Virtual()) {
 
         
 
-    } else {
-        // Construct the data
-        const color = preferences.getAnnoteSquareColor();
-        const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-        const instanceData = legalmovehighlights.genData_Rays(rays);
-        const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
+	} else {
+		// Construct the data
+		const color = preferences.getAnnoteSquareColor();
+		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+		const instanceData = legalmovehighlights.genData_Rays(rays);
+		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
     
-        // Render
-        const boardPos: Coords = movement.getBoardPos();
-        const model_Offset: Coords = legalmovehighlights.getOffset();
-        const position: [number,number,number] = [
+		// Render
+		const boardPos: Coords = movement.getBoardPos();
+		const model_Offset: Coords = legalmovehighlights.getOffset();
+		const position: [number,number,number] = [
             -boardPos[0] + model_Offset[0], // Add the model's offset
             -boardPos[1] + model_Offset[1],
             0
         ];
-        const boardScale: number = movement.getBoardScale();
-        const scale: [number,number,number] = [boardScale, boardScale, 1];
-        model.render(position, scale);
-    }
+		const boardScale: number = movement.getBoardScale();
+		const scale: [number,number,number] = [boardScale, boardScale, 1];
+		model.render(position, scale);
+	}
 
 	// Remove the ray currently being drawn
-    if (drawingCurrentlyDrawn.added) rays.pop();
-    if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays); // Restore the deleted rays if any
+	if (drawingCurrentlyDrawn.added) rays.pop();
+	if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays); // Restore the deleted rays if any
 }
 
 
