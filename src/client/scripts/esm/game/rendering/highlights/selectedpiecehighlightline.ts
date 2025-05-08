@@ -47,7 +47,6 @@ function update() {
 
 	const a = perspective.distToRenderBoard / movement.getBoardScale();
 	const boundingBox: BoundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
-	console.log("Bounding box2:", boundingBox);
 
 
 	for (const strline in legalmoves.sliding) {
@@ -63,10 +62,8 @@ function update() {
 		const start = clampPointToSlideLimit(intersectionPoints[0]!, leftLimitPointCoord, false, lineIsVertical);
 
 		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], line, true);
-		console.log("Is this infinite?", rightLimitPointCoord);
 		// const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
 		const end = clampPointToSlideLimit(intersectionPoints[1]!, rightLimitPointCoord, true, lineIsVertical);
-		console.log("Right capped:", end);
 
 		const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, line);
 
