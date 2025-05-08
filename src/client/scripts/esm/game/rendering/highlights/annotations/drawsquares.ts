@@ -111,6 +111,8 @@ function update(highlights: Square[]) {
 			}
 			else highlights.push(closestEntity.coords); // Add
 		}
+		// Claim the click so other scripts don't also use it
+		input.removeMouseDown_Left(); // CHANGE TO RIGHTTTTTT
 	}
 }
 
@@ -133,6 +135,7 @@ function genModel(highlights: Square[], color: Color): BufferModelInstanced {
 
 
 function render(highlights: Square[]) {
+	// Early exit if no squares to draw
 	if (highlights.length === 0) return;
 
 	// If we're zoomed out, then the size of the highlights is constant.
@@ -142,7 +145,6 @@ function render(highlights: Square[]) {
 	const color = preferences.getAnnoteSquareColor();
 
 	genModel(highlights, color).render(undefined, undefined, { size });
-	// webgl.executeWithDepthFunc_ALWAYS(genModel(highlights, color).render(undefined, undefined, { size }));
 
 	// Render hovered highlights
 	if (highlightsHovered.length > 0) {
@@ -154,7 +156,6 @@ function render(highlights: Square[]) {
 			hover_opacity
 		] as Color;
 		genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size });
-		// webgl.executeWithDepthFunc_ALWAYS(genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size }));
 	}
 }
 
