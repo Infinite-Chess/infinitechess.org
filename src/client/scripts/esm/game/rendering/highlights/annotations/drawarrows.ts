@@ -131,17 +131,17 @@ function stopDrawing() {
 
 function render(arrows: Arrow[]) {
 	// Add the arrow currently being drawn
-	const drawingCurrentlyDrawn = drag_start ? addDrawnArrow(arrows) : { changed: false};
+	const drawingCurrentlyDrawn = drag_start ? addDrawnArrow(arrows) : { changed: false };
 
 	// Early exit if no arrows to draw
-	if (arrows.length === 0) return;
-
-	// Construct the data
-	const color = preferences.getAnnoteArrowColor();
-	const data: number[] = arrows.flatMap(arrow => getDataArrow(arrow, color));
-
-	// Render
-	createModel(data, 2, 'TRIANGLES', true).render(); // No transform needed
+	if (arrows.length > 0) {
+		// Construct the data
+		const color = preferences.getAnnoteArrowColor();
+		const data: number[] = arrows.flatMap(arrow => getDataArrow(arrow, color));
+	
+		// Render
+		createModel(data, 2, 'TRIANGLES', true).render(); // No transform needed
+	}
 
 	// Remove the arrow currently being drawn
 	if (drawingCurrentlyDrawn.changed) {
