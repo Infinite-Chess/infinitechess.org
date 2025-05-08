@@ -6,11 +6,10 @@
 
 
 import preferences from "../../../components/header/preferences.js";
-import jsutil from "../../../util/jsutil.js";
 import selection from "../../chess/selection.js";
-import space from "../../misc/space.js";
 import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
 import math from "../../../util/math.js";
+import highlightline from "./highlightline.js";
 // @ts-ignore
 import perspective from "../perspective.js";
 // @ts-ignore
@@ -18,13 +17,11 @@ import movement from "../movement.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
-import camera from "../camera.js";
+import board from "../board.js";
 
 
 import type { Line } from "./highlightline.js";
 import type { BoundingBox, Vec2 } from "../../../util/math.js";
-import highlightline from "./highlightline.js";
-import board from "../board.js";
 
 
 
@@ -49,7 +46,7 @@ function update() {
 
 
 	const a = perspective.distToRenderBoard / movement.getBoardScale();
-	let boundingBox: BoundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
+	const boundingBox: BoundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
 	console.log("Bounding box2:", boundingBox);
 
 
@@ -63,12 +60,12 @@ function update() {
         
 		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], line, false);
 		// const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
-		const start = clampPointToSlideLimit(intersectionPoints[0], leftLimitPointCoord, false, lineIsVertical);
+		const start = clampPointToSlideLimit(intersectionPoints[0]!, leftLimitPointCoord, false, lineIsVertical);
 
 		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], line, true);
-		console.log("Is this infinite?", rightLimitPointCoord)
+		console.log("Is this infinite?", rightLimitPointCoord);
 		// const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
-		const end = clampPointToSlideLimit(intersectionPoints[1], rightLimitPointCoord, true, lineIsVertical);
+		const end = clampPointToSlideLimit(intersectionPoints[1]!, rightLimitPointCoord, true, lineIsVertical);
 		console.log("Right capped:", end);
 
 		const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, line);
@@ -111,4 +108,4 @@ export default {
 
 	update,
 	render,
-}
+};

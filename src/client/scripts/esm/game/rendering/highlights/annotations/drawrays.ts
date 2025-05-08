@@ -13,7 +13,7 @@ import space from "../../../misc/space.js";
 import math, { Vec2 } from "../../../../util/math.js";
 import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
-import { AttributeInfoInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
+import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import gameslot from "../../../chess/gameslot.js";
 // @ts-ignore
 import input from "../../../input.js";
@@ -28,10 +28,16 @@ import type { Ray } from "./annotations.js";
 // Variables -----------------------------------------------------------------
 
 
+/** All vectors we are gauranteed to be able to draw Rays on. */
+const VECTORS: Coords[] = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+/** {@link VECTORS} but with hippogonals as well. */
+const VECTORS_HIPPOGONAL: Coords[] = [[1,2],[-1,2],[1,-2],[-1,-2],[2,1],[-2,1],[2,-1],[-2,-1]];
+
+
 const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
 	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
-}
+};
 
 
 /** This will be defined if we are CURRENTLY drawing a ray. */
@@ -85,7 +91,7 @@ function update(rays: Ray[]) {
  */
 function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	const pointerWorld = input.getPointerWorldLocation() as Coords;
-	let drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 	// Skip if end equals start (no arrow drawn)
 	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { added: false };
@@ -94,7 +100,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.pieces.hippogonalsPresent);
 	const line = math.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 
-	let deletedRays: Ray[] = [];
+	const deletedRays: Ray[] = [];
 
 	// If any existing rays are coincident, remove those.
 	for (let i = rays.length - 1; i >= 0; i--) { // Iterate backwards since we're modifying the list as we go
