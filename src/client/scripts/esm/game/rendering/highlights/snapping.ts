@@ -148,11 +148,11 @@ function updateSnapping() {
 	}
 
 	// const snapDistWorld = SNAPPING_DIST * getEntityWidthWorld() / 2;
-	const snapDistWorld = SNAPPING_DIST / (2 * movement.getBoardScale());
-	if (closestSnap.snapPoint.distance > snapDistWorld) return; // No line close enough for the mouse to snap to anything
+	const snapDistCoords = SNAPPING_DIST / (2 * movement.getBoardScale());
+	if (closestSnap.snapPoint.distance > snapDistCoords) return; // No line close enough for the mouse to snap to anything
 
 	// Filter out lines which the mouse is too far away from
-	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistWorld);
+	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistCoords);
 
 	/**
 	 * Next, eminate lines in all directions from each entity, seeing where they cross
@@ -173,8 +173,7 @@ function updateSnapping() {
 	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, allPrimitiveSlidesInGame);
 	if (closestSquareSnap) {
 		// Is the snap within snapping distance of the mouse?
-		const distWorld = closestSquareSnap.dist * movement.getBoardScale();
-		if (closestSquareSnap.dist < distWorld) {
+		if (closestSquareSnap.dist < snapDistCoords) {
 			snap = closestSquareSnap;
 			// Teleport if clicked
 			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
@@ -188,8 +187,8 @@ function updateSnapping() {
 	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, allPrimitiveSlidesInGame);
 	if (closestPieceSnap) {
 		// Is the snap within snapping distance of the mouse?
-		const distWorld = closestPieceSnap.dist * movement.getBoardScale();
-		if (closestPieceSnap.dist < distWorld) {
+		if (closestPieceSnap.dist < snapDistCoords) {
+			console.log(2);
 			snap = closestPieceSnap;
 			// Teleport if clicked
 			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
@@ -204,8 +203,7 @@ function updateSnapping() {
 	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, mouseCoords, allPrimitiveSlidesInGame);
 	if (closestOriginSnap) {
 		// Is the snap within snapping distance of the mouse?
-		const distWorld = closestOriginSnap.dist * movement.getBoardScale();
-		if (closestOriginSnap.dist < distWorld) {
+		if (closestOriginSnap.dist < snapDistCoords) {
 			snap = closestOriginSnap;
 			// Teleport if clicked
 			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
@@ -236,14 +234,18 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, 
 				if (intersection === undefined) continue;
 				// They DO intersect.
 				const dist = math.euclideanDistance(intersection, mouseCoords);
+				// if (s[0] === 2000) console.log(dist);
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
-				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) closestEntitySnap = { coords: intersection, dist, type: highlightLine.line.piece, source: [...s] };
+				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) {
+					// if (s[0] === 2000) console.log("Found closer snap:", intersection, dist, highlightLine.line.piece, [...s]);
+					closestEntitySnap = { coords: intersection, dist, type: highlightLine.line.piece, source: [...s] };
+				}
 			}
 		}
 	}
 
-	return undefined; // No snap found
+	return closestEntitySnap;
 }
 
 function getLinesEminatingFromPoint(coords: Coords, allLinesInGame: Vec2[]): [number, number, number][] {
@@ -260,6 +262,20 @@ function getLinesEminatingFromPoint(coords: Coords, allLinesInGame: Vec2[]): [nu
  */
 function render() {
 	if (snap === undefined) return; // No snap to render
+
+	// Render a single gray line between the snap point and its source
+	if (snap.source !== undefined) {
+		const [r,g,b,a] = [0, 0, 1, 0.3];
+		const start = space.convertCoordToWorldSpace(snap.source);
+		const end = space.convertCoordToWorldSpace(snap.coords);
+		const data = [
+			//   Vertex              Color
+			start[0], start[1],   r, g, b, a,
+			end[0], end[1],       r, g, b, a
+		];
+		createModel(data, 2, 'LINES', true).render();
+	}
+
 	if (snap.type === undefined) {
 		// Render glow dot
 		// ...

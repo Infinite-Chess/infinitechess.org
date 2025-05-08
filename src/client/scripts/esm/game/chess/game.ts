@@ -29,14 +29,12 @@ import controls from '../misc/controls.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
-import miniimage from '../rendering/miniimage.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import piecemodels from '../rendering/piecemodels.js';
+import miniimage from '../rendering/miniimage.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
-// @ts-ignore
-import invites from '../misc/invites.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -176,8 +174,8 @@ function render() {
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		highlights.render(gamefile);
 		selectedpiecehighlightline.render();
+		highlights.render(gamefile);
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
