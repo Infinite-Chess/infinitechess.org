@@ -28,7 +28,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import piecemodels from '../rendering/piecemodels.js'
+import piecemodels from '../rendering/piecemodels.js';
 import { CreateInputListener, InputListener, Mouse } from '../input2.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import miniimage from '../rendering/miniimage.js';
@@ -207,8 +207,8 @@ function render() {
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		highlights.render(gamefile);
 		selectedpiecehighlightline.render();
+		highlights.render(gamefile);
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
