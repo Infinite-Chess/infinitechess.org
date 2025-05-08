@@ -112,7 +112,7 @@ function update(highlights: Square[]) {
 			else highlights.push(closestEntity.coords); // Add
 		}
 		// Claim the click so other scripts don't also use it
-		input.removeMouseDown_Left(); // CHANGE TO RIGHTTTTTT
+		// input.getPointerClicked(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 }
 

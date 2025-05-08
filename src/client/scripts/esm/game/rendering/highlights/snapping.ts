@@ -147,7 +147,8 @@ function updateSnapping() {
 		if (lineSnapPoint.snapPoint.distance < closestSnap.snapPoint.distance) closestSnap = lineSnapPoint;
 	}
 
-	const snapDistWorld = SNAPPING_DIST * getEntityWidthWorld() / 2;
+	// const snapDistWorld = SNAPPING_DIST * getEntityWidthWorld() / 2;
+	const snapDistWorld = SNAPPING_DIST / (2 * movement.getBoardScale());
 	if (closestSnap.snapPoint.distance > snapDistWorld) return; // No line close enough for the mouse to snap to anything
 
 	// Filter out lines which the mouse is too far away from
@@ -171,8 +172,14 @@ function updateSnapping() {
 	const squares = annotations.getSquares();
 	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, allPrimitiveSlidesInGame);
 	if (closestSquareSnap) {
-		snap = closestSquareSnap;
-		return;
+		// Is the snap within snapping distance of the mouse?
+		const distWorld = closestSquareSnap.dist * movement.getBoardScale();
+		if (closestSquareSnap.dist < distWorld) {
+			snap = closestSquareSnap;
+			// Teleport if clicked
+			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+			return;
+		}
 	}
 
 	// 3. Pieces
@@ -180,8 +187,14 @@ function updateSnapping() {
 	const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
 	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, allPrimitiveSlidesInGame);
 	if (closestPieceSnap) {
-		snap = closestPieceSnap;
-		return;
+		// Is the snap within snapping distance of the mouse?
+		const distWorld = closestPieceSnap.dist * movement.getBoardScale();
+		if (closestPieceSnap.dist < distWorld) {
+			snap = closestPieceSnap;
+			// Teleport if clicked
+			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+			return;
+		}
 	}
 	
 	// 4. Origin (Center of Play)
@@ -190,14 +203,22 @@ function updateSnapping() {
 	const origin = math.calcCenterOfBoundingBox(startingBox);
 	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, mouseCoords, allPrimitiveSlidesInGame);
 	if (closestOriginSnap) {
-		snap = closestOriginSnap;
-		return;
+		// Is the snap within snapping distance of the mouse?
+		const distWorld = closestOriginSnap.dist * movement.getBoardScale();
+		if (closestOriginSnap.dist < distWorld) {
+			snap = closestOriginSnap;
+			// Teleport if clicked
+			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+			return;
+		}
 	}
 
 	// No snap found!
 
 	// Instead, set the snap to the closest point on the line.
-	snap = { coords: closestSnap.snapPoint.coords };
+	snap = { coords: closestSnap.snapPoint.coords, type: closestSnap.line.piece };
+	// Teleport if clicked
+	if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
 }
 
 function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, snapPoint: { coords: Coords, distance: number }}[], mouseCoords: Coords, allPrimitiveSlidesInGame: Vec2[]): { coords: Coords, dist: number, source: Coords, type?: number } | undefined {
@@ -214,18 +235,12 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, 
 				const intersection = math.calcIntersectionPointOfLines(...eminatedLine, ...highlightLine.line.coefficients);
 				if (intersection === undefined) continue;
 				// They DO intersect.
+				const dist = math.euclideanDistance(intersection, mouseCoords);
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
-				const dist = math.euclideanDistance(intersection, mouseCoords);
 				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) closestEntitySnap = { coords: intersection, dist, type: highlightLine.line.piece, source: [...s] };
 			}
 		}
-	}
-
-	if (closestEntitySnap) {
-		// Teleport if clicked
-		if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap]);
-		return closestEntitySnap; // Nothing below takes snapping priority over Squares
 	}
 
 	return undefined; // No snap found

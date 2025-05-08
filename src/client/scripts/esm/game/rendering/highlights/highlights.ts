@@ -31,8 +31,6 @@ import type gamefile from "../../../chess/logic/gamefile";
  * Outline of highlights render box
  */
 function render(gamefile: gamefile) {
-	selectedpiecehighlightline.render();
-
 	if (!movement.isScaleLess1Pixel_Virtual()) { // Zoomed in
 		highlightLastMove(gamefile);
 		checkhighlight.render(gamefile);
