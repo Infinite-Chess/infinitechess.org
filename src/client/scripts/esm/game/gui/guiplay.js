@@ -260,7 +260,7 @@ function callback_createInvite() {
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
 			Variant: inviteOptions.variant,
 			youAreColor: ourColor,
-			currentEngine: "engineCheckmatePractice",
+			currentEngine: "hydrochess",
 			// engineConfig: { engineTimeLimitPerMoveMillis: 4000 }, // 4 seconds of think time
 			engineConfig: { engineTimeLimitPerMoveMillis: 500 }, // Half a second for dev testing
 		});

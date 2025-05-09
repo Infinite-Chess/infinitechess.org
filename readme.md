@@ -16,7 +16,6 @@ We are still far off from our vision. We refuse to stop until many crucial featu
 - Rating system, with leaderboards
 - Premoving
 - Highlighting squares, drawing infinite lines
-- Engine play
 - Snapping to more easily threaten pieces
 - Games with infinitely many pieces
 - 4 Player

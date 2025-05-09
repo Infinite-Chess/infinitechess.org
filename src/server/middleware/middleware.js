@@ -1,4 +1,3 @@
-
 /**
  * This module configures the middleware waterfall of our server
  */
@@ -69,8 +68,10 @@ function configureMiddleware(app) {
 		contentSecurityPolicy: {
 			directives: {
 				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "'unsafe-inline'"],  // Allows inline scripts
+				// Allow standard scripts, inline, eval, and WASM evaluation
+				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'wasm-unsafe-eval'"],
 				scriptSrcAttr: ["'self'", "'unsafe-inline'"],  // Allows inline event handlers
+				workerSrc: ["'self'"], // Explicitly allow workers from the same origin
 				objectSrc: ["'none'"],
 				frameSrc: ["'self'", 'https://www.youtube.com'],
 				imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com"]
@@ -137,7 +138,13 @@ function configureMiddleware(app) {
 	app.use(cookieParser());
 
 	// Serve public assets. (e.g. css, scripts, images, audio)
-	app.use(express.static(path.join(__dirname, '../../client'))); // Serve public assets
+	app.use(express.static(path.join(__dirname, '../../client'), {
+		setHeaders: (res, path) => {
+			if (path.endsWith('.wasm')) {
+				res.set('Content-Type', 'application/wasm');
+			}
+		}
+	})); // Serve public assets
 
 	// Every request beyond this point will not be for a resource like a script or image,
 	// but it will be a request for an HTML or API

@@ -198,7 +198,7 @@ async function startEngineGame(options: {
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions,
 	youAreColor: Player,
-	currentEngine: 'engineCheckmatePractice' | 'classicEngine', // Add more union types when more engines are added
+	currentEngine: 'engineCheckmatePractice' | 'hydrochess', // Add more union types when more engines are added
 	engineConfig: EngineConfig,
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true
