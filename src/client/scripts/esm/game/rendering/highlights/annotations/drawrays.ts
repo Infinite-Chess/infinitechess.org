@@ -22,7 +22,7 @@ import input from "../../../input.js";
 import movement from "../../movement.js";
 
 
-import type { Coords, CoordsKey } from "../../../../chess/util/coordutil.js";
+import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "./annotations.js";
 
 
@@ -45,7 +45,14 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 let drag_start: Coords | undefined;
 
 
-// Helers -------------------------------------------------------------------
+/**
+ * A list this frame for all the rays converted to lines.
+ * Read by snapping.ts in the update loop.
+ */
+const lines: Line[] = [];
+
+
+// Helpers -------------------------------------------------------------------
 
 
 
@@ -80,6 +87,34 @@ function update(rays: Ray[]) {
 			addDrawnRay(rays);
 			drag_start = undefined; // Reset drawing
 		}
+	}
+
+	// Recalculate the lines from the rays so that snapping can read them in the update loop...
+
+	lines.length = 0;
+
+	if (!movement.isScaleLess1Pixel_Virtual()) return; // Zoomed in, not rendering rays as highlight lines
+
+	const color = preferences.getAnnoteSquareColor();
+	color[3] = 1; // Highlightlines are fully opaque
+
+	const boundingBox = highlightline.getRenderRange();
+	
+	/** Running list of all Lines converted from Rays */
+	for (const ray of rays) {
+		// Find the points it intersects the screen
+		const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
+		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
+		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
+
+		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
+
+		lines.push({
+			start,
+			end: intersectionPoints[1]!.coords,
+			coefficients: ray.line,
+			color,
+		});
 	}
 }
 
@@ -194,41 +229,15 @@ function render(rays: Ray[]) {
 	// Early exit if no rays to draw
 	if (rays.length === 0) return;
 
-	const color = preferences.getAnnoteSquareColor();
-
 	if (movement.isScaleLess1Pixel_Virtual()) { // Zoomed out, render rays as highlight lines
-		color[3] = 1; // Highlightlines are fully opaque
-
-		// Convert rays to Lines...
-
-		const boundingBox = highlightline.getRenderRange();
-		
-		/** Running list of all Lines converted from Rays */
-		let lines: Line[] = [];
-		for (const ray of rays) {
-			// Find the points it intersects the screen
-			const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
-			if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
-			if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
-
-			const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
-
-			lines.push({
-				start,
-				end: intersectionPoints[1]!.coords,
-				coefficients: ray.line,
-				color,
-			});
-		}
-
+		if (lines.length === 0) throw Error('Lines empty, cannot render ray highlight lines.');
 		highlightline.genLinesModel(lines).render();
-
 	} else { // Zoomed in, render rays as infinite legal move highlights
+		const color = preferences.getAnnoteSquareColor();
 		// Construct the data
 		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
 		const instanceData = legalmovehighlights.genData_Rays(rays);
 		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
-    
 		// Render
 		const boardPos: Coords = movement.getBoardPos();
 		const model_Offset: Coords = legalmovehighlights.getOffset();
@@ -252,6 +261,8 @@ function render(rays: Ray[]) {
 
 
 export default {
+	lines,
+
 	update,
 	render,
 };
