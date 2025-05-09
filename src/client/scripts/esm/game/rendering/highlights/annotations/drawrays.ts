@@ -15,6 +15,7 @@ import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import gameslot from "../../../chess/gameslot.js";
+import highlightline, { Line } from "../highlightline.js";
 // @ts-ignore
 import input from "../../../input.js";
 // @ts-ignore
@@ -193,13 +194,37 @@ function render(rays: Ray[]) {
 	// Early exit if no rays to draw
 	if (rays.length === 0) return;
 
-	if (movement.isScaleLess1Pixel_Virtual()) {
+	const color = preferences.getAnnoteSquareColor();
 
-        
+	if (movement.isScaleLess1Pixel_Virtual()) { // Zoomed out, render rays as highlight lines
+		color[3] = 1; // Highlightlines are fully opaque
 
-	} else {
+		// Convert rays to Lines...
+
+		const boundingBox = highlightline.getRenderRange();
+		
+		/** Running list of all Lines converted from Rays */
+		let lines: Line[] = [];
+		for (const ray of rays) {
+			// Find the points it intersects the screen
+			const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
+			if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
+			if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
+
+			const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
+
+			lines.push({
+				start,
+				end: intersectionPoints[1]!.coords,
+				coefficients: ray.line,
+				color,
+			});
+		}
+
+		highlightline.genLinesModel(lines).render();
+
+	} else { // Zoomed in, render rays as infinite legal move highlights
 		// Construct the data
-		const color = preferences.getAnnoteSquareColor();
 		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
 		const instanceData = legalmovehighlights.genData_Rays(rays);
 		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
