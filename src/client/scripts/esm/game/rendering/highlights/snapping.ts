@@ -106,7 +106,10 @@ function getClosestEntityToMouse(): { coords: Coords, dist: number, type: 'minii
 	return closestEntity;
 }
 
-/** SHOULD BE DONE BEFORE {@link updateSnapping} */
+/**
+ * SHOULD BE DONE BEFORE {@link updateSnapping}
+ * This will teleport to all hovered entities.
+ */
 function updateEntitiesHovered() {
 	drawsquares.updateHighlightsHovered(annotations.getSquares());
 	miniimage.updateImagesHovered(); // This updates hovered images at the same time
@@ -145,6 +148,9 @@ function updateSnapping() {
 	// First see if the mouse is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
 
+	
+	// const rayLines = drawrays.lines;
+
 	// First see if the mouse is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
 	const linesSnapPoints: { line: Line, snapPoint: { coords: Coords, distance: number }}[] = selectedPieceLegalMovesLines.map(line => {
@@ -159,7 +165,10 @@ function updateSnapping() {
 
 	// const snapDistWorld = SNAPPING_DIST * getEntityWidthWorld() / 2;
 	const snapDistCoords = SNAPPING_DIST / (2 * movement.getBoardScale());
-	if (closestSnap.snapPoint.distance > snapDistCoords) return; // No line close enough for the mouse to snap to anything
+	if (closestSnap.snapPoint.distance > snapDistCoords) {
+		console.log("Mouse no close snap");
+		return; // No line close enough for the mouse to snap to anything
+	}
 
 	// Filter out lines which the mouse is too far away from
 	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistCoords);
@@ -173,15 +182,17 @@ function updateSnapping() {
 	const allPrimitiveSlidesInGame = gamefile.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 
 
-	// 1. Intersections of Rays (TODO)
-	// ...
+	// 1. Square Annotes & Intersections of Rays (same priority)
 
-	// const rayLines = drawrays.lines;
+	// All Ray intersections are temporarily added as additional Squares
 
-
-	// 2. Square Annotes
-
+	const rayIntersections = drawrays.collapseRays(annotations.getRays());
 	const squares = annotations.getSquares();
+	const originalSquareLength = squares.length;
+	squares.push(...rayIntersections);
+	
+	// Now see if we should snap to any Square
+
 	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, allPrimitiveSlidesInGame);
 	if (closestSquareSnap) {
 		// Is the snap within snapping distance of the mouse?
@@ -189,11 +200,13 @@ function updateSnapping() {
 			snap = closestSquareSnap;
 			// Teleport if clicked
 			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+			squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 			return;
 		}
 	}
+	squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 
-	// 3. Pieces
+	// 2. Pieces
 
 	const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
 	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, allPrimitiveSlidesInGame);
@@ -208,7 +221,7 @@ function updateSnapping() {
 		}
 	}
 	
-	// 4. Origin (Center of Play)
+	// 3. Origin (Center of Play)
 
 	const startingBox = gamefileutility.getStartingAreaBox(gamefile);
 	const origin = math.calcCenterOfBoundingBox(startingBox);
