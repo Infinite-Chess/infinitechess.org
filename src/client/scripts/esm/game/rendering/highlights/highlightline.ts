@@ -21,7 +21,12 @@ import type { Coords } from '../../../chess/util/coordutil.js';
 
 
 
-/** A single highlight line */
+/**
+ * A single highlight line.
+ * 
+ * Coords are clamped to screen edge, since
+ * we can't render lines out to infinity.
+ */
 interface Line {
 	/** The starting point coords. */
 	start: Coords

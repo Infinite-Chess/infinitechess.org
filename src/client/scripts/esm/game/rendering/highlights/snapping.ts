@@ -33,6 +33,7 @@ import bufferdata from "../bufferdata.js";
 
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { Line } from "./highlightline.js";
+import coordutil from "../../../chess/util/coordutil.js";
 
 
 // Variables --------------------------------------------------------------
@@ -139,21 +140,18 @@ function updateSnapping() {
 
 	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
-	const selectedPieceLegalMovesLines = selectedpiecehighlightline.lines;
-	if (selectedPieceLegalMovesLines.length === 0) return; // No lines to have snap
 
-	// const mouseWorld: Coords = input.getMouseWorldLocation() as Coords;
+	const rayLines = drawrays.lines;
+	const selectedPieceLegalMovesLines = selectedpiecehighlightline.lines;
+
+	const allLines: Line[] = [...rayLines, ...selectedPieceLegalMovesLines];
+	if (allLines.length === 0) return; // No lines to have snap
+
 	const mouseCoords = board.gtile_MouseOver_Float();
 
 	// First see if the mouse is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
-
-	
-	// const rayLines = drawrays.lines;
-
-	// First see if the mouse is even CLOSE to any of these lines,
-	// as otherwise we can't snap to anything anyway.
-	const linesSnapPoints: { line: Line, snapPoint: { coords: Coords, distance: number }}[] = selectedPieceLegalMovesLines.map(line => {
+	const linesSnapPoints: { line: Line, snapPoint: { coords: Coords, distance: number }}[] = allLines.map(line => {
 		const snapPoint = math.closestPointOnLine(line.start, line.end, mouseCoords);
 		return { line, snapPoint };
 	});
@@ -163,7 +161,6 @@ function updateSnapping() {
 		if (lineSnapPoint.snapPoint.distance < closestSnap.snapPoint.distance) closestSnap = lineSnapPoint;
 	}
 
-	// const snapDistWorld = SNAPPING_DIST * getEntityWidthWorld() / 2;
 	const snapDistCoords = SNAPPING_DIST / (2 * movement.getBoardScale());
 	if (closestSnap.snapPoint.distance > snapDistCoords) {
 		console.log("Mouse no close snap");
@@ -174,6 +171,51 @@ function updateSnapping() {
 	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistCoords);
 
 	/**
+	 * Next, calculate all intersections of all highlight lines (rays and legal moves),
+	 * and see if the mouse is close enough to snap to them.
+	 * 
+	 * If so, those take priority.
+	 */
+
+	let intersections: Coords[] = [];
+	for (let a = 0; a < closeLines.length - 1; a++) {
+		const line1 = closeLines[a]!;
+		for (let b = a + 1; b < closeLines.length; b++) {
+			const line2 = closeLines[b]!;
+			// Calculate where they intersect
+			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end)
+			if (intsect === undefined) continue; // Don't intersect
+			// Push it to the intersections, preventing duplicates
+			if (intersections.every(i => !coordutil.areCoordsEqual_noValidate(i, intsect))) intersections.push(intsect);
+		}
+	}
+
+	// Calculate the mouse distance to each
+
+	let closestIntsect: { coords: Coords, dist: number } | undefined;
+	for (const i of intersections) {
+		// Calculate distance to mouse
+		const dist = math.euclideanDistance(i, mouseCoords);
+		if (closestIntsect === undefined || dist < closestIntsect.dist) closestIntsect = { coords: i, dist };
+	}
+
+	if (closestIntsect && closestIntsect.dist <= snapDistCoords) {
+		// SNAP to this line intersection, and exit! It takes priority
+
+		const color = [
+			kk
+		]
+		
+		// snap = { coords: closestIntsect.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
+		// // Teleport if clicked
+		// if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+	}
+
+
+
+	/**
+	 * At this point, there is no intersections  of lines to snap to.
+	 * 
 	 * Next, eminate lines in all directions from each entity, seeing where they cross
 	 * existing lines, calculating what we should snap to.
 	 */
