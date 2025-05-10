@@ -21,9 +21,6 @@ import type { Coords } from '../../../chess/util/coordutil.js';
 
 
 
-const perspectiveLimitToTeleport = 50;
-
-
 /** A single highlight line */
 interface Line {
 	/** The starting point coords. */
