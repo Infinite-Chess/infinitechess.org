@@ -44,10 +44,7 @@ function update() {
 	const color = preferences.getLegalMoveHighlightColor(color_options); // Returns a copy
 	color[3] = 1; // Highlight lines should be fully opaque
 
-
-	const a = perspective.distToRenderBoard / movement.getBoardScale();
-	const boundingBox: BoundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
-
+	const boundingBox = highlightline.getRenderRange();
 
 	for (const strline in legalmoves.sliding) {
 		const slideKey = strline as CoordsKey;

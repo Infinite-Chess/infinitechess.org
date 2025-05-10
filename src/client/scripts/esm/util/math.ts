@@ -59,6 +59,53 @@ function calcIntersectionPointOfLines(A1: number, B1: number, C1: number, A2: nu
 }
 
 /**
+ * Calculates the intersection point of two line SEGMENTS (not rays or infinite lines).
+ * Returns undefined if there is none, or there's infinite (colinear).
+ * @param s1p1 Start point of segment 1
+ * @param s1p2 End point of segment 1
+ * @param s2p1 Start point of segment 2
+ * @param s2p2 End point of segment 2
+ * @returns The intersection Coords if they intersect, otherwise undefined.
+ */
+function intersectLineSegments(s1p1: Coords, s1p2: Coords, s2p1: Coords, s2p2: Coords): Coords | undefined {
+    // 1. Get general form for the line containing segment 1
+    const [A1, B1, C1] = getLineGeneralFormFrom2Coords(s1p1, s1p2);
+
+    // 2. Get general form for the line containing segment 2
+    const [A2, B2, C2] = getLineGeneralFormFrom2Coords(s2p1, s2p2);
+
+    // 3. Calculate intersection of the infinite lines
+    const intersectionPoint = calcIntersectionPointOfLines(A1, B1, C1, A2, B2, C2);
+
+    if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
+
+    // 4. Check if the intersection point lies on both segments
+    if (isPointOnSegment(intersectionPoint, s1p1, s1p2) && isPointOnSegment(intersectionPoint, s2p1, s2p2)) return intersectionPoint;
+
+    return undefined; // Intersection point is not on one or both segments
+
+	/**
+	 * Checks if a point lies on a given line segment.
+	 * ASSUMES THE POINT IS COLINEAR with the segment's endpoints if checking after finding an intersection of their lines.
+	 * @param point The point to check.
+	 * @param segStart The starting point of the segment.
+	 * @param segEnd The ending point of the segment.
+	 * @returns True if the point is on the segment, false otherwise.
+	 */
+	function isPointOnSegment(point: Coords, segStart: Coords, segEnd: Coords): boolean {
+		const [px, py] = point;
+		const [s1x, s1y] = segStart;
+		const [s2x, s2y] = segEnd;
+
+		// Check if point is within the bounding box of the segment
+		const withinX = px >= Math.min(s1x, s2x) && px <= Math.max(s1x, s2x);
+		const withinY = py >= Math.min(s1y, s2y) && py <= Math.max(s1y, s2y);
+
+		return withinX && withinY;
+	}
+}
+
+/**
  * Calculates the general form coefficients (A, B, C) of a line given a point and a direction vector.
  */
 function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): [number, number, number] {
@@ -632,6 +679,7 @@ function easeInOut(t: number): number {
 
 export default {
 	calcIntersectionPointOfLines,
+	intersectLineSegments,
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFrom2Coords,
 	areLinesInGeneralFormEqual,

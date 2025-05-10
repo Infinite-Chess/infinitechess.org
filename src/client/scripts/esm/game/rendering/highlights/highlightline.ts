@@ -5,36 +5,54 @@
  */
 
 
+// @ts-ignore
+import perspective from '../perspective.js';
+// @ts-ignore
+import movement from '../movement.js';
+// @ts-ignore
+import board from '../board.js';
 import { createModel } from '../buffermodel.js';
 import space from '../../misc/space.js';
 
 
-import type { Color } from '../../../util/math.js';
+import type { BoundingBox, Color } from '../../../util/math.js';
 import type { Coords } from '../../../chess/util/coordutil.js';
 
 
 
 
-
-const perspectiveLimitToTeleport = 50;
-
-
-/** A single highlight line */
+/**
+ * A single highlight line.
+ * 
+ * Coords are clamped to screen edge, since
+ * we can't render lines out to infinity.
+ */
 interface Line {
 	/** The starting point coords. */
 	start: Coords
 	/** The ending point coords. */
 	end: Coords
-	/** The equation of the line in general form. */
+	/** The equation of the line in general form. [A,B,C] */
 	coefficients: [number, number, number]
 	/** The color of the line. */
 	color: Color
-	/** The piece type that should be displayed when hovering over the line, if there is one. */
-	piece: number
+	/**
+	 * The piece type that should be displayed when hovering over the line, if there is one.
+	 * Otherwise, a glow dot is rendered when hovering over it.
+	 */
+	piece?: number
 }
+ 
 
 
-
+/**
+ * Returns the respective bounding box inside which we should render highlight lines out to,
+ * according to whether we're in perspective mode or not.
+ */
+function getRenderRange(): BoundingBox {
+	const a = perspective.distToRenderBoard / movement.getBoardScale();
+	return perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
+}
 
 
 
@@ -55,7 +73,10 @@ function getLineData(line: Line) {
 	];
 }
 
+
+
 export default {
+	getRenderRange,
 	genLinesModel,
 };
 

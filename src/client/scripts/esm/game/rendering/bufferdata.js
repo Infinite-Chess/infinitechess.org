@@ -256,10 +256,19 @@ function getDataBoxTunnel(left, bottom, startZ, right, top, endZ, r, g, b, a) {
 }
 
 
-// A circle with color points for the middle and edge. 1 is mid, 2 is outer.
-// Resolution is number of points around on the edge.
-// REQUIRES TRIANGLE_FAN mode to render.
-function getDataFuzzBall3D(x, y, z, radius, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
+/**
+ * A circle with color points for the middle and edge. 1 is mid, 2 is outer.
+ * Resolution is number of points around on the edge.
+ * REQUIRES TRIANGLE_FAN mode to render.
+ * @param {*} x 
+ * @param {*} y 
+ * @param {*} radius 
+ * @param {*} resolution 
+ * @param {Color} color_mid 
+ * @param {Color} color_edge 
+ * @returns {number[]}
+ */
+function getDataGlowDot(x, y, radius, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
 	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.");
 
 	const data = [x, y, z, r1, g1, b1, a1]; // Mid point
@@ -439,7 +448,7 @@ export default {
 	getDataCircle,
 	getDataBoxTunnel,
 	getDataCircle_TRIANGLES,
-	getDataFuzzBall3D,
+	getDataGlowDot,
 	getDataRingSolid,
 	getDataRing,
 	rotateDataTexture,
