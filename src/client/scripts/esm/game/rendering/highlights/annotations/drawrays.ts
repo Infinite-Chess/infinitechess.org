@@ -220,7 +220,7 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 /** Collapses all existing rays into a list of intersection coords points. */
 function collapseRays(rays: Ray[]): Coords[] {
 	let intersections: Coords[] = [];
-	if (rays.length === 0) return intersections;
+	if (rays.length < 2) return intersections;
 
 	for (let a = 0; a < rays.length - 1; a++) {
 		const ray1 = rays[a]!;
@@ -231,7 +231,7 @@ function collapseRays(rays: Ray[]): Coords[] {
 			if (intsect === undefined) continue; // Parallel or coincident, can't collapse into an intersection coord.
 
 			// Make sure both dot products are positive, the rays pointing in the direction
-			// of the intersections, since rays are mathematical rays, not infinite lines.
+			// of the intersection, since the  rays are mathematical rays, not infinite lines.
 			const vec1 = math.calculateVectorFromPoints(ray1.start, intsect); // The vector pointing towards the intersection.
 			const dp1 = math.dotProduct(ray1.vector, vec1);
 			const vec2 = math.calculateVectorFromPoints(ray2.start, intsect); // The vector pointing towards the intersection.

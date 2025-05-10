@@ -10,7 +10,7 @@ import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
-import math, { Vec2 } from "../../../util/math.js";
+import math, { Color, Vec2 } from "../../../util/math.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
@@ -45,12 +45,21 @@ const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 36
 const SNAPPING_DIST: number = 1.0; // Default: 1.0
 
 
+/** Properties of the glow dot when rendering the snapped coord. */
+const GLOW_DOT = {
+	RADIUS_PIXELS: 10,
+	RESOLUTION: 16
+}
+
+
 const GHOST_IMAGE_OPACITY = 1;
 
 
 /** The current point the mouse is snapped to this frame, if it is. */
 let snap: {
 	coords: Coords,
+	/** The color of the line we are snapped to. Already made opaque. */
+	color: Color,
 	/** The type of piece to render at the snap point, if applicable */
 	type?: number,
 	/** The source that eminated the line we are snapping to, if we are snapping. */
@@ -217,14 +226,14 @@ function updateSnapping() {
 	// No snap found!
 
 	// Instead, set the snap to the closest point on the line.
-	snap = { coords: closestSnap.snapPoint.coords, type: closestSnap.line.piece };
+	snap = { coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
 	// Teleport if clicked
 	if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
 }
 
-function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, snapPoint: { coords: Coords, distance: number }}[], mouseCoords: Coords, allPrimitiveSlidesInGame: Vec2[]): { coords: Coords, dist: number, source: Coords, type?: number } | undefined {
+function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, snapPoint: { coords: Coords, distance: number }}[], mouseCoords: Coords, allPrimitiveSlidesInGame: Vec2[]): { coords: Coords, color: Color, dist: number, source: Coords, type?: number } | undefined {
 	
-	let closestEntitySnap: { coords: Coords, dist: number, source: Coords, type: number } | undefined;
+	let closestEntitySnap: { coords: Coords, color: Color, dist: number, source: Coords, type?: number } | undefined;
 
 	for (const s of entities) {
 		const eminatingLines = getLinesEminatingFromPoint(s, allPrimitiveSlidesInGame);
@@ -242,7 +251,7 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, 
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
 				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) {
 					// if (s[0] === 2000) console.log("Found closer snap:", intersection, dist, highlightLine.line.piece, [...s]);
-					closestEntitySnap = { coords: intersection, dist, type: highlightLine.line.piece, source: [...s] };
+					closestEntitySnap = { coords: intersection, color: highlightLine.line.color, dist, type: highlightLine.line.piece, source: [...s] };
 				}
 			}
 		}
@@ -279,17 +288,26 @@ function render() {
 		createModel(data, 2, 'LINES', true).render();
 	}
 
+	const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
+
 	if (snap.type === undefined) {
 		// Render glow dot
-		// ...
+		const color = snap.color;
+		const colorTransparent = [...color];
+		colorTransparent[3] = 0;
+
+		const data: number[] = bufferdata.getDataGlowDot(...coordsWorld, GLOW_DOT.RADIUS_PIXELS, GLOW_DOT.RESOLUTION, color, colorTransparent);
+		createModel(data, 2, 'TRIANGLE_FAN', true).render();
 	} else {
 		// Render mini image of piece
-		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
 		const model = generateGhostImageModel(snap.type, coordsWorld);
 		model.render();
 	}
 }
 
+/**
+ * TODO: Dont use the spritesheet
+ */
 function generateGhostImageModel(type: number, coords: Coords) {
 
 	const dataGhost: number[] = [];
