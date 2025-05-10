@@ -16,6 +16,7 @@ import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import { createModel } from "../buffermodel.js";
 import spritesheet from "../spritesheet.js";
+import drawrays from "./annotations/drawrays.js";
 // @ts-ignore
 import input from "../../input.js";
 // @ts-ignore
@@ -165,6 +166,8 @@ function updateSnapping() {
 
 	// 1. Intersections of Rays (TODO)
 	// ...
+
+	// const rayLines = drawrays.lines;
 
 
 	// 2. Square Annotes

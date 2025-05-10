@@ -13,6 +13,7 @@ import jsutil from "../../../../util/jsutil.js";
 import drawarrows from "./drawarrows.js";
 import gameloader from "../../../chess/gameloader.js";
 import drawrays from "./drawrays.js";
+import coordutil from "../../../../chess/util/coordutil.js";
 // @ts-ignore
 import input from "../../../input.js";
 
@@ -138,26 +139,34 @@ function clearAnnotes(annotes: Annotes) {
 function update() {
 	const annotes = getRelevantAnnotes();
 
+	// If middle mouse button is clicked, remove all highlights
+	// TODO: Change this to left clicking an empty region of the board
+	if (input.isMouseDown_Middle()) Collapse();
+
 	// Arrows first since it reads if there was a click, but Squares will claim the click.
 	drawarrows.update(annotes.Arrows);
 	drawsquares.update(annotes.Squares);
 	drawrays.update(annotes.Rays);
-
-	// If middle mouse button is clicked, remove all highlights
-	// TODO: Change this to left clicking an empty region of the board
-	if (input.isMouseDown_Middle()) Collapse();
 }
 
 /**
- * CURRENT:
- * Erases all highlights.
- * 
- * PLANNED:
- * If there are any rays, we collapse their intersections into single highlights.
+ * Collapses all annotations. The behavior is:
+ * A. Atleast 2 rays => Erase all rays and add more Squares at all their intersections.
+ * B. Else => Erase all annotes.
  */
 function Collapse() {
 	const annotes = getRelevantAnnotes();
-	clearAnnotes(annotes);
+
+	if (annotes.Rays.length > 1) {
+		// Collapse rays instead of erasing all annotations.
+		const additionalSquares = drawrays.collapseRays(annotes.Rays);
+		for (const newSquare of additionalSquares) {
+			// Avoid adding duplicates
+			if (annotes.Squares.some(s => coordutil.areCoordsEqual_noValidate(s, newSquare))) continue; // Duplicate
+			annotes.Squares.push(newSquare);
+		}
+		annotes.Rays.length = 0; // Erase all rays
+	} else clearAnnotes(annotes);
 }
 
 /** Renders the annotations that should be rendered below the pieces */
