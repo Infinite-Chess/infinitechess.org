@@ -78,7 +78,7 @@ function update(rays: Ray[]) {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			}
-			console.log("Ray drag start:", drag_start);
+			// console.log("Ray drag start:", drag_start);
 		}
 	} else { // Currently drawing a ray
 		// Test if mouse released (finalize ray)
@@ -93,7 +93,7 @@ function update(rays: Ray[]) {
 				const index = squares.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, drag_start!));
 				if (index !== -1) {
 					squares.splice(index, 1); // Remove the square highlight
-					console.log("Removed square highlight.");
+					// console.log("Removed square highlight.");
 				}
 			}
 		} else if (!mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally ray drawing if we intend to draw square

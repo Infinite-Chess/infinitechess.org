@@ -25,6 +25,8 @@ import type { Coords } from "../chess/util/coordutil.js";
  * 
  * If another pointer id is used, such as a touch event, we cannot
  * detect the mouse position when it is off screen.
+ * 
+ * ONLY WORKS IF WE LEFT-CLICK-DRAG off the screen. NOT if we right-click-drag!
  */
 function getPointerPosition_Offscreen(pointerId: string): Coords | undefined {
 	if (pointerId === 'mouse') {

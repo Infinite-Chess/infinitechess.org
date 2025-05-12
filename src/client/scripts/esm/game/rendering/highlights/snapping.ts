@@ -116,8 +116,13 @@ function updateEntitiesHovered() {
 	// Test if clicked (teleport to all hovered entities)
 	const allEntitiesHovered = [...miniimage.imagesHovered, ...drawsquares.highlightsHovered];
 	if (allEntitiesHovered.length > 0) {
-		if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList(allEntitiesHovered);
-		else if (mouse.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+		if (mouse.isMouseClicked(Mouse.LEFT)) {
+			transition.initTransitionToCoordsList(allEntitiesHovered);
+			mouse.claimMouseClick(Mouse.LEFT);
+		} else if (mouse.isMouseDown(Mouse.LEFT)) {
+			listener_overlay.claimMouseDown(Mouse.LEFT);
+			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+		}
 	}
 }
 
