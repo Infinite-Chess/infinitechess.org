@@ -108,6 +108,15 @@ function initTransitionToCoordsList(coordsList) {
 	teleport(tel);
 }
 
+function initTransitionToCoordsList(coordsList) {
+	const theArea = area.calculateFromCoordsList(coordsList);
+
+	const endCoords = theArea.coords;
+	const endScale = theArea.scale;
+	const tel = { endCoords, endScale };
+	teleport(tel);
+}
+
 function update() { // Animate if we are currently teleporting
 
 	if (!isTeleporting) return; // Return if not currently teleporting
