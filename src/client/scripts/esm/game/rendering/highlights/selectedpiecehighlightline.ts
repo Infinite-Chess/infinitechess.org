@@ -10,36 +10,33 @@ import selection from "../../chess/selection.js";
 import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
 import math from "../../../util/math.js";
 import highlightline from "./highlightline.js";
-// @ts-ignore
-import guipause from "../../gui/guipause.js";
+import boardpos from "../boardpos.js";
 
 
 import type { Line } from "./highlightline.js";
 import type { Vec2 } from "../../../util/math.js";
-import boardpos from "../boardpos.js";
 
 
 
 
-const lines: Line[] = [];
-
-function update() {
-	lines.length = 0;
-
-	if (guipause.areWePaused()) return; // Exit if paused
-	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
-	if (!selection.isAPieceSelected()) return;
+/**
+ * Calculates all the lines formed from the highlight
+ * lines of the current selected piece's legal moves.
+ * */
+function getLines(): Line[] {
+	const lines: Line[] = [];
 
 	const pieceSelected = selection.getPieceSelected()!;
+	if (!pieceSelected) return lines;
+
 	const pieceCoords = pieceSelected.coords;
-	// const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
 	const legalmoves = selection.getLegalMovesOfSelectedPiece()!; // CAREFUL not to modify!
 
+	const boundingBox = highlightline.getRenderRange();
+	
 	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
 	const color = preferences.getLegalMoveHighlightColor(color_options); // Returns a copy
 	color[3] = 1; // Highlight lines should be fully opaque
-
-	const boundingBox = highlightline.getRenderRange();
 
 	for (const strline in legalmoves.sliding) {
 		const slideKey = strline as CoordsKey;
@@ -64,6 +61,8 @@ function update() {
 
 		lines.push({ start, end, coefficients, color, piece: pieceSelected.type });
 	};
+
+	return lines;
 }
 
 /** Calculates the furthest square the piece can slide to, given the direction, parity, and moveset. */
@@ -84,20 +83,17 @@ function clampPointToSlideLimit(point: Coords, slideLimit: Coords, positive: boo
 
 
 
-
-
-
 function render() {
-	// Early exit if no lines this frame
-	if (lines.length === 0) return;
+	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
+
+	const lines = getLines();
+	if (lines.length === 0) return; // No lines to draw
 
 	highlightline.genLinesModel(lines).render();
 }
 
 
 export default {
-	lines,
-
-	update,
+	getLines,
 	render,
 };

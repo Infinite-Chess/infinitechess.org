@@ -141,9 +141,6 @@ function update() {
 	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
 	annotations.update();
 
-	// After updating annotations and mini image hovers, as this early exits if we're hovering.
-	// highlightline.genModel(); // Before boarddrag.checkIfBoardDragged() since clicks should prioritize this.
-	selectedpiecehighlightline.update();
 	snapping.updateSnapping();
 	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
 	annotations.testIfCollapsed();

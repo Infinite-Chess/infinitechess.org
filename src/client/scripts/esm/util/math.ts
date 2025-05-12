@@ -83,26 +83,60 @@ function intersectLineSegments(s1p1: Coords, s1p2: Coords, s2p1: Coords, s2p2: C
 	if (isPointOnSegment(intersectionPoint, s1p1, s1p2) && isPointOnSegment(intersectionPoint, s2p1, s2p2)) return intersectionPoint;
 
 	return undefined; // Intersection point is not on one or both segments
+}
 
-	/**
-	 * Checks if a point lies on a given line segment.
-	 * ASSUMES THE POINT IS COLINEAR with the segment's endpoints if checking after finding an intersection of their lines.
-	 * @param point The point to check.
-	 * @param segStart The starting point of the segment.
-	 * @param segEnd The ending point of the segment.
-	 * @returns True if the point is on the segment, false otherwise.
-	 */
-	function isPointOnSegment(point: Coords, segStart: Coords, segEnd: Coords): boolean {
-		const [px, py] = point;
-		const [s1x, s1y] = segStart;
-		const [s2x, s2y] = segEnd;
+/**
+ * Checks if a point lies on a given line segment.
+ * ASSUMES THE POINT IS COLINEAR with the segment's endpoints if checking after finding an intersection of their lines.
+ * @param point The point to check.
+ * @param segStart The starting point of the segment.
+ * @param segEnd The ending point of the segment.
+ * @returns True if the point is on the segment, false otherwise.
+ */
+function isPointOnSegment(point: Coords, segStart: Coords, segEnd: Coords): boolean {
+	const [px, py] = point;
+	const [s1x, s1y] = segStart;
+	const [s2x, s2y] = segEnd;
 
-		// Check if point is within the bounding box of the segment
-		const withinX = px >= Math.min(s1x, s2x) && px <= Math.max(s1x, s2x);
-		const withinY = py >= Math.min(s1y, s2y) && py <= Math.max(s1y, s2y);
+	// Check if point is within the bounding box of the segment
+	const withinX = px >= Math.min(s1x, s2x) && px <= Math.max(s1x, s2x);
+	const withinY = py >= Math.min(s1y, s2y) && py <= Math.max(s1y, s2y);
 
-		return withinX && withinY;
-	}
+	return withinX && withinY;
+}
+
+/**
+ * Calculates the intersection point of an infinite line (in general form) and a line segment.
+ * Returns undefined if there is no intersection, the intersection point lies
+ * outside the segment, or if the line and segment are collinear/parallel.
+ * @param lineA Coefficient A of the infinite line (Ax + By + C = 0)
+ * @param lineB Coefficient B of the infinite line
+ * @param lineC Coefficient C of the infinite line
+ * @param segP1 Start point of the segment
+ * @param segP2 End point of the segment
+ * @returns The intersection Coords if they intersect ON the segment, otherwise undefined.
+ */
+function intersectLineAndSegment(lineA: number, lineB: number, lineC: number, segP1: Coords, segP2: Coords): Coords | undefined {
+	// 1. Get general form for the infinite line containing the segment
+	const [segA, segB, segC] = getLineGeneralFormFrom2Coords(segP1, segP2);
+
+	// 2. Calculate intersection of the two infinite lines
+	// Uses the provided function calcIntersectionPointOfLines
+	const intersectionPoint = calcIntersectionPointOfLines(
+		lineA, lineB, lineC,
+		segA, segB, segC
+	);
+
+	// 3. Handle no intersection (parallel) or collinear lines.
+	// calcIntersectionPointOfLines returns undefined if determinant is 0.
+	if (!intersectionPoint) return undefined;
+
+	// 4. Check if the calculated intersection point lies on the actual segment
+	// The point is guaranteed to be collinear with the segment if an intersection was found.
+	if (isPointOnSegment(intersectionPoint, segP1, segP2)) return intersectionPoint; // Intersection point is within the segment bounds
+
+	// 5. The intersection point exists but is outside the segment bounds
+	return undefined;
 }
 
 /**
@@ -689,6 +723,7 @@ function easeInOut(t: number): number {
 export default {
 	calcIntersectionPointOfLines,
 	intersectLineSegments,
+	intersectLineAndSegment,
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFrom2Coords,
 	areLinesInGeneralFormEqual,

@@ -45,12 +45,6 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 let drag_start: Coords | undefined;
 
 
-/**
- * A list this frame for all the rays converted to lines.
- * Read by snapping.ts in the update loop.
- */
-const lines: Line[] = [];
-
 
 // Helpers -------------------------------------------------------------------
 
@@ -103,40 +97,33 @@ function update(rays: Ray[]) {
 			drag_start = undefined; // Reset drawing
 		}
 	}
+}
 
-	// Recalculate the lines from the rays so that snapping can read them in the update loop...
-
-	lines.length = 0;
-
-	if (!boardpos.areZoomedOut()) return; // Zoomed in, not rendering rays as highlight lines
+/** Returns all the Rays converted to Lines */
+function getLines(rays: Ray[]): Line[] {
+	const boundingBox = highlightline.getRenderRange();
 
 	const color = preferences.getAnnoteSquareColor();
 	color[3] = 1; // Highlightlines are fully opaque
 
-	const boundingBox = highlightline.getRenderRange();
-	
-	/** Running list of all Lines converted from Rays */
+	const lines: Line[] = [];
 	for (const ray of rays) {
-		pushRayToLines(ray, boundingBox, color);
+		// Find the points it intersects the screen
+		const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
+		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
+		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
+
+		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
+
+		lines.push({
+			start,
+			end: intersectionPoints[1]!.coords,
+			coefficients: ray.line,
+			color,
+		});
 	}
-}
 
-function pushRayToLines(ray: Ray, boundingBox = highlightline.getRenderRange(), color = preferences.getAnnoteSquareColor()) {
-	color[3] = 1; // Highlightlines are fully opaque
-
-	// Find the points it intersects the screen
-	const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
-	if (intersectionPoints.length < 2) return; // Ray has no intersections with screen, not visible, don't render.
-	if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) return; // Ray STARTS off screen and goes in the opposite direction. Not visible.
-
-	const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
-
-	lines.push({
-		start,
-		end: intersectionPoints[1]!.coords,
-		coefficients: ray.line,
-		color,
-	});
+	return lines;
 }
 
 /**
@@ -201,7 +188,6 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// Add the ray
 	const ray = { start: drag_start!, vector, line };
 	rays.push(ray);
-	pushRayToLines(ray); // Push to the lines for this frame
 	// console.log("Added ray:", ray);
 	return { added: true, deletedRays };
 }
@@ -294,7 +280,7 @@ function render(rays: Ray[]) {
 	// Early exit if no rays to draw
 	if (rays.length > 0) {
 		if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
-			if (lines.length === 0) throw Error('Lines empty, cannot render ray highlight lines.');
+			const lines = getLines(rays);
 			highlightline.genLinesModel(lines).render();
 		} else { // Zoomed in, render rays as infinite legal move highlights
 			const color = preferences.getAnnoteSquareColor();
@@ -317,10 +303,7 @@ function render(rays: Ray[]) {
 	}
 
 	// Remove the ray currently being drawn
-	if (drawingCurrentlyDrawn.added) {
-		rays.pop();
-		lines.pop();
-	}
+	if (drawingCurrentlyDrawn.added) rays.pop();
 	// Restore the deleted rays if any
 	if (drawingCurrentlyDrawn.deletedRays && drawingCurrentlyDrawn.deletedRays.length > 0) rays.push(...drawingCurrentlyDrawn.deletedRays);
 }
@@ -330,8 +313,8 @@ function render(rays: Ray[]) {
 
 
 export default {
-	lines,
 	update,
+	getLines,
 	collapseRays,
 	render,
 };

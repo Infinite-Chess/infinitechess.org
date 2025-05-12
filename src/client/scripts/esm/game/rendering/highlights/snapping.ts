@@ -18,20 +18,22 @@ import { createModel } from "../buffermodel.js";
 import spritesheet from "../spritesheet.js";
 import drawrays from "./annotations/drawrays.js";
 import { Mouse } from "../../input.js";
+import coordutil from "../../../chess/util/coordutil.js";
+import mouse from "../../../util/mouse.js";
+import { listener_overlay } from "../../chess/game.js";
+import boardpos from "../boardpos.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore
 import perspective from "../perspective.js";
 // @ts-ignore
 import bufferdata from "../bufferdata.js";
+// @ts-ignore
+import guipause from "../../gui/guipause.js";
 
 
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { Line } from "./highlightline.js";
-import coordutil from "../../../chess/util/coordutil.js";
-import mouse from "../../../util/mouse.js";
-import { listener_overlay } from "../../chess/game.js";
-import boardpos from "../boardpos.js";
 
 
 // Variables --------------------------------------------------------------
@@ -143,11 +145,12 @@ type LineSnapPoint = {
 function updateSnapping() {
 	snap = undefined;
 
+	if (guipause.areWePaused()) return; // Don't snap if paused
 	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
 
-	const rayLines = drawrays.lines;
-	const selectedPieceLegalMovesLines = selectedpiecehighlightline.lines;
+	const rayLines = drawrays.getLines(annotations.getRays());
+	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
 
 	const allLines: Line[] = [...rayLines, ...selectedPieceLegalMovesLines];
 	if (allLines.length === 0) return; // No lines to have snap
@@ -249,7 +252,6 @@ function updateSnapping() {
 	}
 
 
-
 	/**
 	 * At this point, there is no intersections  of lines to snap to.
 	 * 
@@ -339,23 +341,22 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[
 	
 	let closestEntitySnap: { coords: Coords, color: Color, dist: number, source: Coords, type?: number } | undefined;
 
-	for (const s of entities) {
-		const eminatingLines = getLinesEminatingFromPoint(s, allPrimitiveSlidesInGame);
+	for (const entityCoords of entities) {
+		const eminatingLines = getLinesEminatingFromPoint(entityCoords, allPrimitiveSlidesInGame);
 
 		// Calculate their intersections with each individual line close to the mouse
 		for (const eminatedLine of eminatingLines) {
 			for (const highlightLine of closeLines) {
 				// Do they intersect?
-				const intersection = math.calcIntersectionPointOfLines(...eminatedLine, ...highlightLine.line.coefficients);
+				const intersection = math.intersectLineAndSegment(...eminatedLine, highlightLine.line.start, highlightLine.line.end);
 				if (intersection === undefined) continue;
 				// They DO intersect.
 				const dist = math.euclideanDistance(intersection, mouseCoords);
-				// if (s[0] === 2000) console.log(dist);
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
 				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) {
 					// if (s[0] === 2000) console.log("Found closer snap:", intersection, dist, highlightLine.line.piece, [...s]);
-					closestEntitySnap = { coords: intersection, color: highlightLine.line.color, dist, type: highlightLine.line.piece, source: [...s] };
+					closestEntitySnap = { coords: intersection, color: highlightLine.line.color, dist, type: highlightLine.line.piece, source: [...entityCoords] };
 				}
 			}
 		}
