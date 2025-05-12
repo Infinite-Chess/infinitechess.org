@@ -241,6 +241,9 @@ function collapseRays(rays: Ray[]): Coords[] {
 
 			if (dp1 < 0 || dp2 < 0) continue; // One or both rays point away from the intersection point. Don't collapse.
 
+			// Verify the intersection point is an integer
+			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+
 			// Push it to the collapsed coord intersections (should be no duplicates if there's no bug)
 			intersections.push(intsect);
 		}
