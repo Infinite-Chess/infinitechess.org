@@ -219,6 +219,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
+		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
@@ -229,8 +230,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
-		// Claim the mouse down so board dragging doesn't use it
-		listener_overlay.claimMouseDown(Mouse.LEFT);
+		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
 	}
 }
 

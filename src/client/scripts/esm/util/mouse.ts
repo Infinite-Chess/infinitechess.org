@@ -185,6 +185,24 @@ function getWheelDelta(): number {
 	else return listener_overlay.getWheelDelta();
 }
 
+/**
+ * Wrapper for reading the correct listener for claiming the mouse down event,
+ * depending on whether we're in perspective mode or not.
+ */
+function claimMouseDown(button: MouseButton): void {
+	if (perspective.isMouseLocked()) listener_document.claimMouseDown(button);
+	else listener_overlay.claimMouseDown(button);
+}
+
+/**
+ * Wrapper for reading the correct listener for claiming the mouse click event,
+ * depending on whether we're in perspective mode or not.
+ */
+function claimMouseClick(button: MouseButton): void {
+	if (perspective.isMouseLocked()) listener_document.claimMouseClick(button);
+	else listener_overlay.claimMouseClick(button);
+}
+
 
 export default {
 	getMouseWorld,
@@ -199,4 +217,6 @@ export default {
 	isMouseClicked,
 	isMouseDoubleClickDragged,
 	getWheelDelta,
+	claimMouseDown,
+	claimMouseClick,
 };
