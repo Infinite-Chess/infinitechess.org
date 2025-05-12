@@ -269,6 +269,8 @@ function testIfPieceMoved(gamefile: gamefile): void {
 
 	if (!hoverSquareLegal) return; // Don't move it
 	else moveGamefilePiece(gamefile, hoverSquare);
+	
+	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
