@@ -68,21 +68,21 @@ function calcIntersectionPointOfLines(A1: number, B1: number, C1: number, A2: nu
  * @returns The intersection Coords if they intersect, otherwise undefined.
  */
 function intersectLineSegments(s1p1: Coords, s1p2: Coords, s2p1: Coords, s2p2: Coords): Coords | undefined {
-    // 1. Get general form for the line containing segment 1
-    const [A1, B1, C1] = getLineGeneralFormFrom2Coords(s1p1, s1p2);
+	// 1. Get general form for the line containing segment 1
+	const [A1, B1, C1] = getLineGeneralFormFrom2Coords(s1p1, s1p2);
 
-    // 2. Get general form for the line containing segment 2
-    const [A2, B2, C2] = getLineGeneralFormFrom2Coords(s2p1, s2p2);
+	// 2. Get general form for the line containing segment 2
+	const [A2, B2, C2] = getLineGeneralFormFrom2Coords(s2p1, s2p2);
 
-    // 3. Calculate intersection of the infinite lines
-    const intersectionPoint = calcIntersectionPointOfLines(A1, B1, C1, A2, B2, C2);
+	// 3. Calculate intersection of the infinite lines
+	const intersectionPoint = calcIntersectionPointOfLines(A1, B1, C1, A2, B2, C2);
 
-    if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
+	if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
 
-    // 4. Check if the intersection point lies on both segments
-    if (isPointOnSegment(intersectionPoint, s1p1, s1p2) && isPointOnSegment(intersectionPoint, s2p1, s2p2)) return intersectionPoint;
+	// 4. Check if the intersection point lies on both segments
+	if (isPointOnSegment(intersectionPoint, s1p1, s1p2) && isPointOnSegment(intersectionPoint, s2p1, s2p2)) return intersectionPoint;
 
-    return undefined; // Intersection point is not on one or both segments
+	return undefined; // Intersection point is not on one or both segments
 
 	/**
 	 * Checks if a point lies on a given line segment.
@@ -272,35 +272,44 @@ function calcCenterOfBoundingBox(box: BoundingBox): Coords {
 }
 
 /**
- * Returns the point on the line SEGMENT that is nearest/perpendicular to the given point.
+ * Returns the point on the line SEGMENT that is nearest to the given point.
  * @param lineStart - The starting point of the line segment.
  * @param lineEnd - The ending point of the line segment.
- * @param point - The point to find the nearest point on the line to.
- * @returns An object containing the properties `coords`, which is the closest point on our segment to our point, and the `distance` to it.
+ * @param point - The point to find the nearest point on the line segment to.
+ * @returns An object containing the properties `coords`, which is the closest point on the segment,
+ *          and `distance` to that point.
  */
-function closestPointOnLine(lineStart: Coords, lineEnd: Coords, point: Coords): { coords: Coords, distance: number } {
-	let closestPoint: Coords | undefined;
-
+function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: Coords): { coords: Coords, distance: number } {
 	const dx = lineEnd[0] - lineStart[0];
 	const dy = lineEnd[1] - lineStart[1];
 
-	if (dx === 0) { // Vertical line
-		closestPoint = [lineStart[0], clamp(lineStart[1], lineEnd[1], point[1])];
-	} else { // Not vertical
-		const m = dy / dx;
-		const b = lineStart[1] - m * lineStart[0];
-        
-		// Calculate x and y coordinates of closest point on line
-		let x = (m * (point[1] - b) + point[0]) / (m * m + 1);
-		x = clamp(lineStart[0], lineEnd[0], x);
-		const y = m * x + b;
-
-		closestPoint = [x, y];
+	// Calculate the squared length of the segment.
+	// If the segment has zero length, the start point is the closest point.
+	const lineLengthSquared = dx * dx + dy * dy;
+	if (lineLengthSquared < 1e-10) { // Use a small epsilon for floating point comparison
+		const distance = euclideanDistance(lineStart, point);
+		return { coords: [...lineStart], distance }; // Return a copy
 	}
+
+	// Calculate the projection parameter t.
+	// t = dotProduct((point - lineStart), (lineEnd - lineStart)) / lineLengthSquared
+	const dotProduct = ((point[0] - lineStart[0]) * dx + (point[1] - lineStart[1]) * dy);
+	let t = dotProduct / lineLengthSquared;
+
+	// Clamp t to the range [0, 1] to stay within the segment.
+	t = Math.max(0, Math.min(1, t));
+
+	// Calculate the coordinates of the closest point on the segment.
+	const closestX = lineStart[0] + t * dx;
+	const closestY = lineStart[1] + t * dy;
+	const closestPoint: Coords = [closestX, closestY];
+
+	// Calculate the distance from the original point to the closest point on the segment.
+	const distance = euclideanDistance(closestPoint, point);
 
 	return {
 		coords: closestPoint,
-		distance: euclideanDistance(closestPoint, point)
+		distance
 	};
 }
 
@@ -693,7 +702,7 @@ export default {
 	expandBoxToContainSquare,
 	mergeBoundingBoxes,
 	calcCenterOfBoundingBox,
-	closestPointOnLine,
+	closestPointOnLineSegment,
 	findFarthestPointsALineSweepsABox,
 	dotProduct,
 	findLineBoxIntersections,

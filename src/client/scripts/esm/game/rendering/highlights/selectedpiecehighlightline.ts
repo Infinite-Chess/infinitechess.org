@@ -57,6 +57,9 @@ function update() {
 		// const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
 		const end = clampPointToSlideLimit(intersectionPoints[1]!, rightLimitPointCoord, true, lineIsVertical);
 
+		// Skip if zero length
+		if (coordutil.areCoordsEqual_noValidate(start, end)) continue;
+
 		const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, line);
 
 		lines.push({ start, end, coefficients, color, piece: pieceSelected.type });

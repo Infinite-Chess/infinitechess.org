@@ -117,20 +117,26 @@ function update(rays: Ray[]) {
 	
 	/** Running list of all Lines converted from Rays */
 	for (const ray of rays) {
-		// Find the points it intersects the screen
-		const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
-		if (intersectionPoints.length < 2) continue; // Ray has no intersections with screen, not visible, don't render.
-		if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) continue; // Ray STARTS off screen and goes in the opposite direction. Not visible.
-
-		const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
-
-		lines.push({
-			start,
-			end: intersectionPoints[1]!.coords,
-			coefficients: ray.line,
-			color,
-		});
+		pushRayToLines(ray, boundingBox, color);
 	}
+}
+
+function pushRayToLines(ray: Ray, boundingBox = highlightline.getRenderRange(), color = preferences.getAnnoteSquareColor()) {
+	color[3] = 1; // Highlightlines are fully opaque
+
+	// Find the points it intersects the screen
+	const intersectionPoints = math.findLineBoxIntersections(ray.start, ray.vector, boundingBox);
+	if (intersectionPoints.length < 2) return; // Ray has no intersections with screen, not visible, don't render.
+	if (!intersectionPoints[0]!.positiveDotProduct && !intersectionPoints[1]!.positiveDotProduct) return; // Ray STARTS off screen and goes in the opposite direction. Not visible.
+
+	const start = intersectionPoints[0]!.positiveDotProduct ? intersectionPoints[0]!.coords : ray.start;
+
+	lines.push({
+		start,
+		end: intersectionPoints[1]!.coords,
+		coefficients: ray.line,
+		color,
+	});
 }
 
 /**
@@ -195,6 +201,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// Add the ray
 	const ray = { start: drag_start!, vector, line };
 	rays.push(ray);
+	pushRayToLines(ray); // Push to the lines for this frame
 	// console.log("Added ray:", ray);
 	return { added: true, deletedRays };
 }
@@ -310,7 +317,10 @@ function render(rays: Ray[]) {
 	}
 
 	// Remove the ray currently being drawn
-	if (drawingCurrentlyDrawn.added) rays.pop();
+	if (drawingCurrentlyDrawn.added) {
+		rays.pop();
+		lines.pop();
+	}
 	// Restore the deleted rays if any
 	if (drawingCurrentlyDrawn.deletedRays && drawingCurrentlyDrawn.deletedRays.length > 0) rays.push(...drawingCurrentlyDrawn.deletedRays);
 }
