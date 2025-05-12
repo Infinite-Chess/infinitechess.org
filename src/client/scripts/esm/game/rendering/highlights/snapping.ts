@@ -23,8 +23,6 @@ import transition from "../transition.js";
 // @ts-ignore
 import perspective from "../perspective.js";
 // @ts-ignore
-import board from "../board.js";
-// @ts-ignore
 import bufferdata from "../bufferdata.js";
 
 
@@ -48,7 +46,7 @@ const SNAPPING_DIST: number = 1.0; // Default: 1.0
 
 /** Properties of the glow dot when rendering the snapped coord. */
 const GLOW_DOT = {
-	RADIUS_PIXELS: 10,
+	RADIUS_PIXELS: 8,
 	RESOLUTION: 16
 };
 
@@ -147,7 +145,7 @@ function updateSnapping() {
 	const allLines: Line[] = [...rayLines, ...selectedPieceLegalMovesLines];
 	if (allLines.length === 0) return; // No lines to have snap
 
-	const mouseCoords = board.gtile_MouseOver_Float();
+	const mouseCoords = mouse.getTileMouseOver_Float()!;
 
 	// First see if the mouse is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
@@ -177,13 +175,13 @@ function updateSnapping() {
 	 * If so, those take priority.
 	 */
 
-	let intersections: Coords[] = [];
+	const intersections: Coords[] = [];
 	for (let a = 0; a < closeLines.length - 1; a++) {
 		const line1 = closeLines[a]!;
 		for (let b = a + 1; b < closeLines.length; b++) {
 			const line2 = closeLines[b]!;
 			// Calculate where they intersect
-			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end)
+			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
 			if (intersections.every(i => !coordutil.areCoordsEqual_noValidate(i, intsect))) intersections.push(intsect);
@@ -203,7 +201,7 @@ function updateSnapping() {
 		// SNAP to this line intersection, and exit! It takes priority
 
 		const color = [
-			kk
+			
 		]
 		
 		// snap = { coords: closestIntsect.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
@@ -351,7 +349,8 @@ function render() {
 		const colorTransparent = [...color];
 		colorTransparent[3] = 0;
 
-		const data: number[] = bufferdata.getDataGlowDot(...coordsWorld, GLOW_DOT.RADIUS_PIXELS, GLOW_DOT.RESOLUTION, color, colorTransparent);
+		const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
+		const data: number[] = bufferdata.getDataGlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
 		createModel(data, 2, 'TRIANGLE_FAN', true).render();
 	} else {
 		// Render mini image of piece

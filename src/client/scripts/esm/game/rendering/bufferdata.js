@@ -271,13 +271,13 @@ function getDataBoxTunnel(left, bottom, startZ, right, top, endZ, r, g, b, a) {
 function getDataGlowDot(x, y, radius, resolution, [r1,g1,b1,a1], [r2,g2,b2,a2]) {
 	if (resolution < 3) return console.error("Resolution must be 3+ to get data of a fuzz ball.");
 
-	const data = [x, y, z, r1, g1, b1, a1]; // Mid point
+	const data = [x, y, r1, g1, b1, a1]; // Mid point
 
 	for (let i = 0; i <= resolution; i++) { // Add all outer points
 		const theta = (i / resolution) * 2 * Math.PI;
 		const thisX = x + radius * Math.cos(theta);
 		const thisY = y + radius * Math.sin(theta);
-		data.push(...[thisX, thisY, z, r2, g2, b2, a2]);
+		data.push(...[thisX, thisY, r2, g2, b2, a2]);
 	}
 
 	return data;

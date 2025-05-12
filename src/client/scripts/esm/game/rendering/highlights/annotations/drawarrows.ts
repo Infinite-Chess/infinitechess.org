@@ -77,9 +77,14 @@ function update(arrows: Arrow[]) {
 		}
 	} else { // Currently drawing an arrow
 		// Test if mouse released (finalize arrow)
-		if (!mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally drawing tincy arrows while zoomed out if we intend to draw square
-			addDrawnArrow(arrows);
-			drag_start = undefined; // Reset drawing
+
+		if (!mouse.isMouseHeld(Mouse.RIGHT)) {
+			// Prevents accidentally drawing tincy arrows while zoomed out if we intend to draw square
+			if (mouse.isMouseClicked(Mouse.RIGHT)) stopDrawing(); // We drew a square highlight instead of an arrow
+			else {
+				addDrawnArrow(arrows);
+				drag_start = undefined; // Reset drawing
+			}
 		}
 	}
 }
@@ -91,6 +96,7 @@ function update(arrows: Arrow[]) {
  * @returns An object containing the results, such as whether a change was made, and what arrow was deleted if any.
  */
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
+	// console.log("Adding drawn arrow");
 	const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
 	let drag_end: Coords;
 	if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
