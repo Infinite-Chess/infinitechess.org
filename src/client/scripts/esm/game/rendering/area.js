@@ -108,8 +108,7 @@ function applyPaddingToBox(box) { // { left, right, bottom, top }
 	// Iterate until we have desired padding
 	if (iterationsToRecalcPadding <= 0) { console.error("iterationsToRecalcPadding must be greater than 0!"); return boxCopy; }
 	for (let i = 0; i < iterationsToRecalcPadding; i++) {
-
-		const paddingToUse = boardpos.areZoomedOut() ? paddingMiniimage : padding;
+		const paddingToUse = scale < camera.getScaleWhenZoomedOut() ? paddingMiniimage : padding;
 		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
 		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
 
