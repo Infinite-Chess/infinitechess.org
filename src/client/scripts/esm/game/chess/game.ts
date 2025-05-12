@@ -26,19 +26,12 @@ import { CreateInputListener, InputListener } from '../input.js';
 import boarddrag from '../rendering/boarddrag.js';
 import boardpos from '../rendering/boardpos.js';
 import controls from '../misc/controls.js';
-// @ts-ignore
-import invites from '../misc/invites.js';
-// @ts-ignore
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import piecemodels from '../rendering/piecemodels.js';
-import miniimage from '../rendering/miniimage.js';
+import frametracker from '../rendering/frametracker.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 // @ts-ignore
-import guipause from '../gui/guipause.js';
-// @ts-ignore
-import input from '../input.js';
+import invites from '../misc/invites.js';
 // @ts-ignore
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
@@ -51,17 +44,6 @@ import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
-import frametracker from '../rendering/frametracker.js';
-// @ts-ignore
-import websocket from '../websocket.js';
-// @ts-ignore
-import camera from '../rendering/camera.js';
-// @ts-ignore
-import copypastegame from './copypastegame.js';
-// @ts-ignore
-import stats from '../gui/stats.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
 
 
 // Variables -------------------------------------------------------------------------------
