@@ -292,8 +292,6 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
-	if (guipause.areWePaused()) return; // Exit if paused (frozen)
-
 	reset(); // Initiate the arrows empty
 	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
 		arrowlegalmovehighlights.reset(); // Also reset this
