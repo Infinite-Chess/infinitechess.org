@@ -145,6 +145,8 @@ function update() {
 	// highlightline.genModel(); // Before boarddrag.checkIfBoardDragged() since clicks should prioritize this.
 	selectedpiecehighlightline.update();
 	snapping.updateSnapping();
+	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
+	annotations.testIfCollapsed();
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	boarddrag.checkIfBoardGrabbed();

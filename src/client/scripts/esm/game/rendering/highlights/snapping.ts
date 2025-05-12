@@ -286,7 +286,10 @@ function updateSnapping() {
 	// Instead, set the snap to the closest point on the line.
 	snap = { coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
 	// Teleport if clicked
-	if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
+	if (mouse.isMouseClicked(Mouse.LEFT)) {
+		transition.initTransitionToCoordsList([snap.coords]);
+		mouse.claimMouseClick(Mouse.LEFT);
+	}
 }
 
 function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, snapPoint: { coords: Coords, distance: number }}[], mouseCoords: Coords, allPrimitiveSlidesInGame: Vec2[]): { coords: Coords, color: Color, dist: number, source: Coords, type?: number } | undefined {

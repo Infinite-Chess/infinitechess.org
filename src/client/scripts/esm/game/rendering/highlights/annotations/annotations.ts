@@ -139,12 +139,15 @@ function clearAnnotes(annotes: Annotes) {
 function update() {
 	const annotes = getRelevantAnnotes();
 
-	if (mouse.isMouseClicked(Mouse.LEFT)) Collapse();
-
 	// Arrows first since it reads if there was a click, but Squares will claim the click.
 	drawarrows.update(annotes.Arrows);
 	drawsquares.update(annotes.Squares);
 	drawrays.update(annotes.Rays);
+}
+
+/** Collapses all annotations if we clicked the board. */
+function testIfCollapsed() {
+	if (mouse.isMouseClicked(Mouse.LEFT)) Collapse();
 }
 
 /**
@@ -211,6 +214,7 @@ export default {
 	getRays,
 
 	update,
+	testIfCollapsed,
 	onPieceSelection,
 	onGameUnload,
 	render_belowPieces,
