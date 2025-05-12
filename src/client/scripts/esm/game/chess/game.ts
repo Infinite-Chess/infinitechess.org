@@ -113,6 +113,14 @@ function update() {
 	}
 	guiclock.update(gamefile);
 
+	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	boardpos.update(); // Updates the board's position and scale according to its velocity
+
+	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
+	// Variables dependant on the board position & scale
+	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
+	board.recalcVariables();
+
 	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
@@ -126,13 +134,7 @@ function update() {
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
-	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
-	boardpos.update(); // Updates the board's position and scale according to its velocity
 	transition.update();
-
-	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
-
-	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 
 	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
