@@ -73,6 +73,11 @@ function getEntityWidthWorld() {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
 
+/** Returns the current snap. */
+function getSnapCoords(): Coords | undefined {
+	return snap?.coords;
+}
+
 function isHoveringAtleastOneEntity() {
 	return miniimage.imagesHovered.length > 0 || drawsquares.highlightsHovered.length > 0;
 }
@@ -443,6 +448,7 @@ function generateGhostImageModel(type: number, coords: Coords) {
 export default {
 	ENTITY_WIDTH_VPIXELS,
 	getEntityWidthWorld,
+	getSnapCoords,
 
 	isHoveringAtleastOneEntity,
 	getClosestEntityToMouse,

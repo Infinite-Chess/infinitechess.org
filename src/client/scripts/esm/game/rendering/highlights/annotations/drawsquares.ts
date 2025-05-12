@@ -94,28 +94,40 @@ function update(highlights: Square[]) {
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 		const isHoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
+		const snapCoords = snapping.getSnapCoords();
 
-		if (!boardpos.areZoomedOut() || !isHoveringAtleastOneEntity) { // Zoomed in OR not hovering anything. Normal behavior: toggle highlight on square.
+		if (boardpos.areZoomedOut() && (isHoveringAtleastOneEntity || snapCoords)) { // Zoomed out & snapping one thing => Snapping behavior
+			if (isHoveringAtleastOneEntity) {
+				// Find the closest hovered entity to the pointer
+				const closestEntity = snapping.getClosestEntityToMouse();
+	
+				// Now that we have the closest hovered entity, toggle the highlight on its coords.
+				const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, closestEntity.coords));
+				if (index !== -1) { // Already highlighted, Remove
+					highlights.splice(index, 1);
+					// Also remove from highlightsHovered. Prevents a bug where the highlight doesn't dissapear until the next frame render.
+					if (closestEntity.type === 'square') {
+						highlightsHovered.splice(closestEntity.index, 1);
+						highlightsHovered_dists.splice(closestEntity.index, 1);
+					} else throw Error("Cannot remove a highlight from highlightsHovered if it was not a square highlight.");
+				}
+				else highlights.push(closestEntity.coords); // Add
+			} else if (snapCoords) {
+				// Round the snapCoords to the nearest square
+				const snapSquare = space.roundCoords(snapCoords);
+
+				// Toggle the highlight on its coords.
+				const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, snapSquare));
+				if (index !== -1) throw Error("Snap is present, but the highlight already exists. If it exists than it should have been snapped to.")
+				highlights.push(snapSquare); // Add
+			} else throw Error("Snapping behavior but no snapCoords or hovered entity found.");
+
+		} else { // Zoomed in OR zoomed out with no snap => Normal behavior
 			// Check if the square is already highlighted
 			const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, pointerSquare));
 	
 			if (index !== -1) highlights.splice(index, 1); // Remove
 			else highlights.push(pointerSquare); // Add
-		} else { // Zoomed out AND hovering atleast one entity. Behavior: toggle highlight on closest entity to mouse.
-			// Find the closest hovered entity to the pointer
-			const closestEntity = snapping.getClosestEntityToMouse();
-
-			// Now that we have the closest hovered entity, toggle the highlight on its coords.
-			const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, closestEntity.coords));
-			if (index !== -1) { // Already highlighted, Remove
-				highlights.splice(index, 1);
-				// Also remove from highlightsHovered. Prevents a bug where the highlight doesn't dissapear until the next frame render.
-				if (closestEntity.type === 'square') {
-					highlightsHovered.splice(closestEntity.index, 1);
-					highlightsHovered_dists.splice(closestEntity.index, 1);
-				} else throw Error("Cannot remove a highlight from highlightsHovered if it was not a square highlight.");
-			}
-			else highlights.push(closestEntity.coords); // Add
 		}
 		// Claim the click so other scripts don't also use it
 		// input.getPointerClicked(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -37,6 +37,11 @@ function convertWorldSpaceToCoords(worldCoords: Coords): Coords {
 /** Returns the integer square coordinate that includes the floating point square coords inside its area. */
 function convertWorldSpaceToCoords_Rounded(worldCoords: Coords): Coords {
 	const coords = convertWorldSpaceToCoords(worldCoords);
+	return roundCoords(coords);
+}
+
+/** Returns the integer coordinates that contain the floating point coordinate provided. */
+function roundCoords(coords: Coords): Coords {
 	const squareCenter = board.gsquareCenter();
 	return [
 		Math.floor(coords[0] + squareCenter),
@@ -89,6 +94,7 @@ function getVisualCenterOfSquare(coords: Coords): Coords {
 export default {
 	convertWorldSpaceToCoords,
 	convertWorldSpaceToCoords_Rounded,
+	roundCoords,
 	convertCoordToWorldSpace,
 	convertCoordToWorldSpace_IgnoreSquareCenter,
 	convertPixelsToWorldSpace_Virtual,

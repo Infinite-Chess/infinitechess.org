@@ -39,7 +39,6 @@ import imagecache from "../../chess/rendering/imagecache.js";
 import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
 import boardpos from "../rendering/boardpos.js";
-import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
 import texturecache from "../../chess/rendering/texturecache.js";
 // @ts-ignore
