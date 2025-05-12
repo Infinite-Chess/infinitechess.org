@@ -64,10 +64,17 @@ function update(rays: Ray[]) {
 	if (!drag_start) { // Not currently drawing a ray
 		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) { // Double click drag this frame
 			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
-			if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
-				// Snap to nearest hovered entity
-				const nearestEntity = snapping.getClosestEntityToMouse();
-				drag_start = coordutil.copyCoords(nearestEntity.coords);
+
+			const snappingAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
+			const snapCoords = snapping.getSnapCoords();
+
+			if (boardpos.areZoomedOut() && snappingAtleastOneEntity || snapCoords) {
+				if (snapCoords) drag_start = coordutil.copyCoords(snapCoords);
+				else {
+					// Snap to nearest hovered entity
+					const nearestEntity = snapping.getClosestEntityToMouse();
+					drag_start = coordutil.copyCoords(nearestEntity.coords);
+				}
 			} else {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);

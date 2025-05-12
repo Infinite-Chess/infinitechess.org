@@ -113,13 +113,10 @@ function update(highlights: Square[]) {
 				}
 				else highlights.push(closestEntity.coords); // Add
 			} else if (snapCoords) {
-				// Round the snapCoords to the nearest square
-				const snapSquare = space.roundCoords(snapCoords);
-
 				// Toggle the highlight on its coords.
-				const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, snapSquare));
-				if (index !== -1) throw Error("Snap is present, but the highlight already exists. If it exists than it should have been snapped to.")
-				highlights.push(snapSquare); // Add
+				const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, snapCoords));
+				if (index !== -1) throw Error("Snap is present, but the highlight already exists. If it exists than it should have been snapped to.");
+				highlights.push(snapCoords); // Add
 			} else throw Error("Snapping behavior but no snapCoords or hovered entity found.");
 
 		} else { // Zoomed in OR zoomed out with no snap => Normal behavior

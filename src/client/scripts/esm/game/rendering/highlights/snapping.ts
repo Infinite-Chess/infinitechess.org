@@ -73,9 +73,10 @@ function getEntityWidthWorld() {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
 
-/** Returns the current snap. */
+/** Returns the current snap ROUNDED to the integer coordinate that contains it. */
 function getSnapCoords(): Coords | undefined {
-	return snap?.coords;
+	if (snap === undefined) return undefined;
+	return space.roundCoords(snap.coords);
 }
 
 function isHoveringAtleastOneEntity() {
