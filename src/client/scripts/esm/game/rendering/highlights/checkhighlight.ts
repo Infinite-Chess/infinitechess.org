@@ -8,10 +8,9 @@ import space from '../../misc/space.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 import { BufferModel, createModel } from '../buffermodel.js';
 import preferences from '../../../components/header/preferences.js';
+import boardpos from '../boardpos.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
-// @ts-ignore
-import movement from '../movement.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -43,8 +42,8 @@ function genCheckHighlightModel(royalsInCheck: Coords[]): BufferModel {
 	const color = preferences.getCheckHighlightColor(); // [r,g,b,a]
 	const colorOfPerimeter: number[] = [color[0],color[1],color[2], 0]; // Same color, but zero opacity
 
-	const outRad = 0.65 * movement.getBoardScale();
-	const inRad = 0.3 * movement.getBoardScale();
+	const outRad = 0.65 * boardpos.getBoardScale();
+	const inRad = 0.3 * boardpos.getBoardScale();
 	const resolution = 20;
     
 	const data: number[] = [];

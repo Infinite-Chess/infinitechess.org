@@ -5,7 +5,7 @@
  * Enable by pressing `7`.
  */
 
-import type { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
+import type { Coords } from "../../../chess/util/coordutil.js";
 import type { Vec3, Color } from "../../../util/math.js";
 
 
@@ -14,10 +14,9 @@ import gameslot from "../../chess/gameslot.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import legalmovehighlights from "./legalmovehighlights.js";
+import boardpos from "../boardpos.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
-// @ts-ignore
-import movement from "../movement.js";
 // @ts-ignore
 import legalmoveshapes from "../instancedshapes.js";
 
@@ -86,14 +85,14 @@ function regenModel() {
 function renderSpecialRights() {
 	if (!model) throw Error("Specialrights model not initialized");
 
-	const boardPos: Coords = movement.getBoardPos();
+	const boardPos: Coords = boardpos.getBoardPos();
 	const model_Offset: Coords = legalmovehighlights.getOffset();
 	const position: [number,number,number] = [
 		-boardPos[0] + model_Offset[0], // Add the model's offset
 		-boardPos[1] + model_Offset[1],
 		0
 	];
-	const boardScale: number = movement.getBoardScale();
+	const boardScale: number = boardpos.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
 	model.render(position, scale);
@@ -104,13 +103,13 @@ function renderEnPassant() {
 	if (!gamefile.state.global.enpassant) return; // No enpassant gamefile property
 
 
-	const boardPos: Coords = movement.getBoardPos();
+	const boardPos: Coords = boardpos.getBoardPos();
 	const position: Vec3 = [
 		-boardPos[0],
 		-boardPos[1],
 		0
 	];
-	const boardScale: number = movement.getBoardScale();
+	const boardScale: number = boardpos.getBoardScale();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	const data = ENPASSANT.SHAPE_FUNC(ENPASSANT.COLOR);

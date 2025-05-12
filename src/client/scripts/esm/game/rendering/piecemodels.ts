@@ -21,14 +21,13 @@ import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes } from '../../chess/util/typeutil.js';
+import boardpos from './boardpos.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
 import texture from './texture.js';
 // @ts-ignore
 import { gl } from './webgl.js';
-// @ts-ignore
-import movement from './movement.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 
@@ -90,7 +89,7 @@ function regenAll(gamefile: gamefile) {
 	console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
-	gamefile.mesh.offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
+	gamefile.mesh.offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 	// Calculate whether the textures should be inverted or not, based on whether we're viewing black's perspective.
 	gamefile.mesh.inverted = perspective.getIsViewingBlackPerspective();
 
@@ -199,7 +198,7 @@ function getInstanceDataForTypeRange(gamefile: gamefile, pieceList: TypeRange): 
 function shiftAll(gamefile: gamefile) {
 	console.log("Shifting all piece meshes.");
 
-	const newOffset = math.roundPointToNearestGridpoint(movement.getBoardPos(), REGEN_RANGE);
+	const newOffset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 
 	const diffXOffset = gamefile.mesh.offset[0] - newOffset[0];
 	const diffYOffset = gamefile.mesh.offset[1] - newOffset[1];
@@ -328,16 +327,16 @@ function deletebufferdata(gamefile: gamefile, piece: Piece) {
  */
 function renderAll(gamefile: gamefile) {
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const position: [number,number,number] = [ // Translate
         -boardPos[0] + gamefile.mesh.offset[0], // Add the model's offset. 
         -boardPos[1] + gamefile.mesh.offset[1],
         Z
     ]; // While separate these may each be big decimals, TOGETHER they should be small! No graphical glitches.
-	const boardScale = movement.getBoardScale();
+	const boardScale = boardpos.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
-	if (movement.isScaleLess1Pixel_Virtual() && !miniimage.isDisabled()) {
+	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
 		// Only render voids
 		gamefile.mesh.types[rawTypes.VOID]?.model.render(position, scale);
 		return;
@@ -346,7 +345,7 @@ function renderAll(gamefile: gamefile) {
 	// We can render everything...
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
-	if (!movement.isScaleLess1Pixel_Virtual() && isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset)) shiftAll(gamefile);
+	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset)) shiftAll(gamefile);
 
 	// Test if the rotation has changed
 	const correctInverted = perspective.getIsViewingBlackPerspective();
@@ -364,7 +363,7 @@ function renderAll(gamefile: gamefile) {
  * If so, each piece mesh data should be shifted to require less severe uniform translations when rendering.
  */
 function isOffsetOutOfRangeOfRegenRange(offset: Coords) { // offset: [x,y]
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const xDiff = Math.abs(boardPos[0] - offset[0]);
 	const yDiff = Math.abs(boardPos[1] - offset[1]);
 	if (xDiff > REGEN_RANGE || yDiff > REGEN_RANGE) return true;

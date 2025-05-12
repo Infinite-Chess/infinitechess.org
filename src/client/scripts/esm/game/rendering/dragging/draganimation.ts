@@ -24,16 +24,16 @@ import preferences from "../../../components/header/preferences.js";
 import themes from "../../../components/header/themes.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import animation from "../animation.js";
-import { listener } from "../../chess/game.js";
-import { Mouse } from "../../input2.js";
+import { listener_document, listener_overlay } from "../../chess/game.js";
+import { InputListener, Mouse } from "../../input2.js";
+import mouse from "../../../util/mouse.js";
+import boardpos from "../boardpos.js";
 // @ts-ignore
 import shapes from "../shapes.js";
 // @ts-ignore
 import bufferdata from "../bufferdata.js";
 // @ts-ignore
 import perspective from "../perspective.js";
-// @ts-ignore
-import movement from "../movement.js";
 // @ts-ignore
 import camera from "../camera.js";
 // @ts-ignore
@@ -91,6 +91,9 @@ let areDragging = false;
  */
 let parity: boolean = true;
 
+/** The ID of the pointer that is dragging the piece. */
+let pointerId: string | undefined;
+
 /** The coordinates of the piece before it was dragged. */
 let startCoords: Coords | undefined;
 /** The world location the piece has been dragged to. */
@@ -122,10 +125,18 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
 	if (!preferences.getDragEnabled()) return; // Dragging is disabled
 	areDragging = true;
 	if (resetParity) parity = true;
+
+	const respectiveListener = getRespectiveListener();
+	pointerId = respectiveListener.getMouseId(Mouse.LEFT);
+
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
 	if (animation.animations.some(a => coordutil.areCoordsEqual_noValidate(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
+}
+
+function getRespectiveListener(): InputListener {
+	return perspective.getEnabled() ? listener_document : listener_overlay;
 }
 
 /**
@@ -140,21 +151,44 @@ function updateDragLocation() {
 	 */
 	const squarePawnPromotingOn = selection.getSquarePawnIsCurrentlyPromotingOn();
 	if (squarePawnPromotingOn !== undefined) {
-		const worldCoords = space.convertCoordToWorldSpace(squarePawnPromotingOn) as Coords;
+		const worldCoords = space.convertCoordToWorldSpace(squarePawnPromotingOn);
 		worldLocation = worldCoords;
 		hoveredCoords = squarePawnPromotingOn;
 		return;
-	} else worldLocation = listener.getMousePosition(Mouse.LEFT)!; // Normal drag location
-
-	hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
+	} else {
+		// Normal drag location
+		worldLocation = mouse.getPointerWorld(pointerId!)!;
+		hoveredCoords = space.convertWorldSpaceToCoords_Rounded(worldLocation);
+	}
 }
 
-/**
- * Call AFTER {@link updateDragLocation} and BEFORE {@link renderPiece}
- */
+/** Call AFTER {@link updateDragLocation} and BEFORE {@link renderPiece} */
 function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
 	worldLocation = worldLoc;
 	hoveredCoords = hoverSquare;
+}
+
+function hasPointerReleased(): boolean {
+	if (!areDragging) throw Error("Don't call hasPointerReleased() when not dragging a piece");
+	const respectiveListener = getRespectiveListener();
+	const pointer = respectiveListener.getPointer(pointerId!);
+	return pointer === undefined || !pointer.isHeld;
+}
+
+/**
+ * Places the pointer that was dragging the piece back into the pointers down list.
+ * This allows other scripts to utilize it, such as boarddrag.
+ */
+function unclaimPointer() {
+	// console.log("Unclaiming pointer", pointerId);
+	const respectiveListener = getRespectiveListener();
+	respectiveListener.unclaimPointerDown(pointerId!);
+}
+
+/** Returns the pointer id that is dragging the piece. */
+function getPointerId(): string {
+	if (!areDragging) throw Error("Don't call getPointerId() when not dragging a piece");
+	return pointerId!;
 }
 
 /**
@@ -163,6 +197,7 @@ function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
  * @param wasCapture - If true, the capture sound is played. This has no effect if `playSound` is false.
  */
 function dropPiece() {
+	// console.error("Dropped piece");
 	if (!areDragging) return;
 	areDragging = false;
 	pieceType = undefined;
@@ -212,8 +247,8 @@ function genPieceModel(): BufferModel | undefined {
 	if (typeutil.SVGLESS_TYPES.some((type: RawType) => typeutil.getRawType(pieceType!) === type)) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
-	const touchscreenUsed = listener.isMouseTouch(Mouse.LEFT);
-	const boardScale = movement.getBoardScale();
+	const touchscreenUsed = listener_overlay.isMouseTouch(Mouse.LEFT);
+	const boardScale = boardpos.getBoardScale();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 	
 	const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(pieceType, rotation);
@@ -251,9 +286,9 @@ function genPieceModel(): BufferModel | undefined {
  */
 function genOutlineModel(): BufferModel {
 	const data: number[] = [];
-	const pointerIsTouch = listener.isMouseTouch(Mouse.LEFT);
+	const pointerIsTouch = listener_overlay.isMouseTouch(Mouse.LEFT);
 	const { left, right, bottom, top } = shapes.getTransformedBoundingBoxOfSquare(hoveredCoords!);
-	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * movement.getBoardScale();
+	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardpos.getBoardScale();
 	const color = preferences.getBoxOutlineColor();
 	
 	// Outline the enire rank & file when:
@@ -285,8 +320,8 @@ function genOutlineModel(): BufferModel {
  * @returns The vertex data for the frame.
  */
 function getBoxFrameData(coords: Coords): number[] {
-	const boardPos = movement.getBoardPos();
-	const boardScale = movement.getBoardScale();
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
 	const squareCenter = board.gsquareCenter();
 	const edgeWidth = 0.07 * boardScale;
 	const color = themes.getPropertyOfTheme(preferences.getTheme(), 'boxOutlineColor');
@@ -391,6 +426,9 @@ export default {
 	pickUpPiece,
 	updateDragLocation,
 	setDragLocationAndHoverSquare,
+	hasPointerReleased,
+	unclaimPointer,
+	getPointerId,
 	dropPiece,
 	cancelDragging,
 	renderTransparentSquare,

@@ -34,26 +34,24 @@ import space from '../../misc/space.js';
 import boardutil from '../../../chess/util/boardutil.js';
 import { rawTypes } from '../../../chess/util/typeutil.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
+import { listener_overlay } from '../../chess/game.js';
+import { Mouse } from '../../input2.js';
+import mouse from '../../../util/mouse.js';
+import boardpos from '../boardpos.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
 // @ts-ignore
 import legalmoves from '../../../chess/logic/legalmoves.js';
 // @ts-ignore
-import input from '../../input.js';
-// @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
 import transition from '../transition.js';
-// @ts-ignore
-import movement from '../movement.js';
 // @ts-ignore
 import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
-import { listener } from '../../chess/game.js';
-import { Mouse } from '../../input2.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -294,6 +292,8 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
+	if (guipause.areWePaused()) return; // Exit if paused (frozen)
+
 	reset(); // Initiate the arrows empty
 	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
 		arrowlegalmovehighlights.reset(); // Also reset this
@@ -619,10 +619,10 @@ function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft) 
 function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 	if (Object.keys(slideArrows).length > 0) throw Error('SHOULD have erased all slide arrows before recalcing');
 
-	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+	const worldWidth = width * boardpos.getBoardScale(); // The world-space width of our images
 	const worldHalfWidth = worldWidth / 2;
 
-	const mouseWorldLocation = listener.getMousePosition(Mouse.LEFT)!;
+	const mouseWorldLocation = mouse.getMouseWorld();
 
 	// Take the arrows draft, construct the actual
 	for (const [key, value] of Object.entries(slideArrowsDraft)) {
@@ -675,7 +675,7 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
  * @param testHover - Whether the arrow, when hovered over, should add itself to the list of arrows hovered over this frame. Should be false for arrows added by other scripts.
  * @returns 
  */
-function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, index: number, worldHalfWidth: number, mouseWorldLocation: Coords, testHover: boolean): Arrow {
+function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, index: number, worldHalfWidth: number, mouseWorldLocation: Coords | undefined, testHover: boolean): Arrow {
 	const renderCoords = coordutil.copyCoords(intersection);
 
 	// If this picture is an adjacent picture, adjust it's positioning
@@ -688,13 +688,15 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
 
 	// Does the mouse hover over the piece?
 	let hovered = false;
-	const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
-	if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
-		hovered = true;
-		// ADD the piece to the list of arrows being hovered over!!!
-		if (testHover) hoveredArrows.push({ piece: arrowDraft.piece, vector });
-		// If we also clicked, then teleport!
-		teleportToPieceIfClicked(arrowDraft.piece, vector);
+	if (mouseWorldLocation) {
+		const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
+		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
+			hovered = true;
+			// ADD the piece to the list of arrows being hovered over!!!
+			if (testHover) hoveredArrows.push({ piece: arrowDraft.piece, vector });
+			// If we also clicked, then teleport!
+			teleportToPieceIfClicked(arrowDraft.piece, vector);
+		}
 	}
 
 	return { worldLocation, piece: arrowDraft.piece, hovered };
@@ -705,11 +707,12 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
  * This teleports you to the piece it is pointing to IF the mouse has clicked this frame.
  */
 function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
-	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Mouse did not click this frame
+	if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Don't let the board be dragged by this mouse down
+	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Mouse did not click this frame
 
 	// Teleport in the direction of the piece's arrow, NOT straight to the piece.
 
-	const startCoords = movement.getBoardPos();
+	const startCoords = boardpos.getBoardPos();
 	// The direction we will follow when teleporting
 	const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(startCoords, vector);
 	// The line perpendicular to the target piece
@@ -719,7 +722,7 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 	const telCoords = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
 
 	transition.panTel(startCoords, telCoords);
-	if (listener.isMouseDown(Mouse.LEFT)) input.removeMouseDown_Left();
+	if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT);
 }
 
 
@@ -792,8 +795,8 @@ function executeArrowShifts() {
 	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 
-	const worldHalfWidth = (width * movement.getBoardScale()) / 2; // The world-space width of our images
-	const mouseWorldLocation = listener.getMousePosition(Mouse.LEFT)!;
+	const worldHalfWidth = (width * boardpos.getBoardScale()) / 2; // The world-space width of our images
+	const mouseWorldLocation = mouse.getMouseWorld();
 
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 		if (shift.start) {
@@ -903,10 +906,10 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 
 		// Calculate more detailed information, enough to render...
 
-		const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+		const worldWidth = width * boardpos.getBoardScale(); // The world-space width of our images
 		const worldHalfWidth = worldWidth / 2;
 
-		const mouseWorldLocation = listener.getMousePosition(Mouse.LEFT)!;
+		const mouseWorldLocation = mouse.getMouseWorld();
 
 		const vector = slide;
 		const negVector = math.negateVector(slide);
@@ -946,7 +949,7 @@ function render() {
 function regenerateModelAndRender() {
 	if (Object.keys(slideArrows).length === 0 && animatedArrows.length === 0) return; // No visible arrows, don't generate the model
 
-	const worldWidth = width * movement.getBoardScale(); // The world-space width of our images
+	const worldWidth = width * boardpos.getBoardScale(); // The world-space width of our images
 	const halfWorldWidth = worldWidth / 2;
 
 	// Position data of the single instance
@@ -1036,7 +1039,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
 
 	// Opacity changing with distance
-	// let maxAxisDist = math.chebyshevDistance(movement.getBoardPos(), pieceCoords) - 8;
+	// let maxAxisDist = math.chebyshevDistance(boardpos.getBoardPos(), pieceCoords) - 8;
 	// opacity = Math.sin(maxAxisDist / 40) * 0.5
 
 	//								instaceposition	   instancetexcoord  instancecolor

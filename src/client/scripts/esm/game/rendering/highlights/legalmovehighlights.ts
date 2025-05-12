@@ -16,10 +16,9 @@ import frametracker from '../frametracker.js';
 import preferences from '../../../components/header/preferences.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
+import boardpos from '../boardpos.js';
 // @ts-ignore
 import perspective from '../perspective.js';
-// @ts-ignore
-import movement from '../movement.js';
 // @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
@@ -180,7 +179,7 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 
 	// const oldOffset = jsutil.deepCopyObject(model_Offset);
 	// // This is the range at which we will always regen this model. Prevents gittering.
-	// model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
+	// model_Offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
 	// if (!coordutil.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
 
 	// Used to limit the data/highlights of infinitely sliding moves to the area on your screen.
@@ -192,7 +191,7 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 	if (changeMade) {
 		// console.log("Shifted offset of highlights.");
 		/** Update our offset to the nearest grid-point multiple of {@link highlightedMovesRegenRange} */
-		model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
+		model_Offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
 		regenerateAll();
 	}
 }
@@ -223,7 +222,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 
 function getBoundingBoxOfPerspectiveView() {
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const x = boardPos[0];
 	const y = boardPos[1];
 
@@ -252,7 +251,7 @@ function initBoundingBoxOfRenderRange() {
 	const halfNewWidth = newWidth / 2;
 	const halfNewHeight = newHeight / 2;
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const newLeft = Math.ceil(boardPos[0] - halfNewWidth);
 	const newRight = Math.floor(boardPos[0] + halfNewWidth);
 	const newBottom = Math.ceil(boardPos[1] - halfNewHeight);
@@ -383,13 +382,13 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
 function renderSelectedPiecesLegalMoves() {
 	if (!isPieceSelected()) return; // No model to render
 
-	const boardPos: Coords = movement.getBoardPos();
+	const boardPos: Coords = boardpos.getBoardPos();
 	const position: [number,number,number] = [
         -boardPos[0] + model_Offset[0], // Add the model's offset
         -boardPos[1] + model_Offset[1],
         0
     ];
-	const boardScale: number = movement.getBoardScale();
+	const boardScale: number = boardpos.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 	
 	// Render each of the models using instanced rendering.

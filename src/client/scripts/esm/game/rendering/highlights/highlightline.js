@@ -5,7 +5,6 @@
  */
 
 // Import Start
-import input from '../../input.js';
 import bufferdata from '../bufferdata.js';
 import perspective from '../perspective.js';
 import miniimage from '../miniimage.js';
@@ -14,7 +13,6 @@ import transition from '../transition.js';
 import selection from '../../chess/selection.js';
 import camera from '../camera.js';
 import math from '../../../util/math.js';
-import movement from '../movement.js';
 import { createModel } from '../buffermodel.js';
 import jsutil from '../../../util/jsutil.js';
 import coordutil from '../../../chess/util/coordutil.js';
@@ -22,8 +20,10 @@ import space from '../../misc/space.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import guipause from '../../gui/guipause.js';
-import { listener } from '../../chess/game.js';
+import { listener_overlay } from '../../chess/game.js';
 import { Mouse } from '../../input2.js';
+import mouse from '../../../util/mouse.js';
+import boardpos from '../boardpos.js';
 // Import End
 
 /**
@@ -48,7 +48,7 @@ const opacityOfGhostImage = 1;
 // Also tests to see if the line is being hovered over, or clicked to transition.
 function genModel() {
 	if (guipause.areWePaused()) return; // Exit if paused
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (!selection.isAPieceSelected()) return;
 
 	const dataLines = [];
@@ -67,8 +67,7 @@ function genModel() {
 	/** @type {BoundingBox} */
 	let boundingBox = perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : camera.getScreenBoundingBox(false);
     
-	const mousePixels = listener.getMousePosition(Mouse.LEFT);
-	const mouseLocation = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
+	const mouseLocation = mouse.getMouseWorld();
 
 	let closestDistance;
 	let closestPoint;
@@ -137,8 +136,8 @@ function genModel() {
 	// If we clicked, teleport to the point on the line closest to the click location.
 	// BUT we have to recalculate it in coords format instead of world-space
 
-	if (listener.isMouseDown(Mouse.LEFT)) input.removeMouseDown_Left(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, we will not teleport down to this line
+	if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, we will not teleport down to this line
 
 	const moveset = closestPoint.moveset;
 
@@ -155,7 +154,7 @@ function genModel() {
 	const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, moveset, line, true);
 	intersectionPoints[1] = capPointAtSlideLimit(intersectionPoints[1], rightLimitPointCoord, true, lineIsVertical);
 
-	const tileMouseOver = board.getTileMouseOver().tile_Int;
+	const tileMouseOver = mouse.getTileMouseOver_Integer();
 
 	const closestCoordCoords = math.closestPointOnLine(intersectionPoints[0], intersectionPoints[1], tileMouseOver).coords;
 
@@ -191,7 +190,7 @@ function getPointOfDiagSlideLimit(pieceCoords, moveset, line, positive) { // pos
 
 // Renders the legal slide move lines, and ghost image if hovering
 function render() {
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (!selection.isAPieceSelected()) return;
 	if (!modelLines) { console.log("No highlightline model to render!"); return; }
 

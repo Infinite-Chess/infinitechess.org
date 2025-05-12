@@ -22,8 +22,7 @@ import selection from "../../chess/selection.js";
 import legalmovehighlights from "../highlights/legalmovehighlights.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
-// @ts-ignore
-import movement from "../movement.js";
+import boardpos from "../boardpos.js";
 // @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 
@@ -124,14 +123,14 @@ function onPieceIndicatorHover(piece: Piece) {
 function renderEachHoveredPieceLegalMoves() {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const model_Offset = legalmovehighlights.getOffset();
 	const position: [number,number,number] = [
 		-boardPos[0] + model_Offset[0], // Add the highlights offset
 		-boardPos[1] + model_Offset[1],
 		0
 	];
-	const boardScale = movement.getBoardScale();
+	const boardScale = boardpos.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {

@@ -1,8 +1,8 @@
 
 import board from "./board.js";
+import boardpos from "./boardpos.js";
 import bufferdata from "./bufferdata.js";
 import { createModel } from "./buffermodel.js";
-import movement from "./movement.js";
 import perspective from "./perspective.js";
 
 
@@ -51,8 +51,8 @@ function getTransformedBoundingBoxOfSquare(coords) {
  * @param {BoundingBox} boundingBox 
  */
 function applyWorldTransformationsToSquareBoundingBox(boundingBox) {
-	const boardPos = movement.getBoardPos();
-	const boardScale = movement.getBoardScale();
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
 	const left = (boundingBox.left - boardPos[0]) * boardScale;
 	const bottom = (boundingBox.bottom - boardPos[1]) * boardScale;
 	const right = left + boardScale;
@@ -69,8 +69,8 @@ function applyWorldTransformationsToSquareBoundingBox(boundingBox) {
  * @param {BoundingBox} boundingBox 
  */
 function applyWorldTransformationsToBoundingBox(boundingBox) {
-	const boardPos = movement.getBoardPos();
-	const boardScale = movement.getBoardScale();
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
 	const left = (boundingBox.left - boardPos[0]) * boardScale;
 	const right = (boundingBox.right - boardPos[0]) * boardScale;
 	const bottom = (boundingBox.bottom - boardPos[1]) * boardScale;

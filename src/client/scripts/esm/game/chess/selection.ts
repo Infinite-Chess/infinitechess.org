@@ -26,14 +26,15 @@ import pieces from '../rendering/pieces.js';
 import guipromotion from '../gui/guipromotion.js';
 import legalmovehighlights from '../rendering/highlights/legalmovehighlights.js';
 import moveutil from '../../chess/util/moveutil.js';
-import space from '../misc/space.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes, players } from '../../chess/util/typeutil.js';
-import { listener } from './game.js';
+import { listener_document, listener_overlay } from './game.js';
 import { Mouse } from '../input2.js';
+import mouse from '../../util/mouse.js';
+import boardpos from '../rendering/boardpos.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -49,9 +50,8 @@ import perspective from '../rendering/perspective.js';
 // @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
-import movement from '../rendering/movement.js';
-// @ts-ignore
 import statustext from '../gui/statustext.js';
+import boarddrag from '../rendering/boarddrag.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -117,7 +117,7 @@ function promoteToType(type: number) { promoteTo = type; }
 // Called when '1' is pressed!
 function toggleEditMode() {
 	// Make sure it's legal
-	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener.isKeyHeld('0');
+	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener_document.isKeyHeld('0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
 
@@ -133,7 +133,8 @@ function disableEditMode() { editMode = false; }
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
-	if (listener.isMouseDown(Mouse.RIGHT)) return unselectPiece(); // Right-click deselects everything
+	guipromotion.update();
+	if (mouse.isMouseDown(Mouse.RIGHT)) return unselectPiece(); // Right-click deselects everything
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
@@ -141,16 +142,14 @@ function update() {
 		if (promoteTo) makePromotionMove(gamefile);
 		return;
 	}
-	if (movement.isScaleLess1Pixel_Virtual() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) {
+	if (boardpos.areZoomedOut() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
-		if (!listener.isMouseHeld(Mouse.LEFT)) draganimation.dropPiece(); // Drop it without moving it.
+		if (draganimation.areDraggingPiece() && draganimation.hasPointerReleased()) draganimation.dropPiece(); // Drop it without moving it.
 		return;
 	}
 
-	const mousePixels = listener.getMousePosition(Mouse.LEFT)!;
-	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
-	hoverSquare = space.convertWorldSpaceToCoords_Rounded(mouseWorldSpace);
+	hoverSquare = mouse.getTileMouseOver_Integer()!; // Update the tile the mouse is hovering over, if any.
 	// console.log("Hover square:", hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
@@ -198,10 +197,10 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 function testIfPieceSelected(gamefile: gamefile) {
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
-	if (dragEnabled && !listener.isMouseDown(Mouse.LEFT) && !listener.isMouseClicked(Mouse.LEFT)) return; // If dragging is enabled, all we need is pointer down event.
-	else if (!dragEnabled && !listener.isMouseClicked(Mouse.LEFT)) return; // When dragging is off, we actually need a pointer click.
+	if (dragEnabled && !mouse.isMouseDown(Mouse.LEFT) && !mouse.isMouseClicked(Mouse.LEFT)) return; // If dragging is enabled, all we need is pointer down event.
+	else if (!dragEnabled && !mouse.isMouseClicked(Mouse.LEFT)) return; // When dragging is off, we actually need a pointer click.
 
-	if (movement.boardHasMomentum()) return; // Don't select a piece if the board is moving
+	if (boardpos.boardHasMomentum()) return; // Don't select a piece if the board is moving
 
 	// We have clicked, test if we clicked a piece...
 
@@ -209,8 +208,9 @@ function testIfPieceSelected(gamefile: gamefile) {
 
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
+	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0) return; // Can't select this piece type
-	else if (selectionLevel === 1 && listener.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
+	else if (selectionLevel === 1 && mouse.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -218,14 +218,18 @@ function testIfPieceSelected(gamefile: gamefile) {
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
-	} else if (selectionLevel === 2 && listener.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
-		if (listener.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
+	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
+		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
+		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
+		if (Object.keys(listener_overlay.getAllPointers()).length === 2) return;
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
+		// Claim the mouse down so board dragging doesn't use it
+		listener_overlay.claimMouseDown(Mouse.LEFT);
 	}
 }
 
@@ -234,11 +238,13 @@ function testIfPieceDropped(gamefile: gamefile): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
-	if (Object.keys(listener.getAllPointers()).length > 1) { // Prevent accidental dragging when trying to zoom.
+	if (listener_overlay.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() === 2) { // Prevent accidental dragging when trying to zoom.
+		draganimation.unclaimPointer(); // Unclaim the pointer so that board dragging may capture it again to initiate a pinch.
 		if (draganimation.getDragParity()) return unselectPiece();
 		return draganimation.dropPiece();
 	}
-	if (listener.isMouseHeld(Mouse.LEFT)) return; // Not dropped yet
+
+	if (!draganimation.hasPointerReleased()) return; // The pointer has not released yet, don't drop it.
 
 	// The pointer has released, drop the piece.
 
@@ -257,7 +263,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
 function testIfPieceMoved(gamefile: gamefile): void {
 	if (!pieceSelected) return;
-	if (!listener.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
+	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
 	else moveGamefilePiece(gamefile, hoverSquare);
@@ -296,6 +302,10 @@ function canSelectPieceType(gamefile: gamefile, type: number | undefined): 0 | 1
 	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
 	const isOurTurn = gameloader.isItOurTurn(player);
 	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
+	// The piece is also not considered draggable if this is exactly the second pointer down.
+	// But it still may be selected by a simulated click.
+	const pointerCount = Object.keys(listener_overlay.getAllPointers()).length;
+	if (boarddrag.isBoardDragging() && pointerCount === 1) return 1;
 	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
 
@@ -461,7 +471,7 @@ function makePromotionMove(gamefile: gamefile) {
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece() {
-	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || config.VIDEO_MODE) return;
+	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(Mouse.LEFT) || config.VIDEO_MODE) return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
 	if (typeutil.SVGLESS_TYPES.some((type: RawType) => type === rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 

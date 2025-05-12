@@ -14,12 +14,13 @@
 import type { Coords } from '../../chess/util/coordutil.js';
 
 
+import boardpos from '../rendering/boardpos.js';
 // @ts-ignore
 import board from "../rendering/board.js";
 // @ts-ignore
 import camera from "../rendering/camera.js";
 // @ts-ignore
-import movement from "../rendering/movement.js";
+import perspective from '../rendering/perspective.js';
 
 
 /**
@@ -27,14 +28,15 @@ import movement from "../rendering/movement.js";
  * this depends on your position and scale.
  */
 function convertWorldSpaceToCoords(worldCoords: Coords): Coords {
-	const boardPos = movement.getBoardPos();
-	const boardScale = movement.getBoardScale();
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
 	return [
 		worldCoords[0] / boardScale + boardPos[0],
 		worldCoords[1] / boardScale + boardPos[1]
 	];
 }
 
+/** Returns the integer square coordinate that includes the floating point square coords inside its area. */
 function convertWorldSpaceToCoords_Rounded(worldCoords: Coords): Coords {
 	const coords = convertWorldSpaceToCoords(worldCoords);
 	const squareCenter = board.gsquareCenter();
@@ -45,7 +47,7 @@ function convertWorldSpaceToCoords_Rounded(worldCoords: Coords): Coords {
 }
 
 // Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.gsquareCenter().
-function convertCoordToWorldSpace(coords: Coords, position: Coords = movement.getBoardPos(), scale: number = movement.getBoardScale()): Coords {
+function convertCoordToWorldSpace(coords: Coords, position: Coords = boardpos.getBoardPos(), scale: number = boardpos.getBoardScale()): Coords {
 	const squareCenter = board.gsquareCenter();
 	return [
 		(coords[0] - position[0] + 0.5 - squareCenter) * scale,
@@ -53,7 +55,7 @@ function convertCoordToWorldSpace(coords: Coords, position: Coords = movement.ge
 	];
 }
 
-function convertCoordToWorldSpace_IgnoreSquareCenter(coords: Coords, position = movement.getBoardPos(), scale = movement.getBoardScale()): Coords {
+function convertCoordToWorldSpace_IgnoreSquareCenter(coords: Coords, position = boardpos.getBoardPos(), scale = boardpos.getBoardScale()): Coords {
 	return [
 		(coords[0] - position[0]) * scale,
 		(coords[1] - position[1]) * scale
@@ -71,7 +73,7 @@ function convertWorldSpaceToPixels_Virtual(value: number): number {
 }
 
 function convertWorldSpaceToGrid(value: number): number {
-	return value / movement.getBoardScale();
+	return value / boardpos.getBoardScale();
 }
 
 /**
@@ -86,19 +88,6 @@ function getVisualCenterOfSquare(coords: Coords): Coords {
 	];
 }
 
-function convertPointerCoordsToWorldSpace(mouse: Coords, element: HTMLElement): Coords {
-	const screenBox = camera.getScreenBoundingBox();
-	const screenWidth = screenBox.right - screenBox.left;
-	const screenHeight = screenBox.top - screenBox.bottom;
-	const mouseWorldSpace: Coords = [
-		screenBox.left + (mouse[0] / element.clientWidth) * screenWidth,
-		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
-		screenBox.top - (mouse[1] / element.clientHeight) * screenHeight
-	];
-	// console.log('mouseWorldSpace', mouseWorldSpace);
-	return mouseWorldSpace;
-}
-
 export default {
 	convertWorldSpaceToCoords,
 	convertWorldSpaceToCoords_Rounded,
@@ -108,5 +97,4 @@ export default {
 	convertWorldSpaceToPixels_Virtual,
 	convertWorldSpaceToGrid,
 	getVisualCenterOfSquare,
-	convertPointerCoordsToWorldSpace,
 };

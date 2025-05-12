@@ -5,7 +5,7 @@ import stats from '../gui/stats.js';
 import jsutil from '../../util/jsutil.js';
 import config from '../config.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
-import { listener } from '../chess/game.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 // Import End
 
 'use strict';
@@ -164,7 +164,7 @@ function updateTimeForLongTasks() {
 }
 
 function updateAFK() {
-	if (listener.atleastOneInput()) onReturnFromAFK();
+	if (listener_overlay.atleastOneInput() || listener_document.atleastOneInput()) onReturnFromAFK();
 }
 
 function onReturnFromAFK() {
@@ -176,6 +176,7 @@ function onReturnFromAFK() {
 	// Make sure we're subbed to invites list if we're on the play page!
 	invites.subscribeToInvites();
 }
+onReturnFromAFK(); // Starts the timer on page load
 
 function restartAFKTimer() {
 	clearTimeout(AFKTimeoutID);

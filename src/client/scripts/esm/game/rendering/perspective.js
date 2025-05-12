@@ -11,6 +11,9 @@ import frametracker from './frametracker.js';
 import config from '../config.js';
 import preferences from '../../components/header/preferences.js';
 import gameslot from '../chess/gameslot.js';
+import docutil from '../../util/docutil.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
+import { Mouse } from '../input2.js';
 // Import End
 
 /**
@@ -115,17 +118,26 @@ function lockMouse() {
 	// camera.canvas.requestPointerLock({ unadjustedMovement: true });
 }
 
-function update(mouseChangeInX, mouseChangeInY) {
+function update() {
 	if (!enabled) return;
 	// If they pushed escape, the mouse will no longer be locked
 	// If the mouse is unlocked, don't rotate view.
-	if (!isMouseLocked()) return;
+	if (!isMouseLocked()) {
+		// Check if needs to relock
+		if (listener_overlay.isMouseDown(Mouse.LEFT)) {
+			listener_overlay.claimMouseDown(Mouse.LEFT);
+			relockMouse();
+		}
+		return;
+	}
+
+	const mouseChange = listener_document.getPointerDelta('mouse');
 
 	const thisSensitivity = mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
 
 	// Change rotations based on mouse motion
-	rotX += mouseChangeInY * thisSensitivity;
-	rotZ += mouseChangeInX * thisSensitivity;
+	rotX += mouseChange[1] * thisSensitivity;
+	rotZ += mouseChange[0] * thisSensitivity;
 	capRotations();
 	updateIsViewingBlackPerspective();
 

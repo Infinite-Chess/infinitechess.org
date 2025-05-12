@@ -10,6 +10,8 @@ import typeutil from '../../chess/util/typeutil.js';
 import selection from '../chess/selection.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../chess/util/typeutil.js';
+import { listener_overlay } from '../chess/game.js';
+import { Mouse } from '../input2.js';
 
 
 
@@ -47,6 +49,7 @@ function open(color: Player) {
 
 /** Closes the promotion UI */
 function close() {
+	// console.error("Closing promotion UI");
 	selectionOpen = false;
 	for (const element of Object.values(PromotionGUI.players)) {
 		element.classList.add('hidden');
@@ -102,10 +105,19 @@ function callback_promote(event: Event) {
 	close();
 }
 
+/** Closes the UI if the mouse clicks outside it */
+function update() {
+	if (!selectionOpen) return;
+	if (!listener_overlay.isMouseDown(Mouse.LEFT) && !listener_overlay.isMouseDown(Mouse.RIGHT) && !listener_overlay.isMouseDown(Mouse.MIDDLE)) return;
+	selection.unselectPiece();
+	close();
+}
+
 export default {
 	isUIOpen,
 	open,
 	close,
 	initUI,
 	resetUI,
+	update,
 };

@@ -9,7 +9,6 @@
 // Import Start
 import webgl from './rendering/webgl.js';
 import loadbalancer from './misc/loadbalancer.js';
-import input from './input.js';
 import localstorage from '../util/localstorage.js';
 import game from './chess/game.js';
 import shaders from './rendering/shaders.js';
@@ -46,8 +45,6 @@ function start() {
 }
 
 function initListeners() {
-	input.initListeners(); // Mouse, touch, & key event listeners
-
 	window.addEventListener('beforeunload', (event) => {
 		// console.log('Detecting unload');
 
@@ -69,9 +66,8 @@ function gameLoop() {
 
 		render(); // Render everything
         
-		// DELETE SOON
-		input.update(); // Key events should be reset as soon as possible after updating, so we don't miss any. Then again, all events are fired at the end of the animation frame anyway.
-		document.dispatchEvent(new Event('reset-listener-events')); // Reset all event listeners states so we can catch any new events that happen for the next frame.
+		// Reset all event listeners states so we can catch any new events that happen for the next frame.
+		document.dispatchEvent(new Event('reset-listener-events'));
 
 		loadbalancer.timeAnimationFrame(); // This will time how long this frame took to animate
 

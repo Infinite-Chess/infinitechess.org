@@ -4,15 +4,12 @@ import webgl from './webgl.js';
 import texture from './texture.js';
 import style from '../gui/style.js';
 import bufferdata from './bufferdata.js';
-import input from '../input.js';
 import perspective from './perspective.js';
-import movement from './movement.js';
 import camera from './camera.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
-import space from '../misc/space.js';
 import frametracker from './frametracker.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
@@ -22,8 +19,7 @@ import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
 import guipromotion from '../gui/guipromotion.js';
 import spritesheet from './spritesheet.js';
-import { listener } from '../chess/game.js';
-import { Mouse } from '../input2.js';
+import boardpos from './boardpos.js';
 // Import End
 
 /** 
@@ -45,14 +41,6 @@ let tilesTexture_2; // Opaque, no mipmaps
 let tilesTexture_256mips;
 
 const squareCenter = 0.5; // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
-
-let tileWidthPixels_Physical; // Width of tiles in physical, not virtual screen pixels (greater for retina displays).      Dependent on board scale.
-let tileWidthPixels_Virtual; //  Width of tiles in               virtual screen pixels (the same even on retina displays). Dependent on board scale.
-
-let tile_MouseOver_Float; // [x, y]  The board location of the mouse, in floats.
-let tile_MouseOver_Int; // [x, y]  The board location of the mouse, rounded to nearest tile.
-let tiles_FingersOver_Float; // { touchID: [x, y], touchID: [x, y] }  Object with current touches as parameters, with touches containing their board location.
-let tiles_FingersOver_Int; // Same as tiles_FingersOver_Float, but rounded to nearest tile.
 
 /**
  * The *exact* bounding box of the board currently visible on the canvas.
@@ -77,7 +65,6 @@ let boundingBox_debugMode;
 
 const perspectiveMode_z = -0.01;
 
-const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn't break
 //const limitToDampScale = 0.15; // FOR RECORDING. This slows down very fast.
 
 let lightTiles; // [r,g,b,a]
@@ -122,15 +109,11 @@ function gsquareCenter() {
 }
 
 function gtileWidth_Pixels() {
+	// If we're in developer mode, our screenBoundingBox is different
+	const screenBoundingBox = camera.getScreenBoundingBox();
+	const tileWidthPixels_Physical = (camera.canvas.height * 0.5 / screenBoundingBox.top) * boardpos.getBoardScale(); // Greater for retina displays
+	const tileWidthPixels_Virtual = tileWidthPixels_Physical / window.devicePixelRatio;
 	return tileWidthPixels_Virtual;
-}
-
-function gtile_MouseOver_Float() {
-	return tile_MouseOver_Float;
-}
-
-function gtile_MouseOver_Int() {
-	return tile_MouseOver_Int;
 }
 
 /**
@@ -150,75 +133,19 @@ function gboundingBox(debugMode = camera.getDebug()) {
 	return debugMode ? jsutil.deepCopyObject(boundingBox_debugMode) : jsutil.deepCopyObject(boundingBox);
 }
 
-function glimitToDampScale() {
-	return limitToDampScale;
-}
-
 // Recalculate board velicity, scale, and other common variables.
 function recalcVariables() {
-	recalcTileWidth_Pixels();
-	recalcTile_MouseCrosshairOver();
-	recalcTiles_FingersOver();
 	recalcBoundingBox();
-}
-
-function recalcTile_MouseCrosshairOver() {
-	recalcTile_MouseOver();
-	recalcTile_CrosshairOver();
-}
-
-function recalcTileWidth_Pixels() {
-	// If we're in developer mode, our screenBoundingBox is different
-	const screenBoundingBox = camera.getScreenBoundingBox();
-	tileWidthPixels_Physical = (camera.canvas.height * 0.5 / screenBoundingBox.top) * movement.getBoardScale(); // Greater for retina displays
-	tileWidthPixels_Virtual = tileWidthPixels_Physical / window.devicePixelRatio;
-}
-
-function recalcTile_MouseOver() {
-	if (perspective.isMouseLocked()) return;
-	if (perspective.getEnabled()) return setTile_MouseOverToUndefined();
-
-	const tile_MouseOver_IntAndFloat = getTileMouseOver();
-    
-	tile_MouseOver_Float = tile_MouseOver_IntAndFloat.tile_Float;
-	tile_MouseOver_Int = tile_MouseOver_IntAndFloat.tile_Int;
-}
-
-function setTile_MouseOverToUndefined() {
-	tile_MouseOver_Float = undefined;
-	tile_MouseOver_Int = undefined;
-}
-
-function recalcTile_CrosshairOver() {
-	if (!perspective.isMouseLocked()) return;
-
-	const mousePixels = listener.getMousePosition(Mouse.LEFT);
-	const mouseWorldSpace = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
-	const mouseCoords = space.convertWorldSpaceToCoords(mouseWorldSpace);
-
-	tile_MouseOver_Float = mouseCoords;
-	tile_MouseOver_Int = [Math.floor(mouseCoords[0] + squareCenter), Math.floor(mouseCoords[1] + squareCenter)];
-}
-
-function recalcTiles_FingersOver() {
-	tiles_FingersOver_Float = {};
-	tiles_FingersOver_Int = {};
-    
-	for (let i = 0; i < input.getTouchHelds().length; i++) {
-		const thisTouch = input.getTouchHelds()[i];
-		const touchTileAndFloat = gtileCoordsOver(thisTouch.x, thisTouch.y);
-    
-		tiles_FingersOver_Float[thisTouch.id] = touchTileAndFloat.tile_Float;
-		tiles_FingersOver_Int[thisTouch.id] = touchTileAndFloat.tile_Int;
-	}
 }
 
 function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
 	const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
-	const boardPos = movement.getBoardPos();
-	const tileXFloat = n * x / tileWidthPixels_Virtual + boardPos[0];
-	const tileYFloat = n * y / tileWidthPixels_Virtual + boardPos[1];
+	const tileWidthPixels = gtileWidth_Pixels();
+
+	const boardPos = boardpos.getBoardPos();
+	const tileXFloat = n * x / tileWidthPixels + boardPos[0];
+	const tileYFloat = n * y / tileWidthPixels + boardPos[1];
 
 	const tile_Float = [tileXFloat, tileYFloat];
 	const tile_Int = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
@@ -226,32 +153,12 @@ function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
 	return { tile_Float, tile_Int };
 }
 
-// Works whether the mouse is virtual (touch screen) or not
-function getTileMouseOver() {
-	const mousePixels = listener.getMousePosition(Mouse.LEFT); // [x, y]
-	const mouseWorld = space.convertPointerCoordsToWorldSpace(mousePixels, listener.element);
-	const tile_Float = space.convertWorldSpaceToCoords(mouseWorld);
-	const tile_Int = [Math.floor(tile_Float[0] + squareCenter), Math.floor(tile_Float[1] + squareCenter)];
-    
-	console.log("Tile mouse over:", tile_Int, tile_Float);
-	return { tile_Float, tile_Int };
-}
-
-// Takes in touchID, returns an object of the finger id, and x & y of tile
-function gpositionFingerOver(touchID) {
-	return {
-		id: touchID,
-		x: tiles_FingersOver_Float[touchID][0],
-		y: tiles_FingersOver_Float[touchID][1]
-	};
-}
-
 function recalcBoundingBox() {
 
-	boundingBoxFloat = getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), false);
+	boundingBoxFloat = getBoundingBoxOfBoard(boardpos.getBoardPos(), boardpos.getBoardScale(), false);
 	boundingBox = roundAwayBoundingBox(boundingBoxFloat);
 
-	const boundingBoxFloat_debugMode = getBoundingBoxOfBoard(movement.getBoardPos(), movement.getBoardScale(), true);
+	const boundingBoxFloat_debugMode = getBoundingBoxOfBoard(boardpos.getBoardPos(), boardpos.getBoardScale(), true);
 	boundingBox_debugMode = roundAwayBoundingBox(boundingBoxFloat_debugMode);
 }
 
@@ -280,7 +187,7 @@ function regenBoardModel() {
 	const boardTexture = perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
 	if (!boardTexture) return; // Can't create buffer model if texture not loaded.
 
-	const boardScale = movement.getBoardScale();
+	const boardScale = boardpos.getBoardScale();
 	const TwoTimesScale = 2 * boardScale;
 
 	const inPerspective = perspective.getEnabled();
@@ -291,7 +198,7 @@ function regenBoardModel() {
 	const startY = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
 	const endY = inPerspective ? distToRenderBoard : camera.getScreenBoundingBox(false).top;
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
 	const texCoordStartX = (((boardPos[0] + squareCenter) + startX / boardScale) % 2) / 2;
 	const texCoordStartY = (((boardPos[1] + squareCenter) + startY / boardScale) % 2) / 2;
@@ -305,7 +212,7 @@ function regenBoardModel() {
 }
 
 function renderMainBoard() {
-	if (movement.isScaleLess1Pixel_Physical()) return;
+	if (boardpos.isScaleSmallForInvisibleTiles()) return;
 
 	// We'll need to generate a new board buffer model every frame, because the scale and repeat count changes!
 	// The other option is to regenerate it as much as highlighted squares, with the bounding box.
@@ -403,7 +310,7 @@ function render() {
 
 function renderFractalBoards() {
 
-	const e = -math.getBaseLog10(movement.getBoardScale());
+	const e = -math.getBaseLog10(boardpos.getBoardScale());
 
 	const startE = 0.5; // 0.5   lower = starts coming in quicker
 	if (e < startE) return;
@@ -458,7 +365,7 @@ function renderZoomedBoard(zoom, opacity) {
 	const boardTexture = tilesTexture_2; 
 	if (!boardTexture) return; // Can't create buffer model if texture not defined.
 
-	const zoomTimesScale = zoom * movement.getBoardScale();
+	const zoomTimesScale = zoom * boardpos.getBoardScale();
 	const zoomTimesScaleTwo = zoomTimesScale * 2;
 
 	const inPerspective = perspective.getEnabled();
@@ -469,7 +376,7 @@ function renderZoomedBoard(zoom, opacity) {
 	const startY = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
 	const endY =   inPerspective ?  distToRenderBoard : camera.getScreenBoundingBox(false).top;
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
 	const texleft = (((boardPos[0] + squareCenter) / zoom + (startX / zoomTimesScale)) % 2) / 2;
 	const texbottom = (((boardPos[1] + squareCenter) / zoom + (startY / zoomTimesScale)) % 2) / 2;
@@ -502,7 +409,7 @@ function renderZoomedBoard(zoom, opacity) {
  * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {BoundingBox} The bounding box
  */
-function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = movement.getBoardScale(), debugMode) {
+function getBoundingBoxOfBoard(position = boardpos.getBoardPos(), scale = boardpos.getBoardScale(), debugMode) {
 
 	const distToHorzEdgeDivScale = camera.getScreenBoundingBox(debugMode).right / scale;
 
@@ -523,8 +430,8 @@ function getBoundingBoxOfBoard(position = movement.getBoardPos(), scale = moveme
  * @returns {BoundingBox} The perspective mode render range bounding box
  */
 function generatePerspectiveBoundingBox(rangeOfView) { // ~18
-	const coords = movement.getBoardPos();
-	const renderDistInSquares = rangeOfView / movement.getBoardScale();
+	const coords = boardpos.getBoardPos();
+	const renderDistInSquares = rangeOfView / boardpos.getBoardScale();
 
 	return {
 		left: coords[0] - renderDistInSquares,
@@ -538,22 +445,14 @@ export default {
 	gsquareCenter,
 	gtileWidth_Pixels,
 	recalcVariables,
-	gtile_MouseOver_Float,
-	gpositionFingerOver,
-	gtile_MouseOver_Int,
-	recalcTileWidth_Pixels,
 	gtileCoordsOver,
 	roundAwayBoundingBox,
 	gboundingBox,
 	gboundingBoxFloat,
 	updateTheme,
 	resetColor,
-	glimitToDampScale,
 	darkenColor,
 	render,
-	getTileMouseOver,
-	recalcTile_MouseCrosshairOver,
-	recalcTiles_FingersOver,
 	getBoundingBoxOfBoard,
 	generatePerspectiveBoundingBox,
 };
