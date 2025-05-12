@@ -16,6 +16,7 @@ import checkmatepractice from '../chess/checkmatepractice.js';
 import docutil from '../../util/docutil.js';
 import boardpos from '../rendering/boardpos.js';
 import boarddrag from '../rendering/boarddrag.js';
+import draganimation from '../rendering/dragging/draganimation.js';
 // Import End
 
 "use strict";
@@ -68,6 +69,7 @@ function open() {
 
 	boardpos.eraseMomentum();
 	boarddrag.cancelBoardDrag();
+	draganimation.dropPiece();
 }
 
 function toggle() {

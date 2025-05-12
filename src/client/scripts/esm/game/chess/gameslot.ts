@@ -286,8 +286,7 @@ function unloadGame() {
 function startStartingTransition() {
 	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!));
 	boardpos.setBoardPos(centerArea.coords);
-	boardpos.setBoardScale(centerArea.scale);
-	boardpos.setBoardScale(boardpos.getBoardScale() * 1.75);
+	boardpos.setBoardScale(centerArea.scale * 1.75);
 	guinavigation.recenter();
 }
 

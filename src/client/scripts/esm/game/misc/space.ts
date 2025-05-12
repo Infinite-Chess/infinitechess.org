@@ -14,13 +14,11 @@
 import type { Coords } from '../../chess/util/coordutil.js';
 
 
-import boardpos from '../rendering/boardpos.js';
 // @ts-ignore
 import board from "../rendering/board.js";
 // @ts-ignore
 import camera from "../rendering/camera.js";
-// @ts-ignore
-import perspective from '../rendering/perspective.js';
+import boardpos from '../rendering/boardpos.js';
 
 
 /**

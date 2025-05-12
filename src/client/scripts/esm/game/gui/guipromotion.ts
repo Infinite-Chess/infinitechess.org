@@ -105,10 +105,11 @@ function callback_promote(event: Event) {
 	close();
 }
 
-/** Closes the UI if the mouse clicks outside it */
+/** Closes the UI if the mouse clicks outside it. */
 function update() {
 	if (!selectionOpen) return;
 	if (!listener_overlay.isMouseDown(Mouse.LEFT) && !listener_overlay.isMouseDown(Mouse.RIGHT) && !listener_overlay.isMouseDown(Mouse.MIDDLE)) return;
+	// Atleast one mouse button was clicked-down OUTSIDE of the promotion UI
 	selection.unselectPiece();
 	close();
 }

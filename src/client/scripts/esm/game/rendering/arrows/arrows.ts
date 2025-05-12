@@ -722,7 +722,6 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 	const telCoords = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
 
 	transition.panTel(startCoords, telCoords);
-	if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT);
 }
 
 
@@ -1042,7 +1041,7 @@ function concatData(instanceData_Pictures: number[], instanceData_Arrows: number
 	// let maxAxisDist = math.chebyshevDistance(boardpos.getBoardPos(), pieceCoords) - 8;
 	// opacity = Math.sin(maxAxisDist / 40) * 0.5
 
-	//								instaceposition	   instancetexcoord  instancecolor
+	//							   instaceposition	   instancetexcoord  instancecolor
 	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, 1,1,1,a);
 
 	// Next append the data of the little arrow!

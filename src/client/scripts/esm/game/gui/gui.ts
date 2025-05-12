@@ -6,22 +6,12 @@
  * We also prepare the board here whenever ANY gui page (non-game) is opened.
  */
 
-
-import frametracker from '../rendering/frametracker.js';
-import boardpos from '../rendering/boardpos.js';
-import selection from '../chess/selection.js';
-import math from '../../util/math.js';
-// @ts-ignore
-import guipromotion from './guipromotion.js';
 // @ts-ignore
 import statustext from './statustext.js';
+import boardpos from '../rendering/boardpos.js';
+import math from '../../util/math.js';
 import guititle from './guititle.js';
 
-
-// Variables ------------------------------------------------------------------------------
-
-
-const element_overlay: HTMLElement = document.getElementById('overlay')!;
 
 
 // Functions ------------------------------------------------------------------------------

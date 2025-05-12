@@ -304,6 +304,7 @@ function canSelectPieceType(gamefile: gamefile, type: number | undefined): 0 | 1
 	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
 	// The piece is also not considered draggable if this is exactly the second pointer down.
 	// But it still may be selected by a simulated click.
+	// This allows us to tap to select friendly pieces, even if we're already dragging with one finger.
 	const pointerCount = Object.keys(listener_overlay.getAllPointers()).length;
 	if (boarddrag.isBoardDragging() && pointerCount === 1) return 1;
 	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).

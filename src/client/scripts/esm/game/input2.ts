@@ -29,7 +29,9 @@ type MouseButton = typeof Mouse[keyof typeof Mouse];
 
 
 interface InputListener {
+	/** Whether this input listener has experience atleast one input event the past frame. */
 	atleastOneInput: () => boolean;
+	/** Whether the given mouse button experienced a click-down this frame. */
     // eslint-disable-next-line no-unused-vars
     isMouseDown(button: MouseButton): boolean;
 	/** Removes the mouse down so that other scripts don't also use it. */
@@ -41,6 +43,7 @@ interface InputListener {
 	/** Adds the pointer down so that other scripts may use it again. */
 	// eslint-disable-next-line no-unused-vars
 	unclaimPointerDown(pointerId: string): void;
+	/** Whether the given mouse button is currently held down. */
     // eslint-disable-next-line no-unused-vars
     isMouseHeld(button: MouseButton): boolean;
 	/** Returns true if the most recent pointer for a specific mouse button action is a touch (not mouse). */
@@ -49,12 +52,13 @@ interface InputListener {
 	/** Returns the id of the pointer that most recently performed an action on the specified mouse button. */
 	// eslint-disable-next-line no-unused-vars
 	getMouseId(button: MouseButton): string | undefined;
+	/** Returns the last known pointer position that trigerred a simulated event for the given mouse button. */
 	// eslint-disable-next-line no-unused-vars
 	getMousePosition(button: MouseButton): Coords | undefined;
+	/** Whether the given mouse button simulated a full CLICK this frame. */
 	// eslint-disable-next-line no-unused-vars
 	isMouseClicked(button: MouseButton): boolean;
-	// // eslint-disable-next-line no-unused-vars
-	// getMouseClickedPos(button: MouseButton): Coords | undefined;
+	/** Whether the given mouse button experience a double-click-down this frame. */
 	// eslint-disable-next-line no-unused-vars
 	isMouseDoubleClickDragged(button: MouseButton): boolean;
 	/**
@@ -75,15 +79,19 @@ interface InputListener {
 	 */
     // eslint-disable-next-line no-unused-vars
 	getPointerVel(pointerId: string): Vec2 | undefined;
+	/** Returns all existing pointers. */
 	getAllPointers(): Record<string, Pointer>;
 	getPointerCount(): number;
 	// eslint-disable-next-line no-unused-vars
 	getPointer(pointerId: string): Pointer | undefined;
 	/** Returns a list of all pointers that simulated left-click-down this frame. */
 	getPointersDown(): string[];
+	/** Returns how much the wheel has scrolled this frame. */
     getWheelDelta(): number;
+	/** Whether the provided keyboard key was pressed down this frame. */
     // eslint-disable-next-line no-unused-vars
     isKeyDown(keyCode: string): boolean;
+	/** Whether the provided keyboard key is currently being held down. */
     // eslint-disable-next-line no-unused-vars
     isKeyHeld(keyCode: string): boolean;
 	/** Call when done with the input listener. This closes all its event listeners. */
