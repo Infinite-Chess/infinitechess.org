@@ -83,6 +83,7 @@ function update(rays: Ray[]) {
 	} else { // Currently drawing a ray
 		// Test if mouse released (finalize ray)
 		if (!mouse.isMouseHeld(Mouse.RIGHT) && !mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally ray drawing if we intend to draw square
+			// Finalize the ray
 			addDrawnRay(rays);
 			drag_start = undefined; // Reset drawing
 		}
@@ -143,11 +144,11 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	for (let i = rays.length - 1; i >= 0; i--) { // Iterate backwards since we're modifying the list as we go
 		const ray = rays[i]!;
 		if (!coordutil.areCoordsEqual_noValidate(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
-		if (coordutil.areCoordsEqual_noValidate(ray.vector, vector)) {
+		if (coordutil.areCoordsEqual_noValidate(ray.start, drag_start!)) {
 			// Identical, erase the existing one instead.
 			rays.splice(i, 1); // Remove the existing ray
 			deletedRays.push(ray);
-			console.log("Erasing ray.");
+			// console.log("Erasing ray.");
 			return { added: false, deletedRays };
 		}
 		const line2 = ray.line;
@@ -163,9 +164,9 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 					// Remove this comparing ray in favor of the new one
 					rays.splice(i, 1);
 					deletedRays.push(ray);
-					console.log("Removed ray in favor of new.");
+					// console.log("Removed ray in favor of new.");
 				} else { // Skip adding the new one (it already exists contained in this comparing one)
-					console.log("Ray is already contained in another.");
+					// console.log("Ray is already contained in another.");
 					if (deletedRays.length > 0) throw Error("Should not be any rays deleted if ray to be added is contained within another!");
 					return { added: false };
 				}
@@ -179,7 +180,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// Add the ray
 	const ray = { start: drag_start!, vector, line };
 	rays.push(ray);
-	console.log("Added ray:", ray);
+	// console.log("Added ray:", ray);
 	return { added: true, deletedRays };
 }
 
@@ -258,33 +259,34 @@ function render(rays: Ray[]) {
 	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
 
 	// Early exit if no rays to draw
-	if (rays.length === 0) return;
-
-	if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
-		if (lines.length === 0) throw Error('Lines empty, cannot render ray highlight lines.');
-		highlightline.genLinesModel(lines).render();
-	} else { // Zoomed in, render rays as infinite legal move highlights
-		const color = preferences.getAnnoteSquareColor();
-		// Construct the data
-		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-		const instanceData = legalmovehighlights.genData_Rays(rays);
-		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
-		// Render
-		const boardPos: Coords = boardpos.getBoardPos();
-		const model_Offset: Coords = legalmovehighlights.getOffset();
-		const position: [number,number,number] = [
-            -boardPos[0] + model_Offset[0], // Add the model's offset
-            -boardPos[1] + model_Offset[1],
-            0
-        ];
-		const boardScale: number = boardpos.getBoardScale();
-		const scale: [number,number,number] = [boardScale, boardScale, 1];
-		model.render(position, scale);
+	if (rays.length > 0) {
+		if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
+			if (lines.length === 0) throw Error('Lines empty, cannot render ray highlight lines.');
+			highlightline.genLinesModel(lines).render();
+		} else { // Zoomed in, render rays as infinite legal move highlights
+			const color = preferences.getAnnoteSquareColor();
+			// Construct the data
+			const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+			const instanceData = legalmovehighlights.genData_Rays(rays);
+			const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
+			// Render
+			const boardPos: Coords = boardpos.getBoardPos();
+			const model_Offset: Coords = legalmovehighlights.getOffset();
+			const position: [number,number,number] = [
+				-boardPos[0] + model_Offset[0], // Add the model's offset
+				-boardPos[1] + model_Offset[1],
+				0
+			];
+			const boardScale: number = boardpos.getBoardScale();
+			const scale: [number,number,number] = [boardScale, boardScale, 1];
+			model.render(position, scale);
+		}
 	}
 
 	// Remove the ray currently being drawn
 	if (drawingCurrentlyDrawn.added) rays.pop();
-	if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays); // Restore the deleted rays if any
+	// Restore the deleted rays if any
+	if (drawingCurrentlyDrawn.deletedRays && drawingCurrentlyDrawn.deletedRays.length > 0) rays.push(...drawingCurrentlyDrawn.deletedRays);
 }
 
 
