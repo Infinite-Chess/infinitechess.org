@@ -64,7 +64,7 @@ let drag_start: Coords | undefined;
 function update(arrows: Arrow[]) {
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
-		if (mouse.isMouseDown(Mouse.RIGHT)) {
+		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
 			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
 			if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
 				// Snap to nearest hovered entity
