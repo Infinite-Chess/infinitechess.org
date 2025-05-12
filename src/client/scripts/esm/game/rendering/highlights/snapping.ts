@@ -244,7 +244,10 @@ function updateSnapping() {
 		if (closestSquareSnap.dist < snapDistCoords) {
 			snap = closestSquareSnap;
 			// Teleport if clicked
-			if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
+			if (mouse.isMouseClicked(Mouse.LEFT)) {
+				transition.initTransitionToCoordsList([snap.coords]);
+				mouse.claimMouseClick(Mouse.LEFT);
+			}
 			squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 			return;
 		}
@@ -261,7 +264,10 @@ function updateSnapping() {
 			console.log(2);
 			snap = closestPieceSnap;
 			// Teleport if clicked
-			if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
+			if (mouse.isMouseClicked(Mouse.LEFT)) {
+				transition.initTransitionToCoordsList([snap.coords]);
+				mouse.claimMouseClick(Mouse.LEFT);
+			}
 			return;
 		}
 	}
@@ -276,7 +282,10 @@ function updateSnapping() {
 		if (closestOriginSnap.dist < snapDistCoords) {
 			snap = closestOriginSnap;
 			// Teleport if clicked
-			if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
+			if (mouse.isMouseClicked(Mouse.LEFT)) {
+				transition.initTransitionToCoordsList([snap.coords]);
+				mouse.claimMouseClick(Mouse.LEFT);
+			}
 			return;
 		}
 	}
