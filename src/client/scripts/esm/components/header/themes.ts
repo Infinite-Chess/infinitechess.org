@@ -66,7 +66,7 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.32],
 		[lastMoveHighlightColor]: [0.90, 1, 0, 0.30],
-		[annoteSquareColor]: [1, 0, 0, 0.45],
+		[annoteSquareColor]: [1, 0, 0, 0.35], // .45 with no .10 offset to squares
 		[annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	},
 	sandstone: { // Sometimes thanksgiving uses this
