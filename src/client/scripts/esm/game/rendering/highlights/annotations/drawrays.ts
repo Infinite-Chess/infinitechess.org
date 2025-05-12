@@ -131,7 +131,9 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// Skip if end equals start (no arrow drawn)
 	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { added: false };
 
-	const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
+	// const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
+	const mouseCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
+	const vector_unnormalized = coordutil.subtractCoordinates(mouseCoords, drag_start!);
 	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.pieces.hippogonalsPresent);
 	const line = math.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 

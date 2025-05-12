@@ -110,14 +110,14 @@ function convertMousePositionToWorldSpace(mouse: Coords, element: HTMLElement | 
 	return mouseWorldSpace;
 }
 
-function getTileMouseOver_Float(): Coords | undefined {
-	const mouseWorld = getMouseWorld();
+function getTileMouseOver_Float(button: MouseButton = Mouse.LEFT): Coords | undefined {
+	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
 	return space.convertWorldSpaceToCoords(mouseWorld);
 }
 
-function getTileMouseOver_Integer(): Coords | undefined {
-	const mouseWorld = getMouseWorld();
+function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | undefined {
+	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
 	return space.convertWorldSpaceToCoords_Rounded(mouseWorld);
 }
