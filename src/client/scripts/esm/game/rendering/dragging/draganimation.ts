@@ -168,6 +168,7 @@ function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
 	hoveredCoords = hoverSquare;
 }
 
+/** Whether the pointer dragging the selected piece has released yet. */
 function hasPointerReleased(): boolean {
 	if (!areDragging) throw Error("Don't call hasPointerReleased() when not dragging a piece");
 	const respectiveListener = getRespectiveListener();
