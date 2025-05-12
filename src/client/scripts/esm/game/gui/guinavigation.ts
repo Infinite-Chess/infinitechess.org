@@ -6,12 +6,12 @@ import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import selection from '../chess/selection.js';
+import { listener_document } from '../chess/game.js';
+import mouse from '../../util/mouse.js';
+import boardpos from '../rendering/boardpos.js';
 // @ts-ignore
 import board from '../rendering/board.js';
-// @ts-ignore
-import movement from '../rendering/movement.js';
-// @ts-ignore
-import input from '../input.js';
 // @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
@@ -22,7 +22,6 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
-import selection from '../chess/selection.js';
 
 
 /**
@@ -118,17 +117,19 @@ function close() {
 
 // Update the division on the screen displaying your current coordinates
 function updateElement_Coords() {
-	const boardPos = movement.getBoardPos();
-
-	// Tile camera is over
-	// element_CoordsX.textContent = Math.floor(boardPos[0] + board.gsquareCenter())
-	// element_CoordsY.textContent = Math.floor(boardPos[1] + board.gsquareCenter())
-
 	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
 
+	const boardPos = boardpos.getBoardPos();
+	const mouseTile = mouse.getTileMouseOver_Integer();
+	const squareCenter = board.gsquareCenter();
+
+	// Tile camera is over
+	// element_CoordsX.textContent = Math.floor(boardPos[0] + squareCenter)
+	// element_CoordsY.textContent = Math.floor(boardPos[1] + squareCenter)
+
 	// Tile mouse over
-	element_CoordsX.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[0] : Math.floor(boardPos[0] + board.gsquareCenter());
-	element_CoordsY.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[1] : Math.floor(boardPos[1] + board.gsquareCenter());
+	element_CoordsX.value = String(mouseTile ? mouseTile[0] : Math.floor(boardPos[0] + squareCenter));
+	element_CoordsY.value = String(mouseTile ? mouseTile[1] : Math.floor(boardPos[1] + squareCenter));
 }
 
 /**
@@ -139,9 +140,6 @@ function isCoordinateActive(): boolean {
 }
 
 function initListeners_Navigation() {
-	element_Navigation.addEventListener("mousedown", input.doIgnoreMouseDown);
-	element_Navigation.addEventListener("touchstart", input.doIgnoreMouseDown);
-
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
@@ -168,11 +166,6 @@ function initListeners_Navigation() {
 }
 
 function closeListeners_Navigation() {
-	element_Navigation.removeEventListener("mousedown", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("mouseup", input.doIgnoreMouseDown)
-	element_Navigation.removeEventListener("touchstart", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("touchend", input.doIgnoreMouseDown)
-
 	element_Recenter.removeEventListener('click', recenter);
 	element_Expand.removeEventListener('click', callback_Expand);
 	element_Back.removeEventListener('click', callback_Back);
@@ -212,7 +205,7 @@ function callback_CoordsChange() {
 		return;
 	}
 
-	movement.setBoardPos([newX, newY]);
+	boardpos.setBoardPos([newX, newY]);
 }
 
 function callback_Back() {
@@ -392,14 +385,14 @@ function update() {
 
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove() {
-	if (!input.isKeyDown('arrowleft')) return;
+	if (!listener_document.isKeyDown('ArrowLeft')) return;
 	if (rewindIsLocked) return;
 	rewindMove();
 }
 
 /** Tests if the right arrow key has been pressed, signaling to forward the game. */
 function testIfForwardMove() {
-	if (!input.isKeyDown('arrowright')) return;
+	if (!listener_document.isKeyDown('ArrowRight')) return;
 	forwardMove();
 }
 

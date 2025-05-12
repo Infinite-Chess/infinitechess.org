@@ -2,11 +2,12 @@
 // Import Start
 import perspective from './perspective.js';
 import area from './area.js';
-import movement from './movement.js';
 import camera from './camera.js';
 import space from '../misc/space.js';
 import board from './board.js';
 import frametracker from './frametracker.js';
+import boarddrag from './boarddrag.js';
+import boardpos from './boardpos.js';
 // Import End
 
 "use strict";
@@ -55,12 +56,12 @@ let secondTeleport;
 
 function teleport(tel1, tel2, ignoreHistory) { // tel2 can be undefined, if only 1
 
-	if (!ignoreHistory) pushToTelHistory({ endCoords: movement.getBoardPos(), endScale: movement.getBoardScale(), isPanTel: false });
+	if (!ignoreHistory) pushToTelHistory({ endCoords: boardpos.getBoardPos(), endScale: boardpos.getBoardScale(), isPanTel: false });
 
 	secondTeleport = tel2;
 
-	startCoords = movement.getBoardPos();
-	startScale = movement.getBoardScale();
+	startCoords = boardpos.getBoardPos();
+	startScale = boardpos.getBoardScale();
 	endCoords = tel1.endCoords;
 	endScale = tel1.endScale;
 
@@ -93,9 +94,9 @@ function teleport(tel1, tel2, ignoreHistory) { // tel2 can be undefined, if only
 	isTeleporting = true;
 
 	// Reset velocities to zero
-	movement.eraseMomentum();
+	boardpos.eraseMomentum();
 	// We don't want to allow dragging during a transition.
-	movement.cancelBoardDrag();
+	boarddrag.cancelBoardDrag();
 }
 
 function update() { // Animate if we are currently teleporting
@@ -126,7 +127,7 @@ function updateNormal(equaY) {
 	// Smoothly transition E, then convert back to scale
 	const newE = startE + diffE * equaY;
 	const newScale = Math.pow(Math.E, newE);
-	movement.setBoardScale(newScale);
+	boardpos.setBoardScale(newScale);
 
 	// Coords. Needs to be after changing scale because the new world-space is dependant on scale
 	// SEE GRAPH ON DESMOS "World-space converted to boardPos" for my notes while writing this algorithm
@@ -137,18 +138,18 @@ function updateNormal(equaY) {
 	const newWorldX = startWorldSpace[0] + diffWorldSpace[0] * equaY;
 	const newWorldY = startWorldSpace[1] + diffWorldSpace[1] * equaY;
 	// Convert to board position
-	const boardScale = movement.getBoardScale();
+	const boardScale = boardpos.getBoardScale();
 	const newX = targetCoords[0] - (newWorldX / boardScale);
 	const newY = targetCoords[1] - (newWorldY / boardScale);
 
-	movement.setBoardPos([newX, newY]);
+	boardpos.setBoardPos([newX, newY]);
 }
 
 function updatePanTel(equaX, equaY) {
 
 	// What is the scale?
 	// What is the maximum distance we should pan b4 teleporting to the other half?
-	const maxDist = maxPanTelDistB4Teleport / movement.getBoardScale();
+	const maxDist = maxPanTelDistB4Teleport / boardpos.getBoardScale();
 	const greaterThanMaxDist = Math.abs(diffCoords[0]) > maxDist || Math.abs(diffCoords[1]) > maxDist;
 
 	let newX;
@@ -188,14 +189,14 @@ function updatePanTel(equaX, equaY) {
 		newY = target[1] + addY;
 	}
 
-	movement.setBoardPos([newX, newY]);
+	boardpos.setBoardPos([newX, newY]);
 }
 
 function finish() { // Called at the end of a teleport
 
 	// Set the final coords and scale
-	movement.setBoardPos(endCoords);
-	movement.setBoardScale(endScale);
+	boardpos.setBoardPos(endCoords);
+	boardpos.setBoardScale(endScale);
 
 	if (secondTeleport) {
 
@@ -206,13 +207,13 @@ function finish() { // Called at the end of a teleport
 
 function panTel(startCoord, endCoord, ignoreHistory, speeed = panTelSpeed) {
 
-	if (!ignoreHistory) pushToTelHistory({ isPanTel: true, endCoords: movement.getBoardPos() });
+	if (!ignoreHistory) pushToTelHistory({ isPanTel: true, endCoords: boardpos.getBoardPos() });
 
 	startTime = performance.now();
 
 	startCoords = startCoord;
 	endCoords = endCoord;
-	const boardScale = movement.getBoardScale();
+	const boardScale = boardpos.getBoardScale();
 	startScale = boardScale;
 	endScale = boardScale;
 
@@ -226,7 +227,7 @@ function panTel(startCoord, endCoord, ignoreHistory, speeed = panTelSpeed) {
 	isPanTel = true;
 
 	// Reset velocities to zero
-	movement.eraseMomentum();
+	boardpos.eraseMomentum();
 }
 
 function pushToTelHistory(tel) { // { isPanTel, endCoords, endScale }
@@ -240,7 +241,7 @@ function telToPrevTel() {
 
 	if (previousTel.isPanTel) {
 
-		panTel(movement.getBoardPos(), previousTel.endCoords, true);
+		panTel(boardpos.getBoardPos(), previousTel.endCoords, true);
 
 	} else { // Zooming transition
 		const thisArea = {

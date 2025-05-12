@@ -7,10 +7,10 @@ import clockutil from '../../chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
 import style from '../gui/style.js';
-import input from '../input.js';
 import statustext from '../gui/statustext.js';
 import uuid from '../../util/uuid.js';
 import validatorama from '../../util/validatorama.js';
+import docutil from '../../util/docutil.js';
 // Import End
 
 "use strict";
@@ -262,7 +262,7 @@ const playBaseIfNewInvite = (() => {
 })();
 
 function playSoundNewOpponentInvite() {
-	if (input.isMouseSupported()) sound.playSound_base();
+	if (docutil.isMouseSupported()) sound.playSound_base();
 	else sound.playSound_viola_c3();
     
 }

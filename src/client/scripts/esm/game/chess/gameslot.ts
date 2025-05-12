@@ -38,6 +38,7 @@ import selection from "./selection.js";
 import imagecache from "../../chess/rendering/imagecache.js";
 import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
+import boardpos from "../rendering/boardpos.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -54,8 +55,6 @@ import board from "../rendering/board.js";
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import area from "../rendering/area.js";
-// @ts-ignore
-import movement from "../rendering/movement.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
@@ -286,8 +285,8 @@ function unloadGame() {
  */
 function startStartingTransition() {
 	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!));
-	movement.setPositionToArea(centerArea);
-	movement.setBoardScale(movement.getBoardScale() * 1.75);
+	boardpos.setBoardPos(centerArea.coords);
+	boardpos.setBoardScale(centerArea.scale * 1.75);
 	guinavigation.recenter();
 }
 

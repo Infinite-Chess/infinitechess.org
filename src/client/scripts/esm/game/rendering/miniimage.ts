@@ -16,18 +16,18 @@ import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
+import { Mouse } from '../input2.js';
+import mouse from '../../util/mouse.js';
+import boardpos from './boardpos.js';
 // @ts-ignore
 import webgl from './webgl.js';
-// @ts-ignore
-import input from '../input.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
 import transition from './transition.js';
-// @ts-ignore
-import movement from './movement.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
@@ -93,10 +93,7 @@ function disable(): void {
 // Updating --------------------------------------------------------------------------
 
 
-function testIfToggled(): void {
-	if (!input.isKeyDown('p')) return;
-
-	// Toggled
+function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
@@ -113,7 +110,7 @@ function testIfToggled(): void {
  */
 function genModel() {
 	if (guipause.areWePaused()) return; // Exit if paused
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (disabled) return; // Too many pieces to render icons!
 
 	const gamefile = gameslot.getGamefile()!;
@@ -126,11 +123,10 @@ function genModel() {
 	// ...
 
 	const halfWidth: number = widthWorld / 2;
-	const boardPos: Coords = movement.getBoardPos();
-	const boardScale: number = movement.getBoardScale();
+	const boardPos: Coords = boardpos.getBoardPos();
+	const boardScale: number = boardpos.getBoardScale();
 
 	// While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
-	// We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 	const atleastOneAnimation: boolean = animation.animations.length > 0;
@@ -171,11 +167,9 @@ function genModel() {
 
 		// Are we hovering over? If so, opacity needs to be 100%
 		if (areWatchingMousePosition) {
-			const pointerWorldLocation: Coords = input.getPointerWorldLocation() as Coords;
-			const mouseWorldX: number = pointerWorldLocation[0];
-			const mouseWorldY: number = pointerWorldLocation[1];
+			const pointerWorld = mouse.getMouseWorld();
 
-			if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
+			if (pointerWorld && pointerWorld[0] > startX && pointerWorld[0] < endX && pointerWorld[1] > startY && pointerWorld[1] < endY) {
 				thisOpacity = 1;
 				hovering = true;
 				/**
@@ -183,8 +177,8 @@ function genModel() {
 				 * Add them to a list of pieces we're hovering over.
 				 * If we click, we teleport to a location containing them all.
 				 */
-				if (input.getPointerClicked()) piecesClicked.push(coords);
-				else if (input.getPointerDown()) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+				if (mouse.isMouseClicked(Mouse.LEFT)) piecesClicked.push(coords);
+				else if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 			}
 		}
 
@@ -224,7 +218,7 @@ function genModel() {
 
 function render(): void {
 	hovering = false;
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (disabled) return; // Too many pieces to render icons!
 	webgl.executeWithDepthFunc_ALWAYS(model.render);
 }
@@ -234,13 +228,13 @@ function render(): void {
 
 
 export default {
+	toggle,
 	getWidthWorld,
 	recalcWidthWorld,
 	isHovering,
 	isDisabled,
 	enable,
 	disable,
-	testIfToggled,
 	genModel,
 	render,
 };

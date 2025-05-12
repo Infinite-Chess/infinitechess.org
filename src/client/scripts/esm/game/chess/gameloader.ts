@@ -35,9 +35,8 @@ import localstorage from "../../util/localstorage.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
-import movement from "../rendering/movement.js";
-// @ts-ignore
 import transition from "../rendering/transition.js";
+import boardpos from "../rendering/boardpos.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -333,7 +332,7 @@ function unloadGame() {
 	gameslot.unloadGame();
 	perspective.disable();
 	typeOfGameWeAreIn = undefined;
-	movement.eraseMomentum();
+	boardpos.eraseMomentum();
 	transition.terminate();
 
 	gui.prepareForOpen();

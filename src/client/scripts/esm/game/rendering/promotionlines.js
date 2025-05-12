@@ -1,11 +1,11 @@
 
 
 import board from './board.js';
-import movement from './movement.js';
 import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
 import { players } from '../../chess/util/typeutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import boardpos from './boardpos.js';
 
 
 /**
@@ -25,13 +25,13 @@ function render() {
 	if (gameslot.getGamefile().gameRules.promotionRanks === undefined) return; // No promotion ranks in this game
 	const model = initModel();
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const position = [
         -boardPos[0], // Add the model's offset
         -boardPos[1],
         0
     ];
-	const boardScale = movement.getBoardScale();
+	const boardScale = boardpos.getBoardScale();
 	const scale = [boardScale, boardScale, 1];
 	// render.renderModel(model, position, scale, "TRIANGLES")
 	model.render(position, scale);

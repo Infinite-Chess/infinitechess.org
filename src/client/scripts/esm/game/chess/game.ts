@@ -6,13 +6,9 @@
  */
 
 
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
-
 
 import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
-import jsutil from '../../util/jsutil.js';
 import highlights from '../rendering/highlights/highlights.js';
 import gameslot from './gameslot.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -22,26 +18,20 @@ import droparrows from '../rendering/dragging/droparrows.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
 import clock from '../../chess/logic/clock.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import piecemodels from '../rendering/piecemodels.js';
-import { CreateInputListener, InputListener, Mouse } from '../input2.js';
+import { CreateInputListener, InputListener } from '../input2.js';
+import boarddrag from '../rendering/boarddrag.js';
+import boardpos from '../rendering/boardpos.js';
+import controls from '../misc/controls.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
-import guipause from '../gui/guipause.js';
-// @ts-ignore
-import input from '../input.js';
 // @ts-ignore
 import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
 import guiclock from '../gui/guiclock.js';
-// @ts-ignore
-import movement from '../rendering/movement.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -54,90 +44,50 @@ import highlightline from '../rendering/highlights/highlightline.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
-// @ts-ignore
-import websocket from '../websocket.js';
-// @ts-ignore
-import camera from '../rendering/camera.js';
-// @ts-ignore
-import copypastegame from './copypastegame.js';
-// @ts-ignore
-import stats from '../gui/stats.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import frametracker from '../rendering/frametracker.js';
+
+
+// Variables -------------------------------------------------------------------------------
+
+
+const element_overlay: HTMLElement = document.getElementById('overlay')!;
+/** The input listener for the overlay element */
+let listener_overlay: InputListener;
+/** The input listener for the document element */
+let listener_document: InputListener;
+
 
 // Functions -------------------------------------------------------------------------------
 
-const element_overlay: HTMLElement = document.getElementById('overlay')!;
-let listener: InputListener;
 
 function init() {
+	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
+	listener_document = CreateInputListener(document);
+
 	board.updateTheme();
 	board.recalcVariables(); // Variables dependant on the board position & scale
 
 	gui.prepareForOpen();
 
 	guititle.open();
-
-	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
-
-	listener = CreateInputListener(element_overlay);
 }
 
 // Update the game every single frame
 function update() {
-	testOutGameDebugToggles();
+	controls.testOutGameToggles();
 	invites.update();
+	// Any input should trigger the next frame to render.
+	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput()) frametracker.onVisualChange();
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return updateSelectionScreen(); // On title screen
+	if (!gamefile) return boardpos.update(); // On title screen. Updates the board's position and scale according to its velocity; // 
 
 	// There is a gamefile, update everything board-related...
 
-	testInGameDebugToggles(gamefile);
+	controls.testInGameToggles(gamefile);
 
-	updateBoard(gamefile); // Other screen, board is visible, update everything board related
-
-	gameloader.update(); // Updates whatever game is currently loaded.
-
-	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
-}
-
-/** Debug toggles that are not only for in a game, but outside. */
-function testOutGameDebugToggles() {
-	if (listener.isKeyDown('`')) camera.toggleDebug();
-	if (listener.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
-	if (listener.isKeyDown('m')) stats.toggleFPS();
-}
-
-function testInGameDebugToggles(gamefile: gamefile) {
-	if (listener.isKeyDown('2')) {
-		console.log(jsutil.deepCopyObject(gamefile));
-		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
-	}
-	if (listener.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (listener.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
-	if (listener.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
-}
-
-function updateSelectionScreen() {
-	// When we're not inside a game, the board should have a constant slow pan.
-	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
-}
-
-// Called within update() when we are in a game (not title screen)
-function updateBoard(gamefile: gamefile) {
-	if (listener.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
-	if (listener.isKeyDown('escape')) guipause.toggle();
-	if (listener.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (listener.isKeyDown('r')) {
-		piecemodels.regenAll(gamefile);
-		statustext.showStatus('Regenerated piece models.', false, 0.5);
-	}
-	if (listener.isKeyDown('n')) {
-		guinavigation.toggle();
-		guigameinfo.toggle();
-	}
+	perspective.update(); // Update perspective camera according to mouse movement
 
 	const timeWinner = clock.update(gamefile);
 	if (timeWinner && !onlinegame.areInOnlineGame()) { // undefined if no clock has ran out
@@ -145,15 +95,13 @@ function updateBoard(gamefile: gamefile) {
 		gameslot.concludeGame();
 	}
 	guiclock.update(gamefile);
-	miniimage.testIfToggled();
 
-	guinavigation.update();
 	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
-	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
+	// NEEDS TO BE BEFORE boarddrag.checkIfBoardGrabbed() because that shift arrows needs to overwrite this.
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
@@ -161,22 +109,26 @@ function updateBoard(gamefile: gamefile) {
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
-	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
-	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
+	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	boardpos.update(); // Updates the board's position and scale according to its velocity
 	transition.update();
 
-	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
+	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
 
-	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER movement.dragBoard() or picking up the board has a spring back effect to it
+	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 
-	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
-	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	// NEEDS TO BE BEFORE checkIfBoardGrabbed(), because clicks should prioritize teleporting to miniimages over dragging the board!
+	// AFTER: boarddrag.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	miniimage.genModel();
-	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
+	highlightline.genModel(); // Before boarddrag.checkIfBoardGrabbed() since clicks should prioritize this.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
 	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
-	movement.checkIfBoardDragged();
-} 
+	boarddrag.checkIfBoardGrabbed();
+
+	gameloader.update(); // Updates whatever game is currently loaded.
+
+	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
+}
 
 function render() {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
@@ -185,8 +137,6 @@ function render() {
 
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
-
-	input.renderMouse();
 
 	/**
 	 * What is the order of rendering?
@@ -228,4 +178,7 @@ export default {
 	render,
 };
 
-export { listener }; // Export the listener so that other modules can use it.
+export {
+	listener_overlay,
+	listener_document,
+};

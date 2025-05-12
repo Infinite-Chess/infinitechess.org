@@ -13,6 +13,10 @@ import gameloader from '../chess/gameloader.js';
 import gameslot from '../chess/gameslot.js';
 import guipractice from './guipractice.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
+import docutil from '../../util/docutil.js';
+import boardpos from '../rendering/boardpos.js';
+import boarddrag from '../rendering/boarddrag.js';
+import draganimation from '../rendering/dragging/draganimation.js';
 // Import End
 
 "use strict";
@@ -47,6 +51,7 @@ function getelement_perspective() {
 
 function open() {
 	isPaused = true;
+	updatePerspectiveButtonTransparency();
 	updateTextOfMainMenuButton();
 	updatePasteButtonTransparency();
 	if (checkmatepractice.areInCheckmatePractice()) {
@@ -61,6 +66,10 @@ function open() {
 	}
 	element_pauseUI.classList.remove('hidden');
 	initListeners();
+
+	boardpos.eraseMomentum();
+	boarddrag.cancelBoardDrag();
+	draganimation.dropPiece();
 }
 
 function toggle() {
@@ -75,6 +84,11 @@ function updatePasteButtonTransparency() {
 
 	if (onlinegame.areInOnlineGame() && !legalInPrivateMatch) element_pastegame.classList.add('opacity-0_5');
 	else                                                      element_pastegame.classList.remove('opacity-0_5');
+}
+
+function updatePerspectiveButtonTransparency() {
+	if (docutil.isMouseSupported()) element_perspective.classList.remove('opacity-0_5');
+	else element_perspective.classList.add('opacity-0_5');
 }
 
 /**

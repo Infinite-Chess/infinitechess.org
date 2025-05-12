@@ -8,13 +8,12 @@
  */
 
 // @ts-ignore
-import movement from "../movement.js";
-// @ts-ignore
 import highlightline from "./highlightline.js";
 import checkhighlight from "./checkhighlight.js";
 import { highlightLastMove } from "./lastmovehighlight.js";
 import legalmovehighlights from "./legalmovehighlights.js";
 import specialrighthighlights from "./specialrighthighlights.js";
+import boardpos from "../boardpos.js";
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
@@ -32,7 +31,7 @@ import type gamefile from "../../../chess/logic/gamefile";
 function render(gamefile: gamefile) {
 	highlightline.render();
 
-	if (movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're zoomed out.
+	if (boardpos.areZoomedOut()) return; // Quit if we're zoomed out.
 	highlightLastMove(gamefile);
 	checkhighlight.render(gamefile);
 	legalmovehighlights.render();

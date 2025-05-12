@@ -16,8 +16,7 @@ import gameslot from "../../chess/gameslot.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import pingManager from "../../../util/pingManager.js";
-// @ts-ignore
-import input from "../../input.js";
+import { listener_document, listener_overlay } from "../../chess/game.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
 // @ts-ignore
@@ -97,7 +96,8 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
 }
 
 function updateAFK() {
-	if (!input.atleast1InputThisFrame() || gamefileutility.isGameOver(gameslot.getGamefile()!)) return; // No input this frame, don't reset the timer to tell the server we are afk.
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return; // Game is over
+	if (!listener_overlay.atleastOneInput() && !listener_document.atleastOneInput()) return; // No input this frame, don't reset the timer to tell the server we are afk.
 	// There has been mouse movement, restart the afk auto-resign timer.
 	if (isOurAFKAutoResignTimerRunning()) tellServerWeBackFromAFK(); // Also tell the server we are back, IF it had started an auto-resign timer!
 	rescheduleAlertServerWeAFK();
@@ -110,8 +110,9 @@ function updateAFK() {
 function rescheduleAlertServerWeAFK() {
 	clearTimeout(timeoutID);
 	const gamefile = gameslot.getGamefile()!;
+	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) || onlinegame.getIsPrivate() && gamefile.untimed) return;
 	// TEMPORARY: Timed resignable games cannot be auto-resigned from going afk (to make tournament games more fair)
-	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) || onlinegame.getIsPrivate() && gamefile.untimed || !gamefile.untimed && moveutil.isGameResignable(gamefile)) return;
+	if (!gamefile.untimed && moveutil.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
 	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(gamefile) ? timeUntilAFKSecs_Abortable
 										: gamefile.untimed ? timeUntilAFKSecs_Untimed

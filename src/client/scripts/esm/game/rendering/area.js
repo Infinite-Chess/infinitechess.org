@@ -1,7 +1,6 @@
 
 // Import Start
 import transition from './transition.js';
-import movement from './movement.js';
 import camera from './camera.js';
 import board from './board.js';
 import math from '../../util/math.js';
@@ -10,12 +9,14 @@ import space from '../misc/space.js';
 import guinavigation from '../gui/guinavigation.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import boardpos from './boardpos.js';
 // Import End
 
 /** 
  * Type Definitions 
  * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
+ * @typedef {import('../../chess/util/coordutil.js').Coords} Coords
 */
 
 "use strict";
@@ -24,7 +25,7 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
  * An area object, containing the information {@link transition} needs
  * to teleport/transition to this location on the board.
  * @typedef {Object} Area
- * @property {number[]} coords - The coordinates of the area
+ * @property {Coords} coords - The coordinates of the area
  * @property {number} scale - The camera scale (zoom) of the area
  * @property {Object} boundingBox - The bounding box that contains the area of interest.
  */
@@ -108,7 +109,7 @@ function applyPaddingToBox(box) { // { left, right, bottom, top }
 	if (iterationsToRecalcPadding <= 0) { console.error("iterationsToRecalcPadding must be greater than 0!"); return boxCopy; }
 	for (let i = 0; i < iterationsToRecalcPadding; i++) {
 
-		const paddingToUse = scale < movement.getScale_When1TileIs1Pixel_Virtual() ? paddingMiniimage : padding;
+		const paddingToUse = boardpos.areZoomedOut() ? paddingMiniimage : padding;
 		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
 		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
 
@@ -225,13 +226,13 @@ function initTelFromArea(thisArea, ignoreHistory) {
 
 	const thisAreaBox = thisArea.boundingBox;
 
-	const startCoords = movement.getBoardPos();
+	const startCoords = boardpos.getBoardPos();
 	const endCoords = thisArea.coords;
 
 	const currentBoardBoundingBox = board.gboundingBox(); // Tile/board space, NOT world-space
 
 	// Will a teleport to this area be a zoom out or in?
-	const isAZoomOut = thisArea.scale < movement.getBoardScale();
+	const isAZoomOut = thisArea.scale < boardpos.getBoardScale();
 
 	let firstArea;
 
