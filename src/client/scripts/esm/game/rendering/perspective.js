@@ -13,7 +13,7 @@ import preferences from '../../components/header/preferences.js';
 import gameslot from '../chess/gameslot.js';
 import docutil from '../../util/docutil.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
-import { Mouse } from '../input2.js';
+import { Mouse } from '../input.js';
 // Import End
 
 /**

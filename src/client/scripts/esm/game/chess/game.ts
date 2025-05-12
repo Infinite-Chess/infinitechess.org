@@ -22,7 +22,7 @@ import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
-import { CreateInputListener, InputListener } from '../input2.js';
+import { CreateInputListener, InputListener } from '../input.js';
 import boarddrag from '../rendering/boarddrag.js';
 import boardpos from '../rendering/boardpos.js';
 import controls from '../misc/controls.js';

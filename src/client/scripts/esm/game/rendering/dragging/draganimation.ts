@@ -25,7 +25,7 @@ import themes from "../../../components/header/themes.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import animation from "../animation.js";
 import { listener_document, listener_overlay } from "../../chess/game.js";
-import { InputListener, Mouse } from "../../input2.js";
+import { InputListener, Mouse } from "../../input.js";
 import mouse from "../../../util/mouse.js";
 import boardpos from "../boardpos.js";
 // @ts-ignore

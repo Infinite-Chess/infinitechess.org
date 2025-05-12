@@ -21,7 +21,7 @@ import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import guipause from '../../gui/guipause.js';
 import { listener_overlay } from '../../chess/game.js';
-import { Mouse } from '../../input2.js';
+import { Mouse } from '../../input.js';
 import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
 // Import End

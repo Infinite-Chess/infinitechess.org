@@ -11,7 +11,7 @@ import selection from '../chess/selection.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { players } from '../../chess/util/typeutil.js';
 import { listener_overlay } from '../chess/game.js';
-import { Mouse } from '../input2.js';
+import { Mouse } from '../input.js';
 
 
 

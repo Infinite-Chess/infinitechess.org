@@ -17,7 +17,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
 import { listener_overlay } from '../chess/game.js';
-import { Mouse } from '../input2.js';
+import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
 // @ts-ignore

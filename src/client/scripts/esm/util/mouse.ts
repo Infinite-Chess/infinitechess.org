@@ -7,7 +7,7 @@
 
 
 import { listener_document, listener_overlay } from "../game/chess/game.js";
-import input2, { Mouse, MouseButton } from "../game/input2.js";
+import input2, { Mouse, MouseButton } from "../game/input.js";
 import space from "../game/misc/space.js";
 // @ts-ignore
 import camera from "../game/rendering/camera.js";

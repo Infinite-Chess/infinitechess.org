@@ -32,7 +32,7 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import preferences from '../../components/header/preferences.js';
 import { rawTypes, players } from '../../chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
-import { Mouse } from '../input2.js';
+import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 // @ts-ignore
