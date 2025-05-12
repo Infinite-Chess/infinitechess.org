@@ -213,6 +213,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0) return; // Can't select this piece type
 	else if (selectionLevel === 1 && mouse.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
+		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -220,9 +221,9 @@ function testIfPieceSelected(gamefile: gamefile) {
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
-		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
+		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
 		if (Object.keys(listener_overlay.getAllPointers()).length === 2) return;
 		/** Just quickly make sure that, if we already have selected a piece,
@@ -231,7 +232,6 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
-		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
 	}
 }
 
