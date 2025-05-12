@@ -45,7 +45,6 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 let drag_start: Coords | undefined;
 
 
-
 // Getters -------------------------------------------------------------------
 
 
@@ -86,7 +85,6 @@ function update(rays: Ray[]) {
 		}
 	} else { // Currently drawing a ray
 		// Test if mouse released (finalize ray)
-
 		if (mouse.isMouseHeld(Mouse.RIGHT)) {
 			// Mouse is still holding
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
@@ -141,7 +139,7 @@ function getLines(rays: Ray[]): Line[] {
  * If a matching ray already exists, that will be removed instead.
  * Any coincident rays are removed.
  * @param rays - All rays currently visible on the board.
- * @returns An object containing the results, such as whether a change was made, and what rays were deleted if any.
+ * @returns An object containing the results, such as whether the ray was added, and what rays were deleted if any.
  */
 function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;

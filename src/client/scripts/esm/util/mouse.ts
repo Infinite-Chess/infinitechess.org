@@ -205,6 +205,15 @@ function claimMouseClick(button: MouseButton): void {
 	else listener_overlay.claimMouseClick(button);
 }
 
+/**
+ * Wrapper for reading the correct listener for canceling the mouse click event,
+ * depending on whether we're in perspective mode or not.
+ */
+function cancelMouseClick(button: MouseButton): void {
+	if (perspective.isMouseLocked()) listener_document.cancelMouseClick(button);
+	else listener_overlay.cancelMouseClick(button);
+}
+
 
 export default {
 	getMouseWorld,
@@ -221,4 +230,5 @@ export default {
 	getWheelDelta,
 	claimMouseDown,
 	claimMouseClick,
+	cancelMouseClick,
 };
