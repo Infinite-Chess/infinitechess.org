@@ -147,7 +147,7 @@ function testIfCollapsed() {
 function Collapse() {
 	const annotes = getRelevantAnnotes();
 
-	if (annotes.Rays.length > 1) {
+	if (annotes.Rays.length > 0) {
 		// Collapse rays instead of erasing all annotations.
 		const additionalSquares = drawrays.collapseRays(annotes.Rays);
 		for (const newSquare of additionalSquares) {
