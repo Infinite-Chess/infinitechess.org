@@ -16,14 +16,14 @@ import instancedshapes from "../../instancedshapes.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import gameslot from "../../../chess/gameslot.js";
 import highlightline, { Line } from "../highlightline.js";
-// @ts-ignore
 import { Mouse } from "../../../input.js";
+import boardpos from "../../boardpos.js";
+import mouse from "../../../../util/mouse.js";
+import annotations from "./annotations.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "./annotations.js";
-import boardpos from "../../boardpos.js";
-import mouse from "../../../../util/mouse.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -67,7 +67,7 @@ const lines: Line[] = [];
  * @param rays - All ray annotations currently on the board.
  */
 function update(rays: Ray[]) {
-	if (!drag_start) {
+	if (!drag_start) { // Not currently drawing a ray
 		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) { // Double click drag this frame
 			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
 			if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
@@ -82,7 +82,22 @@ function update(rays: Ray[]) {
 		}
 	} else { // Currently drawing a ray
 		// Test if mouse released (finalize ray)
-		if (!mouse.isMouseHeld(Mouse.RIGHT) && !mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally ray drawing if we intend to draw square
+
+		if (mouse.isMouseHeld(Mouse.RIGHT)) {
+			// Mouse is still holding
+			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
+			// This prevents the start coord from being highlighted too opaque.
+			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT)!;
+			if (!coordutil.areCoordsEqual_noValidate(mouseCoords, drag_start!)) {
+				const squares = annotations.getSquares();
+				const index = squares.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, drag_start!));
+				if (index !== -1) {
+					squares.splice(index, 1); // Remove the square highlight
+					console.log("Removed square highlight.");
+				}
+			}
+		} else if (!mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally ray drawing if we intend to draw square
+			// The mouse is no longer being held, nor a click simulated (Square drawn same frame).
 			// Finalize the ray
 			addDrawnRay(rays);
 			drag_start = undefined; // Reset drawing
@@ -222,8 +237,12 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 /** Collapses all existing rays into a list of intersection coords points. */
 function collapseRays(rays: Ray[]): Coords[] {
 	const intersections: Coords[] = [];
-	if (rays.length < 2) return intersections;
+	if (rays.length < 1) return intersections;
 
+	// First add the start coords of all rays to the list of intersections
+	for (const ray of rays) addSquare_NoDuplicates(ray.start);
+
+	// Then add all the intersection points of the rays
 	for (let a = 0; a < rays.length - 1; a++) {
 		const ray1 = rays[a]!;
 		for (let b = a + 1; b < rays.length; b++) {
@@ -244,9 +263,13 @@ function collapseRays(rays: Ray[]): Coords[] {
 			// Verify the intersection point is an integer
 			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 
-			// Push it to the collapsed coord intersections (should be no duplicates if there's no bug)
-			intersections.push(intsect);
+			// Push it to the collapsed coord intersections if there isn't a duplicate already
+			addSquare_NoDuplicates(intsect);
 		}
+	}
+
+	function addSquare_NoDuplicates(coords: Coords) {
+		if (intersections.every(coords2 => !coordutil.areCoordsEqual_noValidate(coords, coords2))) intersections.push(coords);
 	}
 
 	return intersections;

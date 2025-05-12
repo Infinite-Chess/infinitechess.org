@@ -113,7 +113,7 @@ const CLICK_THRESHOLDS = {
 		/** The maximum time the mouse can be held down before a click is not registered. */
 		TIME_MILLIS: 400, // Default: 400
 		/** The maximum time between first click down and second click up to register a double click drag. */
-		DOUBLE_CLICK_TIME_MILLIS: 500,
+		DOUBLE_CLICK_TIME_MILLIS: 450, // Default: 500
 	},
 	TOUCH: {
 		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
