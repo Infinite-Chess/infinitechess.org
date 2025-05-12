@@ -10,16 +10,15 @@ import space from "../../../misc/space.js";
 import math, { Color } from "../../../../util/math.js";
 import preferences from "../../../../components/header/preferences.js";
 import { createModel } from "../../buffermodel.js";
-// @ts-ignore
-import input from "../../../input.js";
-// @ts-ignore
-import movement from "../../movement.js";
 
 
 import type { Arrow } from "./annotations.js";
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import coordutil from "../../../../chess/util/coordutil.js";
 import snapping from "../snapping.js";
+import mouse from "../../../../util/mouse.js";
+import { Mouse } from "../../../input.js";
+import boardpos from "../../boardpos.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -65,9 +64,9 @@ let drag_start: Coords | undefined;
 function update(arrows: Arrow[]) {
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
-		if (input.isMouseHeld_Right()) {
-			const pointerWorld = input.getPointerWorldLocation() as Coords;
-			if (movement.isScaleLess1Pixel_Virtual() && snapping.isHoveringAtleastOneEntity()) {
+		if (mouse.isMouseDown(Mouse.RIGHT)) {
+			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
+			if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
 				// Snap to nearest hovered entity
 				const nearestEntity = snapping.getClosestEntityToMouse();
 				drag_start = coordutil.copyCoords(nearestEntity.coords);
@@ -78,7 +77,7 @@ function update(arrows: Arrow[]) {
 		}
 	} else { // Currently drawing an arrow
 		// Test if mouse released (finalize arrow)
-		if (!input.isMouseHeld_Right() && !input.getPointerClicked_Right()) { // Prevents accidentally drawing tincy arrows while zoomed out if we intend to draw square
+		if (!mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally drawing tincy arrows while zoomed out if we intend to draw square
 			addDrawnArrow(arrows);
 			drag_start = undefined; // Reset drawing
 		}
@@ -92,9 +91,9 @@ function update(arrows: Arrow[]) {
  * @returns An object containing the results, such as whether a change was made, and what arrow was deleted if any.
  */
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
-	const pointerWorld = input.getPointerWorldLocation() as Coords;
+	const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
 	let drag_end: Coords;
-	if (movement.isScaleLess1Pixel_Virtual() && snapping.isHoveringAtleastOneEntity()) {
+	if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
 		// Snap to nearest hovered entity
 		const nearestEntity = snapping.getClosestEntityToMouse();
 		drag_end = coordutil.copyCoords(nearestEntity.coords);
@@ -165,7 +164,7 @@ function getDataArrow(
 	// First we need to shift the arrow's base a little away from the center of the starting square.
 	const length_coords = math.euclideanDistance(arrow.start, arrow.end);
 	// This makes sure that base offset looks the same no matter our zoom level
-	const invMult = movement.isScaleLess1Pixel_Virtual() ? movement.getBoardScale() : 1;
+	const invMult = boardpos.areZoomedOut() ? boardpos.getBoardScale() : 1;
 	const t = ARROW.BASE_OFFSET / (invMult * length_coords); // Proportion of the arrow length to offset the base
 	if (t >= 1) return []; // No arrow drawn if base offset is greater than the entire arrow length (else it would be drawn with negative length).
 	const trueStartCoords = coordutil.lerpCoords(arrow.start, arrow.end, t);
@@ -177,7 +176,7 @@ function getDataArrow(
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
 
-	const size = movement.isScaleLess1Pixel_Virtual() ? 1 : movement.getBoardScale();
+	const size = boardpos.areZoomedOut() ? 1 : boardpos.getBoardScale();
 
 	const bodyWidthArg = ARROW.BODY_WIDTH * size;
 	const tipWidthArg = ARROW.TIP_WIDTH * size;

@@ -194,8 +194,6 @@ function updateCanvasDimensions() {
 function recalcCanvasVariables() {
 	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	initScreenBoundingBox();
-
-	miniimage.recalcWidthWorld();
 }
 
 // Set view matrix

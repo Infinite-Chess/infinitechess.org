@@ -136,13 +136,13 @@ function update() {
 
 	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
-	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	snapping.updateEntitiesHovered();
 	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
 	annotations.update();
 
 	// After updating annotations and mini image hovers, as this early exits if we're hovering.
-	// highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
+	// highlightline.genModel(); // Before boarddrag.checkIfBoardDragged() since clicks should prioritize this.
 	selectedpiecehighlightline.update();
 	snapping.updateSnapping();
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.

@@ -15,11 +15,12 @@ import gameloader from "../../../chess/gameloader.js";
 import drawrays from "./drawrays.js";
 import coordutil from "../../../../chess/util/coordutil.js";
 // @ts-ignore
-import input from "../../../input.js";
+import input, { Mouse } from "../../../input.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Vec2 } from "../../../../util/math.js";
+import mouse from "../../../../util/mouse.js";
 
 
 // Type Definitions ------------------------------------------------------------
@@ -141,7 +142,7 @@ function update() {
 
 	// If middle mouse button is clicked, remove all highlights
 	// TODO: Change this to left clicking an empty region of the board
-	if (input.isMouseDown_Middle()) Collapse();
+	if (mouse.isMouseDown(Mouse.MIDDLE)) Collapse();
 
 	// Arrows first since it reads if there was a click, but Squares will claim the click.
 	drawarrows.update(annotes.Arrows);

@@ -8,8 +8,6 @@
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
-import movement from '../movement.js';
-// @ts-ignore
 import board from '../board.js';
 import { createModel } from '../buffermodel.js';
 import space from '../../misc/space.js';
@@ -17,6 +15,7 @@ import space from '../../misc/space.js';
 
 import type { BoundingBox, Color } from '../../../util/math.js';
 import type { Coords } from '../../../chess/util/coordutil.js';
+import boardpos from '../boardpos.js';
 
 
 
@@ -50,7 +49,7 @@ interface Line {
  * according to whether we're in perspective mode or not.
  */
 function getRenderRange(): BoundingBox {
-	const a = perspective.distToRenderBoard / movement.getBoardScale();
+	const a = perspective.distToRenderBoard / boardpos.getBoardScale();
 	return perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
 }
 

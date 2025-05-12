@@ -11,17 +11,12 @@ import coordutil, { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
 import math from "../../../util/math.js";
 import highlightline from "./highlightline.js";
 // @ts-ignore
-import perspective from "../perspective.js";
-// @ts-ignore
-import movement from "../movement.js";
-// @ts-ignore
 import guipause from "../../gui/guipause.js";
-// @ts-ignore
-import board from "../board.js";
 
 
 import type { Line } from "./highlightline.js";
-import type { BoundingBox, Vec2 } from "../../../util/math.js";
+import type { Vec2 } from "../../../util/math.js";
+import boardpos from "../boardpos.js";
 
 
 
@@ -32,7 +27,7 @@ function update() {
 	lines.length = 0;
 
 	if (guipause.areWePaused()) return; // Exit if paused
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (!selection.isAPieceSelected()) return;
 
 	const pieceSelected = selection.getPieceSelected()!;

@@ -17,12 +17,9 @@ import gamefileutility from "../../../chess/util/gamefileutility.js";
 import { createModel } from "../buffermodel.js";
 import spritesheet from "../spritesheet.js";
 import drawrays from "./annotations/drawrays.js";
-// @ts-ignore
-import input from "../../input.js";
+import { Mouse } from "../../input.js";
 // @ts-ignore
 import transition from "../transition.js";
-// @ts-ignore
-import movement from "../movement.js";
 // @ts-ignore
 import perspective from "../perspective.js";
 // @ts-ignore
@@ -34,6 +31,9 @@ import bufferdata from "../bufferdata.js";
 import type { Coords } from "../../../chess/util/coordutil.js";
 import type { Line } from "./highlightline.js";
 import coordutil from "../../../chess/util/coordutil.js";
+import mouse from "../../../util/mouse.js";
+import { listener_overlay } from "../../chess/game.js";
+import boardpos from "../boardpos.js";
 
 
 // Variables --------------------------------------------------------------
@@ -50,7 +50,7 @@ const SNAPPING_DIST: number = 1.0; // Default: 1.0
 const GLOW_DOT = {
 	RADIUS_PIXELS: 10,
 	RESOLUTION: 16
-}
+};
 
 
 const GHOST_IMAGE_OPACITY = 1;
@@ -118,8 +118,8 @@ function updateEntitiesHovered() {
 	// Test if clicked (teleport to all hovered entities)
 	const allEntitiesHovered = [...miniimage.imagesHovered, ...drawsquares.highlightsHovered];
 	if (allEntitiesHovered.length > 0) {
-		if (input.getPointerClicked()) transition.initTransitionToCoordsList(allEntitiesHovered);
-		else if (input.getPointerDown()) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+		if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList(allEntitiesHovered);
+		else if (mouse.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
 }
 
@@ -138,7 +138,7 @@ function updateEntitiesHovered() {
 function updateSnapping() {
 	snap = undefined;
 
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
+	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
 
 	const rayLines = drawrays.lines;
@@ -161,7 +161,7 @@ function updateSnapping() {
 		if (lineSnapPoint.snapPoint.distance < closestSnap.snapPoint.distance) closestSnap = lineSnapPoint;
 	}
 
-	const snapDistCoords = SNAPPING_DIST / (2 * movement.getBoardScale());
+	const snapDistCoords = SNAPPING_DIST / (2 * boardpos.getBoardScale());
 	if (closestSnap.snapPoint.distance > snapDistCoords) {
 		console.log("Mouse no close snap");
 		return; // No line close enough for the mouse to snap to anything
@@ -241,7 +241,7 @@ function updateSnapping() {
 		if (closestSquareSnap.dist < snapDistCoords) {
 			snap = closestSquareSnap;
 			// Teleport if clicked
-			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+			if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
 			squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 			return;
 		}
@@ -258,7 +258,7 @@ function updateSnapping() {
 			console.log(2);
 			snap = closestPieceSnap;
 			// Teleport if clicked
-			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+			if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
 			return;
 		}
 	}
@@ -273,7 +273,7 @@ function updateSnapping() {
 		if (closestOriginSnap.dist < snapDistCoords) {
 			snap = closestOriginSnap;
 			// Teleport if clicked
-			if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+			if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
 			return;
 		}
 	}
@@ -283,7 +283,7 @@ function updateSnapping() {
 	// Instead, set the snap to the closest point on the line.
 	snap = { coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
 	// Teleport if clicked
-	if (input.getPointerClicked()) transition.initTransitionToCoordsList([snap.coords]);
+	if (mouse.isMouseClicked(Mouse.LEFT)) transition.initTransitionToCoordsList([snap.coords]);
 }
 
 function findClosestEntityOfGroup(entities: Coords[], closeLines: { line: Line, snapPoint: { coords: Coords, distance: number }}[], mouseCoords: Coords, allPrimitiveSlidesInGame: Vec2[]): { coords: Coords, color: Color, dist: number, source: Coords, type?: number } | undefined {

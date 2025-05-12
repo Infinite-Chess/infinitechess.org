@@ -13,9 +13,7 @@ import instancedshapes from "../../instancedshapes.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 // @ts-ignore
-import movement from "../../movement.js";
-// @ts-ignore
-import input from "../../../input.js";
+import { Mouse } from "../../../input.js";
 // @ts-ignore
 import guipause from "../../../gui/guipause.js";
 // @ts-ignore
@@ -24,6 +22,8 @@ import perspective from "../../perspective.js";
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Square } from "./annotations.js";
+import boardpos from "../../boardpos.js";
+import mouse from "../../../../util/mouse.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -53,12 +53,12 @@ function updateHighlightsHovered(highlights: Square[]) {
 	highlightsHovered.length = 0;
 	highlightsHovered_dists.length = 0;
 	
-	if (!movement.isScaleLess1Pixel_Virtual() || guipause.areWePaused() || highlights.length === 0) return;
+	if (!boardpos.areZoomedOut() || guipause.areWePaused() || highlights.length === 0) return;
 	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
 
 	// Test if any one highlight is being hovered over
 
-	const mouseWorld: Coords = input.getPointerWorldLocation() as Coords;
+	const mouseWorld: Coords = mouse.getMouseWorld(Mouse.RIGHT)!;
 
 	const entityHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
 
@@ -83,13 +83,13 @@ function updateHighlightsHovered(highlights: Square[]) {
  */
 function update(highlights: Square[]) {
 	// If the pointer simulated a right click, add a highlight!
-	if (input.getPointerClicked_Right()) {
-		const pointerWorld: Coords = input.getPointerWorldLocation() as Coords;
+	if (mouse.isMouseClicked(Mouse.RIGHT)) {
+		const pointerWorld: Coords = mouse.getMouseWorld(Mouse.RIGHT)!;
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 		const isHoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
 
-		if (!movement.isScaleLess1Pixel_Virtual() || !isHoveringAtleastOneEntity) { // Zoomed in OR not hovering anything. Normal behavior: toggle highlight on square.
+		if (!boardpos.areZoomedOut() || !isHoveringAtleastOneEntity) { // Zoomed in OR not hovering anything. Normal behavior: toggle highlight on square.
 			// Check if the square is already highlighted
 			const index = highlights.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, pointerSquare));
 	
@@ -139,7 +139,7 @@ function render(highlights: Square[]) {
 	if (highlights.length === 0) return;
 
 	// If we're zoomed out, then the size of the highlights is constant.
-	const size = movement.isScaleLess1Pixel_Virtual() ? snapping.getEntityWidthWorld() : movement.getBoardScale();
+	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
 
 	// Render main highlights
 	const color = preferences.getAnnoteSquareColor();

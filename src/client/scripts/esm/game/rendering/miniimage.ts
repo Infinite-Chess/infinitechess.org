@@ -15,8 +15,6 @@ import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
 import { players, TypeGroup } from '../../chess/util/typeutil.js';
 import boardutil from '../../chess/util/boardutil.js';
-import { listener_overlay } from '../chess/game.js';
-import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
 import snapping from './highlights/snapping.js';
@@ -27,10 +25,6 @@ import math, { Color } from '../../util/math.js';
 import webgl from './webgl.js';
 // @ts-ignore
 import perspective from './perspective.js';
-// @ts-ignore
-import bufferdata from './bufferdata.js';
-// @ts-ignore
-import transition from './transition.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore

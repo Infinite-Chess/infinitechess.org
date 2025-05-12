@@ -43,16 +43,16 @@ function getPointerPosition_Offscreen(pointerId: string): Coords | undefined {
  * Returns the world space coordinates of the mouse pointer,
  * or the crosshair if the mouse is locked (in perspective mode).
  */
-function getMouseWorld(): Coords | undefined {
+function getMouseWorld(button: MouseButton = Mouse.LEFT): Coords | undefined {
 	if (!perspective.getEnabled()) {
-		// const mousePos = listener_overlay.getMousePosition(Mouse.LEFT);
-		const mouseId = listener_overlay.getMouseId(Mouse.LEFT);
+		// const mousePos = listener_overlay.getMousePosition(button);
+		const mouseId = listener_overlay.getMouseId(button);
 		if (!mouseId) return undefined;
 		let mousePos = getPointerPosition_Offscreen(mouseId);
 		if (!mousePos) {
 			// Pointer likely doesn't exist anymore (touch event lifted).
 			// This will return its last known position.
-			mousePos = listener_overlay.getMousePosition(Mouse.LEFT);
+			mousePos = listener_overlay.getMousePosition(button);
 		}
 		if (!mousePos) return undefined;
 		return convertMousePositionToWorldSpace(mousePos, listener_overlay.element);

@@ -24,8 +24,6 @@ import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 // @ts-ignore
 import perspective from './perspective.js';
-// @ts-ignore
-import movement from './movement.js';
 
 // Type Definitions ---------------------------------------------------------------------------------
 

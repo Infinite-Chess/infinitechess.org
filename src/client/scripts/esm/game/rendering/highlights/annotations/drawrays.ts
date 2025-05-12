@@ -17,13 +17,13 @@ import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from ".
 import gameslot from "../../../chess/gameslot.js";
 import highlightline, { Line } from "../highlightline.js";
 // @ts-ignore
-import input from "../../../input.js";
-// @ts-ignore
-import movement from "../../movement.js";
+import { Mouse } from "../../../input.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "./annotations.js";
+import boardpos from "../../boardpos.js";
+import mouse from "../../../../util/mouse.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -68,10 +68,9 @@ const lines: Line[] = [];
  */
 function update(rays: Ray[]) {
 	if (!drag_start) {
-		// Test if double click drag (start drawing ray)
-		if (false) { // Double click drag this frame
-			const pointerWorld = input.getPointerWorldLocation() as Coords;
-			if (movement.isScaleLess1Pixel_Virtual() && snapping.isHoveringAtleastOneEntity()) {
+		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) { // Double click drag this frame
+			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
+			if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
 				// Snap to nearest hovered entity
 				const nearestEntity = snapping.getClosestEntityToMouse();
 				drag_start = coordutil.copyCoords(nearestEntity.coords);
@@ -83,7 +82,7 @@ function update(rays: Ray[]) {
 		}
 	} else { // Currently drawing a ray
 		// Test if mouse released (finalize ray)
-		if (!input.isMouseHeld_Right() && !input.getPointerClicked_Right()) { // Prevents accidentally ray drawing if we intend to draw square
+		if (!mouse.isMouseHeld(Mouse.RIGHT) && !mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally ray drawing if we intend to draw square
 			addDrawnRay(rays);
 			drag_start = undefined; // Reset drawing
 		}
@@ -93,7 +92,7 @@ function update(rays: Ray[]) {
 
 	lines.length = 0;
 
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Zoomed in, not rendering rays as highlight lines
+	if (!boardpos.areZoomedOut()) return; // Zoomed in, not rendering rays as highlight lines
 
 	const color = preferences.getAnnoteSquareColor();
 	color[3] = 1; // Highlightlines are fully opaque
@@ -126,7 +125,7 @@ function update(rays: Ray[]) {
  * @returns An object containing the results, such as whether a change was made, and what rays were deleted if any.
  */
 function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
-	const pointerWorld = input.getPointerWorldLocation() as Coords;
+	const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
 	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 	// Skip if end equals start (no arrow drawn)
@@ -219,7 +218,7 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 
 /** Collapses all existing rays into a list of intersection coords points. */
 function collapseRays(rays: Ray[]): Coords[] {
-	let intersections: Coords[] = [];
+	const intersections: Coords[] = [];
 	if (rays.length < 2) return intersections;
 
 	for (let a = 0; a < rays.length - 1; a++) {
@@ -259,7 +258,7 @@ function render(rays: Ray[]) {
 	// Early exit if no rays to draw
 	if (rays.length === 0) return;
 
-	if (movement.isScaleLess1Pixel_Virtual()) { // Zoomed out, render rays as highlight lines
+	if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
 		if (lines.length === 0) throw Error('Lines empty, cannot render ray highlight lines.');
 		highlightline.genLinesModel(lines).render();
 	} else { // Zoomed in, render rays as infinite legal move highlights
@@ -269,14 +268,14 @@ function render(rays: Ray[]) {
 		const instanceData = legalmovehighlights.genData_Rays(rays);
 		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
 		// Render
-		const boardPos: Coords = movement.getBoardPos();
+		const boardPos: Coords = boardpos.getBoardPos();
 		const model_Offset: Coords = legalmovehighlights.getOffset();
 		const position: [number,number,number] = [
             -boardPos[0] + model_Offset[0], // Add the model's offset
             -boardPos[1] + model_Offset[1],
             0
         ];
-		const boardScale: number = movement.getBoardScale();
+		const boardScale: number = boardpos.getBoardScale();
 		const scale: [number,number,number] = [boardScale, boardScale, 1];
 		model.render(position, scale);
 	}
