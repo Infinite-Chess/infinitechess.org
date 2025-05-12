@@ -5,7 +5,7 @@
  */
 
 
-import { Coords } from "../chess/util/coordutil";
+import type { Coords } from "../chess/util/coordutil";
 
 
 // Type Definitions ------------------------------------------------------------------
@@ -35,6 +35,13 @@ type Vec2Key = `${number},${number}`
 
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
+
+type Ray = {
+	start: Coords
+	vector: Vec2
+	/** The line in general form (A, B, C coefficients) */
+	line: [number, number, number]
+}
 
 /** A color in a length-4 array: `[r,g,b,a]` */
 type Color = [number,number,number,number];
@@ -137,6 +144,49 @@ function intersectLineAndSegment(lineA: number, lineB: number, lineC: number, se
 
 	// 5. The intersection point exists but is outside the segment bounds
 	return undefined;
+}
+
+/**
+ * Calculates the intersection point of two rays.
+ * Returns the intersection coordinates if the rays intersect at a single point
+ * that lies on both rays (i.e., not "behind" the starting point of either ray).
+ * Returns undefined if they are parallel, collinear (resulting in no unique
+ * intersection or infinite intersections), or if the intersection point of
+ * their containing lines falls outside of one or both rays.
+ *
+ * @param ray1 The first ray.
+ * @param ray2 The second ray.
+ * @returns The intersection Coords if they intersect on both rays, otherwise undefined.
+ */
+function intersectRays(ray1: Ray, ray2: Ray): Coords | undefined {
+	// 1. Calculate the intersection point of the infinite lines containing the rays.
+	const intersectionPoint = calcIntersectionPointOfLines(...ray1.line, ...ray2.line);
+
+	// 2. If the lines are parallel or collinear, they don't have a unique intersection point.
+	// calcIntersectionPointOfLines returns undefined in this case.
+	if (!intersectionPoint) return undefined; // This covers parallel lines and collinear lines (infinite intersections or no intersection).
+
+	// 3. Check if the intersection point lies on the first ray.
+	// This is done by checking if the vector from the ray's start to the intersection point
+	// points in the same general direction as the ray's own direction vector.
+	// The dot product will be non-negative (>= 0) if this is true.
+    
+	// Vector from ray1's start to the intersection point
+	const vectorToIntersection1 = calculateVectorFromPoints(ray1.start, intersectionPoint);
+    
+	// Dot product of ray1's direction vector and vectorToIntersection1
+	const dotProd1 = dotProduct(ray1.vector, vectorToIntersection1);
+
+	if (dotProd1 < 0) return undefined; // The intersection point is "behind" the start of ray1.
+
+	// 4. Check if the intersection point lies on the second ray (similarly).
+	const vectorToIntersection2 = calculateVectorFromPoints(ray2.start, intersectionPoint);
+	const dotProd2 = dotProduct(ray2.vector, vectorToIntersection2);
+
+	if (dotProd2 < 0) return undefined; // The intersection point is "behind" the start of ray2.
+
+	// 5. If both checks pass, the intersection point is on both rays.
+	return intersectionPoint;
 }
 
 /**
@@ -724,6 +774,7 @@ export default {
 	calcIntersectionPointOfLines,
 	intersectLineSegments,
 	intersectLineAndSegment,
+	intersectRays,
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFrom2Coords,
 	areLinesInGeneralFormEqual,
@@ -768,5 +819,6 @@ export type {
 	Vec2,
 	Vec2Key,
 	Vec3,
-	Color
+	Color,
+	Ray,
 };

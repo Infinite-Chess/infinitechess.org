@@ -19,7 +19,7 @@ import mouse from "../../../../util/mouse.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
-import type { Vec2 } from "../../../../util/math.js";
+import type { Ray } from "../../../../util/math.js";
 
 
 // Type Definitions ------------------------------------------------------------
@@ -44,17 +44,6 @@ type Square = Coords;
 interface Arrow {
 	start: Coords
 	end: Coords
-}
-
-/**
- * Third type of annotation: A ray of infinite square highlights,
- * starting from a square and going to infinity.
- */
-interface Ray {
-	start: Coords
-	vector: Vec2
-	/** The line in general form (A, B, C coefficients) */
-	line: [number, number, number]
 }
 
 
