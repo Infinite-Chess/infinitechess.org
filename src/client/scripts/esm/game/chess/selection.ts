@@ -222,11 +222,12 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
+		console.log('here');
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
-		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
-		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
 		if (Object.keys(listener_overlay.getAllPointers()).length === 2) return;
+		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
+		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
