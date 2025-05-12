@@ -293,6 +293,7 @@ function startStartingTransition() {
 	boardpos.setBoardPos(centerArea.coords);
 	boardpos.setBoardScale(centerArea.scale * 1.75);
 	guinavigation.recenter();
+	transition.eraseTelHist();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
