@@ -139,20 +139,20 @@ function updateImagesHovered() {
 
 
 	gamefile.existingTypes.forEach((type: number) => {
-		if (boardutil.getPieceCountOfTypeRange(pieces.typeRanges.get(type)!) === 0) return; // The type is ALL undefined placeholders
 		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
 		const thisInstanceData: 		number[] = [];
 		const thisInstanceData_hovered: number[] = [];
+		instanceData[type] = thisInstanceData;
+		instanceData_hovered[type] = thisInstanceData_hovered;
+		
+		if (boardutil.getPieceCountOfTypeRange(pieces.typeRanges.get(type)!) === 0) return; // The type is ALL undefined placeholders
 
 		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
 			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
 			processPiece(coords, thisInstanceData, thisInstanceData_hovered);
 		});
-
-		instanceData[type] = thisInstanceData;
-		instanceData_hovered[type] = thisInstanceData_hovered;
 	});
 
 	function processPiece(coords: Coords, instanceData: number[], instanceData_hovered: number[]) {
