@@ -35,6 +35,8 @@ import { listener_document, listener_overlay } from './game.js';
 import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
+import boarddrag from '../rendering/boarddrag.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -51,7 +53,6 @@ import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-import boarddrag from '../rendering/boarddrag.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -135,7 +136,7 @@ function disableEditMode() { editMode = false; }
 function update() {
 	guipromotion.update();
 	// DISABLED BECAUSE highlight drawing uses the right click
-	// if (mouse.isMouseDown(Mouse.RIGHT)) return unselectPiece(); // Right-click deselects everything
+	if (mouse.isMouseDown(Mouse.MIDDLE)) return unselectPiece(); // Right-click deselects everything
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
@@ -354,8 +355,10 @@ function isOpponentType(gamefile: gamefile, type: number) {
  */
 function selectPiece(gamefile: gamefile, piece: Piece, drag: boolean) {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
-	const alreadySelected = pieceSelected !== undefined && coordutil.areCoordsEqual(pieceSelected.coords, piece.coords);
 
+	annotations.onPieceSelection();
+
+	const alreadySelected = pieceSelected !== undefined && coordutil.areCoordsEqual(pieceSelected.coords, piece.coords);
 	if (drag) { // Pick up anyway, don't unselect it if it was already selected.
 		if (alreadySelected) {
 			draganimation.pickUpPiece(piece, false); // Toggle the parity since it's the same piece being picked up.

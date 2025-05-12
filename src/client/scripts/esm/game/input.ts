@@ -43,6 +43,9 @@ interface InputListener {
 	/** Adds the pointer down so that other scripts may use it again. */
 	// eslint-disable-next-line no-unused-vars
 	unclaimPointerDown(pointerId: string): void;
+	/** Removes the simulated mouse click so that other scripts don't also use it. */
+	// eslint-disable-next-line no-unused-vars
+	claimMouseClick(button: MouseButton): void;
 	/** Whether the given mouse button is currently held down. */
     // eslint-disable-next-line no-unused-vars
     isMouseHeld(button: MouseButton): boolean;
@@ -598,6 +601,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (index !== -1) throw Error("Can't unclaim pointer, it was never claimed.");
 			pointersDown.push(pointerId);
 		},
+		claimMouseClick: (button: MouseButton) => clickInfo[button].clicked = false,
 		isMouseHeld: (button: MouseButton) => clickInfo[button].isHeld ?? false,
 		isMouseTouch: (button: MouseButton) => {
 			const pointerId = clickInfo[button].pointerId;

@@ -14,13 +14,12 @@ import drawarrows from "./drawarrows.js";
 import gameloader from "../../../chess/gameloader.js";
 import drawrays from "./drawrays.js";
 import coordutil from "../../../../chess/util/coordutil.js";
-// @ts-ignore
-import input, { Mouse } from "../../../input.js";
+import { Mouse } from "../../../input.js";
+import mouse from "../../../../util/mouse.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Vec2 } from "../../../../util/math.js";
-import mouse from "../../../../util/mouse.js";
 
 
 // Type Definitions ------------------------------------------------------------
@@ -140,9 +139,7 @@ function clearAnnotes(annotes: Annotes) {
 function update() {
 	const annotes = getRelevantAnnotes();
 
-	// If middle mouse button is clicked, remove all highlights
-	// TODO: Change this to left clicking an empty region of the board
-	if (mouse.isMouseDown(Mouse.MIDDLE)) Collapse();
+	if (mouse.isMouseClicked(Mouse.LEFT)) Collapse();
 
 	// Arrows first since it reads if there was a click, but Squares will claim the click.
 	drawarrows.update(annotes.Arrows);
@@ -170,6 +167,27 @@ function Collapse() {
 	} else clearAnnotes(annotes);
 }
 
+/**
+ * Erases all the annotations of the current ply,
+ * if lingering annotations is OFF.
+ */
+function onPieceSelection() {
+	if (preferences.getLingeringAnnotationsMode()) return; // Don't clear annotations on piece selection in this mode
+	// Clear the annotations of the current ply
+	const annotes = getRelevantAnnotes();
+	clearAnnotes(annotes);
+}
+
+function onGameUnload() {
+	annotes_plies.length = 0;
+	clearAnnotes(annotes_linger);
+	drawarrows.stopDrawing();
+}
+
+
+// Rendering ----------------------------------------------------------
+
+
 /** Renders the annotations that should be rendered below the pieces */
 function render_belowPieces() {
 	const annotes = getRelevantAnnotes();
@@ -183,12 +201,6 @@ function render_abovePieces() {
 
 }
 
-function onGameUnload() {
-	annotes_plies.length = 0;
-	clearAnnotes(annotes_linger);
-	drawarrows.stopDrawing();
-}
-
 
 // Exports ----------------------------------------------------------
 
@@ -199,9 +211,10 @@ export default {
 	getRays,
 
 	update,
+	onPieceSelection,
+	onGameUnload,
 	render_belowPieces,
 	render_abovePieces,
-	onGameUnload,
 };
 
 export type {
