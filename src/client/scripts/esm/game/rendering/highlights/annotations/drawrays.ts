@@ -46,9 +46,12 @@ let drag_start: Coords | undefined;
 
 
 
-// Helpers -------------------------------------------------------------------
+// Getters -------------------------------------------------------------------
 
 
+function areDrawing() {
+	return drag_start !== undefined;
+}
 
 
 // Updating -----------------------------------------------------------------
@@ -312,6 +315,7 @@ function render(rays: Ray[]) {
 
 
 export default {
+	areDrawing,
 	update,
 	getLines,
 	collapseRays,

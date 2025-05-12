@@ -154,6 +154,7 @@ function updateSnapping() {
 	if (guipause.areWePaused()) return; // Don't snap if paused
 	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
+	if (drawrays.areDrawing()) return; // Don't snap if we're drawing a ray
 
 	const rayLines = drawrays.getLines(annotations.getRays());
 	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
