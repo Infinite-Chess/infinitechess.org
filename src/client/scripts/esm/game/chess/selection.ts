@@ -222,7 +222,6 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
-		console.log('here');
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
 		if (Object.keys(listener_overlay.getAllPointers()).length === 2) return;

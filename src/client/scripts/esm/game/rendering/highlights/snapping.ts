@@ -291,15 +291,32 @@ function updateSnapping() {
 	const searchVectors = gamefile.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
 
 
-	// 1. Square Annotes & Intersections of Rays (same priority)
+	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority)
 
-	// All Ray intersections are temporarily added as additional Squares,
+	// All Ray intersections & starts are temporarily added as additional Squares,
 	// Including Ray start coords
 
-	const rayIntersections = drawrays.collapseRays(annotations.getRays());
 	const squares = annotations.getSquares();
 	const originalSquareLength = squares.length;
-	squares.push(...rayIntersections);
+	
+	for (let a = 0; a < allLines.length - 1; a++) {
+		const line1 = allLines[a]!;
+		for (let b = a + 1; b < allLines.length; b++) {
+			const line2 = allLines[b]!;
+			// Calculate where they intersect
+			const intsect = math.intersectLineSegments(line1.start, line1.end, line2.start, line2.end);
+			if (intsect === undefined) continue; // Don't intersect
+			// Push it to the intersections, preventing duplicates
+			if (!squares.some(c => coordutil.areCoordsEqual_noValidate(c, intsect))) squares.push(intsect);
+		}
+	}
+
+	// Add all ray start coords too
+	const rayStarts = annotations.getRays().map(r => r.start);
+	// Don't add duplicates
+	for (const start of rayStarts) {
+		if (!squares.some(c => coordutil.areCoordsEqual_noValidate(c, start))) squares.push(start);
+	}
 	
 	// Now see if we should snap to any Square
 
