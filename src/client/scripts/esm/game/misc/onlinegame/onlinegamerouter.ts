@@ -126,16 +126,17 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	}
 
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
 
 	switch (data.action) {
 		case "move":
-			movesendreceive.handleOpponentsMove(gamefile, data.value);
+			movesendreceive.handleOpponentsMove(gamefile, mesh, data.value);
 			break;
 		case "clock": 
 			handleUpdatedClock(gamefile, data.value);
 			break;
 		case "gameupdate":
-			resyncer.handleServerGameUpdate(gamefile, data.value);
+			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
 			break;
 		case "unsub":
 			handleUnsubbing();

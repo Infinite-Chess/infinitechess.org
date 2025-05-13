@@ -6,7 +6,7 @@
 
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { TypeRange } from '../../chess/logic/organizedpieces.js';
+import type { TypeGroup } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
 
@@ -36,6 +36,16 @@ interface MeshData {
 	model: BufferModelInstanced
 }
 
+interface Mesh {
+	/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
+	 * This helps require less severe uniform translations upon rendering when traveling massive distances.
+	 * The amount it is shifted depends on the nearest `REGEN_RANGE`. */
+	offset: Coords,
+	/** Whether the position data of each piece mesh is inverted. This will be true if we're viewing black's perspective. */
+	inverted: boolean,
+	/** An object containing the mesh data for each type of piece in the game. One for every type in `pieces` */
+	types: TypeGroup<MeshData>
+};
 
 // Variables ----------------------------------------------------------------------------------------
 
@@ -81,18 +91,18 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  * 
  * SLOWEST. Minimize calling.
  */
-function regenAll(gamefile: gamefile) {
+function regenAll(gamefile: gamefile, mesh: Mesh) {
 	console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
-	gamefile.mesh.offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
+	mesh.offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 	// Calculate whether the textures should be inverted or not, based on whether we're viewing black's perspective.
-	gamefile.mesh.inverted = perspective.getIsViewingBlackPerspective();
+	mesh.inverted = perspective.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
 	for (const type of gamefile.existingTypes) { // [43] pawn(white)
-		if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
-		else gamefile.mesh.types[type] = genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+		if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(gamefile, mesh, type); // Custom mesh generation logic for voids
+		else mesh.types[type] = genTypeModel(gamefile, mesh, type); // Normal generation logic for all pieces with a texture
 	}
 
 	frametracker.onVisualChange();
@@ -108,11 +118,11 @@ function regenAll(gamefile: gamefile) {
  * @param gamefile
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
-function regenType(gamefile: gamefile, type: number) {
+function regenType(gamefile: gamefile, mesh: Mesh, type: number) {
 	console.log(`Regenerating mesh of type ${type}.`);
 
-	if (typeutil.getRawType(type) === rawTypes.VOID) gamefile.mesh.types[type] = genVoidModel(gamefile, type); // Custom mesh generation logic for voids
-	else gamefile.mesh.types[type] = genTypeModel(gamefile, type); // Normal generation logic for all pieces with a texture
+	if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(gamefile, mesh, type); // Custom mesh generation logic for voids
+	else mesh.types[type] = genTypeModel(gamefile, mesh, type); // Normal generation logic for all pieces with a texture
 
 	frametracker.onVisualChange();
 }
@@ -125,10 +135,10 @@ function regenType(gamefile: gamefile, type: number) {
  * @param gamefile
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
-function genTypeModel(gamefile: gamefile, type: number): MeshData {
+function genTypeModel(gamefile: gamefile, mesh: Mesh, type: number): MeshData {
 	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
-	const vertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, type);
+	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, mesh, type);
 
 	const tex = texturecache.getTexture(type);
 	return {
@@ -143,9 +153,9 @@ function genTypeModel(gamefile: gamefile, type: number): MeshData {
  * 
  * SLOWEST. Minimize calling.
  */
-function genVoidModel(gamefile: gamefile, type: number): MeshData {
+function genVoidModel(gamefile: gamefile, mesh: Mesh, type: number): MeshData {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(preferences.getTintColorOfType(type));
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, type);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, mesh, type);
 
 	return {
 		instanceData64,
@@ -158,7 +168,7 @@ function genVoidModel(gamefile: gamefile, type: number): MeshData {
  * The instance data contains only the offset of each piece instance, with a stride of 2.
  * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
-function getInstanceDataForTypeRange(gamefile: gamefile, type: number): Float64Array {
+function getInstanceDataForTypeRange(gamefile: gamefile, mesh: Mesh, type: number): Float64Array {
 	const range = gamefile.pieces.typeRanges.get(type)!;
 	const instanceData64: Float64Array = new Float64Array((range.end - range.start) * STRIDE_PER_PIECE); // Initialize with all 0's
 
@@ -171,8 +181,8 @@ function getInstanceDataForTypeRange(gamefile: gamefile, type: number): Float64A
 		} else { // NOT undefined
 			const coords = boardutil.getCoordsFromIdx(gamefile.pieces, idx);
 			// Apply the piece mesh offset to the coordinates
-			instanceData64[currIndex] = coords[0] - gamefile.mesh.offset[0];
-			instanceData64[currIndex + 1] = coords[1] - gamefile.mesh.offset[1];
+			instanceData64[currIndex] = coords[0] - mesh.offset[0];
+			instanceData64[currIndex + 1] = coords[1] - mesh.offset[1];
 		}
 		currIndex += STRIDE_PER_PIECE;
 	});
@@ -189,25 +199,25 @@ function getInstanceDataForTypeRange(gamefile: gamefile, type: number): Float64A
  * uniform translations upon rendering, and reinits them on the gpu.
  * Faster than {@link regenAll}.
  */
-function shiftAll(gamefile: gamefile) {
+function shiftAll(gamefile: gamefile, mesh: Mesh) {
 	console.log("Shifting all piece meshes.");
 
 	const newOffset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 
-	const diffXOffset = gamefile.mesh.offset[0] - newOffset[0];
-	const diffYOffset = gamefile.mesh.offset[1] - newOffset[1];
+	const diffXOffset = mesh.offset[0] - newOffset[0];
+	const diffYOffset = mesh.offset[1] - newOffset[1];
 	
-	const chebyshevDistance = math.chebyshevDistance(gamefile.mesh.offset, newOffset);
+	const chebyshevDistance = math.chebyshevDistance(mesh.offset, newOffset);
 	if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
 		console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
-		regenAll(gamefile);
+		regenAll(gamefile, mesh);
 		return;
 	}
 
-	gamefile.mesh.offset = newOffset;
+	mesh.offset = newOffset;
 
 	// Go ahead and shift each model
-	for (const meshData of Object.values(gamefile.mesh.types)) {
+	for (const meshData of Object.values(mesh.types)) {
 		shiftModel(meshData as MeshData, diffXOffset, diffYOffset);
 	}
 }
@@ -245,13 +255,13 @@ function shiftModel(meshData: MeshData, diffXOffset: number, diffYOffset: number
  * 
  * FAST, as this only needs to modify the vertex data of a single instance per piece type.
  */
-function rotateAll(gamefile: gamefile, newInverted: boolean) {
+function rotateAll(mesh: Mesh, newInverted: boolean) {
 	// console.log("Rotating position data of all type meshes!");
 
-	gamefile.mesh.inverted = newInverted;
-	const newVertexData = instancedshapes.getDataTexture(gamefile.mesh.inverted);
+	mesh.inverted = newInverted;
+	const newVertexData = instancedshapes.getDataTexture(mesh.inverted);
 
-	for (const [stringType, meshData] of Object.entries(gamefile.mesh.types)) {
+	for (const [stringType, meshData] of Object.entries(mesh.types)) {
 		const rawType = typeutil.getRawType(Number(stringType));
 		if (typeutil.SVGLESS_TYPES.some(t => t === rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
@@ -274,12 +284,12 @@ function rotateAll(gamefile: gamefile, newInverted: boolean) {
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!
  */
-function overwritebufferdata(gamefile: gamefile, piece: Piece) {
-	const meshData = gamefile.mesh.types[piece.type];
+function overwritebufferdata(mesh: Mesh, piece: Piece) {
+	const meshData = mesh.types[piece.type]!;
 
 	const i = piece.index * STRIDE_PER_PIECE;
 
-	const offsetCoord = coordutil.subtractCoordinates(piece.coords, gamefile.mesh.offset);
+	const offsetCoord = coordutil.subtractCoordinates(piece.coords, mesh.offset);
 
 	meshData.instanceData64[i] = offsetCoord[0];
 	meshData.instanceData64[i + 1] = offsetCoord[1];
@@ -297,8 +307,8 @@ function overwritebufferdata(gamefile: gamefile, piece: Piece) {
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!
  */
-function deletebufferdata(gamefile: gamefile, piece: Piece) {
-	const meshData = gamefile.mesh.types[piece.type];
+function deletebufferdata(mesh: Mesh, piece: Piece) {
+	const meshData = mesh.types[piece.type]!;
 
 	const i = piece.index * STRIDE_PER_PIECE;
 
@@ -319,12 +329,12 @@ function deletebufferdata(gamefile: gamefile, piece: Piece) {
  * Renders ever piece type mesh of the game, including voids,
  * translating and scaling them into position.
  */
-function renderAll(gamefile: gamefile) {
+function renderAll(gamefile: gamefile, mesh: Mesh) {
 
 	const boardPos = boardpos.getBoardPos();
 	const position: [number,number,number] = [ // Translate
-        -boardPos[0] + gamefile.mesh.offset[0], // Add the model's offset. 
-        -boardPos[1] + gamefile.mesh.offset[1],
+        -boardPos[0] + mesh.offset[0], // Add the model's offset. 
+        -boardPos[1] + mesh.offset[1],
         Z
     ]; // While separate these may each be big decimals, TOGETHER they should be small! No graphical glitches.
 	const boardScale = boardpos.getBoardScale();
@@ -332,23 +342,23 @@ function renderAll(gamefile: gamefile) {
 
 	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
 		// Only render voids
-		gamefile.mesh.types[rawTypes.VOID]?.model.render(position, scale);
+		mesh.types[rawTypes.VOID]?.model.render(position, scale);
 		return;
 	};
 
 	// We can render everything...
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
-	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(gamefile.mesh.offset)) shiftAll(gamefile);
+	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset)) shiftAll(gamefile, mesh);
 
 	// Test if the rotation has changed
 	const correctInverted = perspective.getIsViewingBlackPerspective();
-	if (gamefile.mesh.inverted !== correctInverted) rotateAll(gamefile, correctInverted);
+	if (mesh.inverted !== correctInverted) rotateAll(mesh, correctInverted);
 
 
-	for (const meshData of Object.values(gamefile.mesh.types)) {
+	for (const meshData of Object.values(mesh.types)) {
 		// Use a custom tint uniform if our theme has custom colors for the players pieces
-		(meshData as MeshData).model.render(position, scale);
+		meshData.model.render(position, scale);
 	}
 }
 
@@ -378,4 +388,5 @@ export default {
 
 export type {
 	MeshData,
+	Mesh,
 };

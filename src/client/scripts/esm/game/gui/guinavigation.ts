@@ -402,11 +402,12 @@ function testIfForwardMove() {
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
 	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
-	movesequence.navigateMove(gamefile, false);
+	movesequence.navigateMove(gamefile, mesh, false);
     
 	selection.unselectPiece();
 }
@@ -414,9 +415,10 @@ function rewindMove() {
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
 	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
-	movesequence.navigateMove(gamefile, true);
+	movesequence.navigateMove(gamefile, mesh, true);
 }
 
 /**

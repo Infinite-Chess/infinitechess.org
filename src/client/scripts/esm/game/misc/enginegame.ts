@@ -157,9 +157,10 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
 
 	// Go to latest move before making a new move
-	movesequence.viewFront(gamefile);
+	movesequence.viewFront(gamefile, mesh);
 	/**
 	 * PERHAPS we don't need this stuff? It's just to find and apply any special move flag
 	 * that should go with the move. But shouldn't the engine provide that info with its move?
@@ -169,8 +170,8 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	// const endCoordsToAppendSpecial: CoordsSpecial = jsutil.deepCopyObject(move.endCoords);
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	const move = movesequence.makeMove(gamefile, moveDraft);
-	if (gamefile.mesh.offset) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+	if (mesh.offset) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

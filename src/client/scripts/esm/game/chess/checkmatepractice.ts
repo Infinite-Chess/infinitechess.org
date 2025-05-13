@@ -350,6 +350,7 @@ function registerEngineMove() {
 function undoMove() {
 	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
 	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
 		setUndoingIsLegal(false);
 
@@ -357,11 +358,11 @@ function undoMove() {
 		animation.clearAnimations();
 
 		// go to latest move before undoing moves
-		movesequence.viewFront(gamefile);
+		movesequence.viewFront(gamefile, mesh);
 
 		// If it's their turn, only rewind one move.
-		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile);
-		movesequence.rewindMove(gamefile);
+		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile, mesh);
+		movesequence.rewindMove(gamefile, mesh);
 		selection.reselectPiece();
 	}
 }

@@ -36,6 +36,7 @@ import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 // @ts-ignore
 import frametracker from "../rendering/frametracker.js";
+import { Mesh } from "../rendering/piecemodels.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -46,7 +47,7 @@ import frametracker from "../rendering/frametracker.js";
  * 
  * This returns the constructed Move object so that we have the option to animate it if we so choose.
  */
-function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
+function makeMove(gamefile: gamefile, mesh: Mesh, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	
 	movepiece.makeMove(gamefile, move); // Logical changes
@@ -60,8 +61,8 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	 * were affected, because other pieces may still need graphical changes
 	 * from the move's changes! For example, pawn deleted that promoted.
 	 */
-	if (gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile);
-	else boardchanges.runChanges(gamefile, move.changes, meshChanges, true); // Graphical changes
+	if (gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile, mesh);
+	else boardchanges.runChanges(mesh, move.changes, meshChanges, true); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	
 	// GUI changes
@@ -90,12 +91,12 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 /**
  * Makes a global backward move in the game.
  */
-function rewindMove(gamefile: gamefile) {
+function rewindMove(gamefile: gamefile, mesh: Mesh) {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
 	if (lastMove.isNull) return;
-	boardchanges.runChanges(gamefile, lastMove.changes, meshChanges, false); // Graphical changes
+	boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile)) gameslot.unConcludeGame();
@@ -115,10 +116,10 @@ function rewindMove(gamefile: gamefile) {
  * 
  * But it does change the check state.
  */
-function viewMove(gamefile: gamefile, move: Move | NullMove, forward = true) {
+function viewMove(gamefile: gamefile, mesh: Mesh, move: Move | NullMove, forward = true) {
 	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
 	if (move.isNull) return;
-	boardchanges.runChanges(gamefile, move.changes, meshChanges, forward); // Apply the graphical changes.
+	boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
@@ -127,17 +128,17 @@ function viewMove(gamefile: gamefile, move: Move | NullMove, forward = true) {
  * @param gamefile the gamefile
  * @param index the move index to goto
  */
-function viewIndex(gamefile: gamefile, index: number) {
-	movepiece.goToMove(gamefile, index, (move: Move) => viewMove(gamefile, move, index >= gamefile.state.local.moveIndex));
+function viewIndex(gamefile: gamefile, mesh: Mesh, index: number) {
+	movepiece.goToMove(gamefile, index, (move: Move) => viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex));
 	updateGui(false);
 }
 
 /**
  * Makes the game view the last move
  */
-function viewFront(gamefile: gamefile) {
+function viewFront(gamefile: gamefile, mesh: Mesh) {
 	/** Call {@link viewIndex} with the index of the last move in the game */
-	viewIndex(gamefile, gamefile.moves.length - 1);
+	viewIndex(gamefile, mesh, gamefile.moves.length - 1);
 }
 
 /**
@@ -149,7 +150,7 @@ function viewFront(gamefile: gamefile) {
  * 
  * ASSUMES that it is legal to navigate in the direction.
  */
-function navigateMove(gamefile: gamefile, forward: boolean): void {
+function navigateMove(gamefile: gamefile, mesh: Mesh, forward: boolean): void {
 	// Determine the index of the move to apply
 	const idx = forward ? gamefile.state.local.moveIndex + 1 : gamefile.state.local.moveIndex;
 
@@ -158,7 +159,7 @@ function navigateMove(gamefile: gamefile, forward: boolean): void {
 	const move = gamefile.moves[idx];
 	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 	
-	viewMove(gamefile, move, forward); // Apply the logical + graphical changes
+	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	if (move.isNull) return;
 	animateMove(move, forward); // Animate
 	updateGui(true);
