@@ -80,11 +80,12 @@ function update() {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
+	const mesh = gameslot.getMesh();
 	if (!gamefile) return boardpos.update(); // On title screen. Updates the board's position and scale according to its velocity; // 
 
 	// There is a gamefile, update everything board-related...
 
-	controls.testInGameToggles(gamefile);
+	controls.testInGameToggles(gamefile, mesh);
 
 	perspective.update(); // Update perspective camera according to mouse movement
 
@@ -147,6 +148,7 @@ function render() {
 	board.render(); // Renders the infinite checkerboard
 
 	const gamefile = gameslot.getGamefile();
+	const mesh = gameslot.getMesh();
 	if (!gamefile) return; // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
 
 	/**
@@ -170,7 +172,7 @@ function render() {
     
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile);
+	pieces.renderPiecesInGame(gamefile, mesh);
 	
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {

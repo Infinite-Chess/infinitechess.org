@@ -4,10 +4,10 @@
  * including voids, and mini images.
  */
 
-import type { Coords } from '../../chess/util/coordutil.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
-
+import type { Coords } from '../../chess/util/coordutil.js';
+import type { Mesh } from './piecemodels.js';
 
 import spritesheet from './spritesheet.js';
 import { createModel } from './buffermodel.js';
@@ -31,8 +31,8 @@ const ghostOpacity: number = 0.4;
  * Renders all of our pieces on the board,
  * including voids, and mini images, if visible.
  */
-function renderPiecesInGame(gamefile: gamefile) {
-	piecemodels.renderAll(gamefile);
+function renderPiecesInGame(gamefile: gamefile, mesh: Mesh | undefined) {
+	if (mesh) piecemodels.renderAll(gamefile, mesh);
 	miniimage.render();
 }
 

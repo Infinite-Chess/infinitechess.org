@@ -42,7 +42,8 @@ import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
 
 
-import type{ Coords } from "../../chess/util/coordutil.js";
+import type { Mesh } from "../rendering/piecemodels.js";
+import type { Coords } from "../../chess/util/coordutil.js";
 
 
 // Constants -------------------------------------------------------------------
@@ -229,7 +230,7 @@ function testOutGameToggles() {
 }
 
 /** Debug toggles that are only for in a game. */
-function testInGameToggles(gamefile: gamefile) {
+function testInGameToggles(gamefile: gamefile, mesh: Mesh | undefined) {
 	if (listener_document.isKeyDown('Escape')) guipause.toggle();
 	
 	if (listener_document.isKeyDown('Digit1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
@@ -242,8 +243,8 @@ function testInGameToggles(gamefile: gamefile) {
 	if (listener_document.isKeyDown('Digit6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 	
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
-	if (listener_document.isKeyDown('KeyR')) {
-		piecemodels.regenAll(gamefile);
+	if (mesh && listener_document.isKeyDown('KeyR')) {
+		piecemodels.regenAll(gamefile, mesh);
 		statustext.showStatus('Regenerated piece models.', false, 0.5);
 	}
 	if (listener_document.isKeyDown('KeyN')) {

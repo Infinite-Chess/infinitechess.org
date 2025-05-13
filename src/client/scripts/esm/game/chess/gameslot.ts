@@ -12,6 +12,7 @@ import type { ClockValues } from "../../chess/logic/clock.js";
 import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
 import type { Player } from "../../chess/util/typeutil.js";
+import type { Mesh } from "../rendering/piecemodels.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
@@ -128,6 +129,9 @@ interface VariantOptions {
 /** The currently loaded game. */
 let loadedGamefile: gamefile | undefined;
 
+/** The mesh of the gamefile, if it is loaded. */
+let mesh: Mesh | undefined;
+
 /** The player color we are viewing the perspective of in the current loaded game. */
 let youAreColor: Player;
 
@@ -146,12 +150,14 @@ const delayOfLatestMoveAnimationOnRejoinMillis = 150;
 // Functions ---------------------------------------------------------------
 
 
-/**
- * Returns the gamefile currently loaded
- * @returns {gamefile} The current gamefile
- */
+/**  Returns the gamefile currently loaded */
 function getGamefile(): gamefile | undefined {
 	return loadedGamefile;
+}
+
+/** Returns the mesh of the gamefile currently loaded */
+function getMesh(): Mesh | undefined {
+	return mesh;
 }
 
 function areInGame(): boolean {
@@ -240,13 +246,20 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
 	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
+	// Initialize the mesh empty
+	mesh = {
+		offset: [0, 0],
+		inverted: false,
+		types: {}
+	};
+
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(loadedGamefile!);
+	piecemodels.regenAll(loadedGamefile!, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined && !lastmove.isNull) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
 		if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
-		movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
+		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 }
@@ -256,6 +269,7 @@ function unloadGame() {
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
 	
 	loadedGamefile = undefined;
+	mesh = undefined;
 
 	imagecache.deleteImageCache();
 	// texturecache.deleteTextureCache(gl);
@@ -357,6 +371,7 @@ function unConcludeGame() {
 
 export default {
 	getGamefile,
+	getMesh,
 	areInGame,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,

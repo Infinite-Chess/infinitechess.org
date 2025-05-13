@@ -3,11 +3,11 @@
  * and receiving moves from our opponent.
  */
 
-import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile.js";
-// @ts-ignore
+import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
 import type { MoveDraft } from "../../../chess/logic/movepiece.js";
+import type { Mesh } from "../../rendering/piecemodels.js";
 
 import onlinegame from "./onlinegame.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
@@ -63,7 +63,7 @@ function sendMove() {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) {
+function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
 	// Make sure the move number matches the expected.
 	// Otherwise, we need to re-sync
 	const expectedMoveNumber = gamefile.moves.length + 1;
@@ -87,7 +87,7 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
 	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movesequence.viewFront(gamefile);
+	movesequence.viewFront(gamefile, mesh);
 
 	// Forward the move...
 
@@ -97,8 +97,8 @@ function handleOpponentsMove(gamefile: gamefile, message: OpponentsMoveMessage) 
 	legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial, onlinegame.getOpponentColor()); // Passes on any special moves flags to the endCoords
 
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
-	const move = movesequence.makeMove(gamefile, moveDraft);
-	if (gamefile.mesh.offset) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+	if (mesh) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

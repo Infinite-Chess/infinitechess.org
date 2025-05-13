@@ -28,7 +28,6 @@ import legalmoves from './legalmoves.js';
 /** @typedef {import('./organizedpieces.js').OrganizedPieces} OrganizedPieces*/
 /** @typedef {import('../util/typeutil.js').Player} Player*/
 /** @typedef {import('../util/typeutil.js').RawType} RawType*/
-/** @typedef {import('../../game/rendering/piecemodels.js').MeshData} MeshData */
 /** @typedef {import('../util/typeutil.js').Players} Players */
 /** @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup */
 /** @typedef {import('../util/typeutil.js').PlayerGroup} PlayerGroup */
@@ -80,18 +79,6 @@ function gamefile(metadata, { moves = [], variantOptions, gameConclusion, clockV
 
 	/** All pieces on the board @type {OrganizedPieces} */
 	this.pieces = undefined;
-	
-	/** The object that contains the buffer model to render the pieces */
-	this.mesh = {
-		/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
-		 * This helps require less severe uniform translations upon rendering when traveling massive distances.
-		 * The amount it is shifted depends on the nearest `REGEN_RANGE`. @type {Coords} */
-		offset: undefined,
-		/** Whether the position data of each piece mesh is inverted. This will be true if we're viewing black's perspective. @type {boolean} */
-		inverted: undefined,
-		/** An object containing the mesh data for each type of piece in the game. One for every type in `pieces` @type {{ [type: string]: MeshData }} */
-		types: {},
-	};
 
 	/** Contains the movesets of every piece for this game. 
      * When this object's parameters are called as a function,

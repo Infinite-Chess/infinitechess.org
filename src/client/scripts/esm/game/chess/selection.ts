@@ -8,6 +8,7 @@
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
 import type { RawType } from '../../chess/util/typeutil.js';
+import type { Mesh } from '../rendering/piecemodels.js';
 // @ts-ignore
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 // @ts-ignore
@@ -141,8 +142,9 @@ function update() {
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
 	if (pawnIsPromotingOn) { // Do nothing else this frame but wait for a promotion piece to be selected
-		if (promoteTo) makePromotionMove(gamefile);
+		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
 	if (boardpos.areZoomedOut() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile) || guipause.areWePaused() || perspective.isLookingUp()) {
@@ -161,17 +163,17 @@ function update() {
 
 	// 1. Test if we selected a new piece, or a different piece.
 
-	testIfPieceSelected(gamefile); // Test this EVEN if a piece is currently selected, because we can always select a different piece.
+	testIfPieceSelected(gamefile, mesh); // Test this EVEN if a piece is currently selected, because we can always select a different piece.
 
 	// Piece IS selected...
 
 	// 2. Test if the piece was dropped. If it happened to be dropped on a legal square, then make the move.
 
-	testIfPieceDropped(gamefile);
+	testIfPieceDropped(gamefile, mesh);
 
 	// 3. Test if the piece was moved.
 
-	testIfPieceMoved(gamefile);
+	testIfPieceMoved(gamefile, mesh);
 }
 
 /**
@@ -197,7 +199,7 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 
 
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
-function testIfPieceSelected(gamefile: gamefile) {
+function testIfPieceSelected(gamefile: gamefile, mesh: Mesh | undefined) {
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
@@ -222,7 +224,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		// If we are viewing past moves, forward to front instead!!
-		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
+		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
@@ -234,13 +236,13 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
 		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
-		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
+		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
 	}
 }
 
 /** If a piece is being dragged, this will test if it was dropped, making the move if it is legal. */
-function testIfPieceDropped(gamefile: gamefile): void {
+function testIfPieceDropped(gamefile: gamefile, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
@@ -256,34 +258,34 @@ function testIfPieceDropped(gamefile: gamefile): void {
 
 	// If it was dropped an an arrow indicator pointing to a legal piece to capture, capture that!
 	const dropArrowsCaptureCoords = droparrows.getCaptureCoords();
-	if (dropArrowsCaptureCoords) return moveGamefilePiece(gamefile, dropArrowsCaptureCoords);
+	if (dropArrowsCaptureCoords) return moveGamefilePiece(gamefile, mesh, dropArrowsCaptureCoords);
 
 	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.
 
 	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
 	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
-	else if (hoverSquareLegal) moveGamefilePiece(gamefile, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+	else if (hoverSquareLegal) moveGamefilePiece(gamefile, mesh, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
 	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
-function testIfPieceMoved(gamefile: gamefile): void {
+function testIfPieceMoved(gamefile: gamefile, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return;
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't move a piece if we're hovering over an arrow
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
-	else moveGamefilePiece(gamefile, hoverSquare);
+	else moveGamefilePiece(gamefile, mesh, hoverSquare);
 	
 	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
-function viewFrontIfNotViewingLatestMove(gamefile: gamefile): boolean {
+function viewFrontIfNotViewingLatestMove(gamefile: gamefile, mesh: Mesh | undefined): boolean {
 	// If we're viewing history, return.
 	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
 
-	movesequence.viewFront(gamefile);
+	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	if (!lastMove.isNull) movesequence.animateMove(lastMove);
@@ -436,7 +438,7 @@ function initSelectedPieceInfo(gamefile: gamefile, piece: Piece) {
  * The destination coordinates MUST contain any special move flags.
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
+function moveGamefilePiece(gamefile: gamefile, mesh: Mesh | undefined, coords: CoordsSpecial) {
 	// Check if the move is a pawn promotion
 	if (coords.promoteTrigger) {
 		const color = typeutil.getColorFromType(pieceSelected!.type);
@@ -455,7 +457,7 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(gameslot.getGamefile()!, moveDraft);
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
@@ -468,12 +470,12 @@ function moveGamefilePiece(gamefile: gamefile, coords: CoordsSpecial) {
 }
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
-function makePromotionMove(gamefile: gamefile) {
+function makePromotionMove(gamefile: gamefile, mesh: Mesh | undefined) {
 	const coords = pawnIsPromotingOn!;
 	// DELETE THE promoteTrigger flag, and add the promoteTo flag
 	delete coords.promoteTrigger;
 	coords.promotion = promoteTo!;
-	moveGamefilePiece(gamefile, coords);
+	moveGamefilePiece(gamefile, mesh, coords);
 	perspective.relockMouse();
 }
 
