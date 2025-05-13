@@ -50,8 +50,6 @@ import transition from '../transition.js';
 import board from '../board.js';
 // @ts-ignore
 import shapes from '../shapes.js';
-// @ts-ignore
-import guipause from '../../gui/guipause.js';
 
 
 // Type Definitions --------------------------------------------------------------------
@@ -726,6 +724,7 @@ function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 
 // Arrow Shifting: Adding / Removing Arrows before rendering ------------------------------------------------------------------------------------------------
 
+
 type Shift = {
 	type: number,
 	/**
@@ -767,7 +766,7 @@ function shiftArrow(type: number, still: boolean, start?: Coords, end?: Coords) 
 	if (still && end && !coordutil.areCoordsIntegers(end)) throw Error('Cannot add a still-animated arrow to floating point coordinates.');
 	if (!areArrowsActiveThisFrame()) return; // Arrow indicators are off, nothing is visible.
 
-	// console.log("Shifting arrow:");
+	// console.log(`Shifting arrow (still = ${still}):`);
 	// console.error(jsutil.deepCopyObject({ type, start, end }));
 
 	if (start) { // Guaranteed a deletion
@@ -778,11 +777,14 @@ function shiftArrow(type: number, still: boolean, start?: Coords, end?: Coords) 
 		 * check to see if the start is the same as this end coords.
 		 * If so, replace that shift with a delete action, and retain the same order.
 		 */
-		shifts = shifts.filter(shift => !coordutil.areCoordsEqual(shift.start, start) && (shift.still || !coordutil.areCoordsEqual(shift.end, start)) );
+		shifts = shifts.filter(shift => !coordutil.areCoordsEqual(shift.start, start) && !coordutil.areCoordsEqual(shift.end, start));
 	}
 	// else console.log("Skipping filtering");
 
 	shifts.push({ type, still, start, end } as Shift);
+
+	// console.log("Shifts after adding new shift:");
+	// console.log(jsutil.deepCopyObject(shifts));
 }
 
 /** Execute any arrow modifications made by animation.js or arrowsdrop.js */

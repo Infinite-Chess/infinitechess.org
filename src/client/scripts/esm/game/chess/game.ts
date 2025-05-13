@@ -103,7 +103,9 @@ function update() {
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	board.recalcVariables();
 
-	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
+	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
+	// BEFORE animation.update(), since selection can forward to front, which would change the animated piece.
+	selection.update();
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();

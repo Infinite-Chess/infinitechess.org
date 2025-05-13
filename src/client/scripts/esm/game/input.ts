@@ -607,7 +607,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (index !== -1) throw Error("Can't unclaim pointer, it was never claimed.");
 			pointersDown.push(pointerId);
 		},
-		claimMouseClick: (button: MouseButton) => clickInfo[button].clicked = false,
+		claimMouseClick: (button: MouseButton) => {
+			clickInfo[button].clicked = false;
+			// console.error("Claiming mouse click: ", MouseNames[button]);
+		},
 		cancelMouseClick: (button: MouseButton) => clickInfo[button].timeDownMillisHistory.length = 0,
 		isMouseHeld: (button: MouseButton) => clickInfo[button].isHeld ?? false,
 		isMouseTouch: (button: MouseButton) => {
