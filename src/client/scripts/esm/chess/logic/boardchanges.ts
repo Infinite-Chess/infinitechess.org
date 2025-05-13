@@ -165,31 +165,31 @@ function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, end
  * either modifying the piece lists, or modifying the mesh,
  * depending on what changeFuncs are passed in.
  */
-function runChanges<T>(gamefile: T, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc<T>>, forward: boolean = true) {
+function runChanges<T>(actiondata: T, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc<T>>, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
-	applyChanges(gamefile, changes, funcs, forward);
+	applyChanges(actiondata, changes, funcs, forward);
 }
 
 /**
  * Applies the logical board changes of a change list in the provided order, modifying the piece lists.
- * @param gamefile the gamefile
+ * @param actiondata the data to apply the changes to
  * @param changes the changes to apply
  * @param funcs the object contain change funcs
  * @param forward whether to apply changes in forward order (true) or reverse order (false)
  */
-function applyChanges<T>(gamefile: T, changes: Array<Change>, funcs: ActionList<genericChangeFunc<T>>, forward: boolean) {
+function applyChanges<T>(actiondata: T, changes: Array<Change>, funcs: ActionList<genericChangeFunc<T>>, forward: boolean) {
 	if (forward) {
 		// Iterate forwards through the changes array
 		for (const change of changes) {
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-			funcs[change.action]!(gamefile, change);
+			funcs[change.action]!(actiondata, change);
 		}
 	} else {
 		// Iterate backwards through the changes array so the move's changes are reverted in the correct order
 		for (let i = changes.length - 1; i >= 0; i--) {
 			const change = changes[i]!;
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-			funcs[change.action]!(gamefile, change);
+			funcs[change.action]!(actiondata, change);
 		}
 	}
 }
