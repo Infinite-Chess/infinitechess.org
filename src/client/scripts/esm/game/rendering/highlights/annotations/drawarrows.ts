@@ -127,12 +127,12 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 	}
 
 	// Skip if end equals start (no arrow drawn)
-	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { changed: false };
+	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { changed: false };
 
 	// If a matching arrow already exists, remove that instead.
 	for (let i = 0; i < arrows.length; i++) {
 		const arrow = arrows[i]!;
-		if (coordutil.areCoordsEqual_noValidate(arrow.start, drag_start!) && coordutil.areCoordsEqual_noValidate(arrow.end, drag_end)) {
+		if (coordutil.areCoordsEqual(arrow.start, drag_start!) && coordutil.areCoordsEqual(arrow.end, drag_end)) {
 			arrows.splice(i, 1); // Remove the existing arrow
 			return { changed: true, deletedArrow: arrow }; // No new arrow added
 		}

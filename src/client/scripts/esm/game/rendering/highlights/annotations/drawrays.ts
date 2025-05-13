@@ -43,6 +43,7 @@ let drag_start: Coords | undefined;
 // Getters -------------------------------------------------------------------
 
 
+/** Whether a ray is currently being drawn. */
 function areDrawing() {
 	return drag_start !== undefined;
 }
@@ -85,9 +86,9 @@ function update(rays: Ray[]) {
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
 			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT)!;
-			if (!coordutil.areCoordsEqual_noValidate(mouseCoords, drag_start!)) {
+			if (!coordutil.areCoordsEqual(mouseCoords, drag_start!)) {
 				const squares = annotations.getSquares();
-				const index = squares.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, drag_start!));
+				const index = squares.findIndex(coords => coordutil.areCoordsEqual(coords, drag_start!));
 				if (index !== -1) {
 					squares.splice(index, 1); // Remove the square highlight
 					// console.log("Removed square highlight.");
@@ -141,7 +142,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 	// Skip if end equals start (no arrow drawn)
-	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { added: false };
+	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
 	// const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
 	const mouseCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
@@ -154,8 +155,8 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// If any existing rays are coincident, remove those.
 	for (let i = rays.length - 1; i >= 0; i--) { // Iterate backwards since we're modifying the list as we go
 		const ray = rays[i]!;
-		if (!coordutil.areCoordsEqual_noValidate(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
-		if (coordutil.areCoordsEqual_noValidate(ray.start, drag_start!)) {
+		if (!coordutil.areCoordsEqual(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
+		if (coordutil.areCoordsEqual(ray.start, drag_start!)) {
 			// Identical, erase the existing one instead.
 			rays.splice(i, 1); // Remove the existing ray
 			deletedRays.push(ray);
@@ -287,7 +288,7 @@ function collapseRays(rays: Ray[]): Coords[] {
 	}
 
 	function addSquare_NoDuplicates(coords: Coords) {
-		if (intersections.every(coords2 => !coordutil.areCoordsEqual_noValidate(coords, coords2))) intersections.push(coords);
+		if (intersections.every(coords2 => !coordutil.areCoordsEqual(coords, coords2))) intersections.push(coords);
 	}
 
 	return intersections;

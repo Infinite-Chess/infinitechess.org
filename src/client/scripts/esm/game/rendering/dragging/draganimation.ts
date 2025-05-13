@@ -132,7 +132,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
-	if (animation.animations.some(a => coordutil.areCoordsEqual_noValidate(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
+	if (animation.animations.some(a => coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
 }
 
 function getRespectiveListener(): InputListener {
@@ -298,7 +298,7 @@ function genOutlineModel(): BufferModel {
 	// Outline the enire rank & file when:
 	// 1. We're not hovering over the start square.
 	// 2. It is a touch screen, OR we are zoomed out enough.
-	if (!coordutil.areCoordsEqual(hoveredCoords, startCoords) && (pointerIsTouch || board.gtileWidth_Pixels() < minSizeToDrawOutline)) {
+	if (!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) && (pointerIsTouch || board.gtileWidth_Pixels() < minSizeToDrawOutline)) {
 		// Outline the entire rank and file
 		let boundingBox: BoundingBox;
 		if (perspective.getEnabled()) {

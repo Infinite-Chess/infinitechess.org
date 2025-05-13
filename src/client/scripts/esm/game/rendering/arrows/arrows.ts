@@ -781,7 +781,10 @@ function shiftArrow(type: number, still: boolean, start?: Coords, end?: Coords) 
 		 * check to see if the start is the same as this end coords.
 		 * If so, replace that shift with a delete action, and retain the same order.
 		 */
-		shifts = shifts.filter(shift => !coordutil.areCoordsEqual(shift.start, start) && !coordutil.areCoordsEqual(shift.end, start));
+		shifts = shifts.filter(shift => {
+			return (!shift.start || !coordutil.areCoordsEqual(shift.start, start)) &&
+				   (!shift.end   || !coordutil.areCoordsEqual(shift.end,   start));
+		});
 	}
 	// else console.log("Skipping filtering");
 
@@ -878,7 +881,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 
 	// Prevents legal move highlights from rendering for
 	// the currently animated arrow indicator when hovering over its destination
-	// hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, coords));
+	// hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual(hoveredArrow.piece.coords, coords));
 
 	for (const [slideKey, linegroup] of gamefile.pieces.lines) { // For each slide direction in the game...
 		const slide = coordutil.getCoordsFromKey(slideKey);

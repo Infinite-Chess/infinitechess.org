@@ -55,7 +55,7 @@ function getLines(): Line[] {
 		const end = clampPointToSlideLimit(intersectionPoints[1]!, rightLimitPointCoord, true, lineIsVertical);
 
 		// Skip if zero length
-		if (coordutil.areCoordsEqual_noValidate(start, end)) continue;
+		if (coordutil.areCoordsEqual(start, end)) continue;
 
 		const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, line);
 
@@ -106,7 +106,7 @@ function getLineComponents(): { rays: Ray[], segments: Segment[] } {
 		if (isFinite(leftRightLimitPointCoord[0]) && isFinite(leftRightLimitPointCoord[1])) { // Can't slide infinitly => SEGMENT
 			const end = leftRightLimitPointCoord;
 			// Skip if zero length
-			if (coordutil.areCoordsEqual_noValidate(start, end)) return;
+			if (coordutil.areCoordsEqual(start, end)) return;
 			segments.push({ start, end });
 		} else { // Can slide infinitly => RAY
 			const vector: Vec2 = negatedStep;

@@ -31,6 +31,7 @@ import { rawTypes as r } from '../util/typeutil.js';
  * @typedef {import('../util/typeutil.js').TypeGroup} TypeGroup
  * @typedef {import('../util/metadata.js').MetaData} MetaData
  * @typedef {import('../util/typeutil.js').RawType} RawType
+ * @typedef {import('../../util/math.js').Vec2Key} Vec2Key
 */
 
 
@@ -41,8 +42,8 @@ import { rawTypes as r } from '../util/typeutil.js';
 /**
  * An object containing all the legal moves of a piece.
  * @typedef {Object} LegalMoves
- * @property {Object} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
- * @property {Object} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
+ * @property {Coords[]} individual - A list of the legal jumping move coordinates: `[[1,2], [2,1]]`
+ * @property {Record<Vec2Key, Coords>} sliding - A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}`
  * @property {true | undefined} brute - If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen.
  * @property {IgnoreFunction} ignoreFunc - The ignore function of the piece, to skip over moves.
  */

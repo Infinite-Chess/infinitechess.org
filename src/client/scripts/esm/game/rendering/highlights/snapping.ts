@@ -241,7 +241,7 @@ function updateSnapping() {
 			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
-			if (!line_intersections.some(i => coordutil.areCoordsEqual_noValidate(i.coords, intsect))) line_intersections.push({
+			if (!line_intersections.some(i => coordutil.areCoordsEqual(i.coords, intsect))) line_intersections.push({
 				coords: intsect,
 				line1: line1.line,
 				line2: line2.line
@@ -307,7 +307,7 @@ function updateSnapping() {
 			const intsect = math.intersectLineSegments(line1.start, line1.end, line2.start, line2.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
-			if (!squares.some(c => coordutil.areCoordsEqual_noValidate(c, intsect))) squares.push(intsect);
+			if (!squares.some(c => coordutil.areCoordsEqual(c, intsect))) squares.push(intsect);
 		}
 	}
 
@@ -315,7 +315,7 @@ function updateSnapping() {
 	const rayStarts = annotations.getRays().map(r => r.start);
 	// Don't add duplicates
 	for (const start of rayStarts) {
-		if (!squares.some(c => coordutil.areCoordsEqual_noValidate(c, start))) squares.push(start);
+		if (!squares.some(c => coordutil.areCoordsEqual(c, start))) squares.push(start);
 	}
 	
 	// Now see if we should snap to any Square

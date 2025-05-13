@@ -137,7 +137,7 @@ function renderEachHoveredPieceLegalMoves() {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)
 		if (selection.isAPieceSelected()) {
 			const pieceSelectedCoords = selection.getPieceSelected()!.coords;
-			if (coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, pieceSelectedCoords)) return; // Skip (already rendering its legal moves, because it's selected)
+			if (coordutil.areCoordsEqual(hoveredArrow.piece.coords, pieceSelectedCoords)) return; // Skip (already rendering its legal moves, because it's selected)
 		}
 		hoveredArrow.model_NonCapture.render(position, scale);
 		hoveredArrow.model_Capture.render(position, scale);
