@@ -64,6 +64,12 @@ const GLOW_DOT = {
  */
 const GHOST_IMAGE_OPACITY = 1;
 
+/**
+ * If more pieces than this are present in the game, snapping skips
+ * checking if we should snap to a piece, as it's too slow.
+ */
+const THRESHOLD_TO_SNAP_PIECES = 100_000
+
 
 type Snap = {
 	coords: Coords,
@@ -291,7 +297,7 @@ function updateSnapping() {
 	const searchVectors = gamefile.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
 
 
-	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority)
+	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority) ==================
 
 	// All Ray intersections & starts are temporarily added as additional Squares,
 	// Including Ray start coords
@@ -299,6 +305,7 @@ function updateSnapping() {
 	const squares = annotations.getSquares();
 	const originalSquareLength = squares.length;
 	
+	// Ray intersections (legal move & rays)
 	for (let a = 0; a < allLines.length - 1; a++) {
 		const line1 = allLines[a]!;
 		for (let b = a + 1; b < allLines.length; b++) {
@@ -318,7 +325,7 @@ function updateSnapping() {
 		if (!squares.some(c => coordutil.areCoordsEqual(c, start))) squares.push(start);
 	}
 	
-	// Now see if we should snap to any Square
+	// Now see if we should snap to any "Square"
 
 	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, searchVectors);
 	if (closestSquareSnap) {
@@ -331,16 +338,19 @@ function updateSnapping() {
 	}
 	squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 
-	// 2. Pieces
+	// 2. Pieces ========================================
 
-	const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
-	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, searchVectors);
-	if (closestPieceSnap) {
-		// Is the snap within snapping distance of the mouse?
-		if (closestPieceSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestPieceSnap.snap);
+	// Only snap to these if there isn't too many pieces (slow)
+	if (boardutil.getPieceCountOfGame(gamefile.pieces) > THRESHOLD_TO_SNAP_PIECES) {
+		const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
+		const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, searchVectors);
+		if (closestPieceSnap) {
+			// Is the snap within snapping distance of the mouse?
+			if (closestPieceSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestPieceSnap.snap);
+		}
 	}
-	
-	// 3. Origin (Center of Play)
+
+	// 3. Origin (Center of Play) ==============================
 
 	const startingBox = gamefileutility.getStartingAreaBox(gamefile);
 	const origin = math.calcCenterOfBoundingBox(startingBox);
@@ -350,7 +360,7 @@ function updateSnapping() {
 		if (closestOriginSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestOriginSnap.snap);
 	}
 
-	// No snap found!
+	// No snap found! ===========================================
 
 	// Instead, set the snap to the closest point on the line.
 	setSnapAndTeleportIfClicked({ coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece });
@@ -359,8 +369,8 @@ function updateSnapping() {
 function setSnapAndTeleportIfClicked(newSnap: Snap) {
 	snap = newSnap;
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		transition.initTransitionToCoordsList([newSnap.coords]);
 		mouse.claimMouseClick(Mouse.LEFT);
+		transition.initTransitionToCoordsList([newSnap.coords]);
 	}
 }
 
