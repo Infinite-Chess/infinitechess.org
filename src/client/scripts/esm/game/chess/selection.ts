@@ -213,11 +213,11 @@ function testIfPieceSelected(gamefile: gamefile) {
 	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0) return; // Can't select this piece type
 	else if (selectionLevel === 1 && mouse.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
-		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
+		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
