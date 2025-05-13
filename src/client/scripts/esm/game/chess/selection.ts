@@ -207,10 +207,11 @@ function testIfPieceSelected(gamefile: gamefile) {
 	// We have clicked, test if we clicked a piece...
 
 	const pieceClicked = boardutil.getPieceFromCoords(gamefile.pieces, hoverSquare);
+	// if (pieceClicked) console.log(typeutil.debugType(pieceClicked?.type));
 
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
-	// console.log('Selection Level:', selectionLevel);
+	console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0) return; // Can't select this piece type
 	else if (selectionLevel === 1 && mouse.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
 		/** Just quickly make sure that, if we already have selected a piece,
@@ -225,12 +226,12 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
 		if (Object.keys(listener_overlay.getAllPointers()).length === 2) return;
-		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
-		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
+		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
+		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
 	}
