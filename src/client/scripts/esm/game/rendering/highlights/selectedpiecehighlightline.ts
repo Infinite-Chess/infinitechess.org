@@ -14,7 +14,7 @@ import boardpos from "../boardpos.js";
 
 
 import type { Line } from "./highlightline.js";
-import type { Vec2 } from "../../../util/math.js";
+import type { Ray, Vec2 } from "../../../util/math.js";
 
 
 
@@ -65,6 +65,59 @@ function getLines(): Line[] {
 	return lines;
 }
 
+/** Start and end of a line segment */
+type Segment = {
+	start: Coords
+	end: Coords
+}
+
+/**
+ * Converts the selected piece's legal move highlight lines into
+ * their ray and line segment components.
+ * Used by drawrays.ts during collapsing, so we can add additional
+ * Square annotations at all the intersections of rays with components.
+ */
+function getLineComponents(): { rays: Ray[], segments: Segment[] } {
+	const rays: Ray[] = [];
+	const segments: Segment[] = [];
+
+	const pieceSelected = selection.getPieceSelected()!;
+	if (!pieceSelected) return { rays, segments };
+
+	const pieceCoords = pieceSelected.coords;
+	const legalmoves = selection.getLegalMovesOfSelectedPiece()!; // CAREFUL not to modify!
+
+	for (const strline in legalmoves.sliding) {
+		const slideKey = strline as CoordsKey;
+		const step = coordutil.getCoordsFromKey(slideKey);
+
+		let start: Coords = [...pieceCoords];
+		const leftLimitPointCoord = getPointOfDiagSlideLimit(start, legalmoves.sliding[slideKey], step, false);
+		processComponent(pieceCoords, leftLimitPointCoord, step, false);
+
+		start = [...pieceCoords];
+		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], step, true);
+		processComponent(pieceCoords, rightLimitPointCoord, step, true);
+	};
+
+	function processComponent(start: Coords, leftRightLimitPointCoord: Coords, step: Vec2, positive: boolean) {
+		const negatedStep: Coords = positive ? [...step] : [-step[0], -step[1]]; // Negate the step if we're going left/down
+
+		if (isFinite(leftRightLimitPointCoord[0]) && isFinite(leftRightLimitPointCoord[1])) { // Can't slide infinitly => SEGMENT
+			const end = leftRightLimitPointCoord;
+			// Skip if zero length
+			if (coordutil.areCoordsEqual_noValidate(start, end)) return;
+			segments.push({ start, end });
+		} else { // Can slide infinitly => RAY
+			const vector: Vec2 = negatedStep;
+			const coefficients = math.getLineGeneralFormFromCoordsAndVec(start, vector);
+			rays.push({ start, vector, line: coefficients });
+		}
+	}
+
+	return { rays, segments };
+}
+
 /** Calculates the furthest square the piece can slide to, given the direction, parity, and moveset. */
 function getPointOfDiagSlideLimit(pieceCoords: Coords, moveset: Coords, line: Vec2, positive: boolean): Coords { // positive is true if it's the right/top half of the slide direction
 	const steps = positive ? moveset[1] : moveset[0];
@@ -95,5 +148,6 @@ function render() {
 
 export default {
 	getLines,
+	getLineComponents,
 	render,
 };

@@ -24,6 +24,7 @@ import annotations from "./annotations.js";
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "./annotations.js";
+import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -245,6 +246,36 @@ function collapseRays(rays: Ray[]): Coords[] {
 			
 			// Calculate where they intersect
 			const intsect = math.intersectRays(ray1, ray2);
+			if (intsect === undefined) continue; // No intersection, skip.
+
+			// Verify the intersection point is an integer
+			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+
+			// Push it to the collapsed coord intersections if there isn't a duplicate already
+			addSquare_NoDuplicates(intsect);
+		}
+	}
+	
+	// Add all the intersection points of the drawn rays with all
+	// the components of the selected piece's legal move lines.
+
+	const { rays: selectedPieceRays, segments: selectedPieceSegments } = selectedpiecehighlightline.getLineComponents();
+
+	for (const ray of rays) {
+		// Selected piece legal move RAYS
+		for (const legalRay of selectedPieceRays) {
+			const intsect = math.intersectRays(ray, legalRay);
+			if (intsect === undefined) continue; // No intersection, skip.
+
+			// Verify the intersection point is an integer
+			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+
+			// Push it to the collapsed coord intersections if there isn't a duplicate already
+			addSquare_NoDuplicates(intsect);
+		}
+		// Selected piece legal move SEGMENTS
+		for (const segment of selectedPieceSegments) {
+			const intsect = math.intersectRayAndSegment(ray, segment.start, segment.end);
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer

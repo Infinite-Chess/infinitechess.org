@@ -5,7 +5,9 @@
  */
 
 
-import type { Coords } from "../chess/util/coordutil";
+import coordutil from "../chess/util/coordutil.js";
+
+import type { Coords } from "../chess/util/coordutil.js";
 
 
 // Type Definitions ------------------------------------------------------------------
@@ -144,6 +146,66 @@ function intersectLineAndSegment(lineA: number, lineB: number, lineC: number, se
 
 	// 5. The intersection point exists but is outside the segment bounds
 	return undefined;
+}
+
+/**
+ * Calculates the intersection point of an infinite ray and a line segment.
+ * Returns undefined if there is no intersection, the intersection point lies
+ * outside the segment, the intersection point lies "behind" the ray's start,
+ * or if the ray's line and segment's line are collinear/parallel without a
+ * valid single intersection point on both.
+ * @param ray The ray, defined by a starting point and a direction vector.
+ * @param segP1 Start point of the segment.
+ * @param segP2 End point of the segment.
+ * @returns The intersection Coords if they intersect ON the segment and ON the ray, otherwise undefined.
+ */
+function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): Coords | undefined {
+	// 1. Get general form for the infinite line containing the ray.
+	const [lineA_ray, lineB_ray, lineC_ray] = ray.line;
+
+	// 2. Get general form for the infinite line containing the segment.
+	const [lineA_seg, lineB_seg, lineC_seg] = getLineGeneralFormFrom2Coords(segP1, segP2);
+
+	// 3. Calculate intersection of the two infinite lines.
+	const intersectionPoint = calcIntersectionPointOfLines(lineA_ray, lineB_ray, lineC_ray, lineA_seg, lineB_seg, lineC_seg);
+
+	// 4. Handle no unique intersection (parallel or collinear lines).
+	// Be sure to capture the case if the ray starts at one of the segment's endpoints.
+	if (!intersectionPoint) {
+		// First check if the ray's start lies on the start/end poit of the segment.
+		const rayStartIsP1 = coordutil.areCoordsEqual_noValidate(ray.start, segP1);
+		const rayStartIsP2 = coordutil.areCoordsEqual_noValidate(ray.start, segP2);
+		if (rayStartIsP1 || rayStartIsP2) { // Collinear
+			// This means the lines must be collinear, so we need to check if
+			// the ray's direction vector points away from the segment's opposite end (1 intersection),
+			// because if it pointed towards the segment's opposite end, it would have infinite intersections.
+			if (rayStartIsP1) return getCollinearIntersection(segP2);
+			else if (rayStartIsP2) return getCollinearIntersection(segP1);
+		}
+		return undefined; // Parallel, not collinear, zero intersections.
+	}
+
+	function getCollinearIntersection(oppositePoint: Coords): Coords | undefined {
+		const vectorToOppositePoint = calculateVectorFromPoints(ray.start, oppositePoint);
+		const dotProd = dotProduct(ray.vector, vectorToOppositePoint);
+		if (dotProd > 0) return undefined; // The ray points towards the opposite end of the segment, so no unique intersection.
+		else return [...ray.start]; // The ray's start is the intersection point.
+	}
+
+	// 5. Check if the calculated intersection point lies on the actual segment.
+	if (!isPointOnSegment(intersectionPoint, segP1, segP2)) return undefined; // Intersection point is not within the segment bounds.
+
+	// 6. Check if the intersection point lies on the ray (not "behind" its start).
+	// Calculate vector from ray start to intersection.
+	const vectorToIntersection = calculateVectorFromPoints(ray.start, intersectionPoint);
+
+	// Calculate dot product of ray's direction vector and the vector to the intersection.
+	const dotProd = dotProduct(ray.vector, vectorToIntersection);
+
+	if (dotProd < 0) return undefined; // Dot product is negative, meaning the intersection point is behind the ray's start.
+
+	// 7. If all checks pass, the intersection point is valid for both ray and segment.
+	return intersectionPoint;
 }
 
 /**
@@ -774,6 +836,7 @@ export default {
 	calcIntersectionPointOfLines,
 	intersectLineSegments,
 	intersectLineAndSegment,
+	intersectRayAndSegment,
 	intersectRays,
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFrom2Coords,
