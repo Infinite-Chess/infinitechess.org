@@ -12,6 +12,8 @@ import { BufferModelInstanced, createModel_Instanced } from "../../buffermodel.j
 import instancedshapes from "../../instancedshapes.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
+import boardpos from "../../boardpos.js";
+import mouse from "../../../../util/mouse.js";
 // @ts-ignore
 import { Mouse } from "../../../input.js";
 // @ts-ignore
@@ -22,8 +24,6 @@ import perspective from "../../perspective.js";
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Square } from "./annotations.js";
-import boardpos from "../../boardpos.js";
-import mouse from "../../../../util/mouse.js";
 
 
 // Variables -----------------------------------------------------------------
