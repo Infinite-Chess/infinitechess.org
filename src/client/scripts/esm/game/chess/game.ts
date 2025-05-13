@@ -104,7 +104,7 @@ function update() {
 	board.recalcVariables();
 
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
-	// BEFORE animation.update(), since selection can forward to front, which would change the animated piece.
+	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
 	selection.update();
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
@@ -114,8 +114,8 @@ function update() {
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
-
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
+	
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
 	transition.update();

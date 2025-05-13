@@ -274,6 +274,10 @@ function getHoveredArrows(): HoveredArrow[] {
 	return hoveredArrows;
 }
 
+function areHoveringAtleastOneArrow(): boolean {
+	return hoveredArrows.length > 0;
+}
+
 
 // Updating -----------------------------------------------------------------------------------------------------------
 
@@ -1085,6 +1089,7 @@ export default {
 	setMode,
 	toggleArrows,
 	getHoveredArrows,
+	areHoveringAtleastOneArrow,
 	shiftArrow,
 	executeArrowShifts,
 	update,

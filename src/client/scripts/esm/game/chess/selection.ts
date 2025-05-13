@@ -37,6 +37,7 @@ import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import boarddrag from '../rendering/boarddrag.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
+import arrows from '../rendering/arrows/arrows.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -197,6 +198,7 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
 function testIfPieceSelected(gamefile: gamefile) {
+	if (arrows.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
 	if (dragEnabled && !mouse.isMouseDown(Mouse.LEFT) && !mouse.isMouseClicked(Mouse.LEFT)) return; // If dragging is enabled, all we need is pointer down event.
@@ -267,6 +269,7 @@ function testIfPieceDropped(gamefile: gamefile): void {
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
 function testIfPieceMoved(gamefile: gamefile): void {
 	if (!pieceSelected) return;
+	if (arrows.areHoveringAtleastOneArrow()) return; // Don't move a piece if we're hovering over an arrow
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
