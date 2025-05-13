@@ -66,10 +66,19 @@ function update(arrows: Arrow[]) {
 		// Test if right mouse down (start drawing)
 		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
 			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
-			if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
-				// Snap to nearest hovered entity
-				const nearestEntity = snapping.getClosestEntityToMouse();
-				drag_start = coordutil.copyCoords(nearestEntity.coords);
+
+			const hoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
+			const snapCoords = snapping.getSnapCoords();
+
+			if (boardpos.areZoomedOut() && (hoveringAtleastOneEntity || snapCoords)) {
+				if (hoveringAtleastOneEntity) {
+					// Snap to nearest hovered entity 
+					const nearestEntity = snapping.getClosestEntityToMouse();
+					drag_start = coordutil.copyCoords(nearestEntity.coords);
+				} else {
+					// Snap to the current snap
+					drag_start = [...snapCoords!];
+				}
 			} else {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
@@ -99,10 +108,19 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 	// console.log("Adding drawn arrow");
 	const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
 	let drag_end: Coords;
-	if (boardpos.areZoomedOut() && snapping.isHoveringAtleastOneEntity()) {
-		// Snap to nearest hovered entity
-		const nearestEntity = snapping.getClosestEntityToMouse();
-		drag_end = coordutil.copyCoords(nearestEntity.coords);
+
+	const hoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
+	const snapCoords = snapping.getSnapCoords();
+
+	if (boardpos.areZoomedOut() && (hoveringAtleastOneEntity || snapCoords)) {
+		if (hoveringAtleastOneEntity) {
+			// Snap to nearest hovered entity
+			const nearestEntity = snapping.getClosestEntityToMouse();
+			drag_end = coordutil.copyCoords(nearestEntity.coords);
+		} else {
+			// Snap to the current snap
+			drag_end = [...snapCoords!];
+		}
 	} else {
 		// No snap
 		drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
