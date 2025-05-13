@@ -29,12 +29,6 @@ import type { Ray } from "./annotations.js";
 // Variables -----------------------------------------------------------------
 
 
-/** All vectors we are gauranteed to be able to draw Rays on. */
-const VECTORS: Coords[] = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
-/** {@link VECTORS} but with hippogonals as well. */
-const VECTORS_HIPPOGONAL: Coords[] = [[1,2],[-1,2],[1,-2],[-1,-2],[2,1],[-2,1],[2,-1],[-2,-1]];
-
-
 const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
 	instanceDataAttribInfo: [{ name: 'instanceposition', numComponents: 2 }]
@@ -207,7 +201,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: boolean): Coords {
 	const targetAngle = Math.atan2(targetVector[1], targetVector[0]);
 
-	const searchVectors: Coords[] = searchHippogonals ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
+	const searchVectors: Coords[] = searchHippogonals ? [...snapping.VECTORS, ...snapping.VECTORS_HIPPOGONAL] : [...snapping.VECTORS];
 
 	let minAbsoluteAngleDifference = Infinity;
 	// Initialize with the first vector

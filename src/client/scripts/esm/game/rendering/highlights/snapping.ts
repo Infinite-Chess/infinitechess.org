@@ -43,18 +43,29 @@ import type { Line } from "./highlightline.js";
 const ENTITY_WIDTH_VPIXELS: number = 40; // Default: 36
 
 
+/** All default snapping vectors. */
+const VECTORS: Coords[] = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+/** The knightrider hippogonals. */
+const VECTORS_HIPPOGONAL: Coords[] = [[1,2],[-1,2],[1,-2],[-1,-2],[2,1],[-2,1],[2,-1],[-2,-1]];
+
+/** The color of the line that shows you what entity your mouse is snapped to. */
+const SNAP_LINE_COLOR: Color = [0, 0, 1, 0.3];
+
+
 /** Properties of the glow dot when rendering the snapped coord. */
 const GLOW_DOT = {
 	RADIUS_PIXELS: 8,
 	RESOLUTION: 16
 };
 
-
+/**
+ * The opacity of the ghost image that's rendered when hovering over
+ * the highlight line of the selected piece's legal moves.
+ */
 const GHOST_IMAGE_OPACITY = 1;
 
 
-/** The current point the mouse is snapped to this frame, if it is. */
-let snap: {
+type Snap = {
 	coords: Coords,
 	/** The color of the line we are snapped to. Already made opaque. */
 	color: Color,
@@ -62,7 +73,10 @@ let snap: {
 	type?: number,
 	/** The source that eminated the line we are snapping to, if we are snapping. */
 	source?: Coords,
-} | undefined;
+}
+
+/** The current point the mouse is snapped to this frame, if it is. */
+let snap: Snap | undefined;
 
 
 // Methods --------------------------------------------------------------
@@ -83,12 +97,22 @@ function isHoveringAtleastOneEntity() {
 	return miniimage.imagesHovered.length > 0 || drawsquares.highlightsHovered.length > 0;
 }
 
-function getClosestEntityToMouse(): { coords: Coords, dist: number, type: 'miniimage' | 'square', index: number } {
+
+type ClosestEntity = {
+	coords: Coords,
+	/** The euclidean distance in coordinates from the mouse to the entity. */
+	dist: number,
+	type: 'miniimage' | 'square',
+	/** The index of the entity within its home list. */
+	index: number
+};
+
+function getClosestEntityToMouse(): ClosestEntity {
 	if (!isHoveringAtleastOneEntity()) throw Error("Should not call getClosestEntityToMouse() if isHoveringAtleastOneEntity() is false.");
 	
 	// Find the closest hovered entity to the pointer
 
-	let closestEntity: { coords: Coords, dist: number, type: 'miniimage' | 'square', index: number } | undefined = undefined;
+	let closestEntity: ClosestEntity | undefined = undefined;
 
 	// Pieces
 	for (let i = 0; i < miniimage.imagesHovered.length; i++) {
@@ -109,6 +133,7 @@ function getClosestEntityToMouse(): { coords: Coords, dist: number, type: 'minii
 	if (closestEntity === undefined) throw Error("No closest entity found, this should never happen.");
 	return closestEntity;
 }
+
 
 /**
  * SHOULD BE DONE BEFORE {@link updateSnapping}
@@ -134,6 +159,7 @@ function updateEntitiesHovered() {
 
 // Snapping -------------------------------------------------------------
 
+
 type LineSnapPoint = {
 	line: Line,
 	snapPoint: { coords: Coords, distance: number }
@@ -150,7 +176,7 @@ type LineSnapPoint = {
  */
 function updateSnapping() {
 	snap = undefined;
-
+	
 	if (guipause.areWePaused()) return; // Don't snap if paused
 	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
@@ -194,7 +220,7 @@ function updateSnapping() {
 	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistCoords);
 
 	/**
-	 * Next, calculate all intersections of all highlight lines (rays and legal moves),
+	 * Next, calculate all intersection points of all highlight lines (rays and legal moves),
 	 * and see if the mouse is close enough to snap to them.
 	 * 
 	 * If so, those take priority.
@@ -206,7 +232,7 @@ function updateSnapping() {
 		line2: Line,
 	}
 
-	const intersections: Intersection[] = [];
+	const line_intersections: Intersection[] = [];
 	for (let a = 0; a < closeLines.length - 1; a++) {
 		const line1 = closeLines[a]!;
 		for (let b = a + 1; b < closeLines.length; b++) {
@@ -215,7 +241,7 @@ function updateSnapping() {
 			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
-			if (intersections.every(i => !coordutil.areCoordsEqual_noValidate(i.coords, intsect))) intersections.push({
+			if (!line_intersections.some(i => coordutil.areCoordsEqual_noValidate(i.coords, intsect))) line_intersections.push({
 				coords: intsect,
 				line1: line1.line,
 				line2: line2.line
@@ -223,10 +249,10 @@ function updateSnapping() {
 		}
 	}
 
-	// Calculate the mouse distance to each
+	// Calculate closest one to the mouse
 
 	let closestIntsect: { intersection: Intersection, dist: number } | undefined;
-	for (const i of intersections) {
+	for (const i of line_intersections) {
 		// Calculate distance to mouse
 		const dist = math.euclideanDistance(i.coords, mouseCoords);
 		if (closestIntsect === undefined || dist < closestIntsect.dist) closestIntsect = { intersection: i, dist };
@@ -247,17 +273,9 @@ function updateSnapping() {
 			(color1[2] + color2[2]) / 2,
 			(color1[3] + color2[3]) / 2
 		];
-
-		snap = { coords: closestIntsect.intersection.coords, color, type, };
 		
-		// Teleport if clicked
-		if (mouse.isMouseClicked(Mouse.LEFT)) {
-			transition.initTransitionToCoordsList([snap.coords]);
-			mouse.claimMouseClick(Mouse.LEFT);
-		}
-		return; // Don't snap to anything else
+		return setSnapAndTeleportIfClicked({ coords: closestIntsect.intersection.coords, color, type });
 	}
-
 
 	/**
 	 * At this point, there is no intersections  of lines to snap to.
@@ -267,7 +285,10 @@ function updateSnapping() {
 	 */
 
 	const gamefile = gameslot.getGamefile()!;
-	const allPrimitiveSlidesInGame = gamefile.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
+	// Allows snapping to all hippogonals, even the ones in 4D variants.
+	// const allPrimitiveSlidesInGame = gamefile.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
+	// Minimal snapping vectors
+	const searchVectors = gamefile.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
 
 
 	// 1. Square Annotes & Intersections of Rays (same priority)
@@ -282,16 +303,11 @@ function updateSnapping() {
 	
 	// Now see if we should snap to any Square
 
-	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, allPrimitiveSlidesInGame);
+	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, searchVectors);
 	if (closestSquareSnap) {
 		// Is the snap within snapping distance of the mouse?
 		if (closestSquareSnap.dist < snapDistCoords) {
-			snap = closestSquareSnap;
-			// Teleport if clicked
-			if (mouse.isMouseClicked(Mouse.LEFT)) {
-				transition.initTransitionToCoordsList([snap.coords]);
-				mouse.claimMouseClick(Mouse.LEFT);
-			}
+			setSnapAndTeleportIfClicked(closestSquareSnap.snap);
 			squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 			return;
 		}
@@ -301,55 +317,47 @@ function updateSnapping() {
 	// 2. Pieces
 
 	const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
-	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, allPrimitiveSlidesInGame);
+	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, searchVectors);
 	if (closestPieceSnap) {
 		// Is the snap within snapping distance of the mouse?
-		if (closestPieceSnap.dist < snapDistCoords) {
-			snap = closestPieceSnap;
-			// Teleport if clicked
-			if (mouse.isMouseClicked(Mouse.LEFT)) {
-				transition.initTransitionToCoordsList([snap.coords]);
-				mouse.claimMouseClick(Mouse.LEFT);
-			}
-			return;
-		}
+		if (closestPieceSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestPieceSnap.snap);
 	}
 	
 	// 3. Origin (Center of Play)
 
 	const startingBox = gamefileutility.getStartingAreaBox(gamefile);
 	const origin = math.calcCenterOfBoundingBox(startingBox);
-	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, mouseCoords, allPrimitiveSlidesInGame);
+	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, mouseCoords, searchVectors);
 	if (closestOriginSnap) {
 		// Is the snap within snapping distance of the mouse?
-		if (closestOriginSnap.dist < snapDistCoords) {
-			snap = closestOriginSnap;
-			// Teleport if clicked
-			if (mouse.isMouseClicked(Mouse.LEFT)) {
-				transition.initTransitionToCoordsList([snap.coords]);
-				mouse.claimMouseClick(Mouse.LEFT);
-			}
-			return;
-		}
+		if (closestOriginSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestOriginSnap.snap);
 	}
 
 	// No snap found!
 
 	// Instead, set the snap to the closest point on the line.
-	snap = { coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
-	// Teleport if clicked
+	setSnapAndTeleportIfClicked({ coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece });
+}
+
+function setSnapAndTeleportIfClicked(newSnap: { coords: Coords, color: Color, type?: number, source?: Coords }) {
+	snap = newSnap;
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		transition.initTransitionToCoordsList([snap.coords]);
+		transition.initTransitionToCoordsList([newSnap.coords]);
 		mouse.claimMouseClick(Mouse.LEFT);
 	}
 }
 
-function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[], mouseCoords: Coords, allPrimitiveSlidesInGame: Vec2[]): { coords: Coords, color: Color, dist: number, source: Coords, type?: number } | undefined {
+/**
+ * Finds the entity which snapping point to a line near the mouse is closest to the mouse.
+ * Eminates lines from each entity in all directions, and checks if they intersect any of the lines close to the mouse.
+ */
+function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[], mouseCoords: Coords, searchVectors: Vec2[]): { snap: Snap, dist: number } | undefined {
 	
-	let closestEntitySnap: { coords: Coords, color: Color, dist: number, source: Coords, type?: number } | undefined;
+	let closestEntitySnap: { snap: Snap, dist: number } | undefined;
 
 	for (const entityCoords of entities) {
-		const eminatingLines = getLinesEminatingFromPoint(entityCoords, allPrimitiveSlidesInGame);
+		// Eminate lines in all directions from the entity coords
+		const eminatingLines = searchVectors.map(l => math.getLineGeneralFormFromCoordsAndVec(entityCoords, l));
 
 		// Calculate their intersections with each individual line close to the mouse
 		for (const eminatedLine of eminatingLines) {
@@ -362,18 +370,14 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[
 				// Is the intersection point closer to the mouse than the previous closest snap?
 				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
 				if (closestEntitySnap === undefined || dist < closestEntitySnap.dist) {
-					// if (s[0] === 2000) console.log("Found closer snap:", intersection, dist, highlightLine.line.piece, [...s]);
-					closestEntitySnap = { coords: intersection, color: highlightLine.line.color, dist, type: highlightLine.line.piece, source: [...entityCoords] };
+					const snap = { coords: intersection, color: highlightLine.line.color, type: highlightLine.line.piece, source: [...entityCoords] as Coords };
+					closestEntitySnap = { snap, dist };
 				}
 			}
 		}
 	}
 
 	return closestEntitySnap;
-}
-
-function getLinesEminatingFromPoint(coords: Coords, allLinesInGame: Vec2[]): [number, number, number][] {
-	return allLinesInGame.map(l => math.getLineGeneralFormFromCoordsAndVec(coords, l));
 }
 
 
@@ -387,9 +391,10 @@ function getLinesEminatingFromPoint(coords: Coords, allLinesInGame: Vec2[]): [nu
 function render() {
 	if (snap === undefined) return; // No snap to render
 
-	// Render a single gray line between the snap point and its source
+	// Render a single line between the snap point and its source
+
 	if (snap.source !== undefined) {
-		const [r,g,b,a] = [0, 0, 1, 0.3];
+		const [r,g,b,a] = SNAP_LINE_COLOR;
 		const start = space.convertCoordToWorldSpace(snap.source);
 		const end = space.convertCoordToWorldSpace(snap.coords);
 		const data = [
@@ -399,6 +404,8 @@ function render() {
 		];
 		createModel(data, 2, 'LINES', true).render();
 	}
+
+	// Next we render either the glow dot or the mini image of the piece.
 
 	const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
 
@@ -418,9 +425,7 @@ function render() {
 	}
 }
 
-/**
- * TODO: Dont use the spritesheet
- */
+/** TODO: Dont use the spritesheet */
 function generateGhostImageModel(type: number, coords: Coords) {
 
 	const dataGhost: number[] = [];
@@ -448,6 +453,8 @@ function generateGhostImageModel(type: number, coords: Coords) {
 
 
 export default {
+	VECTORS,
+	VECTORS_HIPPOGONAL,
 	ENTITY_WIDTH_VPIXELS,
 	getEntityWidthWorld,
 	getSnapCoords,
