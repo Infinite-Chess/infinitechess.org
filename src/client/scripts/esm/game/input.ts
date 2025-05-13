@@ -43,6 +43,15 @@ interface InputListener {
 	/** Adds the pointer down so that other scripts may use it again. */
 	// eslint-disable-next-line no-unused-vars
 	unclaimPointerDown(pointerId: string): void;
+	/** Removes the simulated mouse click so that other scripts don't also use it. */
+	// eslint-disable-next-line no-unused-vars
+	claimMouseClick(button: MouseButton): void;
+	/**
+	 * Resets the simulated mouse click on mouse-down so that
+	 * when it released it DOESN'T count as a click.
+	 */
+	// eslint-disable-next-line no-unused-vars
+	cancelMouseClick(button: MouseButton): void;
 	/** Whether the given mouse button is currently held down. */
     // eslint-disable-next-line no-unused-vars
     isMouseHeld(button: MouseButton): boolean;
@@ -110,7 +119,7 @@ const CLICK_THRESHOLDS = {
 		/** The maximum time the mouse can be held down before a click is not registered. */
 		TIME_MILLIS: 400, // Default: 400
 		/** The maximum time between first click down and second click up to register a double click drag. */
-		DOUBLE_CLICK_TIME_MILLIS: 500,
+		DOUBLE_CLICK_TIME_MILLIS: 450, // Default: 500
 	},
 	TOUCH: {
 		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
@@ -598,6 +607,8 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			if (index !== -1) throw Error("Can't unclaim pointer, it was never claimed.");
 			pointersDown.push(pointerId);
 		},
+		claimMouseClick: (button: MouseButton) => clickInfo[button].clicked = false,
+		cancelMouseClick: (button: MouseButton) => clickInfo[button].timeDownMillisHistory.length = 0,
 		isMouseHeld: (button: MouseButton) => clickInfo[button].isHeld ?? false,
 		isMouseTouch: (button: MouseButton) => {
 			const pointerId = clickInfo[button].pointerId;

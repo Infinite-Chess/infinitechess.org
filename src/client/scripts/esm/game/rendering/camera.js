@@ -12,7 +12,6 @@
 
 // Import Start
 import perspective from './perspective.js';
-import miniimage from './miniimage.js';
 import stats from '../gui/stats.js';
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
@@ -195,8 +194,6 @@ function updateCanvasDimensions() {
 function recalcCanvasVariables() {
 	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	initScreenBoundingBox();
-
-	miniimage.recalcWidthWorld();
 }
 
 // Set view matrix

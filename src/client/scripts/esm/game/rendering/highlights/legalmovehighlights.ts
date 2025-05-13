@@ -37,6 +37,7 @@ import type { Player } from '../../../chess/util/typeutil.js';
 import type { BoundingBox, Vec2, Color } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
+import type { Ray } from './annotations/annotations.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
 // @ts-ignore
@@ -483,6 +484,24 @@ function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[],
 function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: true) {
 	if (limit === 0) return; // Quick exit
 
+	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, limit, false);
+	if (iterationInfo === undefined) return;
+	const { firstInstancePositionOffset, startCoords, iterationCount } = iterationInfo;
+
+	addDataDiagonalVariant(instanceData_NonCapture, instanceData_Capture, firstInstancePositionOffset, step, iterationCount, startCoords, coords, ignoreFunc, gamefile, friendlyColor, brute);
+}
+
+/**
+ * Calculates how many times a highlight should be repeated to cover all squares a ray can reach in the render range.
+ * @param coords 
+ * @param step 
+ * @param intsect1Tile 
+ * @param intsect2Tile 
+ * @param limit 
+ * @param includeStartCoords - Set to true for rays, it will also highlight the starting coordinate.
+ * @returns 
+ */
+function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, includeStartCoords: boolean) {
 	const lineIsVertical = step[0] === 0;
 	const index: 0 | 1 = lineIsVertical ? 1 : 0;
 	const inverseIndex: 0 | 1 = 1 - index as 0 | 1;
@@ -492,7 +511,11 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
 	const exitIntsectTile = stepIsPositive ? intsect2Tile : intsect1Tile;
     
 	// Where the piece would land after 1 step
-	let startCoords: Coords = [coords[0] + step[0], coords[1] + step[1]];
+	let startCoords: Coords = [...coords];
+	if (!includeStartCoords) {
+		startCoords[0] += step[0];
+		startCoords[1] += step[1];
+	}
 	// Is the piece 
 	// Is the piece left, off-screen, of our intsect1Tile?
 	if (stepIsPositive && startCoords[index] < entryIntsectTile[index] || !stepIsPositive && startCoords[index] > entryIntsectTile[index]) { // Modify the start square
@@ -521,7 +544,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
 	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
 	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
 
-	addDataDiagonalVariant(instanceData_NonCapture, instanceData_Capture, firstInstancePositionOffset, step, iterationCount, startCoords, coords, ignoreFunc, gamefile, friendlyColor, brute);
+	return { firstInstancePositionOffset, startCoords, iterationCount };
 }
 
 /**
@@ -560,9 +583,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 	}
 }
 
-/**
- * Renders an outline of the box containing all legal move highlights.
- */
+/** Renders an outline of the box containing all legal move highlights. */
 function renderOutlineofRenderBox() {
 	if (!camera.getDebug()) return; // Skip if camera debug mode off
 
@@ -573,10 +594,63 @@ function renderOutlineofRenderBox() {
 	model.render();
 }
 
+
+// Rays --------------------------------------------------------------------------------------
+
+
+/**
+ * Calculates the instanceData of all Rays in a list.
+ * Rays are square highlights starting from a single coord
+ * and going in one direction to infinity, unobstructed.
+ */
+function genData_Rays(rays: Ray[]) { // { left, right, bottom, top} The size of the box we should render within
+	const instanceData: number[] = [];
+
+	for (const ray of rays) {
+		const vector = coordutil.copyCoords(ray.vector);
+		// Make the vector positive
+		if (vector[0] === 0 && vector[1] < 0) vector[1] *= -1;
+		else if (vector[0] < 0) { vector[0] *= -1; vector[1] *= -1; }
+
+		const intersections = math.findLineBoxIntersections(ray.start, vector, boundingBoxOfRenderRange);
+		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
+
+		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
+        
+		concatData_Ray(instanceData, ray.start, ray.vector, intsect1Tile, intsect2Tile);
+	}
+
+	return instanceData;
+}
+
+/** Simplified {@link concatData_HighlightedMoves_Diagonal_Split} for Ray drawing */
+function concatData_Ray(instanceData: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords) {
+	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, Infinity, true);
+	if (iterationInfo === undefined) return;
+	const { firstInstancePositionOffset, iterationCount } = iterationInfo;
+
+	addDataDiagonalVariant_Ray(instanceData, firstInstancePositionOffset, step, iterationCount);
+}
+
+/** Simplified {@link addDataDiagonalVariant} for Ray drawing */
+function addDataDiagonalVariant_Ray(instanceData: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number) {
+	for (let i = 0; i < iterateCount; i++) { 
+		instanceData.push(...firstInstancePositionOffset);
+		firstInstancePositionOffset[0] += step[0];
+		firstInstancePositionOffset[1] += step[1];
+	}
+}
+
+
+// Exports -----------------------------------------------------------------------------------
+
+
 export default {
 	render,
 	getOffset,
 	onPieceSelected,
 	onPieceUnselected,
 	generateModelsForPiecesLegalMoveHighlights,
+
+	genData_Rays,
 };

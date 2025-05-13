@@ -25,6 +25,8 @@ import type { Coords } from "../chess/util/coordutil.js";
  * 
  * If another pointer id is used, such as a touch event, we cannot
  * detect the mouse position when it is off screen.
+ * 
+ * ONLY WORKS IF WE LEFT-CLICK-DRAG off the screen. NOT if we right-click-drag!
  */
 function getPointerPosition_Offscreen(pointerId: string): Coords | undefined {
 	if (pointerId === 'mouse') {
@@ -43,16 +45,16 @@ function getPointerPosition_Offscreen(pointerId: string): Coords | undefined {
  * Returns the world space coordinates of the mouse pointer,
  * or the crosshair if the mouse is locked (in perspective mode).
  */
-function getMouseWorld(): Coords | undefined {
+function getMouseWorld(button: MouseButton = Mouse.LEFT): Coords | undefined {
 	if (!perspective.getEnabled()) {
-		// const mousePos = listener_overlay.getMousePosition(Mouse.LEFT);
-		const mouseId = listener_overlay.getMouseId(Mouse.LEFT);
+		// const mousePos = listener_overlay.getMousePosition(button);
+		const mouseId = listener_overlay.getMouseId(button);
 		if (!mouseId) return undefined;
 		let mousePos = getPointerPosition_Offscreen(mouseId);
 		if (!mousePos) {
 			// Pointer likely doesn't exist anymore (touch event lifted).
 			// This will return its last known position.
-			mousePos = listener_overlay.getMousePosition(Mouse.LEFT);
+			mousePos = listener_overlay.getMousePosition(button);
 		}
 		if (!mousePos) return undefined;
 		return convertMousePositionToWorldSpace(mousePos, listener_overlay.element);
@@ -110,14 +112,14 @@ function convertMousePositionToWorldSpace(mouse: Coords, element: HTMLElement | 
 	return mouseWorldSpace;
 }
 
-function getTileMouseOver_Float(): Coords | undefined {
-	const mouseWorld = getMouseWorld();
+function getTileMouseOver_Float(button: MouseButton = Mouse.LEFT): Coords | undefined {
+	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
 	return space.convertWorldSpaceToCoords(mouseWorld);
 }
 
-function getTileMouseOver_Integer(): Coords | undefined {
-	const mouseWorld = getMouseWorld();
+function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | undefined {
+	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
 	return space.convertWorldSpaceToCoords_Rounded(mouseWorld);
 }
@@ -185,6 +187,33 @@ function getWheelDelta(): number {
 	else return listener_overlay.getWheelDelta();
 }
 
+/**
+ * Wrapper for reading the correct listener for claiming the mouse down event,
+ * depending on whether we're in perspective mode or not.
+ */
+function claimMouseDown(button: MouseButton): void {
+	if (perspective.isMouseLocked()) listener_document.claimMouseDown(button);
+	else listener_overlay.claimMouseDown(button);
+}
+
+/**
+ * Wrapper for reading the correct listener for claiming the mouse click event,
+ * depending on whether we're in perspective mode or not.
+ */
+function claimMouseClick(button: MouseButton): void {
+	if (perspective.isMouseLocked()) listener_document.claimMouseClick(button);
+	else listener_overlay.claimMouseClick(button);
+}
+
+/**
+ * Wrapper for reading the correct listener for canceling the mouse click event,
+ * depending on whether we're in perspective mode or not.
+ */
+function cancelMouseClick(button: MouseButton): void {
+	if (perspective.isMouseLocked()) listener_document.cancelMouseClick(button);
+	else listener_overlay.cancelMouseClick(button);
+}
+
 
 export default {
 	getMouseWorld,
@@ -199,4 +228,7 @@ export default {
 	isMouseClicked,
 	isMouseDoubleClickDragged,
 	getWheelDelta,
+	claimMouseDown,
+	claimMouseClick,
+	cancelMouseClick,
 };

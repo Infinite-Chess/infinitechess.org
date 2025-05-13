@@ -7,13 +7,13 @@
  * Legal moves (of selected piece and hovered arrows)
  */
 
-// @ts-ignore
-import highlightline from "./highlightline.js";
 import checkhighlight from "./checkhighlight.js";
 import { highlightLastMove } from "./lastmovehighlight.js";
 import legalmovehighlights from "./legalmovehighlights.js";
 import specialrighthighlights from "./specialrighthighlights.js";
 import boardpos from "../boardpos.js";
+import annotations from "./annotations/annotations.js";
+
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile";
@@ -29,13 +29,13 @@ import type gamefile from "../../../chess/logic/gamefile";
  * Outline of highlights render box
  */
 function render(gamefile: gamefile) {
-	highlightline.render();
-
-	if (boardpos.areZoomedOut()) return; // Quit if we're zoomed out.
-	highlightLastMove(gamefile);
-	checkhighlight.render(gamefile);
-	legalmovehighlights.render();
-	specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
+	if (!boardpos.areZoomedOut()) { // Zoomed in
+		highlightLastMove(gamefile);
+		checkhighlight.render(gamefile);
+		legalmovehighlights.render();
+		specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
+	} 
+	annotations.render_belowPieces(); // The square highlights added by the user
 }
 
 export default {

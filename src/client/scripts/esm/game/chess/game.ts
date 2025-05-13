@@ -26,10 +26,12 @@ import { CreateInputListener, InputListener } from '../input.js';
 import boarddrag from '../rendering/boarddrag.js';
 import boardpos from '../rendering/boardpos.js';
 import controls from '../misc/controls.js';
+import frametracker from '../rendering/frametracker.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import snapping from '../rendering/highlights/snapping.js';
+import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
-import miniimage from '../rendering/miniimage.js';
 // @ts-ignore
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
@@ -39,12 +41,9 @@ import webgl from '../rendering/webgl.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
 // @ts-ignore
-import highlightline from '../rendering/highlights/highlightline.js';
-// @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
-import frametracker from '../rendering/frametracker.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -96,6 +95,14 @@ function update() {
 	}
 	guiclock.update(gamefile);
 
+	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	boardpos.update(); // Updates the board's position and scale according to its velocity
+
+	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
+	// Variables dependant on the board position & scale
+	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
+	board.recalcVariables();
+
 	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
@@ -109,20 +116,20 @@ function update() {
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
-	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
-	boardpos.update(); // Updates the board's position and scale according to its velocity
 	transition.update();
 
-	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
+	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
+	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
+	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	snapping.updateEntitiesHovered();
+	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
+	annotations.update();
 
-	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
-
-	// NEEDS TO BE BEFORE checkIfBoardGrabbed(), because clicks should prioritize teleporting to miniimages over dragging the board!
-	// AFTER: boarddrag.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
-	miniimage.genModel();
-	highlightline.genModel(); // Before boarddrag.checkIfBoardGrabbed() since clicks should prioritize this.
+	snapping.updateSnapping();
+	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
+	annotations.testIfCollapsed();
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
-	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
+	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	boarddrag.checkIfBoardGrabbed();
 
 	gameloader.update(); // Updates whatever game is currently loaded.
@@ -150,7 +157,9 @@ function render() {
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
+		selectedpiecehighlightline.render();
 		highlights.render(gamefile);
+		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	});
@@ -166,6 +175,7 @@ function render() {
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
 		arrows.render();
+		annotations.render_abovePieces();
 		perspective.renderCrosshair();
 	});
 }

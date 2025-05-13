@@ -20,6 +20,7 @@ import piecemodels from './piecemodels.js';
 import guipromotion from '../gui/guipromotion.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
+import texturecache from '../../chess/rendering/texturecache.js';
 // Import End
 
 /** 
@@ -78,10 +79,12 @@ let darkTiles;
 		const gamefile = gameslot.getGamefile();
 		if (!gamefile) return;
 		imagecache.deleteImageCache();
+		texturecache.deleteTextureCache(gl);
 		imagecache.initImagesForGame(gamefile).then(() => {
 			piecemodels.regenAll(gamefile);
 			// Regenerate the spritesheet with the new tinted images
 			spritesheet.initSpritesheetForGame(gl, gamefile);
+			texturecache.initTexturesForGame(gl, gamefile);
 		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();

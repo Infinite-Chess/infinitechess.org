@@ -35,6 +35,8 @@ import { listener_document, listener_overlay } from './game.js';
 import { Mouse } from '../input.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
+import boarddrag from '../rendering/boarddrag.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
 // @ts-ignore
 import config from '../config.js';
 // @ts-ignore
@@ -51,7 +53,6 @@ import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
-import boarddrag from '../rendering/boarddrag.js';
 
 
 // Variables -----------------------------------------------------------------------------
@@ -134,7 +135,8 @@ function disableEditMode() { editMode = false; }
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update() {
 	guipromotion.update();
-	if (mouse.isMouseDown(Mouse.RIGHT)) return unselectPiece(); // Right-click deselects everything
+	// DISABLED BECAUSE highlight drawing uses the right click
+	if (mouse.isMouseDown(Mouse.MIDDLE)) return unselectPiece(); // Right-click deselects everything
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
@@ -211,6 +213,7 @@ function testIfPieceSelected(gamefile: gamefile) {
 	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0) return; // Can't select this piece type
 	else if (selectionLevel === 1 && mouse.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
+		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -222,14 +225,14 @@ function testIfPieceSelected(gamefile: gamefile) {
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
 		if (Object.keys(listener_overlay.getAllPointers()).length === 2) return;
+		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
+		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		if (viewFrontIfNotViewingLatestMove(gamefile)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
-		// Claim the mouse down so board dragging doesn't use it
-		listener_overlay.claimMouseDown(Mouse.LEFT);
 	}
 }
 
@@ -267,6 +270,8 @@ function testIfPieceMoved(gamefile: gamefile): void {
 
 	if (!hoverSquareLegal) return; // Don't move it
 	else moveGamefilePiece(gamefile, hoverSquare);
+	
+	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
@@ -353,8 +358,10 @@ function isOpponentType(gamefile: gamefile, type: number) {
  */
 function selectPiece(gamefile: gamefile, piece: Piece, drag: boolean) {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
-	const alreadySelected = pieceSelected !== undefined && coordutil.areCoordsEqual(pieceSelected.coords, piece.coords);
 
+	annotations.onPieceSelection();
+
+	const alreadySelected = pieceSelected !== undefined && coordutil.areCoordsEqual(pieceSelected.coords, piece.coords);
 	if (drag) { // Pick up anyway, don't unselect it if it was already selected.
 		if (alreadySelected) {
 			draganimation.pickUpPiece(piece, false); // Toggle the parity since it's the same piece being picked up.

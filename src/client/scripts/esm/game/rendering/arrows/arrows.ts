@@ -292,8 +292,6 @@ function getHoveredArrows(): HoveredArrow[] {
  * visible arrows before rendering.
  */
 function update() {
-	if (guipause.areWePaused()) return; // Exit if paused (frozen)
-
 	reset(); // Initiate the arrows empty
 	if (!areArrowsActiveThisFrame()) { // Arrow indicators are off, nothing is visible.
 		arrowlegalmovehighlights.reset(); // Also reset this
@@ -709,6 +707,7 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
 function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
 	if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Don't let the board be dragged by this mouse down
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Mouse did not click this frame
+	mouse.claimMouseClick(Mouse.LEFT); // Don't let annotations erase
 
 	// Teleport in the direction of the piece's arrow, NOT straight to the piece.
 

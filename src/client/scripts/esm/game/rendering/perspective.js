@@ -124,8 +124,8 @@ function update() {
 	// If the mouse is unlocked, don't rotate view.
 	if (!isMouseLocked()) {
 		// Check if needs to relock
-		if (listener_overlay.isMouseDown(Mouse.LEFT)) {
-			listener_overlay.claimMouseDown(Mouse.LEFT);
+		if (listener_overlay.isMouseClicked(Mouse.LEFT)) {
+			listener_overlay.claimMouseClick(Mouse.LEFT);
 			relockMouse();
 		}
 		return;

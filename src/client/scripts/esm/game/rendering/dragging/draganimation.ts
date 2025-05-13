@@ -208,6 +208,9 @@ function dropPiece() {
 	parity = false; // The next time this piece is dropped on its home square, it will be deselected
 	droparrows.onDragTermination();
 	frametracker.onVisualChange();
+	// Rapidly picking up and dropping a piece triggers a simulated click.
+	// If we don't claim it here, annotations will read it to Collapse annotations.
+	if (mouse.isMouseClicked(Mouse.LEFT)) mouse.claimMouseClick(Mouse.LEFT);
 }
 
 /** Puts the dragged piece back. Doesn't make a move. */

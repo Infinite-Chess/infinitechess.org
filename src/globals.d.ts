@@ -9,6 +9,7 @@ declare global {
 	interface DocumentEventMap {
 		ping: CustomEvent<number>;
 		'socket-closed': CustomEvent<void>;
+		'lingering-annotations-toggle': CustomEvent<boolean>;
 	}
 
 	/** The sound script global variables. */
