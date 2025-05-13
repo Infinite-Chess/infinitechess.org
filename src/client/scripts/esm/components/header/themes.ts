@@ -48,6 +48,8 @@ const defaults: ThemeProperties = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
+	[annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares
+	[annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	[pieceTheme]: {},
 };
 
@@ -67,8 +69,8 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.32],
 		[lastMoveHighlightColor]: [0.90, 1, 0, 0.30],
-		[annoteSquareColor]: [1, 0, 0, 0.35], // .45 with no .10 offset to squares
-		[annoteArrowColor]: [1, 0.65, 0.15, 0.8],
+		// [annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares
+		// [annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	},
 	sandstone: { // Sometimes thanksgiving uses this
 		[lightTiles]: [0.94, 0.88, 0.78, 1],
@@ -77,7 +79,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.7, 0, 0.35],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.28],
 		[lastMoveHighlightColor]: [0.3, 1, 0, 0.35], // 0.3 for small, 0.35 for BIG positions
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	wood: {
 		[lightTiles]: [0.96, 0.87, 0.75, 1],
@@ -85,7 +86,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.42],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.43],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.32],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	sandstone_dark: {
 		[lightTiles]: [0.86, 0.76, 0.50, 1],
@@ -93,7 +93,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.29],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.28],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	maple: {
 		[lightTiles]: [0.96, 0.81, 0.65, 1],
@@ -101,7 +100,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.52, 0, 0.57],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.28],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	red_wood: {
 		[lightTiles]: [0.96, 0.82, 0.7, 1],
@@ -109,7 +107,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.48],
 		[legalMovesHighlightColor_Opponent]: [1, 0.52, 0, 0.61],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.36],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	cyan_ocean: {
 		[lightTiles]: [0.06, 1, 1, 1],
@@ -117,7 +114,8 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.46, 0.1, 0.42],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0.24, 0.46],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.30],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
+		[annoteSquareColor]: [0, 0, 1, 0.29],
+		[annoteArrowColor]: [0.66, 0, 1,0.62],
 	},
 	ocean: {
 		[lightTiles]: [0.42, 0.75, 0.96, 1],
@@ -125,7 +123,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.86, 0.14, 0.5],
 		[legalMovesHighlightColor_Opponent]: [1, 0, 0.22, 0.35],
 		[legalMovesHighlightColor_Premove]: [0.12, 0, 0.24, 0.48],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	blue_hard: {
 		[lightTiles]: [0.84, 0.91, 0.94, 1],
@@ -133,7 +130,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.6, 0.1, 0.46],
 		[legalMovesHighlightColor_Opponent]: [1, 0, 0.22, 0.37],
 		[legalMovesHighlightColor_Premove]: [0.12, 0, 0.24, 0.42],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	blue: {
 		[lightTiles]: [0.87, 0.89, 0.91, 1],
@@ -142,7 +138,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.46, 0, 0.35],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.34],
 		[lastMoveHighlightColor]: [0, 1, 1, 0.3],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	blue_soft: {
 		[lightTiles]: [0.59, 0.70, 0.78, 1],
@@ -150,7 +145,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.60, 0.1, 0.36],
 		[legalMovesHighlightColor_Opponent]: [1, 0.46, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.36],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	green_plastic: {
 		[lightTiles]: [0.95, 0.98, 0.73, 1],
@@ -158,7 +152,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.26, 0.64, 0.56],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.43],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.40],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	green: { 
 		[lightTiles]: [0.92, 0.93, 0.82, 1],
@@ -167,7 +160,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [0.28, 0, 1, 0.31],
 		[legalMovesHighlightColor_Premove]: [1, 0.12, 0.12, 0.38],
 		[lastMoveHighlightColor]: [1, 1, 0, 0.4],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	lime: {
 		[lightTiles]: [0.8, 0.94, 0.39, 1],
@@ -176,7 +168,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0, 0, 0.35],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.30, 0.34],
 		[lastMoveHighlightColor]: [0, 0.26, 1, 0.24],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	avocado: {
 		[lightTiles]: [0.84, 0.98, 0.5, 1],
@@ -185,7 +176,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0, 0, 0.31],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.30, 0.30],
 		[lastMoveHighlightColor]: [0, 0.28, 1, 0.24],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	white: {
 		[lightTiles]: [1, 1, 1, 1],
@@ -195,7 +185,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.26, 0.36],
 		[lastMoveHighlightColor]: [0.28, 1, 0, 0.28],
 		[boxOutlineColor]: [0, 0, 0, 0.25],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	poison: {
 		[lightTiles]: [0.93, 0.93, 0.93, 1],
@@ -203,7 +192,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.29],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.28],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	grey: {
 		[lightTiles]: [0.72, 0.72, 0.72, 1],
@@ -211,7 +199,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.27],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.26],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	olive: {
 		[lightTiles]: [0.71, 0.68, 0.62, 1],
@@ -219,7 +206,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.34],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.29],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.28],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	dark_grey: {
 		[lightTiles]: [0.45, 0.45, 0.45, 1],
@@ -227,7 +213,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.58, 0.1, 0.34],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.31],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.40, 0.26],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	seabed: {
 		[lightTiles]: [0.56, 0.66, 0.57, 1],
@@ -235,7 +220,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.20, 0.78, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.29],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.28, 0.28],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	marble: { 
 		[lightTiles]: [0.78, 0.78, 0.7, 1],
@@ -243,7 +227,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.44],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.34],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	purple: {
 		[lightTiles]: [0.93, 0.89, 0.96, 1],
@@ -251,7 +234,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.44],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.39],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.30, 0.42],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	pink: {
 		[lightTiles]: [0.98, 0.93, 0.93, 1],
@@ -259,7 +241,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.48, 0.1, 0.32],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.29],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.28],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 	beehive: {
 		[lightTiles]: [1, 0.86, 0.35, 1],
@@ -268,7 +249,6 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.14, 0, 0.49],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.32],
 		[lastMoveHighlightColor]: [0, 1, 0, 0.28],
-		// [annoteSquareColor]: [1, 0, 0, 0.5],
 	},
 
 	// purple_hard: { 

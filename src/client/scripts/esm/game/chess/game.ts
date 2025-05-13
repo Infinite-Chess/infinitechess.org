@@ -30,7 +30,6 @@ import frametracker from '../rendering/frametracker.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
-import preferences from '../../components/header/preferences.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -138,6 +137,8 @@ function update() {
 	gameloader.update(); // Updates whatever game is currently loaded.
 
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
+
+	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
 }
 
 function render() {

@@ -33,7 +33,7 @@ import mouse from "../../../../util/mouse.js";
  * To make single Square highlight more visible than rays (which
  * include a LOT of squares), lone squares get an opacity offset.
  */
-const OPACITY_OFFSET = 0.1;
+const OPACITY_OFFSET = 0.08;
 
 /** ADDITONAL (not overriding) opacity when hovering over highlights. */
 const hover_opacity = 0.5;

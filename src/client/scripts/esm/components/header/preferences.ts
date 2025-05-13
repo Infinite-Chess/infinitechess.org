@@ -1,5 +1,4 @@
 
-
 import themes from "./themes.js";
 import pieceThemes, { PieceColorGroup } from "./pieceThemes.js";
 import localstorage from "../../util/localstorage.js";
@@ -323,93 +322,121 @@ function getTintColorOfType(type: number): Color {
 
 
 /*
- * The commented stuff below was ONLY used for fast
- * modifying of theme players using the keyboard keys!!!
+ * The commented stuff below is ONLY used for fast
+ * modifying of theme players using the keyboard keys!
  */
 
-// const allProperties = Object.keys(themes.themes[themes.defaultTheme]);
+// import { listener_document } from "../../game/chess/game.js";
+
+// const allProperties = Object.keys(themes.themes[themes.defaultTheme]!);
 // let currPropertyIndex = 0;
-// let currProperty = allProperties[currPropertyIndex];
+// let currProperty = allProperties[currPropertyIndex]!;
 // function update() {
 
-// 	const themeProperties = themes.themes[theme];
+// 	const themeProperties = themes.themes[preferences.theme]!;
 	
-// 	if (inputlistenerisKeyDown('u')) {
+// 	if (listener_document.isKeyDown('KeyU')) {
 // 		currPropertyIndex--;
 // 		if (currPropertyIndex < 0) currPropertyIndex = allProperties.length - 1;
-// 		currProperty = allProperties[currPropertyIndex];
+// 		currProperty = allProperties[currPropertyIndex]!;
 // 		console.log(`Selected property: ${currProperty}`);
 // 	}
-// 	if (inputlistenerisKeyDown('i')) {
+// 	if (listener_document.isKeyDown('KeyI')) {
 // 		currPropertyIndex++;
 // 		if (currPropertyIndex > allProperties.length - 1) currPropertyIndex = 0;
-// 		currProperty = allProperties[currPropertyIndex];
+// 		currProperty = allProperties[currPropertyIndex]!;
 // 		console.log(`Selected property: ${currProperty}`);
 // 	}
 
 // 	const amount = 0.02;
 
-// 	if (inputlistenerisKeyDown('j')) {
+// 	if (listener_document.isKeyDown('KeyJ')) {
 // 		const dig = 0;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (inputlistenerisKeyDown('m')) {
+// 	if (listener_document.isKeyDown('KeyM')) {
 // 		const dig = 0;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (inputlistenerisKeyDown('k')) {
+// 	if (listener_document.isKeyDown('KeyK')) {
 // 		const dig = 1;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (inputlistenerisKeyDown(',')) {
+// 	if (listener_document.isKeyDown('Comma')) {
 // 		const dig = 1;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (inputlistenerisKeyDown('l')) {
+// 	if (listener_document.isKeyDown('KeyL')) {
 // 		const dig = 2;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (inputlistenerisKeyDown('.')) {
+// 	if (listener_document.isKeyDown('Period')) {
 // 		const dig = 2;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (inputlistenerisKeyDown(';')) {
+// 	if (listener_document.isKeyDown('Semicolon')) {
 // 		const dig = 3;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (inputlistenerisKeyDown('/')) {
+// 	if (listener_document.isKeyDown('Slash')) {
 // 		const dig = 3;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
 
-// 	if (inputlistenerisKeyDown('\\')) {
-// 		console.log(JSON.stringify(themes.themes[theme]));
+// 	if (listener_document.isKeyDown('Backslash')) {
+// 		console.log(JSON.stringify(themes.themes[preferences.theme]));
 // 	}
 
-// 	board.updateTheme();
-// 	piecesmodel.regenModel(gameslot.getGamefile());
-// 	highlights.regenModel();
 // }
+
+// function dispatchThemeChangeEvent() {
+// 	document.dispatchEvent(new Event('theme-change'));
+// }
+// setInterval(dispatchThemeChangeEvent, 1000);
 
 
 // Exports -----------------------------------------------------------------------------------------
@@ -443,4 +470,7 @@ export default {
 	getAnnoteSquareColor,
 	getAnnoteArrowColor,
 	getTintColorOfType,
+
+	// Only used for temporarily micro adjusting theme properties & colors
+	// update,
 };
