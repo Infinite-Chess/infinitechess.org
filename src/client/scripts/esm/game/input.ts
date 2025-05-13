@@ -648,7 +648,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		},
 		isMouseClicked: (button: MouseButton) => clickInfo[button].clicked,
 		isMouseDoubleClickDragged: (button: MouseButton) => clickInfo[button].doubleClickDrag,
-		setTreatLeftasRight: (value: boolean) treatLeftAsRight = value,
+		setTreatLeftasRight: (value: boolean) => treatLeftAsRight = value,
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? undefined,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? undefined,
 		getPointerVel: (pointerId: string) => pointers[pointerId]?.velocity ?? undefined,
