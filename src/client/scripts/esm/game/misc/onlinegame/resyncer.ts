@@ -12,9 +12,9 @@
  */
 
 
-import type { GameUpdateMessage } from "./onlinegamerouter.js";
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile.js";
+import type { GameUpdateMessage } from "./onlinegamerouter.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
 
@@ -38,7 +38,7 @@ import legalmoves from "../../../chess/logic/legalmoves.js";
  * Called when the server sends us the conclusion of the game when it ends,
  * OR we just need to resync! The game may not always be over.
  */
-function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh, message: GameUpdateMessage) {
+function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh | undefined, message: GameUpdateMessage) {
 	const claimedGameConclusion = message.gameConclusion;
 
 	// This needs to be BEFORE synchronizeMovesList(), otherwise it won't resend our move since it thinks we're not in sync
@@ -75,7 +75,7 @@ function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh, message: GameUpd
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
-function synchronizeMovesList(gamefile: gamefile, mesh: Mesh, moves: string[], claimedGameConclusion: string | false): { opponentPlayedIllegalMove: boolean } {
+function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves: string[], claimedGameConclusion: string | false): { opponentPlayedIllegalMove: boolean } {
 	// console.log("Resyncing...");
 
 	// Early exit case. If we have played exactly 1 more move than the server,

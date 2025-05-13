@@ -160,6 +160,7 @@ function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, end
 
 // Executing changes of a Move ----------------------------------------------------------------------------------------
 
+
 /**
  * Applies the board changes of a move either forward or backward,
  * either modifying the piece lists, or modifying the mesh,

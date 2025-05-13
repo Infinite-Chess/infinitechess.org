@@ -8,11 +8,11 @@
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
 import type { RawType } from '../../chess/util/typeutil.js';
+import type { Mesh } from '../rendering/piecemodels.js';
 // @ts-ignore
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
-import type { Mesh } from '../rendering/piecemodels.js';
 
 import gameslot from './gameslot.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
@@ -142,7 +142,7 @@ function update() {
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
+	const mesh = gameslot.getMesh();
 	if (pawnIsPromotingOn) { // Do nothing else this frame but wait for a promotion piece to be selected
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
@@ -199,7 +199,7 @@ function updateHoverSquareLegal(gamefile: gamefile): void {
 
 
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
-function testIfPieceSelected(gamefile: gamefile, mesh: Mesh) {
+function testIfPieceSelected(gamefile: gamefile, mesh: Mesh | undefined) {
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
@@ -242,7 +242,7 @@ function testIfPieceSelected(gamefile: gamefile, mesh: Mesh) {
 }
 
 /** If a piece is being dragged, this will test if it was dropped, making the move if it is legal. */
-function testIfPieceDropped(gamefile: gamefile, mesh: Mesh): void {
+function testIfPieceDropped(gamefile: gamefile, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
@@ -269,7 +269,7 @@ function testIfPieceDropped(gamefile: gamefile, mesh: Mesh): void {
 }
 
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
-function testIfPieceMoved(gamefile: gamefile, mesh: Mesh): void {
+function testIfPieceMoved(gamefile: gamefile, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return;
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't move a piece if we're hovering over an arrow
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
@@ -281,7 +281,7 @@ function testIfPieceMoved(gamefile: gamefile, mesh: Mesh): void {
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
-function viewFrontIfNotViewingLatestMove(gamefile: gamefile, mesh: Mesh): boolean {
+function viewFrontIfNotViewingLatestMove(gamefile: gamefile, mesh: Mesh | undefined): boolean {
 	// If we're viewing history, return.
 	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
 
@@ -438,7 +438,7 @@ function initSelectedPieceInfo(gamefile: gamefile, piece: Piece) {
  * The destination coordinates MUST contain any special move flags.
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(gamefile: gamefile, mesh: Mesh, coords: CoordsSpecial) {
+function moveGamefilePiece(gamefile: gamefile, mesh: Mesh | undefined, coords: CoordsSpecial) {
 	// Check if the move is a pawn promotion
 	if (coords.promoteTrigger) {
 		const color = typeutil.getColorFromType(pieceSelected!.type);
@@ -470,7 +470,7 @@ function moveGamefilePiece(gamefile: gamefile, mesh: Mesh, coords: CoordsSpecial
 }
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
-function makePromotionMove(gamefile: gamefile, mesh: Mesh) {
+function makePromotionMove(gamefile: gamefile, mesh: Mesh | undefined) {
 	const coords = pawnIsPromotingOn!;
 	// DELETE THE promoteTrigger flag, and add the promoteTo flag
 	delete coords.promoteTrigger;

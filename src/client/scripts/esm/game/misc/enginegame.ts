@@ -157,7 +157,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
 	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
+	const mesh = gameslot.getMesh();
 
 	// Go to latest move before making a new move
 	movesequence.viewFront(gamefile, mesh);
@@ -171,7 +171,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-	if (mesh.offset) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	if (mesh) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

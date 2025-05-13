@@ -126,7 +126,7 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	}
 
 	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh()!;
+	const mesh = gameslot.getMesh();
 
 	switch (data.action) {
 		case "move":

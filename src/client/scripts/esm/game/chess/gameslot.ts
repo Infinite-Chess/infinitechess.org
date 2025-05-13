@@ -12,9 +12,9 @@ import type { ClockValues } from "../../chess/logic/clock.js";
 import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
 import type { Player } from "../../chess/util/typeutil.js";
+import type { Mesh } from "../rendering/piecemodels.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
-import type { Mesh } from "../rendering/piecemodels.js";
 
 // @ts-ignore
 import enginegame from '../misc/enginegame.js';
@@ -129,6 +129,7 @@ interface VariantOptions {
 /** The currently loaded game. */
 let loadedGamefile: gamefile | undefined;
 
+/** The mesh of the gamefile, if it is loaded. */
 let mesh: Mesh | undefined;
 
 /** The player color we are viewing the perspective of in the current loaded game. */
@@ -149,14 +150,12 @@ const delayOfLatestMoveAnimationOnRejoinMillis = 150;
 // Functions ---------------------------------------------------------------
 
 
-/**
- * Returns the gamefile currently loaded
- * @returns {gamefile} The current gamefile
- */
+/**  Returns the gamefile currently loaded */
 function getGamefile(): gamefile | undefined {
 	return loadedGamefile;
 }
 
+/** Returns the mesh of the gamefile currently loaded */
 function getMesh(): Mesh | undefined {
 	return mesh;
 }
@@ -247,6 +246,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
 	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
+	// Initialize the mesh empty
 	mesh = {
 		offset: [0, 0],
 		inverted: false,

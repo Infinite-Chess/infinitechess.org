@@ -28,7 +28,7 @@ import perspective from './perspective.js';
 // Type Definitions ---------------------------------------------------------------------------------
 
 
-/** Mesh data of a single piece type in gamefile.mesh.types */
+/** Mesh data of a single piece type in mesh.types */
 interface MeshData {
 	/** High precision instance data for performing arithmetic. */
 	instanceData64: Float64Array,
@@ -36,6 +36,7 @@ interface MeshData {
 	model: BufferModelInstanced
 }
 
+/** An object that contains the buffer models to render the pieces in a game. */
 interface Mesh {
 	/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
 	 * This helps require less severe uniform translations upon rendering when traveling massive distances.

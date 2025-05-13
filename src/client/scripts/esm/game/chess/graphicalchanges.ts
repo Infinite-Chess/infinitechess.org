@@ -8,9 +8,9 @@
 import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 
-import piecemodels from "../rendering/piecemodels.js";
 // @ts-ignore
 import animation from "../rendering/animation.js";
+import piecemodels from "../rendering/piecemodels.js";
 import preferences from "../../components/header/preferences.js";
 
 
@@ -64,28 +64,23 @@ const animatableChanges: ChangeApplication<animationFunc> = {
 
 
 function addMeshPiece(mesh: Mesh, change: Change) {
-	if (!mesh.offset) return; // The mesh isn't generated yet. This can happen if your opponent/engine moves extremely fast on turn 1.
 	piecemodels.overwritebufferdata(mesh, change.piece);
 }
 
 function deleteMeshPiece(mesh: Mesh, change: Change) {
-	if (!mesh.offset) return; // The mesh isn't generated yet. This can happen if your opponent/engine moves extremely fast on turn 1.
 	piecemodels.deletebufferdata(mesh, change.piece);
 }
 
 function moveMeshPiece(mesh: Mesh, change: Change) {
-	if (!mesh.offset) return; // The mesh isn't generated yet. This can happen if your opponent/engine moves extremely fast on turn 1.
 	if (change.action !== 'move' && change.action !== 'capture') throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
 	piecemodels.overwritebufferdata(mesh, { type: change.piece.type, coords: change.endCoords, index: change.piece.index });
 }
 
 function returnMeshPiece(mesh: Mesh, change: Change) {
-	if (!mesh.offset) return; // The mesh isn't generated yet. This can happen if your opponent/engine moves extremely fast on turn 1.
 	piecemodels.overwritebufferdata(mesh, change.piece);
 }
 
 function captureMeshPiece(mesh: Mesh, change: Change) {
-	if (!mesh.offset) return; // The mesh isn't generated yet. This can happen if your opponent/engine moves extremely fast on turn 1.
 	if (change.action !== 'capture') throw Error(`captureMeshPiece called with non-capture action: ${change.action}`);
 
 	piecemodels.deletebufferdata(mesh, change.capturedPiece);
@@ -93,7 +88,6 @@ function captureMeshPiece(mesh: Mesh, change: Change) {
 }
 
 function uncaptureMeshPiece(mesh: Mesh, change: Change) {
-	if (!mesh.offset) return; // The mesh isn't generated yet. This can happen if your opponent/engine moves extremely fast on turn 1.
 	if (change.action !== 'capture') throw Error(`uncaptureMeshPiece called with non-capture action: ${change.action}`);
 
 	returnMeshPiece(mesh, change);
