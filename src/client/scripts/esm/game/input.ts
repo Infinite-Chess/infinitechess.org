@@ -410,14 +410,14 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			const targetPointer = pointers['mouse'];
 			if (!targetPointer) return; // Sometimes the 'mousedown' event is fired from touch events, even though the mouse pointer does not exist.
 			atleastOneInputThisFrame = true;
-			const targetButton = e.button as MouseButton;
+			const targetButton = e.altKey ? Mouse.RIGHT : e.button as MouseButton;
 			updateClickInfoDown(targetButton, e);
 		}) as EventListener);
 
 		// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
 		addListener(document, 'mouseup', ((e: MouseEvent) => {
 			atleastOneInputThisFrame = true;
-			const targetButton = e.button as MouseButton;
+			const targetButton = e.altKey ? Mouse.RIGHT : e.button as MouseButton;
 			updateClickInfoUp(targetButton, e);
 		}) as EventListener);
 
