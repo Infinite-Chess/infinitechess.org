@@ -356,7 +356,7 @@ function updateSnapping() {
 	setSnapAndTeleportIfClicked({ coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece });
 }
 
-function setSnapAndTeleportIfClicked(newSnap: { coords: Coords, color: Color, type?: number, source?: Coords }) {
+function setSnapAndTeleportIfClicked(newSnap: Snap) {
 	snap = newSnap;
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
 		transition.initTransitionToCoordsList([newSnap.coords]);
