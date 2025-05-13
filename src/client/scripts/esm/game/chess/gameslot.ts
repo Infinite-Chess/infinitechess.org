@@ -258,7 +258,7 @@ function unloadGame() {
 	loadedGamefile = undefined;
 
 	imagecache.deleteImageCache();
-	texturecache.deleteTextureCache(gl);
+	// texturecache.deleteTextureCache(gl);
 	selection.unselectPiece();
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)

@@ -40,6 +40,7 @@ type Preferences = ServerSidePreferences & ClientSidePreferences;
 // Variables ------------------------------------------------------------
 
 
+/** All our preferences. */
 let preferences: Preferences;
 
 // The legal moves shape preference

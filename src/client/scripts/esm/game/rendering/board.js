@@ -79,12 +79,12 @@ let darkTiles;
 		const gamefile = gameslot.getGamefile();
 		if (!gamefile) return;
 		imagecache.deleteImageCache();
-		texturecache.deleteTextureCache(gl);
+		// texturecache.deleteTextureCache(gl);
 		imagecache.initImagesForGame(gamefile).then(() => {
-			piecemodels.regenAll(gamefile);
 			// Regenerate the spritesheet with the new tinted images
 			spritesheet.initSpritesheetForGame(gl, gamefile);
 			texturecache.initTexturesForGame(gl, gamefile);
+			piecemodels.regenAll(gamefile);
 		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();

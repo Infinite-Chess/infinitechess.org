@@ -19,7 +19,7 @@ import texture from '../../game/rendering/texture.js';
 
 
 /** Internal cache storing WebGLTexture objects, keyed by piece type. */
-let textureCache: TypeGroup<WebGLTexture> = {};
+const textureCache: TypeGroup<WebGLTexture> = {};
 
 /**
  * Initializes the texture cache for the provided gamefile.
@@ -31,7 +31,7 @@ let textureCache: TypeGroup<WebGLTexture> = {};
  */
 async function initTexturesForGame(gl: WebGL2RenderingContext, gamefile: gamefile): Promise<void> {
 	// Clear existing cache before initializing for a new game
-	if (Object.keys(textureCache).length > 0) throw Error("TextureCache: Cache already initialized. Call deleteTextureCache() when unloading games.");
+	// if (Object.keys(textureCache).length > 0) throw Error("TextureCache: Cache already initialized. Call deleteTextureCache() when unloading games.");
 	// console.log("Initializing texture cache for game...");
 
 	// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
@@ -66,20 +66,20 @@ function getTexture(type: number): WebGLTexture {
 	else throw new Error(`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`);
 }
 
-/**
- * Deletes all textures currently stored in the cache from the GPU memory
- * and clears the internal cache object.
- *
- * **Important:** This requires the same WebGL context that was used to create the textures.
- * Call this when the WebGL context is being destroyed or the cached textures are no longer needed
- * to prevent GPU memory leaks.
- */
-function deleteTextureCache(gl: WebGL2RenderingContext): void {
-	console.log("TextureCache: Deleting all cached textures...");
-	for (const key in textureCache) gl.deleteTexture(textureCache[key]!);
-	textureCache = {}; // Clear the cache object
-	console.log(`TextureCache: Deleted textures from GPU and cleared cache.`);
-}
+// /**
+//  * Deletes all textures currently stored in the cache from the GPU memory
+//  * and clears the internal cache object.
+//  *
+//  * **Important:** This requires the same WebGL context that was used to create the textures.
+//  * Call this when the WebGL context is being destroyed or the cached textures are no longer needed
+//  * to prevent GPU memory leaks.
+//  */
+// function deleteTextureCache(gl: WebGL2RenderingContext): void {
+// 	console.log("TextureCache: Deleting all cached textures...");
+// 	for (const key in textureCache) gl.deleteTexture(textureCache[key]!);
+// 	textureCache = {}; // Clear the cache object
+// 	console.log(`TextureCache: Deleted textures from GPU and cleared cache.`);
+// }
 
 
 // Exports --------------------------------------------------------------------
@@ -88,5 +88,5 @@ function deleteTextureCache(gl: WebGL2RenderingContext): void {
 export default {
 	initTexturesForGame, // Add the init function to exports
 	getTexture,
-	deleteTextureCache,
+	// deleteTextureCache,
 };
