@@ -9,7 +9,8 @@ import { addGameToGamesTable } from '../../database/gamesManager.js';
 import { getPlayerStatsData, updatePlayerStatsColumns } from "../../database/playerStatsManager.js";
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { VariantLeaderboards } from '../../database/leaderboardsManager.js';
+import { VariantLeaderboards, addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating } from "../../database/leaderboardsManager.js";
+import { computeRatingDataChanges } from './ratingcalculation.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
@@ -27,6 +28,7 @@ import clockutil from '../../../client/scripts/esm/chess/util/clockutil.js';
 
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
 import type { FormatConverterLong } from '../../../client/scripts/esm/game/chess/gameformulator.js';
+import type { RatingData } from './ratingcalculation.js';
 // @ts-ignore
 import type { Game } from '../TypeDefinitions.js';
 
@@ -60,10 +62,10 @@ async function logGame(game: Game) {
 
 	// 2. Update the leaderboards table
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor;
-	// TODO: Compute rating change in different file and update leaderboard
+	const ratingdata = await updateLeaderboardsTable(game, victor);
 
 	// 3. Enter the game into the player_games table
-	await updatePlayerGamesTable(game, results.game_id, victor); // TODO: Add support for rated games in here (pass in elo_at_game and elo_change_from_game)
+	await updatePlayerGamesTable(game, results.game_id, victor, ratingdata);
 
 	// 4. Update the player_stats table
 	await updatePlayerStatsTable(game, results.game_id, victor);
@@ -136,21 +138,79 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 }
 
 /**
- * For each member, add an entry into player_games according to the results of this game.
  * If the game was ranked, also update the leaderboards table accordingly.
  */
-async function updatePlayerGamesTable(game: Game, game_id: number, victor: Player | undefined) {
+async function updateLeaderboardsTable(game: Game, victor: Player | undefined) : Promise<RatingData> {
+	if (!game.rated || victor === undefined) return {}; // If game is unrated or aborted, then no ratings get updated
+
+	const leaderboard_id = VariantLeaderboards[game.variant];
+	if (leaderboard_id === undefined) return {}; // If game belongs to no valid leaderboard_id, then no ratings get updated
+
+	// Loop over all players of game in order to construct ratingdata object
+	let ratingdata : RatingData = {};
+	for (const playerStr in game.players) {
+		const player: Player = Number(playerStr) as Player;
+		const user_id = game.players[playerStr].identifier.user_id;
+		if (user_id === undefined) return {}; // If a player doesn't exist, then no ratings get updated
+
+		// Access the player leaderboard data
+		let leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
+		if (leaderboard_data === undefined) {
+			// This might happen if this is a player's first rated game on this leaderboard
+			// In this case, add this player to the leaderboard now, and immediately try accessing his leaderboard data again
+			const results = addUserToLeaderboard(user_id, leaderboard_id);
+			if (results.success) leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
+		}
+
+		// If user is still not in leaderboard or has no valid entries for some reason, then no ratings get updated
+		if (leaderboard_data === undefined || leaderboard_data?.elo === undefined || leaderboard_data?.rating_deviation === undefined) {
+			console.log(`Unable to correctly process leaderboard_data of user ${user_id} and leaderboard ${leaderboard_id}.`);
+			return {};
+		}
+
+		ratingdata[player] = {
+			elo_at_game: leaderboard_data.elo,
+			rating_deviation_at_game: leaderboard_data.rating_deviation,
+			last_rated_game_date: leaderboard_data.last_rated_game_date,
+		};
+	}
+
+	// Perform calculation of new ratings by adding relevant entries in ratingdata object
+	ratingdata = computeRatingDataChanges(ratingdata);
+
+	// Update the rating data of each player in leaderboard table
+	for (const playerStr in game.players) {
+		const player: Player = Number(playerStr) as Player;
+		const user_id = game.players[playerStr].identifier.user_id;
+
+		const elo = ratingdata[player]?.elo_after_game;
+		const rd = ratingdata[player]?.rating_deviation_after_game;
+		if (elo === undefined || rd === undefined) continue;
+
+		// Push changed player_stats to database
+		const results = updatePlayerLeaderboardRating(user_id, leaderboard_id, elo, rd);
+
+		if (!results.success) {
+			await logEvents(`Failed to update leaderboard data for player ${user_id} and leaderboard ${leaderboard_id}.`, 'errLog.txt', { print: true });
+			continue;
+		}
+	}
+
+	return ratingdata;
+}
+
+/**
+ * For each member, add an entry into player_games according to the results of this game.
+ */
+async function updatePlayerGamesTable(game: Game, game_id: number, victor: Player | undefined, ratingdata: RatingData) {
 	for (const playerStr in game.players) {
 		const player: Player = Number(playerStr) as Player;
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
 
 		const score = victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0;
-
-		// TODO: Implement the following when rated games are here
-		// We can potentially get the elo_at_game entries from the rating calculation and not have to do it again here, if the game was rated
-		const elo_at_game = null;
-		const elo_change_from_game = null;
+		const elo_at_game = ratingdata[player]?.elo_at_game ?? null;
+		const elo_change_from_game = ratingdata[player]?.elo_change_from_game ?? null;
 
 		const options = {
 			user_id: user_id,

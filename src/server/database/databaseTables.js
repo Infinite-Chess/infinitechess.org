@@ -117,7 +117,7 @@ function generateTables() {
 		CREATE TABLE IF NOT EXISTS leaderboards (
         	user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
    			leaderboard_id INTEGER NOT NULL, -- Each leaderboard's id and variants are declared in the code
-			elo REAL NOT NULL DEFAULT 1000.0,
+			elo REAL NOT NULL DEFAULT 1500.0,
 			rating_deviation REAL NOT NULL DEFAULT 350.0,
 			-- Add other Glicko fields if needed (volatility)
 			last_rated_game_date TIMESTAMP,

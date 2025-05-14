@@ -6,6 +6,7 @@
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 // @ts-ignore
 import db from './database.js';
+import { DEFAULT_LEADERBOARD_ELO } from '../game/gamemanager/ratingcalculation.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
 
@@ -25,9 +26,6 @@ interface LeaderboardEntry {
 
 /** The result of add/update operations */
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
-
-/** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
-const DEFAULT_LEADERBOARD_ELO = 1000;
 
 const Leaderboards = {
 	/**
@@ -62,7 +60,7 @@ const VariantLeaderboards: Record<string, Leaderboard> = {
 
 
 /**
- * Adds a user entry to a specific leaderboard, defaulting to 1000 elo and 350 rd.
+ * Adds a user entry to a specific leaderboard, defaulting to 1500 elo and 350 rd.
  * @param user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
  * @param leaderboard_id - The id for the specific leaderboard.
  * @returns A result object indicating success or failure.
