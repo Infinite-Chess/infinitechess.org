@@ -33,6 +33,9 @@ const minRD = 30.0;
 /** Constant c, used for Glicko-1 */
 const c = 63.2;
 
+/** Constant q, used for Glicko-1 */
+const q = 0.00575646273;
+
 // Functions -------------------------------------------------------------------------------
 
 /**
