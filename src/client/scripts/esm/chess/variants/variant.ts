@@ -75,7 +75,7 @@ interface Variant {
 	 * this, because it means the piece could make captures on different locations.
 	 */
 	specialVicinity?: TimeVariantProperty<SpecialVicinity>
-	ray_presets?: Ray[]
+	ray_presets?: BaseRay[]
 }
 
 /**
@@ -98,7 +98,8 @@ type SpecialVicinity = {
 	[r in RawType]?: Coords[]
 }
 
-type Ray = { start: Coords, vector: Vec2 };
+/** The simplest form of a ray. */
+type BaseRay = { start: Coords, vector: Vec2 };
 
 
 
@@ -631,7 +632,7 @@ function getSpecialVicinityOfVariant({ Variant, UTCDate = timeutil.getCurrentUTC
 
 
 /** Returns the Ray presets for the given variant, if they have any. */
-function getRayPresets(Variant: string | undefined): Ray[] {
+function getRayPresets(Variant: string | undefined): BaseRay[] {
 	if (Variant === undefined) return [];
 	return variantDictionary[Variant]?.ray_presets ?? [];
 }

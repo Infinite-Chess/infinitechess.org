@@ -52,6 +52,19 @@ function areDrawing() {
 	return drag_start !== undefined;
 }
 
+/** Returns all the preset rays in the current variant. */
+function getPresetRays(): Ray[] {
+	const baseRays = variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant);
+	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
+	return baseRays.map(r => {
+		return {
+			start: r.start,
+			vector: r.vector,
+			line: math.getLineGeneralFormFromCoordsAndVec(r.start, r.vector)
+		};
+	});
+}
+
 
 // Updating -----------------------------------------------------------------
 
@@ -233,18 +246,22 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 }
 
 /** Collapses all existing rays into a list of intersection coords points. */
-function collapseRays(rays: Ray[]): Coords[] {
+function collapseRays(rays_drawn: Ray[]): Coords[] {
 	const intersections: Coords[] = [];
-	if (rays.length < 1) return intersections;
+
+	const rays_preset = getPresetRays();
+	const rays_all: Ray[] = [...rays_drawn, ...rays_preset];
+
+	if (rays_all.length === 0) return intersections;
 
 	// First add the start coords of all rays to the list of intersections
-	for (const ray of rays) addSquare_NoDuplicates(ray.start);
+	for (const ray of rays_drawn) addSquare_NoDuplicates(ray.start);
 
 	// Then add all the intersection points of the rays
-	for (let a = 0; a < rays.length - 1; a++) {
-		const ray1 = rays[a]!;
-		for (let b = a + 1; b < rays.length; b++) {
-			const ray2 = rays[b]!;
+	for (let a = 0; a < rays_drawn.length; a++) {
+		const ray1 = rays_drawn[a]!; // Gauranteed drawn ray
+		for (let b = a + 1; b < rays_all.length; b++) {
+			const ray2 = rays_all[b]!; // Could be drawn or preset ray
 			
 			// Calculate where they intersect
 			const intsect = math.intersectRays(ray1, ray2);
@@ -252,6 +269,8 @@ function collapseRays(rays: Ray[]): Coords[] {
 
 			// Verify the intersection point is an integer
 			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			// OPTIONAL: Floor() the coords and add it anyway, even if not integer.
+			// intsect = space.roundCoords(intsect);
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);
@@ -263,7 +282,7 @@ function collapseRays(rays: Ray[]): Coords[] {
 
 	const { rays: selectedPieceRays, segments: selectedPieceSegments } = selectedpiecehighlightline.getLineComponents();
 
-	for (const ray of rays) {
+	for (const ray of rays_all) {
 		// Selected piece legal move RAYS
 		for (const legalRay of selectedPieceRays) {
 			const intsect = math.intersectRays(ray, legalRay);
@@ -303,7 +322,7 @@ function render(rays: Ray[]) {
 	// Add the ray currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
 
-	const presetRays = addCoefficientsToRays(variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant));
+	const presetRays = getPresetRays();
 
 	[rays, presetRays].forEach(rays => {
 		if (rays.length === 0) return; // Nothing to render
@@ -338,17 +357,6 @@ function render(rays: Ray[]) {
 	if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays);
 }
 
-/** Maps a list of plain rays to a new Ray list that contains their line coefficient info. */
-function addCoefficientsToRays(rays: { start: Coords, vector: Vec2 }[]): Ray[] {
-	return rays.map(r => {
-		return {
-			start: r.start,
-			vector: r.vector,
-			line: math.getLineGeneralFormFromCoordsAndVec(r.start, r.vector)
-		};
-	});
-}
-
 
 // Exports -------------------------------------------------------------------
 
@@ -356,9 +364,9 @@ function addCoefficientsToRays(rays: { start: Coords, vector: Vec2 }[]): Ray[] {
 export default {
 	PRESET_RAY_COLOR,
 	areDrawing,
+	getPresetRays,
 	update,
 	getLines,
 	collapseRays,
 	render,
-	addCoefficientsToRays,
 };

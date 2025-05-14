@@ -10,7 +10,7 @@ import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
-import math, { Color, Ray, Vec2 } from "../../../util/math.js";
+import math, { Color, Vec2 } from "../../../util/math.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
@@ -198,7 +198,7 @@ function updateSnapping() {
 	rayColor[3] = 1; // Highlightlines are fully opaque
 	const rayLines = drawrays.getLines(drawnRays, rayColor);
 
-	const presetRays: Ray[] = drawrays.addCoefficientsToRays(variant.getRayPresets(gamefile.metadata.Variant));
+	const presetRays = drawrays.getPresetRays();
 	const presetRayColor: Color = [...drawrays.PRESET_RAY_COLOR];
 	presetRayColor[3] = 1; // Highlightlines are fully opaque
 	const presetRayLines = drawrays.getLines(presetRays, presetRayColor);
