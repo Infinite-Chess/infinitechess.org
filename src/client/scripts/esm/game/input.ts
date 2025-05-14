@@ -99,8 +99,10 @@ interface InputListener {
 	getPointerCount(): number;
 	// eslint-disable-next-line no-unused-vars
 	getPointer(pointerId: string): Pointer | undefined;
-	/** Returns a list of all pointers that simulated left-click-down this frame. */
+	/** Returns a list of all pointers that were pressed down this frame. */
 	getPointersDown(): string[];
+	/** Returns the number of pointers that were pressed down this frame. */
+	getPointersDownCount(): number;
 	/** Returns how much the wheel has scrolled this frame. */
     getWheelDelta(): number;
 	/** Whether the provided keyboard key was pressed down this frame. */
@@ -225,7 +227,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	/** The keys are the finger ids, if its a finger, or 'mouse' if it's the mouse. */
 	const pointers: Record<string, Pointer> = {};
 
-	/** A list of all pointer id's that were left-click pressed down this frame. */
+	/** A list of all pointer id's that were pressed down this frame. */
 	const pointersDown: string[] = [];
 
 	/** 
@@ -329,7 +331,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY], element);
 		targetButtonInfo.position = [...relativeMousePos];
 
-		if (targetButton === Mouse.LEFT) pointersDown.push(targetButtonInfo.pointerId!);
+		// if (targetButton === Mouse.LEFT) pointersDown.push(targetButtonInfo.pointerId!);
+		// Push them down anyway no matter which type of click.
+		// So that you can still pinch the board when drawing annotations.
+		pointersDown.push(targetButtonInfo.pointerId!);
 
 		if (pointers[pointerId]) pointers[pointerId].isHeld = true; // Mark the pointer as held down
 		else throw Error(`Pointer of id (${pointerId}) wasn't added to pointers list.`);
@@ -656,6 +661,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		getPointerCount: () => Object.keys(pointers).length,
 		getPointer: (pointerId: string) => pointers[pointerId],
 		getPointersDown: () => pointersDown,
+		getPointersDownCount: () => pointersDown.length;
 		getWheelDelta: () => wheelDelta,
 		isKeyDown: (keyCode: string) => keyDowns.includes(keyCode),
 		isKeyHeld: (keyCode: string) => keyHelds.includes(keyCode),

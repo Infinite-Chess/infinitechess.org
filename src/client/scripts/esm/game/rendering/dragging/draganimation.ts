@@ -179,18 +179,21 @@ function hasPointerReleased(): boolean {
 /**
  * Places the pointer that was dragging the piece back into the pointers down list.
  * This allows other scripts to utilize it, such as boarddrag.
+ * 
+ * This should never be called if we're in persective mode,
+ * where the respective listener is listener_document,
+ * because we cannot drag the board.
  */
 function unclaimPointer() {
 	// console.log("Unclaiming pointer", pointerId);
-	const respectiveListener = getRespectiveListener();
-	respectiveListener.unclaimPointerDown(pointerId!);
+	listener_overlay.unclaimPointerDown(pointerId!);
 }
 
-/** Returns the pointer id that is dragging the piece. */
-function getPointerId(): string {
-	if (!areDragging) throw Error("Don't call getPointerId() when not dragging a piece");
-	return pointerId!;
-}
+// /** Returns the pointer id that is dragging the piece. */
+// function getPointerId(): string {
+// 	if (!areDragging) throw Error("Don't call getPointerId() when not dragging a piece");
+// 	return pointerId!;
+// }
 
 /**
  * Stop dragging the piece and optionally play a sound.
@@ -432,7 +435,6 @@ export default {
 	setDragLocationAndHoverSquare,
 	hasPointerReleased,
 	unclaimPointer,
-	getPointerId,
 	dropPiece,
 	cancelDragging,
 	renderTransparentSquare,
