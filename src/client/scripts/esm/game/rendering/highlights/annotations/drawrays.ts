@@ -32,7 +32,7 @@ import type { Ray } from "./annotations.js";
 
 
 /** The color of preset rays for the variant. */
-const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 1];
+const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.35];
 
 const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
@@ -108,11 +108,8 @@ function update(rays: Ray[]) {
 }
 
 /** Returns all the Rays converted to Lines, which are rendered easily. */
-function getLines(rays: Ray[]): Line[] {
+function getLines(rays: Ray[], color: Color): Line[] {
 	const boundingBox = highlightline.getRenderRange();
-
-	const color = preferences.getAnnoteSquareColor();
-	color[3] = 1; // Highlightlines are fully opaque
 
 	const lines: Line[] = [];
 	for (const ray of rays) {
@@ -302,43 +299,38 @@ function collapseRays(rays: Ray[]): Coords[] {
 // Rendering -----------------------------------------------------------------
 
 
-
 function render(rays: Ray[]) {
 	// Add the ray currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
 
-	// 1. Hand-drawn rays
+	const presetRays = addCoefficientsToRays(variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant));
 
-	if (rays.length > 0) {
+	[rays, presetRays].forEach(rays => {
+		if (rays.length === 0) return; // Nothing to render
+
+		const color = preferences.getAnnoteSquareColor();
 		if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
-			const lines = getLines(rays);
+			color[3] = 1; // Highlightlines are fully opaque
+			const lines = getLines(rays, color);
 			highlightline.genLinesModel(lines).render();
 		} else { // Zoomed in, render rays as infinite legal move highlights
-			const color = preferences.getAnnoteSquareColor();
-			genAndRenderZoomedInRays(rays, color);
+			// Construct the data
+			const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+			const instanceData = legalmovehighlights.genData_Rays(rays);
+			const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
+			// Render
+			const boardPos: Coords = boardpos.getBoardPos();
+			const model_Offset: Coords = legalmovehighlights.getOffset();
+			const position: [number,number,number] = [
+				-boardPos[0] + model_Offset[0], // Add the model's offset
+				-boardPos[1] + model_Offset[1],
+				0
+			];
+			const boardScale: number = boardpos.getBoardScale();
+			const scale: [number,number,number] = [boardScale, boardScale, 1];
+			model.render(position, scale);
 		}
-	}
-
-	// 2. Preset Rays (according to the variant)
-
-	const preset_rays = variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant);
-	if (preset_rays.length > 0) {
-		// Calculate each of the ray's line coefficients
-		const fullPresetRays: Ray[] = preset_rays.map(pr => {
-			return {
-				start: pr.start,
-				vector: pr.vector,
-				line: math.getLineGeneralFormFromCoordsAndVec(pr.start, pr.vector)
-			}
-		});
-		if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
-			const lines = getLines(fullPresetRays);
-			highlightline.genLinesModel(lines).render();
-		} else { // Zoomed in, render rays as infinite legal move highlights
-			const color = PRESET_RAY_COLOR;
-			genAndRenderZoomedInRays(fullPresetRays, color);
-		}
-	}
+	});
 
 	// Remove the ray currently being drawn
 	if (drawingCurrentlyDrawn.added) rays.pop();
@@ -346,23 +338,15 @@ function render(rays: Ray[]) {
 	if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays);
 }
 
-/** Generates the (zoomed in) buffer data and renders a list of rays. */
-function genAndRenderZoomedInRays(rays: Ray[], color: Color) {
-	// Construct the data
-	const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-	const instanceData = legalmovehighlights.genData_Rays(rays);
-	const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
-	// Render
-	const boardPos: Coords = boardpos.getBoardPos();
-	const model_Offset: Coords = legalmovehighlights.getOffset();
-	const position: [number,number,number] = [
-		-boardPos[0] + model_Offset[0], // Add the model's offset
-		-boardPos[1] + model_Offset[1],
-		0
-	];
-	const boardScale: number = boardpos.getBoardScale();
-	const scale: [number,number,number] = [boardScale, boardScale, 1];
-	model.render(position, scale);
+/** Maps a list of plain rays to a new Ray list that contains their line coefficient info. */
+function addCoefficientsToRays(rays: { start: Coords, vector: Vec2 }[]): Ray[] {
+	return rays.map(r => {
+		return {
+			start: r.start,
+			vector: r.vector,
+			line: math.getLineGeneralFormFromCoordsAndVec(r.start, r.vector)
+		};
+	});
 }
 
 
@@ -370,9 +354,11 @@ function genAndRenderZoomedInRays(rays: Ray[], color: Color) {
 
 
 export default {
+	PRESET_RAY_COLOR,
 	areDrawing,
 	update,
 	getLines,
 	collapseRays,
 	render,
+	addCoefficientsToRays,
 };

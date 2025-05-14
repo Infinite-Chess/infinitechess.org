@@ -22,6 +22,8 @@ import coordutil from "../../../chess/util/coordutil.js";
 import mouse from "../../../util/mouse.js";
 import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
+import variant from "../../../chess/variants/variant.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore
@@ -187,11 +189,22 @@ function updateSnapping() {
 	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
 	if (drawrays.areDrawing()) return; // Don't snap if we're drawing a ray
+	
+	const gamefile = gameslot.getGamefile()!;
 
-	const rayLines = drawrays.getLines(annotations.getRays());
+
+	const rayColor = preferences.getAnnoteSquareColor();
+	rayColor[3] = 1; // Highlightlines are fully opaque
+	const rayLines = drawrays.getLines(annotations.getRays(), rayColor);
+
+	const presetRayColor: Color = [...drawrays.PRESET_RAY_COLOR];
+	presetRayColor[3] = 1; // Highlightlines are fully opaque
+	const presetRays = drawrays.getLines(drawrays.addCoefficientsToRays(variant.getRayPresets(gamefile.metadata.Variant)), presetRayColor);
+
 	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
 
-	const allLines: Line[] = [...rayLines, ...selectedPieceLegalMovesLines];
+	
+	const allLines: Line[] = [...rayLines, ...presetRays, ...selectedPieceLegalMovesLines];
 	if (allLines.length === 0) return; // No lines to have snap
 
 	const mouseCoords = mouse.getTileMouseOver_Float()!;
@@ -226,7 +239,7 @@ function updateSnapping() {
 	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistCoords);
 
 	/**
-	 * Next, calculate all intersection points of all highlight lines (rays and legal moves),
+	 * Next, calculate all intersection points of all highlight lines (drawn rays, preset rays, and legal moves),
 	 * and see if the mouse is close enough to snap to them.
 	 * 
 	 * If so, those take priority.
@@ -290,7 +303,6 @@ function updateSnapping() {
 	 * existing lines, calculating what we should snap to.
 	 */
 
-	const gamefile = gameslot.getGamefile()!;
 	// Allows snapping to all hippogonals, even the ones in 4D variants.
 	// const allPrimitiveSlidesInGame = gamefile.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
