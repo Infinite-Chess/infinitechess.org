@@ -7,7 +7,7 @@ import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import selection from '../chess/selection.js';
-import { listener_document } from '../chess/game.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
@@ -37,6 +37,9 @@ const element_Navigation = document.getElementById('navigation-bar')!;
 const element_Recenter = document.getElementById('recenter')!;
 const element_Expand = document.getElementById('expand')!;
 const element_Back = document.getElementById('back')!;
+const element_Annotations = document.getElementById('annotations')!;
+const element_Erase = document.getElementById('erase')!;
+const element_Collapse = document.getElementById('collapse')!;
 
 const element_CoordsX = document.getElementById('x') as HTMLInputElement;
 const element_CoordsY = document.getElementById('y') as HTMLInputElement;
@@ -66,8 +69,14 @@ const durationToLockRewindAfterMoveForwardingMillis = 750;
 /** Whether the navigation UI is visible (not hidden) */
 let navigationOpen = true;
 
+/**
+ * Whether the annotations button is enabled.
+ * If so, all left click actions are treated as right clicks.
+ */
+let annotationsEnabled: boolean = false;
 
-// Functions'
+
+// Functions
 
 function isOpen() {
 	return navigationOpen;
@@ -144,6 +153,9 @@ function initListeners_Navigation() {
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
+	element_Annotations.addEventListener('click', callback_Annotations);
+	element_Erase.addEventListener('click', callback__Collapse);
+	element_Collapse.addEventListener('click', callback__Collapse);
 	element_moveRewind.addEventListener('click', callback_MoveRewind);
 	element_moveRewind.addEventListener('mousedown', callback_MoveRewindMouseDown);
 	element_moveRewind.addEventListener('mouseleave', callback_MoveRewindMouseLeave);
@@ -225,6 +237,31 @@ function recenter() {
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
+
+// Annotations Buttons ======================================
+
+function callback_Annotations() {
+	annotationsEnabled = !annotationsEnabled;
+	listener_overlay.setTreatLeftasRight(annotationsEnabled);
+	element_Annotations.classList.toggle('enabled')
+}
+
+function callback__Collapse() {
+	annotations.Collapse();
+}
+
+document.addEventListener('ray-count-change', (e: CustomEvent) => {
+	const rayCount = e.detail;
+	if (rayCount > 0) {
+		element_Erase.classList.add('hidden');
+		element_Collapse.classList.remove('hidden');
+	} else { // Zero rays
+		element_Erase.classList.remove('hidden');
+		element_Collapse.classList.add('hidden');
+	}
+});
+
+// ==============================================================
 
 function callback_MoveRewind() {
 	if (rewindIsLocked) return;
