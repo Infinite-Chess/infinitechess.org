@@ -10,7 +10,7 @@ import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
-import math, { Color, Vec2 } from "../../../util/math.js";
+import math, { Color, Ray, Vec2 } from "../../../util/math.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
@@ -193,18 +193,20 @@ function updateSnapping() {
 	const gamefile = gameslot.getGamefile()!;
 
 
+	const drawnRays = annotations.getRays()
 	const rayColor = preferences.getAnnoteSquareColor();
 	rayColor[3] = 1; // Highlightlines are fully opaque
-	const rayLines = drawrays.getLines(annotations.getRays(), rayColor);
+	const rayLines = drawrays.getLines(drawnRays, rayColor);
 
+	const presetRays: Ray[] = drawrays.addCoefficientsToRays(variant.getRayPresets(gamefile.metadata.Variant));
 	const presetRayColor: Color = [...drawrays.PRESET_RAY_COLOR];
 	presetRayColor[3] = 1; // Highlightlines are fully opaque
-	const presetRays = drawrays.getLines(drawrays.addCoefficientsToRays(variant.getRayPresets(gamefile.metadata.Variant)), presetRayColor);
+	const presetRayLines = drawrays.getLines(presetRays, presetRayColor);
 
 	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
 
-	
-	const allLines: Line[] = [...rayLines, ...presetRays, ...selectedPieceLegalMovesLines];
+
+	const allLines: Line[] = [...rayLines, ...presetRayLines, ...selectedPieceLegalMovesLines];
 	if (allLines.length === 0) return; // No lines to have snap
 
 	const mouseCoords = mouse.getTileMouseOver_Float()!;
@@ -330,10 +332,10 @@ function updateSnapping() {
 		}
 	}
 
-	// Add all ray start coords too
-	const rayStarts = annotations.getRays().map(r => r.start);
-	// Don't add duplicates
+	// Add all ray start coords too, including preset ray starts
+	const rayStarts = [...drawnRays.map(r => r.start), ...presetRays.map(r => r.start)];
 	for (const start of rayStarts) {
+		// Don't add duplicates
 		if (!squares.some(c => coordutil.areCoordsEqual(c, start))) squares.push(start);
 	}
 	
