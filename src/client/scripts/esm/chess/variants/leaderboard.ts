@@ -5,9 +5,6 @@
 /** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
 const DEFAULT_LEADERBOARD_ELO = 1500.0;
 
-/** Default rating deviation for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
-const DEFAULT_RATING_DEVIATION = 350.0;
-
 const Leaderboards = {
 	/**
 	 * The main leaderboard for all same-ish, infinity, variants.
@@ -38,7 +35,6 @@ const VariantLeaderboards: Record<string, Leaderboard> = {
 
 export {
 	DEFAULT_LEADERBOARD_ELO,
-	DEFAULT_RATING_DEVIATION,
 	Leaderboard,
 	Leaderboards,
 	VariantLeaderboards,

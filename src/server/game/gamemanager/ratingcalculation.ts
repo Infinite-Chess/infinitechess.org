@@ -3,7 +3,7 @@
  */
 
 import { PlayerGroup, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { DEFAULT_LEADERBOARD_ELO, DEFAULT_RATING_DEVIATION } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
+import { DEFAULT_LEADERBOARD_ELO as defaultElo } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
 
 
 // Types -------------------------------------------------------------------------------
@@ -22,10 +22,16 @@ type PlayerRatingData = {
 type RatingData = PlayerGroup<PlayerRatingData>;
 
 
-// Default variables -------------------------------------------------------------------------------
+// Default variables, shared across all leaderboards ------------------------------------------------------------------
 
+/** Default rating deviation. */
+const defaultRD = 350.0;
 
+/** Minimum rating deviation. */
+const minRD = 30.0;
 
+/** Constant c, used for Glicko-1 */
+const c = 63.2;
 
 // Functions -------------------------------------------------------------------------------
 
