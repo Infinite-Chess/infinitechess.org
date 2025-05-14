@@ -10,7 +10,7 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import coordutil from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
-import math, { Vec2 } from "../../../../util/math.js";
+import math, { Color, Vec2 } from "../../../../util/math.js";
 import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
@@ -20,15 +20,19 @@ import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
 import annotations from "./annotations.js";
+import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
+import variant from "../../../../chess/variants/variant.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "./annotations.js";
-import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 
 
 // Variables -----------------------------------------------------------------
 
+
+/** The color of preset rays for the variant. */
+const PRESET_RAY_COLOR: Color = [0, 0, 1, 0.35];
 
 const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
@@ -43,8 +47,22 @@ let drag_start: Coords | undefined;
 // Getters -------------------------------------------------------------------
 
 
+/** Whether a ray is currently being drawn. */
 function areDrawing() {
 	return drag_start !== undefined;
+}
+
+/** Returns all the preset rays in the current variant. */
+function getPresetRays(): Ray[] {
+	const baseRays = variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant);
+	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
+	return baseRays.map(r => {
+		return {
+			start: r.start,
+			vector: r.vector,
+			line: math.getLineGeneralFormFromCoordsAndVec(r.start, r.vector)
+		};
+	});
 }
 
 
@@ -85,9 +103,9 @@ function update(rays: Ray[]) {
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
 			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT)!;
-			if (!coordutil.areCoordsEqual_noValidate(mouseCoords, drag_start!)) {
+			if (!coordutil.areCoordsEqual(mouseCoords, drag_start!)) {
 				const squares = annotations.getSquares();
-				const index = squares.findIndex(coords => coordutil.areCoordsEqual_noValidate(coords, drag_start!));
+				const index = squares.findIndex(coords => coordutil.areCoordsEqual(coords, drag_start!));
 				if (index !== -1) {
 					squares.splice(index, 1); // Remove the square highlight
 					// console.log("Removed square highlight.");
@@ -102,12 +120,9 @@ function update(rays: Ray[]) {
 	}
 }
 
-/** Returns all the Rays converted to Lines */
-function getLines(rays: Ray[]): Line[] {
+/** Returns all the Rays converted to Lines, which are rendered easily. */
+function getLines(rays: Ray[], color: Color): Line[] {
 	const boundingBox = highlightline.getRenderRange();
-
-	const color = preferences.getAnnoteSquareColor();
-	color[3] = 1; // Highlightlines are fully opaque
 
 	const lines: Line[] = [];
 	for (const ray of rays) {
@@ -141,7 +156,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
 	// Skip if end equals start (no arrow drawn)
-	if (coordutil.areCoordsEqual_noValidate(drag_start!, drag_end)) return { added: false };
+	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
 	// const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
 	const mouseCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
@@ -154,8 +169,8 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// If any existing rays are coincident, remove those.
 	for (let i = rays.length - 1; i >= 0; i--) { // Iterate backwards since we're modifying the list as we go
 		const ray = rays[i]!;
-		if (!coordutil.areCoordsEqual_noValidate(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
-		if (coordutil.areCoordsEqual_noValidate(ray.start, drag_start!)) {
+		if (!coordutil.areCoordsEqual(ray.vector, vector)) continue; // Not parallel (assumes vectors are normalized)
+		if (coordutil.areCoordsEqual(ray.start, drag_start!)) {
 			// Identical, erase the existing one instead.
 			rays.splice(i, 1); // Remove the existing ray
 			deletedRays.push(ray);
@@ -231,18 +246,22 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 }
 
 /** Collapses all existing rays into a list of intersection coords points. */
-function collapseRays(rays: Ray[]): Coords[] {
+function collapseRays(rays_drawn: Ray[]): Coords[] {
 	const intersections: Coords[] = [];
-	if (rays.length < 1) return intersections;
+
+	const rays_preset = getPresetRays();
+	const rays_all: Ray[] = [...rays_drawn, ...rays_preset];
+
+	if (rays_all.length === 0) return intersections;
 
 	// First add the start coords of all rays to the list of intersections
-	for (const ray of rays) addSquare_NoDuplicates(ray.start);
+	for (const ray of rays_drawn) addSquare_NoDuplicates(ray.start);
 
 	// Then add all the intersection points of the rays
-	for (let a = 0; a < rays.length - 1; a++) {
-		const ray1 = rays[a]!;
-		for (let b = a + 1; b < rays.length; b++) {
-			const ray2 = rays[b]!;
+	for (let a = 0; a < rays_drawn.length; a++) {
+		const ray1 = rays_drawn[a]!; // Gauranteed drawn ray
+		for (let b = a + 1; b < rays_all.length; b++) {
+			const ray2 = rays_all[b]!; // Could be drawn or preset ray
 			
 			// Calculate where they intersect
 			const intsect = math.intersectRays(ray1, ray2);
@@ -250,6 +269,8 @@ function collapseRays(rays: Ray[]): Coords[] {
 
 			// Verify the intersection point is an integer
 			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			// OPTIONAL: Floor() the coords and add it anyway, even if not integer.
+			// intsect = space.roundCoords(intsect);
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);
@@ -261,7 +282,7 @@ function collapseRays(rays: Ray[]): Coords[] {
 
 	const { rays: selectedPieceRays, segments: selectedPieceSegments } = selectedpiecehighlightline.getLineComponents();
 
-	for (const ray of rays) {
+	for (const ray of rays_all) {
 		// Selected piece legal move RAYS
 		for (const legalRay of selectedPieceRays) {
 			const intsect = math.intersectRays(ray, legalRay);
@@ -287,7 +308,7 @@ function collapseRays(rays: Ray[]): Coords[] {
 	}
 
 	function addSquare_NoDuplicates(coords: Coords) {
-		if (intersections.every(coords2 => !coordutil.areCoordsEqual_noValidate(coords, coords2))) intersections.push(coords);
+		if (intersections.every(coords2 => !coordutil.areCoordsEqual(coords, coords2))) intersections.push(coords);
 	}
 
 	return intersections;
@@ -297,40 +318,50 @@ function collapseRays(rays: Ray[]): Coords[] {
 // Rendering -----------------------------------------------------------------
 
 
-
+/** Renders all existing rays, including preset rays. */
 function render(rays: Ray[]) {
 	// Add the ray currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
 
-	// Early exit if no rays to draw
-	if (rays.length > 0) {
-		if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
-			const lines = getLines(rays);
-			highlightline.genLinesModel(lines).render();
-		} else { // Zoomed in, render rays as infinite legal move highlights
-			const color = preferences.getAnnoteSquareColor();
-			// Construct the data
-			const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-			const instanceData = legalmovehighlights.genData_Rays(rays);
-			const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
-			// Render
-			const boardPos: Coords = boardpos.getBoardPos();
-			const model_Offset: Coords = legalmovehighlights.getOffset();
-			const position: [number,number,number] = [
-				-boardPos[0] + model_Offset[0], // Add the model's offset
-				-boardPos[1] + model_Offset[1],
-				0
-			];
-			const boardScale: number = boardpos.getBoardScale();
-			const scale: [number,number,number] = [boardScale, boardScale, 1];
-			model.render(position, scale);
-		}
-	}
+	const presetRays = getPresetRays();
+
+	const drawnRaysColor = preferences.getAnnoteSquareColor();
+	const presetRaysColor: Color = [...PRESET_RAY_COLOR];
+	
+	genAndRenderRays(rays, drawnRaysColor);
+	genAndRenderRays(presetRays, presetRaysColor);
 
 	// Remove the ray currently being drawn
 	if (drawingCurrentlyDrawn.added) rays.pop();
 	// Restore the deleted rays if any
-	if (drawingCurrentlyDrawn.deletedRays && drawingCurrentlyDrawn.deletedRays.length > 0) rays.push(...drawingCurrentlyDrawn.deletedRays);
+	if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays);
+}
+
+/** Generates and renders a model for the given rays and color. */
+function genAndRenderRays(rays: Ray[], color: Color) {
+	if (rays.length === 0) return; // Nothing to render
+
+	if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
+		color[3] = 1; // Highlightlines are fully opaque
+		const lines = getLines(rays, color);
+		highlightline.genLinesModel(lines).render();
+	} else { // Zoomed in, render rays as infinite legal move highlights
+		// Construct the data
+		const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+		const instanceData = legalmovehighlights.genData_Rays(rays);
+		const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
+		// Render
+		const boardPos: Coords = boardpos.getBoardPos();
+		const model_Offset: Coords = legalmovehighlights.getOffset();
+		const position: [number,number,number] = [
+			-boardPos[0] + model_Offset[0], // Add the model's offset
+			-boardPos[1] + model_Offset[1],
+			0
+		];
+		const boardScale: number = boardpos.getBoardScale();
+		const scale: [number,number,number] = [boardScale, boardScale, 1];
+		model.render(position, scale);
+	}
 }
 
 
@@ -338,7 +369,9 @@ function render(rays: Ray[]) {
 
 
 export default {
+	PRESET_RAY_COLOR,
 	areDrawing,
+	getPresetRays,
 	update,
 	getLines,
 	collapseRays,

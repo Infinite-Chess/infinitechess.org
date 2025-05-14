@@ -173,8 +173,8 @@ function intersectRayAndSegment(ray: Ray, segP1: Coords, segP2: Coords): Coords 
 	// Be sure to capture the case if the ray starts at one of the segment's endpoints.
 	if (!intersectionPoint) {
 		// First check if the ray's start lies on the start/end poit of the segment.
-		const rayStartIsP1 = coordutil.areCoordsEqual_noValidate(ray.start, segP1);
-		const rayStartIsP2 = coordutil.areCoordsEqual_noValidate(ray.start, segP2);
+		const rayStartIsP1 = coordutil.areCoordsEqual(ray.start, segP1);
+		const rayStartIsP2 = coordutil.areCoordsEqual(ray.start, segP2);
 		if (rayStartIsP1 || rayStartIsP2) { // Collinear
 			// This means the lines must be collinear, so we need to check if
 			// the ray's direction vector points away from the segment's opposite end (1 intersection),

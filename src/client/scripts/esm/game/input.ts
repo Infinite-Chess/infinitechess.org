@@ -71,6 +71,12 @@ interface InputListener {
 	// eslint-disable-next-line no-unused-vars
 	isMouseDoubleClickDragged(button: MouseButton): boolean;
 	/**
+	 * Toggles all-left click actions being treated as right-click actions.
+	 * This is useful for allowing fingers to right click.
+	 */
+	// eslint-disable-next-line no-unused-vars
+	setTreatLeftasRight(value: boolean): void,
+	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported. 
 	 * The mouse pointer's id is 'mouse'.
 	 */
@@ -221,6 +227,12 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 
 	/** A list of all pointer id's that were left-click pressed down this frame. */
 	const pointersDown: string[] = [];
+
+	/** 
+	 * Whether to treat all left click actions as right click actions.
+	 * This is useful for allowing fingers to right click.
+	 */
+	let treatLeftAsRight = false;
 
 	// console.log("Mouse supported: ", docutil.isMouseSupported());
 	// Immediately add the mouse pointer if the doc supports it
@@ -410,15 +422,19 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			const targetPointer = pointers['mouse'];
 			if (!targetPointer) return; // Sometimes the 'mousedown' event is fired from touch events, even though the mouse pointer does not exist.
 			atleastOneInputThisFrame = true;
-			const targetButton = e.button as MouseButton;
-			updateClickInfoDown(targetButton, e);
+			const eventButton = e.button as MouseButton;
+			// If alt is held,  right click instead
+			const button = (e.altKey || treatLeftAsRight) && eventButton === Mouse.LEFT ? Mouse.RIGHT : eventButton;
+			updateClickInfoDown(button, e);
 		}) as EventListener);
 
 		// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
 		addListener(document, 'mouseup', ((e: MouseEvent) => {
 			atleastOneInputThisFrame = true;
-			const targetButton = e.button as MouseButton;
-			updateClickInfoUp(targetButton, e);
+			const eventButton = e.button as MouseButton;
+			// If alt is held, right click instead
+			const button = (e.altKey || treatLeftAsRight) && eventButton === Mouse.LEFT ? Mouse.RIGHT : eventButton;
+			updateClickInfoUp(button, e);
 		}) as EventListener);
 
 		// Mouse position tracking
@@ -496,7 +512,8 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 				// console.log("Touch start: ", touch.identifier);
 
 				// Treat fingers as the left mouse button by default
-				updateClickInfoDown(Mouse.LEFT, touch);
+				const button = treatLeftAsRight ? Mouse.RIGHT : Mouse.LEFT;
+				updateClickInfoDown(button, touch);
 			}
 		}) as EventListener);
 
@@ -536,7 +553,8 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 				} // else This touch likely started outside the element, so we ignored adding it.
 
 				// Treat fingers as the left mouse button by default
-				updateClickInfoUp(Mouse.LEFT, touch);
+				const button = treatLeftAsRight ? Mouse.RIGHT : Mouse.LEFT;
+				updateClickInfoUp(button, touch);
 			}
 		}
 	}
@@ -630,6 +648,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		},
 		isMouseClicked: (button: MouseButton) => clickInfo[button].clicked,
 		isMouseDoubleClickDragged: (button: MouseButton) => clickInfo[button].doubleClickDrag,
+		setTreatLeftasRight: (value: boolean) => treatLeftAsRight = value,
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? undefined,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? undefined,
 		getPointerVel: (pointerId: string) => pointers[pointerId]?.velocity ?? undefined,

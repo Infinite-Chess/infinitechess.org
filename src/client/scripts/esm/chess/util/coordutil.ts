@@ -61,20 +61,8 @@ function getCoordsFromKey(key: CoordsKey): Coords {
 	return key.split(',').map(Number) as Coords;
 }
 
-/**
- * Returns true if the coordinates are equal.
- * 
- * If one coordinate isn't provided, they are considered not equal.
- */
-function areCoordsEqual(coord1?: Coords, coord2?: Coords): boolean {
-	if (!coord1 || !coord2) return false; // One undefined, can't be equal
-	return coord1[0] === coord2[0] && coord1[1] === coord2[1];
-}
-
-/**
- * Returns true if the coordinates are equal
- */
-function areCoordsEqual_noValidate(coord1: Coords, coord2: Coords): boolean {
+/**  Returns true if the coordinates are equal. */
+function areCoordsEqual(coord1: Coords, coord2: Coords): boolean {
 	return coord1[0] === coord2[0] && coord1[1] === coord2[1];
 }
 
@@ -128,7 +116,6 @@ export default {
 	getKeyFromCoords,
 	getCoordsFromKey,
 	areCoordsEqual,
-	areCoordsEqual_noValidate,
 	addCoordinates,
 	subtractCoordinates,
 	copyCoords,

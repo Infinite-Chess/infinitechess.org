@@ -22,6 +22,7 @@ import coordutil from "../../../chess/util/coordutil.js";
 import mouse from "../../../util/mouse.js";
 import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
+import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore
@@ -63,6 +64,12 @@ const GLOW_DOT = {
  * the highlight line of the selected piece's legal moves.
  */
 const GHOST_IMAGE_OPACITY = 1;
+
+/**
+ * If more pieces than this are present in the game, snapping skips
+ * checking if we should snap to a piece, as it's too slow.
+ */
+const THRESHOLD_TO_SNAP_PIECES = 10_000;
 
 
 type Snap = {
@@ -181,11 +188,24 @@ function updateSnapping() {
 	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
 	if (drawrays.areDrawing()) return; // Don't snap if we're drawing a ray
+	
+	const gamefile = gameslot.getGamefile()!;
 
-	const rayLines = drawrays.getLines(annotations.getRays());
+
+	const drawnRays = annotations.getRays();
+	const rayColor = preferences.getAnnoteSquareColor();
+	rayColor[3] = 1; // Highlightlines are fully opaque
+	const rayLines = drawrays.getLines(drawnRays, rayColor);
+
+	const presetRays = drawrays.getPresetRays();
+	const presetRayColor: Color = [...drawrays.PRESET_RAY_COLOR];
+	presetRayColor[3] = 1; // Highlightlines are fully opaque
+	const presetRayLines = drawrays.getLines(presetRays, presetRayColor);
+
 	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
 
-	const allLines: Line[] = [...rayLines, ...selectedPieceLegalMovesLines];
+
+	const allLines: Line[] = [...rayLines, ...presetRayLines, ...selectedPieceLegalMovesLines];
 	if (allLines.length === 0) return; // No lines to have snap
 
 	const mouseCoords = mouse.getTileMouseOver_Float()!;
@@ -220,7 +240,7 @@ function updateSnapping() {
 	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistCoords);
 
 	/**
-	 * Next, calculate all intersection points of all highlight lines (rays and legal moves),
+	 * Next, calculate all intersection points of all highlight lines (drawn rays, preset rays, and legal moves),
 	 * and see if the mouse is close enough to snap to them.
 	 * 
 	 * If so, those take priority.
@@ -241,7 +261,7 @@ function updateSnapping() {
 			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
-			if (!line_intersections.some(i => coordutil.areCoordsEqual_noValidate(i.coords, intsect))) line_intersections.push({
+			if (!line_intersections.some(i => coordutil.areCoordsEqual(i.coords, intsect))) line_intersections.push({
 				coords: intsect,
 				line1: line1.line,
 				line2: line2.line
@@ -284,14 +304,13 @@ function updateSnapping() {
 	 * existing lines, calculating what we should snap to.
 	 */
 
-	const gamefile = gameslot.getGamefile()!;
 	// Allows snapping to all hippogonals, even the ones in 4D variants.
 	// const allPrimitiveSlidesInGame = gamefile.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
 	const searchVectors = gamefile.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
 
 
-	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority)
+	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority) ==================
 
 	// All Ray intersections & starts are temporarily added as additional Squares,
 	// Including Ray start coords
@@ -299,6 +318,7 @@ function updateSnapping() {
 	const squares = annotations.getSquares();
 	const originalSquareLength = squares.length;
 	
+	// Ray intersections (legal move & rays)
 	for (let a = 0; a < allLines.length - 1; a++) {
 		const line1 = allLines[a]!;
 		for (let b = a + 1; b < allLines.length; b++) {
@@ -307,18 +327,18 @@ function updateSnapping() {
 			const intsect = math.intersectLineSegments(line1.start, line1.end, line2.start, line2.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
-			if (!squares.some(c => coordutil.areCoordsEqual_noValidate(c, intsect))) squares.push(intsect);
+			if (!squares.some(c => coordutil.areCoordsEqual(c, intsect))) squares.push(intsect);
 		}
 	}
 
-	// Add all ray start coords too
-	const rayStarts = annotations.getRays().map(r => r.start);
-	// Don't add duplicates
+	// Add all ray start coords too, including preset ray starts
+	const rayStarts = [...drawnRays.map(r => r.start), ...presetRays.map(r => r.start)];
 	for (const start of rayStarts) {
-		if (!squares.some(c => coordutil.areCoordsEqual_noValidate(c, start))) squares.push(start);
+		// Don't add duplicates
+		if (!squares.some(c => coordutil.areCoordsEqual(c, start))) squares.push(start);
 	}
 	
-	// Now see if we should snap to any Square
+	// Now see if we should snap to any "Square"
 
 	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, searchVectors);
 	if (closestSquareSnap) {
@@ -331,16 +351,19 @@ function updateSnapping() {
 	}
 	squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 
-	// 2. Pieces
+	// 2. Pieces ========================================
 
-	const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
-	const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, searchVectors);
-	if (closestPieceSnap) {
-		// Is the snap within snapping distance of the mouse?
-		if (closestPieceSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestPieceSnap.snap);
+	// Only snap to these if there isn't too many pieces (slow)
+	if (boardutil.getPieceCountOfGame(gamefile.pieces) < THRESHOLD_TO_SNAP_PIECES) {
+		const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
+		const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, searchVectors);
+		if (closestPieceSnap) {
+			// Is the snap within snapping distance of the mouse?
+			if (closestPieceSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestPieceSnap.snap);
+		}
 	}
-	
-	// 3. Origin (Center of Play)
+
+	// 3. Origin (Center of Play) ==============================
 
 	const startingBox = gamefileutility.getStartingAreaBox(gamefile);
 	const origin = math.calcCenterOfBoundingBox(startingBox);
@@ -350,7 +373,7 @@ function updateSnapping() {
 		if (closestOriginSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestOriginSnap.snap);
 	}
 
-	// No snap found!
+	// No snap found! ===========================================
 
 	// Instead, set the snap to the closest point on the line.
 	setSnapAndTeleportIfClicked({ coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece });
@@ -359,8 +382,8 @@ function updateSnapping() {
 function setSnapAndTeleportIfClicked(newSnap: Snap) {
 	snap = newSnap;
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		transition.initTransitionToCoordsList([newSnap.coords]);
 		mouse.claimMouseClick(Mouse.LEFT);
+		transition.initTransitionToCoordsList([newSnap.coords]);
 	}
 }
 

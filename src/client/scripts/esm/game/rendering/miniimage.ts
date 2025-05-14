@@ -150,7 +150,7 @@ function updateImagesHovered() {
 
 		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
-			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
+			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
 			processPiece(coords, thisInstanceData, thisInstanceData_hovered);
 		});
 	});
