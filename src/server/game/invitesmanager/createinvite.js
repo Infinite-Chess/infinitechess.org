@@ -21,6 +21,7 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js'; 
 
 /**
  * Type Definitions
@@ -133,7 +134,8 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 	if (!clockweb.isClockValueValid(invite.clock)) return true;
 
 	if (invite.color !== players.WHITE && invite.color !== players.BLACK && invite.color !== players.NEUTRAL) return true;
-	if (invite.rated !== 'casual') return true;
+	if (invite.rated !== 'casual' && invite.rated !== 'rated') return true;
+	if (invite.rated === 'rated' && !(invite.variant in VariantLeaderboards)) return true; // Do not allow creating rated invites for variants not on a leaderboard
 	if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 	if (invite.tag.length !== 8) return true; // Invite tags must be 8 characters long.
 

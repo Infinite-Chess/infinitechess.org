@@ -6,9 +6,11 @@
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 // @ts-ignore
 import db from './database.js';
-import { DEFAULT_LEADERBOARD_ELO } from '../game/gamemanager/ratingcalculation.js';
+import { DEFAULT_LEADERBOARD_ELO } from '../../client/scripts/esm/chess/variants/leaderboard.js'; 
+import { VariantLeaderboards } from '../../client/scripts/esm/chess/variants/leaderboard.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { Leaderboard } from '../../client/scripts/esm/chess/variants/leaderboard.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -26,34 +28,6 @@ interface LeaderboardEntry {
 
 /** The result of add/update operations */
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
-
-const Leaderboards = {
-	/**
-	 * The main leaderboard for all same-ish, infinity, variants.
-	 * Doesn't include any finite variants, or non-symmetrical ones.
-	 */
-	INFINITY: 0,
-	// Add more leaderboards here as needed
-} as const;
-
-type Leaderboard = typeof Leaderboards[keyof typeof Leaderboards];
-
-/** Maps variants to the leaderboard they belong to, if they have one. */
-const VariantLeaderboards: Record<string, Leaderboard> = {
-	'Classical': Leaderboards.INFINITY,
-	'Confined_Classical': Leaderboards.INFINITY,
-	'Classical_Plus': Leaderboards.INFINITY,
-	'CoaIP': Leaderboards.INFINITY,
-	'CoaIP_HO': Leaderboards.INFINITY,
-	'Knighted_Chess': Leaderboards.INFINITY,
-	'Pawndard': Leaderboards.INFINITY,
-	'Core': Leaderboards.INFINITY,
-	'Standarch': Leaderboards.INFINITY,
-	'Space_Classic': Leaderboards.INFINITY,
-	'Space': Leaderboards.INFINITY,
-	'Abundance': Leaderboards.INFINITY,
-	// Add more variants and their corresponding leaderboard here
-};
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -339,8 +313,6 @@ function getLeaderboardOfVariant(variant: string): Leaderboard | undefined {
 
 // Updated export names to be more descriptive
 export {
-	Leaderboards,
-	VariantLeaderboards,
 	addUserToLeaderboard,
 	updatePlayerLeaderboardRating,
 	isPlayerInLeaderboard,

@@ -9,7 +9,6 @@
  */
 
 
-import { addUserToLeaderboard, Leaderboards } from '../database/leaderboardsManager.js';
 import uuid from '../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
 import bcrypt from 'bcrypt';

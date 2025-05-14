@@ -2,7 +2,8 @@
  * Implementation of glicko-1 algorithm for calculating rating changes arising from ranked games
  */
 
-import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { PlayerGroup, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { DEFAULT_LEADERBOARD_ELO, DEFAULT_RATING_DEVIATION } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
 
 
 // Types -------------------------------------------------------------------------------
@@ -24,11 +25,6 @@ type RatingData = PlayerGroup<PlayerRatingData>;
 // Default variables -------------------------------------------------------------------------------
 
 
-/** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
-const DEFAULT_LEADERBOARD_ELO = 1500.0;
-
-/** Default rating deviation for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
-const DEFAULT_RATING_DEVIATION = 350.0;
 
 
 // Functions -------------------------------------------------------------------------------
@@ -61,6 +57,5 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 
 export {
 	RatingData,
-	DEFAULT_LEADERBOARD_ELO,
 	computeRatingDataChanges
 };

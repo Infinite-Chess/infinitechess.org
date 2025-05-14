@@ -9,7 +9,8 @@ import { addGameToGamesTable } from '../../database/gamesManager.js';
 import { getPlayerStatsData, updatePlayerStatsColumns } from "../../database/playerStatsManager.js";
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { VariantLeaderboards, addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating } from "../../database/leaderboardsManager.js";
+import { addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating } from "../../database/leaderboardsManager.js";
+import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
 import { computeRatingDataChanges } from './ratingcalculation.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
 // @ts-ignore

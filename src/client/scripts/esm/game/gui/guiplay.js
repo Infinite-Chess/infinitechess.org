@@ -58,6 +58,8 @@ const element_optionClock = document.getElementById('option-clock');
 const element_optionColor = document.getElementById('option-color');
 const element_optionPrivate = document.getElementById('option-private');
 const element_optionRated = document.getElementById('option-rated');
+const element_optionRatedYes = document.getElementById('option-rated-yes');
+const element_optionRatedNo = document.getElementById('option-rated-no');
 
 const element_joinPrivate = document.getElementById('join-private');
 const element_inviteCode = document.getElementById('invite-code');
