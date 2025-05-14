@@ -1118,6 +1118,19 @@ svg.collapse {
     transform: scale(0.75);
 }
 
+/* Annotation buttons aren't visible on desktop */
+@media only screen and (pointer: fine) { /* Desktop */
+    .buttoncontainer.annotations {
+        display: none;
+    }
+    .buttoncontainer.erase {
+        display: none;
+    }
+    .buttoncontainer.collapse {
+        display: none;
+    }
+}
+
 
 
 /* Start shrinking top navigation bar */
