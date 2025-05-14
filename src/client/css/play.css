@@ -1107,6 +1107,16 @@ button.join-button, button.copy-button {
     position: absolute;
 }
 
+svg.pencil {
+    transform: scale(0.72) translate(0.01em, 0);
+}
+svg.erase {
+    transform: scale(0.8) translate(-0.02em, 0);
+}
+svg.collapse {
+    transform: scale(0.75);
+}
+
 /* Start shrinking top navigation bar */
 @media only screen and (max-width: 700px) {
     .navigation-bar {
