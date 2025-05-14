@@ -176,7 +176,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 	}
 
 	// Perform calculation of new ratings by adding relevant entries in ratingdata object
-	ratingdata = computeRatingDataChanges(ratingdata);
+	ratingdata = computeRatingDataChanges(ratingdata, victor);
 
 	// Update the rating data of each player in leaderboard table
 	for (const playerStr in game.players) {

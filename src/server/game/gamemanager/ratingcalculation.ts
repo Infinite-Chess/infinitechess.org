@@ -37,7 +37,23 @@ const DEFAULT_RATING_DEVIATION = 350.0;
  * Takes ratingdata object as an input, with entries: elo_at_game, rating_deviation_at_game and last_rated_game_date.
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
  */
-function computeRatingDataChanges(ratingdata: RatingData) : RatingData {
+function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : RatingData {
+	const playerCount = Object.keys(ratingdata).length;
+
+	// Currently, only rating calculations for 2-player games are supported
+	if (playerCount !== 2) return ratingdata;
+	if (ratingdata[1] === undefined || ratingdata[2] === undefined) return ratingdata;
+
+	for (const player of Object.keys(ratingdata) as unknown[] as Player[]) {
+		const playerratingdata = ratingdata[player];
+		const rating_change = (victor === player ? 1 : -1);
+		//@ts-ignore
+		playerratingdata.elo_after_game = playerratingdata.elo_at_game - rating_change;
+		//@ts-ignore
+		playerratingdata.rating_deviation_after_game = playerratingdata.rating_deviation_after_game - 1;
+		//@ts-ignore
+		playerratingdata.elo_change_from_game = rating_change;
+	}
 	return ratingdata;
 }
 
