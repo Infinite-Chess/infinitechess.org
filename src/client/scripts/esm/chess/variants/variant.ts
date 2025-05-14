@@ -10,6 +10,7 @@ import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
+import type { Vec2 } from '../../util/math.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 // @ts-ignore
@@ -74,6 +75,7 @@ interface Variant {
 	 * this, because it means the piece could make captures on different locations.
 	 */
 	specialVicinity?: TimeVariantProperty<SpecialVicinity>
+	ray_presets?: Ray[]
 }
 
 /**
@@ -96,7 +98,9 @@ type SpecialVicinity = {
 	[r in RawType]?: Coords[]
 }
 
-"use strict";
+type Ray = { start: Coords, vector: Vec2 };
+
+
 
 const positionStringOfClassical = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 const positionStringOfCoaIP = 'P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|HA-2,-6|HA11,-6|ha-2,15|ha11,15|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
@@ -131,7 +135,9 @@ const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule
 const variantDictionary: { [variantName: string]: Variant } = {
 	Classical: {
 		positionString: positionStringOfClassical,
-		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed }
+		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed },
+		// DELETE AFTER DEBUGGING:
+		ray_presets: [{ start: [1,10], vector: [1,0] }, { start: [15,0], vector: [-1,1] }]
 	},
 	Core: {
 		positionString: 'p-1,10+|p3,10+|p4,10+|p5,10+|p6,10+|p10,10+|p0,9+|p9,9+|n0,8|r1,8+|n2,8|b3,8|q4,8|k5,8+|b6,8|n7,8|r8,8+|n9,8|p-2,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p11,7+|p-3,6+|p12,6+|p1,5+|P2,5+|P7,5+|p8,5+|P1,4+|p2,4+|p7,4+|P8,4+|P-3,3+|P12,3+|P-2,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P11,2+|N0,1|R1,1+|N2,1|B3,1|Q4,1|K5,1+|B6,1|N7,1|R8,1+|N9,1|P0,0+|P9,0+|P-1,-1+|P3,-1+|P4,-1+|P5,-1+|P6,-1+|P10,-1+',
@@ -624,6 +630,13 @@ function getSpecialVicinityOfVariant({ Variant, UTCDate = timeutil.getCurrentUTC
 }
 
 
+/** Returns the Ray presets for the given variant, if they have any. */
+function getRayPresets(Variant: string | undefined): Ray[] {
+	if (Variant === undefined) return [];
+	return variantDictionary[Variant]?.ray_presets ?? [];
+}
+
+
 export default {
 	isVariantValid,
 	getStartingPositionOfVariant,
@@ -633,6 +646,7 @@ export default {
 	getSpecialMovesOfVariant,
 	getSpecialVicinityOfVariant,
 	getBareMinimumGameRules,
+	getRayPresets,
 };
 
 export type {

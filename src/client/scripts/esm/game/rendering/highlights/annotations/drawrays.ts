@@ -10,7 +10,7 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import coordutil from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
-import math, { Vec2 } from "../../../../util/math.js";
+import math, { Color, Vec2 } from "../../../../util/math.js";
 import legalmovehighlights from "../legalmovehighlights.js";
 import instancedshapes from "../../instancedshapes.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
@@ -20,15 +20,19 @@ import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
 import annotations from "./annotations.js";
+import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
+import variant from "../../../../chess/variants/variant.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Ray } from "./annotations.js";
-import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 
 
 // Variables -----------------------------------------------------------------
 
+
+/** The color of preset rays for the variant. */
+const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 1];
 
 const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [{ name: 'position', numComponents: 2 }, { name: 'color', numComponents: 4 }],
@@ -103,7 +107,7 @@ function update(rays: Ray[]) {
 	}
 }
 
-/** Returns all the Rays converted to Lines */
+/** Returns all the Rays converted to Lines, which are rendered easily. */
 function getLines(rays: Ray[]): Line[] {
 	const boundingBox = highlightline.getRenderRange();
 
@@ -303,35 +307,62 @@ function render(rays: Ray[]) {
 	// Add the ray currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnRay(rays) : { added: false };
 
-	// Early exit if no rays to draw
+	// 1. Hand-drawn rays
+
 	if (rays.length > 0) {
 		if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
 			const lines = getLines(rays);
 			highlightline.genLinesModel(lines).render();
 		} else { // Zoomed in, render rays as infinite legal move highlights
 			const color = preferences.getAnnoteSquareColor();
-			// Construct the data
-			const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-			const instanceData = legalmovehighlights.genData_Rays(rays);
-			const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
-			// Render
-			const boardPos: Coords = boardpos.getBoardPos();
-			const model_Offset: Coords = legalmovehighlights.getOffset();
-			const position: [number,number,number] = [
-				-boardPos[0] + model_Offset[0], // Add the model's offset
-				-boardPos[1] + model_Offset[1],
-				0
-			];
-			const boardScale: number = boardpos.getBoardScale();
-			const scale: [number,number,number] = [boardScale, boardScale, 1];
-			model.render(position, scale);
+			genAndRenderZoomedInRays(rays, color);
+		}
+	}
+
+	// 2. Preset Rays (according to the variant)
+
+	const preset_rays = variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant);
+	if (preset_rays.length > 0) {
+		// Calculate each of the ray's line coefficients
+		const fullPresetRays: Ray[] = preset_rays.map(pr => {
+			return {
+				start: pr.start,
+				vector: pr.vector,
+				line: math.getLineGeneralFormFromCoordsAndVec(pr.start, pr.vector)
+			}
+		});
+		if (boardpos.areZoomedOut()) { // Zoomed out, render rays as highlight lines
+			const lines = getLines(fullPresetRays);
+			highlightline.genLinesModel(lines).render();
+		} else { // Zoomed in, render rays as infinite legal move highlights
+			const color = PRESET_RAY_COLOR;
+			genAndRenderZoomedInRays(fullPresetRays, color);
 		}
 	}
 
 	// Remove the ray currently being drawn
 	if (drawingCurrentlyDrawn.added) rays.pop();
 	// Restore the deleted rays if any
-	if (drawingCurrentlyDrawn.deletedRays && drawingCurrentlyDrawn.deletedRays.length > 0) rays.push(...drawingCurrentlyDrawn.deletedRays);
+	if (drawingCurrentlyDrawn.deletedRays) rays.push(...drawingCurrentlyDrawn.deletedRays);
+}
+
+/** Generates the (zoomed in) buffer data and renders a list of rays. */
+function genAndRenderZoomedInRays(rays: Ray[], color: Color) {
+	// Construct the data
+	const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+	const instanceData = legalmovehighlights.genData_Rays(rays);
+	const model = createModel_Instanced_GivenAttribInfo(vertexData, instanceData, ATTRIB_INFO, 'TRIANGLES');
+	// Render
+	const boardPos: Coords = boardpos.getBoardPos();
+	const model_Offset: Coords = legalmovehighlights.getOffset();
+	const position: [number,number,number] = [
+		-boardPos[0] + model_Offset[0], // Add the model's offset
+		-boardPos[1] + model_Offset[1],
+		0
+	];
+	const boardScale: number = boardpos.getBoardScale();
+	const scale: [number,number,number] = [boardScale, boardScale, 1];
+	model.render(position, scale);
 }
 
 
