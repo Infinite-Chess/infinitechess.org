@@ -1009,6 +1009,7 @@ button.join-button, button.copy-button {
     font-size: 84px; /* Update with doc!! */
     height: 1em;
     display: flex;
+    justify-content: space-between;
     box-shadow: 0px 1px 7px 0px rgba(0, 0, 0, 0.659);
     background: linear-gradient(to top, rgba(255, 255, 255, 0.104), rgba(255, 255, 255, 0.552), rgba(255, 255, 255, 0.216));
     -webkit-backdrop-filter: blur(5px); /* Must be BEFORE the unprefixed rules, so Lightning CSS correclty parses! */
@@ -1108,38 +1109,36 @@ button.join-button, button.copy-button {
 }
 
 svg.pencil {
-    transform: scale(0.72) translate(0.01em, 0);
+    transform: scale(0.72) translate(0.02em, 0);
 }
 svg.erase {
-    transform: scale(0.8) translate(-0.02em, 0);
+    transform: scale(0.75) translate(-0.015em, 0);
 }
 svg.collapse {
     transform: scale(0.75);
 }
 
 /* Start shrinking top navigation bar */
-@media only screen and (max-width: 700px) {
+@media only screen and (max-width: 803px) {
     .navigation-bar {
-        font-size: 12vw; /* Update with doc!! */
+        font-size: 10.5vw; /* Update with doc!! */
     }
 }
 
-/* Small screens. HIDE the coords and make the buttons bigger! */
-@media only screen and (max-width: 550px) {
+/* Small screens. HIDE the coords and make the buttons size constant! */
+@media only screen and (max-width: 625px) {
     .navigation-bar {
-        justify-content: space-between;
         font-size: 66px; /* Update with doc!! */
     }
-
     .coords {
         display: none;
     }
 }
 
 /* Mobile screen, start shrinking the size again */
-@media only screen and (max-width: 368px) {
+@media only screen and (max-width: 483px) {
     .navigation-bar {
-        font-size: 17.9vw; /* Update with doc!! */
+        font-size: 13.7vw; /* Update with doc!! */
     }
 }
 
