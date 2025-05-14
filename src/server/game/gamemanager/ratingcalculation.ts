@@ -40,13 +40,14 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 	if (playerCount !== 2) return ratingdata;
 	if (ratingdata[1] === undefined || ratingdata[2] === undefined) return ratingdata;
 
-	for (const player of Object.keys(ratingdata) as unknown[] as Player[]) {
+	for (const playerString of Object.keys(ratingdata)) {
+		const player = Number(playerString) as Player;
 		const playerratingdata = ratingdata[player];
 		const rating_change = (victor === player ? 1 : -1);
 		//@ts-ignore
 		playerratingdata.elo_after_game = playerratingdata.elo_at_game - rating_change;
 		//@ts-ignore
-		playerratingdata.rating_deviation_after_game = playerratingdata.rating_deviation_after_game - 1;
+		playerratingdata.rating_deviation_after_game = playerratingdata.rating_deviation_at_game - 1;
 		//@ts-ignore
 		playerratingdata.elo_change_from_game = rating_change;
 	}
