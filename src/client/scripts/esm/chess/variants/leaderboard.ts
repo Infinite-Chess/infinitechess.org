@@ -1,5 +1,5 @@
 /**
- * This script stores our leaderboards.
+ * This script stores all global variables related to our leaderboards.
  */
 
 /** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
