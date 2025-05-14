@@ -1118,15 +1118,31 @@ svg.collapse {
     transform: scale(0.75);
 }
 
+
+
 /* Start shrinking top navigation bar */
-@media only screen and (max-width: 803px) {
+@media only screen and (max-width: 700px) and (pointer: fine) { /* Desktop */
+    .navigation-bar {
+        font-size: 12vw; /* Update with doc!! */
+    }
+}
+@media only screen and (max-width: 803px) and (pointer: coarse) { /* Mobile */
     .navigation-bar {
         font-size: 10.5vw; /* Update with doc!! */
     }
 }
 
 /* Small screens. HIDE the coords and make the buttons size constant! */
-@media only screen and (max-width: 625px) {
+@media only screen and (max-width: 550px) and (pointer: fine) { /* Desktop */
+    .navigation-bar {
+        justify-content: space-between;
+        font-size: 66px; /* Update with doc!! */
+    }
+    .coords {
+        display: none;
+    }
+}
+@media only screen and (max-width: 625px) and (pointer: coarse) { /* Mobile */
     .navigation-bar {
         font-size: 66px; /* Update with doc!! */
     }
@@ -1136,7 +1152,12 @@ svg.collapse {
 }
 
 /* Mobile screen, start shrinking the size again */
-@media only screen and (max-width: 483px) {
+@media only screen and (max-width: 368px) and (pointer: fine) { /* Desktop */
+    .navigation-bar {
+        font-size: 17.9vw; /* Update with doc!! */
+    }
+}
+@media only screen and (max-width: 483px) and (pointer: coarse) { /* Mobile */
     .navigation-bar {
         font-size: 13.7vw; /* Update with doc!! */
     }
