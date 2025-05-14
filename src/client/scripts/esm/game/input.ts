@@ -333,7 +333,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 
 		// if (targetButton === Mouse.LEFT) pointersDown.push(targetButtonInfo.pointerId!);
 		// Push them down anyway no matter which type of click.
-		// So that you can still pinch the board when drawing annotations.
+		// So that you can still pinch the board when fingers act as right clicks.
 		pointersDown.push(targetButtonInfo.pointerId!);
 
 		if (pointers[pointerId]) pointers[pointerId].isHeld = true; // Mark the pointer as held down
