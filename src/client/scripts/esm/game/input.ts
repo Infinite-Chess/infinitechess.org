@@ -357,7 +357,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			const MOVE_VPIXELS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS : CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) { // Only register the double click drag if the mouse hasn't moved too far from its last click down.
 				targetButtonInfo.doubleClickDrag = true;
-				console.log("Mouse double click dragged: ", MouseNames[targetButton]);
+				// console.log("Mouse double click dragged: ", MouseNames[targetButton]);
 			}
 			// else console.log("Mouse double click MOVED TOO FAR: ", MouseNames[targetButton]);
 		} // ----------------
@@ -403,7 +403,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			const MOVE_VPIXELS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS : CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) {
 				clickInfo[targetButton].clicked = true;
-				console.log("Mouse clicked: ", MouseNames[targetButton]);
+				// console.log("Mouse clicked: ", MouseNames[targetButton]);
 			}
 		} // --------------
 	}

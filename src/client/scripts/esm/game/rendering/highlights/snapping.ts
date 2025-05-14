@@ -22,7 +22,6 @@ import coordutil from "../../../chess/util/coordutil.js";
 import mouse from "../../../util/mouse.js";
 import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
-import variant from "../../../chess/variants/variant.js";
 import preferences from "../../../components/header/preferences.js";
 // @ts-ignore
 import transition from "../transition.js";
@@ -70,7 +69,7 @@ const GHOST_IMAGE_OPACITY = 1;
  * If more pieces than this are present in the game, snapping skips
  * checking if we should snap to a piece, as it's too slow.
  */
-const THRESHOLD_TO_SNAP_PIECES = 100_000
+const THRESHOLD_TO_SNAP_PIECES = 10_000;
 
 
 type Snap = {
@@ -193,7 +192,7 @@ function updateSnapping() {
 	const gamefile = gameslot.getGamefile()!;
 
 
-	const drawnRays = annotations.getRays()
+	const drawnRays = annotations.getRays();
 	const rayColor = preferences.getAnnoteSquareColor();
 	rayColor[3] = 1; // Highlightlines are fully opaque
 	const rayLines = drawrays.getLines(drawnRays, rayColor);
@@ -355,7 +354,7 @@ function updateSnapping() {
 	// 2. Pieces ========================================
 
 	// Only snap to these if there isn't too many pieces (slow)
-	if (boardutil.getPieceCountOfGame(gamefile.pieces) > THRESHOLD_TO_SNAP_PIECES) {
+	if (boardutil.getPieceCountOfGame(gamefile.pieces) < THRESHOLD_TO_SNAP_PIECES) {
 		const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
 		const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, searchVectors);
 		if (closestPieceSnap) {
