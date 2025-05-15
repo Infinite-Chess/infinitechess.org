@@ -41,6 +41,7 @@ function getTrueRD(rating_deviation: number, last_rated_game_date: string | null
 		const last_rated_game_timestamp = timeutil.sqliteToTimestamp(last_rated_game_date);
 		const current_timestamp = Date.now();
 
+		// fraction of elapsed time over length of a standard rating period -> noninteger in general
 		const rating_periods_elapsed = Math.max(0, (current_timestamp - last_rated_game_timestamp) / rating_period_duration);
 
 		return Math.max(minRD, Math.min(defaultRD, Math.sqrt(rating_deviation ** 2 + rating_periods_elapsed * c ** 2)));
