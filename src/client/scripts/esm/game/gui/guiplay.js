@@ -306,9 +306,9 @@ function callback_updateOptions() {
 	const privateValue = element_optionPrivate.value;
 	// conditions for enabling Rated games:
 	if (
+		variantValue in VariantLeaderboards &&
 		clockValue !== "-" &&
-		(colorValue === "Random" || privateValue === "private") &&
-		variantValue in VariantLeaderboards
+		(colorValue === "Random" || privateValue === "private")
 	) {
 		element_optionRatedYes.disabled = false;
 	}
