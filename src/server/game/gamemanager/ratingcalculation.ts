@@ -66,12 +66,14 @@ function d_squared(r: number, r_opp: number, RD_opp: number) : number {
 	return 1 / ( (q ** 2) * (g(RD_opp) ** 2) * Es * (1 - Es) );
 }
 
+/** Given a game outcome for a player, his rating r, his RD, and the opponent'S rating r_opp and RD_opp, compute his new rating with glicko-1 */
 function new_rating(outcome: 0 | 0.5 | 1, r: number, RD: number, r_opp: number, RD_opp: number) {
 	return r + ( q / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) * g(RD_opp) * (outcome - E(r, r_opp, RD_opp));
 }
 
+/** Given a player's rating r, his RD, and the opponent'S rating r_opp and RD_opp, compute his new rating with glicko-1 */
 function new_RD(r: number, RD: number, r_opp: number, RD_opp: number) {
-	return Math.sqrt( 1 / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) );
+	return Math.max(minRD, Math.sqrt( 1 / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) );
 }
 
 /**
