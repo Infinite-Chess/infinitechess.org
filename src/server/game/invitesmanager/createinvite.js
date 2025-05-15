@@ -21,7 +21,8 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js'; 
+import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
+import { getTranslation } from '../../utility/translate.js'; 
 
 /**
  * Type Definitions
@@ -58,7 +59,12 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Validate invite parameters, detect cheating
 	if (isCreatedInviteExploited(invite)) return reportForExploitingInvite(ws, invite, replyto); // Our response will have already been sent
 
-	// Invite has all legal parameters! Create the invite...
+	// Invite has all legal parameters!
+
+	// Check if user tries creating a rated game despite not being allowed to
+	if (isInviteRatedStatusForbidden(ws, invite)) return notifyUserAboutForbiddenRatedInviteCreation(ws, replyto);
+
+	// Create the invite now ...
 
 	addInvite(ws, invite, replyto);
 }
@@ -142,8 +148,6 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 	if (invite.rated === 'rated') {
 		if (!(invite.variant in VariantLeaderboards)) return true;
 		if (invite.clock === "-") return true;
-		if (!(invite.color === "Random" || invite.publicity === "private")) return true;
-		if (invite.owner === "(Guest)") return true;
 	}
 
 	return false;
@@ -188,6 +192,24 @@ async function isAllowedToCreateInvite(ws, replyto) {
 	return false; // NOT allowed to make an invite!
 }
 
+/**
+ * Check if user is forbidden from creating this rated game
+ * @param {CustomWebSocket} ws - The socket attempting to create a new invite
+ * @param {Invite} invite - The incoming invite
+ * @returns {boolean} true if the invite is rated and the user is forbidden from making it (because he is logged out or unverified)
+ */
+function isInviteRatedStatusForbidden(ws, invite) {
+	return invite.rated === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified);
+}
+
+/**
+ * Send a notification to the user telling him that he needs to have a verified acount to create a rated game
+ * @param {CustomWebSocket} ws - The socket attempting to create a new invite
+ * @param {number} replyto - The incoming websocket message ID, to include in the reply
+ */
+function notifyUserAboutForbiddenRatedInviteCreation(ws, replyto) {
+	sendSocketMessage(ws, "general", "notifyerror", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
+}
 
 export {
 	createInvite

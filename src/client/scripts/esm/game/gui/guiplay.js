@@ -8,7 +8,6 @@ import guititle from './guititle.js';
 import timeutil from '../../util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
-import validatorama from '../../util/validatorama.js';
 import { players } from '../../chess/util/typeutil.js';
 import { VariantLeaderboards } from '../../chess/variants/leaderboard.js';
 // Import End
@@ -309,8 +308,7 @@ function callback_updateOptions() {
 	if (
 		clockValue !== "-" &&
 		(colorValue === "Random" || privateValue === "private") &&
-		variantValue in VariantLeaderboards &&
-		validatorama.areWeLoggedIn()
+		variantValue in VariantLeaderboards
 	) {
 		element_optionRatedYes.disabled = false;
 	}
