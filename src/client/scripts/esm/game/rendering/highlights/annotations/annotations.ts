@@ -175,6 +175,7 @@ function onGameUnload() {
 	annotes_plies.length = 0;
 	clearAnnotes(annotes_linger);
 	drawarrows.stopDrawing();
+	drawrays.stopDrawing();
 }
 
 
@@ -191,7 +192,6 @@ function render_belowPieces() {
 function render_abovePieces() {
 	const annotes = getRelevantAnnotes();
 	drawarrows.render(annotes.Arrows);
-
 }
 
 

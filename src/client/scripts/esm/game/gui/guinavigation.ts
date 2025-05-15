@@ -122,6 +122,11 @@ function close() {
 	closeListeners_Navigation();
 	navigationOpen = false;
 	stats.updateStatsCSS();
+
+	// Disable annotations mode
+	annotationsEnabled = false;
+	listener_overlay.setTreatLeftasRight(false);
+	element_Annotations.classList.remove('enabled');
 }
 
 

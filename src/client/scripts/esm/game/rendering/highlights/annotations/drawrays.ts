@@ -6,9 +6,11 @@
  */
 
 
+// @ts-ignore
+import perspective from "../../perspective.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
-import coordutil from "../../../../chess/util/coordutil.js";
+import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
 import space from "../../../misc/space.js";
 import math, { Color, Vec2 } from "../../../../util/math.js";
 import legalmovehighlights from "../legalmovehighlights.js";
@@ -19,13 +21,10 @@ import highlightline, { Line } from "../highlightline.js";
 import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
-import annotations from "./annotations.js";
+import annotations, { Ray } from "./annotations.js";
 import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 import variant from "../../../../chess/variants/variant.js";
-
-
-import type { Coords } from "../../../../chess/util/coordutil.js";
-import type { Ray } from "./annotations.js";
+import { listener_document, listener_overlay } from "../../../chess/game.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -42,6 +41,10 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 
 /** This will be defined if we are CURRENTLY drawing a ray. */
 let drag_start: Coords | undefined;
+/** The ID of the pointer that is drawing the ray. */
+let pointerId: string | undefined;
+/** The last known position of the pointer drawing a ray. */
+let pointerWorld: Coords | undefined;
 
 
 // Getters -------------------------------------------------------------------
@@ -76,9 +79,13 @@ function getPresetRays(): Ray[] {
  * @param rays - All ray annotations currently on the board.
  */
 function update(rays: Ray[]) {
+	const respectiveListener = perspective.getEnabled() ? listener_document : listener_overlay;
+
 	if (!drag_start) { // Not currently drawing a ray
-		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) { // Double click drag this frame
-			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
+		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) { // Double click drag this frame
+			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
+			pointerId = respectiveListener.getMouseId(Mouse.RIGHT);
+			pointerWorld = mouse.getPointerWorld(pointerId!)!;
 
 			const snappingAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
 			const snapCoords = snapping.getSnapCoords();
@@ -97,9 +104,20 @@ function update(rays: Ray[]) {
 			// console.log("Ray drag start:", drag_start);
 		}
 	} else { // Currently drawing a ray
-		// Test if mouse released (finalize ray)
-		if (mouse.isMouseHeld(Mouse.RIGHT)) {
-			// Mouse is still holding
+		
+		// Prevent accidental ray drawing when trying to zoom.
+		if (listener_overlay.getPointersDownCount() > 0 && listener_overlay.getPointerCount() === 2) {
+			// Unclaim the pointer so that board dragging may capture it again to initiate a pinch.
+			listener_overlay.unclaimPointerDown(pointerId!);
+			stopDrawing();
+			return;
+		}
+
+		// Test if pointer released (finalize ray)
+		// If not released, delete any Square present on the Ray start
+		const pointer = respectiveListener.getPointer(pointerId!);
+		if (pointer) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
+		if (pointer?.isHeld) { // Pointer is still holding
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
 			const mouseCoords = mouse.getTileMouseOver_Integer(Mouse.RIGHT)!;
@@ -111,14 +129,21 @@ function update(rays: Ray[]) {
 					// console.log("Removed square highlight.");
 				}
 			}
-		} else if (!mouse.isMouseClicked(Mouse.RIGHT)) { // Prevents accidentally ray drawing if we intend to draw square
-			// The mouse is no longer being held, nor a click simulated (Square drawn same frame).
-			// Finalize the ray
-			addDrawnRay(rays);
-			drag_start = undefined; // Reset drawing
-			dispatchRayCountEvent(rays);
+		} else { // The pointer is no longer being held
+			// Prevents accidentally ray drawing if we intend to draw square
+			if (!mouse.isMouseClicked(Mouse.RIGHT)) {
+				addDrawnRay(rays); // Finalize the ray
+				dispatchRayCountEvent(rays);
+      		}
+			stopDrawing();
 		}
 	}
+}
+
+function stopDrawing() {
+	drag_start = undefined;
+	pointerId = undefined;
+	pointerWorld = undefined;
 }
 
 /** Returns all the Rays converted to Lines, which are rendered easily. */
@@ -153,10 +178,9 @@ function getLines(rays: Ray[], color: Color): Line[] {
  * @returns An object containing the results, such as whether the ray was added, and what rays were deleted if any.
  */
 function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
-	const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
-	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld!);
 
-	// Skip if end equals start (no arrow drawn)
+	// Skip if end equals start (no ray drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
 	// const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
@@ -378,6 +402,7 @@ export default {
 	areDrawing,
 	getPresetRays,
 	update,
+	stopDrawing,
 	getLines,
 	collapseRays,
 	dispatchRayCountEvent,
