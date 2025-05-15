@@ -216,20 +216,31 @@ function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
  * @returns An array of top player leaderboard entries, potentially empty.
  */
 function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: number): LeaderboardEntry[] {
-	// Changed table name, column names, ORDER BY column, added WHERE clause for leaderboard_id
+	if (n_players < 1) return [];
+
 	const query = `
 		SELECT user_id, elo, rating_deviation, last_rated_game_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
 		ORDER BY elo DESC
-		LIMIT ?
 	`;
 
 	try {
-		// Execute the query with leaderboard_id and n_players parameters
-		// Added leaderboard_id to parameters
-		const top_players = db.all(query, [leaderboard_id, n_players]) as LeaderboardEntry[];
-		return top_players; // Returns an array (empty if no players or n_players <= 0)
+		// Execute the query with leaderboard_id
+		const results = db.all(query, [leaderboard_id]) as LeaderboardEntry[];
+		const top_players: LeaderboardEntry[] = [];
+
+		// Iterate through all players in descending elo order and add them to top_players if their trueRD is below UNCERTAIN_LEADERBOARD_RD
+		for (const player of results) {
+			if (player?.rating_deviation === undefined || player?.last_rated_game_date === undefined) continue;
+			const trueRD = getTrueRD(player.rating_deviation, player.last_rated_game_date);
+			if (trueRD < UNCERTAIN_LEADERBOARD_RD) {
+				top_players.push(player);
+				if (top_players.length >= n_players) break; // exit if top_players has enough entries
+			}
+		}
+
+		return top_players; // Returns an array
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Updated log message
@@ -240,39 +251,36 @@ function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: num
 
 /**
  * Gets the rank (position) of a specific user within a specific leaderboard based on Elo.
- * Rank 1 is the highest Elo. Uses RANK() to handle ties (tied players share the same rank,
- * but the next rank number is skipped, creating potential gaps, e.g., 1, 1, 3).
+ * Rank 1 is the highest Elo.
  * @param user_id - The ID of the user whose rank is needed.
  * @param leaderboard_id - The ID of the leaderboard to check.
  * @returns The user's rank (1-based) as a number, or undefined if the user is not found
  *          on that leaderboard or if an error occurs.
  */
 function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard): number | undefined {
-	// This query uses a Common Table Expression (CTE) and the RANK window function.
-	// 1. Filter `leaderboards` to only include rows for the specific `leaderboard_id`.
-	// 2. Calculate `RANK() OVER (ORDER BY elo DESC)`.
-	//    RANK assigns the same rank to ties, but skips subsequent ranks
-	//    (e.g., if 2 players tie for 1st, the next rank is 3).
-	// 3. Select the calculated `rank` for the specific `user_id`.
+	if (!isPlayerInLeaderboard(user_id, leaderboard_id)) return undefined; // return undefined if player is not in leaderboard
+
 	const query = `
-		WITH RankedPlayers AS (
-			SELECT
-				user_id,
-				RANK() OVER (ORDER BY elo DESC) as rank
-			FROM leaderboards
-			WHERE leaderboard_id = ? -- Filter for the specific leaderboard FIRST
-		)
-		SELECT rank
-		FROM RankedPlayers
-		WHERE user_id = ?; -- Then find the rank for the specific user
+		SELECT user_id, elo, rating_deviation, last_rated_game_date
+		FROM leaderboards
+		WHERE leaderboard_id = ?
+		ORDER BY elo DESC
 	`;
 
 	try {
-		// Execute the query, expecting at most one row containing the rank
-		const result = db.get(query, [leaderboard_id, user_id]) as { rank: number } | undefined;
+		// Execute the query with leaderboard_id
+		const results = db.all(query, [leaderboard_id]) as LeaderboardEntry[];
 
-		// If a result is found, return the rank, otherwise return undefined
-		return result?.rank;
+		// Iterate through all players in descending elo order and keep incrementing the running rank if their trueRD is below UNCERTAIN_LEADERBOARD_RD
+		let rank = 1;
+		for (const player of results) {
+			if (player.user_id === user_id) return rank; // user found in table, exit by returning rank
+			if (player?.rating_deviation === undefined || player?.last_rated_game_date === undefined) continue;
+			const trueRD = getTrueRD(player.rating_deviation, player.last_rated_game_date);
+			if (trueRD < UNCERTAIN_LEADERBOARD_RD) rank++;
+		}
+
+		return undefined; // Return undefined since player not found in leaderboard search for some weird reason
 
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
