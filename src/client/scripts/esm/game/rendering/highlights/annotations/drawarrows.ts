@@ -6,8 +6,6 @@
  */
 
 
-// @ts-ignore
-import perspective from "../../perspective.js";
 import space from "../../../misc/space.js";
 import math, { Color } from "../../../../util/math.js";
 import preferences from "../../../../components/header/preferences.js";
@@ -17,7 +15,7 @@ import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
 import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
-import { listener_document, listener_overlay } from "../../../chess/game.js";
+import { listener_overlay } from "../../../chess/game.js";
 
 
 import type { Arrow } from "./annotations.js";
@@ -68,23 +66,22 @@ let pointerWorld: Coords | undefined;
  * @param arrows - All arrow annotations currently on the board.
  */
 function update(arrows: Arrow[]) {
-	const respectiveListener = perspective.getEnabled() ? listener_document : listener_overlay;
+	const respectiveListener = mouse.getRelevantListener();
 
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
 		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) {
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
-			pointerId = respectiveListener.getMouseId(Mouse.RIGHT);
+			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!)!;
 
-			const hoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
-			const snapCoords = snapping.getSnapCoords();
+			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
+			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
 
-			if (boardpos.areZoomedOut() && (hoveringAtleastOneEntity || snapCoords)) {
-				if (hoveringAtleastOneEntity) {
+			if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
+				if (closestEntityToWorld) {
 					// Snap to nearest hovered entity 
-					const nearestEntity = snapping.getClosestEntityToMouse();
-					drag_start = coordutil.copyCoords(nearestEntity.coords);
+					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
 				} else {
 					// Snap to the current snap
 					drag_start = [...snapCoords!];
@@ -132,14 +129,13 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 	// console.log("Adding drawn arrow");
 	let drag_end: Coords;
 
-	const hoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
-	const snapCoords = snapping.getSnapCoords();
+	const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld!);
+	const snapCoords = snapping.getWorldSnapCoords(pointerWorld!);
 
-	if (boardpos.areZoomedOut() && (hoveringAtleastOneEntity || snapCoords)) {
-		if (hoveringAtleastOneEntity) {
+	if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
+		if (closestEntityToWorld) {
 			// Snap to nearest hovered entity
-			const nearestEntity = snapping.getClosestEntityToMouse();
-			drag_end = coordutil.copyCoords(nearestEntity.coords);
+			drag_end = coordutil.copyCoords(closestEntityToWorld.coords);
 		} else {
 			// Snap to the current snap
 			drag_end = [...snapCoords!];

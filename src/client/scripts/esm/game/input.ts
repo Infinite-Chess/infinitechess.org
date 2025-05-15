@@ -94,8 +94,10 @@ interface InputListener {
 	 */
     // eslint-disable-next-line no-unused-vars
 	getPointerVel(pointerId: string): Vec2 | undefined;
+	/** Returns the ids of all existing pointers. */
+	getAllPointerIds(): string[];
 	/** Returns all existing pointers. */
-	getAllPointers(): Record<string, Pointer>;
+	getAllPointers(): Pointer[];
 	getPointerCount(): number;
 	// eslint-disable-next-line no-unused-vars
 	getPointer(pointerId: string): Pointer | undefined;
@@ -616,13 +618,13 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			// Also remove the pointer from the list of pointers down this frame.
 			const pointerId = clickInfo[button].pointerId;
 			const index = pointersDown.indexOf(pointerId!);
-			// console.log("Claiming pointer down1: ", pointerId);
+			// console.error("Claiming pointer down1: ", pointerId);
 			if (index !== -1) pointersDown.splice(index, 1);
 		},
 		claimPointerDown: (pointerId: string) => {
 			const index = pointersDown.indexOf(pointerId);
 			if (index === -1) throw Error("Can't claim pointer down. Already claimed, or is not down.");
-			// console.log("Claiming pointer down2: ", pointerId);
+			// console.error("Claiming pointer down2: ", pointerId);
 			pointersDown.splice(index, 1);
 		},
 		unclaimPointerDown: (pointerId: string) => {
@@ -657,7 +659,8 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? undefined,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? undefined,
 		getPointerVel: (pointerId: string) => pointers[pointerId]?.velocity ?? undefined,
-		getAllPointers: () => pointers,
+		getAllPointerIds: () => Object.keys(pointers),
+		getAllPointers: () => Object.values(pointers),
 		getPointerCount: () => Object.keys(pointers).length,
 		getPointer: (pointerId: string) => pointers[pointerId],
 		getPointersDown: () => pointersDown,

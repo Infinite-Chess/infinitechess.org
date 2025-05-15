@@ -6,8 +6,6 @@
  */
 
 
-// @ts-ignore
-import perspective from "../../perspective.js";
 import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
@@ -24,7 +22,7 @@ import mouse from "../../../../util/mouse.js";
 import annotations, { Ray } from "./annotations.js";
 import selectedpiecehighlightline from "../selectedpiecehighlightline.js";
 import variant from "../../../../chess/variants/variant.js";
-import { listener_document, listener_overlay } from "../../../chess/game.js";
+import { listener_overlay } from "../../../chess/game.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -79,24 +77,23 @@ function getPresetRays(): Ray[] {
  * @param rays - All ray annotations currently on the board.
  */
 function update(rays: Ray[]) {
-	const respectiveListener = perspective.getEnabled() ? listener_document : listener_overlay;
+	const respectiveListener = mouse.getRelevantListener();
 
 	if (!drag_start) { // Not currently drawing a ray
 		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) { // Double click drag this frame
 			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
-			pointerId = respectiveListener.getMouseId(Mouse.RIGHT);
+			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!)!;
 
-			const snappingAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
-			const snapCoords = snapping.getSnapCoords();
+			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
+			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
 
-			if (boardpos.areZoomedOut() && snappingAtleastOneEntity || snapCoords) {
+			if (boardpos.areZoomedOut() && closestEntityToWorld || snapCoords) {
 				if (snapCoords) drag_start = coordutil.copyCoords(snapCoords);
-				else {
+				else if (closestEntityToWorld) {
 					// Snap to nearest hovered entity
-					const nearestEntity = snapping.getClosestEntityToMouse();
-					drag_start = coordutil.copyCoords(nearestEntity.coords);
-				}
+					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
+				} else throw Error("How did we get here?");
 			} else {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
@@ -138,6 +135,11 @@ function update(rays: Ray[]) {
 			stopDrawing();
 		}
 	}
+}
+
+function getPointerId(): string {
+	if (!pointerId) throw Error("Pointer ID is undefined. Don't call drawrays.getPointerId() if not drawing a ray.");
+	return pointerId;
 }
 
 function stopDrawing() {
@@ -402,6 +404,7 @@ export default {
 	areDrawing,
 	getPresetRays,
 	update,
+	getPointerId,
 	stopDrawing,
 	getLines,
 	collapseRays,

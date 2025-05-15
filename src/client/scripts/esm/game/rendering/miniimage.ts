@@ -21,6 +21,7 @@ import snapping from './highlights/snapping.js';
 import instancedshapes from './instancedshapes.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import math, { Color } from '../../util/math.js';
+import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -31,8 +32,6 @@ import statustext from '../gui/statustext.js';
 import board from './board.js';
 // @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
-// @ts-ignore
-import guipause from '../gui/guipause.js';
 
 
 // Variables --------------------------------------------------------------
@@ -59,26 +58,6 @@ const attribInfo: AttributeInfoInstanced = {
 let disabled: boolean = false; // Disabled when there's too many pieces
 
 
-/** All mini images currently being hovered over, if zoomed out. */
-const imagesHovered: Coords[] = [];
-/**
- * All mini images currently being hovered over EUCLIDEAN DISTANCES to the mouse in world space.
- * For quickly comparing against other hovered annotes.
- * EACH INDEX MAPS TO THE SAME INDEX IN {@link highlightsHovered}.
- */
-const imagesHovered_dists: number[] = [];
-
-
-/**
- * The instance data of all the mini images, where the keys are the piece type,
- * and the values are arrays of world space coordinates of images of that type.
- */
-let instanceData: TypeGroup<number[]> = {};
-/**
- * {@link instanceData}, but only for images being hovered over,
- * since those need to be rendered completely opaque.
- */
-let instanceData_hovered: TypeGroup<number[]> = {};
 
 
 // Toggling --------------------------------------------------------------
@@ -96,10 +75,6 @@ function disable(): void {
 	disabled = true;
 }
 
-
-// Updating --------------------------------------------------------------------------
-
-
 function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
@@ -112,75 +87,98 @@ function toggle(): void {
 // Updating --------------------------------------------------------------------------
 
 
-/**
- * Generates the instance data for the miniimages of the pieces this frame.
- * At the same time, this calculates what images are being hovered over.
- */
-function updateImagesHovered() {
-	imagesHovered.length = 0;
-	imagesHovered_dists.length = 0;
-
-	instanceData = {};
-	instanceData_hovered = {};
-
-	if (guipause.areWePaused() || !boardpos.areZoomedOut() || disabled) return;
-
+/** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
+// eslint-disable-next-line no-unused-vars
+function forEachRenderablePiece(callback: (coords: Coords, type: number) => void) {
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.pieces;
 
-	// Iterate through all pieces...
+	// Helper to test if a static piece is being animated
+	const isAnimatedStatic = (coords: Coords) => animation.animations.some(a => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!));
 
-	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
-
-	// While we're iterating, test to see if mouse is hovering over, if so, add the same data to the hovered data.
-
-	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
-	const atleastOneAnimation: boolean = animation.animations.length > 0;
-
-
+	// Static pieces
 	gamefile.existingTypes.forEach((type: number) => {
 		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
-		const thisInstanceData: 		number[] = [];
-		const thisInstanceData_hovered: number[] = [];
-		instanceData[type] = thisInstanceData;
-		instanceData_hovered[type] = thisInstanceData_hovered;
-		
-		if (boardutil.getPieceCountOfTypeRange(pieces.typeRanges.get(type)!) === 0) return; // The type is ALL undefined placeholders
+		const range = pieces.typeRanges.get(type)!;
+		// Skip types with no pieces
+		if (boardutil.getPieceCountOfTypeRange(range) === 0) return;
 
 		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
-			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
-			processPiece(coords, thisInstanceData, thisInstanceData_hovered);
+			if (!isAnimatedStatic(coords)) callback(coords, type);
 		});
 	});
 
-	function processPiece(coords: Coords, instanceData: number[], instanceData_hovered: number[]) {
-		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
-		instanceData.push(...coordsWorld);
+	// Animated pieces
+	animation.animations.forEach(a => {
+		// Animate the main piece being animated
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels();
+		const current = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
+		callback(current, a.type);
+
+		// Animate the captured piece too, if there is one
+		if (a.captured) callback(a.captured.coords, a.captured.type);
+	});
+}
+
+/** Generates the instance data for the miniimages of the pieces this frame. */
+function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceData_hovered: TypeGroup<number[]> } {
+	const instanceData: TypeGroup<number[]> = {};
+	const instanceData_hovered: TypeGroup<number[]> = {};
+
+	const allPointers = mouse.getRelevantListener().getAllPointers();
+	const pointerWorlds = allPointers.map(pointer => mouse.getPointerWorld(pointer.id)!);
+
+	const gamefile = gameslot.getGamefile()!;
+
+	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
+
+	// Prepare empty arrays by type
+	gamefile.existingTypes.forEach((type: number) => {
+		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
+
+		instanceData[type] = [];
+		instanceData_hovered[type] = [];
+	});
+
+	// Process each renderable piece
+	forEachRenderablePiece((coords, type) => {
+		const coordsWorld = space.convertCoordToWorldSpace(coords);
+		instanceData[type]!.push(...coordsWorld);
 
 		// Are we hovering over? If so, add the same data to instanceData_hovered
 		if (areWatchingMousePosition) {
-			const mouseWorld = mouse.getMouseWorld();
-			if (mouseWorld && math.chebyshevDistance(coordsWorld, mouseWorld) < halfWorldWidth) { // Being hovered over!
-				imagesHovered.push(coords);
-				// Upgrade the distance to euclidean
-				imagesHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld));
-				instanceData_hovered.push(...coordsWorld);
+			for (const pointerWorld of pointerWorlds) {
+				if (math.chebyshevDistance(coordsWorld, pointerWorld) < halfWorldWidth) instanceData_hovered[type]!.push(...coordsWorld);
 			}
 		}
-	}
-
-	// Add the animated pieces
-	animation.animations.forEach(a => {
-		// Animate the main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
-		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		processPiece(currentCoords, instanceData[a.type]!, instanceData_hovered[a.type]!);
-
-		// Animate the captured piece too, if there is one
-		if (a.captured) processPiece(a.captured.coords, instanceData[a.captured.type]!, instanceData_hovered[a.captured.type]!);
 	});
+
+	return { instanceData, instanceData_hovered };
+}
+
+/** Returns a list of mini image coordinates that are all being hovered over by the provided world coords. */
+function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coords[], dists?: number[] } {
+	if (disabled) return { images: [] };
+
+	const imagesHovered: Coords[] = [];
+	const dists: number[] = [];
+
+	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+
+	// Check static and animated pieces for hover
+	forEachRenderablePiece((coords) => {
+		const coordsWorld = space.convertCoordToWorldSpace(coords);
+		if (math.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
+			imagesHovered.push(coords);
+			// Upgrade the distance to euclidean
+			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
+		}
+	});
+
+	return trackDists ? { images: imagesHovered, dists } : { images: imagesHovered };
 }
 
 
@@ -192,6 +190,8 @@ function render(): void {
 
 	const gamefile = gameslot.getGamefile()!;
 	const inverted = perspective.getIsViewingBlackPerspective();
+
+	const { instanceData, instanceData_hovered } = getImageInstanceData();
 
 	const models: TypeGroup<BufferModelInstanced> = {};
 	const models_hovered: TypeGroup<BufferModelInstanced> = {};
@@ -233,14 +233,11 @@ function render(): void {
 
 
 export default {
-	toggle,
-	imagesHovered,
-	imagesHovered_dists,
-	
 	isDisabled,
 	enable,
 	disable,
+	toggle,
 
-	updateImagesHovered,
+	getImagesBelowWorld,
 	render,
 };

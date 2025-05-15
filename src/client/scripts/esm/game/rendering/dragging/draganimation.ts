@@ -126,17 +126,13 @@ function pickUpPiece(piece: Piece, resetParity: boolean) {
 	areDragging = true;
 	if (resetParity) parity = true;
 
-	const respectiveListener = getRespectiveListener();
+	const respectiveListener = mouse.getRelevantListener();
 	pointerId = respectiveListener.getMouseId(Mouse.LEFT);
 
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
 	if (animation.animations.some(a => coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!) )) animation.clearAnimations(true);
-}
-
-function getRespectiveListener(): InputListener {
-	return perspective.getEnabled() ? listener_document : listener_overlay;
 }
 
 /**
@@ -171,7 +167,7 @@ function setDragLocationAndHoverSquare(worldLoc: Coords, hoverSquare: Coords) {
 /** Whether the pointer dragging the selected piece has released yet. */
 function hasPointerReleased(): boolean {
 	if (!areDragging) throw Error("Don't call hasPointerReleased() when not dragging a piece");
-	const respectiveListener = getRespectiveListener();
+	const respectiveListener = mouse.getRelevantListener();
 	const pointer = respectiveListener.getPointer(pointerId!);
 	return pointer === undefined || !pointer.isHeld;
 }

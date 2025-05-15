@@ -127,7 +127,7 @@ function update() {
 		if (listener_overlay.isMouseClicked(Mouse.LEFT)) {
 			listener_overlay.claimMouseClick(Mouse.LEFT);
 			relockMouse();
-		}
+		} else if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
 		return;
 	}
 

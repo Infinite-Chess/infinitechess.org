@@ -229,7 +229,7 @@ function testIfPieceSelected(gamefile: gamefile, mesh: Mesh | undefined) {
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
-		if (Object.keys(listener_overlay.getAllPointers()).length === 2) return;
+		if (listener_overlay.getPointerCount() === 2) return;
 		/** Just quickly make sure that, if we already have selected a piece,
 		 * AND we just clicked a piece that's legal to MOVE to,
 		 * that we don't select it instead! */
@@ -316,8 +316,7 @@ function canSelectPieceType(gamefile: gamefile, type: number | undefined): 0 | 1
 	// The piece is also not considered draggable if this is exactly the second pointer down.
 	// But it still may be selected by a simulated click.
 	// This allows us to tap to select friendly pieces, even if we're already dragging with one finger.
-	const pointerCount = Object.keys(listener_overlay.getAllPointers()).length;
-	if (boarddrag.isBoardDragging() && pointerCount === 1) return 1;
+	if (boarddrag.isBoardDragging() && listener_overlay.getPointerCount() === 1) return 1;
 	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
 
