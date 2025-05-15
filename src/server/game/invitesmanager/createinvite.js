@@ -62,7 +62,9 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Invite has all legal parameters!
 
 	// Check if user tries creating a rated game despite not being allowed to
-	if (isInviteRatedStatusForbidden(ws, invite)) return notifyUserAboutForbiddenRatedInviteCreation(ws, replyto);
+	if (invite.rated === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified)) {
+		return sendSocketMessage(ws, "general", "notifyerror", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
+	}
 
 	// Create the invite now ...
 
@@ -190,25 +192,6 @@ async function isAllowedToCreateInvite(ws, replyto) {
 	sendNotify(ws, message, { customNumber: timeUntilRestart, replyto });
 
 	return false; // NOT allowed to make an invite!
-}
-
-/**
- * Check if user is forbidden from creating this rated game
- * @param {CustomWebSocket} ws - The socket attempting to create a new invite
- * @param {Invite} invite - The incoming invite
- * @returns {boolean} true if the invite is rated and the user is forbidden from making it (because he is logged out or unverified)
- */
-function isInviteRatedStatusForbidden(ws, invite) {
-	return invite.rated === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified);
-}
-
-/**
- * Send a notification to the user telling him that he needs to have a verified acount to create a rated game
- * @param {CustomWebSocket} ws - The socket attempting to create a new invite
- * @param {number} replyto - The incoming websocket message ID, to include in the reply
- */
-function notifyUserAboutForbiddenRatedInviteCreation(ws, replyto) {
-	sendSocketMessage(ws, "general", "notifyerror", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
 }
 
 export {
