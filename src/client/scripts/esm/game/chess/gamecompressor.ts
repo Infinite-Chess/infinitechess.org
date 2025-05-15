@@ -158,7 +158,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): Abridg
 		else console.warn("Enpassant distance is more than 1 square, not assigning it to the ICN. Enpassant:", gamestate.state_global.enpassant);
 	}
 
-	console.log("Returning abridged game:", jsutil.deepCopyObject(abridgedGamefile));
+	// console.log("Returning abridged game:", jsutil.deepCopyObject(abridgedGamefile));
 
 	return abridgedGamefile;
 }

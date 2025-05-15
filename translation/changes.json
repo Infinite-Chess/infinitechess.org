@@ -1,4 +1,8 @@
 {
+	"50": {
+		"note": "Added annotations, erase, and collapse, lines 285-287.",
+		"changes": []
+	},
 	"49": {
 		"note": "Added selection-lingering_annotations, line 25.",
 		"changes": []

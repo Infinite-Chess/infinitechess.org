@@ -116,6 +116,7 @@ function update(rays: Ray[]) {
 			// Finalize the ray
 			addDrawnRay(rays);
 			drag_start = undefined; // Reset drawing
+			dispatchRayCountEvent(rays);
 		}
 	}
 }
@@ -314,6 +315,10 @@ function collapseRays(rays_drawn: Ray[]): Coords[] {
 	return intersections;
 }
 
+function dispatchRayCountEvent(rays: Ray[]) {
+	document.dispatchEvent(new CustomEvent('ray-count-change', { detail: rays.length }));
+}
+
 
 // Rendering -----------------------------------------------------------------
 
@@ -375,5 +380,6 @@ export default {
 	update,
 	getLines,
 	collapseRays,
+	dispatchRayCountEvent,
 	render,
 };
