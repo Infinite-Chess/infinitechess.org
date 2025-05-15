@@ -135,9 +135,16 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 
 	if (invite.color !== players.WHITE && invite.color !== players.BLACK && invite.color !== players.NEUTRAL) return true;
 	if (invite.rated !== 'casual' && invite.rated !== 'rated') return true;
-	if (invite.rated === 'rated' && !(invite.variant in VariantLeaderboards)) return true; // Do not allow creating rated invites for variants not on a leaderboard
 	if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 	if (invite.tag.length !== 8) return true; // Invite tags must be 8 characters long.
+
+	// Check if invite is allowed to be rated
+	if (invite.rated === 'rated') {
+		if (!(invite.variant in VariantLeaderboards)) return true;
+		if (invite.clock === "-") return true;
+		if (!(invite.color === "Random" || invite.publicity === "private")) return true;
+		if (invite.owner === "(Guest)") return true;
+	}
 
 	return false;
 }
