@@ -4,8 +4,7 @@
 
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 import { PlayerGroup, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { 
-	DEFAULT_LEADERBOARD_ELO as defaultElo,
+import {
 	DEFAULT_LEADERBOARD_RD as defaultRD,
 	MIMIMUM_LEADERBOARD_RD as minRD,
 	GLICKO_ONE_C as c,

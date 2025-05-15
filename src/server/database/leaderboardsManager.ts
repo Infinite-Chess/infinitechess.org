@@ -6,8 +6,7 @@
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 // @ts-ignore
 import db from './database.js';
-import { DEFAULT_LEADERBOARD_ELO, UNCERTAIN_LEADERBOARD_RD } from '../../client/scripts/esm/chess/variants/leaderboard.js'; 
-import { VariantLeaderboards } from '../../client/scripts/esm/chess/variants/leaderboard.js';
+import { DEFAULT_LEADERBOARD_ELO, UNCERTAIN_LEADERBOARD_RD } from '../../client/scripts/esm/chess/variants/leaderboard.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
@@ -312,14 +311,6 @@ function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Lea
 	}
 
 	return ranked_elo;
-}
-
-/**
- * Returns the leaderboard a variant is a part of, if it's a part of one.
- * This can be used to ask if we are allowed to play ranked on that variant.
- */
-function getLeaderboardOfVariant(variant: string): Leaderboard | undefined {
-	return VariantLeaderboards[variant] as Leaderboard | undefined;
 }
 
 

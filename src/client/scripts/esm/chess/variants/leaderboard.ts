@@ -66,5 +66,5 @@ export {
 	RATING_PERIOD_DURATION,
 	Leaderboard,
 	Leaderboards,
-	VariantLeaderboards,
+	VariantLeaderboards
 };
