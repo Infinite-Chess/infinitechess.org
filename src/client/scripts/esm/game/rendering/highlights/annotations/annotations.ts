@@ -156,6 +156,7 @@ function Collapse() {
 			annotes.Squares.push(newSquare);
 		}
 		annotes.Rays.length = 0; // Erase all rays
+		drawrays.dispatchRayCountEvent(annotes.Rays);
 	} else clearAnnotes(annotes);
 }
 
@@ -204,6 +205,7 @@ export default {
 
 	update,
 	testIfCollapsed,
+	Collapse,
 	onPieceSelection,
 	onGameUnload,
 	render_belowPieces,

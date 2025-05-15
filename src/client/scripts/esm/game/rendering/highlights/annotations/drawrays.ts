@@ -128,7 +128,10 @@ function update(rays: Ray[]) {
 			}
 		} else { // The pointer is no longer being held
 			// Prevents accidentally ray drawing if we intend to draw square
-			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnRay(rays); // Finalize the ray
+			if (!mouse.isMouseClicked(Mouse.RIGHT)) {
+        addDrawnRay(rays); // Finalize the ray
+			  dispatchRayCountEvent(rays);
+      }
 			stopDrawing();
 		}
 	}
@@ -333,6 +336,10 @@ function collapseRays(rays_drawn: Ray[]): Coords[] {
 	return intersections;
 }
 
+function dispatchRayCountEvent(rays: Ray[]) {
+	document.dispatchEvent(new CustomEvent('ray-count-change', { detail: rays.length }));
+}
+
 
 // Rendering -----------------------------------------------------------------
 
@@ -395,5 +402,6 @@ export default {
 	stopDrawing,
 	getLines,
 	collapseRays,
+	dispatchRayCountEvent,
 	render,
 };
