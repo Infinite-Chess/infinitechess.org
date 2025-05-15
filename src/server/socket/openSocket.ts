@@ -81,8 +81,9 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 
 	// If user is signed in, use the database to correctly set the property ws.metadata.verified
 	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo?.user_id !== undefined) {
-		const { verification } = getMemberDataByCriteria(['verification'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true });
-		ws.metadata.verified = JSON.parse(verification)?.verified ?? false;
+		let { verification } = getMemberDataByCriteria(['verification'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true });
+		verification = JSON.parse(verification); // string needs to be parsed to a JSON
+		if (verification === null || verification.verified) ws.metadata.verified = true; // user is verified
 	}
 
 	// Send the current game vesion, so they will know whether to refresh.
