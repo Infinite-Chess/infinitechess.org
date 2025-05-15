@@ -125,10 +125,10 @@ function update() {
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
 	snapping.updateEntitiesHovered();
+	snapping.updateSnapping();
 	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
 	annotations.update();
 
-	snapping.updateSnapping();
 	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
 	annotations.testIfCollapsed();
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.

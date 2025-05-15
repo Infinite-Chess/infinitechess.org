@@ -132,6 +132,7 @@ function update() {
 	}
 
 	const mouseChange = listener_document.getPointerDelta('mouse');
+	if (!mouseChange) throw Error("Mouse pointer not present!");
 
 	const thisSensitivity = mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
 
