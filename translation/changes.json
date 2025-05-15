@@ -1,6 +1,10 @@
 {
+	"51": {
+		"note": "Added member.infinity_leaderboard_position on line 122 and added server.javascript.ws-rated_invite_verification_needed on line 603",
+    "changes": []
+	},
 	"50": {
-		"note": "Added member.infinity_leaderboard_position on line 122 and added server.javascript.ws-rated_invite_verification_needed on line 600",
+		"note": "Added annotations, erase, and collapse, lines 285-287.",
 		"changes": []
 	},
 	"49": {

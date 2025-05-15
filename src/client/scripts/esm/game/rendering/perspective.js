@@ -127,11 +127,12 @@ function update() {
 		if (listener_overlay.isMouseClicked(Mouse.LEFT)) {
 			listener_overlay.claimMouseClick(Mouse.LEFT);
 			relockMouse();
-		}
+		} else if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
 		return;
 	}
 
 	const mouseChange = listener_document.getPointerDelta('mouse');
+	if (!mouseChange) throw Error("Mouse pointer not present!");
 
 	const thisSensitivity = mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
 

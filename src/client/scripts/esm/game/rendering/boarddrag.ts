@@ -116,7 +116,7 @@ function checkIfBoardDropped() {
 
 	const now = Date.now();
 
-	const allPointers = Object.values(listener_overlay.getAllPointers());
+	const allPointers = listener_overlay.getAllPointers();
 
 	const pointer1Released = allPointers.every(p => p.id !== pointer1Id || !p.isHeld);
 

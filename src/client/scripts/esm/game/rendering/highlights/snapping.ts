@@ -23,6 +23,7 @@ import mouse from "../../../util/mouse.js";
 import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
+import jsutil from "../../../util/jsutil.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore
@@ -82,11 +83,8 @@ type Snap = {
 	source?: Coords,
 }
 
-/** The current point the mouse is snapped to this frame, if it is. */
-let snap: Snap | undefined;
 
-
-// Methods --------------------------------------------------------------
+// Entity Hovering ---------------------------------------------------------
 
 
 /** {@link ENTITY_WIDTH_VPIXELS}, but converted to world-space units. This can change depending on the screen dimensions. */
@@ -94,16 +92,21 @@ function getEntityWidthWorld() {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
 
-/** Returns the current snap ROUNDED to the integer coordinate that contains it. */
-function getSnapCoords(): Coords | undefined {
-	if (snap === undefined) return undefined;
-	return space.roundCoords(snap.coords);
+/**
+ * Tests if a specific pointer is hovering over entities this frame.
+ * If so, it shouldn't snap to anything.
+ */
+function isWorldHoveringAtleastOneEntity(world: Coords): boolean {
+	if (!isSnappingEnabledThisFrame()) return false;
+
+	return getAllEntitiesWorldHovers(world).length > 0;
 }
 
-function isHoveringAtleastOneEntity() {
-	return miniimage.imagesHovered.length > 0 || drawsquares.highlightsHovered.length > 0;
+function getAllEntitiesWorldHovers(world: Coords) {
+	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(annotations.getSquares(), world, false).squares;
+	return [...imagesHovered, ...highlightsHovered];
 }
-
 
 type ClosestEntity = {
 	coords: Coords,
@@ -114,58 +117,80 @@ type ClosestEntity = {
 	index: number
 };
 
-function getClosestEntityToMouse(): ClosestEntity {
-	if (!isHoveringAtleastOneEntity()) throw Error("Should not call getClosestEntityToMouse() if isHoveringAtleastOneEntity() is false.");
-	
-	// Find the closest hovered entity to the pointer
+/** Calculates the closest entity (piece/square) to the given world coords. */
+function getClosestEntityToWorld(world: Coords): ClosestEntity | undefined {
+	if (!isSnappingEnabledThisFrame()) return undefined;
 
+	// Find the closest hovered entity to the pointer
 	let closestEntity: ClosestEntity | undefined = undefined;
 
+	const imagesHovered = miniimage.getImagesBelowWorld(world, true);
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(annotations.getSquares(), world, true);
+
 	// Pieces
-	for (let i = 0; i < miniimage.imagesHovered.length; i++) {
-		const coords = miniimage.imagesHovered[i]!;
-		const dist = miniimage.imagesHovered_dists[i]!;
+	for (let i = 0; i < imagesHovered.images.length; i++) {
+		const coords = imagesHovered.images[i]!;
+		const dist = imagesHovered.dists![i]!;
 		if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'miniimage', index: i };
 	}
 
 	// Square Highlights
-	const highlightsHovered = drawsquares.highlightsHovered;
-	const highlightsHovered_dists = drawsquares.highlightsHovered_dists;
-	for (let i = 0; i < highlightsHovered.length; i++) {
-		const coords = highlightsHovered[i]!;
-		const dist = highlightsHovered_dists[i]!;
+	for (let i = 0; i < highlightsHovered.squares.length; i++) {
+		const coords = highlightsHovered.squares[i]!;
+		const dist = highlightsHovered.dists![i]!;
 		if (closestEntity === undefined || dist <= closestEntity.dist) closestEntity = { coords, dist, type: 'square', index: i };
 	}
 
-	if (closestEntity === undefined) throw Error("No closest entity found, this should never happen.");
 	return closestEntity;
 }
 
 
 /**
- * SHOULD BE DONE BEFORE {@link updateSnapping}
- * This will teleport to all hovered entities.
+ * Calculates what entities are below the click location.
+ * Teleports to them, claiming the click.
  */
-function updateEntitiesHovered() {
-	drawsquares.updateHighlightsHovered(annotations.getSquares());
-	miniimage.updateImagesHovered(); // This updates hovered images at the same time
+function teleportToEntitiesIfClicked() {
+	if (!isSnappingEnabledThisFrame()) return;
 
-	// Test if clicked (teleport to all hovered entities)
-	const allEntitiesHovered = [...miniimage.imagesHovered, ...drawsquares.highlightsHovered];
-	if (allEntitiesHovered.length > 0) {
-		if (mouse.isMouseClicked(Mouse.LEFT)) {
-			transition.initTransitionToCoordsList(allEntitiesHovered);
-			mouse.claimMouseClick(Mouse.LEFT);
-		} else if (mouse.isMouseDown(Mouse.LEFT)) {
-			listener_overlay.claimMouseDown(Mouse.LEFT);
-			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-		}
+	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only teleport if clicked
+
+	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT)!;
+
+	const allEntitiesHovered = getAllEntitiesWorldHovers(mouseWorld);
+	
+	// console.log("Hovered entities:", jsutil.deepCopyObject(allEntitiesHovered));
+
+	if (allEntitiesHovered.length === 0) return; // No images to teleport to
+
+	if (mouse.isMouseClicked(Mouse.LEFT)) {
+		mouse.claimMouseClick(Mouse.LEFT);
+		transition.initTransitionToCoordsList(allEntitiesHovered);
+	} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) { // Allows second finger to grab the board
+		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
 }
 
 
-// Snapping -------------------------------------------------------------
+// Snapping --------------------------------------------------------------------
 
+
+/** We do not snap when zoomed in. */
+function isSnappingEnabledThisFrame(): boolean {
+	if (!boardpos.areZoomedOut()) return false;
+	if (guipause.areWePaused()) return false;
+	if (perspective.getEnabled() && !perspective.isMouseLocked()) return false;
+
+	return true;
+}
+
+/** Snap's the provided world coords to the nearest snappable coords. */
+function getWorldSnapCoords(world: Coords): Coords | undefined {
+	if (!isSnappingEnabledThisFrame()) return undefined;
+
+	const snap = snapPointerWorld(world);
+	if (snap === undefined) return undefined;
+	else return space.roundCoords(snap.coords);
+}
 
 type LineSnapPoint = {
 	line: Line,
@@ -177,18 +202,9 @@ type LineSnapPoint = {
  * eminates lines in all directions from all entities and calculates where those
  * intersect any of the highlight lines, calculating where we should snap the mouse to,
  * and teleporting if clicked.
- * 
- * EXPECTS {@link updateEntitiesHovered} TO BE CALLED BEFORE THIS, as we
- * should not snap to anything if the mouse is hovering atleast on entity.
  */
-function updateSnapping() {
-	snap = undefined;
-	
-	if (guipause.areWePaused()) return; // Don't snap if paused
-	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
-	if (isHoveringAtleastOneEntity()) return; // Early exit, no snapping in this case.
-	if (drawrays.areDrawing()) return; // Don't snap if we're drawing a ray
-	
+function snapPointerWorld(world: Coords): Snap | undefined {
+	const pointerCoords = space.convertWorldSpaceToCoords(world);
 	const gamefile = gameslot.getGamefile()!;
 
 
@@ -208,12 +224,14 @@ function updateSnapping() {
 	const allLines: Line[] = [...rayLines, ...presetRayLines, ...selectedPieceLegalMovesLines];
 	if (allLines.length === 0) return; // No lines to have snap
 
-	const mouseCoords = mouse.getTileMouseOver_Float()!;
+	const snapDistVPixels = ENTITY_WIDTH_VPIXELS * 0.5;
+	const snapDistWorld = space.convertPixelsToWorldSpace_Virtual(snapDistVPixels);
+	const snapDistCoords = snapDistWorld / boardpos.getBoardScale();
 
-	// First see if the mouse is even CLOSE to any of these lines,
+	// First see if the pointer is even CLOSE to any of these lines,
 	// as otherwise we can't snap to anything anyway.
 	const linesSnapPoints: LineSnapPoint[] = allLines.map(line => {
-		const snapPoint = math.closestPointOnLineSegment(line.start, line.end, mouseCoords);
+		const snapPoint = math.closestPointOnLineSegment(line.start, line.end, pointerCoords);
 		return { line, snapPoint };
 	});
 
@@ -222,19 +240,12 @@ function updateSnapping() {
 		if (lineSnapPoint.snapPoint.distance < closestSnap.snapPoint.distance) closestSnap = lineSnapPoint;
 	}
 
-	const snapDistVPixels = ENTITY_WIDTH_VPIXELS * 0.5;
-	const snapDistWorld = space.convertPixelsToWorldSpace_Virtual(snapDistVPixels);
-	const snapDistCoords = snapDistWorld / boardpos.getBoardScale();
-
 	if (closestSnap.snapPoint.distance > snapDistCoords) {
-		// console.log("Mouse no close snap");
-		return; // No line close enough for the mouse to snap to anything
+		// console.log("pointer no close snap");
+		return; // No line close enough for the pointer to snap to anything
 	}
 
 	// At this point we know we WILL be snapping to something.
-
-	// Claim the mouse down so that board doesn't use it to start dragging
-	if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT);
 
 	// Filter out lines which the mouse is too far away from
 	const closeLines = linesSnapPoints.filter(lsp => lsp.snapPoint.distance <= snapDistCoords);
@@ -269,12 +280,12 @@ function updateSnapping() {
 		}
 	}
 
-	// Calculate closest one to the mouse
+	// Calculate closest one to the pointer
 
 	let closestIntsect: { intersection: Intersection, dist: number } | undefined;
 	for (const i of line_intersections) {
 		// Calculate distance to mouse
-		const dist = math.euclideanDistance(i.coords, mouseCoords);
+		const dist = math.euclideanDistance(i.coords, pointerCoords);
 		if (closestIntsect === undefined || dist < closestIntsect.dist) closestIntsect = { intersection: i, dist };
 	}
 
@@ -294,7 +305,7 @@ function updateSnapping() {
 			(color1[3] + color2[3]) / 2
 		];
 		
-		return setSnapAndTeleportIfClicked({ coords: closestIntsect.intersection.coords, color, type });
+		return { coords: closestIntsect.intersection.coords, color, type };
 	}
 
 	/**
@@ -340,13 +351,12 @@ function updateSnapping() {
 	
 	// Now see if we should snap to any "Square"
 
-	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, mouseCoords, searchVectors);
+	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, pointerCoords, searchVectors);
 	if (closestSquareSnap) {
 		// Is the snap within snapping distance of the mouse?
 		if (closestSquareSnap.dist < snapDistCoords) {
-			setSnapAndTeleportIfClicked(closestSquareSnap.snap);
 			squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
-			return;
+			return closestSquareSnap.snap;
 		}
 	}
 	squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
@@ -356,10 +366,10 @@ function updateSnapping() {
 	// Only snap to these if there isn't too many pieces (slow)
 	if (boardutil.getPieceCountOfGame(gamefile.pieces) < THRESHOLD_TO_SNAP_PIECES) {
 		const pieces = boardutil.getCoordsOfAllPieces(gamefile.pieces);
-		const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, mouseCoords, searchVectors);
+		const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, pointerCoords, searchVectors);
 		if (closestPieceSnap) {
 			// Is the snap within snapping distance of the mouse?
-			if (closestPieceSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestPieceSnap.snap);
+			if (closestPieceSnap.dist < snapDistCoords) return closestPieceSnap.snap;
 		}
 	}
 
@@ -367,23 +377,31 @@ function updateSnapping() {
 
 	const startingBox = gamefileutility.getStartingAreaBox(gamefile);
 	const origin = math.calcCenterOfBoundingBox(startingBox);
-	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, mouseCoords, searchVectors);
+	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, pointerCoords, searchVectors);
 	if (closestOriginSnap) {
 		// Is the snap within snapping distance of the mouse?
-		if (closestOriginSnap.dist < snapDistCoords) return setSnapAndTeleportIfClicked(closestOriginSnap.snap);
+		if (closestOriginSnap.dist < snapDistCoords) return closestOriginSnap.snap;
 	}
 
 	// No snap found! ===========================================
 
 	// Instead, set the snap to the closest point on the line.
-	setSnapAndTeleportIfClicked({ coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece });
+	return { coords: closestSnap.snapPoint.coords, color: closestSnap.line.color, type: closestSnap.line.piece };
 }
 
-function setSnapAndTeleportIfClicked(newSnap: Snap) {
-	snap = newSnap;
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		mouse.claimMouseClick(Mouse.LEFT);
-		transition.initTransitionToCoordsList([newSnap.coords]);
+function teleportToSnapIfClicked() {
+	if (!isSnappingEnabledThisFrame()) return undefined;
+	
+	if (mouse.isMouseClicked(Mouse.LEFT) || mouse.isMouseDown(Mouse.LEFT)) {
+		const world = mouse.getMouseWorld(Mouse.LEFT)!;
+		const snap = snapPointerWorld(world);
+		if (snap === undefined) return; // No snap to teleport to
+		if (mouse.isMouseClicked(Mouse.LEFT)) {
+			mouse.claimMouseClick(Mouse.LEFT);
+			transition.initTransitionToCoordsList([snap.coords]);
+		} else if (mouse.isMouseDown(Mouse.LEFT) && listener_overlay.getPointerCount() !== 2) {
+			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+		}
 	}
 }
 
@@ -429,39 +447,50 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[
  * or a mini image of a piece on the legal move line.
  */
 function render() {
-	if (snap === undefined) return; // No snap to render
+	if (!isSnappingEnabledThisFrame()) return undefined;
 
-	// Render a single line between the snap point and its source
-
-	if (snap.source !== undefined) {
-		const [r,g,b,a] = SNAP_LINE_COLOR;
-		const start = space.convertCoordToWorldSpace(snap.source);
-		const end = space.convertCoordToWorldSpace(snap.coords);
-		const data = [
-			//   Vertex              Color
-			start[0], start[1],   r, g, b, a,
-			end[0], end[1],       r, g, b, a
-		];
-		createModel(data, 2, 'LINES', true).render();
+	const allPointerWorlds = mouse.getRelevantListener().getAllPointerIds().map(id => mouse.getPointerWorld(id)!);
+	const allSnaps: Snap[] = [];
+	for (const pointerWorld of allPointerWorlds) {
+		const snap = snapPointerWorld(pointerWorld);
+		if (snap !== undefined) allSnaps.push(snap);
 	}
 
-	// Next we render either the glow dot or the mini image of the piece.
+	if (allSnaps.length === 0) return; // No snaps to render
 
-	const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
-
-	if (snap.type === undefined) {
-		// Render glow dot
-		const color = snap.color;
-		const colorTransparent = [...color];
-		colorTransparent[3] = 0;
-
-		const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
-		const data: number[] = bufferdata.getDataGlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
-		createModel(data, 2, 'TRIANGLE_FAN', true).render();
-	} else {
-		// Render mini image of piece
-		const model = generateGhostImageModel(snap.type, coordsWorld);
-		model.render();
+	for (const snap of allSnaps) {
+		// Render a single line between the snap point and its source
+	
+		if (snap.source !== undefined) {
+			const [r,g,b,a] = SNAP_LINE_COLOR;
+			const start = space.convertCoordToWorldSpace(snap.source);
+			const end = space.convertCoordToWorldSpace(snap.coords);
+			const data = [
+				//   Vertex              Color
+				start[0], start[1],   r, g, b, a,
+				end[0], end[1],       r, g, b, a
+			];
+			createModel(data, 2, 'LINES', true).render();
+		}
+	
+		// Next we render either the glow dot or the mini image of the piece.
+	
+		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
+	
+		if (snap.type === undefined) {
+			// Render glow dot
+			const color = snap.color;
+			const colorTransparent = [...color];
+			colorTransparent[3] = 0;
+	
+			const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
+			const data: number[] = bufferdata.getDataGlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
+			createModel(data, 2, 'TRIANGLE_FAN', true).render();
+		} else {
+			// Render mini image of piece
+			const model = generateGhostImageModel(snap.type, coordsWorld);
+			model.render();
+		}
 	}
 }
 
@@ -495,14 +524,13 @@ function generateGhostImageModel(type: number, coords: Coords) {
 export default {
 	VECTORS,
 	VECTORS_HIPPOGONAL,
-	ENTITY_WIDTH_VPIXELS,
 	getEntityWidthWorld,
-	getSnapCoords,
 
-	isHoveringAtleastOneEntity,
-	getClosestEntityToMouse,
-	updateEntitiesHovered,
+	isWorldHoveringAtleastOneEntity,
+	getClosestEntityToWorld,
+	teleportToEntitiesIfClicked,
 
-	updateSnapping,
+	getWorldSnapCoords,
+	teleportToSnapIfClicked,
 	render,
 };

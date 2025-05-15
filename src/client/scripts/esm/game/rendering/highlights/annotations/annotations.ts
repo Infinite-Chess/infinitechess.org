@@ -156,6 +156,7 @@ function Collapse() {
 			annotes.Squares.push(newSquare);
 		}
 		annotes.Rays.length = 0; // Erase all rays
+		drawrays.dispatchRayCountEvent(annotes.Rays);
 	} else clearAnnotes(annotes);
 }
 
@@ -174,6 +175,7 @@ function onGameUnload() {
 	annotes_plies.length = 0;
 	clearAnnotes(annotes_linger);
 	drawarrows.stopDrawing();
+	drawrays.stopDrawing();
 }
 
 
@@ -190,7 +192,6 @@ function render_belowPieces() {
 function render_abovePieces() {
 	const annotes = getRelevantAnnotes();
 	drawarrows.render(annotes.Arrows);
-
 }
 
 
@@ -204,6 +205,7 @@ export default {
 
 	update,
 	testIfCollapsed,
+	Collapse,
 	onPieceSelection,
 	onGameUnload,
 	render_belowPieces,

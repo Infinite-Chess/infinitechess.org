@@ -18,8 +18,6 @@ import mouse from "../../../../util/mouse.js";
 import { Mouse } from "../../../input.js";
 // @ts-ignore
 import guipause from "../../../gui/guipause.js";
-// @ts-ignore
-import perspective from "../../perspective.js";
 
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
@@ -38,47 +36,30 @@ const OPACITY_OFFSET = 0.08;
 /** ADDITONAL (not overriding) opacity when hovering over highlights. */
 const hover_opacity = 0.5;
 
-/** All highlights currently being hovered over, if zoomed out. */
-const highlightsHovered: Coords[] = [];
-/**
- * All highlights currently being hovered over EUCLIDEAN DISTANCES to the mouse in world space.
- * For quickly comparing against other hovered annotes.
- * EACH INDEX MAPS TO THE SAME INDEX IN {@link highlightsHovered}.
- */
-const highlightsHovered_dists: number[] = [];
-
 
 // Updating -----------------------------------------------------------------
 
 
-/**
- * This is done PRIOR to update(), since that depends on what annotes we're currently hovering over.
- * @param highlights - All square highlights currently on the board.
- */
-function updateHighlightsHovered(highlights: Square[]) {
-	highlightsHovered.length = 0;
-	highlightsHovered_dists.length = 0;
-	
-	if (!boardpos.areZoomedOut() || guipause.areWePaused() || highlights.length === 0) return;
-	if (perspective.getEnabled() && !perspective.isMouseLocked()) return;
-
-	// Test if any one highlight is being hovered over
-
-	const mouseWorld: Coords = mouse.getMouseWorld(Mouse.RIGHT)!;
+/** Returns a list of Square highlight coordinates that are all being hovered over by the provided world coords. */
+function getSquaresBelowWorld(highlights: Square[], world: Coords, trackDists: boolean): { squares: Coords[], dists?: number[] } {
+	const squares: Square[] = [];
+	const dists: number[] = [];
 
 	const entityHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
 
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach(coords => {
-		// const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(coords);
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
-		const dist_cheby = math.chebyshevDistance(coordsWorld, mouseWorld);
+		const dist_cheby = math.chebyshevDistance(coordsWorld, world);
 		if (dist_cheby < entityHalfWidthWorld) {
-			highlightsHovered.push(coords);
+			squares.push(coords);
 			// Upgrade the distance to euclidean
-			highlightsHovered_dists.push(math.euclideanDistance(coordsWorld, mouseWorld));
+			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
 		}
 	});
+
+	if (trackDists) return { squares, dists };
+	else return { squares };
 }
 
 /**
@@ -90,28 +71,19 @@ function updateHighlightsHovered(highlights: Square[]) {
 function update(highlights: Square[]) {
 	// If the pointer simulated a right click, add a highlight!
 	if (mouse.isMouseClicked(Mouse.RIGHT)) {
+		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
 		const pointerWorld: Coords = mouse.getMouseWorld(Mouse.RIGHT)!;
 		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 
-		const isHoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
-		const snapCoords = snapping.getSnapCoords();
+		const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
+		const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
 
-		if (boardpos.areZoomedOut() && (isHoveringAtleastOneEntity || snapCoords)) { // Zoomed out & snapping one thing => Snapping behavior
-			if (isHoveringAtleastOneEntity) {
-				// Find the closest hovered entity to the pointer
-				const closestEntity = snapping.getClosestEntityToMouse();
-	
+		if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) { // Zoomed out & snapping one thing => Snapping behavior
+			if (closestEntityToWorld) {
 				// Now that we have the closest hovered entity, toggle the highlight on its coords.
-				const index = highlights.findIndex(coords => coordutil.areCoordsEqual(coords, closestEntity.coords));
-				if (index !== -1) { // Already highlighted, Remove
-					highlights.splice(index, 1);
-					// Also remove from highlightsHovered. Prevents a bug where the highlight doesn't dissapear until the next frame render.
-					if (closestEntity.type === 'square') {
-						highlightsHovered.splice(closestEntity.index, 1);
-						highlightsHovered_dists.splice(closestEntity.index, 1);
-					} else throw Error("Cannot remove a highlight from highlightsHovered if it was not a square highlight.");
-				}
-				else highlights.push(closestEntity.coords); // Add
+				const index = highlights.findIndex(coords => coordutil.areCoordsEqual(coords, closestEntityToWorld.coords));
+				if (index !== -1) highlights.splice(index, 1); // Already highlighted, Remove
+				else highlights.push(closestEntityToWorld.coords); // Add
 			} else if (snapCoords) {
 				// Toggle the highlight on its coords.
 				const index = highlights.findIndex(coords => coordutil.areCoordsEqual(coords, snapCoords));
@@ -126,8 +98,6 @@ function update(highlights: Square[]) {
 			if (index !== -1) highlights.splice(index, 1); // Remove
 			else highlights.push(pointerSquare); // Add
 		}
-		// Claim the click so other scripts don't also use it
-		// input.getPointerClicked(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 }
 
@@ -163,7 +133,20 @@ function render(highlights: Square[]) {
 	genModel(highlights, color).render(undefined, undefined, { size });
 
 	// Render hovered highlights
-	if (highlightsHovered.length > 0) {
+
+	if (!boardpos.areZoomedOut() || guipause.areWePaused()) return; // Don't increase opacity of highlighgts when zoomed in
+
+	// Prevent duplicates
+	const allHovered: Square[] = [];
+	for (const pointerId of mouse.getRelevantListener().getAllPointerIds()) {
+		const pointerWorld: Coords = mouse.getPointerWorld(pointerId)!;
+		const hovered = getSquaresBelowWorld(highlights, pointerWorld, false).squares;
+		hovered.forEach(coords => {
+			if (!allHovered.some(c => coordutil.areCoordsEqual(c, coords))) allHovered.push(coords);
+		});
+	}
+
+	if (allHovered.length > 0) {
 		const color = preferences.getAnnoteSquareColor();
 		const hoverColor = [
 			color[0],
@@ -171,7 +154,7 @@ function render(highlights: Square[]) {
 			color[2],
 			hover_opacity
 		] as Color;
-		genModel(highlightsHovered, hoverColor).render(undefined, undefined, { size });
+		genModel(allHovered, hoverColor).render(undefined, undefined, { size });
 	}
 }
 
@@ -180,10 +163,7 @@ function render(highlights: Square[]) {
 
 
 export default {
-	highlightsHovered,
-	highlightsHovered_dists,
-
 	update,
-	updateHighlightsHovered,
+	getSquaresBelowWorld,
 	render,
 };

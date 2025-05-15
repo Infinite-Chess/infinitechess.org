@@ -10,6 +10,7 @@ declare global {
 		ping: CustomEvent<number>;
 		'socket-closed': CustomEvent<void>;
 		'lingering-annotations-toggle': CustomEvent<boolean>;
+		'ray-count-change': CustomEvent<number>;
 	}
 
 	/** The sound script global variables. */

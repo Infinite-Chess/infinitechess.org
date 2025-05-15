@@ -47,7 +47,6 @@ function getPointerPosition_Offscreen(pointerId: string): Coords | undefined {
  */
 function getMouseWorld(button: MouseButton = Mouse.LEFT): Coords | undefined {
 	if (!perspective.getEnabled()) {
-		// const mousePos = listener_overlay.getMousePosition(button);
 		const mouseId = listener_overlay.getMouseId(button);
 		if (!mouseId) return undefined;
 		let mousePos = getPointerPosition_Offscreen(mouseId);
@@ -214,6 +213,24 @@ function cancelMouseClick(button: MouseButton): void {
 	else listener_overlay.cancelMouseClick(button);
 }
 
+/**
+ * Wrapper for reading the correct listener for getting the mose recent mouse id
+ * that performed the specified action, depending on whether we're in perspective mode or not.
+ */
+function getMouseId(button: MouseButton): string | undefined {
+	if (perspective.isMouseLocked()) return listener_document.getMouseId(button);
+	else return listener_overlay.getMouseId(button);
+}
+
+/**
+ * Returns the relevant listener for the mouse events,
+ * depending on whether we're in perspective mode or not.
+ */
+function getRelevantListener() {
+	if (perspective.getEnabled()) return listener_document;
+	else return listener_overlay;
+}
+
 
 export default {
 	getMouseWorld,
@@ -231,4 +248,6 @@ export default {
 	claimMouseDown,
 	claimMouseClick,
 	cancelMouseClick,
+	getMouseId,
+	getRelevantListener,
 };

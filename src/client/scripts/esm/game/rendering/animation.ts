@@ -107,9 +107,9 @@ const MOVE_ANIMATION_DURATION = {
 	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
 	baseMillis_Debug: 2000,
 	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis} when {@link DEBUG} is true. */
-	multiplierMillis_Debug: 30,
+	multiplierMillis_Debug: 15,
 	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link DEBUG} is true. */
-	multiplierMillis_Curved_Debug: 60,
+	multiplierMillis_Curved_Debug: 30,
 };
 
 

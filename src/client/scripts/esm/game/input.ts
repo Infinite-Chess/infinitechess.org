@@ -94,13 +94,17 @@ interface InputListener {
 	 */
     // eslint-disable-next-line no-unused-vars
 	getPointerVel(pointerId: string): Vec2 | undefined;
+	/** Returns the ids of all existing pointers. */
+	getAllPointerIds(): string[];
 	/** Returns all existing pointers. */
-	getAllPointers(): Record<string, Pointer>;
+	getAllPointers(): Pointer[];
 	getPointerCount(): number;
 	// eslint-disable-next-line no-unused-vars
 	getPointer(pointerId: string): Pointer | undefined;
-	/** Returns a list of all pointers that simulated left-click-down this frame. */
+	/** Returns a list of all pointers that were pressed down this frame. */
 	getPointersDown(): string[];
+	/** Returns the number of pointers that were pressed down this frame. */
+	getPointersDownCount(): number;
 	/** Returns how much the wheel has scrolled this frame. */
     getWheelDelta(): number;
 	/** Whether the provided keyboard key was pressed down this frame. */
@@ -225,7 +229,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 	/** The keys are the finger ids, if its a finger, or 'mouse' if it's the mouse. */
 	const pointers: Record<string, Pointer> = {};
 
-	/** A list of all pointer id's that were left-click pressed down this frame. */
+	/** A list of all pointer id's that were pressed down this frame. */
 	const pointersDown: string[] = [];
 
 	/** 
@@ -329,7 +333,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY], element);
 		targetButtonInfo.position = [...relativeMousePos];
 
-		if (targetButton === Mouse.LEFT) pointersDown.push(targetButtonInfo.pointerId!);
+		// if (targetButton === Mouse.LEFT) pointersDown.push(targetButtonInfo.pointerId!);
+		// Push them down anyway no matter which type of click.
+		// So that you can still pinch the board when fingers act as right clicks.
+		pointersDown.push(targetButtonInfo.pointerId!);
 
 		if (pointers[pointerId]) pointers[pointerId].isHeld = true; // Mark the pointer as held down
 		else throw Error(`Pointer of id (${pointerId}) wasn't added to pointers list.`);
@@ -611,13 +618,13 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			// Also remove the pointer from the list of pointers down this frame.
 			const pointerId = clickInfo[button].pointerId;
 			const index = pointersDown.indexOf(pointerId!);
-			// console.log("Claiming pointer down1: ", pointerId);
+			// console.error("Claiming pointer down1: ", pointerId);
 			if (index !== -1) pointersDown.splice(index, 1);
 		},
 		claimPointerDown: (pointerId: string) => {
 			const index = pointersDown.indexOf(pointerId);
 			if (index === -1) throw Error("Can't claim pointer down. Already claimed, or is not down.");
-			// console.log("Claiming pointer down2: ", pointerId);
+			// console.error("Claiming pointer down2: ", pointerId);
 			pointersDown.splice(index, 1);
 		},
 		unclaimPointerDown: (pointerId: string) => {
@@ -652,10 +659,12 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		getPointerPos: (pointerId: string) => pointers[pointerId]?.position ?? undefined,
 		getPointerDelta: (pointerId: string) => pointers[pointerId]?.delta ?? undefined,
 		getPointerVel: (pointerId: string) => pointers[pointerId]?.velocity ?? undefined,
-		getAllPointers: () => pointers,
+		getAllPointerIds: () => Object.keys(pointers),
+		getAllPointers: () => Object.values(pointers),
 		getPointerCount: () => Object.keys(pointers).length,
 		getPointer: (pointerId: string) => pointers[pointerId],
 		getPointersDown: () => pointersDown,
+		getPointersDownCount: () => pointersDown.length,
 		getWheelDelta: () => wheelDelta,
 		isKeyDown: (keyCode: string) => keyDowns.includes(keyCode),
 		isKeyHeld: (keyCode: string) => keyHelds.includes(keyCode),
