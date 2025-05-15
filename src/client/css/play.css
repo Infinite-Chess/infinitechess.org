@@ -1115,12 +1115,12 @@ svg.erase {
     transform: scale(0.75) translate(-0.015em, 0);
 }
 svg.collapse {
-    transform: scale(0.75);
+    transform: scale(0.75) translate(0, 0.02em)
 }
 
 /* Color annotations button bright blue when enabled */
-.buttoncontainer.enabled #annotations {
-    background: radial-gradient(circle at center, rgb(0, 255, 255) rgb(0, 232, 232));
+#annotations.enabled {
+    background: radial-gradient(rgb(255, 100, 0), rgb(255, 100, 0), rgb(255, 100, 100), rgb(255,170,170), rgb(255, 255, 255))
 }
 
 /* Annotation buttons aren't visible on desktop */

@@ -41,6 +41,10 @@ const element_Annotations = document.getElementById('annotations')!;
 const element_Erase = document.getElementById('erase')!;
 const element_Collapse = document.getElementById('collapse')!;
 
+// const element_AnnotationsContainer = document.querySelector('.buttoncontainer.annotations')!;
+const element_EraseContainer = document.querySelector('.buttoncontainer.erase')!;
+const element_CollapseContainer = document.querySelector('.buttoncontainer.collapse')!;
+
 const element_CoordsX = document.getElementById('x') as HTMLInputElement;
 const element_CoordsY = document.getElementById('y') as HTMLInputElement;
 
@@ -182,6 +186,9 @@ function closeListeners_Navigation() {
 	element_Recenter.removeEventListener('click', recenter);
 	element_Expand.removeEventListener('click', callback_Expand);
 	element_Back.removeEventListener('click', callback_Back);
+	element_Annotations.removeEventListener('click', callback_Annotations);
+	element_Erase.removeEventListener('click', callback__Collapse);
+	element_Collapse.removeEventListener('click', callback__Collapse);
 	element_moveRewind.removeEventListener('click', callback_MoveRewind);
 	element_moveRewind.removeEventListener('mousedown', callback_MoveRewindMouseDown);
 	element_moveRewind.removeEventListener('mouseleave', callback_MoveRewindMouseLeave);
@@ -243,7 +250,7 @@ function recenter() {
 function callback_Annotations() {
 	annotationsEnabled = !annotationsEnabled;
 	listener_overlay.setTreatLeftasRight(annotationsEnabled);
-	element_Annotations.classList.toggle('enabled')
+	element_Annotations.classList.toggle('enabled');
 }
 
 function callback__Collapse() {
@@ -253,11 +260,11 @@ function callback__Collapse() {
 document.addEventListener('ray-count-change', (e: CustomEvent) => {
 	const rayCount = e.detail;
 	if (rayCount > 0) {
-		element_Erase.classList.add('hidden');
-		element_Collapse.classList.remove('hidden');
+		element_EraseContainer.classList.add('hidden');
+		element_CollapseContainer.classList.remove('hidden');
 	} else { // Zero rays
-		element_Erase.classList.remove('hidden');
-		element_Collapse.classList.add('hidden');
+		element_EraseContainer.classList.remove('hidden');
+		element_CollapseContainer.classList.add('hidden');
 	}
 });
 
