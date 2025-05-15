@@ -96,7 +96,7 @@ async function verifyAccount(req: CustomRequest, res: Response) {
 	verification = getNewVerificationAfterVerifying();
 
 	// Informs all sockets of the user that he is now verified
-	if (verification.verified) AddVerificationToAllSocketsOfMember(user_id);
+	AddVerificationToAllSocketsOfMember(user_id);
 
 	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
 
