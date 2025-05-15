@@ -9,7 +9,7 @@ import { addGameToGamesTable } from '../../database/gamesManager.js';
 import { getPlayerStatsData, updatePlayerStatsColumns } from "../../database/playerStatsManager.js";
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating } from "../../database/leaderboardsManager.js";
+import { addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating, isPlayerInLeaderboard } from "../../database/leaderboardsManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
 import { computeRatingDataChanges } from './ratingcalculation.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
@@ -154,16 +154,11 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) return {}; // If a player doesn't exist, then no ratings get updated
 
-		// Access the player leaderboard data
-		let leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
-		if (leaderboard_data === undefined) {
-			// This might happen if this is a player's first rated game on this leaderboard
-			// In this case, add this player to the leaderboard now, and immediately try accessing his leaderboard data again
-			const results = addUserToLeaderboard(user_id, leaderboard_id);
-			if (results.success) leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
-		}
+		// If player is not on leaderboard, add him to it
+		if (!isPlayerInLeaderboard(user_id, leaderboard_id)) addUserToLeaderboard(user_id, leaderboard_id);
 
-		// If user is still not in leaderboard or has no valid entries for some reason, then no ratings get updated
+		// Access the player leaderboard data
+		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
 		if (leaderboard_data === undefined || leaderboard_data?.elo === undefined || leaderboard_data?.rating_deviation === undefined) {
 			console.log(`Unable to correctly process leaderboard_data of user ${user_id} and leaderboard ${leaderboard_id}.`);
 			return {};
@@ -172,7 +167,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		ratingdata[player] = {
 			elo_at_game: leaderboard_data.elo,
 			rating_deviation_at_game: leaderboard_data.rating_deviation,
-			last_rated_game_date: leaderboard_data.last_rated_game_date,
+			last_rated_game_date: leaderboard_data.last_rated_game_date ?? null,
 		};
 	}
 

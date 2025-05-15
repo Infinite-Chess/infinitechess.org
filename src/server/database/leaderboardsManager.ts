@@ -6,8 +6,9 @@
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 // @ts-ignore
 import db from './database.js';
-import { DEFAULT_LEADERBOARD_ELO } from '../../client/scripts/esm/chess/variants/leaderboard.js'; 
+import { DEFAULT_LEADERBOARD_ELO, UNCERTAIN_LEADERBOARD_RD } from '../../client/scripts/esm/chess/variants/leaderboard.js'; 
 import { VariantLeaderboards } from '../../client/scripts/esm/chess/variants/leaderboard.js';
+import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Leaderboard } from '../../client/scripts/esm/chess/variants/leaderboard.js';
@@ -294,7 +295,13 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
 	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`; // Fallback if they aren't in the leaderboard
 	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
-	if (rating_values?.elo !== undefined) ranked_elo = String(Math.round(rating_values.elo));
+	if (rating_values?.elo !== undefined) {
+		ranked_elo = String(Math.round(rating_values.elo));
+		if (rating_values.rating_deviation !== undefined && rating_values.last_rated_game_date !== undefined) {
+			const true_rating_deviation = getTrueRD(rating_values.rating_deviation, rating_values.last_rated_game_date);
+			if (true_rating_deviation >= UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
+		}
+	}
 
 	return ranked_elo;
 }
