@@ -150,6 +150,7 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 	if (invite.rated === 'rated') {
 		if (!(invite.variant in VariantLeaderboards)) return true;
 		if (invite.clock === "-") return true;
+		if (!(invite.color === players.NEUTRAL || invite.publicity === "private")) return true;
 	}
 
 	return false;
