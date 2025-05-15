@@ -661,7 +661,7 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 		getPointerCount: () => Object.keys(pointers).length,
 		getPointer: (pointerId: string) => pointers[pointerId],
 		getPointersDown: () => pointersDown,
-		getPointersDownCount: () => pointersDown.length;
+		getPointersDownCount: () => pointersDown.length,
 		getWheelDelta: () => wheelDelta,
 		isKeyDown: (keyCode: string) => keyDowns.includes(keyCode),
 		isKeyHeld: (keyCode: string) => keyHelds.includes(keyCode),

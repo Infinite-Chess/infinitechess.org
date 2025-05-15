@@ -15,7 +15,7 @@ import { createModel } from "../../buffermodel.js";
 import coordutil, { Coords } from "../../../../chess/util/coordutil.js";
 import snapping from "../snapping.js";
 import mouse from "../../../../util/mouse.js";
-import { InputListener, Mouse } from "../../../input.js";
+import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
 import { listener_document, listener_overlay } from "../../../chess/game.js";
 
@@ -52,9 +52,10 @@ const ARROW = {
 
 /** This will be defined if we are CURRENTLY drawing an arrow. */
 let drag_start: Coords | undefined;
-
 /** The ID of the pointer that is drawing the arrow. */
 let pointerId: string | undefined;
+/** The last known position of the pointer drawing an arrow. */
+let pointerWorld: Coords | undefined;
 
 
 // Updating -----------------------------------------------------------------
@@ -71,8 +72,10 @@ function update(arrows: Arrow[]) {
 
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
-		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
-			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
+		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) {
+			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
+			pointerId = respectiveListener.getMouseId(Mouse.RIGHT);
+			pointerWorld = mouse.getPointerWorld(pointerId!)!;
 
 			const hoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
 			const snapCoords = snapping.getSnapCoords();
@@ -90,7 +93,6 @@ function update(arrows: Arrow[]) {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			}
-			pointerId = respectiveListener.getMouseId(Mouse.RIGHT);
 		}
 	} else { // Currently drawing an arrow
 
@@ -104,6 +106,7 @@ function update(arrows: Arrow[]) {
 
 		// Test if pointer released (finalize arrow)
 		const pointer = respectiveListener.getPointer(pointerId!);
+		if (pointer) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
 		if (!pointer || !pointer.isHeld) {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
@@ -116,6 +119,7 @@ function update(arrows: Arrow[]) {
 function stopDrawing() {
 	drag_start = undefined;
 	pointerId = undefined;
+	pointerWorld = undefined;
 }
 
 /**
@@ -126,7 +130,6 @@ function stopDrawing() {
  */
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arrow } {
 	// console.log("Adding drawn arrow");
-	const pointerWorld = mouse.getPointerWorld(pointerId!)!;
 	let drag_end: Coords;
 
 	const hoveringAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
@@ -143,7 +146,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean, deletedArrow?: Arro
 		}
 	} else {
 		// No snap
-		drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+		drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld!);
 	}
 
 	// Skip if end equals start (no arrow drawn)

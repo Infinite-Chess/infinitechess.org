@@ -18,7 +18,7 @@ import instancedshapes from "../../instancedshapes.js";
 import { AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from "../../buffermodel.js";
 import gameslot from "../../../chess/gameslot.js";
 import highlightline, { Line } from "../highlightline.js";
-import { InputListener, Mouse } from "../../../input.js";
+import { Mouse } from "../../../input.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
 import annotations, { Ray } from "./annotations.js";
@@ -41,9 +41,10 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 
 /** This will be defined if we are CURRENTLY drawing a ray. */
 let drag_start: Coords | undefined;
-
 /** The ID of the pointer that is drawing the ray. */
 let pointerId: string | undefined;
+/** The last known position of the pointer drawing a ray. */
+let pointerWorld: Coords | undefined;
 
 
 // Getters -------------------------------------------------------------------
@@ -81,8 +82,10 @@ function update(rays: Ray[]) {
 	const respectiveListener = perspective.getEnabled() ? listener_document : listener_overlay;
 
 	if (!drag_start) { // Not currently drawing a ray
-		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) { // Double click drag this frame
-			const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
+		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT) && respectiveListener.getPointerCount() !== 2) { // Double click drag this frame
+			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
+			pointerId = respectiveListener.getMouseId(Mouse.RIGHT);
+			pointerWorld = mouse.getPointerWorld(pointerId!)!;
 
 			const snappingAtleastOneEntity = snapping.isHoveringAtleastOneEntity();
 			const snapCoords = snapping.getSnapCoords();
@@ -98,7 +101,6 @@ function update(rays: Ray[]) {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 			}
-			pointerId = respectiveListener.getMouseId(Mouse.RIGHT);
 			// console.log("Ray drag start:", drag_start);
 		}
 	} else { // Currently drawing a ray
@@ -114,6 +116,7 @@ function update(rays: Ray[]) {
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
 		const pointer = respectiveListener.getPointer(pointerId!);
+		if (pointer) pointerWorld = mouse.getPointerWorld(pointerId!)!; // Update its last known position
 		if (pointer?.isHeld) { // Pointer is still holding
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
@@ -129,9 +132,9 @@ function update(rays: Ray[]) {
 		} else { // The pointer is no longer being held
 			// Prevents accidentally ray drawing if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) {
-        addDrawnRay(rays); // Finalize the ray
-			  dispatchRayCountEvent(rays);
-      }
+				addDrawnRay(rays); // Finalize the ray
+				dispatchRayCountEvent(rays);
+      		}
 			stopDrawing();
 		}
 	}
@@ -140,6 +143,7 @@ function update(rays: Ray[]) {
 function stopDrawing() {
 	drag_start = undefined;
 	pointerId = undefined;
+	pointerWorld = undefined;
 }
 
 /** Returns all the Rays converted to Lines, which are rendered easily. */
@@ -174,8 +178,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
  * @returns An object containing the results, such as whether the ray was added, and what rays were deleted if any.
  */
 function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
-	const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT)!;
-	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld!);
 
 	// Skip if end equals start (no ray drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
