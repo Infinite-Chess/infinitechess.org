@@ -57,7 +57,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
 	if (invite.rated === 'rated' && !(signedIn && ws.metadata.verified)) {
-		return sendSocketMessage(ws, "general", "notifyerror", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
+		return sendSocketMessage(ws, "general", "notify", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
 	}
 
 	// Accept the invite!

@@ -31,6 +31,7 @@ const RATING_PERIOD_DURATION = 1000 * 60 * 60 * 24 * 15; // 15 days
 
 /** Frequency of automatic RD update in database, in milliseconds */
 const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
+// const RD_UPDATE_FREQUENCY = 1000 * 30; // 30s for dev testing
 
 
 // Types -------------------------------------------------------------------------------
@@ -130,7 +131,10 @@ export {
 	DEFAULT_LEADERBOARD_RD,
 	UNCERTAIN_LEADERBOARD_RD,
 	RD_UPDATE_FREQUENCY,
-	RatingData,
 	getTrueRD,
 	computeRatingDataChanges
+};
+
+export type {
+	RatingData,
 };

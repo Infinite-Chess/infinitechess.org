@@ -224,7 +224,7 @@ function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: num
 		SELECT user_id, elo, rating_deviation, last_rated_game_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
-			AND rating_deviation <= ? -- Disregard any members with a too high RD
+		AND rating_deviation <= ? -- Disregard any members with a too high RD
 		ORDER BY elo DESC
 		LIMIT ?
 	`;
@@ -265,7 +265,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 				RANK() OVER (ORDER BY elo DESC) as rank
 			FROM leaderboards
 			WHERE leaderboard_id = ? -- Filter for the specific leaderboard FIRST
-				AND (rating_deviation <= ? OR user_id = ?) -- Disregard any other users with a too high RD
+			AND (rating_deviation <= ? OR user_id = ?) -- Disregard any other users with a too high RD
 		)
 		SELECT rank
 		FROM RankedPlayers
@@ -284,26 +284,6 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 		// Log message remains appropriate
 		logEvents(`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
 		return undefined; // Return undefined on error
-	}
-}
-
-/**
- * Retrieves all entries of the leaderboards table and updates their RD
- */
-function updateAllRatingDeviationsofLeaderboardTable() {
-	const query = `SELECT * FROM leaderboards`;
-
-	try {
-		const entries = db.all(query) as LeaderboardEntry[];
-		for (const entry of entries) {
-			const updatedRD = getTrueRD(entry.rating_deviation as number, entry?.rd_last_update_date ?? null);
-			updatePlayerLeaderboardRating(entry.user_id as number, entry.leaderboard_id as Leaderboard, entry.elo as number, updatedRD);
-		}
-		logEvents(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt', { print: true });
-
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEvents(`Error updating all rating deviations in leaderboard table: ${message}`, 'errLog.txt', { print: true });
 	}
 }
 
@@ -340,6 +320,25 @@ function startPeriodicLeaderboardRatingDeviationUpdate() {
 	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
 }
 
+/**
+ * Retrieves all entries of the leaderboards table and updates their RD
+ */
+function updateAllRatingDeviationsofLeaderboardTable() {
+	const query = `SELECT * FROM leaderboards`;
+
+	try {
+		const entries = db.all(query) as LeaderboardEntry[];
+		for (const entry of entries) {
+			const updatedRD = getTrueRD(entry.rating_deviation as number, entry?.rd_last_update_date ?? null);
+			updatePlayerLeaderboardRating(entry.user_id as number, entry.leaderboard_id as Leaderboard, entry.elo as number, updatedRD);
+		}
+		logEvents(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt', { print: true });
+
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEvents(`Error updating all rating deviations in leaderboard table: ${message}`, 'errLog.txt', { print: true });
+	}
+}
 
 // Exports --------------------------------------------------------------------------------------------
 

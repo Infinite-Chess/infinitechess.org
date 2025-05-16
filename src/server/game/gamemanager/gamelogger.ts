@@ -11,7 +11,7 @@ import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating, isPlayerInLeaderboard } from "../../database/leaderboardsManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
-import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, computeRatingDataChanges } from './ratingcalculation.js';
+import { computeRatingDataChanges } from './ratingcalculation.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
@@ -158,7 +158,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		}
 
 		// If player is not on leaderboard, add him to it
-		if (!isPlayerInLeaderboard(user_id, leaderboard_id)) addUserToLeaderboard(user_id, leaderboard_id, DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD);
+		if (!isPlayerInLeaderboard(user_id, leaderboard_id)) addUserToLeaderboard(user_id, leaderboard_id);
 
 		// Access the player leaderboard data
 		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
@@ -182,9 +182,8 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		const player: Player = Number(playerStr) as Player;
 		const user_id = game.players[playerStr].identifier.user_id;
 
-		const elo = ratingdata[player]!.elo_after_game;
-		const rd = ratingdata[player]!.rating_deviation_after_game;
-		if (elo === undefined || rd === undefined) continue;
+		const elo = ratingdata[player]!.elo_after_game!;
+		const rd = ratingdata[player]!.rating_deviation_after_game!;
 
 		// Push changed player_stats to database
 		const results = updatePlayerLeaderboardRating(user_id, leaderboard_id, elo, rd);

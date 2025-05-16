@@ -63,7 +63,8 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 
 	// Check if user tries creating a rated game despite not being allowed to
 	if (invite.rated === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified)) {
-		return sendSocketMessage(ws, "general", "notifyerror", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
+		const message = getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next);
+		return sendSocketMessage(ws, "general", "notify", message, replyto);
 	}
 
 	// Create the invite now ...

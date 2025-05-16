@@ -114,7 +114,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 
 		const infinityLeaderboardPositionElement = document.getElementById('infinity_leaderboard_position')!;
 		infinityLeaderboardPositionElement.textContent = result.infinity_leaderboard_position === undefined ? "?" : 
-						(result.ranked_elo.slice(-1) !== "?" ? String(result.infinity_leaderboard_position) : `${result.infinity_leaderboard_position}?`);
+						(result.ranked_elo.slice(-1) !== "?" ? '#' + String(result.infinity_leaderboard_position) : `#${result.infinity_leaderboard_position}?`);
 
 		const loggedInAs = validatorama.getOurUsername(); // Assuming returns string | null
 
