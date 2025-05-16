@@ -55,3 +55,47 @@ main {
 .center {
     text-align: center;
 }
+
+
+
+
+
+
+/* Start increasing header links width */
+@media only screen and (min-width: 450px) {
+    .member {
+        padding: calc(12px + (100vw - 450px) * 0.05);
+    }
+
+    .member img {
+        height: calc(100px + (100vw - 450px) * 0.165);
+    }
+}
+
+/* Stop increasing header links width */
+@media only screen and (min-width: 715px) {
+    #verifyerror h2, #verifyconfirm {
+        font-size: 20px;
+    }
+    
+    #verifyerror p {
+        font-size: 13px;
+    }
+}
+
+/* Cap content width size, revealing image on the sides */
+@media only screen and (min-width: 810px) {
+    #content {
+        max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
+        padding: 40px 30px;
+        min-height: calc(100vh - 182px);
+    }
+
+    .member {
+        padding: 30px;
+    }
+
+    .member img {
+        height: 160px;
+    }
+}
