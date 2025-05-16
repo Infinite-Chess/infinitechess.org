@@ -17,6 +17,8 @@ import docutil from '../../util/docutil.js';
 import boardpos from '../rendering/boardpos.js';
 import boarddrag from '../rendering/boarddrag.js';
 import draganimation from '../rendering/dragging/draganimation.js';
+import { listener_document } from '../chess/game.js';
+import { Mouse } from '../input.js';
 // Import End
 
 "use strict";
@@ -225,6 +227,8 @@ function callback_ToggleArrows() {
 }
 
 function callback_Perspective() {
+	// This prevents toggling perspective ON in the pause menu immediately erasing all annotations.
+	listener_document.claimMouseClick(Mouse.LEFT);
 	perspective.toggle();
 }
 
