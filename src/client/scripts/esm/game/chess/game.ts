@@ -100,8 +100,10 @@ function update() {
 	boardpos.update(); // Updates the board's position and scale according to its velocity
 
 	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
-	// Variables dependant on the board position & scale
+	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
+	transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
+	// AFTER:transition.update() since that updates the board position
 	board.recalcVariables();
 
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
@@ -118,8 +120,6 @@ function update() {
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 	
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
-
-	transition.update();
 
 	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
