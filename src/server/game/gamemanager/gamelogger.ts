@@ -208,8 +208,8 @@ async function updatePlayerGamesTable(game: Game, game_id: number, victor: Playe
 		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
 
 		const score = victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0;
-		const elo_at_game = ratingdata[player]!.elo_at_game!;
-		const elo_change_from_game = ratingdata[player]!.elo_change_from_game!;
+		const elo_at_game = ratingdata[player]?.elo_at_game ?? null;
+		const elo_change_from_game = ratingdata[player]?.elo_change_from_game! ?? null;
 
 		const options = {
 			user_id: user_id,
