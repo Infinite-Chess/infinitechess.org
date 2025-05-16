@@ -331,7 +331,7 @@ function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Lea
 // Regular Table Utility Functions -------------------------------------------------------------------
 
 
-/** */
+/** Calls updateAllRatingDeviationsofLeaderboardTable() every RD_UPDATE_FREQUENCY milliseconds */
 function startPeriodicLeaderboardRatingDeviationUpdate() {
 	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
 }
