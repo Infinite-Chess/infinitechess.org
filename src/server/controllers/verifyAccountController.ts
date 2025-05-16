@@ -144,6 +144,9 @@ function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, u
 	// VERIFY THEM..
 	verification = getNewVerificationAfterVerifying();
 
+	// Informs all sockets of the user that he is now verified
+	AddVerificationToAllSocketsOfMember(user_id);
+
 	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
 
 	const changesMade = updateMemberColumns(user_id, { verification });

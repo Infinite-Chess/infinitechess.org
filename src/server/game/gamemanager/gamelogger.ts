@@ -152,7 +152,10 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 	for (const playerStr in game.players) {
 		const player: Player = Number(playerStr) as Player;
 		const user_id = game.players[playerStr].identifier.user_id;
-		if (user_id === undefined) return {}; // If a player doesn't exist, then no ratings get updated
+		if (user_id === undefined) {
+			await logEvents(`Unexpected: trying to log ranked game for a player without a user_id. Game: ${JSON.stringify(game)}`, 'errLog.txt', { print: true });
+			return {};
+		}
 
 		// If player is not on leaderboard, add him to it
 		if (!isPlayerInLeaderboard(user_id, leaderboard_id)) addUserToLeaderboard(user_id, leaderboard_id);
@@ -160,7 +163,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		// Access the player leaderboard data
 		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
 		if (leaderboard_data === undefined || leaderboard_data?.elo === undefined || leaderboard_data?.rating_deviation === undefined) {
-			console.log(`Unable to correctly process leaderboard_data of user ${user_id} and leaderboard ${leaderboard_id}.`);
+			await logEvents(`Unable to correctly process leaderboard_data of user ${user_id} and leaderboard ${leaderboard_id}.`, 'errLog.txt', { print: true });
 			return {};
 		}
 
@@ -179,8 +182,8 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		const player: Player = Number(playerStr) as Player;
 		const user_id = game.players[playerStr].identifier.user_id;
 
-		const elo = ratingdata[player]?.elo_after_game;
-		const rd = ratingdata[player]?.rating_deviation_after_game;
+		const elo = ratingdata[player]!.elo_after_game;
+		const rd = ratingdata[player]!.rating_deviation_after_game;
 		if (elo === undefined || rd === undefined) continue;
 
 		// Push changed player_stats to database
@@ -205,8 +208,8 @@ async function updatePlayerGamesTable(game: Game, game_id: number, victor: Playe
 		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
 
 		const score = victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0;
-		const elo_at_game = ratingdata[player]?.elo_at_game ?? null;
-		const elo_change_from_game = ratingdata[player]?.elo_change_from_game ?? null;
+		const elo_at_game = ratingdata[player]!.elo_at_game!;
+		const elo_change_from_game = ratingdata[player]!.elo_change_from_game!;
 
 		const options = {
 			user_id: user_id,
