@@ -22,7 +22,7 @@ interface LeaderboardEntry {
 	leaderboard_id?: number;
 	elo?: number;
 	rating_deviation?: number;
-	last_rated_game_date?: string | null; // Can be null if no games played yet
+	rd_last_update_date?: string | null; // Can be null if no games played yet
 	// Consider adding volatility if you use it in Glicko-2
 }
 
@@ -46,7 +46,7 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard): Mod
 		user_id,
 		leaderboard_id
 		-- elo and rating_deviation will use DB defaults
-		-- last_rated_game_date will be NULL by default
+		-- rd_last_update_date will be NULL by default
 	) VALUES (?, ?)
 	`;
 
@@ -80,7 +80,7 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard): Mod
 
 /**
  * Updates the rating values for a player on a specific leaderboard.
- * Also updates the last_rated_game_date to the current time.
+ * Also updates the rd_last_update_date to the current time.
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard.
  * @param elo - The new elo value for the player
@@ -88,12 +88,12 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard): Mod
  * @returns A result object indicating success or failure.
  */
 function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): ModifyQueryResult {
-	// Changed table name, column names, added leaderboard_id to WHERE, added last_rated_game_date update
+	// Changed table name, column names, added leaderboard_id to WHERE, added rd_last_update_date update
 	const query = `
 	UPDATE leaderboards
 	SET elo = ?,
 	    rating_deviation = ?,
-		last_rated_game_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
+		rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
 	WHERE user_id = ? AND leaderboard_id = ?
 	`;
 	try {
@@ -166,7 +166,7 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
 function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): LeaderboardEntry | undefined {
 	// Changed table name, column names, added leaderboard_id to WHERE, selected new columns
 	const query = `
-		SELECT elo, rating_deviation, last_rated_game_date
+		SELECT elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
@@ -192,7 +192,7 @@ function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard
 function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 	// New function leveraging the idx_leaderboards_user index
 	const query = `
-        SELECT leaderboard_id, elo, rating_deviation, last_rated_game_date
+        SELECT leaderboard_id, elo, rating_deviation, rd_last_update_date
         FROM leaderboards
         WHERE user_id = ?
         ORDER BY leaderboard_id ASC -- Optional: order for consistency
@@ -218,7 +218,7 @@ function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: num
 	if (n_players < 1) return [];
 
 	const query = `
-		SELECT user_id, elo, rating_deviation, last_rated_game_date
+		SELECT user_id, elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
 		ORDER BY elo DESC
@@ -231,8 +231,8 @@ function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: num
 
 		// Iterate through all players in descending elo order and add them to top_players if their trueRD is below UNCERTAIN_LEADERBOARD_RD
 		for (const player of results) {
-			if (player?.rating_deviation === undefined || player?.last_rated_game_date === undefined) continue;
-			const trueRD = getTrueRD(player.rating_deviation, player.last_rated_game_date);
+			if (player?.rating_deviation === undefined || player?.rd_last_update_date === undefined) continue;
+			const trueRD = getTrueRD(player.rating_deviation, player.rd_last_update_date);
 			if (trueRD < UNCERTAIN_LEADERBOARD_RD) {
 				top_players.push(player);
 				if (top_players.length >= n_players) break; // exit if top_players has enough entries
@@ -260,7 +260,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 	if (!isPlayerInLeaderboard(user_id, leaderboard_id)) return undefined; // return undefined if player is not in leaderboard
 
 	const query = `
-		SELECT user_id, elo, rating_deviation, last_rated_game_date
+		SELECT user_id, elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
 		ORDER BY elo DESC
@@ -274,8 +274,8 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 		let rank = 1;
 		for (const player of results) {
 			if (player.user_id === user_id) return rank; // user found in table, exit by returning rank
-			if (player?.rating_deviation === undefined || player?.last_rated_game_date === undefined) continue;
-			const trueRD = getTrueRD(player.rating_deviation, player.last_rated_game_date);
+			if (player?.rating_deviation === undefined || player?.rd_last_update_date === undefined) continue;
+			const trueRD = getTrueRD(player.rating_deviation, player.rd_last_update_date);
 			if (trueRD < UNCERTAIN_LEADERBOARD_RD) rank++;
 		}
 
@@ -301,11 +301,11 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
  */
 function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
 	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`; // Fallback if they aren't in the leaderboard
-	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
+	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, rd_last_update_date } | undefined
 	if (rating_values?.elo !== undefined) {
 		ranked_elo = String(Math.round(rating_values.elo));
-		if (rating_values.rating_deviation !== undefined && rating_values.last_rated_game_date !== undefined) {
-			const true_rating_deviation = getTrueRD(rating_values.rating_deviation, rating_values.last_rated_game_date);
+		if (rating_values.rating_deviation !== undefined && rating_values.rd_last_update_date !== undefined) {
+			const true_rating_deviation = getTrueRD(rating_values.rating_deviation, rating_values.rd_last_update_date);
 			if (true_rating_deviation >= UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
 		}
 	}

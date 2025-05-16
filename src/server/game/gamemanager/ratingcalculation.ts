@@ -19,7 +19,7 @@ import {
 type PlayerRatingData = {
 	elo_at_game: number;
 	rating_deviation_at_game: number;
-	last_rated_game_date: string | null; // A date in string format, as used in the database. Can be null if no games played yet
+	rd_last_update_date: string | null; // A date in string format, as used in the database. Can be null if no games played yet
     elo_after_game?: number;
     rating_deviation_after_game?: number;
 	elo_change_from_game?: number;
@@ -35,10 +35,10 @@ type RatingData = PlayerGroup<PlayerRatingData>;
 /**
  * Computes the effective rating deviation for the current rating period, as for Glicko-1 algorithm
  */
-function getTrueRD(rating_deviation: number, last_rated_game_date: string | null) : number {
-	if (last_rated_game_date === null) return rating_deviation;
+function getTrueRD(rating_deviation: number, rd_last_update_date: string | null) : number {
+	if (rd_last_update_date === null) return rating_deviation;
 	else {
-		const last_rated_game_timestamp = timeutil.sqliteToTimestamp(last_rated_game_date);
+		const last_rated_game_timestamp = timeutil.sqliteToTimestamp(rd_last_update_date);
 		const current_timestamp = Date.now();
 
 		// fraction of elapsed time over length of a standard rating period -> noninteger in general
@@ -75,7 +75,7 @@ function new_RD(r: number, RD: number, r_opp: number, RD_opp: number) {
 }
 
 /**
- * Takes ratingdata object as an input, with entries: elo_at_game, rating_deviation_at_game and last_rated_game_date.
+ * Takes ratingdata object as an input, with entries: elo_at_game, rating_deviation_at_game and rd_last_update_date.
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
  */
 function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : RatingData {
@@ -87,8 +87,8 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 
 	const r1 = ratingdata[1].elo_at_game;
 	const r2 = ratingdata[2].elo_at_game;
-	const RD1 = getTrueRD(ratingdata[1].rating_deviation_at_game, ratingdata[1].last_rated_game_date);
-	const RD2 = getTrueRD(ratingdata[2].rating_deviation_at_game, ratingdata[2].last_rated_game_date);
+	const RD1 = getTrueRD(ratingdata[1].rating_deviation_at_game, ratingdata[1].rd_last_update_date);
+	const RD2 = getTrueRD(ratingdata[2].rating_deviation_at_game, ratingdata[2].rd_last_update_date);
 	const outcome_white = (victor === 1 ? 1 : (victor === 2 ? 0 : 0.5 ));
 	const outcome_black = (victor === 1 ? 0 : (victor === 2 ? 1 : 0.5 ));
 

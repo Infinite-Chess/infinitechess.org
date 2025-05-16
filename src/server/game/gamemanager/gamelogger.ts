@@ -167,7 +167,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		ratingdata[player] = {
 			elo_at_game: leaderboard_data.elo,
 			rating_deviation_at_game: leaderboard_data.rating_deviation,
-			last_rated_game_date: leaderboard_data.last_rated_game_date ?? null,
+			rd_last_update_date: leaderboard_data.rd_last_update_date ?? null,
 		};
 	}
 

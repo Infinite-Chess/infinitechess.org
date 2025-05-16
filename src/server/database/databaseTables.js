@@ -120,7 +120,7 @@ function generateTables() {
 			elo REAL NOT NULL DEFAULT 1500.0,
 			rating_deviation REAL NOT NULL DEFAULT 350.0,
 			-- Add other Glicko fields if needed (volatility)
-			last_rated_game_date TIMESTAMP,
+			rd_last_update_date TIMESTAMP,
 			PRIMARY KEY (user_id, leaderboard_id) -- Composite key essential
 		);
 	`);
