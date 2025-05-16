@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="<%=language%>" dir="<%=t('direction')%>" >
+    <head>
+        <script>
+            const translations = <%-JSON.stringify({
+                ...t('leaderboard.javascript', {returnObjects: true})
+            })%>;
+        </script>
+        <meta charset="utf-8" />
+        <meta http-equiv="x-ua-compatible" content="ie=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title><%=t('leaderboard.title')%></title>
+        <link rel='stylesheet' href='/css/header.css'>
+        <link rel='stylesheet' href='/css/leaderboard.css'>
+        <link rel='stylesheet' href='/css/footer.css'>
+        <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
+        <script defer src="/scripts/esm/views/leaderboard.js" type="module"></script>
+    </head>
+    <body>
+        <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
+        <main>
+            <div id="content">
+                <h1 class="center"><%=t('leaderboard.title')%></h1>
+            </div>
+        </main>
+        <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>
+    </body>
+</html>

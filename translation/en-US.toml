@@ -11,6 +11,7 @@ login = "Log In"
 profile = "Profile"
 createaccount = "Create Account"
 logout = "Log Out"
+leaderboard = "Leaderboard"
 
 [header.settings]
 language = "Language"
@@ -38,6 +39,9 @@ language = "Language"
 [member.javascript]
 js-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
 js-enter_password = "Enter your password to PERMANENTLY delete your account:"
+
+[leaderboard.javascript]
+
 
 [index]
 title = "Infinite Chess | Home - The Official Website" # The tab title
@@ -149,6 +153,9 @@ js-pwd_incorrect_format = "Password is in an incorrect format"
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
+
+[leaderboard]
+title = "Leaderboard"
 
 [play]
 title = "Infinite Chess - Play" # The tab title
