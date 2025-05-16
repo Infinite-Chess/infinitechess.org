@@ -6,7 +6,7 @@
  * they get after they create their account.
  */
 
-
+import { AddVerificationToAllSocketsOfMember } from "../socket/socketManager.js";
 // @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 // @ts-ignore
@@ -95,6 +95,9 @@ async function verifyAccount(req: CustomRequest, res: Response) {
 	// VERIFY THEM..
 	verification = getNewVerificationAfterVerifying();
 
+	// Informs all sockets of the user that he is now verified
+	AddVerificationToAllSocketsOfMember(user_id);
+
 	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
 
 	const changesMade = updateMemberColumns(user_id, { verification });
@@ -141,6 +144,9 @@ function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, u
 	// VERIFY THEM..
 	verification = getNewVerificationAfterVerifying();
 
+	// Informs all sockets of the user that he is now verified
+	AddVerificationToAllSocketsOfMember(user_id);
+
 	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
 
 	const changesMade = updateMemberColumns(user_id, { verification });
@@ -155,6 +161,7 @@ function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, u
 
 
 export {
+	Verification,
 	verifyAccount,
 	manuallyVerifyUser,
 };

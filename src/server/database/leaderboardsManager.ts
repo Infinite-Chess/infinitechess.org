@@ -6,8 +6,11 @@
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 // @ts-ignore
 import db from './database.js';
+import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
+import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { Leaderboard } from '../../client/scripts/esm/chess/variants/leaderboard.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -19,69 +22,42 @@ interface LeaderboardEntry {
 	leaderboard_id?: number;
 	elo?: number;
 	rating_deviation?: number;
-	last_rated_game_date?: string | null; // Can be null if no games played yet
+	rd_last_update_date?: string | null; // Can be null if no games played yet
 	// Consider adding volatility if you use it in Glicko-2
 }
 
 /** The result of add/update operations */
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
 
-/** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
-const DEFAULT_LEADERBOARD_ELO = 1000;
-
-const Leaderboards = {
-	/**
-	 * The main leaderboard for all same-ish, infinity, variants.
-	 * Doesn't include any finite variants, or non-symmetrical ones.
-	 */
-	INFINITY: 0,
-	// Add more leaderboards here as needed
-} as const;
-
-type Leaderboard = typeof Leaderboards[keyof typeof Leaderboards];
-
-/** Maps variants to the leaderboard they belong to, if they have one. */
-const VariantLeaderboards: Record<string, Leaderboard> = {
-	'Classical': Leaderboards.INFINITY,
-	'Confined_Classical': Leaderboards.INFINITY,
-	'Classical_Plus': Leaderboards.INFINITY,
-	'CoaIP': Leaderboards.INFINITY,
-	'CoaIP_HO': Leaderboards.INFINITY,
-	'Knighted_Chess': Leaderboards.INFINITY,
-	'Pawndard': Leaderboards.INFINITY,
-	'Core': Leaderboards.INFINITY,
-	'Standarch': Leaderboards.INFINITY,
-	'Space_Classic': Leaderboards.INFINITY,
-	'Space': Leaderboards.INFINITY,
-	'Abundance': Leaderboards.INFINITY,
-	// Add more variants and their corresponding leaderboard here
-};
-
 
 // Methods --------------------------------------------------------------------------------------------
 
 
 /**
- * Adds a user entry to a specific leaderboard, defaulting to 1000 elo and 350 rd.
+ * Adds a user entry to a specific leaderboard
  * @param user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
  * @param leaderboard_id - The id for the specific leaderboard.
+ * @param elo - The new elo value for the player
+ * @param rd - The new rating deviation for the player
  * @returns A result object indicating success or failure.
  */
-function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard): ModifyQueryResult {
+function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo: number = DEFAULT_LEADERBOARD_ELO, rd: number = DEFAULT_LEADERBOARD_RD): ModifyQueryResult {
 	// Changed table name, added leaderboard_id column
 	const query = `
 	INSERT INTO leaderboards (
 		user_id,
-		leaderboard_id
+		leaderboard_id,
+		elo,
+		rating_deviation
 		-- elo and rating_deviation will use DB defaults
-		-- last_rated_game_date will be NULL by default
-	) VALUES (?, ?)
+		-- rd_last_update_date will be NULL by default
+	) VALUES (?, ?, ?, ?)
 	`;
 
 	try {
 		// Execute the query with the provided values
 		// Added leaderboard_id to parameters
-		const result = db.run(query, [user_id, leaderboard_id]);
+		const result = db.run(query, [user_id, leaderboard_id, elo, rd]);
 
 		// Return success result
 		return { success: true, result };
@@ -108,7 +84,7 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard): Mod
 
 /**
  * Updates the rating values for a player on a specific leaderboard.
- * Also updates the last_rated_game_date to the current time.
+ * Also updates the rd_last_update_date to the current time.
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard.
  * @param elo - The new elo value for the player
@@ -116,12 +92,12 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard): Mod
  * @returns A result object indicating success or failure.
  */
 function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): ModifyQueryResult {
-	// Changed table name, column names, added leaderboard_id to WHERE, added last_rated_game_date update
+	// Changed table name, column names, added leaderboard_id to WHERE, added rd_last_update_date update
 	const query = `
 	UPDATE leaderboards
 	SET elo = ?,
 	    rating_deviation = ?,
-		last_rated_game_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
+		rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
 	WHERE user_id = ? AND leaderboard_id = ?
 	`;
 	try {
@@ -194,7 +170,7 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
 function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): LeaderboardEntry | undefined {
 	// Changed table name, column names, added leaderboard_id to WHERE, selected new columns
 	const query = `
-		SELECT elo, rating_deviation, last_rated_game_date
+		SELECT elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
@@ -220,7 +196,7 @@ function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard
 function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 	// New function leveraging the idx_leaderboards_user index
 	const query = `
-        SELECT leaderboard_id, elo, rating_deviation, last_rated_game_date
+        SELECT leaderboard_id, elo, rating_deviation, rd_last_update_date
         FROM leaderboards
         WHERE user_id = ?
         ORDER BY leaderboard_id ASC -- Optional: order for consistency
@@ -248,6 +224,7 @@ function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: num
 		SELECT user_id, elo, rating_deviation, last_rated_game_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
+		AND rating_deviation <= ? -- Disregard any members with a too high RD
 		ORDER BY elo DESC
 		LIMIT ?
 	`;
@@ -255,7 +232,7 @@ function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: num
 	try {
 		// Execute the query with leaderboard_id and n_players parameters
 		// Added leaderboard_id to parameters
-		const top_players = db.all(query, [leaderboard_id, n_players]) as LeaderboardEntry[];
+		const top_players = db.all(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, n_players]) as LeaderboardEntry[];
 		return top_players; // Returns an array (empty if no players or n_players <= 0)
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -288,6 +265,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 				RANK() OVER (ORDER BY elo DESC) as rank
 			FROM leaderboards
 			WHERE leaderboard_id = ? -- Filter for the specific leaderboard FIRST
+			AND (rating_deviation <= ? OR user_id = ?) -- Disregard any other users with a too high RD
 		)
 		SELECT rank
 		FROM RankedPlayers
@@ -296,7 +274,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 
 	try {
 		// Execute the query, expecting at most one row containing the rank
-		const result = db.get(query, [leaderboard_id, user_id]) as { rank: number } | undefined;
+		const result = db.get(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, user_id, user_id]) as { rank: number } | undefined;
 
 		// If a result is found, return the rank, otherwise return undefined
 		return result?.rank;
@@ -321,28 +299,52 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
  */
 function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
 	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`; // Fallback if they aren't in the leaderboard
-	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, last_rated_game_date } | undefined
-	if (rating_values?.elo !== undefined) ranked_elo = String(Math.round(rating_values.elo));
+	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, rd_last_update_date } | undefined
+	if (rating_values?.elo !== undefined) {
+		ranked_elo = String(Math.round(rating_values.elo));
+		if (rating_values.rating_deviation !== undefined && rating_values.rd_last_update_date !== undefined) {
+			const true_rating_deviation = getTrueRD(rating_values.rating_deviation, rating_values.rd_last_update_date);
+			if (true_rating_deviation >= UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
+		}
+	}
 
 	return ranked_elo;
 }
 
-/**
- * Returns the leaderboard a variant is a part of, if it's a part of one.
- * This can be used to ask if we are allowed to play ranked on that variant.
- */
-function getLeaderboardOfVariant(variant: string): Leaderboard | undefined {
-	return VariantLeaderboards[variant] as Leaderboard | undefined;
+
+// Regular Table Utility Functions -------------------------------------------------------------------
+
+
+/** Calls updateAllRatingDeviationsofLeaderboardTable() every RD_UPDATE_FREQUENCY milliseconds */
+function startPeriodicLeaderboardRatingDeviationUpdate() {
+	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
 }
 
+/**
+ * Retrieves all entries of the leaderboards table and updates their RD
+ */
+function updateAllRatingDeviationsofLeaderboardTable() {
+	const query = `SELECT * FROM leaderboards`;
+
+	try {
+		const entries = db.all(query) as LeaderboardEntry[];
+		for (const entry of entries) {
+			const updatedRD = getTrueRD(entry.rating_deviation as number, entry?.rd_last_update_date ?? null);
+			updatePlayerLeaderboardRating(entry.user_id as number, entry.leaderboard_id as Leaderboard, entry.elo as number, updatedRD);
+		}
+		logEvents(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt', { print: true });
+
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEvents(`Error updating all rating deviations in leaderboard table: ${message}`, 'errLog.txt', { print: true });
+	}
+}
 
 // Exports --------------------------------------------------------------------------------------------
 
 
 // Updated export names to be more descriptive
 export {
-	Leaderboards,
-	VariantLeaderboards,
 	addUserToLeaderboard,
 	updatePlayerLeaderboardRating,
 	isPlayerInLeaderboard,
@@ -350,5 +352,6 @@ export {
 	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
-	getDisplayEloOfPlayerInLeaderboard
+	getDisplayEloOfPlayerInLeaderboard,
+	startPeriodicLeaderboardRatingDeviationUpdate
 };

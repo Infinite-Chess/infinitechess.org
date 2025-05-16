@@ -9,6 +9,8 @@ import { addConnectionToConnectionLists, doesClientHaveMaxSocketCount, doesSessi
 import { onmessage } from './receiveSocketMessage.js';
 import { onclose } from './closeSocket.js';
 // @ts-ignore
+import { getMemberDataByCriteria } from '../database/memberManager.js';
+// @ts-ignore
 import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
@@ -26,6 +28,7 @@ import { executeSafely } from '../utility/errorGuard.js';
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
 import type { CustomWebSocket } from './socketUtility.js';
+import type { Verification } from '../controllers/verifyAccountController.js';
 
 
 // Variables ---------------------------------------------------------------------------
@@ -77,6 +80,13 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 
 	addListenersToSocket(req, ws);
 
+	// If user is signed in, use the database to correctly set the property ws.metadata.verified
+	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo?.user_id !== undefined) {
+		let { verification } = getMemberDataByCriteria(['verification'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true });
+		verification = JSON.parse(verification) as Verification | null; // string needs to be parsed to a JSON
+		if (verification === null || verification.verified) ws.metadata.verified = true; // user is verified
+	}
+
 	// Send the current game vesion, so they will know whether to refresh.
 	sendSocketMessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
@@ -113,6 +123,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 		subscriptions: {},
 		userAgent: req.headers['user-agent'],
 		memberInfo: { signedIn: false },
+		verified: false,
 		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
 		IP,
 	};

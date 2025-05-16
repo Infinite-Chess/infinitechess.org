@@ -167,6 +167,21 @@ function closeAllSocketsOfMember(user_id: string, closureCode: number, closureRe
 	});
 }
 
+/**
+ * Sets the metadata.verified entry of all sockets of a given user to true.
+ * @param user_id - The unique ID of the user.
+ */
+function AddVerificationToAllSocketsOfMember(user_id: string) {
+	const socketIDs = connectedMembers[user_id];
+	if (!socketIDs) return; // This member doesn't have any connected sockets
+
+	socketIDs.slice().forEach(socketID => { // slice() makes a copy of it
+		const ws = websocketConnections[socketID];
+		if (!ws) return;
+		ws.metadata.verified = true;
+	});
+}
+
 
 // Limiting the socket count per user ---------------------------------------------------------------------------
 
@@ -244,4 +259,5 @@ export {
 	handleUnsubbing,
 	closeAllSocketsOfSession,
 	closeAllSocketsOfMember,
+	AddVerificationToAllSocketsOfMember,
 };

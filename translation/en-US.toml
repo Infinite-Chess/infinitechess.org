@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "49"
+version = "51"
 maintainer = "Naviary"
 
 [header]
@@ -119,6 +119,7 @@ joined = "Joined:"
 seen = ["Seen:", " ago"]
 practice_progress = "Practice Mode Progress:"
 ranked_elo = "Elo:"
+infinity_leaderboard_position = "Global Ranking:"
 reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"
@@ -599,3 +600,4 @@ ws-game_aborted_cheating = "Game aborted for probable cheating."
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
+ws-rated_invite_verification_needed = "To play ranked, you need to be signed in with a verified account."

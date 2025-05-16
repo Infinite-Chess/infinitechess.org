@@ -23,6 +23,7 @@ interface MemberData {
 	username: string;
 	checkmates_beaten: string;
 	ranked_elo: string;
+	infinity_leaderboard_position: number | undefined;
 	// Only present/relevant if viewing our own profile
 	email?: string;
 	verified?: boolean;
@@ -110,6 +111,10 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 
 		const eloElement = document.getElementById('ranked_elo')!;
 		eloElement.textContent = result.ranked_elo;
+
+		const infinityLeaderboardPositionElement = document.getElementById('infinity_leaderboard_position')!;
+		infinityLeaderboardPositionElement.textContent = result.infinity_leaderboard_position === undefined ? "?" : 
+						(result.ranked_elo.slice(-1) !== "?" ? '#' + String(result.infinity_leaderboard_position) : `#${result.infinity_leaderboard_position}?`);
 
 		const loggedInAs = validatorama.getOurUsername(); // Assuming returns string | null
 

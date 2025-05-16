@@ -9,6 +9,7 @@ import timeutil from '../../util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
 import { players } from '../../chess/util/typeutil.js';
+import { VariantLeaderboards } from '../../chess/variants/leaderboard.js';
 // Import End
 
 
@@ -58,6 +59,7 @@ const element_optionClock = document.getElementById('option-clock');
 const element_optionColor = document.getElementById('option-color');
 const element_optionPrivate = document.getElementById('option-private');
 const element_optionRated = document.getElementById('option-rated');
+const element_optionRatedYes = document.getElementById('option-rated-yes');
 
 const element_joinPrivate = document.getElementById('join-private');
 const element_inviteCode = document.getElementById('invite-code');
@@ -133,8 +135,10 @@ function initListeners() {
 	// element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_computer.addEventListener('click', callback_computer);
 	element_createInvite.addEventListener('click', callback_createInvite);
+	element_optionVariant.addEventListener('change', callback_updateOptions);
 	element_optionColor.addEventListener('change', callback_updateOptions);
 	element_optionClock.addEventListener('change', callback_updateOptions);
+	element_optionPrivate.addEventListener('change', callback_updateOptions);
 	element_joinPrivateMatch.addEventListener('click', callback_joinPrivate);
 	element_copyInviteCode.addEventListener('click', callback_copyInviteCode);
 	element_textboxPrivate.addEventListener('keyup', callback_textboxPrivateEnter);
@@ -147,8 +151,10 @@ function closeListeners() {
 	// element_computer.addEventListener('click', gui.displayStatus_FeaturePlanned);
 	element_computer.removeEventListener('click', callback_computer);
 	element_createInvite.removeEventListener('click', callback_createInvite);
+	element_optionVariant.removeEventListener('change', callback_updateOptions);
 	element_optionColor.removeEventListener('change', callback_updateOptions);
 	element_optionClock.removeEventListener('change', callback_updateOptions);
+	element_optionPrivate.removeEventListener('change', callback_updateOptions);
 	element_joinPrivateMatch.removeEventListener('click', callback_joinPrivate);
 	element_copyInviteCode.removeEventListener('click', callback_copyInviteCode);
 	element_textboxPrivate.removeEventListener('keyup', callback_textboxPrivateEnter);
@@ -175,7 +181,7 @@ function changePlayMode(mode) { // online / local / computer
 		element_optionCardClock.classList.remove('hidden');
 		element_optionClock.selectedIndex = localStorageClock !== undefined ? localStorageClock : indexOf10m; // 10m+4s
 		element_joinPrivate.classList.remove('hidden');
-		// callback_updateOptions()
+		callback_updateOptions(); // update displayed dropdown options, e.g. disable ranked if necessary
 	} else if (mode === 'local') {
 		// Enabling the button doesn't necessarily unlock it. It's enabled for "local" so that we
 		// can click "Start Game" at any point. But it will be re-disabled if we click "online" rapidly,
@@ -286,17 +292,30 @@ function getInviteOptions() {
 	};
 }
 
-// Call whenever the Clock or Color inputs change, or play mode changes
+// Call whenever the Variant, Clock, Color or Private inputs change, or play mode changes
 function callback_updateOptions() {
     
+	// save prefered clock option
 	savePreferredClockOption(element_optionClock.selectedIndex);
     
+	// check if rated games should be enabled in online mode
 	if (modeSelected !== 'online') return;
-
+	const variantValue = element_optionVariant.value;
 	const clockValue = element_optionClock.value;
 	const colorValue = element_optionColor.value;
-	if (clockValue === "0" || colorValue !== "Random") element_optionRated.disabled = true;
-	else element_optionRated.disabled = false;
+	const privateValue = element_optionPrivate.value;
+	// conditions for enabling Rated games:
+	if (
+		variantValue in VariantLeaderboards &&
+		clockValue !== "-" &&
+		(colorValue === "Random" || privateValue === "private")
+	) {
+		element_optionRatedYes.disabled = false;
+	}
+	else {
+		element_optionRated.value = "casual";
+		element_optionRatedYes.disabled = true;
+	}
 
 }
 

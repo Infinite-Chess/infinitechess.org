@@ -16,6 +16,7 @@ import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getTranslation } from '../../utility/translate.js'; 
 
 /**
  * Type Definitions
@@ -54,8 +55,10 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 		return;
 	}
 
-	// Make sure it's legal for them to accept. (Not legal if they are a guest and the invite is RATED)
-	// ...
+	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
+	if (invite.rated === 'rated' && !(signedIn && ws.metadata.verified)) {
+		return sendSocketMessage(ws, "general", "notify", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
+	}
 
 	// Accept the invite!
 

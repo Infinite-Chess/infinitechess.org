@@ -21,6 +21,8 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
+import { getTranslation } from '../../utility/translate.js'; 
 
 /**
  * Type Definitions
@@ -57,7 +59,15 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Validate invite parameters, detect cheating
 	if (isCreatedInviteExploited(invite)) return reportForExploitingInvite(ws, invite, replyto); // Our response will have already been sent
 
-	// Invite has all legal parameters! Create the invite...
+	// Invite has all legal parameters!
+
+	// Check if user tries creating a rated game despite not being allowed to
+	if (invite.rated === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified)) {
+		const message = getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next);
+		return sendSocketMessage(ws, "general", "notify", message, replyto);
+	}
+
+	// Create the invite now ...
 
 	addInvite(ws, invite, replyto);
 }
@@ -133,9 +143,16 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 	if (!clockweb.isClockValueValid(invite.clock)) return true;
 
 	if (invite.color !== players.WHITE && invite.color !== players.BLACK && invite.color !== players.NEUTRAL) return true;
-	if (invite.rated !== 'casual') return true;
+	if (invite.rated !== 'casual' && invite.rated !== 'rated') return true;
 	if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 	if (invite.tag.length !== 8) return true; // Invite tags must be 8 characters long.
+
+	// Check if invite is allowed to be rated
+	if (invite.rated === 'rated') {
+		if (!(invite.variant in VariantLeaderboards)) return true;
+		if (invite.clock === "-") return true;
+		if (!(invite.color === players.NEUTRAL || invite.publicity === "private")) return true;
+	}
 
 	return false;
 }
@@ -178,7 +195,6 @@ async function isAllowedToCreateInvite(ws, replyto) {
 
 	return false; // NOT allowed to make an invite!
 }
-
 
 export {
 	createInvite

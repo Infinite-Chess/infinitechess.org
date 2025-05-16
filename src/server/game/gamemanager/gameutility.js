@@ -78,7 +78,7 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 		untimed: clockweb.isClockValueInfinite(inviteOptions.clock),
 		startTimeMillis: null,
 		incrementMillis: null,
-		rated: inviteOptions.rated === "Rated",
+		rated: inviteOptions.rated === "rated",
 		moves: [],
 		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
 		gameConclusion: false,

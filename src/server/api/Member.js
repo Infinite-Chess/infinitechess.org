@@ -7,7 +7,8 @@ import locale from 'date-fns/locale/index.js';
 import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-import { Leaderboards, getDisplayEloOfPlayerInLeaderboard } from '../database/leaderboardsManager.js';
+import { Leaderboards } from '../../client/scripts/esm/chess/variants/leaderboard.js';
+import { getDisplayEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEvents } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
@@ -26,6 +27,9 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	// Get the player's display elo string from the INFINITY leaderboard
 	const ranked_elo = getDisplayEloOfPlayerInLeaderboard(user_id, Leaderboards.INFINITY);
 
+	// Get the player's position from the INFINITY leaderboard
+	const infinity_leaderboard_position = getPlayerRankInLeaderboard(user_id, Leaderboards.INFINITY);
+
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...
 
@@ -43,6 +47,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		seen: seenPhrase,
 		checkmates_beaten,
 		ranked_elo,
+		infinity_leaderboard_position,
 	};
 
 	// If they are the same person as who their requesting data, also include these.
