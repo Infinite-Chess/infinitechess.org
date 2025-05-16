@@ -4,13 +4,30 @@
 
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 import { PlayerGroup, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import {
-	DEFAULT_LEADERBOARD_RD as defaultRD,
-	MIMIMUM_LEADERBOARD_RD as minRD,
-	GLICKO_ONE_C as c,
-	GLICKO_ONE_Q as q,
-	RATING_PERIOD_DURATION as rating_period_duration
-} from '../../../client/scripts/esm/chess/variants/leaderboard.js';
+
+// Default variables, shared across all leaderboards ------------------------------------------------------------------
+
+
+/** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
+const DEFAULT_LEADERBOARD_ELO = 1500.0;
+
+/** Default rating deviation, used for Glicko-1 */
+const DEFAULT_LEADERBOARD_RD = 350.0;
+
+/** Minimum rating deviation, used for Glicko-1 */
+const MIMIMUM_LEADERBOARD_RD = 30.0;
+
+/** Rating deviations above this are considered to be too uncertain and the user is excluded from leaderboards */
+const UNCERTAIN_LEADERBOARD_RD = 250.0;
+
+/** Constant c, used for Glicko-1 */
+const c = 70;
+
+/** Constant q, used for Glicko-1 */
+const q = 0.00575646273;
+
+/** Duration of a glicko-1 rating period, in milliseconds */
+const RATING_PERIOD_DURATION = 1000 * 60 * 60 * 24 * 15; // 15 days
 
 
 // Types -------------------------------------------------------------------------------
@@ -42,9 +59,9 @@ function getTrueRD(rating_deviation: number, rd_last_update_date: string | null)
 		const current_timestamp = Date.now();
 
 		// fraction of elapsed time over length of a standard rating period -> noninteger in general
-		const rating_periods_elapsed = Math.max(0, (current_timestamp - last_rated_game_timestamp) / rating_period_duration);
+		const rating_periods_elapsed = Math.max(0, (current_timestamp - last_rated_game_timestamp) / RATING_PERIOD_DURATION);
 
-		return Math.max(minRD, Math.min(defaultRD, Math.sqrt(rating_deviation ** 2 + rating_periods_elapsed * c ** 2)));
+		return Math.max(MIMIMUM_LEADERBOARD_RD, Math.min(DEFAULT_LEADERBOARD_RD, Math.sqrt(rating_deviation ** 2 + rating_periods_elapsed * c ** 2)));
 	}
 }
 
@@ -71,7 +88,7 @@ function new_rating(outcome: 0 | 0.5 | 1, r: number, RD: number, r_opp: number, 
 
 /** Given a player's rating r, his RD, and the opponent'S rating r_opp and RD_opp, compute his new rating with glicko-1 */
 function new_RD(r: number, RD: number, r_opp: number, RD_opp: number) {
-	return Math.max(minRD, Math.sqrt( 1 / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) );
+	return Math.max(MIMIMUM_LEADERBOARD_RD, Math.sqrt( 1 / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) );
 }
 
 /**
@@ -106,6 +123,9 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 
 
 export {
+	DEFAULT_LEADERBOARD_ELO,
+	DEFAULT_LEADERBOARD_RD,
+	UNCERTAIN_LEADERBOARD_RD,
 	RatingData,
 	getTrueRD,
 	computeRatingDataChanges
