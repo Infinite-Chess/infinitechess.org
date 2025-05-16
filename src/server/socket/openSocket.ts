@@ -28,6 +28,7 @@ import { executeSafely } from '../utility/errorGuard.js';
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
 import type { CustomWebSocket } from './socketUtility.js';
+import type { Verification } from '../controllers/verifyAccountController.js';
 
 
 // Variables ---------------------------------------------------------------------------
@@ -82,7 +83,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 	// If user is signed in, use the database to correctly set the property ws.metadata.verified
 	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo?.user_id !== undefined) {
 		let { verification } = getMemberDataByCriteria(['verification'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true });
-		verification = JSON.parse(verification); // string needs to be parsed to a JSON
+		verification = JSON.parse(verification) as Verification | null; // string needs to be parsed to a JSON
 		if (verification === null || verification.verified) ws.metadata.verified = true; // user is verified
 	}
 

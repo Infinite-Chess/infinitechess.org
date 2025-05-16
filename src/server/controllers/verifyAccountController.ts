@@ -161,6 +161,7 @@ function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, u
 
 
 export {
+	Verification,
 	verifyAccount,
 	manuallyVerifyUser,
 };
