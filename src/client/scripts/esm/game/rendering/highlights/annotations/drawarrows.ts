@@ -27,11 +27,11 @@ import type { Arrow } from "./annotations.js";
 /** Properties for the drawn arrows.*/
 const ARROW = {
 	/** Width of the arrow's rectangular body, where 1.0 spans a full square. */
-	BODY_WIDTH: 0.26,
+	BODY_WIDTH: 0.24, // Default: 0.26
 	/** Width of the base of the arrowhead (perpendicular to arrow direction), where 1.0 spans a full square. */
-	TIP_WIDTH: 0.58,
+	TIP_WIDTH: 0.55, // Default: 0.58
 	/** Length of the arrowhead (along arrow direction), where 1.0 spans a full square. */
-	TIP_LENGTH: 0.39,
+	TIP_LENGTH: 0.37, // Default: 0.39
 	/**
 	 * The minimum desired length of the arrow's body, as a proportion of the total arrow length.
 	 * E.g., 0.5 means the body should try to be at least 50% of the total arrow length.
@@ -40,7 +40,7 @@ const ARROW = {
 	 * Valid range: [0.0, 1.0]. 0.0 means no minimum proportional body length is enforced beyond
 	 * what's left after the tip takes ARROW.TIP_LENGTH. 1.0 means the arrow tries to be all body.
 	 */
-	MIN_BODY_PROPORTION: 0.4, // Example: Body should be at least 30% of total arrow length
+	MIN_BODY_PROPORTION: 0.43, // Default: 0.4   Example: Body should be at least 30% of total arrow length
 	/** Offset of the arrow's base from the starting coordinate, in percentage of 1 tile width. */
 	BASE_OFFSET: 0.35,
 };
