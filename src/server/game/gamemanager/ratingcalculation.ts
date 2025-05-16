@@ -29,6 +29,9 @@ const q = 0.00575646273;
 /** Duration of a glicko-1 rating period, in milliseconds */
 const RATING_PERIOD_DURATION = 1000 * 60 * 60 * 24 * 15; // 15 days
 
+/** Frequency of automatic RD update in database, in milliseconds */
+const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
+
 
 // Types -------------------------------------------------------------------------------
 
@@ -126,6 +129,7 @@ export {
 	DEFAULT_LEADERBOARD_ELO,
 	DEFAULT_LEADERBOARD_RD,
 	UNCERTAIN_LEADERBOARD_RD,
+	RD_UPDATE_FREQUENCY,
 	RatingData,
 	getTrueRD,
 	computeRatingDataChanges

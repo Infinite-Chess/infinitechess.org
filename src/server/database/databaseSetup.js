@@ -5,6 +5,7 @@ import { startPeriodicDeleteUnverifiedMembers } from "./deleteUnverifiedMembers.
 import { migrateUsers, migrateMembersToPlayerStatsTable } from "./migrateMembers.js";
 import gamelogger from '../game/gamemanager/gamelogger.js';
 import ensureCheckmatesBeatenColumn from "./ensureCheckmatesBeatenColumn.js";
+import { startPeriodicLeaderboardRatingDeviationUpdate } from "./leaderboardsManager.js";
 
 
 function initDatabase() {
@@ -15,6 +16,7 @@ function initDatabase() {
 	gamelogger.migrateGameLogsToDatabase();
 	startPeriodicDeleteUnverifiedMembers();
 	startPeriodicRefreshTokenCleanup();
+	startPeriodicLeaderboardRatingDeviationUpdate();
 }
 
 export {
