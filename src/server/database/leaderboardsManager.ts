@@ -6,7 +6,7 @@
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 // @ts-ignore
 import db from './database.js';
-import { DEFAULT_LEADERBOARD_ELO, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
+import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
@@ -34,26 +34,30 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 
 
 /**
- * Adds a user entry to a specific leaderboard, defaulting to 1500 elo and 350 rd.
+ * Adds a user entry to a specific leaderboard
  * @param user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
  * @param leaderboard_id - The id for the specific leaderboard.
+ * @param elo - The new elo value for the player
+ * @param rd - The new rating deviation for the player
  * @returns A result object indicating success or failure.
  */
-function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard): ModifyQueryResult {
+function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo: number = DEFAULT_LEADERBOARD_ELO, rd: number = DEFAULT_LEADERBOARD_RD): ModifyQueryResult {
 	// Changed table name, added leaderboard_id column
 	const query = `
 	INSERT INTO leaderboards (
 		user_id,
-		leaderboard_id
+		leaderboard_id,
+		elo,
+		rating_deviation
 		-- elo and rating_deviation will use DB defaults
 		-- rd_last_update_date will be NULL by default
-	) VALUES (?, ?)
+	) VALUES (?, ?, ?, ?)
 	`;
 
 	try {
 		// Execute the query with the provided values
 		// Added leaderboard_id to parameters
-		const result = db.run(query, [user_id, leaderboard_id]);
+		const result = db.run(query, [user_id, leaderboard_id, elo, rd]);
 
 		// Return success result
 		return { success: true, result };

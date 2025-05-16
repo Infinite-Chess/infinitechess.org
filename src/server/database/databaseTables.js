@@ -4,7 +4,6 @@
  */
 
 import db from './database.js';
-import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD } from '../game/gamemanager/ratingcalculation.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -118,8 +117,8 @@ function generateTables() {
 		CREATE TABLE IF NOT EXISTS leaderboards (
         	user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
    			leaderboard_id INTEGER NOT NULL, -- Each leaderboard's id and variants are declared in the code
-			elo REAL NOT NULL DEFAULT ${DEFAULT_LEADERBOARD_ELO.toFixed(1)},
-			rating_deviation REAL NOT NULL DEFAULT ${DEFAULT_LEADERBOARD_RD.toFixed(1)},
+			elo REAL NOT NULL,
+			rating_deviation REAL NOT NULL,
 			-- Add other Glicko fields if needed (volatility)
 			rd_last_update_date TIMESTAMP,
 			PRIMARY KEY (user_id, leaderboard_id) -- Composite key essential
