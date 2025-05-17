@@ -1,4 +1,8 @@
 {
+	"52": {
+		"note": "Added header.leaderboard on line 14. Added leaderboard.javascript.supported_variants on line 44. Added new leaderboard category with 3 entries on line 157.",
+    	"changes": []
+	},
 	"51": {
 		"note": "Added member.infinity_leaderboard_position on line 122 and added server.javascript.ws-rated_invite_verification_needed on line 603",
     	"changes": []

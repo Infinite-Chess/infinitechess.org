@@ -36,7 +36,7 @@ import boardutil from '../../chess/util/boardutil.js';
  * A list of metadata properties that are retained from the current game when pasting an external game.
  * These will overwrite the pasted game's metadata with the current game's metadata.
  */
-const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeControl','Event','Site','Round'];
+const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','WhiteElo','BlackElo','TimeControl','Event','Site','Round'];
 
 const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth'];
 

@@ -11,6 +11,7 @@ import statustext from '../gui/statustext.js';
 import uuid from '../../util/uuid.js';
 import validatorama from '../../util/validatorama.js';
 import docutil from '../../util/docutil.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
 // Import End
 
 "use strict";
@@ -18,7 +19,8 @@ import docutil from '../../util/docutil.js';
 
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
- * @property {string} name - Who owns the invite. If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
+ * @property {Object} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
+ * If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
  * @property {string} id - A unique identifier
  * @property {string} tag - Used to verify if an invite is your own.
  * @property {string} variant - The name of the variant
@@ -164,7 +166,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 	let foundOurs = false;
 	let privateInviteID = undefined;
 	ourInviteID = undefined;
-	for (let i = 0; i < list.length; i++) { // { name, variant, clock, color, publicity }
+	for (let i = 0; i < list.length; i++) { // { usernamecontainer, variant, clock, color, publicity }
 		const invite = list[i];
 
 		// Is this our own invite?
@@ -193,7 +195,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		// <div class="invite-child">Casual</div>
 		// <div class="invite-child accept">Accept</div>
 
-		const n = ours ? translations.invites.you_indicator : invite.name;
+		const n = ours ? translations.invites.you_indicator : usernamecontainer.parseUsernameContainerToInviteText(invite.usernamecontainer);
 		const name = createDiv(['invite-child'], n);
 		newInvite.appendChild(name);
 
@@ -245,7 +247,7 @@ const playBaseIfNewInvite = (() => {
 		let playedSound = false;
 		const newIDsInList = {};
 		inviteList.forEach((invite) => {
-			const name = invite.name;
+			const name = invite.usernamecontainer.username;
 			const id = invite.id;
 			newIDsInList[id] = true;
 			if (IDsInLastList[id]) return; // Not a new invite, was there last update.
@@ -293,7 +295,7 @@ function clearIfOnPlayPage() {
  * @returns {boolean} true if it is our
  */
 function isInviteOurs(invite) {
-	if (validatorama.getOurUsername() === invite.name) return true;
+	if (validatorama.getOurUsername() === invite.usernamecontainer.username) return true;
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 
@@ -316,12 +318,12 @@ function getInviteFromElement(inviteElement) {
     
 	/**
      * Starting from the first child, the order goes:
-     * Name, Variant, TimeControl, Color, Publicity, Rated
+     * Usernamecontainer, Variant, TimeControl, Color, Publicity, Rated
      * (see the {@link Invite} object)
      */
 
 	return {
-		name: childrenTextContent[0],
+		usernamecontainer: usernamecontainer.parseInviteTextToUsernameContainer(childrenTextContent[0]),
 		variant: childrenTextContent[1],
 		clock: childrenTextContent[2],
 		color: childrenTextContent[3],
