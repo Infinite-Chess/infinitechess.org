@@ -19,7 +19,7 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 (async function loadLeaderboardData(): Promise<void> {
 	const leaderboard_id = Leaderboards.INFINITY;
-	const n_players = 2;
+	const n_players = 100;
 
 	setSupportedVariantsDisplay(leaderboard_id);
 	setLeaderboardTable(leaderboard_id, n_players);
@@ -117,6 +117,11 @@ async function setLeaderboardTable(leaderboard_id: number, n_players: number) {
 		});
 
 		table.appendChild(tbody);
+
+		// Clear all other content of element_LeaderboardContainer and add table
+		while (element_LeaderboardContainer.firstChild) {
+			element_LeaderboardContainer.removeChild(element_LeaderboardContainer.firstChild);
+		}
 		element_LeaderboardContainer.appendChild(table);
 
 	} catch (error) {
