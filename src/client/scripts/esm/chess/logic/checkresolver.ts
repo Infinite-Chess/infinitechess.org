@@ -183,7 +183,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	if (!attacker.slidingCheck && (attacker.path?.length ?? 2) < 3
 		|| attacker.slidingCheck && dist === 1) {
 		// Impossible to block
-		delete legalMoves.sliding; // Erase all sliding moves
+		legalMoves.sliding = {}; // Erase all sliding moves
 		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
 		return true;
 	}
@@ -198,7 +198,7 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
 	else appendPathBlockingMoves(gamefile, attacker.path!, legalMoves, selectedPieceCoords, color);
 
 	if (!legalMoves.brute) {
-		delete legalMoves.sliding; // Erase all sliding moves IF appendBlockingMoves() didn't flag any slide direction to brute force! It will have deleted all other sliding moves for us.
+		legalMoves.sliding = {}; // Erase all sliding moves IF appendBlockingMoves() didn't flag any slide direction to brute force! It will have deleted all other sliding moves for us.
 		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
 	}
 	
@@ -254,7 +254,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 					if (legalmoves.checkIfMoveLegal(gamefile, moves, pieceSelected.coords, attacker.coords, color, { ignoreIndividualMoves: true })) {
 						moves.individual.push(attacker.coords);
 					}
-					delete moves.sliding; // Erase all sliding moves
+					moves.sliding = {}; // Erase all sliding moves
 					// We don't have to keep iterating through royals and attackers, since
 					// if none of these newly added path-blocking moves are legal, nothing else will be.
 					// They are all simulated to see if they resolve the check. There are only finitely many.
@@ -275,12 +275,12 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 					const slideDirVec = math.getVec2FromKey(slideDir as Vec2Key); // [dx,dy]
 					// Does the line created from sliding this direction equal the line between the attacker and the royal?
 					const slideLineGeneralForm = math.getLineGeneralFormFromCoordsAndVec(pieceSelected.coords, slideDirVec);
-					if (!math.areLinesInGeneralFormEqual(line1GeneralForm, slideLineGeneralForm)) delete moves.sliding[slideDir]; // Not the same line, delete it.
+					if (!math.areLinesInGeneralFormEqual(line1GeneralForm, slideLineGeneralForm)) delete moves.sliding[slideDir as Vec2Key]; // Not the same line, delete it.
 				}
 			}
 		}
 
-		if (Object.keys(moves.sliding).length === 0) delete moves.sliding; // No sliding moves left
+		if (Object.keys(moves.sliding).length === 0) moves.sliding = {}; // No sliding moves left
 		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
 		else if (gamefile.colinearsPresent) moves.brute = true;
 	}
@@ -331,7 +331,7 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 				// Different line... but is it colinear? If so we also want to keep it.
 				const thisSlideDir = coordutil.getCoordsFromKey(slideDir as Vec2Key); // [dx,dy]
 				const thisLineGeneralForm = math.getLineGeneralFormFromCoordsAndVec(coords, thisSlideDir);
-				if (!math.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) delete moves.sliding[slideDir]; // Not colinear, delete it.
+				if (!math.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
 			}
 			break; // All other slides were deleted, no point in continuing to iterate.
 		}

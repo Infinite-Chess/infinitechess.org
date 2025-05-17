@@ -133,7 +133,7 @@ function viewMove(gamefile: gamefile, mesh: Mesh | undefined, move: Move | NullM
  * @param index the move index to goto
  */
 function viewIndex(gamefile: gamefile, mesh: Mesh | undefined, index: number) {
-	movepiece.goToMove(gamefile, index, (move: Move) => viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex));
+	movepiece.goToMove(gamefile, index, (move: (Move | NullMove)) => viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex));
 	updateGui(false);
 }
 

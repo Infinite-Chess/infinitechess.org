@@ -470,7 +470,7 @@ function rewindMove(gamefile: gamefile) {
  * @param {number} index 
  * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
-function goToMove(gamefile: gamefile, index: number, callback: CallableFunction) {
+function goToMove(gamefile: gamefile, index: number, callback: (move: Move | NullMove) => void) {
 	if (index === gamefile.state.local.moveIndex) return;
 
 	const forwards = index >= gamefile.state.local.moveIndex;
