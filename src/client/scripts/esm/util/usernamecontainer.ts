@@ -21,7 +21,9 @@ type UsernameContainer = {
  */
 type UsernameContainerDisplayOptions = {
     /** Whether to make the username a clickable hyperlink */
-    makehyperlink?: boolean
+    makehyperlink?: boolean,
+	/** Hyperlink target. By default, '_blank' is used. */
+	hyperlinktarget?: string,
     /** Whether to show the displayrating entry if it exists */
     showrating?: boolean
 }
@@ -44,7 +46,7 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 		const usernameDiv = document.createElement('a');
 		usernameDiv.href = `/member/${usernamecontainer.username}`;
 		usernameDiv.textContent = usernamecontainer.username;
-		usernameDiv.target = '_blank';
+		usernameDiv.target = options?.hyperlinktarget !== undefined ? options.hyperlinktarget : '_blank';
 		containerDiv.appendChild(usernameDiv);
 	}
 	else {

@@ -7,6 +7,9 @@
  */
 
 import { Leaderboards, VariantLeaderboards } from "../chess/variants/leaderboard.js";
+import usernamecontainer from "../util/usernamecontainer.js";
+
+import type { UsernameContainer, UsernameContainerDisplayOptions } from '../util/usernamecontainer.js';
 
 // --- DOM Element Selection ---
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
@@ -57,11 +60,26 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 		let rank = 1;
 		results.forEach((player: { username: string; elo: string }) => {
 			const row = document.createElement("tr");
-			row.innerHTML = `
-            <td>${rank}</td>
-            <td>${player.username}</td>
-            <td>${player.elo}</td>
-            `;
+
+			// Create and append <td> for rank
+			const rankCell = document.createElement("td");
+			rankCell.textContent = `${rank}`;
+			row.appendChild(rankCell);
+
+			// Create and append <td> for username
+			const usernameCell = document.createElement("td");
+			const usernamecontainer_object: UsernameContainer = { username: player.username };
+			const usernamecontainer_options: UsernameContainerDisplayOptions = { makehyperlink: true, hyperlinktarget: "_self" };
+			const usernamecontainer_display = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_object, usernamecontainer_options);
+			usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_display, usernameCell);
+			row.appendChild(usernameCell);
+
+			// Create and append <td> for elo
+			const eloCell = document.createElement("td");
+			eloCell.textContent = player.elo;
+			row.appendChild(eloCell);
+
+			// Append the completed row to the table body
 			tbody.appendChild(row);
 			rank++;
 		});
