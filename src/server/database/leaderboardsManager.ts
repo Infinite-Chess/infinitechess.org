@@ -221,7 +221,7 @@ function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: number): LeaderboardEntry[] {
 	// Changed table name, column names, ORDER BY column, added WHERE clause for leaderboard_id
 	const query = `
-		SELECT user_id, elo, rating_deviation, last_rated_game_date
+		SELECT user_id, elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
 		AND rating_deviation <= ? -- Disregard any members with a too high RD

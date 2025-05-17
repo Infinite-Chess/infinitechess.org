@@ -41,6 +41,7 @@ import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from "../api/AdminPanel.js";
 import { getContributors } from '../api/GitHub.js';
+import { getLeaderboardData } from '../api/Leaderboard.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -165,6 +166,8 @@ function configureMiddleware(app) {
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
 
+	// Leaderboard router
+	app.get('/leaderboard/:leaderboard_id/:n_players', getLeaderboardData);
 
 	// API --------------------------------------------------------------------
 

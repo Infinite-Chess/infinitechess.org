@@ -15,17 +15,29 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 // --- Initialization ---
 
 (async function loadLeaderboardData(): Promise<void> {
+	const leaderboard_id = Leaderboards.INFINITY;
+
 	setSupportedVariantsDisplay();
     
-	
+	const config: RequestInit = {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			"is-fetch-request": "true" // Custom header
+		},
+	};
 
 	try {
-        
-		const players = [
-            { name: "Alice", rank: 1, rating: 2400 },
-            { name: "Bob", rank: 2, rating: 2300 },
-            { name: "Charlie", rank: 3, rating: 2200 },
-        ];
+
+		const n_players = 2;
+		const response = await fetch(`/leaderboard/${leaderboard_id}/${n_players}`, config);
+
+		if (response.status === 404 || response.status === 500 || !response.ok) {
+			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
+			return;
+		}
+
+		const results = await response.json();
 
 		const table = document.createElement("table");
 
@@ -42,12 +54,12 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 		// Create body of table
 		const tbody = document.createElement("tbody");
-		players.forEach(player => {
+		results.forEach((player: { user_id: any; elo: any; rating_deviation: any; }) => {
 			const row = document.createElement("tr");
 			row.innerHTML = `
-            <td>${player.rank}</td>
-            <td>${player.name}</td>
-            <td>${player.rating}</td>
+            <td>${player.user_id}</td>
+            <td>${player.elo}</td>
+            <td>${player.rating_deviation}</td>
             `;
 			tbody.appendChild(row);
 		});
@@ -57,8 +69,6 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 	} catch (error) {
 		console.error("Error loading leaderboard data:", error);
-		// Redirect to a generic error page or display an error message
-		// window.location.href = '/500'; // Example
 	}
 })();
 
