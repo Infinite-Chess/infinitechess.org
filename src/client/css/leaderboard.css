@@ -60,6 +60,30 @@ main {
 }
 
 
+/* Table styling */
+
+table {
+    width: 95%;
+    border-collapse: collapse;
+    margin: 20px;
+    font-family: Arial, sans-serif;
+    align-self: center;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
 
 /* Don't hide borders on hr tags */
 hr {

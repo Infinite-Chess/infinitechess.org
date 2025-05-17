@@ -9,7 +9,7 @@
 import { Leaderboards, VariantLeaderboards } from "../chess/variants/leaderboard.js";
 
 // --- DOM Element Selection ---
-// const element_LeaderboardTable = document.getElementById('leaderboard-table')!;
+const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
 const element_supportedVariants = document.getElementById('supported-variants')!;
 
 // --- Initialization ---
@@ -21,6 +21,39 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 	try {
         
+		const players = [
+            { name: "Alice", rank: 1, rating: 2400 },
+            { name: "Bob", rank: 2, rating: 2300 },
+            { name: "Charlie", rank: 3, rating: 2200 },
+        ];
+
+		const table = document.createElement("table");
+
+		// Create header of table
+		const thead = document.createElement("thead");
+		thead.innerHTML = `
+            <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Rating</th>
+            </tr>
+        `;
+		table.appendChild(thead);
+
+		// Create body of table
+		const tbody = document.createElement("tbody");
+		players.forEach(player => {
+			const row = document.createElement("tr");
+			row.innerHTML = `
+            <td>${player.rank}</td>
+            <td>${player.name}</td>
+            <td>${player.rating}</td>
+            `;
+			tbody.appendChild(row);
+		});
+
+		table.appendChild(tbody);
+		element_LeaderboardContainer.appendChild(table);
 
 	} catch (error) {
 		console.error("Error loading leaderboard data:", error);
