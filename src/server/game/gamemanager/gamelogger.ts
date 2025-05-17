@@ -504,6 +504,8 @@ const MetaDataRequiredValues = {
 const MetaDataOptionalValues = {
 	WhiteID: null,
 	BlackID: null,
+	WhiteElo: null,
+	BlackElo: null
 };
 
 /**

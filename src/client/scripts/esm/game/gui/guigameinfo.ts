@@ -51,14 +51,20 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	else showButtons = false;
 	const { white, black, white_uses_username, black_uses_username } = getPlayerNamesForGame(metadata);
 
+	metadata.WhiteElo = "test1";
+	metadata.BlackElo = "test2";
+
+	const white_display_rating = (white_uses_username && metadata?.WhiteElo !== undefined ? `(${metadata.WhiteElo})` : null);
+	const black_display_rating = (black_uses_username && metadata?.BlackElo !== undefined ? `(${metadata.BlackElo})` : null);
+
 	// Set white username container
 	const usernamecontainer_white: UsernameContainer = {
 		username: white,
-		displayrating: "(1400)"
+		displayrating: white_display_rating
 	};
 	const usernamecontainer_options_white: UsernameContainerDisplayOptions = {
 		makehyperlink: white_uses_username,
-		showrating: white_uses_username
+		showrating: white_display_rating !== null
 	};
 	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
 	usernamecontainer_white_Div.className = "playerwhite";
@@ -67,11 +73,11 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	// Set black username container
 	const usernamecontainer_black: UsernameContainer = {
 		username: black,
-		displayrating: "(1400)"
+		displayrating: black_display_rating
 	};
 	const usernamecontainer_options_black: UsernameContainerDisplayOptions = {
 		makehyperlink: black_uses_username,
-		showrating: black_uses_username
+		showrating: black_display_rating !== null
 	};
 	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
 	usernamecontainer_black_Div.className = "playerblack";
