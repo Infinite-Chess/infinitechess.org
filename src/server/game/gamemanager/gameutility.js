@@ -29,6 +29,8 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
+import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { VariantLeaderboards, Leaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
 
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 // Type Definitions...
@@ -291,10 +293,12 @@ function getMetadataOfGame(game) {
 	if (white.member !== undefined) {
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
+		gameMetadata.WhiteElo = getDisplayEloOfPlayerInLeaderboard(white.user_id, VariantLeaderboards[game.variant] ?? Leaderboards.INFINITY);
 	}
 	if (black.member !== undefined) {
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
+		gameMetadata.BlackElo = getDisplayEloOfPlayerInLeaderboard(black.user_id, VariantLeaderboards[game.variant] ?? Leaderboards.INFINITY);
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata

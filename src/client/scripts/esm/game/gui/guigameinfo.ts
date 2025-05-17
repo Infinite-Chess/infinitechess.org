@@ -50,10 +50,6 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
 	const { white, black, white_uses_username, black_uses_username } = getPlayerNamesForGame(metadata);
-
-	metadata.WhiteElo = "test1";
-	metadata.BlackElo = "test2";
-
 	const white_display_rating = (white_uses_username && metadata?.WhiteElo !== undefined ? `(${metadata.WhiteElo})` : null);
 	const black_display_rating = (black_uses_username && metadata?.BlackElo !== undefined ? `(${metadata.BlackElo})` : null);
 
