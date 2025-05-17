@@ -8,6 +8,7 @@
 
 import { Leaderboards, VariantLeaderboards } from "../chess/variants/leaderboard.js";
 import usernamecontainer from "../util/usernamecontainer.js";
+import validatorama from "../util/validatorama.js";
 
 import type { UsernameContainer, UsernameContainerDisplayOptions } from '../util/usernamecontainer.js';
 
@@ -31,6 +32,11 @@ const leaderboard_id = Leaderboards.INFINITY;
 
 (async function loadLeaderboardData(): Promise<void> {
 	element_ShowMoreButton.classList.remove("hidden");
+
+	// We have to wait for validatorama here because it might be attempting
+	// to refresh our session in which case our session cookies will change
+	// so our refresh token in this here fetch request here would then be invalid
+	await validatorama.waitUntilInitialRequestBack();
 
 	setSupportedVariantsDisplay();
 	await makeLeaderboardTable();
@@ -129,6 +135,11 @@ async function makeLeaderboardTable() {
 
 			// Append the completed row to the table body
 			tbody.appendChild(row);
+
+			// Color row of logged in user
+			const loggedInAs = validatorama.getOurUsername();
+			if (loggedInAs === player.username) row.classList.add("logged_in_user_entry");
+
 			rank++;
 		});
 

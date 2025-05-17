@@ -109,6 +109,10 @@ tr:nth-child(even) {
     background-color: #fafafa;
 }
 
+.logged_in_user_entry {
+    background-color: rgba(0, 128, 0, 0.3) !important;
+}
+
 /* Don't hide borders on hr tags */
 hr {
     border: 1px solid #00000057;
