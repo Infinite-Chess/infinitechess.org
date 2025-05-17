@@ -21,8 +21,9 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
+import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
 import { getTranslation } from '../../utility/translate.js'; 
+import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
 /**
  * Type Definitions
@@ -100,7 +101,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
      * We further need to manually add the properties:
      * id
      * owner
-     * name
+     * usernamecontainer
      */
 
 	const invite = {};
@@ -111,7 +112,9 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 
 	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username, user_id: ws.metadata.memberInfo.user_id } : { browser: ws.metadata.cookies["browser-id"] };
 	invite.owner = owner;
-	invite.name = owner.member || "(Guest)"; // Protect browser's browser-id cookie
+	invite.usernamecontainer = {};
+	invite.usernamecontainer.username = owner.member || "(Guest)"; // Protect browser's browser-id cookie
+	if (ws.metadata.memberInfo.signedIn) invite.usernamecontainer.displayrating = getDisplayEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY);
 
 	invite.variant = messageContents.variant;
 	invite.clock = messageContents.clock;
