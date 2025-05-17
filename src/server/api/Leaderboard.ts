@@ -32,8 +32,17 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 		return res.status(404).json({ message: "Database retrieval failed." });
 	}
 
+	const sendData: Object[] = [];
+	for (const player of top_players) {
+		const playerData = { 
+			username: player.user_id,
+			elo: player.elo
+		};
+		sendData.push(playerData);
+	}
+
 	// Return data
-	return res.json(top_players);
+	return res.json(sendData);
 };
 
 export {

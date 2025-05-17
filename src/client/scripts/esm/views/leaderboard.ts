@@ -29,7 +29,7 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 	try {
 
-		const n_players = 2;
+		const n_players = 100;
 		const response = await fetch(`/leaderboard/${leaderboard_id}/${n_players}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
@@ -39,8 +39,8 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 		const results = await response.json();
 
+		// Create table
 		const table = document.createElement("table");
-
 		// Create header of table
 		const thead = document.createElement("thead");
 		thead.innerHTML = `
@@ -54,14 +54,16 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 		// Create body of table
 		const tbody = document.createElement("tbody");
-		results.forEach((player: { user_id: any; elo: any; rating_deviation: any; }) => {
+		let rank = 1;
+		results.forEach((player: { username: string; elo: number }) => {
 			const row = document.createElement("tr");
 			row.innerHTML = `
-            <td>${player.user_id}</td>
+            <td>${rank}</td>
+            <td>${player.username}</td>
             <td>${player.elo}</td>
-            <td>${player.rating_deviation}</td>
             `;
 			tbody.appendChild(row);
+			rank++;
 		});
 
 		table.appendChild(tbody);
