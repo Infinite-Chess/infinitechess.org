@@ -1,7 +1,7 @@
 * {
     margin: 0;
     padding: 0;
-    font-family: Verdana; /* Helvetica */
+    font-family: Verdana;
     border: 0;
     /* Enable temporarily during dev to see the borders of all elements */
     /* outline: 1px solid rgba(0, 0, 0, 0.191); */
@@ -30,15 +30,12 @@ main {
     min-height: 400px;
 }
 
-#content {
-    display: flex;
-    flex-direction: column;
+.content {
     background-color: rgba(255, 255, 255, 0.805);
     min-height: 450px;
     margin: auto;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
     padding: 30px 20px;
-    text-align: center;
 }
 
 .content h1 {
@@ -52,50 +49,40 @@ main {
     margin-bottom: 1em;
 }
 
+.content p {
+    line-height: 1.5;
+    font-size: 17px;
+    margin: 1em;
+}
+
 .center {
     text-align: center;
 }
 
 
 
-
-
+/* Don't hide borders on hr tags */
+hr {
+    border: 1px solid #00000057;
+}
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {
-    .member {
-        padding: calc(12px + (100vw - 450px) * 0.05);
-    }
-
-    .member img {
-        height: calc(100px + (100vw - 450px) * 0.165);
-    }
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-    #verifyerror h2, #verifyconfirm {
-        font-size: 20px;
-    }
-    
-    #verifyerror p {
-        font-size: 13px;
+    .content h1 {
+        font-size: calc(40px + 0.028 * (100vw - 450px));
     }
 }
 
 /* Cap content width size, revealing image on the sides */
 @media only screen and (min-width: 810px) {
-    #content {
+    .content {
         max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
         padding: 40px 30px;
-        min-height: calc(100vh - 182px);
+        min-height: 800px;
     }
 
-    .member {
-        padding: 30px;
-    }
-
-    .member img {
-        height: 160px;
+    .content h1 {
+        font-size: 50px;
+        margin-bottom: 50px;
     }
 }

@@ -41,7 +41,7 @@ js-confirm_delete = "Are you sure you want to delete your account? This CANNOT b
 js-enter_password = "Enter your password to PERMANENTLY delete your account:"
 
 [leaderboard.javascript]
-
+supported_variants = "This leaderboard is used for the following variants:"
 
 [index]
 title = "Infinite Chess | Home - The Official Website" # The tab title
@@ -155,7 +155,8 @@ js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
 
 [leaderboard]
-title = "Leaderboard"
+title = "LEADERBOARD"
+inactive_players = "Inactive players with a high rating uncertainty are excluded from the leaderboard."
 
 [play]
 title = "Infinite Chess - Play" # The tab title
