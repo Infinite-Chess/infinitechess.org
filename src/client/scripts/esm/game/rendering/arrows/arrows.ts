@@ -40,7 +40,6 @@ import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
-// @ts-ignore
 import legalmoves from '../../../chess/logic/legalmoves.js';
 // @ts-ignore
 import perspective from '../perspective.js';

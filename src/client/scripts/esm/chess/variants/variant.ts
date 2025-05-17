@@ -27,7 +27,6 @@ import icnconverter from '../logic/icn/icnconverter.js';
 import omega3generator from './omega3generator.js';
 // @ts-ignore
 import omega4generator from './omega4generator.js';
-// @ts-ignore
 import specialmove from '../logic/specialmove.js';
 
 

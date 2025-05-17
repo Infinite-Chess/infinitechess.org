@@ -23,7 +23,6 @@ import mouse from "../../../util/mouse.js";
 import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
-import jsutil from "../../../util/jsutil.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore

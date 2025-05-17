@@ -6,7 +6,6 @@ import boardchanges from './boardchanges.js';
 import state from './state.js';
 import { rawTypes } from '../util/typeutil.js';
 
-import type { EnPassant } from './state.js';
 import type { RawTypeGroup } from '../util/typeutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Move } from './movepiece.js';

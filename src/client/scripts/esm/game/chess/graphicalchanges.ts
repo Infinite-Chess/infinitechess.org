@@ -8,7 +8,6 @@
 import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 
-// @ts-ignore
 import animation from "../rendering/animation.js";
 import piecemodels from "../rendering/piecemodels.js";
 import preferences from "../../components/header/preferences.js";

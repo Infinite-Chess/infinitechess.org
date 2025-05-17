@@ -19,11 +19,9 @@ import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
-// @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import specialdetect from "../../../chess/logic/specialdetect.js";
-// @ts-ignore
 import guiclock from "../../gui/guiclock.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";

@@ -16,7 +16,6 @@ import type { Mesh } from "../rendering/piecemodels.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
-// @ts-ignore
 import enginegame from '../misc/enginegame.js';
 
 import guinavigation from "../gui/guinavigation.js";
@@ -46,7 +45,6 @@ import texturecache from "../../chess/rendering/texturecache.js";
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
-// @ts-ignore
 import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
@@ -54,7 +52,6 @@ import copypastegame from "./copypastegame.js";
 import transition from "../rendering/transition.js";
 // @ts-ignore
 import board from "../rendering/board.js";
-// @ts-ignore
 import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import area from "../rendering/area.js";

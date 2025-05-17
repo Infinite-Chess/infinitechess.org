@@ -17,11 +17,9 @@ import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
-// @ts-ignore
 import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
-// @ts-ignore
 import sound from '../misc/sound.js';
 // @ts-ignore
 import board from './board.js';

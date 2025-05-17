@@ -27,7 +27,6 @@ import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
-// @ts-ignore
 import enginegame from '../misc/enginegame.js';
 
 // Variables ----------------------------------------------------------------------------

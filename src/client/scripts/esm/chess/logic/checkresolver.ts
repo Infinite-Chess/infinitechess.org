@@ -15,7 +15,6 @@ import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { BoundingBox, Vec2Key } from "../../util/math.js";
 import type { Player } from "../util/typeutil.js";
-// @ts-ignore
 import type { LegalMoves } from './legalmoves.js';
 // @ts-ignore
 import type { gamefile } from "../logic/gamefile.js";
@@ -30,13 +29,10 @@ import jsutil from "../../util/jsutil.js";
 import moveutil from "../util/moveutil.js";
 
 import { players } from "../util/typeutil.js";
-// @ts-ignore
 import typeutil from "../util/typeutil.js";
-// @ts-ignore
 import checkdetection from "./checkdetection.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
-// @ts-ignore
 import legalmoves from "./legalmoves.js";
 
 // Functions ------------------------------------------------------------------------------

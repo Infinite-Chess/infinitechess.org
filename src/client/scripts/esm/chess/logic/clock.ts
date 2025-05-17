@@ -11,7 +11,6 @@ import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil from '../util/typeutil.js';
 import type { PlayerGroup } from '../util/typeutil.js';
-// @ts-ignore
 import clockutil from '../util/clockutil.js';
 
 // Type Definitions ---------------------------------------------------------------

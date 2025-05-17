@@ -9,7 +9,6 @@ import type { Piece } from '../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
 import type { RawType } from '../../chess/util/typeutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-// @ts-ignore
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
@@ -39,13 +38,10 @@ import boardpos from '../rendering/boardpos.js';
 import boarddrag from '../rendering/boarddrag.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import arrows from '../rendering/arrows/arrows.js';
-// @ts-ignore
 import config from '../config.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
-// @ts-ignore
 import legalmoves from '../../chess/logic/legalmoves.js';
-// @ts-ignore
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';

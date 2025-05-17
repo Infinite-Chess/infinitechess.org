@@ -9,10 +9,8 @@
 
 
 import guigameinfo from './guigameinfo.js';
-import clock from '../../chess/logic/clock.js';
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
-// @ts-ignore
 import guiclock from './guiclock.js';
 
 

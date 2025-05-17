@@ -23,7 +23,6 @@ import perspective from '../perspective.js';
 import camera from '../camera.js';
 // @ts-ignore
 import board from '../board.js';
-// @ts-ignore
 import math from '../../../util/math.js';
 // @ts-ignore
 import legalmoveshapes from '../instancedshapes.js';
@@ -40,9 +39,8 @@ import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 import type { Ray } from './annotations/annotations.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
-// @ts-ignore
-import type { MoveDraft, Piece } from '../../../chess/logic/movepiece.js';
-// @ts-ignore
+import type { Piece } from '../../../chess/util/boardutil.js';
+import type { MoveDraft } from '../../../chess/logic/movepiece.js';
 import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
 
 
@@ -322,7 +320,7 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 	// console.log("Regenerating legal moves model..");
 
 	// The model of the selected piece's legal moves
-	const selectedPieceColor = typeutil.getColorFromType(pieceSelected.type);
+	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
 	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
 	const color = preferences.getLegalMoveHighlightColor(color_options); // [r,g,b,a]
 	const { NonCaptureModel, CaptureModel } = generateModelsForPiecesLegalMoveHighlights(pieceSelected!.coords, selectedPieceLegalMoves!, selectedPieceColor, color);

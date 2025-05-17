@@ -14,7 +14,6 @@ import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 
 import { players } from '../util/typeutil.js';
-// @ts-ignore
 import legalmoves from './legalmoves.js';
 
 import type { Vec2 } from '../../util/math.js';

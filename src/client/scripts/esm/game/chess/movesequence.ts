@@ -21,21 +21,14 @@ import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighligh
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import piecemodels from "../rendering/piecemodels.js";
 import { Mesh } from "../rendering/piecemodels.js";
-// @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
-// @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
-// @ts-ignore
 import movepiece from "../../chess/logic/movepiece.js";
-// @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
-// @ts-ignore
 import guiclock from "../gui/guiclock.js";
-// @ts-ignore
 import clock from "../../chess/logic/clock.js";
-// @ts-ignore
 import frametracker from "../rendering/frametracker.js";
 
 
