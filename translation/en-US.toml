@@ -157,6 +157,7 @@ js-pwd_not_pwd = "Password must not be 'password'"
 [leaderboard]
 title = "LEADERBOARD"
 inactive_players = "Inactive players with a high rating uncertainty are excluded from the leaderboard."
+show_more = "Show more..."
 
 [play]
 title = "Infinite Chess - Play" # The tab title

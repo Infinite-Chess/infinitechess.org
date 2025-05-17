@@ -45,14 +45,34 @@ main {
     margin-bottom: 40px;
 }
 
-.content h2 {
-    margin-bottom: 1em;
-}
-
 .content p {
     line-height: 1.5;
     font-size: 17px;
     margin: 1em;
+}
+
+.button-wrapper {
+    margin-bottom: 1em;
+}
+
+.button-wrapper button {
+    padding: 10px 16px;
+    font-size: 17px;
+    cursor: pointer;
+    border: 2px solid #000000;
+    border-radius: 12px;
+    background-color: #f4f4f4;
+}
+
+.button-wrapper button:hover {
+    background-color: #dfdbdb;
+}
+
+.unselectable { /* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
+    user-select: none; 
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .center {
@@ -83,7 +103,6 @@ th {
 tr:nth-child(even) {
     background-color: #fafafa;
 }
-
 
 /* Don't hide borders on hr tags */
 hr {
