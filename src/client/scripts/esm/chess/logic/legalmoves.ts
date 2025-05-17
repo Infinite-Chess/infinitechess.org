@@ -56,8 +56,8 @@ type Vicinity = Record<CoordsKey, RawType[]>
  * Must be called after the piece movesets are initialized. 
  * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
  * DOES NOT include pawn moves.
- * @param {} pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
- * @returns {Object} The vicinity object
+ * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
+ * @returns The vicinity object
  */
 function genVicinity(pieceMovesets: TypeGroup<() => PieceMoveset>): Vicinity {
 	const vicinity: Record<CoordsKey, RawType[]> = {};
@@ -83,9 +83,9 @@ function genVicinity(pieceMovesets: TypeGroup<() => PieceMoveset>): Vicinity {
  * to see if they would check you or not.
  * This saves us from having to iterate through every single
  * special piece in the game to see if they would check you.
- * @param {MetaData} metadata - The metadata of the gamefile
- * @param {RawType[]} existingRawTypes
- * @returns {Object} The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
+ * @param metadata - The metadata of the gamefile
+ * @param existingRawTypes
+ * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
 function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vicinity {
 	// @ts-ignore
@@ -106,9 +106,9 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
 
 /**
  * Gets the moveset of the type of piece specified.
- * @param {gamefile} gamefile - The gamefile 
- * @param {number} pieceType - The type of piece
- * @returns {PieceMoveset} A moveset object.
+ * @param gamefile - The gamefile 
+ * @param pieceType - The type of piece
+ * @returns A moveset object.
  */
 function getPieceMoveset(gamefile: gamefile, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
@@ -120,8 +120,7 @@ function getPieceMoveset(gamefile: gamefile, pieceType: number): PieceMoveset {
 
 /**
  * Return the piece move that's blocking function if it is specified, or the default otherwise.
- * @param {PieceMoveset} pieceMoveset 
- * @returns {BlockingFunction}
+ * @param pieceMoveset 
  */
 function getBlockingFuncFromPieceMoveset(pieceMoveset: PieceMoveset): BlockingFunction {
 	return pieceMoveset.blocking || movesets.defaultBlockingFunction;
@@ -130,8 +129,7 @@ function getBlockingFuncFromPieceMoveset(pieceMoveset: PieceMoveset): BlockingFu
 
 /**
  * Return the piece move ignore function if it is specified, or the default otherwise.
- * @param {PieceMoveset} pieceMoveset 
- * @returns {IgnoreFunction}
+ * @param pieceMoveset 
  */
 function getIgnoreFuncFromPieceMoveset(pieceMoveset: PieceMoveset): IgnoreFunction {
 	return pieceMoveset.ignore || movesets.defaultIgnoreFunction;
@@ -139,10 +137,10 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset: PieceMoveset): IgnoreFuncti
 
 /**
  * Calculates the legal moves of the provided piece in the provided gamefile.
- * @param {gamefile} gamefile - The gamefile
- * @param {Piece} piece - The piece: `{ type, coords, index }`
- * @param {Object} options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
- * @returns {LegalMoves} The legalmoves object.
+ * @param gamefile - The gamefile
+ * @param piece - The piece: `{ type, coords, index }`
+ * @param options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
+ * @returns The legalmoves object.
  */
 function calculate(gamefile: gamefile, piece: Piece, { onlyCalcSpecials = false, ignoreCheck = false } = {}) { // piece: { type, coords }
 	const coords = piece.coords;
@@ -194,12 +192,11 @@ function calculate(gamefile: gamefile, piece: Piece, { onlyCalcSpecials = false,
 /**
  * Calculates how far a given piece can legally slide (ignoring ignore functions, and ignoring check respection)
  * on the given line of a specific slope.
- * @param {gamefile} gamefile
- * @param {Piece} piece
- * @param {Vec2} slide
- * @param {Vec2Key} lineKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
- * @param {Piece[]} organizedLine - The organized line of the above key that our piece is on
- * @returns {undefined | Coords}
+ * @param gamefile
+ * @param piece
+ * @param slide
+ * @param lineKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
+ * @param organizedLine - The organized line of the above key that our piece is on
  */
 function calcPiecesLegalSlideLimitOnSpecificLine(gamefile: gamefile, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {
 	const thisPieceMoveset = getPieceMoveset(gamefile, piece.type); // Default piece moveset
@@ -215,7 +212,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(gamefile: gamefile, piece: Piec
 /**
  * Shifts/translates the individual/jumping portion
  * of a moveset by the coordinates of a piece.
- * @param {CoordsSpecial[]} indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
+ * @param indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
  */
 function shiftIndividualMovesetByCoords(indivMoveset: Coords[], coords: Coords) {
 	if (!indivMoveset) return;
@@ -251,13 +248,13 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid<T extends Coords[] | undefine
 /**
  * Takes in specified organized list, direction of the slide, the current moveset...
  * Shortens the moveset by pieces that block it's path.
- * @param {BlockingFunction} blockingFunc - The function that will check if each piece on the same line needs to block the piece
- * @param {OrganizedPieces} o
- * @param {Piece[]} line - The list of pieces on this line 
- * @param {number[]} direction - The direction of the line: `[dx,dy]` 
- * @param {number[] | undefined} slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
- * @param {number[]} coords - The coordinates of the piece with the specified slideMoveset.
- * @param {Player} color - The color of friendlies
+ * @param blockingFunc - The function that will check if each piece on the same line needs to block the piece
+ * @param o
+ * @param line - The list of pieces on this line 
+ * @param direction - The direction of the line: `[dx,dy]` 
+ * @param slideMoveset - How far this piece can slide in this direction: `[left,right]`. If the line is vertical, this is `[bottom,top]`
+ * @param coords - The coordinates of the piece with the specified slideMoveset.
+ * @param color - The color of friendlies
  */
 function slide_CalcLegalLimit<T extends SlideLimits | undefined>(
 	blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], direction: Vec2,
@@ -311,14 +308,14 @@ function slide_CalcLegalLimit<T extends SlideLimits | undefined>(
  * legal moves in the provided legalMoves object.
  * 
  * **This will modify** the provided endCoords to attach any special move flags.
- * @param {gamefile} gamefile
- * @param {LegalMoves} legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
- * @param {Coords} startCoords - The coordinates of the piece owning the legal moves
- * @param {Coords} endCoords - The square to test if the piece can legally move to
- * @param {Player} colorOfFriendly - The player color owning the piece with the legal moves
- * @param {Object} options - An object that may contain the options:
+ * @param gamefile
+ * @param legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
+ * @param startCoords - The coordinates of the piece owning the legal moves
+ * @param endCoords - The square to test if the piece can legally move to
+ * @param colorOfFriendly - The player color owning the piece with the legal moves
+ * @param options - An object that may contain the options:
  * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
- * @returns {boolean} *true* if the provided legalMoves object contains the provided endCoords.
+ * @returns *true* if the provided legalMoves object contains the provided endCoords.
  */
 function checkIfMoveLegal(gamefile: gamefile, legalMoves: LegalMoves, startCoords: Coords, endCoords: Coords, colorOfFriendly: Player, { ignoreIndividualMoves = false } = {}) {
 	// Return if it's the same exact square
@@ -357,9 +354,9 @@ function checkIfMoveLegal(gamefile: gamefile, legalMoves: LegalMoves, startCoord
 /**
  * Tests if the provided move is legal to play in this game.
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
- * @param {gamefile} gamefile - The gamefile
- * @param {MoveDraft} moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
- * @returns {true | string} *true* If the move is legal, otherwise a string containing why it is illegal.
+ * @param gamefile - The gamefile
+ * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
+ * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
  */
 function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedGameConclusion: string | false) {
 	if (!moveDraft) {
@@ -455,12 +452,12 @@ function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedG
 /**
  * Tests if the piece's precalculated slideMoveset is able to reach the provided coords.
  * ASSUMES the coords are on the direction of travel!!!
- * @param {number[]} slideMoveset - The distance the piece can move along this line: `[left,right]`. If the line is vertical, this will be `[bottom,top]`.
- * @param {number[]} direction - The direction of the line: `[dx,dy]`
- * @param {number[]} pieceCoords - The coordinates of the piece with the provided sliding net
- * @param {number[]} coords - The coordinates we want to know if they can reach.
- * @param {IgnoreFunction} ignoreFunc - The ignore function.
- * @returns {boolean} true if the piece is able to slide to the coordinates
+ * @param slideMoveset - The distance the piece can move along this line: `[left,right]`. If the line is vertical, this will be `[bottom,top]`.
+ * @param direction - The direction of the line: `[dx,dy]`
+ * @param pieceCoords - The coordinates of the piece with the provided sliding net
+ * @param coords - The coordinates we want to know if they can reach.
+ * @param ignoreFunc - The ignore function.
+ * @returns true if the piece is able to slide to the coordinates
  */
 function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: Vec2, pieceCoords: Coords, coords: Coords, ignoreFunc: IgnoreFunction): boolean {
 	const axis = direction[0] === 0 ? 1 : 0;
@@ -472,8 +469,7 @@ function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: V
 
 /**
  * Accepts the calculated legal moves, tests to see if there are any
- * @param {LegalMoves} moves 
- * @returns {boolean} 
+ * @param moves 
  */
 function hasAtleast1Move(moves: LegalMoves): boolean { // { individual, horizontal, vertical, ... }
     
