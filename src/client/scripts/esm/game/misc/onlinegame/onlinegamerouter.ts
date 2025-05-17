@@ -26,7 +26,6 @@ import guiplay from "../../gui/guiplay.js";
 import websocket from "../../websocket.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
-// @ts-ignore
 import guiclock from "../../gui/guiclock.js";
 // @ts-ignore
 import board from "../../rendering/board.js";

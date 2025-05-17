@@ -8,7 +8,6 @@
 import type { Piece } from "../../../chess/util/boardutil.js";
 import type { Color } from "../../../util/math.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
-// @ts-ignore
 import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 
 
@@ -23,7 +22,6 @@ import legalmovehighlights from "../highlights/legalmovehighlights.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
 import boardpos from "../boardpos.js";
-// @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 
 // Type Definitions -------------------------------------------------------------------------------------------

@@ -19,7 +19,6 @@ import pingManager from "../../../util/pingManager.js";
 import { listener_document, listener_overlay } from "../../chess/game.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
-// @ts-ignore
 import sound from "../sound.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";

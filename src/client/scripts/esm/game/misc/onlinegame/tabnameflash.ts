@@ -9,7 +9,6 @@ import afk from "./afk.js";
 import moveutil from "../../../chess/util/moveutil.js";
 // @ts-ignore
 import loadbalancer from "../loadbalancer.js";
-// @ts-ignore
 import sound from "../sound.js";
 
 

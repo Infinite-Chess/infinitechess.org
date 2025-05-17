@@ -16,7 +16,6 @@ import draganimation from "./draganimation.js";
 import space from "../../misc/space.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import gameslot from "../../chess/gameslot.js";
-// @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 
 

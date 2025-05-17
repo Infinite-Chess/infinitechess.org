@@ -103,6 +103,11 @@ type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
 type Player = typeof players[keyof typeof players]
 
+type RawTypeGroup<T> = {
+	// eslint-disable-next-line no-unused-vars
+	[t in RawType]?: T
+}
+
 /** A dictionary type with all types for keys */
 type TypeGroup<T> = { [t: number]: T }
 
@@ -181,6 +186,7 @@ function debugType(type: number): string {
 export type {
 	RawType,
 	Player,
+	RawTypeGroup,
 	TypeGroup,
 	PlayerGroup,
 };

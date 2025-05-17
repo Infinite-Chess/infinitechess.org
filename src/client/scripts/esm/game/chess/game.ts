@@ -32,7 +32,6 @@ import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-// @ts-ignore
 import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import board from '../rendering/board.js';

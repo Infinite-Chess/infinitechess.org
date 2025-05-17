@@ -14,13 +14,11 @@ import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 
 import { players } from '../util/typeutil.js';
-// @ts-ignore
 import legalmoves from './legalmoves.js';
 
 import type { Vec2 } from '../../util/math.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
-import type { path } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
 import type { Attacker } from './state.js';
 // @ts-ignore
@@ -149,7 +147,7 @@ function doesSpecialAttackSquare(gamefile: gamefile, square: CoordsSpecial, frie
 		// Is that a match with any piece type on this vicinity square?
 		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured via special move...
 			// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
-			const pieceOnSquare = boardutil.getPieceFromCoords(gamefile.pieces, actualSquare);
+			const pieceOnSquare = boardutil.getPieceFromCoords(gamefile.pieces, actualSquare)!;
 			const specialPiecesLegalMoves = legalmoves.calculate(gamefile, pieceOnSquare, { onlyCalcSpecials: true, ignoreCheck: true });
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));

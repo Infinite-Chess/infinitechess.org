@@ -12,7 +12,6 @@ import type { Mesh } from './piecemodels.js';
 import spritesheet from './spritesheet.js';
 import { createModel } from './buffermodel.js';
 import piecemodels from './piecemodels.js';
-// @ts-ignore
 import miniimage from './miniimage.js';
 // @ts-ignore
 import shapes from './shapes.js';

@@ -20,13 +20,10 @@ import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
 import icnconverter from './icn/icnconverter.js';
-// @ts-ignore
 import legalmoves from './legalmoves.js';
 // @ts-ignore
 import specialdetect from './specialdetect.js';
-// @ts-ignore
 import math from '../../util/math.js';
-// @ts-ignore
 import checkdetection from './checkdetection.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
@@ -470,7 +467,7 @@ function rewindMove(gamefile: gamefile) {
  * @param {number} index 
  * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
-function goToMove(gamefile: gamefile, index: number, callback: CallableFunction) {
+function goToMove(gamefile: gamefile, index: number, callback: (move: Move | NullMove) => void) {
 	if (index === gamefile.state.local.moveIndex) return;
 
 	const forwards = index >= gamefile.state.local.moveIndex;

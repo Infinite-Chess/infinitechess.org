@@ -7,7 +7,6 @@
 import type { MetaData } from '../../chess/util/metadata.js';
 
 
-// @ts-ignore
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
