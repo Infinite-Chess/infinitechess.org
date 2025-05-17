@@ -14,23 +14,39 @@ import type { UsernameContainer, UsernameContainerDisplayOptions } from '../util
 // --- DOM Element Selection ---
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
 const element_supportedVariants = document.getElementById('supported-variants')!;
+const element_ShowMoreButton = document.getElementById('show_more_button')!;
+
+
+// --- Variables ---
+/** Number of players to be shown on leaderboard page load */
+let n_players = 50;
+/** Number of players to be added on show more button press */
+const showMoreButtonIncrement = 25;
+/** Leaderboard to be displayed */
+const leaderboard_id = Leaderboards.INFINITY;
+
 
 // --- Initialization ---
 
+
 (async function loadLeaderboardData(): Promise<void> {
-	const leaderboard_id = Leaderboards.INFINITY;
-	const n_players = 100;
+	element_ShowMoreButton.classList.remove("hidden");
 
-	setSupportedVariantsDisplay(leaderboard_id);
-	setLeaderboardTable(leaderboard_id, n_players);
+	setSupportedVariantsDisplay();
+	await makeLeaderboardTable();
 
+	element_ShowMoreButton.addEventListener('click', showMorePlayers);
 })();
+
+
+
+// --- Functions ---
+
 
 /**
  * Set the text below the leaderboard table, explaining which variants belong to it
- * @param leaderboard_id 
  */
-function setSupportedVariantsDisplay(leaderboard_id: number) {
+function setSupportedVariantsDisplay() {
 	// Set the text above the list:
 	element_supportedVariants.textContent = translations["supported_variants"];
 
@@ -51,10 +67,8 @@ function setSupportedVariantsDisplay(leaderboard_id: number) {
 
 /**
  * Create the leaderboard table for the chosen leaderboard, with the top n players
- * @param leaderboard_id 
- * @param n_players
  */
-async function setLeaderboardTable(leaderboard_id: number, n_players: number) {
+async function makeLeaderboardTable() {
 	const config: RequestInit = {
 		method: 'GET',
 		headers: {
@@ -64,7 +78,8 @@ async function setLeaderboardTable(leaderboard_id: number, n_players: number) {
 	};
 
 	try {
-		const response = await fetch(`/leaderboard/${leaderboard_id}/${n_players}`, config);
+		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
+		const response = await fetch(`/leaderboard/${leaderboard_id}/${n_players + 1}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
 			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
@@ -91,6 +106,7 @@ async function setLeaderboardTable(leaderboard_id: number, n_players: number) {
 		const tbody = document.createElement("tbody");
 		let rank = 1;
 		results.forEach((player: { username: string; elo: string }) => {
+			if (rank > n_players) return;
 			const row = document.createElement("tr");
 
 			// Create and append <td> for rank
@@ -124,7 +140,18 @@ async function setLeaderboardTable(leaderboard_id: number, n_players: number) {
 		}
 		element_LeaderboardContainer.appendChild(table);
 
+		// Hide "show more" button if not enough players are shown
+		if (results.length < n_players + 1) element_ShowMoreButton.classList.add("hidden");
+
 	} catch (error) {
 		console.error("Error loading leaderboard data:", error);
 	}
+}
+
+/**
+ * Increase n_players and redraw the leaderboard table
+ */
+async function showMorePlayers() {
+	n_players += showMoreButtonIncrement;
+	await makeLeaderboardTable();
 }
