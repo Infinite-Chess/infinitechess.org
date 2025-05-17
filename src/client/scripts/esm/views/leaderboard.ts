@@ -19,9 +19,42 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 
 (async function loadLeaderboardData(): Promise<void> {
 	const leaderboard_id = Leaderboards.INFINITY;
+	const n_players = 2;
 
-	setSupportedVariantsDisplay();
-    
+	setSupportedVariantsDisplay(leaderboard_id);
+	setLeaderboardTable(leaderboard_id, n_players);
+
+})();
+
+/**
+ * Set the text below the leaderboard table, explaining which variants belong to it
+ * @param leaderboard_id 
+ */
+function setSupportedVariantsDisplay(leaderboard_id: number) {
+	// Set the text above the list:
+	element_supportedVariants.textContent = translations["supported_variants"];
+
+	const valid_variants = Object.keys(VariantLeaderboards);
+	
+	// Create a <ul> element and append <li> items
+	const ul = document.createElement("ul");
+	valid_variants.forEach((variant: string | null) => {
+		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
+		const li = document.createElement("li");
+		li.textContent = translations[variant] ? translations[variant] : variant;
+		ul.appendChild(li);
+	});
+
+	// Add the list to the page
+	element_supportedVariants.appendChild(ul);
+}
+
+/**
+ * Create the leaderboard table for the chosen leaderboard, with the top n players
+ * @param leaderboard_id 
+ * @param n_players
+ */
+async function setLeaderboardTable(leaderboard_id: number, n_players: number) {
 	const config: RequestInit = {
 		method: 'GET',
 		headers: {
@@ -31,8 +64,6 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 	};
 
 	try {
-
-		const n_players = 100;
 		const response = await fetch(`/leaderboard/${leaderboard_id}/${n_players}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
@@ -41,6 +72,7 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 		}
 
 		const results = await response.json();
+		console.log(results);
 
 		// Create table
 		const table = document.createElement("table");
@@ -90,24 +122,4 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 	} catch (error) {
 		console.error("Error loading leaderboard data:", error);
 	}
-})();
-
-
-function setSupportedVariantsDisplay() {
-	// Set the text above the list:
-	element_supportedVariants.textContent = translations["supported_variants"];
-
-	const valid_variants = Object.keys(VariantLeaderboards);
-	
-	// Create a <ul> element and append <li> items
-	const ul = document.createElement("ul");
-	valid_variants.forEach((variant: string | null) => {
-		if (variant === null || VariantLeaderboards[variant] !== Leaderboards.INFINITY) return;
-		const li = document.createElement("li");
-		li.textContent = translations[variant] ? translations[variant] : variant;
-		ul.appendChild(li);
-	});
-
-	// Add the list to the page
-	element_supportedVariants.appendChild(ul);
 }
