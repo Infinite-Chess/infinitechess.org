@@ -5,6 +5,7 @@
  */
 
 import type { MetaData } from '../../chess/util/metadata.js';
+import type { UsernameContainer, UsernameContainerDisplayOptions } from '../../util/usernamecontainer.js';
 
 
 // @ts-ignore
@@ -17,6 +18,7 @@ import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import { players } from '../../chess/util/typeutil.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
 
 "use strict";
 
@@ -47,10 +49,35 @@ let showButtons = false;
 function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
-	const { white, black } = getPlayerNamesForGame(metadata);
+	const { white, black, white_uses_username, black_uses_username } = getPlayerNamesForGame(metadata);
 
-	element_playerWhite.textContent = white;
-	element_playerBlack.textContent = black;
+	// Set white username container
+	const usernamecontainer_white: UsernameContainer = {
+		username: white,
+		displayrating: "(1400)"
+	};
+	const usernamecontainer_options_white: UsernameContainerDisplayOptions = {
+		makehyperlink: white_uses_username,
+		showrating: white_uses_username
+	};
+	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
+	usernamecontainer_white_Div.className = "playerwhite";
+	element_playerWhite.replaceWith(usernamecontainer_white_Div);
+
+	// Set black username container
+	const usernamecontainer_black: UsernameContainer = {
+		username: black,
+		displayrating: "(1400)"
+	};
+	const usernamecontainer_options_black: UsernameContainerDisplayOptions = {
+		makehyperlink: black_uses_username,
+		showrating: black_uses_username
+	};
+	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
+	usernamecontainer_black_Div.className = "playerblack";
+	element_playerBlack.replaceWith(usernamecontainer_black_Div);
+
+
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
 
@@ -145,23 +172,34 @@ function toggle() {
 	frametracker.onVisualChange();
 }
 
-function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string } {
+/**
+ * Given a metadata object, determines the names of the players to be displayed, as well as whether they correspond to actual usernames
+ */
+function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_uses_username: boolean, black_uses_username: boolean } {
 	if (gameloader.getTypeOfGameWeIn() === 'local') {
 		return {
 			white: translations['player_name_white_generic'],
-			black: translations['player_name_black_generic']
+			black: translations['player_name_black_generic'],
+			white_uses_username: false,
+			black_uses_username: false
 		};
 	} else if (onlinegame.areInOnlineGame()) {	
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
+		const white = onlinegame.areWeColorInOnlineGame(players.WHITE) && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'];
+		const black = onlinegame.areWeColorInOnlineGame(players.BLACK) && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black'];
 		return {
-			white: onlinegame.areWeColorInOnlineGame(players.WHITE) && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'],
-			black: onlinegame.areWeColorInOnlineGame(players.BLACK) && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black']
+			white: white,
+			black: black,
+			white_uses_username: white !== translations['guest_indicator'] && white !== translations['you_indicator'],
+			black_uses_username: black !== translations['guest_indicator'] && black !== translations['you_indicator']
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
 			white: metadata.White!,
-			black: metadata.Black!
+			black: metadata.Black!,
+			white_uses_username: false,
+			black_uses_username: false
 		};
 	} else throw Error('Cannot get player names for game when not in a local, online, or engine game.');
 }

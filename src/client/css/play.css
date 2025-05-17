@@ -1234,6 +1234,7 @@ svg.collapse {
     display: flex;
     align-items: center;
     font-size: 18px;
+    gap: 8px;
 }
 
 .playerwhite {
