@@ -63,8 +63,7 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 		showrating: white_display_rating !== null
 	};
 	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
-	usernamecontainer_white_Div.className = "playerwhite";
-	element_playerWhite.replaceWith(usernamecontainer_white_Div);
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white_Div, element_playerWhite);
 
 	// Set black username container
 	const usernamecontainer_black: UsernameContainer = {
@@ -76,9 +75,7 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 		showrating: black_display_rating !== null
 	};
 	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
-	usernamecontainer_black_Div.className = "playerblack";
-	element_playerBlack.replaceWith(usernamecontainer_black_Div);
-
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
 
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');

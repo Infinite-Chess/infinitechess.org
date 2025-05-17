@@ -53,10 +53,29 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 	return containerDiv;
 }
 
+/**
+ * Set child_element as the only content of parent_element, with the same classes and styling
+ * @param child_element 
+ * @param parent_element 
+ */
+function embedUsernameContainerDisplayIntoParent(child_element: HTMLDivElement, parent_element: HTMLElement) {
+	// First clear all other content of parent_element
+	while (parent_element.firstChild) {
+		parent_element.removeChild(parent_element.firstChild);
+	}
+
+	// styling: make child inherit all classes of parent_element
+	child_element.className = parent_element.className;
+
+	// append child to parent
+	parent_element.appendChild(child_element);
+}
+
 
 
 export default {
-	createUsernameContainerDisplay
+	createUsernameContainerDisplay,
+	embedUsernameContainerDisplayIntoParent
 };
 
 export type {
