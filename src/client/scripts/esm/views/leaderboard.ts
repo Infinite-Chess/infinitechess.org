@@ -31,8 +31,6 @@ const leaderboard_id = Leaderboards.INFINITY;
 
 
 (async function loadLeaderboardData(): Promise<void> {
-	element_ShowMoreButton.classList.remove("hidden");
-
 	// We have to wait for validatorama here because it might be attempting
 	// to refresh our session in which case our session cookies will change
 	// so our refresh token in this here fetch request here would then be invalid
@@ -153,6 +151,7 @@ async function makeLeaderboardTable() {
 
 		// Hide "show more" button if not enough players are shown
 		if (results.length < n_players + 1) element_ShowMoreButton.classList.add("hidden");
+		else element_ShowMoreButton.classList.remove("hidden");
 
 	} catch (error) {
 		console.error("Error loading leaderboard data:", error);
