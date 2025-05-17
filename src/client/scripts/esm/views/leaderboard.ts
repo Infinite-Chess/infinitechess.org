@@ -55,7 +55,7 @@ const element_supportedVariants = document.getElementById('supported-variants')!
 		// Create body of table
 		const tbody = document.createElement("tbody");
 		let rank = 1;
-		results.forEach((player: { username: string; elo: number }) => {
+		results.forEach((player: { username: string; elo: string }) => {
 			const row = document.createElement("tr");
 			row.innerHTML = `
             <td>${rank}</td>

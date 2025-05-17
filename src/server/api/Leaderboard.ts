@@ -6,14 +6,13 @@
  */
 
 import { getTopPlayersForLeaderboard } from "../database/leaderboardsManager.js";
+import { Leaderboard } from "../../client/scripts/esm/chess/variants/leaderboard.js";
+// @ts-ignore
+import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 
-
 import type { Request, Response } from "express";
-import { Leaderboard } from "../../client/scripts/esm/chess/variants/leaderboard.js";
-
-
 
 // Functions -------------------------------------------------------------
 
@@ -34,9 +33,9 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 
 	const sendData: Object[] = [];
 	for (const player of top_players) {
-		const playerData = { 
-			username: player.user_id,
-			elo: player.elo
+		const playerData = {
+			username: getMemberDataByCriteria(['username'], 'user_id', player.user_id!, { skipErrorLogging: true }).username,
+			elo: String(Math.round(player.elo!))
 		};
 		sendData.push(playerData);
 	}
