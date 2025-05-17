@@ -1,6 +1,12 @@
+
 /**
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
+
+
+
+// Types ----------------------------------------------------------------------------------------
+
 
 /**
  * Such an object contains all display information for a given user
@@ -19,6 +25,10 @@ type UsernameContainerDisplayOptions = {
     /** Whether to show the displayrating entry if it exists */
     showrating?: boolean
 }
+
+
+// Functions ----------------------------------------------------------------------------------------
+
 
 /**
  * Creates an HTML Div Element containing all information to be shown about a UsernameContainer
