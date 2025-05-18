@@ -24,6 +24,9 @@
             <div class="content">
                 <h1 class="center"><%=t('leaderboard.title')%></h1>
                 <hr>
+                <div id="user_ranking_container" class="hidden center">
+                    <div id="user_ranking_text"><%=t('leaderboard.your_global_ranking')%></div><div id="user_ranking"></div>
+                </div>
                 <div class="center" id="leaderboard-table"></div>
                 <div class="center button-wrapper">
                     <button id="show_more_button" class="unselectable hidden"><%=t('leaderboard.show_more')%></button>

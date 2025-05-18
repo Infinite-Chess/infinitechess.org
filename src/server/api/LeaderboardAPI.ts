@@ -50,7 +50,7 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 
 	if (requester_username !== undefined && requester_rank === undefined) {
 		const requester_userid = getMemberDataByCriteria(['user_id'], 'username', requester_username, { skipErrorLogging: true }).user_id;
-		requester_rank = getPlayerRankInLeaderboard(leaderboard_id, requester_userid);
+		requester_rank = getPlayerRankInLeaderboard(requester_userid, leaderboard_id);
 	}
 
 	const requesterData = { 

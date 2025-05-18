@@ -52,6 +52,16 @@ main {
     margin: 1em;
 }
 
+#user_ranking_container {
+    justify-content: center;
+    display: flex;
+    gap: 20px;
+}
+
+#user_ranking_text {
+    font-weight: bold;
+}
+
 /* Show More Button */
 
 .button-wrapper {
@@ -104,6 +114,7 @@ tr:nth-child(even) {
 /* Don't hide borders on hr tags */
 hr {
     border: 1px solid #00000057;
+    margin-bottom: 12px;
 }
 
 /* Start increasing header links width */

@@ -16,6 +16,8 @@ import type { UsernameContainer, UsernameContainerDisplayOptions } from '../util
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
 const element_supportedVariants = document.getElementById('supported-variants')!;
 const element_ShowMoreButton = document.getElementById('show_more_button')!;
+const element_UserRankingContainer = document.getElementById('user_ranking_container')!;
+const element_UserRanking = document.getElementById('user_ranking')!;
 
 
 // --- Variables ---
@@ -90,6 +92,9 @@ function createEmptyLeaderboardTable() {
  * Populate the leaderboard table for the chosen leaderboard, with the top n players
  */
 async function populateTable(start_rank: number, n_players: number) {
+
+	const loggedInAs = validatorama.getOurUsername();
+
 	const config: RequestInit = {
 		method: 'GET',
 		headers: {
@@ -100,7 +105,7 @@ async function populateTable(start_rank: number, n_players: number) {
 
 	try {
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
-		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/(Guest)`, config);
+		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/${initialized ? "(Guest)" : loggedInAs}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
 			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
@@ -110,6 +115,10 @@ async function populateTable(start_rank: number, n_players: number) {
 		const results = await response.json();
 		console.log(results);
 
+		if (results.requesterData?.rank !== undefined) {
+			element_UserRankingContainer.classList.remove("hidden");
+			element_UserRanking.textContent = `#${results.requesterData.rank}`;
+		}
 		
 		let rank = start_rank;
 		results.leaderboardData.forEach((player: { username: string; elo: string }) => {
@@ -138,7 +147,6 @@ async function populateTable(start_rank: number, n_players: number) {
 			element_LeaderboardTableBody.appendChild(row);
 
 			// Color row of logged in user
-			const loggedInAs = validatorama.getOurUsername();
 			if (loggedInAs === player.username) row.classList.add("logged_in_user_entry");
 
 			rank++;
