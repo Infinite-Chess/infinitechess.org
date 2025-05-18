@@ -15,7 +15,7 @@ import type { UsernameContainer, UsernameContainerDisplayOptions } from '../util
 // --- DOM Element Selection ---
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
 const element_supportedVariants = document.getElementById('supported-variants')!;
-const element_ShowMoreButton = document.getElementById('show_more_button')!;
+const element_ShowMoreButton: HTMLButtonElement = document.getElementById('show_more_button')! as HTMLButtonElement;
 const element_UserRankingText = document.getElementById('user_ranking_text')!;
 const element_UserRanking = document.getElementById('user_ranking')!;
 
@@ -178,5 +178,13 @@ async function populateTable(start_rank: number, n_players: number) {
  * Increase n_players and redraw the leaderboard table
  */
 async function showMorePlayers() {
-	await populateTable(running_start_rank, LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT);
+	// await populateTable(running_start_rank, LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT);
+	// disable the button so it can’t be clicked again while we’re fetching
+	element_ShowMoreButton.disabled = true;
+	try {
+		await populateTable(running_start_rank, LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT);
+	} finally {
+		// re-enable regardless of success or failure
+		element_ShowMoreButton.disabled = false;
+	}
 }
