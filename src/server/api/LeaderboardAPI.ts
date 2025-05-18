@@ -65,16 +65,18 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 		const requester_userid = getMemberDataByCriteria(['user_id'], 'username', requester_username, { skipErrorLogging: true })?.user_id;
 		if (requester_userid === undefined) break rank_string_constructor;
 
-		const requester_elo = getDisplayEloOfPlayerInLeaderboard(requester_userid, leaderboard_id);
-		const is_requester_elo_uncertain = /\?/.test(requester_elo); // If the display elo contains a ?, then the rank_string should also contain a ?
 		const requester_rank = getPlayerRankInLeaderboard(requester_userid, leaderboard_id);
 		if (requester_rank !== undefined) {
 			rank_string = `#${requester_rank}`;
+
+			// If the display elo contains a ?, then the rank_string should also contain a ?
+			const requester_elo = getDisplayEloOfPlayerInLeaderboard(requester_userid, leaderboard_id);
+			const is_requester_elo_uncertain = /\?/.test(requester_elo);
 			if (is_requester_elo_uncertain) rank_string += "?";
 		}
 		else rank_string = "?";
 	}
-	else if (requester_username !== undefined) rank_string = `#${requester_rank}`;
+	else if (requester_username !== undefined) rank_string = `#${requester_rank}`; // case where the requester_username was already contained in the top leaderboard ranks
 
 	const requesterData = {
 		rank_string: rank_string
