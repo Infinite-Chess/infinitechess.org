@@ -23,9 +23,9 @@ const element_UserRanking = document.getElementById('user_ranking')!;
 // --- Variables ---
 
 /** Number of players to be shown on leaderboard page load */
-const LEADERBOARD_LENGTH_ON_LOAD = 1;
+const LEADERBOARD_LENGTH_ON_LOAD = 50;
 /** Number of players to be added on show more button press */
-const LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT = 1;
+const LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT = 25;
 /** Leaderboard to be displayed */
 const leaderboard_id = Leaderboards.INFINITY;
 
@@ -68,6 +68,9 @@ function setSupportedVariantsDisplay() {;
 	element_supportedVariants.textContent += `${translations["supported_variants"]} ${variantslist.join(", ")}.`;
 };
 
+/**
+ * Create an empty leaderboard table upon page initialization
+ */
 function createEmptyLeaderboardTable() {
 	// Create table
 	const table = document.createElement("table");
@@ -89,7 +92,10 @@ function createEmptyLeaderboardTable() {
 }
 
 /**
- * Populate the leaderboard table for the chosen leaderboard, with the top n players
+ * Populate the leaderboard table for the chosen leaderboard, with the top n players.
+ * If initialized === false, then this function also populates the "global ranking" element at the top
+ * @param start_rank - highest rank of leaderboard player to add to table
+ * @param n_players - number of players to add to table
  */
 async function populateTable(start_rank: number, n_players: number) {
 
@@ -104,8 +110,10 @@ async function populateTable(start_rank: number, n_players: number) {
 	};
 
 	try {
+		// Make server request
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
-		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/${initialized ? "(Guest)" : loggedInAs}`, config);
+		// If initialized === false, we also add the username of the logged in player to the request, if possible, in order to get his rank
+		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/${!initialized && loggedInAs !== undefined ? loggedInAs : "(Guest)"}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
 			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
@@ -115,11 +123,13 @@ async function populateTable(start_rank: number, n_players: number) {
 		const results = await response.json();
 		console.log(results);
 
-		if (results.requesterData?.rank !== undefined) {
+		// Now populate the "your global rank" text at the top if possible
+		if (!initialized && results.requesterData?.rank !== undefined) {
 			element_UserRankingContainer.classList.remove("hidden");
 			element_UserRanking.textContent = `#${results.requesterData.rank}`;
 		}
 		
+		// Iterate through all results.leaderboardData and add a row to the table body for each of them
 		let rank = start_rank;
 		results.leaderboardData.forEach((player: { username: string; elo: string }) => {
 			if (rank >= start_rank + n_players) return;
