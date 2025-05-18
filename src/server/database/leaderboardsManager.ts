@@ -306,10 +306,7 @@ function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Lea
 	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, rd_last_update_date } | undefined
 	if (rating_values?.elo !== undefined) {
 		ranked_elo = String(Math.round(rating_values.elo));
-		if (rating_values.rating_deviation !== undefined && rating_values.rd_last_update_date !== undefined) {
-			const true_rating_deviation = getTrueRD(rating_values.rating_deviation, rating_values.rd_last_update_date);
-			if (true_rating_deviation >= UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
-		}
+		if (rating_values.rating_deviation !== undefined && rating_values.rating_deviation > UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
 	}
 
 	return ranked_elo;
