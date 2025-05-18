@@ -85,6 +85,28 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 }
 
 /**
+ * Extracts a UsernameContainer object from a display HTML element
+ * @param containerDiv - the HTMLDivElement to extract information from
+ * @returns a freshly created UsernameContainer or undefined, if this failed
+ */
+function extractUsernameContainerFromDisplayElement(containerDiv: HTMLDivElement) : UsernameContainer | undefined {
+	const result: UsernameContainer = { username: "" };
+
+	// Find the username
+	const usernameElem = containerDiv.querySelector('.username');
+	if (usernameElem && usernameElem?.textContent !== undefined && usernameElem?.textContent !== null) result.username = usernameElem.textContent;
+	else return undefined;
+
+	// Find the displayrating
+	const eloElem = containerDiv.querySelector('.elo');
+	if (eloElem) {
+		if (eloElem && eloElem?.textContent !== undefined && eloElem?.textContent !== null) result.displayrating = eloElem.textContent;
+	}
+
+	return result;
+}
+
+/**
  * Set child_element as the only content of parent_element, with the same classes and styling
  * @param child_element 
  * @param parent_element 
@@ -115,6 +137,7 @@ function createSvgElementFromString(svgText: string): SVGElement {
 
 export default {
 	createUsernameContainerDisplay,
+	extractUsernameContainerFromDisplayElement,
 	embedUsernameContainerDisplayIntoParent
 };
 

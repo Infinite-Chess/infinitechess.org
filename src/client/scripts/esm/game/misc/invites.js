@@ -328,7 +328,7 @@ function getInviteFromElement(inviteElement) {
      */
 
 	return {
-		usernamecontainer: inviteElement.children[0],
+		usernamecontainer: usernamecontainer.extractUsernameContainerFromDisplayElement(inviteElement.children[0]),
 		variant: inviteElement.children[1].textContent,
 		clock: inviteElement.children[2].textContent,
 		color: inviteElement.children[3].textContent,
