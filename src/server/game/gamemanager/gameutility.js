@@ -279,13 +279,14 @@ function getMetadataOfGame(game) {
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 	const white = game.players[players.WHITE].identifier;
 	const black = game.players[players.BLACK].identifier;
+	const guest_indicator = getTranslation('play.javascript.guest_indicator');
 	const gameMetadata = {
 		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
 		Site: "https://www.infinitechess.org/",
 		Round: "-",
 		Variant: game.variant,
-		White: white.member || "(Guest)", // Protect browser's browser-id cookie
-		Black: black.member || "(Guest)", // Protect browser's browser-id cookie
+		White: white.member || guest_indicator, // Protect browser's browser-id cookie
+		Black: black.member || guest_indicator, // Protect browser's browser-id cookie
 		TimeControl: game.clock,
 		UTCDate,
 		UTCTime,

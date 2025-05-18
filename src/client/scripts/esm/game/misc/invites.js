@@ -197,7 +197,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		// <div class="invite-child accept">Accept</div>
 
 		const display_usernamecontainer = jsutil.deepCopyObject(invite.usernamecontainer);
-		const user_type = display_usernamecontainer.username === translations.guest_indicator ? '(Guest)' : 'user';
+		const user_type = display_usernamecontainer.username === "(Guest)" ? 'guest' : 'user';
 		const display_usernamecontainer_options = {
 			makehyperlink: user_type === 'user',
 			showrating: true

@@ -1,6 +1,6 @@
 {
 	"52": {
-		"note": "Added header.leaderboard on line 14. Added leaderboard.javascript.supported_variants on line 44. Added infinity_leaderboard_rating_deviation on line 127. Added new leaderboard category with 4 entries on line 158.",
+		"note": "Added header.leaderboard on line 14. Added leaderboard.javascript.supported_variants on line 44. Added infinity_leaderboard_rating_deviation on line 127. Added new leaderboard category with 4 entries on line 158. Deleted you_indicator line 400. Added engine_indicator line 323.",
     	"changes": []
 	},
 	"51": {

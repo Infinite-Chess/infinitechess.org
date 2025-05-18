@@ -318,6 +318,8 @@ function getPlayerMoveCountsInGame(game: Game): PlayerGroup<number> {
 import fs from 'fs';
 import readline from 'readline';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
+// @ts-ignore
+import { getTranslation } from '../../utility/translate.js';
 /**
  * TEMPORARY FUNCTION
  * This functions opens the file /logs/gameLog.txt, if it exists
@@ -399,9 +401,10 @@ async function migrateGameLogsToDatabase() {
 			game.moves = longformat.moves;
 
 			game.players = { 1: { identifier: {} } , 2: { identifier: {} } };
-			if (longformat.metadata.White !== "(Guest)") game.players[1].identifier = { member: longformat.metadata.White, user_id: uuid.base62ToBase10(longformat.metadata.WhiteID!) };
+			const guest_indicator = getTranslation('play.javascript.guest_indicator');
+			if (longformat.metadata.White !== guest_indicator) game.players[1].identifier = { member: longformat.metadata.White, user_id: uuid.base62ToBase10(longformat.metadata.WhiteID!) };
 			else game.players[1].identifier = { browser: 'examplebrowserid' };
-			if (longformat.metadata.Black !== "(Guest)") game.players[2].identifier = { member: longformat.metadata.Black, user_id: uuid.base62ToBase10(longformat.metadata.BlackID!) };
+			if (longformat.metadata.Black !== guest_indicator) game.players[2].identifier = { member: longformat.metadata.Black, user_id: uuid.base62ToBase10(longformat.metadata.BlackID!) };
 			else game.players[2].identifier = { browser: 'examplebrowserid' };
 
 			game.gameRules = longformat.gameRules;
@@ -545,10 +548,11 @@ function VerifyRequiredMetadata(metadata: MetaData) {
 		}
 	}
 	// Make sure if White/Black is present, that WhiteID/BlackID is also present
-	if (metadata.White !== "(Guest)" && !metadata.WhiteID) console.log(`WhiteID is missing, but White is present! ${metadata.White}`);
-	if (metadata.Black !== "(Guest)" && !metadata.BlackID) console.log(`BlackID is missing, but Black is present! ${metadata.Black}`);
-	if (metadata.WhiteID && metadata.White === "(Guest)") console.log(`White is missing, but WhiteID is present! ${metadata.WhiteID}`);
-	if (metadata.BlackID && metadata.Black === "(Guest)") console.log(`Black is missing, but BlackID is present! ${metadata.BlackID}`);
+	const guest_indicator = getTranslation('play.javascript.guest_indicator');
+	if (metadata.White !== guest_indicator && !metadata.WhiteID) console.log(`WhiteID is missing, but White is present! ${metadata.White}`);
+	if (metadata.Black !== guest_indicator && !metadata.BlackID) console.log(`BlackID is missing, but Black is present! ${metadata.Black}`);
+	if (metadata.WhiteID && metadata.White === guest_indicator) console.log(`White is missing, but WhiteID is present! ${metadata.WhiteID}`);
+	if (metadata.BlackID && metadata.Black === guest_indicator) console.log(`Black is missing, but BlackID is present! ${metadata.BlackID}`);
 	// Make sure specifically TimeControl isn't in m+s, but s+s format
 	if (metadata.TimeControl === '10+4' || metadata.TimeControl === '10+6') console.log(`Time control "${metadata.TimeControl}" not valid! Should be in s+s format.`);
 

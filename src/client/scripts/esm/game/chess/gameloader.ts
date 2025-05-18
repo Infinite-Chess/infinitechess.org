@@ -216,8 +216,8 @@ async function startEngineGame(options: {
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		TimeControl: '-',
-		White: options.youAreColor === players.WHITE ? '(You)' : 'Engine',
-		Black: options.youAreColor === players.BLACK ? '(You)' : 'Engine',
+		White: options.youAreColor === players.WHITE ? translations['you_indicator'] : translations['engine_indicator'],
+		Black: options.youAreColor === players.BLACK ? translations['you_indicator'] : translations['engine_indicator'],
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
