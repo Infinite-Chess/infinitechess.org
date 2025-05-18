@@ -74,7 +74,7 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 		}
 		else rank_string = "?";
 	}
-	else rank_string = `#${requester_rank}`;
+	else if (requester_username !== undefined) rank_string = `#${requester_rank}`;
 
 	const requesterData = {
 		rank_string: rank_string
