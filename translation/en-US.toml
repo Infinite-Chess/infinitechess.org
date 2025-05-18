@@ -156,7 +156,7 @@ js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
 
 [leaderboard]
-title = "LEADERBOARD"
+title = "Leaderboard"
 inactive_players = "Inactive players with a high rating uncertainty are excluded from the leaderboard."
 your_global_ranking = "Your Global Ranking:"
 show_more = "Show more..."
