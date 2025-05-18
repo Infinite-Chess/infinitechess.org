@@ -43,7 +43,7 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 	}
 
 	// Populate leaderboardData object with usernames and elos of players
-	// Also look out for requester_username among usernames
+	// Also look out for requester_username among usernames in order to set the value of requester_rank if possible
 	let requester_rank: number | undefined = undefined;
 	let running_rank = start_rank;
 	const leaderboardData: Object[] = [];
@@ -58,12 +58,15 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 		running_rank++;
 	}
 
+	// Construct rank_string of user
 	// If there is a requester_username, but requester_rank is still undefined, we need another database query
 	let rank_string: string | undefined = undefined;
-	if (requester_username !== undefined && requester_rank === undefined) {
-		const requester_userid = getMemberDataByCriteria(['user_id'], 'username', requester_username, { skipErrorLogging: true }).user_id;
+	rank_string_constructor: if (requester_username !== undefined && requester_rank === undefined) {
+		const requester_userid = getMemberDataByCriteria(['user_id'], 'username', requester_username, { skipErrorLogging: true })?.user_id;
+		if (requester_userid === undefined) break rank_string_constructor;
+
 		const requester_elo = getDisplayEloOfPlayerInLeaderboard(requester_userid, leaderboard_id);
-		const is_requester_elo_uncertain = /\?/.test(requester_elo);
+		const is_requester_elo_uncertain = /\?/.test(requester_elo); // If the display elo contains a ?, then the rank_string should also contain a ?
 		const requester_rank = getPlayerRankInLeaderboard(requester_userid, leaderboard_id);
 		if (requester_rank !== undefined) {
 			rank_string = `#${requester_rank}`;
