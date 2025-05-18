@@ -50,6 +50,21 @@ let showButtons = false;
 function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
+
+	embedUsernameContainers(metadata);
+	
+	updateWhosTurn();
+	element_gameInfoBar.classList.remove('hidden');
+
+	if (showButtons) {
+		element_practiceButtons.classList.remove('hidden');
+		initListeners_Gamecontrol();
+	} else element_practiceButtons.classList.add('hidden');
+
+	isOpen = true;
+}
+
+function embedUsernameContainers(metadata: MetaData) {
 	const { white, black, white_type, black_type } = getPlayerNamesForGame(metadata);
 	const white_display_rating = (white_type === 'player' && metadata?.WhiteElo !== undefined ? `(${metadata.WhiteElo})` : null);
 	const black_display_rating = (black_type === 'player' && metadata?.BlackElo !== undefined ? `(${metadata.BlackElo})` : null);
@@ -81,16 +96,6 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
 	setTimeout(updateAlignmentOfRightUsername, 0);
-
-	updateWhosTurn();
-	element_gameInfoBar.classList.remove('hidden');
-
-	if (showButtons) {
-		element_practiceButtons.classList.remove('hidden');
-		initListeners_Gamecontrol();
-	} else element_practiceButtons.classList.add('hidden');
-
-	isOpen = true;
 }
 
 function close() {
