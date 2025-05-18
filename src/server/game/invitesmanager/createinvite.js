@@ -21,7 +21,7 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
+import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getTranslation } from '../../utility/translate.js'; 
 import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 

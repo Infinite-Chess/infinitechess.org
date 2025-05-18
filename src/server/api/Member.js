@@ -7,7 +7,7 @@ import locale from 'date-fns/locale/index.js';
 import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-import { Leaderboards } from '../../client/scripts/esm/chess/variants/leaderboard.js';
+import { Leaderboards } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getDisplayEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEvents } from '../middleware/logEvents.js';

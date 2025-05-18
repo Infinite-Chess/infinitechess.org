@@ -30,7 +30,7 @@ import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sen
 import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { VariantLeaderboards, Leaderboards } from '../../../client/scripts/esm/chess/variants/leaderboard.js';
+import { VariantLeaderboards, Leaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 // Type Definitions...

@@ -9,7 +9,7 @@ import timeutil from '../../util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
 import { players } from '../../chess/util/typeutil.js';
-import { VariantLeaderboards } from '../../chess/variants/leaderboard.js';
+import { VariantLeaderboards } from '../../chess/variants/validleaderboard.js';
 // Import End
 
 

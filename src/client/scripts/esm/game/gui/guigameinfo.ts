@@ -52,7 +52,7 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	else showButtons = false;
 
 	embedUsernameContainers(metadata);
-	
+
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
 
@@ -179,7 +179,8 @@ function toggle() {
 }
 
 /**
- * Given a metadata object, determines the names of the players to be displayed, as well as whether they correspond to actual usernames
+ * Given a metadata object, determines the names of the players to be displayed, as well as the type of player,
+ * which determines the svg of the username container, and whether it should hyperlink or not.
  */
 function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_type: 'player' | 'guest' | 'engine', black_type: 'player' | 'guest' | 'engine' } {
 	if (gameloader.getTypeOfGameWeIn() === 'local') {

@@ -6,7 +6,7 @@
  */
 
 import { getTopPlayersForLeaderboard } from "../database/leaderboardsManager.js";
-import { Leaderboard } from "../../client/scripts/esm/chess/variants/leaderboard.js";
+import { Leaderboard } from "../../client/scripts/esm/chess/variants/validleaderboard.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
