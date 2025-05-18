@@ -112,34 +112,10 @@ function createSvgElementFromString(svgText: string): SVGElement {
 	return svg;
 }
 
-// Invite-text specific functions ----------------------------------------------------------------------------------------
-
-
-/**
- * Parse a UsernameContainer object into a text string, as it should appear on an invite
- */
-function parseUsernameContainerToInviteText(usernamecontainer: UsernameContainer) : string {
-	return usernamecontainer?.displayrating === undefined || usernamecontainer?.displayrating === null ? usernamecontainer.username : `${usernamecontainer.username} (${usernamecontainer.displayrating})`;
-}
-
-/**
- * Parse a text string appearing on an invite into a UsernameContainer object
- */
-function parseInviteTextToUsernameContainer(text: string) : UsernameContainer {
-	const elo_index = text.search(/\(?-?[0-9]/);
-	if (elo_index === -1) return {username: text}; // contains no display elo
-	else return { // contains display elo
-		username: text.slice(0, elo_index).trimEnd(),
-		displayrating: text.slice(elo_index).replace(/[()]/g, "")
-	};
-}
-
 
 export default {
 	createUsernameContainerDisplay,
-	embedUsernameContainerDisplayIntoParent,
-	parseUsernameContainerToInviteText,
-	parseInviteTextToUsernameContainer
+	embedUsernameContainerDisplayIntoParent
 };
 
 export type {

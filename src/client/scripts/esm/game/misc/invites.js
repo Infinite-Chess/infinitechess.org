@@ -6,12 +6,12 @@ import sound from './sound.js';
 import clockutil from '../../chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
-import style from '../gui/style.js';
 import statustext from '../gui/statustext.js';
 import uuid from '../../util/uuid.js';
 import validatorama from '../../util/validatorama.js';
 import docutil from '../../util/docutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+import jsutil from '../../util/jsutil.js';
 // Import End
 
 "use strict";
@@ -196,9 +196,14 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		// <div class="invite-child">Casual</div>
 		// <div class="invite-child accept">Accept</div>
 
-		const n = ours ? translations.invites.you_indicator : usernamecontainer.parseUsernameContainerToInviteText(invite.usernamecontainer);
-		const name = createDiv(['invite-child'], n);
-		newInvite.appendChild(name);
+		const display_usernamecontainer = jsutil.deepCopyObject(invite.usernamecontainer);
+		if (ours) display_usernamecontainer.username = translations.invites.you_indicator;
+		const display_usernamecontainer_options = {
+			makehyperlink: false,
+			showrating: true
+		};
+		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainerDisplay(display_usernamecontainer, display_usernamecontainer_options);
+		newInvite.appendChild(displayelement_usernamecontainer);
 
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
 		newInvite.appendChild(variant);
@@ -314,7 +319,6 @@ function isInviteOurs(invite) {
  * @returns {Invite} The invite object, parsed from an HTML element.
  */
 function getInviteFromElement(inviteElement) {
-	const childrenTextContent = style.getChildrenTextContents(inviteElement);
 	const id = inviteElement.getAttribute('id');
     
 	/**
@@ -324,12 +328,12 @@ function getInviteFromElement(inviteElement) {
      */
 
 	return {
-		usernamecontainer: usernamecontainer.parseInviteTextToUsernameContainer(childrenTextContent[0]),
-		variant: childrenTextContent[1],
-		clock: childrenTextContent[2],
-		color: childrenTextContent[3],
-		publicity: childrenTextContent[4],
-		rated: childrenTextContent[5],
+		usernamecontainer: inviteElement.children[0],
+		variant: inviteElement.children[1].textContent,
+		clock: inviteElement.children[2].textContent,
+		color: inviteElement.children[3].textContent,
+		publicity: inviteElement.children[4].textContent,
+		rated: inviteElement.children[5].textContent,
 		id
 	};
 }
