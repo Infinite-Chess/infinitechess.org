@@ -100,8 +100,8 @@ function embedUsernameContainers(metadata: MetaData) {
 
 function close() {
 	// Restore the player names to original content
-	element_playerWhite.textContent = '';
-	element_playerBlack.textContent = '';
+	element_playerWhite.innerHTML = '';
+	element_playerBlack.innerHTML = '';
 	// revealPlayerNames();
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
@@ -319,6 +319,7 @@ function getHeightOfGameInfoBar(): number {
 function updateAlignmentOfRightUsername() {
 	if (element_playerBlack.children.length > 1) throw Error("Update reference to the username container inside the player black div!");
 	const usernameEmbed = element_playerBlack.children[0]!;
+	if (usernameEmbed === undefined) return;
 	if (usernameEmbed.clientWidth > element_playerBlack.clientWidth) {
 		element_playerBlack.classList.remove('justify-content-right');
 		element_playerBlack.classList.add('justify-content-left');
