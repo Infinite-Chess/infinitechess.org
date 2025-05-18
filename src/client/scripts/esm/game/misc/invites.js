@@ -19,7 +19,7 @@ import usernamecontainer from '../../util/usernamecontainer.js';
 
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
- * @property {Object} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
+ * @property {UsernameContainer} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
  * If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
  * @property {string} id - A unique identifier
  * @property {string} tag - Used to verify if an invite is your own.
@@ -31,6 +31,7 @@ import usernamecontainer from '../../util/usernamecontainer.js';
  */
 
 /** @typedef {import('../gui/guiplay.js').InviteOptions} InviteOptions */
+/** @typedef {import('../../util/usernamecontainer.js').UsernameContainer} UsernameContainer */
 
 
 /** This script manages the invites on the Play page. */

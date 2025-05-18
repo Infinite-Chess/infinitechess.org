@@ -41,7 +41,7 @@ import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from "../api/AdminPanel.js";
 import { getContributors } from '../api/GitHub.js';
-import { getLeaderboardData } from '../api/Leaderboard.js';
+import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
