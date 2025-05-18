@@ -12,14 +12,12 @@ import type { Player, PlayerGroup } from "../../chess/util/typeutil.js";
 // @ts-ignore
 import type gamefile from "../../chess/logic/gamefile.js";
 
-const element_timers: PlayerGroup<{ timer: HTMLElement, container: HTMLElement }> = {
+const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
 	[players.WHITE]: {
 		timer: document.getElementById('timer-white')!,
-		container: document.getElementById('timer-container-white')!,
 	},
 	[players.BLACK]: {
 		timer: document.getElementById('timer-black')!,
-		container: document.getElementById('timer-container-black')!
 	}
 };
 
@@ -89,13 +87,13 @@ const countdown: {
 
 function hideClocks() {
 	for (const clockElements of Object.values(element_timers)) {
-		clockElements.container.classList.add('hidden');
+		clockElements.timer.classList.add('hidden');
 	}
 }
 
 function showClocks() {
 	for (const clockElements of Object.values(element_timers)) {
-		clockElements.container.classList.remove('hidden');
+		clockElements.timer.classList.remove('hidden');
 	}
 }
 

@@ -20,6 +20,7 @@ import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import statustext from '../gui/statustext.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
 /**
@@ -270,6 +271,7 @@ function onScreenResize() {
 	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 	guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
+	guigameinfo.updateAlignmentOfRightUsername();
 	// console.log('Resized window.')
 }
 

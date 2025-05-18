@@ -29,6 +29,12 @@ type UsernameContainerDisplayOptions = {
 }
 
 
+// Variables ----------------------------------------------------------------------------------------
+
+
+const profileSVGSource = '<svg class="svg-profile" xmlns="http://www.w3.org/2000/svg" fill="#000" stroke="#000" version="1.1" viewBox="0 0 2000 2000"><path d="M1656 1800H344c-70 0-123-70-96-134C370 1370 662 1200 1000 1200s629 170 752 466c27 64-25 134-96 134M592 600c0-220 183-400 408-400s408 180 408 400-183 400-408 400a405 405 0 01-408-400m1404 1164a952 952 0 00-612-697 593 593 0 00 220-560 610 610 0 00-530-503A608 608 0 00 388 600c0 190 89 357 228 467a952 952 0 00-612 697c-27 122 74 236 200 236h1590c128 0 229-114 200-236" fill="#555" fill-rule="evenodd" stroke="none"/></svg>';
+
+
 // General functions ----------------------------------------------------------------------------------------
 
 
@@ -40,18 +46,24 @@ type UsernameContainerDisplayOptions = {
  */
 function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, options: UsernameContainerDisplayOptions = {}) : HTMLDivElement {
 	const containerDiv = document.createElement('div');
-    
+
+	// Profile SVG element
+	const svgElement = createSvgElementFromString(profileSVGSource);
+	containerDiv.appendChild(svgElement);
+
 	// username element
 	if (options?.makehyperlink) {
-		const usernameDiv = document.createElement('a');
-		usernameDiv.href = `/member/${usernamecontainer.username}`;
-		usernameDiv.textContent = usernamecontainer.username;
-		usernameDiv.target = options?.hyperlinktarget !== undefined ? options.hyperlinktarget : '_blank';
-		containerDiv.appendChild(usernameDiv);
+		const usernameHyper = document.createElement('a');
+		usernameHyper.href = `/member/${usernamecontainer.username}`;
+		usernameHyper.textContent = usernamecontainer.username;
+		usernameHyper.target = options?.hyperlinktarget !== undefined ? options.hyperlinktarget : '_blank';
+		usernameHyper.classList.add("username");
+		containerDiv.appendChild(usernameHyper);
 	}
 	else {
 		const usernameDiv = document.createElement('div');
 		usernameDiv.textContent = usernamecontainer.username;
+		usernameDiv.classList.add("username");
 		containerDiv.appendChild(usernameDiv);
 	}
 
@@ -59,8 +71,11 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 	if (options?.showrating && usernamecontainer?.displayrating !== undefined && usernamecontainer?.displayrating !== null ) {
 		const eloDiv = document.createElement('div');
 		eloDiv.textContent = usernamecontainer.displayrating;
+		eloDiv.classList.add("elo");
 		containerDiv.appendChild(eloDiv);
 	}
+
+	containerDiv.classList.add("username-embed");
 
 	return containerDiv;
 }
@@ -76,13 +91,22 @@ function embedUsernameContainerDisplayIntoParent(child_element: HTMLDivElement, 
 		parent_element.removeChild(parent_element.firstChild);
 	}
 
-	// styling: make child inherit all classes of parent_element
-	child_element.className = parent_element.className;
-
 	// append child to parent
 	parent_element.appendChild(child_element);
 }
 
+/**
+ * Parse an SVG string into a live SVGElement.
+ * @param svgText — a string containing valid `<svg>…</svg>` markup
+ * @returns the newly created SVG element
+ */
+function createSvgElementFromString(svgText: string): SVGElement {
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(svgText, 'image/svg+xml');
+	const svg = doc.querySelector('svg');
+	if (!svg) throw new Error('Failed to parse SVG string.');
+	return svg;
+}
 
 // Invite-text specific functions ----------------------------------------------------------------------------------------
 

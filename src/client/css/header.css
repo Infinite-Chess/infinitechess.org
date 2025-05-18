@@ -854,3 +854,56 @@ span.arrow-head-left {
         transform: translate(-50%, -50%) rotate(360deg);
     }
 }
+
+
+/* Username Embed Containers */
+
+.username-embed {
+    display: flex;
+    align-items: center;
+    /* flex-wrap: wrap; */
+    gap: 0.3em;
+    font-size: 16px;
+    width: fit-content;
+}
+
+.username-embed .svg-profile {
+    width: 1em;
+    height: 1em;
+    aspect-ratio: 1;
+}
+
+.username-embed .username {
+    font-size: 1em;
+    font-weight: bold;
+    color: #000;
+    text-decoration: none;
+}
+
+.username-embed .elo {
+    color: #666;
+    font-size: 0.9em;
+}
+
+
+
+
+/* Fades the right side of the element away to hide overflow text */
+.fade-element {
+    mask-image: linear-gradient(
+      to right,
+      black 0%,
+      black calc(100% - 20px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      black 0%,
+      black calc(100% - 20px),
+      transparent 100%
+    );
+}
+
+.justify-content-right {
+    justify-content: right;
+}

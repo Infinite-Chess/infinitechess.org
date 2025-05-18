@@ -519,10 +519,13 @@
 
                 <!-- Game info, clocks, player names, whos turn -->
                 <div id="game-info-bar" class="game-info-bar hidden">
-                    <div id="timer-container-white" class="timerwhitecontainer">
-                        <div id="timer-white" class="timerwhite">10:00</div>
+                    <div class="player-container left fade-element">
+                        <div id="playerwhite" class="playerwhite"></div>
+                        <div class="timer-container left">
+                            <div id="timer-white" class="timer white">XX:XX</div>
+                        </div>
                     </div>
-                    <div id="playerwhite" class="playerwhite"></div>
+                    
                     <div class="whosturn">
                         <div id="dot" class="dotwhite"></div>
                         <div id="whosturn"></div>
@@ -552,9 +555,11 @@
 
                         </button>
                     </div>
-                    <div id="playerblack" class="playerblack"></div>
-                    <div id="timer-container-black" class="timerblackcontainer">
-                        <div id="timer-black" class="timerblack">10:00</div>
+                    <div class="player-container right">
+                        <div id="playerblack" class="playerblack justify-content-right"></div>
+                        <div class="timer-container right">
+                            <div id="timer-black" class="timer black">XX:XX</div>
+                        </div>
                     </div>
                 </div>
 

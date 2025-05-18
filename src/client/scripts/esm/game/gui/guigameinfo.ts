@@ -29,6 +29,8 @@ const element_gameInfoBar = document.getElementById('game-info-bar')!;
 
 const element_whosturn = document.getElementById('whosturn')!;
 const element_dot = document.getElementById('dot')!;
+const element_playerWhiteContainer = document.querySelector('.player-container.left')!;
+const element_playerBlackContainer = document.querySelector('.player-container.right')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
 const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
@@ -76,6 +78,8 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	};
 	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
 	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
+	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
+	setTimeout(updateAlignmentOfRightUsername, 0);
 
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
@@ -154,14 +158,14 @@ function preventFocus(event: Event) {
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
 function revealPlayerNames() {
-	element_playerWhite.classList.remove('hidden');
-	element_playerBlack.classList.remove('hidden');
+	element_playerWhiteContainer.classList.remove('hidden');
+	element_playerBlackContainer.classList.remove('hidden');
 }
 
 /** Hides the player names. Typically to make room for the draw offer UI */
 function hidePlayerNames() {
-	element_playerWhite.classList.add('hidden');
-	element_playerBlack.classList.add('hidden');
+	element_playerWhiteContainer.classList.add('hidden');
+	element_playerBlackContainer.classList.add('hidden');
 }
 
 function toggle() {
@@ -314,6 +318,24 @@ function getHeightOfGameInfoBar(): number {
 	return element_gameInfoBar.getBoundingClientRect().height;
 }
 
+/**
+ * Wide screen => Right-aligns black's username container
+ * Narrow screen => Left-aligns black's username container and adds a fade effect on the right overflow
+ */
+function updateAlignmentOfRightUsername() {
+	if (element_playerBlack.children.length > 1) throw Error("Update reference to the username container inside the player black div!");
+	const usernameEmbed = element_playerBlack.children[0]!;
+	if (usernameEmbed.clientWidth > element_playerBlack.clientWidth) {
+		element_playerBlack.classList.remove('justify-content-right');
+		element_playerBlack.classList.add('justify-content-left');
+		element_playerBlack.classList.add('fade-element');
+	} else {
+		element_playerBlack.classList.add('justify-content-right');
+		element_playerBlack.classList.remove('justify-content-left');
+		element_playerBlack.classList.remove('fade-element');
+	}
+}
+
 export default {
 	open,
 	close,
@@ -324,4 +346,5 @@ export default {
 	updateWhosTurn,
 	gameEnd,
 	getHeightOfGameInfoBar,
+	updateAlignmentOfRightUsername,
 };

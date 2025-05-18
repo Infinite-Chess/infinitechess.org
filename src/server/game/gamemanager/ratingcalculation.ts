@@ -153,7 +153,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 // // --- Simulation State ---
 // const player1CurrentStats: PlayerStats = {
 // 	elo: DEFAULT_LEADERBOARD_ELO,
-// 	rd: 50,
+// 	rd: DEFAULT_LEADERBOARD_RD,
 // 	lastUpdateDate: null, // Initially null, set to date string after first game
 // };
 
@@ -202,7 +202,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 // 	let victorId;
 // 	let outcomeDescription;
 
-// 	if (randomOutcomeSeed < 0.75) { // Player 1 (White) wins
+// 	if (randomOutcomeSeed < 0.45) { // Player 1 (White) wins
 // 		victorId = players.WHITE;
 // 		outcomeDescription = "Player 1 (White) wins";
 // 	} else if (randomOutcomeSeed < 0.9) { // Player 2 (Black) wins
@@ -219,7 +219,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 
 // 	// Update player stats for the next simulated game
 // 	// 2 Days
-// 	const timeSinceLastGame = 1000 * 60 * 60 * .24; // 1 month
+// 	const timeSinceLastGame = 1000 * 60 * 60 * 24 * 30; // 1 month
 // 	const gameTimestampString = timeutil.timestampToSqlite(Date.now() - timeSinceLastGame);
 
 // 	player1CurrentStats.elo = GlickoResults[players.WHITE]!.elo_after_game!;

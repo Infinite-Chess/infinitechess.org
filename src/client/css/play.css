@@ -1197,125 +1197,63 @@ svg.collapse {
     backdrop-filter: blur(8px); /* Apply a blur effect to the background */
 }
 
-.timerwhitecontainer, .timerblackcontainer {
-    display: flex;
-    align-items: center;
+/* Stores their username container and timer */
+.player-container {
+    align-content: center;
+    padding: 0 10px;
+    width: 35%;
 }
 
-.timerwhitecontainer {
-    padding: 25px 0 25px 25px;
-}
-
-.timerblackcontainer {
-    padding: 25px 25px 25px 0;
-}
-
-.timerwhite, .timerblack {
-    background-color: rgba(121, 121, 121, 0.474);
-    padding: 15px;
-    font-size: 20px;
-    border-radius: 10px;
-    z-index: 1;
-}
-
-.timerwhite {
-    background-color: rgb(255, 255, 255);
-    color: rgb(0, 0, 0);
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.878);
-}
-
-.timerblack {
-    background-color: rgb(0, 0, 0);
-    color: white;
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.571);
-}
-
+/* Stores the username containers */
 .playerwhite, .playerblack {
     display: flex;
-    align-items: center;
-    font-size: 18px;
-    gap: 8px;
 }
-
 .playerwhite {
-    padding: 0 10px 0 25px;
+    justify-content: left;
+}
+.playerblack {
+    /* Don't need to justify here since the spacing is specially handled by guigameinfo.ts */
 }
 
-.playerblack {
-    text-align: right;
-    padding: 0 25px 0 10px;
+/* Stores the timer */
+.timer-container {
+    display: flex;
+    align-items: center;
+    padding-top: 5px;
 }
+.timer-container.left {
+    justify-content: left;
+}
+.timer-container.right {
+    justify-content: right;
+}
+
+.timer {
+    padding: 6px 9px;
+    font-size: 18px;
+    border-radius: 4px;
+    border: 1px solid black;
+}
+.timer.white {
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+}
+.timer.black {
+    background-color: rgb(0, 0, 0);
+    color: white;
+}
+
 
 .whosturn {
-    min-width: 0;
-    max-width: 100%;
     flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 30px;
-    font-family: "Open Sans";
+    font-size: 20px;
     font-weight: bold;
-}
-
-.dotwhite, .dotblack {
-    border: 1px solid black;
-    width: 22px;
-    height: 22px;
-    border-radius: 100%;
-    margin: 12px;
-    transition: 0.25s;
-    flex-shrink: 0;
-}
-
-.dotwhite {
-    background-color: white;
-    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.491);
-}
-
-.dotblack {
-    background-color: black;
-    box-shadow: 0px 0px 9px 0px rgba(0, 0, 0, 0.259);
-}
-
-@media only screen and (max-width: 850px) {
-    .dotwhite, .dotblack {
-        display: none;
-    }
-    .whosturn {
-        font-size: 24px;
-    }
-    .playerwhite, .playerblack {
-        font-size: 16px;
-    }
-    .playerwhite {
-        padding-left: 20px;
-    }
-    .playerblack {
-        padding-right: 20px;
-    }
-    .timerwhitecontainer {
-        padding: 20px 0 20px 20px;
-    }
-    
-    .timerblackcontainer {
-        padding: 20px 20px 20px 0;
-    }
-    .timerwhite, .timerblack {
-        padding: 14px 12px;
-        font-size: 18px;
-        border-radius: 9px;
-    }
-    .draw_offer_ui {
-        padding: 0 0.5em;
-    }
-}
-
-@media only screen and (max-width: 502px) {
-    .playerwhite, .playerblack {
-        display: none;
-    }
+    padding: 0 8px;
+    min-width: 0px; /* Prevents the minimum width fitting the longest word */
 }
 
 /* Draw Offer UI (in the bottom nav bar) */
