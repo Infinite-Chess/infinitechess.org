@@ -16,7 +16,7 @@ import type { UsernameContainer, UsernameContainerDisplayOptions } from '../util
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
 const element_supportedVariants = document.getElementById('supported-variants')!;
 const element_ShowMoreButton = document.getElementById('show_more_button')!;
-const element_UserRankingContainer = document.getElementById('user_ranking_container')!;
+const element_UserRankingText = document.getElementById('user_ranking_text')!;
 const element_UserRanking = document.getElementById('user_ranking')!;
 
 
@@ -125,7 +125,7 @@ async function populateTable(start_rank: number, n_players: number) {
 
 		// Now populate the "your global rank" text at the top if possible
 		if (!initialized && results.requesterData?.rank !== undefined) {
-			element_UserRankingContainer.classList.remove("hidden");
+			element_UserRankingText.classList.remove("hidden");
 			element_UserRanking.textContent = `#${results.requesterData.rank}`;
 		}
 		
