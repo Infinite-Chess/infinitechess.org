@@ -867,7 +867,7 @@ span.arrow-head-left {
     width: fit-content;
 }
 
-.username-embed .svg-profile {
+.username-embed .svg-profile, .svg-engine {
     width: 1em;
     height: 1em;
     aspect-ratio: 1;

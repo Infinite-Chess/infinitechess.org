@@ -51,9 +51,9 @@ let showButtons = false;
 function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
-	const { white, black, white_uses_username, black_uses_username } = getPlayerNamesForGame(metadata);
-	const white_display_rating = (white_uses_username && metadata?.WhiteElo !== undefined ? `(${metadata.WhiteElo})` : null);
-	const black_display_rating = (black_uses_username && metadata?.BlackElo !== undefined ? `(${metadata.BlackElo})` : null);
+	const { white, black, white_type, black_type } = getPlayerNamesForGame(metadata);
+	const white_display_rating = (white_type === 'player' && metadata?.WhiteElo !== undefined ? `(${metadata.WhiteElo})` : null);
+	const black_display_rating = (black_type === 'player' && metadata?.BlackElo !== undefined ? `(${metadata.BlackElo})` : null);
 
 	// Set white username container
 	const usernamecontainer_white: UsernameContainer = {
@@ -61,8 +61,9 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 		displayrating: white_display_rating
 	};
 	const usernamecontainer_options_white: UsernameContainerDisplayOptions = {
-		makehyperlink: white_uses_username,
-		showrating: white_display_rating !== null
+		makehyperlink: white_type === 'player',
+		showrating: white_display_rating !== null,
+		isEngine: white_type === 'engine',
 	};
 	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
 	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white_Div, element_playerWhite);
@@ -73,8 +74,9 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 		displayrating: black_display_rating
 	};
 	const usernamecontainer_options_black: UsernameContainerDisplayOptions = {
-		makehyperlink: black_uses_username,
-		showrating: black_display_rating !== null
+		makehyperlink: black_type === 'player',
+		showrating: black_display_rating !== null,
+		isEngine: black_type === 'engine',
 	};
 	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
 	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
@@ -178,13 +180,13 @@ function toggle() {
 /**
  * Given a metadata object, determines the names of the players to be displayed, as well as whether they correspond to actual usernames
  */
-function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_uses_username: boolean, black_uses_username: boolean } {
+function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_type: 'player' | 'guest' | 'engine', black_type: 'player' | 'guest' | 'engine' } {
 	if (gameloader.getTypeOfGameWeIn() === 'local') {
 		return {
 			white: translations['player_name_white_generic'],
 			black: translations['player_name_black_generic'],
-			white_uses_username: false,
-			black_uses_username: false
+			white_type: 'player',
+			black_type: 'player',
 		};
 	} else if (onlinegame.areInOnlineGame()) {	
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
@@ -194,15 +196,15 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 		return {
 			white: white,
 			black: black,
-			white_uses_username: white !== translations['guest_indicator'] && white !== translations['you_indicator'],
-			black_uses_username: black !== translations['guest_indicator'] && black !== translations['you_indicator']
+			white_type: white === translations['guest_indicator'] || white === translations['you_indicator'] ? 'guest' : 'player',
+			black_type: black === translations['guest_indicator'] || black === translations['you_indicator'] ? 'guest' : 'player',
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
 			white: metadata.White!,
 			black: metadata.Black!,
-			white_uses_username: false,
-			black_uses_username: false
+			white_type: metadata.White === translations['you_indicator'] ? 'guest' : 'engine',
+			black_type: metadata.Black === translations['you_indicator'] ? 'guest' : 'engine',
 		};
 	} else throw Error('Cannot get player names for game when not in a local, online, or engine game.');
 }
