@@ -917,6 +917,11 @@ canvas {
     cursor: pointer;
 }
 
+/* Enforce same font size across all children elements of invite as well. */
+.invite * {
+    font-size: min(1.7vw, 18px, calc(var(--vh-sub-nav) * 0.020));
+}
+
 .invite .invite-child {
     padding: 0 0.6em;
 }
