@@ -66,8 +66,8 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 
 function embedUsernameContainers(metadata: MetaData) {
 	const { white, black, white_type, black_type } = getPlayerNamesForGame(metadata);
-	const white_display_rating = (white_type === 'player' && metadata?.WhiteElo !== undefined ? `(${metadata.WhiteElo})` : null);
-	const black_display_rating = (black_type === 'player' && metadata?.BlackElo !== undefined ? `(${metadata.BlackElo})` : null);
+	const white_display_rating = (white_type === 'player' && metadata?.WhiteElo !== undefined ? metadata.WhiteElo : null);
+	const black_display_rating = (black_type === 'player' && metadata?.BlackElo !== undefined ? metadata.BlackElo : null);
 
 	// Set white username container
 	const usernamecontainer_white: UsernameContainer = {

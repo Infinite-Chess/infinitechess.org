@@ -74,7 +74,7 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 	// rating element
 	if (options?.showrating && usernamecontainer?.displayrating !== undefined && usernamecontainer?.displayrating !== null ) {
 		const eloDiv = document.createElement('div');
-		eloDiv.textContent = usernamecontainer.displayrating;
+		eloDiv.textContent = `(${usernamecontainer.displayrating})`;
 		eloDiv.classList.add("elo");
 		containerDiv.appendChild(eloDiv);
 	}
@@ -119,7 +119,7 @@ function createSvgElementFromString(svgText: string): SVGElement {
  * Parse a UsernameContainer object into a text string, as it should appear on an invite
  */
 function parseUsernameContainerToInviteText(usernamecontainer: UsernameContainer) : string {
-	return usernamecontainer?.displayrating === undefined ? usernamecontainer.username : `${usernamecontainer.username} (${usernamecontainer.displayrating})`;
+	return usernamecontainer?.displayrating === undefined || usernamecontainer?.displayrating === null ? usernamecontainer.username : `${usernamecontainer.username} (${usernamecontainer.displayrating})`;
 }
 
 /**

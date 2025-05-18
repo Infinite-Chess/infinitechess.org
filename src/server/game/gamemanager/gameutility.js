@@ -293,12 +293,12 @@ function getMetadataOfGame(game) {
 	if (white.member !== undefined) {
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
-		gameMetadata.WhiteElo = getDisplayEloOfPlayerInLeaderboard(white.user_id, VariantLeaderboards[game.variant] ?? Leaderboards.INFINITY);
+		if (game.variant in VariantLeaderboards) gameMetadata.WhiteElo = getDisplayEloOfPlayerInLeaderboard(white.user_id, VariantLeaderboards[game.variant]);
 	}
 	if (black.member !== undefined) {
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
-		gameMetadata.BlackElo = getDisplayEloOfPlayerInLeaderboard(black.user_id, VariantLeaderboards[game.variant] ?? Leaderboards.INFINITY);
+		if (game.variant in VariantLeaderboards) gameMetadata.BlackElo = getDisplayEloOfPlayerInLeaderboard(black.user_id, VariantLeaderboards[game.variant]);
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata

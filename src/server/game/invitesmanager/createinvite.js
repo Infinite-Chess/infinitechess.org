@@ -114,7 +114,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 	invite.owner = owner;
 	invite.usernamecontainer = {};
 	invite.usernamecontainer.username = owner.member || "(Guest)"; // Protect browser's browser-id cookie
-	if (ws.metadata.memberInfo.signedIn) invite.usernamecontainer.displayrating = getDisplayEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY);
+	invite.usernamecontainer.displayrating = (ws.metadata.memberInfo.signedIn && messageContents.variant in VariantLeaderboards ? getDisplayEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, VariantLeaderboards[messageContents.variant]) : null);
 
 	invite.variant = messageContents.variant;
 	invite.clock = messageContents.clock;
