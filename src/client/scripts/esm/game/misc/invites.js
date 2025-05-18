@@ -203,6 +203,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 			showrating: true
 		};
 		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainerDisplay(display_usernamecontainer, display_usernamecontainer_options);
+		displayelement_usernamecontainer.classList.add("invite-child");
 		newInvite.appendChild(displayelement_usernamecontainer);
 
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
