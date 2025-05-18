@@ -24,7 +24,7 @@ interface MemberData {
 	checkmates_beaten: string;
 	ranked_elo: string;
 	infinity_leaderboard_position: number | undefined;
-	infinity_leaderboard_rating_deviation: string | undefined;
+	infinity_leaderboard_rating_deviation: number | undefined;
 	// Only present/relevant if viewing our own profile
 	email?: string;
 	verified?: boolean;
@@ -119,7 +119,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		
 		const infinityLeaderboardRatingDeviationElement = document.getElementById('infinity_leaderboard_rating_deviation')!;
 		infinityLeaderboardRatingDeviationElement.textContent = result.infinity_leaderboard_rating_deviation === undefined ? "?" : 
-						result.infinity_leaderboard_rating_deviation;
+						String(result.infinity_leaderboard_rating_deviation);
 
 		const loggedInAs = validatorama.getOurUsername(); // Assuming returns string | null
 

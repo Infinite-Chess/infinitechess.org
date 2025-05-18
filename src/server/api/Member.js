@@ -32,7 +32,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 
 	// Get the player's RD from the INFINITY leaderboard
 	let infinity_leaderboard_rating_deviation = getPlayerLeaderboardRating(user_id, Leaderboards.INFINITY)?.rating_deviation;
-	if (infinity_leaderboard_rating_deviation !== undefined) infinity_leaderboard_rating_deviation = infinity_leaderboard_rating_deviation.toFixed(2);
+	if (infinity_leaderboard_rating_deviation !== undefined) infinity_leaderboard_rating_deviation = Math.round(infinity_leaderboard_rating_deviation);
 
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...
