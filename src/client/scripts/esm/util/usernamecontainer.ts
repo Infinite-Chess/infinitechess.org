@@ -99,9 +99,7 @@ function extractUsernameContainerFromDisplayElement(containerDiv: HTMLDivElement
 
 	// Find the displayrating
 	const eloElem = containerDiv.querySelector('.elo');
-	if (eloElem) {
-		if (eloElem && eloElem?.textContent !== undefined && eloElem?.textContent !== null) result.displayrating = eloElem.textContent;
-	}
+	if (eloElem && eloElem?.textContent !== undefined && eloElem?.textContent !== null) result.displayrating = eloElem.textContent;
 
 	return result;
 }
