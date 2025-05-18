@@ -51,19 +51,13 @@ function setSupportedVariantsDisplay() {
 	element_supportedVariants.textContent = translations["supported_variants"];
 
 	const valid_variants = Object.keys(VariantLeaderboards);
-	
-	// Create a <ul> element and append <li> items
-	const ul = document.createElement("ul");
+	const variantslist: string[] = [];
 	valid_variants.forEach((variant: string | null) => {
 		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
-		const li = document.createElement("li");
-		li.textContent = translations[variant] ? translations[variant] : variant;
-		ul.appendChild(li);
+		variantslist.push( variant in translations ? translations[variant] : variant );
 	});
-
-	// Add the list to the page
-	element_supportedVariants.appendChild(ul);
-}
+	element_supportedVariants.textContent += ` ${variantslist.join(", ")}.`;
+};
 
 /**
  * Create the leaderboard table for the chosen leaderboard, with the top n players
