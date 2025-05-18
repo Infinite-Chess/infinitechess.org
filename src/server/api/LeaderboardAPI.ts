@@ -5,7 +5,7 @@
  * Sends the client the information about the leaderboard they are currently profile viewing.
  */
 
-import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard } from "../database/leaderboardsManager.js";
+import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getDisplayEloOfPlayerInLeaderboard } from "../database/leaderboardsManager.js";
 import { Leaderboard } from "../../client/scripts/esm/chess/variants/validleaderboard.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
@@ -44,7 +44,7 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 
 	// Populate leaderboardData object with usernames and elos of players
 	// Also look out for requester_username among usernames
-	let requester_rank: Number | undefined = undefined;
+	let requester_rank: number | undefined = undefined;
 	let running_rank = start_rank;
 	const leaderboardData: Object[] = [];
 	for (const player of top_players) {
@@ -59,13 +59,22 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 	}
 
 	// If there is a requester_username, but requester_rank is still undefined, we need another database query
+	let rank_string: string | undefined = undefined;
 	if (requester_username !== undefined && requester_rank === undefined) {
 		const requester_userid = getMemberDataByCriteria(['user_id'], 'username', requester_username, { skipErrorLogging: true }).user_id;
-		requester_rank = getPlayerRankInLeaderboard(requester_userid, leaderboard_id);
+		const requester_elo = getDisplayEloOfPlayerInLeaderboard(requester_userid, leaderboard_id);
+		const is_requester_elo_uncertain = /\?/.test(requester_elo);
+		const requester_rank = getPlayerRankInLeaderboard(requester_userid, leaderboard_id);
+		if (requester_rank !== undefined) {
+			rank_string = `#${requester_rank}`;
+			if (is_requester_elo_uncertain) rank_string += "?";
+		}
+		else rank_string = "?";
 	}
+	else rank_string = `#${requester_rank}`;
 
-	const requesterData = { 
-		rank: requester_rank
+	const requesterData = {
+		rank_string: rank_string
 	};
 
 	const sendData = {

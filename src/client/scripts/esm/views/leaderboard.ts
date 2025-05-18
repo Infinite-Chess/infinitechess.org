@@ -124,9 +124,9 @@ async function populateTable(start_rank: number, n_players: number) {
 		console.log(results);
 
 		// Now populate the "your global rank" text at the top if possible
-		if (!initialized && results.requesterData?.rank !== undefined) {
+		if (!initialized && results.requesterData?.rank_string !== undefined) {
 			element_UserRankingText.classList.remove("hidden");
-			element_UserRanking.textContent = `#${results.requesterData.rank}`;
+			element_UserRanking.textContent = results.requesterData.rank_string;
 		}
 		
 		// Iterate through all results.leaderboardData and add a row to the table body for each of them
