@@ -51,6 +51,8 @@ main {
     margin: 1em;
 }
 
+/* Show More Button */
+
 .button-wrapper {
     margin-bottom: 1em;
 }
@@ -66,21 +68,6 @@ main {
 
 .button-wrapper button:hover {
     background-color: #dfdbdb;
-}
-
-.unselectable { /* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
-    user-select: none; 
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-}
-
-.center {
-    text-align: center;
-}
-
-.hidden {
-    display: none;
 }
 
 

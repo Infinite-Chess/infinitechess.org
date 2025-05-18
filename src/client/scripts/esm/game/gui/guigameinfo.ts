@@ -28,7 +28,6 @@ import usernamecontainer from '../../util/usernamecontainer.js';
 const element_gameInfoBar = document.getElementById('game-info-bar')!;
 
 const element_whosturn = document.getElementById('whosturn')!;
-const element_dot = document.getElementById('dot')!;
 const element_playerWhiteContainer = document.querySelector('.player-container.left')!;
 const element_playerBlackContainer = document.querySelector('.player-container.right')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
@@ -101,9 +100,6 @@ function close() {
 	// revealPlayerNames();
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
-	element_dot.classList.remove('dotblack');
-	element_dot.classList.add('dotwhite');
-	element_dot.classList.remove('hidden');
 	
 	// Hide the whole bar
 	element_gameInfoBar.classList.add('hidden');
@@ -231,15 +227,6 @@ function updateWhosTurn() {
 	} else textContent = color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
 
 	element_whosturn.textContent = textContent;
-
-	element_dot.classList.remove('hidden');
-	if (color === players.WHITE) {
-		element_dot.classList.remove('dotblack');
-		element_dot.classList.add('dotwhite');
-	} else {
-		element_dot.classList.remove('dotwhite');
-		element_dot.classList.add('dotblack');
-	}
 }
 
 /** Updates the whosTurn text to say who won! */
@@ -249,7 +236,6 @@ function gameEnd(conclusion: string | false) {
 
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	const resultTranslations = translations['results'];
-	element_dot.classList.add('hidden');
 
 	const gamefile = gameslot.getGamefile()!;
 

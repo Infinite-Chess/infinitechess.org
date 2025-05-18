@@ -632,6 +632,10 @@ span.arrow-head-left {
     display: none;
 }
 
+.center {
+    text-align: center;
+}
+
 .visibility-hidden {
     visibility: hidden;
 }
