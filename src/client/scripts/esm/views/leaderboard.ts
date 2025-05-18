@@ -46,17 +46,14 @@ const leaderboard_id = Leaderboards.INFINITY;
 /**
  * Set the text below the leaderboard table, explaining which variants belong to it
  */
-function setSupportedVariantsDisplay() {
-	// Set the text above the list:
-	element_supportedVariants.textContent = translations["supported_variants"];
-
+function setSupportedVariantsDisplay() {;
 	const valid_variants = Object.keys(VariantLeaderboards);
 	const variantslist: string[] = [];
 	valid_variants.forEach((variant: string | null) => {
 		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
 		variantslist.push( variant in translations ? translations[variant] : variant );
 	});
-	element_supportedVariants.textContent += ` ${variantslist.join(", ")}.`;
+	element_supportedVariants.textContent += `${translations["supported_variants"]} ${variantslist.join(", ")}.`;
 };
 
 /**
