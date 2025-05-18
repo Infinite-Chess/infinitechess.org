@@ -867,7 +867,6 @@ span.arrow-head-left {
     align-items: center;
     /* flex-wrap: wrap; */
     gap: 0.3em;
-    font-size: 16px;
     width: fit-content;
 }
 
