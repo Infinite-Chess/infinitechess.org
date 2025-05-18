@@ -4,6 +4,8 @@ import { doesMemberOfUsernameExist, updateMemberColumns } from '../database/memb
 import { generateAccount } from '../controllers/createAccountController.js';
 import { giveRole } from '../controllers/roles.js';
 import validcheckmates from '../../client/scripts/esm/chess/util/validcheckmates.js';
+import { addUserToLeaderboard, updatePlayerLeaderboardRating } from '../database/leaderboardsManager.js';
+import { Leaderboards } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
 
 function initDevEnvironment() {
 	if (!DEV_BUILD) return; // Production
@@ -44,6 +46,16 @@ async function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("member")) {
 		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
+
+	/*
+	for (let i = 0; i < 230; i++) {
+		if (!doesMemberOfUsernameExist(`Player${i}`)) {
+			const user_id = await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true });
+			addUserToLeaderboard(user_id, Leaderboards.INFINITY);
+			updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1600 + 10 * i, 100 + i);
+		}
+	}
+	*/
 }
 
 
