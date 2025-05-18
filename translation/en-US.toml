@@ -124,6 +124,7 @@ seen = ["Seen:", " ago"]
 practice_progress = "Practice Mode Progress:"
 ranked_elo = "Elo:"
 infinity_leaderboard_position = "Global Ranking:"
+infinity_leaderboard_rating_deviation = "Rating Deviation:"
 reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"

@@ -8,7 +8,7 @@ import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 import { Leaderboards } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
-import { getDisplayEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
+import { getPlayerLeaderboardRating, getDisplayEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEvents } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
@@ -30,6 +30,10 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	// Get the player's position from the INFINITY leaderboard
 	const infinity_leaderboard_position = getPlayerRankInLeaderboard(user_id, Leaderboards.INFINITY);
 
+	// Get the player's RD from the INFINITY leaderboard
+	let infinity_leaderboard_rating_deviation = getPlayerLeaderboardRating(user_id, Leaderboards.INFINITY)?.rating_deviation;
+	if (infinity_leaderboard_rating_deviation !== undefined) infinity_leaderboard_rating_deviation = infinity_leaderboard_rating_deviation.toFixed(2);
+
 	// What data are we going to send?
 	// Case-sensitive username, elo rating, joined date, last seen...
 
@@ -48,6 +52,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		checkmates_beaten,
 		ranked_elo,
 		infinity_leaderboard_position,
+		infinity_leaderboard_rating_deviation
 	};
 
 	// If they are the same person as who their requesting data, also include these.
