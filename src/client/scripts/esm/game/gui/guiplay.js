@@ -398,9 +398,24 @@ function callback_inviteMouseLeave() {
 }
 
 function callback_inviteClicked(event) {
+	if (getUsernameEmbedFromEvent(event)) {
+		// console.log('Clicked on a username embed, ignoring click');
+		return;
+	}
+
 	invites.click(event.currentTarget);
 }
 
+/**
+ * Test's if the mouse click event was inside a username embed.
+ * @param {MouseEvent} event
+ * @returns {HTMLElement|null} the nearest .username-embed element, or null if the click was outside
+ */
+function getUsernameEmbedFromEvent(event) {
+	// event.target could be a TextNode, comment, etc. Only Elements have .closest()
+	const el = event.target instanceof Element ? event.target : event.target.parentElement;
+	return el?.closest('.username-embed') || null;
+}
 
 /**
  * Locks the create invite button to disable it.
