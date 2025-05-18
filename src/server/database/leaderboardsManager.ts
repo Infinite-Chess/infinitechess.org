@@ -213,34 +213,38 @@ function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 }
 
 /**
- * Gets the top N players for a specific leaderboard by elo.
+ * Gets the top N players for a specific leaderboard by elo, starting from a given rank.
  * @param leaderboard_id - The id for the specific leaderboard.
- * @param n_players - The maximum number of top players to retrieve
+ * @param start_rank - The 1-based rank to start from (e.g. 1 = top player, 2 = second-best, etc.)
+ * @param n_players - The maximum number of players to retrieve, starting from start_rank
  * @returns An array of top player leaderboard entries, potentially empty.
  */
-function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: number): LeaderboardEntry[] {
+function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, start_rank: number, n_players: number): LeaderboardEntry[] {
 	// Changed table name, column names, ORDER BY column, added WHERE clause for leaderboard_id
+	const offset = Math.max(0, start_rank - 1); // SQL OFFSET is 0-based
+
 	const query = `
 		SELECT user_id, elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
 		AND rating_deviation <= ? -- Disregard any members with a too high RD
 		ORDER BY elo DESC
-		LIMIT ?
+		LIMIT ? OFFSET ?
 	`;
 
 	try {
-		// Execute the query with leaderboard_id and n_players parameters
+		// Execute the query with leaderboard_id, n_players and offset parameters
 		// Added leaderboard_id to parameters
-		const top_players = db.all(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, n_players]) as LeaderboardEntry[];
-		return top_players; // Returns an array (empty if no players or n_players <= 0)
+		const top_players = db.all(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, n_players, offset]) as LeaderboardEntry[];
+		return top_players; // Returns an array (potentially empty)
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Updated log message
-		logEvents(`Error getting top "${n_players}" players for leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEvents(`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
 		return []; // Return an empty array on error
 	}
 }
+
 
 /**
  * Gets the rank (position) of a specific user within a specific leaderboard based on Elo.

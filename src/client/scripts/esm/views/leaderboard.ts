@@ -19,12 +19,20 @@ const element_ShowMoreButton = document.getElementById('show_more_button')!;
 
 
 // --- Variables ---
+
 /** Number of players to be shown on leaderboard page load */
-let n_players = 50;
+const LEADERBOARD_LENGTH_ON_LOAD = 1;
 /** Number of players to be added on show more button press */
-const showMoreButtonIncrement = 25;
+const LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT = 1;
 /** Leaderboard to be displayed */
 const leaderboard_id = Leaderboards.INFINITY;
+
+/** Body of leaderboard table, as created in createEmptyLeaderboardTable() */
+let element_LeaderboardTableBody: HTMLTableSectionElement;
+/** Running start rank: highest leaderboard position to be requested first */
+let running_start_rank = 1;
+/** Whether the page has already been initialized once */
+let initialized = false;
 
 
 // --- Initialization ---
@@ -33,7 +41,9 @@ const leaderboard_id = Leaderboards.INFINITY;
 (async function loadLeaderboardData(): Promise<void> {
 
 	setSupportedVariantsDisplay();
-	await makeLeaderboardTable();
+	createEmptyLeaderboardTable();
+	await populateTable(running_start_rank, LEADERBOARD_LENGTH_ON_LOAD);
+	initialized = true;
 
 	element_ShowMoreButton.addEventListener('click', showMorePlayers);
 })();
@@ -56,10 +66,30 @@ function setSupportedVariantsDisplay() {;
 	element_supportedVariants.textContent += `${translations["supported_variants"]} ${variantslist.join(", ")}.`;
 };
 
+function createEmptyLeaderboardTable() {
+	// Create table
+	const table = document.createElement("table");
+	// Create header of table
+	const thead = document.createElement("thead");
+	thead.innerHTML = `
+		<tr>
+		<th>Rank</th>
+		<th>Player</th>
+		<th>Rating</th>
+		</tr>
+	`;
+	table.appendChild(thead);
+
+	// Create body of table
+	element_LeaderboardTableBody = document.createElement("tbody");
+	table.appendChild(element_LeaderboardTableBody);
+	element_LeaderboardContainer.appendChild(table);
+}
+
 /**
- * Create the leaderboard table for the chosen leaderboard, with the top n players
+ * Populate the leaderboard table for the chosen leaderboard, with the top n players
  */
-async function makeLeaderboardTable() {
+async function populateTable(start_rank: number, n_players: number) {
 	const config: RequestInit = {
 		method: 'GET',
 		headers: {
@@ -70,7 +100,7 @@ async function makeLeaderboardTable() {
 
 	try {
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
-		const response = await fetch(`/leaderboard/${leaderboard_id}/${n_players + 1}`, config);
+		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/(Guest)`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
 			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
@@ -80,24 +110,10 @@ async function makeLeaderboardTable() {
 		const results = await response.json();
 		console.log(results);
 
-		// Create table
-		const table = document.createElement("table");
-		// Create header of table
-		const thead = document.createElement("thead");
-		thead.innerHTML = `
-            <tr>
-            <th>Rank</th>
-            <th>Player</th>
-            <th>Rating</th>
-            </tr>
-        `;
-		table.appendChild(thead);
-
-		// Create body of table
-		const tbody = document.createElement("tbody");
-		let rank = 1;
-		results.forEach((player: { username: string; elo: string }) => {
-			if (rank > n_players) return;
+		
+		let rank = start_rank;
+		results.leaderboardData.forEach((player: { username: string; elo: string }) => {
+			if (rank >= start_rank + n_players) return;
 			const row = document.createElement("tr");
 
 			// Create and append <td> for rank
@@ -119,7 +135,7 @@ async function makeLeaderboardTable() {
 			row.appendChild(eloCell);
 
 			// Append the completed row to the table body
-			tbody.appendChild(row);
+			element_LeaderboardTableBody.appendChild(row);
 
 			// Color row of logged in user
 			const loggedInAs = validatorama.getOurUsername();
@@ -128,16 +144,11 @@ async function makeLeaderboardTable() {
 			rank++;
 		});
 
-		table.appendChild(tbody);
+		// Update running_start_rank
+		running_start_rank += n_players;
 
-		// Clear all other content of element_LeaderboardContainer and add table
-		while (element_LeaderboardContainer.firstChild) {
-			element_LeaderboardContainer.removeChild(element_LeaderboardContainer.firstChild);
-		}
-		element_LeaderboardContainer.appendChild(table);
-
-		// Hide "show more" button if not enough players are shown
-		if (results.length < n_players + 1) element_ShowMoreButton.classList.add("hidden");
+		// Hide "show more" button if not enough players were returned by server
+		if (results.leaderboardData.length < n_players + 1) element_ShowMoreButton.classList.add("hidden");
 		else element_ShowMoreButton.classList.remove("hidden");
 
 	} catch (error) {
@@ -149,6 +160,5 @@ async function makeLeaderboardTable() {
  * Increase n_players and redraw the leaderboard table
  */
 async function showMorePlayers() {
-	n_players += showMoreButtonIncrement;
-	await makeLeaderboardTable();
+	await populateTable(running_start_rank, LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT);
 }

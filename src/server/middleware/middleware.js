@@ -167,7 +167,7 @@ function configureMiddleware(app) {
 	app.delete('/member/:member/delete', removeAccount);
 
 	// Leaderboard router
-	app.get('/leaderboard/:leaderboard_id/:n_players', getLeaderboardData);
+	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:requester_username', getLeaderboardData);
 
 	// API --------------------------------------------------------------------
 
