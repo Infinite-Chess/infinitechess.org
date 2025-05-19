@@ -342,7 +342,7 @@ function doesPieceHaveSpecialRight(gamefile, coords) {
 /**
  * Returns true if a pawn moved onto a promotion line.
  * @param {gamefile} gamefile
- * @param {string} type 
+ * @param {number} type 
  * @param {number[]} coordsClicked 
  * @returns {boolean}
  */

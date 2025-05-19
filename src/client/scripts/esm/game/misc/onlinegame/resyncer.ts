@@ -27,7 +27,6 @@ import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
-// @ts-ignore
 import legalmoves from "../../../chess/logic/legalmoves.js";
 
 

@@ -14,7 +14,6 @@ import preferences from "../../../../components/header/preferences.js";
 import snapping from "../snapping.js";
 import boardpos from "../../boardpos.js";
 import mouse from "../../../../util/mouse.js";
-// @ts-ignore
 import { Mouse } from "../../../input.js";
 // @ts-ignore
 import guipause from "../../../gui/guipause.js";

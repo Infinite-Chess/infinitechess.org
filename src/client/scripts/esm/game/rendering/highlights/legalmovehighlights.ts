@@ -17,14 +17,13 @@ import preferences from '../../../components/header/preferences.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
+import math from '../../../util/math.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
 import board from '../board.js';
-// @ts-ignore
-import math from '../../../util/math.js';
 // @ts-ignore
 import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore
@@ -38,12 +37,11 @@ import type { BoundingBox, Vec2, Color } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 import type { Ray } from './annotations/annotations.js';
+import type { Piece } from '../../../chess/util/boardutil.js';
+import type { MoveDraft } from '../../../chess/logic/movepiece.js';
+import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
 // @ts-ignore
 import type gamefile from '../../../chess/logic/gamefile.js';
-// @ts-ignore
-import type { MoveDraft, Piece } from '../../../chess/logic/movepiece.js';
-// @ts-ignore
-import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
 
 
 
@@ -129,10 +127,6 @@ let model_Offset: Coords = [0,0]; // [x,y]
 /** Returns {@link model_Offset} */
 function getOffset() {
 	return model_Offset;
-}
-
-function isPieceSelected() {
-	return pieceSelected !== undefined;
 }
 
 /** Call this from selection.js when a piece is selected */
@@ -318,11 +312,11 @@ function regenerateAll() {
 
 // Regenerates the model for all highlighted legal moves.
 function regenSelectedPieceLegalMovesHighlightsModel() {
-	if (!isPieceSelected()) return;
+	if (!pieceSelected) return;
 	// console.log("Regenerating legal moves model..");
 
 	// The model of the selected piece's legal moves
-	const selectedPieceColor = typeutil.getColorFromType(pieceSelected.type);
+	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
 	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
 	const color = preferences.getLegalMoveHighlightColor(color_options); // [r,g,b,a]
 	const { NonCaptureModel, CaptureModel } = generateModelsForPiecesLegalMoveHighlights(pieceSelected!.coords, selectedPieceLegalMoves!, selectedPieceColor, color);
@@ -381,7 +375,7 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
  * The mesh should have been pre-calculated.
  */
 function renderSelectedPiecesLegalMoves() {
-	if (!isPieceSelected()) return; // No model to render
+	if (!pieceSelected) return; // No model to render
 
 	const boardPos: Coords = boardpos.getBoardPos();
 	const position: [number,number,number] = [
@@ -431,16 +425,14 @@ function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[
 function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, legalMoves: LegalMoves, gamefile: gamefile, friendlyColor: Player) { // { left, right, bottom, top} The size of the box we should render within
 	if (!legalMoves.sliding) return; // No sliding moves
 
-	const slideLines = Object.keys(legalMoves.sliding); // ['1,0','1,1', ...]
-
-	for (const lineKey of slideLines) { // '1,0'
+	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) { // '1,0'
 		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
 		const intersections = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
 		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
 
 		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
         
-		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[lineKey], legalMoves.ignoreFunc, gamefile, friendlyColor, legalMoves.brute);
+		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, limits, legalMoves.ignoreFunc, gamefile, friendlyColor, legalMoves.brute);
 	}
 }
 
@@ -458,7 +450,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: true) {
+function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: boolean) {
 	// Right moveset
 	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		    ignoreFunc, gamefile, friendlyColor, brute);
     
@@ -481,7 +473,7 @@ function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[],
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: true) {
+function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: boolean) {
 	if (limit === 0) return; // Quick exit
 
 	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, limit, false);
@@ -562,7 +554,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, i
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: true) {
+function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: boolean) {
 	for (let i = 0; i < iterateCount; i++) { 
 		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
 		legal: if (ignoreFunc(pieceCoords, thisCoord)) { // Ignore function PASSED. This move is LEGAL
