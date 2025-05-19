@@ -144,7 +144,7 @@ function testIfCollapsed() {
 
 /**
  * Collapses all annotations. The behavior is:
- * A. Atleast 2 rays => Erase all rays and add more Squares at all their intersections.
+ * A. Atleast 1 ray => Erase all rays and add more Squares at all their intersections.
  * B. Else => Erase all annotes.
  */
 function Collapse() {
