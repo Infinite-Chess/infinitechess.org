@@ -1,11 +1,11 @@
 {
 	"53": {
-		"note": "Added header.leaderboard on line 14. Added leaderboard.javascript with 4 entries on line 43. Added infinity_leaderboard_rating_deviation on line 127. Added new leaderboard category with 4 entries on line 158. Added engine_indicator line 323. Deleted you_indicator line 400.",
+		"note": "Added header.leaderboard on line 14. Added leaderboard.javascript with 4 entries on line 43. Added infinity_leaderboard_rating_deviation on line 127. Added new leaderboard category with 4 entries on line 158. Added engine_indicator line 323. Deleted you_indicator line 401.",
 		"changes": []
 	},
 	"52": {
 		"note": "Deleted textures_credits line 90.",
-    "changes": []
+		"changes": []
 	},
 	"51": {
 		"note": "Added member.infinity_leaderboard_position on line 122 and added server.javascript.ws-rated_invite_verification_needed on line 603",

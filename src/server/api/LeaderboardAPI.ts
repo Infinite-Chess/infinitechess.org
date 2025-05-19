@@ -17,13 +17,14 @@ import { CustomRequest } from "../../types.js";
 
 
 
-/** Maximum number of players allowed to be requested in a single request */
+/** Maximum number of players allowed to be requested in a single request. */
 const MAX_N_PLAYERS_REQUEST_CAP = 100;
 
 // Functions -------------------------------------------------------------
 
 /**
- * Responds to the request to fetch top (N = n_players) players of leaderboard leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
+ * Responds to the request to fetch top (N = n_players) players of leaderboard
+ * leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
  */
 const getLeaderboardData = async(req: CustomRequest, res: Response) => { // route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
 
