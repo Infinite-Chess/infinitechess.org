@@ -52,7 +52,7 @@ let initialized = false;
 	await validatorama.waitUntilInitialRequestBack();
 	loggedInAs = validatorama.getOurUsername();
 
-	await populateTable(running_start_rank, LEADERBOARD_LENGTH_ON_LOAD);
+	await populateTable(LEADERBOARD_LENGTH_ON_LOAD);
 	initialized = true;
 
 	element_ShowMoreButton.addEventListener('click', showMorePlayers);
@@ -100,12 +100,11 @@ function createEmptyLeaderboardTable() {
 }
 
 /**
- * Populate the leaderboard table for the chosen leaderboard, with the top n players.
+ * Populate the leaderboard table for the chosen leaderboard by adding the next top n players.
  * If initialized === false, then this function also populates the "global ranking" element at the top
- * @param start_rank - highest rank of leaderboard player to add to table
  * @param n_players - number of players to add to table
  */
-async function populateTable(start_rank: number, n_players: number) {
+async function populateTable(n_players: number) {
 	const config: RequestInit = {
 		method: 'GET',
 		headers: {
@@ -119,7 +118,7 @@ async function populateTable(start_rank: number, n_players: number) {
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
 		// If initialized === false and the player is logged in, we also set find_requester_rank to 1, if possible, in order to request his rank from the server on the first page load
 		const find_requester_rank = (!initialized && loggedInAs !== undefined ? 1 : 0);
-		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/${find_requester_rank}`, config);
+		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
 			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
@@ -136,9 +135,9 @@ async function populateTable(start_rank: number, n_players: number) {
 		}
 		
 		// Iterate through all results.leaderboardData and add a row to the table body for each of them
-		let rank = start_rank;
+		let rank = running_start_rank;
 		results.leaderboardData.forEach((player: { username: string; elo: string }) => {
-			if (rank >= start_rank + n_players) return;
+			if (rank >= running_start_rank + n_players) return;
 			const row = document.createElement("tr");
 
 			// Create and append <td> for rank
@@ -187,7 +186,7 @@ async function showMorePlayers() {
 	// disable the button so it can’t be clicked again while we’re fetching
 	element_ShowMoreButton.disabled = true;
 	try {
-		await populateTable(running_start_rank, LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT);
+		await populateTable(LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT);
 	} finally {
 		// re-enable regardless of success or failure
 		element_ShowMoreButton.disabled = false;
