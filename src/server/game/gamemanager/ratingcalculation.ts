@@ -164,7 +164,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 // };
 
 // let gameCounter = 0;
-// const SIMULATION_GAME_INTERVAL_MS = 1000; // Simulate a game every 3 seconds
+// const SIMULATION_GAME_INTERVAL_MS = 250; // Simulate a game every 3 seconds
 
 
 
@@ -219,7 +219,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 
 // 	// Update player stats for the next simulated game
 // 	// 2 Days
-// 	const timeSinceLastGame = 1000 * 60 * 60 * 24 * 30; // 1 month
+// 	const timeSinceLastGame = 1000 * 60 * 60 * 24 * 30 * 1.5; // 6 weeks
 // 	const gameTimestampString = timeutil.timestampToSqlite(Date.now() - timeSinceLastGame);
 
 // 	player1CurrentStats.elo = GlickoResults[players.WHITE]!.elo_after_game!;
@@ -243,7 +243,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 // 	// In our rapid simulation, this effect is small between games.
 // 	// Here we show what RD would be after a longer period.
 // 	if (gameCounter % 5 === 0 && typeof timeutil !== 'undefined') { // Show every 5 games
-// 		const timeDeltaForDemo = 1000 * 60 * 60 * 24 * 30 * 6; // 6 months
+// 		const timeDeltaForDemo = 1000 * 60 * 60 * 24 * 30 * 2; // 2 months
         
 // 		// We need to simulate 'Date.now()' being in the future for getTrueRD.
 // 		// We can do this by preparing inputs for getTrueRD manually.
