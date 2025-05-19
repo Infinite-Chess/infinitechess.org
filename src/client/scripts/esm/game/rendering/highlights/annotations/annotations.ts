@@ -136,7 +136,10 @@ function update() {
 
 /** Collapses all annotations if we clicked the board. */
 function testIfCollapsed() {
-	if (mouse.isMouseClicked(Mouse.LEFT)) Collapse();
+	if (mouse.isMouseClicked(Mouse.LEFT)) {
+		mouse.claimMouseClick(Mouse.LEFT);
+		Collapse();
+	}
 }
 
 /**
