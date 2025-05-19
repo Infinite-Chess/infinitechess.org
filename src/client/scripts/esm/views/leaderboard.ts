@@ -33,6 +33,11 @@ const leaderboard_id = Leaderboards.INFINITY;
 let element_LeaderboardTableBody: HTMLTableSectionElement;
 /** Running start rank: highest leaderboard position not shown on leaderboard yet */
 let running_start_rank = 1;
+/**
+ * Username of the player, if he is logged in, else undefined,
+ * AT THE TIME OF THE initial request for our world ranking.
+ */
+let loggedInAs: string | undefined;
 /** Whether the page has already been initialized once */
 let initialized = false;
 
@@ -48,6 +53,7 @@ let initialized = false;
 	// On page load, we wait for validatorama to renew our session if needed,
 	// as the server reads our session info to know who to return a global ranking for.
 	await validatorama.waitUntilInitialRequestBack();
+	loggedInAs = validatorama.getOurUsername();
 
 	await populateTable(LEADERBOARD_LENGTH_ON_LOAD);
 	initialized = true;
@@ -114,7 +120,7 @@ async function populateTable(n_players: number) {
 		// Make server request
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
 		// If initialized === false and the player is logged in, we also set find_requester_rank to 1, if possible, in order to request his rank from the server on the first page load
-		const find_requester_rank = (!initialized && validatorama.getOurUsername() !== undefined ? 1 : 0);
+		const find_requester_rank = (!initialized && loggedInAs !== undefined ? 1 : 0);
 		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
@@ -159,7 +165,7 @@ async function populateTable(n_players: number) {
 			element_LeaderboardTableBody.appendChild(row);
 
 			// Color row of logged in user
-			if (validatorama.getOurUsername() === player.username) row.classList.add("logged_in_user_entry");
+			if (loggedInAs === player.username) row.classList.add("logged_in_user_entry");
 
 			rank++;
 		});
