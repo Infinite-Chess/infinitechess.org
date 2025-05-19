@@ -99,6 +99,9 @@ function createEmptyLeaderboardTable() {
  */
 async function populateTable(start_rank: number, n_players: number) {
 
+	// OKAY NOW we may to wait for validatorama to renew our session if needed,
+	// as the server reads our session info to know who to return a global ranking for.
+	await validatorama.waitUntilInitialRequestBack();
 	const loggedInAs = validatorama.getOurUsername();
 
 	const config: RequestInit = {
