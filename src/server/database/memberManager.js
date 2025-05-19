@@ -390,28 +390,29 @@ function doesMemberOfIDExist(userId) {
 }
 
 /**
- * Checks if a given user_id exists in the members table.
+ * Checks if a given user_id exists in the members table OR deleted_members table.
  * @param {number} userId - The user ID to check.
  * @param {Object} [options] - Optional parameters for the function.
  * @param {boolean} [options.ignoreDeleted] - If true, skips checking the deleted_members table.
  * @returns {boolean} - Returns true if the user ID exists, false otherwise.
  */
 function isUserIdTaken(userId, { ignoreDeleted } = {}) {
-	let query = 'SELECT 1 FROM members WHERE user_id = ?';
 	try {
+		const query = ignoreDeleted ? 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found'
+			: `
+				SELECT
+					EXISTS(SELECT 1 FROM members WHERE user_id = ?)
+					OR
+					EXISTS(SELECT 1 FROM deleted_members WHERE user_id = ?)
+				AS found
+			`;
+		const params = ignoreDeleted ? [userId] : [userId, userId];
+
 		// Execute query to check if the user_id exists in the members table
-		let row = db.get(query, [userId]); // { '1': 1 }
+		const row = db.get(query, params); // { found: 0 | 1 }
 
-		// If a row is found, the user_id exists
-		if (row !== undefined) return true;
-		if (ignoreDeleted) return false;
-
-		// Check if the user_id is in the deleted_members table
-		query = 'SELECT 1 FROM deleted_members WHERE user_id = ?';
-		row = db.get(query, [userId]); // { '1': 1 }
-
-		// Return true if found in deleted_members, false otherwise
-		return row !== undefined;
+		// row.found will be 0 or 1
+		return Boolean(row?.found);
 
 	} catch (error) {
 		// Log the error if the query fails
@@ -503,6 +504,7 @@ export {
 	doesMemberOfIDExist,
 	getUserIdByUsername,
 	doesMemberOfUsernameExist,
+	isUserIdTaken,
 	isUsernameTaken,
 	isEmailTaken,
 	genUniqueUserID

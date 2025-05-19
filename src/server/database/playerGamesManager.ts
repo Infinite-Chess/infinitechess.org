@@ -12,6 +12,8 @@ import { allPlayerGamesColumns } from './databaseTables.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
+// @ts-ignore
+import { isUserIdTaken } from './memberManager.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -47,6 +49,14 @@ function addGameToPlayerGamesTable(
 		elo_at_game: number | null,
 		elo_change_from_game: number | null,
 	}): ModifyQueryResult {
+
+	// Guard: make sure this user ID is used (live or deleted)
+	// SQLite doesn't check for us because we can't have a foreign key to the members
+	// table when the same user_id may be moved to the deleted_members table later.
+	if (!isUserIdTaken(options.user_id)) {
+		logEvents(`User ID (${options.user_id}) does not exist when adding game to player_games table!`, 'errLog.txt', { print: true });
+	    return { success: false, reason: `User ID does not exist.` };
+	}
 
 	const query = `
 	INSERT INTO player_games (
@@ -85,9 +95,7 @@ function addGameToPlayerGamesTable(
 		let reason = 'Failed to add game to player_games table.';
 		if (error instanceof Error && 'code' in error) {
 			// Example check for better-sqlite3 specific error codes
-			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = 'User ID does not exist in the members table or Game ID does not exist in the games table.';
-			} else if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
+			if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
 				reason = '(User ID, Game ID) already exists in the player_games table.';
 			}
 		}
