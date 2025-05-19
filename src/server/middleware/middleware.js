@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { requestConfirmEmail } from '../controllers/sendMail.js';
-import { getMemberData } from '../api/Member.js';
+import { getMemberData } from '../api/MemberAPI.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';

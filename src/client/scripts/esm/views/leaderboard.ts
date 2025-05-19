@@ -178,7 +178,6 @@ async function populateTable(start_rank: number, n_players: number) {
  * Increase n_players and redraw the leaderboard table
  */
 async function showMorePlayers() {
-	// await populateTable(running_start_rank, LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT);
 	// disable the button so it can’t be clicked again while we’re fetching
 	element_ShowMoreButton.disabled = true;
 	try {

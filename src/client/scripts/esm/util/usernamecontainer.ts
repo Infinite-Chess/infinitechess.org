@@ -132,11 +132,23 @@ function createSvgElementFromString(svgText: string): SVGElement {
 	return svg;
 }
 
+/**
+ * Test's if the mouse click event was inside a username embed.
+ * @param event
+ * @returns The nearest .username-embed element, or null if the click was outside
+ */
+function getUsernameEmbedFromEvent(event: MouseEvent): HTMLDivElement | null {
+	const targetNode = event.target as Node;
+	const el = targetNode instanceof Element ? targetNode : targetNode.parentElement;
+	return el?.closest<HTMLDivElement>('.username-embed') || null;
+}
+
 
 export default {
 	createUsernameContainerDisplay,
 	extractUsernameContainerFromDisplayElement,
-	embedUsernameContainerDisplayIntoParent
+	embedUsernameContainerDisplayIntoParent,
+	getUsernameEmbedFromEvent,
 };
 
 export type {

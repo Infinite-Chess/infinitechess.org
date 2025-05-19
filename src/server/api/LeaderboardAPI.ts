@@ -39,7 +39,7 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 	const top_players = getTopPlayersForLeaderboard(leaderboard_id, start_rank, n_players);
 	if (top_players === undefined) {
 		logEvents(`Retrieval of top ${n_players} players from start rank ${start_rank} of leaderboard ${leaderboard_id} upon user request failed.`, 'errLog.txt', { print: true });
-		return res.status(404).json({ message: "Database retrieval failed." });
+		return res.status(500).json({ message: "Server error." }); // Generic message for database retrieval failed
 	}
 
 	// Populate leaderboardData object with usernames and elos of players

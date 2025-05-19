@@ -20,7 +20,7 @@ import jsutil from '../../util/jsutil.js';
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
  * @property {UsernameContainer} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
- * If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
+ * If it's a guest, then "(Guest)".
  * @property {string} id - A unique identifier
  * @property {string} tag - Used to verify if an invite is your own.
  * @property {string} variant - The name of the variant
