@@ -33,6 +33,8 @@ const leaderboard_id = Leaderboards.INFINITY;
 let element_LeaderboardTableBody: HTMLTableSectionElement;
 /** Running start rank: highest leaderboard position to be requested first */
 let running_start_rank = 1;
+/** Username of the player, if he is logged in, else undefined. */
+let loggedInAs: string | undefined;
 /** Whether the page has already been initialized once */
 let initialized = false;
 
@@ -44,6 +46,12 @@ let initialized = false;
 
 	setSupportedVariantsDisplay();
 	createEmptyLeaderboardTable();
+
+	// On page load, we wait for validatorama to renew our session if needed,
+	// as the server reads our session info to know who to return a global ranking for.
+	await validatorama.waitUntilInitialRequestBack();
+	loggedInAs = validatorama.getOurUsername();
+	
 	await populateTable(running_start_rank, LEADERBOARD_LENGTH_ON_LOAD);
 	initialized = true;
 
@@ -98,12 +106,6 @@ function createEmptyLeaderboardTable() {
  * @param n_players - number of players to add to table
  */
 async function populateTable(start_rank: number, n_players: number) {
-
-	// OKAY NOW we may to wait for validatorama to renew our session if needed,
-	// as the server reads our session info to know who to return a global ranking for.
-	await validatorama.waitUntilInitialRequestBack();
-	const loggedInAs = validatorama.getOurUsername();
-
 	const config: RequestInit = {
 		method: 'GET',
 		headers: {
