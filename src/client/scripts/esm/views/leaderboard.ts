@@ -31,7 +31,7 @@ const leaderboard_id = Leaderboards.INFINITY;
 
 /** Body of leaderboard table, as created in createEmptyLeaderboardTable() */
 let element_LeaderboardTableBody: HTMLTableSectionElement;
-/** Running start rank: highest leaderboard position to be requested first */
+/** Running start rank: highest leaderboard position not shown on leaderboard yet */
 let running_start_rank = 1;
 /** Username of the player, if he is logged in, else undefined. */
 let loggedInAs: string | undefined;
@@ -73,7 +73,7 @@ function setSupportedVariantsDisplay() {;
 		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
 		variantslist.push( variant in translations ? translations[variant] : variant );
 	});
-	element_supportedVariants.textContent += `${translations["supported_variants"]} ${variantslist.join(", ")}.`;
+	element_supportedVariants.textContent = `${translations["supported_variants"]} ${variantslist.join(", ")}.`;
 };
 
 /**
@@ -180,7 +180,7 @@ async function populateTable(n_players: number) {
 }
 
 /**
- * Increase n_players and redraw the leaderboard table
+ * Populate the leaderboard table with the next highest rated players
  */
 async function showMorePlayers() {
 	// disable the button so it can’t be clicked again while we’re fetching
