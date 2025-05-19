@@ -187,8 +187,8 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 		return {
 			white: translations['player_name_white_generic'],
 			black: translations['player_name_black_generic'],
-			white_type: 'player',
-			black_type: 'player',
+			white_type: 'guest',
+			black_type: 'guest',
 		};
 	} else if (onlinegame.areInOnlineGame()) {	
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
