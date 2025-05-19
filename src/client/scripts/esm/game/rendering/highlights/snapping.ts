@@ -92,16 +92,6 @@ function getEntityWidthWorld() {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
 
-/**
- * Tests if a specific pointer is hovering over entities this frame.
- * If so, it shouldn't snap to anything.
- */
-function isWorldHoveringAtleastOneEntity(world: Coords): boolean {
-	if (!isSnappingEnabledThisFrame()) return false;
-
-	return getAllEntitiesWorldHovers(world).length > 0;
-}
-
 function getAllEntitiesWorldHovers(world: Coords) {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
 	const highlightsHovered = drawsquares.getSquaresBelowWorld(annotations.getSquares(), world, false).squares;
@@ -452,6 +442,7 @@ function render() {
 	const allPointerWorlds = mouse.getRelevantListener().getAllPointerIds().map(id => mouse.getPointerWorld(id)!);
 	const allSnaps: Snap[] = [];
 	for (const pointerWorld of allPointerWorlds) {
+		if (getAllEntitiesWorldHovers(pointerWorld).length > 0) continue; // Don't snap if this pointer is hovering over an entity
 		const snap = snapPointerWorld(pointerWorld);
 		if (snap !== undefined) allSnaps.push(snap);
 	}
@@ -526,7 +517,6 @@ export default {
 	VECTORS_HIPPOGONAL,
 	getEntityWidthWorld,
 
-	isWorldHoveringAtleastOneEntity,
 	getClosestEntityToWorld,
 	teleportToEntitiesIfClicked,
 
