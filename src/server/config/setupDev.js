@@ -47,15 +47,13 @@ async function createDevelopmentAccounts() {
 		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
 	}
 
-	/*
-	for (let i = 0; i < 230; i++) {
-		if (!doesMemberOfUsernameExist(`Player${i}`)) {
-			const user_id = await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true });
-			addUserToLeaderboard(user_id, Leaderboards.INFINITY);
-			updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1600 + 10 * i, 100 + i);
-		}
-	}
-	*/
+	// for (let i = 0; i < 230; i++) {
+	// 	if (!doesMemberOfUsernameExist(`Player${i}`)) {
+	// 		const user_id = await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true });
+	// 		addUserToLeaderboard(user_id, Leaderboards.INFINITY);
+	// 		updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1600 + 10 * i, 100 + i);
+	// 	}
+	// }
 }
 
 
