@@ -23,12 +23,11 @@ import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
 import { rawTypes as r, players as p } from '../util/typeutil.js';
 import icnconverter from '../logic/icn/icnconverter.js';
+import specialmove from '../logic/specialmove.js';
 // @ts-ignore
 import omega3generator from './omega3generator.js';
 // @ts-ignore
 import omega4generator from './omega4generator.js';
-// @ts-ignore
-import specialmove from '../logic/specialmove.js';
 
 
 /** An object that describes what modifications to make to default gamerules in a variant. */

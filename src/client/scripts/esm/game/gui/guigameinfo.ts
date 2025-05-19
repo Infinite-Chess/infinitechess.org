@@ -9,9 +9,8 @@ import type { UsernameContainer, UsernameContainerDisplayOptions } from '../../u
 
 
 // @ts-ignore
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-// @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';

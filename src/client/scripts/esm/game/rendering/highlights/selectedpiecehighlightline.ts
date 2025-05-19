@@ -38,7 +38,7 @@ function getLines(): Line[] {
 	const color = preferences.getLegalMoveHighlightColor(color_options); // Returns a copy
 	color[3] = 1; // Highlight lines should be fully opaque
 
-	for (const strline in legalmoves.sliding) {
+	for (const [strline, limits] of Object.entries(legalmoves.sliding)) {
 		const slideKey = strline as CoordsKey;
 		const line = coordutil.getCoordsFromKey(slideKey);
 		const lineIsVertical = line[0] === 0;
@@ -46,11 +46,11 @@ function getLines(): Line[] {
 		const intersectionPoints = math.findLineBoxIntersections(pieceCoords, line, boundingBox).map(intersection => intersection.coords);
 		if (intersectionPoints.length < 2) continue;
         
-		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], line, false);
+		const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, line, false);
 		// const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
 		const start = clampPointToSlideLimit(intersectionPoints[0]!, leftLimitPointCoord, false, lineIsVertical);
 
-		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], line, true);
+		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, line, true);
 		// const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
 		const end = clampPointToSlideLimit(intersectionPoints[1]!, rightLimitPointCoord, true, lineIsVertical);
 
@@ -87,16 +87,16 @@ function getLineComponents(): { rays: Ray[], segments: Segment[] } {
 	const pieceCoords = pieceSelected.coords;
 	const legalmoves = selection.getLegalMovesOfSelectedPiece()!; // CAREFUL not to modify!
 
-	for (const strline in legalmoves.sliding) {
+	for (const [strline, limits] of Object.entries(legalmoves.sliding)) {
 		const slideKey = strline as CoordsKey;
 		const step = coordutil.getCoordsFromKey(slideKey);
 
 		let start: Coords = [...pieceCoords];
-		const leftLimitPointCoord = getPointOfDiagSlideLimit(start, legalmoves.sliding[slideKey], step, false);
+		const leftLimitPointCoord = getPointOfDiagSlideLimit(start, limits, step, false);
 		processComponent(pieceCoords, leftLimitPointCoord, step, false);
 
 		start = [...pieceCoords];
-		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[slideKey], step, true);
+		const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, limits, step, true);
 		processComponent(pieceCoords, rightLimitPointCoord, step, true);
 	};
 

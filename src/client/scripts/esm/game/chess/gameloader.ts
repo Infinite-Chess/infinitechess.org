@@ -24,19 +24,15 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
 import loadingscreen from "../gui/loadingscreen.js";
 import { players } from "../../chess/util/typeutil.js";
-// @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
-// @ts-ignore
 import guinavigation from "../gui/guinavigation.js";
-// @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
 import localstorage from "../../util/localstorage.js";
+import boardpos from "../rendering/boardpos.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
-import boardpos from "../rendering/boardpos.js";
 
 
 // Variables --------------------------------------------------------------------

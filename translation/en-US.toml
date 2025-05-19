@@ -91,9 +91,6 @@ variants_credits = [
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"
-textures_credits = [
-"Gold coin by Quolte.",
-]
 sounds_heading = "Sounds"
 sounds_credits = [
 ["Some sounds are provided by the", "project under the"],

@@ -136,12 +136,15 @@ function update() {
 
 /** Collapses all annotations if we clicked the board. */
 function testIfCollapsed() {
-	if (mouse.isMouseClicked(Mouse.LEFT)) Collapse();
+	if (mouse.isMouseClicked(Mouse.LEFT)) {
+		mouse.claimMouseClick(Mouse.LEFT);
+		Collapse();
+	}
 }
 
 /**
  * Collapses all annotations. The behavior is:
- * A. Atleast 2 rays => Erase all rays and add more Squares at all their intersections.
+ * A. Atleast 1 ray => Erase all rays and add more Squares at all their intersections.
  * B. Else => Erase all annotes.
  */
 function Collapse() {
@@ -152,8 +155,7 @@ function Collapse() {
 		const additionalSquares = drawrays.collapseRays(annotes.Rays);
 		for (const newSquare of additionalSquares) {
 			// Avoid adding duplicates
-			if (annotes.Squares.some(s => coordutil.areCoordsEqual(s, newSquare))) continue; // Duplicate
-			annotes.Squares.push(newSquare);
+			if (annotes.Squares.every(s => !coordutil.areCoordsEqual(s, newSquare))) annotes.Squares.push(newSquare);
 		}
 		annotes.Rays.length = 0; // Erase all rays
 		drawrays.dispatchRayCountEvent(annotes.Rays);

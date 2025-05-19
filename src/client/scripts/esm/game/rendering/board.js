@@ -84,7 +84,7 @@ let darkTiles;
 			// Regenerate the spritesheet with the new tinted images
 			spritesheet.initSpritesheetForGame(gl, gamefile);
 			texturecache.initTexturesForGame(gl, gamefile);
-			piecemodels.regenAll(gamefile);
+			piecemodels.regenAll(gamefile, gameslot.getMesh());
 		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();

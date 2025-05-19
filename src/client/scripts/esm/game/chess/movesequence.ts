@@ -21,22 +21,15 @@ import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighligh
 import specialrighthighlights from "../rendering/highlights/specialrighthighlights.js";
 import piecemodels from "../rendering/piecemodels.js";
 import { Mesh } from "../rendering/piecemodels.js";
-// @ts-ignore
 import gamefileutility from "../../chess/util/gamefileutility.js";
-// @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
+import movepiece from "../../chess/logic/movepiece.js";
+import guigameinfo from "../gui/guigameinfo.js";
+import guiclock from "../gui/guiclock.js";
+import clock from "../../chess/logic/clock.js";
+import frametracker from "../rendering/frametracker.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
-// @ts-ignore
-import movepiece from "../../chess/logic/movepiece.js";
-// @ts-ignore
-import guigameinfo from "../gui/guigameinfo.js";
-// @ts-ignore
-import guiclock from "../gui/guiclock.js";
-// @ts-ignore
-import clock from "../../chess/logic/clock.js";
-// @ts-ignore
-import frametracker from "../rendering/frametracker.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -133,7 +126,7 @@ function viewMove(gamefile: gamefile, mesh: Mesh | undefined, move: Move | NullM
  * @param index the move index to goto
  */
 function viewIndex(gamefile: gamefile, mesh: Mesh | undefined, index: number) {
-	movepiece.goToMove(gamefile, index, (move: Move) => viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex));
+	movepiece.goToMove(gamefile, index, (move: (Move | NullMove)) => viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex));
 	updateGui(false);
 }
 

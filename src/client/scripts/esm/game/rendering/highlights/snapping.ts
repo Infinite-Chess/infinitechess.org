@@ -23,7 +23,6 @@ import mouse from "../../../util/mouse.js";
 import { listener_overlay } from "../../chess/game.js";
 import boardpos from "../boardpos.js";
 import preferences from "../../../components/header/preferences.js";
-import jsutil from "../../../util/jsutil.js";
 // @ts-ignore
 import transition from "../transition.js";
 // @ts-ignore
@@ -90,16 +89,6 @@ type Snap = {
 /** {@link ENTITY_WIDTH_VPIXELS}, but converted to world-space units. This can change depending on the screen dimensions. */
 function getEntityWidthWorld() {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
-}
-
-/**
- * Tests if a specific pointer is hovering over entities this frame.
- * If so, it shouldn't snap to anything.
- */
-function isWorldHoveringAtleastOneEntity(world: Coords): boolean {
-	if (!isSnappingEnabledThisFrame()) return false;
-
-	return getAllEntitiesWorldHovers(world).length > 0;
 }
 
 function getAllEntitiesWorldHovers(world: Coords) {
@@ -452,6 +441,7 @@ function render() {
 	const allPointerWorlds = mouse.getRelevantListener().getAllPointerIds().map(id => mouse.getPointerWorld(id)!);
 	const allSnaps: Snap[] = [];
 	for (const pointerWorld of allPointerWorlds) {
+		if (getAllEntitiesWorldHovers(pointerWorld).length > 0) continue; // Don't snap if this pointer is hovering over an entity
 		const snap = snapPointerWorld(pointerWorld);
 		if (snap !== undefined) allSnaps.push(snap);
 	}
@@ -526,7 +516,6 @@ export default {
 	VECTORS_HIPPOGONAL,
 	getEntityWidthWorld,
 
-	isWorldHoveringAtleastOneEntity,
 	getClosestEntityToWorld,
 	teleportToEntitiesIfClicked,
 
