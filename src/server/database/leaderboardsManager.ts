@@ -330,8 +330,8 @@ function updateAllRatingDeviationsofLeaderboardTable() {
 	try {
 		const entries = db.all(query) as LeaderboardEntry[];
 		for (const entry of entries) {
-			const updatedRD = getTrueRD(entry.rating_deviation as number, entry?.rd_last_update_date ?? null);
-			updatePlayerLeaderboardRating(entry.user_id as number, entry.leaderboard_id as Leaderboard, entry.elo as number, updatedRD);
+			const updatedRD = getTrueRD(entry.rating_deviation!, entry?.rd_last_update_date ?? null);
+			updatePlayerLeaderboardRating(entry.user_id!, entry.leaderboard_id! as Leaderboard, entry.elo!, updatedRD);
 		}
 		logEvents(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt', { print: true });
 
