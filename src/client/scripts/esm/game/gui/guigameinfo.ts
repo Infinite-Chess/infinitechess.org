@@ -5,6 +5,7 @@
  */
 
 import type { MetaData } from '../../chess/util/metadata.js';
+import type { UsernameContainer, UsernameContainerDisplayOptions } from '../../util/usernamecontainer.js';
 
 
 // @ts-ignore
@@ -16,6 +17,7 @@ import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import { players } from '../../chess/util/typeutil.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
 
 "use strict";
 
@@ -25,7 +27,8 @@ import { players } from '../../chess/util/typeutil.js';
 const element_gameInfoBar = document.getElementById('game-info-bar')!;
 
 const element_whosturn = document.getElementById('whosturn')!;
-const element_dot = document.getElementById('dot')!;
+const element_playerWhiteContainer = document.querySelector('.player-container.left')!;
+const element_playerBlackContainer = document.querySelector('.player-container.right')!;
 const element_playerWhite = document.getElementById('playerwhite')!;
 const element_playerBlack = document.getElementById('playerblack')!;
 const element_practiceButtons = document.querySelector('.practice-engine-buttons')!;
@@ -46,10 +49,9 @@ let showButtons = false;
 function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
-	const { white, black } = getPlayerNamesForGame(metadata);
 
-	element_playerWhite.textContent = white;
-	element_playerBlack.textContent = black;
+	embedUsernameContainers(metadata);
+
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
 
@@ -61,16 +63,47 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	isOpen = true;
 }
 
+function embedUsernameContainers(metadata: MetaData) {
+	const { white, black, white_type, black_type } = getPlayerNamesForGame(metadata);
+	const white_display_rating = (white_type === 'player' && metadata?.WhiteElo !== undefined ? metadata.WhiteElo : null);
+	const black_display_rating = (black_type === 'player' && metadata?.BlackElo !== undefined ? metadata.BlackElo : null);
+
+	// Set white username container
+	const usernamecontainer_white: UsernameContainer = {
+		username: white,
+		displayrating: white_display_rating
+	};
+	const usernamecontainer_options_white: UsernameContainerDisplayOptions = {
+		makehyperlink: white_type === 'player',
+		showrating: white_display_rating !== null,
+		isEngine: white_type === 'engine',
+	};
+	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white_Div, element_playerWhite);
+
+	// Set black username container
+	const usernamecontainer_black: UsernameContainer = {
+		username: black,
+		displayrating: black_display_rating
+	};
+	const usernamecontainer_options_black: UsernameContainerDisplayOptions = {
+		makehyperlink: black_type === 'player',
+		showrating: black_display_rating !== null,
+		isEngine: black_type === 'engine',
+	};
+	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
+	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
+	setTimeout(updateAlignmentOfRightUsername, 0);
+}
+
 function close() {
 	// Restore the player names to original content
-	element_playerWhite.textContent = '';
-	element_playerBlack.textContent = '';
+	element_playerWhite.innerHTML = '';
+	element_playerBlack.innerHTML = '';
 	// revealPlayerNames();
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
-	element_dot.classList.remove('dotblack');
-	element_dot.classList.add('dotwhite');
-	element_dot.classList.remove('hidden');
 	
 	// Hide the whole bar
 	element_gameInfoBar.classList.add('hidden');
@@ -127,14 +160,14 @@ function preventFocus(event: Event) {
 
 /** Reveales the player names. Typically called after the draw offer UI is closed */
 function revealPlayerNames() {
-	element_playerWhite.classList.remove('hidden');
-	element_playerBlack.classList.remove('hidden');
+	element_playerWhiteContainer.classList.remove('hidden');
+	element_playerBlackContainer.classList.remove('hidden');
 }
 
 /** Hides the player names. Typically to make room for the draw offer UI */
 function hidePlayerNames() {
-	element_playerWhite.classList.add('hidden');
-	element_playerBlack.classList.add('hidden');
+	element_playerWhiteContainer.classList.add('hidden');
+	element_playerBlackContainer.classList.add('hidden');
 }
 
 function toggle() {
@@ -144,23 +177,35 @@ function toggle() {
 	frametracker.onVisualChange();
 }
 
-function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string } {
+/**
+ * Given a metadata object, determines the names of the players to be displayed, as well as the type of player,
+ * which determines the svg of the username container, and whether it should hyperlink or not.
+ */
+function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_type: 'player' | 'guest' | 'engine', black_type: 'player' | 'guest' | 'engine' } {
 	if (gameloader.getTypeOfGameWeIn() === 'local') {
 		return {
 			white: translations['player_name_white_generic'],
-			black: translations['player_name_black_generic']
+			black: translations['player_name_black_generic'],
+			white_type: 'guest',
+			black_type: 'guest',
 		};
 	} else if (onlinegame.areInOnlineGame()) {	
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
+		const white = onlinegame.areWeColorInOnlineGame(players.WHITE) && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'];
+		const black = onlinegame.areWeColorInOnlineGame(players.BLACK) && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black'];
 		return {
-			white: onlinegame.areWeColorInOnlineGame(players.WHITE) && metadata['White'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['White'],
-			black: onlinegame.areWeColorInOnlineGame(players.BLACK) && metadata['Black'] === translations['guest_indicator'] ? translations['you_indicator'] : metadata['Black']
+			white: white,
+			black: black,
+			white_type: white === translations['guest_indicator'] || white === translations['you_indicator'] ? 'guest' : 'player',
+			black_type: black === translations['guest_indicator'] || black === translations['you_indicator'] ? 'guest' : 'player',
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
 			white: metadata.White!,
-			black: metadata.Black!
+			black: metadata.Black!,
+			white_type: metadata.White === translations['you_indicator'] ? 'guest' : 'engine',
+			black_type: metadata.Black === translations['you_indicator'] ? 'guest' : 'engine',
 		};
 	} else throw Error('Cannot get player names for game when not in a local, online, or engine game.');
 }
@@ -187,15 +232,6 @@ function updateWhosTurn() {
 	} else textContent = color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
 
 	element_whosturn.textContent = textContent;
-
-	element_dot.classList.remove('hidden');
-	if (color === players.WHITE) {
-		element_dot.classList.remove('dotblack');
-		element_dot.classList.add('dotwhite');
-	} else {
-		element_dot.classList.remove('dotwhite');
-		element_dot.classList.add('dotblack');
-	}
 }
 
 /** Updates the whosTurn text to say who won! */
@@ -205,7 +241,6 @@ function gameEnd(conclusion: string | false) {
 
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	const resultTranslations = translations['results'];
-	element_dot.classList.add('hidden');
 
 	const gamefile = gameslot.getGamefile()!;
 
@@ -276,6 +311,25 @@ function getHeightOfGameInfoBar(): number {
 	return element_gameInfoBar.getBoundingClientRect().height;
 }
 
+/**
+ * Wide screen => Right-aligns black's username container
+ * Narrow screen => Left-aligns black's username container and adds a fade effect on the right overflow
+ */
+function updateAlignmentOfRightUsername() {
+	if (element_playerBlack.children.length > 1) throw Error("Update reference to the username container inside the player black div!");
+	const usernameEmbed = element_playerBlack.children[0]!;
+	if (usernameEmbed === undefined) return;
+	if (usernameEmbed.clientWidth > element_playerBlack.clientWidth) {
+		element_playerBlack.classList.remove('justify-content-right');
+		element_playerBlack.classList.add('justify-content-left');
+		element_playerBlack.classList.add('fade-element');
+	} else {
+		element_playerBlack.classList.add('justify-content-right');
+		element_playerBlack.classList.remove('justify-content-left');
+		element_playerBlack.classList.remove('fade-element');
+	}
+}
+
 export default {
 	open,
 	close,
@@ -286,4 +340,5 @@ export default {
 	updateWhosTurn,
 	gameEnd,
 	getHeightOfGameInfoBar,
+	updateAlignmentOfRightUsername,
 };

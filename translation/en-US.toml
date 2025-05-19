@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "52"
+version = "53"
 maintainer = "Naviary"
 
 [header]
@@ -11,6 +11,7 @@ login = "Log In"
 profile = "Profile"
 createaccount = "Create Account"
 logout = "Log Out"
+leaderboard = "Leaderboard"
 
 [header.settings]
 language = "Language"
@@ -38,6 +39,12 @@ language = "Language"
 [member.javascript]
 js-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
 js-enter_password = "Enter your password to PERMANENTLY delete your account:"
+
+[leaderboard.javascript]
+supported_variants = "This leaderboard is used for the following variants:"
+rank = "Rank"
+player = "Player"
+rating = "Rating"
 
 [index]
 title = "Infinite Chess | Home - The Official Website" # The tab title
@@ -117,6 +124,7 @@ seen = ["Seen:", " ago"]
 practice_progress = "Practice Mode Progress:"
 ranked_elo = "Elo:"
 infinity_leaderboard_position = "Global Ranking:"
+infinity_leaderboard_rating_deviation = "Rating Deviation:"
 reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"
@@ -146,6 +154,12 @@ js-pwd_incorrect_format = "Password is in an incorrect format"
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
+
+[leaderboard]
+title = "Leaderboard"
+inactive_players = "Inactive players with a high rating uncertainty are excluded from the leaderboard."
+your_global_ranking = "Your Global Ranking:"
+show_more = "Show more..."
 
 [play]
 title = "Infinite Chess - Play" # The tab title
@@ -306,6 +320,7 @@ question = "Accept draw offer?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
+engine_indicator = "Engine"
 player_name_white_generic = "White"
 player_name_black_generic = "Black"
 white_to_move = "White to move"
@@ -383,7 +398,6 @@ regenerated_pieces = "Regenerated pieces."
 [play.javascript.invites]
 move_mouse = "Move the mouse to reconnect."
 cannot_cancel = "Cannot cancel invite of undefined ID."
-you_indicator = "(You)"
 you_are_white = "You're: White"
 you_are_black = "You're: Black"
 random = "Random"

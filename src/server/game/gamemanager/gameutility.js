@@ -29,6 +29,8 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
+import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { VariantLeaderboards, Leaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 // Type Definitions...
@@ -277,13 +279,14 @@ function getMetadataOfGame(game) {
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 	const white = game.players[players.WHITE].identifier;
 	const black = game.players[players.BLACK].identifier;
+	const guest_indicator = getTranslation('play.javascript.guest_indicator');
 	const gameMetadata = {
 		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
 		Site: "https://www.infinitechess.org/",
 		Round: "-",
 		Variant: game.variant,
-		White: white.member || "(Guest)", // Protect browser's browser-id cookie
-		Black: black.member || "(Guest)", // Protect browser's browser-id cookie
+		White: white.member || guest_indicator, // Protect browser's browser-id cookie
+		Black: black.member || guest_indicator, // Protect browser's browser-id cookie
 		TimeControl: game.clock,
 		UTCDate,
 		UTCTime,
@@ -291,10 +294,12 @@ function getMetadataOfGame(game) {
 	if (white.member !== undefined) {
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
+		if (game.variant in VariantLeaderboards) gameMetadata.WhiteElo = getDisplayEloOfPlayerInLeaderboard(white.user_id, VariantLeaderboards[game.variant]);
 	}
 	if (black.member !== undefined) {
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
+		if (game.variant in VariantLeaderboards) gameMetadata.BlackElo = getDisplayEloOfPlayerInLeaderboard(black.user_id, VariantLeaderboards[game.variant]);
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata

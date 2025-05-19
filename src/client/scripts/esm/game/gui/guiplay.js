@@ -9,7 +9,8 @@ import timeutil from '../../util/timeutil.js';
 import docutil from '../../util/docutil.js';
 import gameloader from '../chess/gameloader.js';
 import { players } from '../../chess/util/typeutil.js';
-import { VariantLeaderboards } from '../../chess/variants/leaderboard.js';
+import { VariantLeaderboards } from '../../chess/variants/validleaderboard.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
 // Import End
 
 
@@ -398,9 +399,13 @@ function callback_inviteMouseLeave() {
 }
 
 function callback_inviteClicked(event) {
+	if (usernamecontainer.getUsernameEmbedFromEvent(event)) {
+		// console.log('Clicked on a username embed, ignoring click');
+		return;
+	}
+
 	invites.click(event.currentTarget);
 }
-
 
 /**
  * Locks the create invite button to disable it.

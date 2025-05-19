@@ -10,7 +10,7 @@ import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
-import type { Leaderboard } from '../../client/scripts/esm/chess/variants/leaderboard.js';
+import type { Leaderboard } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -213,34 +213,38 @@ function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 }
 
 /**
- * Gets the top N players for a specific leaderboard by elo.
+ * Gets the top N players for a specific leaderboard by elo, starting from a given rank.
  * @param leaderboard_id - The id for the specific leaderboard.
- * @param n_players - The maximum number of top players to retrieve
+ * @param start_rank - The 1-based rank to start from (e.g. 1 = top player, 2 = second-best, etc.)
+ * @param n_players - The maximum number of players to retrieve, starting from start_rank
  * @returns An array of top player leaderboard entries, potentially empty.
  */
-function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, n_players: number): LeaderboardEntry[] {
+function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, start_rank: number, n_players: number): LeaderboardEntry[] {
 	// Changed table name, column names, ORDER BY column, added WHERE clause for leaderboard_id
+	const offset = Math.max(0, start_rank - 1); // SQL OFFSET is 0-based
+
 	const query = `
-		SELECT user_id, elo, rating_deviation, last_rated_game_date
+		SELECT user_id, elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE leaderboard_id = ?
 		AND rating_deviation <= ? -- Disregard any members with a too high RD
 		ORDER BY elo DESC
-		LIMIT ?
+		LIMIT ? OFFSET ?
 	`;
 
 	try {
-		// Execute the query with leaderboard_id and n_players parameters
+		// Execute the query with leaderboard_id, n_players and offset parameters
 		// Added leaderboard_id to parameters
-		const top_players = db.all(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, n_players]) as LeaderboardEntry[];
-		return top_players; // Returns an array (empty if no players or n_players <= 0)
+		const top_players = db.all(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, n_players, offset]) as LeaderboardEntry[];
+		return top_players; // Returns an array (potentially empty)
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Updated log message
-		logEvents(`Error getting top "${n_players}" players for leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEvents(`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
 		return []; // Return an empty array on error
 	}
 }
+
 
 /**
  * Gets the rank (position) of a specific user within a specific leaderboard based on Elo.
@@ -302,10 +306,7 @@ function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Lea
 	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, rd_last_update_date } | undefined
 	if (rating_values?.elo !== undefined) {
 		ranked_elo = String(Math.round(rating_values.elo));
-		if (rating_values.rating_deviation !== undefined && rating_values.rd_last_update_date !== undefined) {
-			const true_rating_deviation = getTrueRD(rating_values.rating_deviation, rating_values.rd_last_update_date);
-			if (true_rating_deviation >= UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
-		}
+		if (rating_values.rating_deviation !== undefined && rating_values.rating_deviation > UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
 	}
 
 	return ranked_elo;
@@ -329,8 +330,8 @@ function updateAllRatingDeviationsofLeaderboardTable() {
 	try {
 		const entries = db.all(query) as LeaderboardEntry[];
 		for (const entry of entries) {
-			const updatedRD = getTrueRD(entry.rating_deviation as number, entry?.rd_last_update_date ?? null);
-			updatePlayerLeaderboardRating(entry.user_id as number, entry.leaderboard_id as Leaderboard, entry.elo as number, updatedRD);
+			const updatedRD = getTrueRD(entry.rating_deviation!, entry?.rd_last_update_date ?? null);
+			updatePlayerLeaderboardRating(entry.user_id!, entry.leaderboard_id! as Leaderboard, entry.elo!, updatedRD);
 		}
 		logEvents(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt', { print: true });
 

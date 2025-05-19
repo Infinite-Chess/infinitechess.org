@@ -130,6 +130,8 @@ const metadata_key_ordering = [
     "Black",
     "WhiteID",
     "BlackID",
+	"WhiteElo",
+	"BlackElo",
     "Result",
     "Termination"
 ];

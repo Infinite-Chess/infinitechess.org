@@ -136,7 +136,7 @@ header label {
 
 
 
-/* The navigation hyperlinks, middle of header. Play, News, Login, Create Account */
+/* The navigation hyperlinks, middle of header. Play, News, Leaderboard, Login, Create Account */
 
 nav {
     display: flex;
@@ -160,6 +160,11 @@ nav .svg-pawn {
 nav #svg-news {
     height: 55%;
     padding: 0 5px;
+}
+
+nav #svg-leaderboard {
+    height: 55%;
+    padding-left: 4px;
 }
 
 nav #svg-login {
@@ -201,6 +206,9 @@ nav.compact-3 span {
     display: none;
 }
 nav.compact-3 #svg-news {
+    padding: 0 4px;
+}
+nav.compact-3 #svg-leaderboard {
     padding: 0 4px;
 }
 nav.compact-3 #svg-profile {
@@ -624,6 +632,10 @@ span.arrow-head-left {
     display: none;
 }
 
+.center {
+    text-align: center;
+}
+
 .visibility-hidden {
     visibility: hidden;
 }
@@ -845,4 +857,56 @@ span.arrow-head-left {
     to {
         transform: translate(-50%, -50%) rotate(360deg);
     }
+}
+
+
+/* Username Embed Containers */
+
+.username-embed {
+    display: flex;
+    align-items: center;
+    /* flex-wrap: wrap; */
+    gap: 0.3em;
+    width: fit-content;
+}
+
+.username-embed .svg-profile, .svg-engine {
+    width: 1em;
+    height: 1em;
+    aspect-ratio: 1;
+}
+
+.username-embed .username {
+    font-size: 1em;
+    font-weight: bold;
+    color: #000;
+    text-decoration: none;
+}
+
+.username-embed .elo {
+    color: #666;
+    font-size: 0.9em;
+}
+
+
+
+
+/* Fades the right side of the element away to hide overflow text */
+.fade-element {
+    mask-image: linear-gradient(
+      to right,
+      black 0%,
+      black calc(100% - 20px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      black 0%,
+      black calc(100% - 20px),
+      transparent 100%
+    );
+}
+
+.justify-content-right {
+    justify-content: right;
 }

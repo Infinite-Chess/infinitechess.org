@@ -47,26 +47,6 @@ function updateJavascriptStyling() {
 }
 
 /**
- * Gets all children of an element and returns an array of their text contents.
- * @param {HTMLElement} parentElement - The parent element.
- * @returns {string[]} An array of text contents of the child elements.
- */
-function getChildrenTextContents(parentElement) {
-	// Get all child elements
-	const children = parentElement.children;
-    
-	// Create an array to hold the text contents
-	const textContents = [];
-
-	// Loop through the child elements and extract their text content
-	for (let i = 0; i < children.length; i++) {
-		textContents.push(children[i].textContent);
-	}
-
-	return textContents;
-}
-
-/**
  * Finds the index of an element within its parent.
  * @param {Element} element - The element to find the index of.
  * @returns {number} - The index of the element within its parent, or -1 if not found.
@@ -121,7 +101,6 @@ function arrayToCssColor(colorArray) {
 
 export default {
 	setNavStyle,
-	getChildrenTextContents,
 	arrayToCssColor,
 	getElementIndexWithinItsParent,
 	getChildByIndexInParent,

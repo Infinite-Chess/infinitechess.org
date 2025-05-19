@@ -164,7 +164,7 @@ function generateTables() {
 	// Player Games Table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS player_games (
-			user_id INTEGER NOT NULL REFERENCES members(user_id), -- Account deletion does not delete rows in this table
+			user_id INTEGER NOT NULL, -- Account deletion does not delete rows in this table
 			game_id INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number INTEGER NOT NULL, -- 1 => White  2 => Black
 			score REAL, -- 1 => Win   0.5 => Draw   0 => Loss   null => Aborted
