@@ -42,6 +42,9 @@ js-enter_password = "Enter your password to PERMANENTLY delete your account:"
 
 [leaderboard.javascript]
 supported_variants = "This leaderboard is used for the following variants:"
+rank = "Rank"
+player = "Player"
+rating = "Rating"
 
 [index]
 title = "Infinite Chess | Home - The Official Website" # The tab title

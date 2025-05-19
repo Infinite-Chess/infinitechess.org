@@ -51,7 +51,7 @@ let initialized = false;
 	// as the server reads our session info to know who to return a global ranking for.
 	await validatorama.waitUntilInitialRequestBack();
 	loggedInAs = validatorama.getOurUsername();
-	
+
 	await populateTable(running_start_rank, LEADERBOARD_LENGTH_ON_LOAD);
 	initialized = true;
 
@@ -86,9 +86,9 @@ function createEmptyLeaderboardTable() {
 	const thead = document.createElement("thead");
 	thead.innerHTML = `
 		<tr>
-		<th>Rank</th>
-		<th>Player</th>
-		<th>Rating</th>
+		<th>${translations["rank"]}</th>
+		<th>${translations["player"]}</th>
+		<th>${translations["rating"]}</th>
 		</tr>
 	`;
 	table.appendChild(thead);
