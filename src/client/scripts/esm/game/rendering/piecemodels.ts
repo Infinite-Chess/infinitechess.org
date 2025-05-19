@@ -92,7 +92,8 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  * 
  * SLOWEST. Minimize calling.
  */
-function regenAll(gamefile: gamefile, mesh: Mesh) {
+function regenAll(gamefile: gamefile, mesh: Mesh | undefined) {
+	if (!mesh) return;
 	console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
