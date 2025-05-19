@@ -166,9 +166,6 @@ function configureMiddleware(app) {
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
 
-	// Leaderboard router
-	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:requester_username', getLeaderboardData);
-
 	// API --------------------------------------------------------------------
 
 	app.post("/auth", handleLogin); // Login fetch POST request
@@ -211,6 +208,9 @@ function configureMiddleware(app) {
 	app.get('/member/:member/data', getMemberData);
 	app.get('/member/:member/send-email', requestConfirmEmail);
 	app.get("/verify/:member/:code", verifyAccount);
+
+	// Leaderboard router
+	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank', getLeaderboardData);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 

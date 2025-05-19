@@ -12,14 +12,20 @@ import { getMemberDataByCriteria } from "../database/memberManager.js";
 // @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 
-import type { Request, Response } from "express";
+import type { Response } from "express";
+import { CustomRequest } from "../../types.js";
+
+
+
+/** Maximum number of players allowed to be requested in a single request */
+const MAX_N_PLAYERS_REQUEST_CAP = 100;
 
 // Functions -------------------------------------------------------------
 
 /**
- * Responds to the request to fetch top (N = n_players) players of leaderboard leaderboard_id, starting from start_rank, and requested by requester_username (potentially = "(Guest)")
+ * Responds to the request to fetch top (N = n_players) players of leaderboard leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
  */
-const getLeaderboardData = async(req: Request, res: Response) => { // route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:requester_username
+const getLeaderboardData = async(req: CustomRequest, res: Response) => { // route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
 
 	/** ID of leaderboard to be fetched */
 	const leaderboard_id = Number(req.params["leaderboard_id"]) as Leaderboard;
@@ -30,10 +36,15 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 	/** Number of players to fetch from leaderboard */
 	const n_players = Number(req.params["n_players"]);
 
-	/** Username of user whose global ranking should be returned. Ignored if equal to "(Guest)" */
-	const requester_username = (req.params["requester_username"] === undefined || /\(|\)/.test(req.params["requester_username"] as string)) ? undefined : req.params["requester_username"];
+	/** Whether the server should also look for and return the rank of the user making the request */
+	const find_requester_rank = Number(req.params["find_requester_rank"]) as 0 | 1;
 
-	if (Number.isNaN(start_rank) || Number.isNaN(n_players) || Number.isNaN(leaderboard_id)) return res.status(404).json({ message: "Request incorrectly formatted." });
+	if (Number.isNaN(start_rank) || Number.isNaN(n_players) || 
+		Number.isNaN(leaderboard_id) || Number.isNaN(find_requester_rank)) return res.status(404).json({ message: "Request incorrectly formatted." });
+	if (n_players > MAX_N_PLAYERS_REQUEST_CAP) return res.status(404).json({ message: "Too many leaderboard positions requested at once." });
+
+	/** Username of user whose global ranking should be returned. Set to undefined if its global rank should not be found. */
+	const requester_username = (find_requester_rank && req.memberInfo.signedIn ? req.memberInfo.username : undefined);
 
 	// Query leaderboard database
 	const top_players = getTopPlayersForLeaderboard(leaderboard_id, start_rank, n_players);
@@ -49,6 +60,10 @@ const getLeaderboardData = async(req: Request, res: Response) => { // route: /le
 	const leaderboardData: Object[] = [];
 	for (const player of top_players) {
 		const username = getMemberDataByCriteria(['username'], 'user_id', player.user_id!, { skipErrorLogging: true }).username;
+		if (username === undefined) {
+			logEvents(`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by getTopPlayersForLeaderboard().`, 'errLog.txt', { print: true });
+			continue;
+		}
 		const playerData = {
 			username: username,
 			elo: String(Math.round(player.elo!))

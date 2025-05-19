@@ -25,7 +25,7 @@ const element_UserRanking = document.getElementById('user_ranking')!;
 /** Number of players to be shown on leaderboard page load */
 const LEADERBOARD_LENGTH_ON_LOAD = 50;
 /** Number of players to be added on show more button press */
-const LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT = 25;
+const LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT = 50;
 /** Leaderboard to be displayed */
 const leaderboard_id = Leaderboards.INFINITY;
 
@@ -115,8 +115,9 @@ async function populateTable(start_rank: number, n_players: number) {
 	try {
 		// Make server request
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
-		// If initialized === false, we also add the username of the logged in player to the request, if possible, in order to get his rank
-		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/${!initialized && loggedInAs !== undefined ? loggedInAs : "(Guest)"}`, config);
+		// If initialized === false and the player is logged in, we also set find_requester_rank to 1, if possible, in order to request his rank from the server on the first page load
+		const find_requester_rank = (!initialized && loggedInAs !== undefined ? 1 : 0);
+		const response = await fetch(`/leaderboard/top/${leaderboard_id}/${start_rank}/${n_players + 1}/${find_requester_rank}`, config);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
 			console.error("Failed to fetch leaderboard data:", response.status, response.statusText);
