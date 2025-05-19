@@ -21,6 +21,7 @@ import snapping from './highlights/snapping.js';
 import instancedshapes from './instancedshapes.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import math, { Color } from '../../util/math.js';
+import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -29,7 +30,6 @@ import perspective from './perspective.js';
 import statustext from '../gui/statustext.js';
 // @ts-ignore
 import board from './board.js';
-import typeutil from '../../chess/util/typeutil.js';
 
 
 // Variables --------------------------------------------------------------

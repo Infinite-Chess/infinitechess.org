@@ -17,9 +17,9 @@ import gamefileutility from "../../../chess/util/gamefileutility.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import pingManager from "../../../util/pingManager.js";
 import { listener_document, listener_overlay } from "../../chess/game.js";
+import sound from "../sound.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
-import sound from "../sound.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
 

@@ -30,9 +30,9 @@ import frametracker from '../rendering/frametracker.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
+import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
-import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore

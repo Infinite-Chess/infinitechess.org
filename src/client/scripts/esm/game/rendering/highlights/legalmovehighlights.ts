@@ -17,13 +17,13 @@ import preferences from '../../../components/header/preferences.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
 import boardpos from '../boardpos.js';
+import math from '../../../util/math.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
 import board from '../board.js';
-import math from '../../../util/math.js';
 // @ts-ignore
 import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore
@@ -37,11 +37,11 @@ import type { BoundingBox, Vec2, Color } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
 import type { Ray } from './annotations/annotations.js';
-// @ts-ignore
-import type gamefile from '../../../chess/logic/gamefile.js';
 import type { Piece } from '../../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../../chess/logic/movepiece.js';
 import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
+// @ts-ignore
+import type gamefile from '../../../chess/logic/gamefile.js';
 
 
 

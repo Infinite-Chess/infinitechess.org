@@ -23,13 +23,13 @@ import piecemodels from "../rendering/piecemodels.js";
 import { Mesh } from "../rendering/piecemodels.js";
 import gamefileutility from "../../chess/util/gamefileutility.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
-import stats from "../gui/stats.js";
 import movepiece from "../../chess/logic/movepiece.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 import frametracker from "../rendering/frametracker.js";
+// @ts-ignore
+import stats from "../gui/stats.js";
 
 
 // Global Moving ----------------------------------------------------------------------------------------------------------

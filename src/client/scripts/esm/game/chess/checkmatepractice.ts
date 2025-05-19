@@ -25,9 +25,9 @@ import validcheckmates from '../../chess/util/validcheckmates.js';
 import docutil from '../../util/docutil.js';
 import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
-import enginegame from '../misc/enginegame.js';
 
 // Variables ----------------------------------------------------------------------------
 

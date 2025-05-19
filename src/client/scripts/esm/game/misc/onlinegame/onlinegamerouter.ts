@@ -20,13 +20,13 @@ import guititle from "../../gui/guititle.js";
 import clock from "../../../chess/logic/clock.js";
 import selection from "../../chess/selection.js";
 import onlinegame from "./onlinegame.js";
+import guiclock from "../../gui/guiclock.js";
 // @ts-ignore
 import guiplay from "../../gui/guiplay.js";
 // @ts-ignore
 import websocket from "../../websocket.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
-import guiclock from "../../gui/guiclock.js";
 // @ts-ignore
 import board from "../../rendering/board.js";
 

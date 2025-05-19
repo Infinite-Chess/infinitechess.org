@@ -41,18 +41,18 @@ import { players } from "../../chess/util/typeutil.js";
 import boardpos from "../rendering/boardpos.js";
 import annotations from "../rendering/highlights/annotations/annotations.js";
 import texturecache from "../../chess/rendering/texturecache.js";
+import sound from "../misc/sound.js";
+import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
-import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore
 import board from "../rendering/board.js";
-import guiclock from "../gui/guiclock.js";
 // @ts-ignore
 import area from "../rendering/area.js";
 // @ts-ignore

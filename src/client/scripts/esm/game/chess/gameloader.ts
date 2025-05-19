@@ -28,11 +28,11 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guinavigation from "../gui/guinavigation.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
+import boardpos from "../rendering/boardpos.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
-import boardpos from "../rendering/boardpos.js";
 
 
 // Variables --------------------------------------------------------------------

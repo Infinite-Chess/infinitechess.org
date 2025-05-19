@@ -38,9 +38,9 @@ import { listener_overlay } from '../../chess/game.js';
 import { Mouse } from '../../input.js';
 import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
+import legalmoves from '../../../chess/logic/legalmoves.js';
 // @ts-ignore
 import bufferdata from '../bufferdata.js';
-import legalmoves from '../../../chess/logic/legalmoves.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore

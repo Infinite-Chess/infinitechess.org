@@ -39,10 +39,10 @@ import boarddrag from '../rendering/boarddrag.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';
-// @ts-ignore
-import guipause from '../gui/guipause.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
+// @ts-ignore
+import guipause from '../gui/guipause.js';
 // @ts-ignore
 import specialdetect, { CoordsSpecial } from '../../chess/logic/specialdetect.js';
 // @ts-ignore

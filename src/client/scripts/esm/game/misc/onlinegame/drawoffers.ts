@@ -16,13 +16,13 @@ import gameslot from '../../chess/gameslot.js';
 import onlinegame from './onlinegame.js';
 import moveutil from '../../../chess/util/moveutil.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
+import sound from '../sound.js';
 // @ts-ignore
 import statustext from '../../gui/statustext.js';
 // @ts-ignore
 import websocket from '../../websocket.js';
 // @ts-ignore
 import guipause from '../../gui/guipause.js';
-import sound from '../sound.js';
 
 
 // Variables ---------------------------------------------------
