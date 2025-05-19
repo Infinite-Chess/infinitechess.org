@@ -133,7 +133,7 @@ const CLICK_THRESHOLDS = {
 	},
 	TOUCH: {
 		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
-		MOVE_VPIXELS: 24,
+		MOVE_VPIXELS: 20, // Default: 24
 		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
 		TIME_MILLIS: 120,
 		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
@@ -195,12 +195,14 @@ interface ClickInfo {
 	 */
 	posDown?: Coords;
 	/**
-	 * How much the mouse has moved since the last click down.
+	 * How much the mouse has ABSOLUTELY moved since the last click down.
 	 * ONLY USED FOR CALCULATING SIMULATED CLICKS AND DOUBLE CLICK DRAGS,
 	 * as if the pointer has moved too far, we don't register the click.
 	 * 
 	 * We use delta instead of remembering the position down, because when
 	 * the mouse is locked in perspective mode, the position is not updated.
+	 * 
+	 * This can only be positive, not negative.
 	 */
 	deltaSinceDown: Coords;
 	/**
@@ -358,9 +360,10 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			) : 0;
 			// Works for 3D mode, desktop (mouse is locked in place then)
 			const delta = Math.max(
-				Math.abs(targetButtonInfo.deltaSinceDown[0]),
-				Math.abs(targetButtonInfo.deltaSinceDown[1])
+				targetButtonInfo.deltaSinceDown[0],
+				targetButtonInfo.deltaSinceDown[1]
 			);
+			// console.log("Mouse delta:", delta);
 			const MOVE_VPIXELS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS : CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) { // Only register the double click drag if the mouse hasn't moved too far from its last click down.
 				targetButtonInfo.doubleClickDrag = true;
@@ -404,15 +407,34 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			) : 0; // No click down to compare to. This can happen if you click down offscreen.
 			// Works for 3D mode, desktop (mouse is locked in place then)
 			const delta = Math.max(
-				Math.abs(clickInfo[targetButton].deltaSinceDown[0]),
-				Math.abs(clickInfo[targetButton].deltaSinceDown[1])
+				clickInfo[targetButton].deltaSinceDown[0],
+				clickInfo[targetButton].deltaSinceDown[1]
 			);
+			// console.log("Mouse delta: ", delta);
 			const MOVE_VPIXELS = e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS : CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
 			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) {
 				clickInfo[targetButton].clicked = true;
 				// console.log("Mouse clicked: ", MouseNames[targetButton]);
 			}
 		} // --------------
+	}
+
+	/**
+	 * On pointer move. This updates the deltaSinceDown for the
+	 * clickInfo of the mouse button whos most recent action
+	 * was from the pointerId.
+	 * 
+	 * If the pointer moves too much, don't simulate a click.
+	 */
+	function updateDeltaSinceDownForPointer(pointerId: string, delta: Vec2) {
+		// Update the delta (deltaSinceDown) for simulated mouse clicks
+		Object.values(Mouse).forEach((targetButton) => {
+			const targetButtonInfo = clickInfo[targetButton];
+			// Only update the click info if the mouse is the pointer that most recently performed that click action.
+			if (targetButtonInfo.pointerId !== pointerId) return;
+			targetButtonInfo.deltaSinceDown[0] += Math.abs(delta[0]);
+			targetButtonInfo.deltaSinceDown[1] += Math.abs(delta[1]);
+		});
 	}
 
 	if (mouse) {
@@ -455,15 +477,9 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 			// Add to the current delta, in case this event is triggered multiple times in a frame.
 			targetPointer.delta[0] += e.movementX;
 			targetPointer.delta[1] += e.movementY;
+
 			// Update the delta (deltaSinceDown) for simulated mouse clicks
-			
-			Object.values(Mouse).forEach((targetButton) => {
-				const targetButtonInfo = clickInfo[targetButton];
-				if (targetButtonInfo.deltaSinceDown) {
-					targetButtonInfo.deltaSinceDown[0] += e.movementX;
-					targetButtonInfo.deltaSinceDown[1] += e.movementY;
-				}
-			});
+			updateDeltaSinceDownForPointer(targetPointer.id, targetPointer.delta);
 			
 			// console.log("Mouse delta: ", targetPointer.delta);
 			// Update velocity
@@ -532,11 +548,14 @@ function CreateInputListener(element: HTMLElement | typeof document, { keyboard 
 					const targetPointer = pointers[touch.identifier]!;
 					const relativeTouchPos = getRelativeMousePosition([touch.clientX, touch.clientY], element);
 					// Update delta
-					targetPointer.delta = [
-						relativeTouchPos[0] - targetPointer.position[0],
-						relativeTouchPos[1] - targetPointer.position[1]
-					];
+					targetPointer.delta[0] += relativeTouchPos[0] - targetPointer.position[0];
+					targetPointer.delta[1] += relativeTouchPos[1] - targetPointer.position[1];
+					// Position
 					targetPointer.position = relativeTouchPos;
+
+					// Update the delta (deltaSinceDown) for simulated mouse clicks
+					updateDeltaSinceDownForPointer(touch.identifier.toString(), targetPointer.delta);
+
 					// Update velocity
 					const now = Date.now();
 					targetPointer.positionHistory.push({ pos: [...targetPointer.position], time: now }); // Deep copy the touch position to avoid modifying the original
