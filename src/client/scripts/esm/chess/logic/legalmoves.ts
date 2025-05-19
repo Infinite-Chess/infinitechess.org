@@ -3,20 +3,22 @@
  * This script calculates legal moves
  */
 
-import movepiece from './movepiece.js';
-import boardutil from '../util/boardutil.js';
+
 // @ts-ignore
 import specialdetect from './specialdetect.js';
+// @ts-ignore
+import winconutil from '../util/winconutil.js';
+import movepiece from './movepiece.js';
+import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
 import typeutil, { players } from '../util/typeutil.js';
 import jsutil from '../../util/jsutil.js';
 import coordutil from '../util/coordutil.js';
-// @ts-ignore
-import winconutil from '../util/winconutil.js';
 import movesets from './movesets.js';
 import variant from '../variants/variant.js';
 import checkresolver from './checkresolver.js';
 import { rawTypes as r } from '../util/typeutil.js';
+
 
 import type { TypeGroup, RawType, Player } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
@@ -30,10 +32,16 @@ import type { OrganizedPieces } from './organizedpieces.js';
 // @ts-ignore
 import type gamefile from './gamefile.js';
 
-"use strict";
 
-// Custom type definitions...
+// Type Definitions ----------------------------------------------------------------
 
+
+/**
+ * The negative/positive vector step-limit of a sliding direction.
+ * 
+ * [-2,Infinity] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
+ * For knightriders, one [2,1] hop is considered 1 step.
+ */
 type SlideLimits = [number, number]
 
 /** An object containing all the legal moves of a piece. */
@@ -48,6 +56,10 @@ interface LegalMoves {
 	ignoreFunc: IgnoreFunction
 }
 
+/**
+ * A dictionary of vector distances from an origin square containing
+ * a list of raw piece types, typically that can capture from that distance.
+ */
 type Vicinity = Record<CoordsKey, RawType[]>
 
 /**
@@ -97,8 +109,10 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
 		if (!existingRawTypes.includes(rawType)) continue; // This piece isn't present in our game
 		pieceVicinity.forEach(coords => {
 			const coordsKey = coordutil.getKeyFromCoords(coords as Coords);
-			if (!(coordsKey in vicinity)) vicinity[coordsKey] = []; // Make sure it's initialized
-			vicinity[coordsKey]!.push(rawType);
+			// typescript doesn't realize vicinity[coordsKey] is gauranteed to be defined
+			// after this statement if we use (coordsKey in vicinity) for some reason
+			if (!vicinity[coordsKey]) vicinity[coordsKey] = []; // Make sure it's initialized
+			vicinity[coordsKey].push(rawType);
 		});
 	}
 	return vicinity;
@@ -106,9 +120,6 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
 
 /**
  * Gets the moveset of the type of piece specified.
- * @param gamefile - The gamefile 
- * @param pieceType - The type of piece
- * @returns A moveset object.
  */
 function getPieceMoveset(gamefile: gamefile, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
@@ -120,7 +131,6 @@ function getPieceMoveset(gamefile: gamefile, pieceType: number): PieceMoveset {
 
 /**
  * Return the piece move that's blocking function if it is specified, or the default otherwise.
- * @param pieceMoveset 
  */
 function getBlockingFuncFromPieceMoveset(pieceMoveset: PieceMoveset): BlockingFunction {
 	return pieceMoveset.blocking || movesets.defaultBlockingFunction;
@@ -129,7 +139,6 @@ function getBlockingFuncFromPieceMoveset(pieceMoveset: PieceMoveset): BlockingFu
 
 /**
  * Return the piece move ignore function if it is specified, or the default otherwise.
- * @param pieceMoveset 
  */
 function getIgnoreFuncFromPieceMoveset(pieceMoveset: PieceMoveset): IgnoreFunction {
 	return pieceMoveset.ignore || movesets.defaultIgnoreFunction;
@@ -168,7 +177,7 @@ function calculate(gamefile: gamefile, piece: Piece, { onlyCalcSpecials = false,
 				if (lines === undefined) continue;
 				const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 				const key = organizedpieces.getKeyFromLine(line, coords);
-				legalSliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, gamefile.pieces, lines.get(key)!, line, limits, coords, color);
+				legalSliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, gamefile.pieces, lines.get(key)!, line, limits, coords, color)!;
 			};
 		};
 
@@ -222,11 +231,11 @@ function shiftIndividualMovesetByCoords(indivMoveset: Coords[], coords: Coords) 
 	});
 }
 
-// Accepts array of moves, returns new array with illegal moves removed due to pieces occupying.
-function moves_RemoveOccupiedByFriendlyPieceOrVoid<T extends Coords[] | undefined>(gamefile: gamefile, individualMoves: T, color: Player): T {
-	// TS is jank
-	if (individualMoves === undefined) return individualMoves; // No jumping moves possible
-
+/**
+ * Accepts array of moves, returns new array with illegal moves removed due to pieces occupying.
+ * MUTATES original array.
+ */
+function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile: gamefile, individualMoves: Coords[], color: Player): Coords[] {
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		const thisMove = individualMoves[i]!;
 
@@ -256,12 +265,12 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid<T extends Coords[] | undefine
  * @param coords - The coordinates of the piece with the specified slideMoveset.
  * @param color - The color of friendlies
  */
-function slide_CalcLegalLimit<T extends SlideLimits | undefined>(
+function slide_CalcLegalLimit(
 	blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], direction: Vec2,
-	slideMoveset: T, coords: Coords, color: Player
-): T {
+	slideMoveset: SlideLimits | undefined, coords: Coords, color: Player
+): SlideLimits | undefined {
 
-	if (slideMoveset === undefined) return slideMoveset; // Return undefined if there is no slide moveset
+	if (!slideMoveset) return; // Return undefined if there is no slide moveset
 
 	// The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
@@ -300,7 +309,7 @@ function slide_CalcLegalLimit<T extends SlideLimits | undefined>(
 
 		} // else this is us, don't do anything.
 	}
-	return limit as T;
+	return limit;
 }
 
 /**
@@ -358,7 +367,7 @@ function checkIfMoveLegal(gamefile: gamefile, legalMoves: LegalMoves, startCoord
  * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
  * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
  */
-function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedGameConclusion: string | false) {
+function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedGameConclusion: string | false): string | true {
 	if (!moveDraft) {
 		console.log("Opponents move is illegal because it is not defined. There was likely an error in converting it to long format.");
 		return 'Move is not defined. Probably an error in converting it to long format.';
@@ -390,7 +399,7 @@ function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedG
 
 	// If there is a promotion, make sure that's legal
 	if (moveDraftCopy.promotion) {
-		if (!(typeutil.getRawType(piecemoved.type) === r.PAWN)) {
+		if (typeutil.getRawType(piecemoved.type) !== r.PAWN) {
 			console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote a non-pawn.");
 		}
@@ -471,20 +480,29 @@ function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: V
  * Accepts the calculated legal moves, tests to see if there are any
  * @param moves 
  */
-function hasAtleast1Move(moves: LegalMoves): boolean { // { individual, horizontal, vertical, ... }
+function hasAtleast1Move(moves: LegalMoves): boolean {
     
 	if (moves.individual.length > 0) return true;
 	for (const limits of Object.values(moves.sliding)) {
 		if (doesSlideHaveWidth(limits)) return true;
 	}
 
-	function doesSlideHaveWidth(slide: SlideLimits) { // [-Infinity, Infinity]
+	function doesSlideHaveWidth(slide: SlideLimits) {
 		if (!slide) return false;
 		return slide[1] - slide[0] > 0;
+
+		// In the future: If the `brute` flag is present, and there isn't
+		// too large of a slide range (maybe 50 max),
+		// then we could test if each of them would result in check.
+		// ...
 	}
 
 	return false;
 }
+
+
+// Exports ----------------------------------------------------------------
+
 
 export type {
 	LegalMoves,

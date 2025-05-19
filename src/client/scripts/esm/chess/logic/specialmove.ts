@@ -68,7 +68,7 @@ function pawns(gamefile: gamefile, piece: Piece, move: Move) {
 
 	const enpassantTag = move.enpassant; // true | undefined
 	const promotionTag = move.promotion; // promote type
-	if (!enpassantTag && !promotionTag) return false; ; // No special move to execute, return false to signify we didn't move the piece.
+	if (!enpassantTag && !promotionTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	const captureCoords = enpassantTag ? gamefile.state.global.enpassant!.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;

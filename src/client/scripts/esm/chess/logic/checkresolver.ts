@@ -19,6 +19,7 @@ import type { LegalMoves } from './legalmoves.js';
 // @ts-ignore
 import type { gamefile } from "../logic/gamefile.js";
 
+
 import gamefileutility from "../util/gamefileutility.js";
 import boardutil from "../util/boardutil.js";
 import math from "../../util/math.js";
@@ -31,9 +32,9 @@ import moveutil from "../util/moveutil.js";
 import { players } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 import checkdetection from "./checkdetection.js";
+import legalmoves from "./legalmoves.js";
 // @ts-ignore
 import specialdetect from "./specialdetect.js";
-import legalmoves from "./legalmoves.js";
 
 // Functions ------------------------------------------------------------------------------
 

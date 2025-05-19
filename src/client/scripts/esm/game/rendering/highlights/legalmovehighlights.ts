@@ -129,10 +129,6 @@ function getOffset() {
 	return model_Offset;
 }
 
-function isPieceSelected() {
-	return pieceSelected !== undefined;
-}
-
 /** Call this from selection.js when a piece is selected */
 function onPieceSelected(piece: Piece, legalMoves: LegalMoves) {
 	pieceSelected = piece;
@@ -316,7 +312,7 @@ function regenerateAll() {
 
 // Regenerates the model for all highlighted legal moves.
 function regenSelectedPieceLegalMovesHighlightsModel() {
-	if (!isPieceSelected()) return;
+	if (!pieceSelected) return;
 	// console.log("Regenerating legal moves model..");
 
 	// The model of the selected piece's legal moves
@@ -379,7 +375,7 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
  * The mesh should have been pre-calculated.
  */
 function renderSelectedPiecesLegalMoves() {
-	if (!isPieceSelected()) return; // No model to render
+	if (!pieceSelected) return; // No model to render
 
 	const boardPos: Coords = boardpos.getBoardPos();
 	const position: [number,number,number] = [
