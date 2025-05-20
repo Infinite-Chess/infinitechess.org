@@ -26,11 +26,13 @@ import type { EnPassant, GlobalGameState } from "../state.js";
 // Type Definitions -------------------------------------------------------------------
 
 
+/** Represents the game format coming IN to the converter. */
 interface LongFormatIn extends LongFormatBase {
 	metadata: MetaData
 	moves?: _Move_In[]
 }
 
+/** Represents the game format coming OUT of the converter. */
 interface LongFormatOut extends LongFormatBase {
 	metadata: MetaData
 	moves?: _Move_Out[]
@@ -57,7 +59,7 @@ type NamedCaptureMoveGroups = {
 	comment?: string
 };
 
-/** Same as {@link _Move_Out}, but with additional information we may want to prettify the shortform with. */
+/** Represents the move type coming IN to the converter. Same as {@link _Move_Out}, but with additional information we may want to prettify the shortform with. */
 interface _Move_In extends _Move_Out {
 	/** The type of piece moved */
 	type?: number,
@@ -71,7 +73,7 @@ interface _Move_In extends _Move_Out {
 	}
 }
 
-/** Information pullable from moves in shortform notation. */
+/** Represents the move type coming OUT of the converter. Information pullable from moves in shortform notation. */
 interface _Move_Out extends _Move_Compact {
 	compact: string,
 	/**
