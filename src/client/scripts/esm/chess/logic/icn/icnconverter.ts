@@ -21,6 +21,7 @@ import icncommentutils, { CommandObject } from "./icncommentutils.js";
 import type { GameRules } from "../../variants/gamerules.js";
 import type { MetaData } from "../../util/metadata.js";
 import type { EnPassant, GlobalGameState } from "../state.js";
+import type { Vec2 } from "../../../util/math.js";
 
 
 // Type Definitions -------------------------------------------------------------------
@@ -44,6 +45,7 @@ interface LongFormatBase {
 	gameRules: GameRules
 	fullMove: number
 	state_global: Partial<GlobalGameState>
+	preset_rays?: BaseRay[]
 }
 
 /** The named capture groups of a shortform move. */
@@ -92,6 +94,9 @@ interface _Move_Compact {
 	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
 	promotion?: number,
 }
+
+/** Used for preset rays */
+type BaseRay = { start: Coords, vector: Vec2 };
 
 
 // Dictionaries -----------------------------------------------------------------------
@@ -333,7 +338,7 @@ function getMoveRegexSource(capturing: boolean): string {
 /**
  * Construct the regexes for matching sections of the ICN.
  * 
- * [Variant "Classical"] w 3,4 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
+ * [Variant "Classical"] w 3,4 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate Rays:14,-140>-1,-1 P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
  */
 
 /**
@@ -366,6 +371,19 @@ const singleWinConSource = '[a-z]{3,100}'; // 'royalcapture'   Minimum of 3 char
 const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*`; // 'royalcapture,koth'
 /** Captures the win conditions section in the ICN. */
 const winConditionRegex = new RegExp(String.raw`(?<winConditions>${singlePlayerWinConSource}(?:\|${singlePlayerWinConSource})*)${whiteSpaceOrEnd}`, 'y');
+
+/** Matches a single preset ray, optionally capturing its properties. */
+function getRayRegexSource(capturing: boolean): string {
+	const startCoordsKey = capturing ? '<startCoordsKey>' : ':';
+	const vec2Key = capturing ? '<vec2Key>' : ':';
+	return `(?${startCoordsKey}${coordsKeyRegexSource})>(?${vec2Key}${coordsKeyRegexSource})`;
+}
+// const singleRaySource = String.raw`${coordsKeyRegexSource}>${coordsKeyRegexSource}`; // 'x,y>dx,dy'
+/**
+ * Matches the preset rays segment in ICN
+ * 'Rays:x,y>dx,dy|x,y>dx,dy'
+ */
+const presetRaysRegex = new RegExp(String.raw`Rays:(?<rayPresets>${getRayRegexSource(false)}(\|${getRayRegexSource(false)})*)${whiteSpaceOrEnd}`, 'y'); // 'Rays:x,y>dx,dy|x,y>dx,dy'
 
 // SKIP THE POSITION (It can be too big to capture all at once)
 
@@ -668,6 +686,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let promotionRanks: PlayerGroup<number[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
 	let winConditions: PlayerGroup<string[]> = {}; // Required
+	let presetRays: BaseRay[] | undefined;
 	let position: Map<CoordsKey, number> | undefined;
 	let specialRights: Set<CoordsKey> | undefined;
 	let moves: _Move_Out[] | undefined;
@@ -850,6 +869,38 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 
+	// Preset Rays
+	presetRaysRegex.lastIndex = lastIndex;
+
+	const raysResult = presetRaysRegex.exec(icn);
+	if (raysResult) {
+		console.log("Parsing rays:", raysResult);
+
+		presetRays = [];
+		const capturingRaysRegex = new RegExp(getRayRegexSource(true), "g");
+
+		// Since the rayRegex has the global flag, exec() will return the next match each time.
+		// NO STRING SPLITTING REQUIRED
+		let match: RegExpExecArray | null;
+		while (match = capturingRaysRegex.exec(raysResult[0]!)) {
+			const startCoordsKey = match.groups!.startCoordsKey as CoordsKey;
+			const vec2Key = match.groups!.vec2Key as CoordsKey;
+
+			const start = coordutil.getCoordsFromKey(startCoordsKey);
+			const vector = coordutil.getCoordsFromKey(vec2Key);
+
+			// Make sure neither are Infinity
+			if (!isFinite(start[0]) || !isFinite(start[1]) || !isFinite(vector[0]) || !isFinite(vector[1])) {
+				throw Error(`Ray start/vector must not be Infinite. ${JSON.stringify(match.groups)}`);
+			}
+
+			presetRays.push({ start, vector });
+		}
+
+		console.log("Parsed rays:", presetRays);
+	}
+
+
 	/**
 	 * Moves
 	 * 
@@ -974,6 +1025,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	};
 	if (position) longFormatOut.position = position;
 	if (moves) longFormatOut.moves = moves;
+	if (presetRays) longFormatOut.preset_rays = presetRays;
 
 	// console.log("Finished parcing ICN!");
 	// console.log("Parsed longformat:", jsutil.deepCopyObject(longFormatOut));
