@@ -14,7 +14,6 @@ import { ServerGameMoveMessage } from '../misc/onlinegame/onlinegamerouter.js';
 
 import type { VariantOptions } from './gameslot.js';
 import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
-import type { GlobalGameState } from '../../chess/logic/state.js';
 
 
 
@@ -84,7 +83,13 @@ function ICNToGamefile(ICN: string): gamefile {
 	longformOut.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 
 	// TEMPORARY: Convert he LongFormatOut's moves into the gamefile's constructor's move's format's form's form for fo
-	const moves: string[] = longformOut.moves?.map(m => m.compact) ?? [];
+	const moves: ServerGameMoveMessage[] = longformOut.moves?.map(m => {
+		const move: ServerGameMoveMessage = { compact: m.compact };
+		if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
+		// Potentially also transfer the pasted comments into the gamefile here in the future!
+		// ...
+		return move;
+	}) ?? [];
 
 	/**
 	 * This automatically forwards all moves to the front of the game.
