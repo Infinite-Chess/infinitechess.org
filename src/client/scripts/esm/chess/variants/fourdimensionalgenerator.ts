@@ -102,7 +102,7 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 
 	// position is string and should identically populate all 2D boards
 	if (typeof input_position === 'string') {
-		const input_position_long: Map<CoordsKey, number> = icnconverter.ShortToLong_Format(input_position).position;
+		const input_position_long: Map<CoordsKey, number> = icnconverter.ShortToLong_Format(input_position).position!;
 		
 		// Loop through from the leftmost column that should be voids to the right most, and also vertically
 		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
@@ -134,7 +134,7 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 					// Add the subposition to the correct board
 					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
 						const sub_position_short = input_position[`${Math.floor(i / dim.BOARD_SPACING)},${Math.floor(j / dim.BOARD_SPACING)}`];
-						const sub_position_long: Map<CoordsKey, number> = sub_position_short ? icnconverter.ShortToLong_Format(sub_position_short).position;
+						const sub_position_long: Map<CoordsKey, number> = sub_position_short ? icnconverter.ShortToLong_Format(sub_position_short).position! : new Map<CoordsKey, number>();
 						for (const [key, value] of sub_position_long) {
 							const coords = coordutil.getCoordsFromKey(key);
 							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);

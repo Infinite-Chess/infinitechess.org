@@ -53,12 +53,12 @@ interface SimplifiedGameState {
  */
 function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFormatIn {
 
-	let startingPosition: Map<CoordsKey, number>;
+	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;
 	let fullMove: number;
 
 	if (gamefile.startSnapshot) {
-		startingPosition = jsutil.deepCopyObject(gamefile.startSnapshot.position);
+		position = jsutil.deepCopyObject(gamefile.startSnapshot.position);
 		state_global = jsutil.deepCopyObject(gamefile.startSnapshot.state_global);
 		fullMove = gamefile.startSnapshot.fullMove;
 	} else { // editor game,   also copySinglePosition is false
@@ -66,7 +66,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFo
 		if (gamefile.moves.length > 0) throw Error("Should not be moves present in editor mode");
 		if (copySinglePosition) throw Error('copySinglePosition has no effect in editor mode');
 
-		startingPosition = organizedpieces.generatePositionFromPieces(gamefile.pieces);
+		position = organizedpieces.generatePositionFromPieces(gamefile.pieces);
 		// Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
 		state_global = jsutil.deepCopyObject(gamefile.state.global);
 		fullMove = 1;
@@ -78,7 +78,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFo
 	 */
 	const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
 	let gamestate: SimplifiedGameState = {
-		position: startingPosition,
+		position,
 		turnOrder: gameRulesCopy.turnOrder,
 		fullMove,
 		state_global,
@@ -104,14 +104,14 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFo
 
 function convertMovesToICNConverterInMove(moves: (Move | NullMove)[]): _Move_In[] {
 	const mappedMoves = moves.map((move: Move | NullMove) => {
-		if (move.isNull) throw Error("Should not be null moves in game!")
+		if (move.isNull) throw Error("Should not be null moves in game!");
 		const move_in: _Move_In = {
 			type: move.type,
 			startCoords: move.startCoords,
 			endCoords: move.endCoords,
 			compact: move.compact,
 			flags: move.flags,
-		}
+		};
 		// Optionals
 		if (move.promotion !== undefined) move_in.promotion = move.promotion;
 		if (move.comment) move_in.comment = move.comment;
@@ -147,7 +147,7 @@ function GameToPosition(longform: SimplifiedGameState, moves: (Move | NullMove)[
 	// until we reach the desired halfmove.
 	for (let i = 0; i < halfmoves; i++) {
 		const move = moves[i]!;
-		if (move.isNull) throw Error("Should not be a null move.")
+		if (move.isNull) throw Error("Should not be a null move.");
 
 		// Apply the move's state changes.
 		// state.applyMove(longform, move.state, true, { globalChange: true }); // Apply the State of the move

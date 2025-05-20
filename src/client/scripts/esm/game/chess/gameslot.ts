@@ -38,6 +38,7 @@ import selection from "./selection.js";
 import imagecache from "../../chess/rendering/imagecache.js";
 import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
+import { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -81,7 +82,7 @@ interface LoadOptions {
  * Typically used if we're pasting a game, or reloading an online one. */
 interface Additional {
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: string[],
+	moves?: ServerGameMovesMessage,
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions,
 	/** The conclusion of the game, if loading an online game that has already ended. */
@@ -108,7 +109,7 @@ interface VariantOptions {
 	 * The key of the object is the coordinates of the piece as a string,
 	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
 	 */
-	startingPosition: Map<CoordsKey, number>
+	position: Map<CoordsKey, number>
 	/** The 3 global game states */
 	state_global: {
 		/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */

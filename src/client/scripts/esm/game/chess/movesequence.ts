@@ -68,8 +68,10 @@ function makeMove(gamefile: gamefile, moveDraft: MoveDraft, { doGameOverChecks =
 	updateGui(false);
 
 	if (!onlinegame.areInOnlineGame()) {
-		clock.push(gamefile);
+		const clockStamp_ = clock.push(gamefile);
 		guiclock.push(gamefile);
+		// Add the clock stamp to the move
+		if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
 	}
 
 	if (doGameOverChecks) {

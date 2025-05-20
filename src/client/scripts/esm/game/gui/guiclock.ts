@@ -284,7 +284,7 @@ function rescheduleDrum(gamefile: gamefile) {
 		timeNextDrum += addTimeNextDrum;
 		secsRemaining -= addTimeNextDrum / 1000;
 	}
-	console.log("Rescheduling drum countdown in ", timeNextDrum, "ms");
+	// console.log("Rescheduling drum countdown in ", timeNextDrum, "ms");
 	countdown.drum.timeoutID = setTimeout(() => playDrumAndQueueNext(gamefile, secsRemaining), timeNextDrum);
 }
 

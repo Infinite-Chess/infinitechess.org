@@ -163,7 +163,7 @@ function detectInsufficientMaterial(gamefile) {
 
 	// Only make the draw check if the last move was a capture or promotion or if there is no last move
 	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion)) return false;
+	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion !== undefined)) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle or gargoyle pieces
 	if (boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(gamefile.pieces, r.VOID + e.N) >= 11) return false;

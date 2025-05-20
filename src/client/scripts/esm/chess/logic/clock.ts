@@ -153,22 +153,27 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
 
 /**
  * Call after flipping whosTurn. Flips colorTicking in local games.
+ * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
-function push(gamefile: gamefile) {
+function push(gamefile: gamefile): number | undefined {
 	if (gamefile.untimed) return;
-	if (!moveutil.isGameResignable(gamefile)) return; // Don't push unless atleast 2 moves have been played
+
 	const clocks = gamefile.clocks!;
+	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 
-	clocks.colorTicking = gamefile.whosTurn;
+	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
 
-	// Add increment if the last move has a clock ticking
-	if (clocks.timeAtTurnStart !== undefined) {
-		const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
+	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
+	if (clocks.timeAtTurnStart !== undefined) { // 3+ moves
 		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
 
+	// Set up clocksticking for the new turn.
+	clocks.colorTicking = gamefile.whosTurn;
 	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
 	clocks.timeAtTurnStart = Date.now();
+	
+	return clocks.currentTime[prevcolor];
 }
 
 function endGame(gamefile: gamefile) {

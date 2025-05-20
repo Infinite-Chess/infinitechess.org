@@ -187,34 +187,41 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
  * Pushes the game clock, adding increment. Resets the timer
  * to auto terminate the game when a player loses on time.
  * @param {Game} game - The game
+ * @returns {number} The new time (in ms) of the player that just moved after increment is added.
  */
 function pushGameClock(game) {
-	// if (!game.whosTurn) return; // Game is over
 	const colorWhoJustMoved = game.whosTurn; // white/black
 	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
-	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
-
-	if (!gameutility.isGameResignable(game)) return;
-
-	// Atleast 2 moves played
-
-	const now = Date.now();
-	const timeSpent = now - game.timeAtTurnStart;
-	let newTime = game.timeRemainAtTurnStart - timeSpent;
-	game.timeAtTurnStart = now;
 
 	const curPlayerdata = game.players[game.whosTurn];
 	const prevPlayerdata = game.players[colorWhoJustMoved];
 
+	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
+
+	const now = Date.now();
+
+	if (!gameutility.isGameResignable(game)) return prevPlayerdata.timer; // 0-1 moves played. Just return their time
+
+	if (game.moves.length > 2) {
+		// Subtract the time spent from their clock, and add increment
+		const timeSpent = now - game.timeAtTurnStart;
+		prevPlayerdata.timer = game.timeRemainAtTurnStart - timeSpent + game.incrementMillis;
+	}
+
+	// Start the timer for the next person
+	game.timeAtTurnStart = now;
 	game.timeRemainAtTurnStart = curPlayerdata.timer;
 
-	// Start the timer that will auto-terminate the player when they lose on time
-	setAutoTimeLossTimer(game);
+	// Reset the timer that will auto terminate the game when one player loses on time.
+	if (!gameutility.isGameOver(game)) {
+		// Cancel previous auto loss timer if it exists
+		clearTimeout(game.autoTimeLossTimeoutID);
+		// Set the next one
+		const timeUntilLoseOnTime = Math.max(game.timeRemainAtTurnStart, 0);
+		game.autoTimeLossTimeoutID = setTimeout(onPlayerLostOnTime, timeUntilLoseOnTime, game);
+	}
 
-	if (game.moves.length < 3) return; //////////////////////////////////////// Atleast 3 moves played
-
-	newTime += game.incrementMillis; // Increment
-	prevPlayerdata.timer = newTime;
+	return prevPlayerdata.timer;
 }
 
 /**
@@ -285,19 +292,6 @@ function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
 	// to give the other client time to oppose the conclusion if they want.
 	gameutility.cancelDeleteGameTimer(game); // Cancel first, in case a hacking report just ocurred.
 	game.deleteTimeoutID = setTimeout(deleteGame, timeBeforeGameDeletionMillis, game);
-}
-
-/**
- * Reset the timer that will auto terminate the game when one player loses on time.
- * @param {Game} game - The game
- */
-function setAutoTimeLossTimer(game) {
-	if (gameutility.isGameOver(game)) return; // Don't set the timer if the game is over
-	// Cancel previous auto loss timer if it exists
-	clearTimeout(game.autoTimeLossTimeoutID);
-	// Set the next one
-	const timeUntilLoseOnTime = game.timeRemainAtTurnStart;
-	game.autoTimeLossTimeoutID = setTimeout(onPlayerLostOnTime, timeUntilLoseOnTime, game);
 }
 
 /**

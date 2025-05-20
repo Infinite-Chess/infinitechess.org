@@ -3,6 +3,7 @@
  * Type Definitions 
  * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
  * @typedef {import('../../chess/logic/icn/icnconverter.js').LongFormatOut} LongFormatOut
+ * @typedef {import('./gameslot.js').VariantOptions} VariantOptions
  */
 
 // Import Start
@@ -24,6 +25,8 @@ import gameformulator from './gameformulator.js';
 import websocket from '../websocket.js';
 import boardutil from '../../chess/util/boardutil.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import jsutil from '../../util/jsutil.js';
+import variant from '../../chess/variants/variant.js';
 // Import End
 
 "use strict";
@@ -38,7 +41,7 @@ import icnconverter from '../../chess/logic/icn/icnconverter.js';
  */
 const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','TimeControl','Event','Site','Round'];
 
-const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth'];
+const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', '5D_Chess'];
 
 /**
  * Copies the current game to the clipboard in ICN notation.
@@ -99,8 +102,6 @@ async function callbackPaste(event) {
 	}
 
 	if (!verifyWinConditions(longformOut.gameRules.winConditions)) return;
-
-	// console.log(longformat);
     
 	const success = pasteGame(longformOut);
 
@@ -168,15 +169,27 @@ function pasteGame(longformOut) {
 	delete longformOut.metadata.Result;
 	delete longformOut.metadata.Termination;
 
+	let position;
+	let specialRights;
+	if (longformOut.position) {
+		position = longformOut.position;
+		specialRights = longformOut.state_global.specialRights;
+	} else {
+		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
+		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
+	}
+
 	// The variant options passed into the variant loader needs to contain the following properties:
-	// `fullMove`, `enpassant`, `moveRuleState`, `startingPosition`, `specialRights`, `gameRules`.
+	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
 	const variantOptions = {
 		fullMove: longformOut.fullMove,
 		gameRules: longformOut.gameRules,
-		startingPosition: longformOut.startingPosition,
-		state_global: longformOut.state_global,
+		position,
+		state_global: {
+			...longformOut.state_global,
+			specialRights,
+		},
 	};
-
 
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
 		// Playing a custom private game! Save the pasted position in browser
@@ -188,12 +201,21 @@ function pasteGame(longformOut) {
 	// What is the warning message if pasting in a private match?
 	const privateMatchWarning = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
 
+	const additional = { variantOptions };
+	if (longformOut.moves) {
+		// Trim the excess properties from the _Move_Out type, including the comment.
+		additional.moves = longformOut.moves.map(m => {
+			const move = { compact: m.compact };
+			if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
+			// Potentially also transfer the pasted comments into the gamefile here in the future!
+			// ...
+			return move;
+		});
+	}
+
 	gameloader.pasteGame({
 		metadata: longformOut.metadata,
-		additional: {
-			moves: longformOut.moves,
-			variantOptions,
-		}
+		additional,
 	});
 
 	const gamefile = gameslot.getGamefile();

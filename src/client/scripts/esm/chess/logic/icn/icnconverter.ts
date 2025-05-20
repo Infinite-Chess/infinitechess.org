@@ -17,29 +17,31 @@ import typeutil from "../../util/typeutil.js";
 import icncommentutils, { CommandObject } from "./icncommentutils.js";
 
 
-import type { MetaData } from "../../util/metadata.js";
-import type { GlobalGameState } from "../state.js";
 // @ts-ignore
 import type { GameRules } from "../../variants/gamerules.js";
+import type { MetaData } from "../../util/metadata.js";
+import type { EnPassant, GlobalGameState } from "../state.js";
 
 
 // Type Definitions -------------------------------------------------------------------
 
 
 interface LongFormatIn extends LongFormatBase {
+	metadata: MetaData
 	moves?: _Move_In[]
 }
 
 interface LongFormatOut extends LongFormatBase {
+	metadata: MetaData
 	moves?: _Move_Out[]
 }
 
+/** Shared properties between in & out game formats. */
 interface LongFormatBase {
-	metadata: MetaData
-	position: Map<CoordsKey, number>
+	position?: Map<CoordsKey, number>
 	gameRules: GameRules
 	fullMove: number
-	state_global: GlobalGameState
+	state_global: Partial<GlobalGameState>
 }
 
 /** The named capture groups of a shortform move. */
@@ -55,7 +57,7 @@ type NamedCaptureMoveGroups = {
 	comment?: string
 };
 
-/** Same as {@link _Move_In}, but with additional information we may want to prettify the shortform with. */
+/** Same as {@link _Move_Out}, but with additional information we may want to prettify the shortform with. */
 interface _Move_In extends _Move_Out {
 	/** The type of piece moved */
 	type?: number,
@@ -88,6 +90,7 @@ interface _Move_Compact {
 	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
 	promotion?: number,
 }
+
 
 // Dictionaries -----------------------------------------------------------------------
 
@@ -166,6 +169,10 @@ const piece_codes_raw = {
 };
 const piece_codes_raw_inverted = jsutil.invertObj(piece_codes_raw);
 
+
+// Variables ------------------------------------------------------------------
+
+
 /** The desired ordering metadata should be placed in the ICN */
 const metadata_ordering: (keyof MetaData)[] = [
     "Event",
@@ -183,24 +190,65 @@ const metadata_ordering: (keyof MetaData)[] = [
     "Termination"
 ];
 
+
+// Defaults when pasting an ICN ----------------------------------------------------------
+
+
 /**
  * The default promotions allowed, if the ICN does not specify.
  * If, when converting a game into ICN, the promotionsAllowed
  * gamerule matches this, then we won't specify custom promotions in the ICN.
  */
-const default_promotions =  [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
+const default_promotions: RawType[] = [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
 
+/** Tests if the provided array of legal promotions is the default set of promotions. */
+function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
+	if (promotionList.length !== default_promotions.length) return false;
+	return default_promotions.every(promotion => promotionList.includes(promotion));
+}
+
+/** The default win condition for each player, if none specified in the ICN. */
 const default_win_condition = 'checkmate';
-
-/** Gamerules that will not be stringified into the ICN */
-const excludedGameRules = new Set(["promotionRanks", "promotionsAllowed", "winConditions", "turnOrder", "moveRule"]);
-
-
-// Regular Expressions ------------------------------------------------------------------------------------
+/** The default turn order, if none specified in the ICN. */
+const defaultTurnOrder = [p.WHITE, p.BLACK];
+/** The default full move, if none specified in the ICN. */
+const defaultFullMove = 1;
 
 
-const singleCoordSource = '(?:0|-?[1-9]\\d*)'; // Prevents "-0", or numbers with leading 0's like "000005"
-const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1,2'
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//											REGULAR EXPRESSIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+/**
+ * Simulates possessive behavior for a regex pattern string `str` (e.g., \d+)
+ * using the lookahead/named backreference technique `(?:(?=(?<name>str))\k<name>)`.
+ * Can essentially transform any (...?), (...+), or (...*) regex into a possessive version (...?+), (...?+), or (...*+).
+ * 
+ * Using this prevents catastrophic backtracking in regexes.
+ * @param {string} str - Regex pattern string to make possessive.
+ * @returns {string} Pattern string with possessive simulation.
+ */
+const possessive = (() => {
+	let counter = 0;
+	// The actual function that gets assigned to possessive()
+	return function(str: string): string {
+		const uniqueGroupName = `_g${counter++}`; // Generate unique name internally
+		return String.raw`(?:(?=(?<${uniqueGroupName}>${str}))\k<${uniqueGroupName}>)`;
+	};
+})();
+
+
+const countingNumberSource = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
+const wholeNumberSource = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
+const integerSource = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
+
+const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
+
+const piece_code_regex_source = '[a-zA-Z]{1,2}';
+const raw_piece_code_regex_source = '[a-z]{1,2}';
 
 /**
  * Returns a regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
@@ -215,8 +263,10 @@ const coordsKeyRegexSource = `${singleCoordSource},${singleCoordSource}`; // '-1
  */
 function getPieceAbbrevRegexSource(capturing: boolean): string {
 	const player = capturing ? '<player>' : ':';
-	const abbrev = capturing ? '<abbrev>' : ':';	
-	return `(?${player}0|[1-9]\\d*)?(?${abbrev}[A-Za-z]+)`; // Disallows negatives, or leading 0's
+	const abbrev = capturing ? '<abbrev>' : ':';
+	const result = `(?${player}${wholeNumberSource})?(?${abbrev}${piece_code_regex_source})`;
+	// console.log("Generated PieceAbbrev Regex Source:", result);
+	return result;
 }
 
 /**
@@ -229,62 +279,112 @@ function getPieceEntryRegexSource(capturing: boolean) {
 	const coordsKey = capturing ? '<coordsKey>' : ':';
 	const specialRight = capturing ? '<specialRight>' : ':';
 
-	return `(?${pieceAbbr}${getPieceAbbrevRegexSource(false)})(?${coordsKey}${coordsKeyRegexSource})(?${specialRight}\\+)?` // 'P1,2+' => Pawn at 1,2 with special right
+	return String.raw`(?${pieceAbbr}${getPieceAbbrevRegexSource(false)})(?${coordsKey}${coordsKeyRegexSource})(?${specialRight}\+)?`; // 'P1,2+' => Pawn at 1,2 with special right
 }
 
+/** Returns a regex source for matching the promotion segment in a move, optionally capturing  */
 function getPromotionRegexSource(capturing: boolean) {
 	const promotionAbbr = capturing ? '<promotionAbbr>' : ':';
 	return `(?:=(?${promotionAbbr}${getPieceAbbrevRegexSource(false)}))?`; // '=Q' => Promotion to queen
 }
-
-const promotionRegexSource = `(?:=(?<promotionAbbr>${getPieceAbbrevRegexSource(false)}))?`; // '=Q' => Promotion to queen
-
 /**
- * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q
+ * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q'
  * The start coords, end coords, and promotion abbrev are all captured into named groups.
  */
-// const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${getPromotionRegexSource(true)}$`);
-
-
+const moveRegexCompact = new RegExp(`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${getPromotionRegexSource(true)}$`);
 /**
  * A regex for dynamically matching all forms of a move in ICN.
  * The move may optionally include a piece abbreviation, spaces between segments,
  * a separator of ">" or "x", check/mate flags "+" or "#", symbols !?, ?!, !!, and a comment.
+ * "P1,7 x 2,8 =Q + !! {Promotion!!!}"
  * 
- * It captures start coords, end coords, promotion abbrev, and comment into named groups.
+ * It captures the start coords, end coords, promotion abbrev, and the comment, all into named groups.
  */
 function getMoveRegexSource(capturing: boolean): string {
 	const startCoordsKey = capturing ? '<startCoordsKey>' : ':';
 	const endCoordsKey = capturing ? '<endCoordsKey>' : ':';
 	const comment = capturing ? '<comment>' : ':';
-	return (
-		`(${getPieceAbbrevRegexSource(false)})?` + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
+	const result = (
+		possessive(`(?:${getPieceAbbrevRegexSource(false)})?`) + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
 		`(?${startCoordsKey}${coordsKeyRegexSource})` + // Starting coordinates
-		` ?` + // Optional space
+		possessive(` ?`) + // Optional space
 		`[>x]` + // Separator
-		` ?` + // Optional space
+		possessive(` ?`) + // Optional space
 		`(?${endCoordsKey}${coordsKeyRegexSource})` + // Ending coordinates
-		` ?` + // Optional space
-		getPromotionRegexSource(true) + // Optional promotion ("=" REQUIRED)
-		` ?` + // Optional space
-		`[+#]?` + // Optional check/checkmate
-		` ?` + // Optional space
-		`(?:[!?]{1,2})?` + // Optional symbols: !?, ?!, !!
-		` ?` + // Optional space
-		`(?:\\{(?${comment}[^}]+)\\})?` // Optional comment (not-greedy). Comments should NOT contain a closing brace "}".
-	)
+		possessive(` ?`) + // Optional space
+		possessive(getPromotionRegexSource(capturing)) + // Optional promotion ("=" REQUIRED)
+		possessive(` ?`) + // Optional space
+		possessive(`[+#]?`) + // Optional check/checkmate
+		possessive(` ?`) + // Optional space
+		possessive(`(?:[!?]{1,2})?`) + // Optional symbols: !?, ?!, !!
+		possessive(' ?') + // Optional space
+		possessive(String.raw`(?:\{(?${comment}[^}]+)\})?`) // Optional comment (not-greedy). Comments should NOT contain a closing brace "}".
+	);
+	// console.log("Generated Move Regex Source:", result);
+	return result;
 }
+// console.log("MoveRegexSource:", getMoveRegexSource(false));
+
+
+/**
+ * Construct the regexes for matching sections of the ICN.
+ * 
+ * [Variant "Classical"] w 3,4 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
+ */
+
+/**
+ * Matches following whitespace, or end of string.
+ * Adding this to many of the section regexes prevents them from
+ * confusing other sections with similar starts.
+ */
+const whiteSpaceOrEnd = String.raw`(?:\s+|$)`; // Matches whitespace or end of string
+const whiteSpaceOrEndRegex = new RegExp(whiteSpaceOrEnd, 'y');
+
+/** Regex source that matches and captures a single metadata entry. */
+const singleMetadataSource = String.raw`\[([a-zA-Z]+)\s+"([^"]{1,100})"\]`; // Max metadata value length of 100 chars for safety. This prevents, if we forget a closing ", the regex consuming the entirity of the ICN
+const metadataRegex = new RegExp(String.raw`${singleMetadataSource}(?:\s+${singleMetadataSource})*${whiteSpaceOrEnd}`, 'y'); // 'y' flag for sticky matching (only matches at the regex's lastIndex property, not after)
+
+const turnOrderRegex = new RegExp(String.raw`(?<turnOrder>${raw_piece_code_regex_source}(?::${raw_piece_code_regex_source})*)${whiteSpaceOrEnd}`, 'y');
+
+const enpassantRegex = new RegExp(String.raw`(?<enpassant>${coordsKeyRegexSource})${whiteSpaceOrEnd}`, 'y');
+
+const moveRuleRegex = new RegExp(String.raw`(?<moveRule>${wholeNumberSource}\/${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
+
+const fullMoveRegex = new RegExp(String.raw`(?<fullMove>${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
+
+const promotionRanksSource = `${integerSource}(?:,${integerSource})*`; // '8,16,24,32'
+const promotionsAllowedSource = `${piece_code_regex_source}(?:,${piece_code_regex_source})*`; // 'q,r,b,n'
+const singlePlayerPromotionSource = `(?:${promotionRanksSource}(?:;${promotionsAllowedSource})?)?`; // '8,16,24,32;q,r,b,n' | ''
+/** Captures the promotion ranks and promotions allowed section in the ICN. */
+const promotionsRegex = new RegExp(String.raw`\((?<promotions>${singlePlayerPromotionSource}(?:\|${singlePlayerPromotionSource})*)\)${whiteSpaceOrEnd}`, 'y');
+
+const singleWinConSource = '[a-z]{3,100}'; // 'royalcapture'   Minimum of 3 characters so it's impossible to confuse with turn order.
+const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*`; // 'royalcapture,koth'
+/** Captures the win conditions section in the ICN. */
+const winConditionRegex = new RegExp(String.raw`(?<winConditions>${singlePlayerWinConSource}(?:\|${singlePlayerWinConSource})*)${whiteSpaceOrEnd}`, 'y');
+
+// SKIP THE POSITION (It can be too big to capture all at once)
+
+/**
+ * Matches any possible delimiter between moves in the moves section of an ICN.
+ * This could be a pipe "|", or the move number "14."
+ */
+const movesDelimiter = String.raw`(?:\s?${countingNumberSource}\. | ?\| ?)`; // " 14. " or " | "
+/** Matches an entire moves list in an ICN, no matter its styling. */
+const movesRegexSource =
+	possessive(String.raw`(?:${countingNumberSource}\. )?`) + 
+	getMoveRegexSource(false) +
+	possessive(`(?:${movesDelimiter}${getMoveRegexSource(false)})*`);
+// console.log("MovesRegexSource:", movesRegexSource);
+/** Captures the moes list  */
+const movesRegex = new RegExp(String.raw`(?<moves>${movesRegexSource})${whiteSpaceOrEnd}`, 'y');
 
 
 
-// Helper Functions ---------------------------------------------------------------------------------
+//\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//										 END OF REGULAR EXPRESSIONS
+//\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-
-/** Tests if the provided array of legal promotions is the default set of promotions. */
-function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
-	if (promotionList.length !== default_promotions.length) return false;
-	return default_promotions.every(promotion => promotionList.includes(promotion));
-}
 
 
 // Getting & Parsing Abbreviations --------------------------------------------------------------------------------
@@ -361,6 +461,8 @@ function getTypeFromAbbr(pieceAbbr: string): number {
  */
 function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: boolean, compact: boolean; spaces: boolean; comments: boolean; make_new_lines: boolean, move_numbers: boolean}): string {
 
+	// console.log("Converting longformat to shortform ICN:", jsutil.deepCopyObject(longformat));
+
 	/** Will contain the Metadata, Positon, and Move sections. */
 	const segments: string[] = [];
 
@@ -430,7 +532,7 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 
 
 	// 50 Move Rule
-	if (longformat.gameRules.moveRule !== undefined || longformat) {
+	if (longformat.gameRules.moveRule !== undefined || longformat.state_global.moveRuleState !== undefined) {
 		// Make sure both moveRule and moveRuleState are present
 		if (longformat.state_global.moveRuleState === undefined) throw Error("moveRuleState must be present when convering a game with moveRule to shortform!");
 		if (longformat.gameRules.moveRule === undefined) throw Error("moveRule must be present when convering a game with moveRuleState to shortform!");
@@ -488,7 +590,6 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	const playerWinConSegments: string[] = []; // ['checkmate','checkmate|allpiecescaptured']
 	// Sort by ascending player number
 	const sortedPlayers = (Object.keys(longformat.gameRules.winConditions).map(Number) as Player[]).sort((a, b) => a - b);
-	console.log("Are players sorted?:", sortedPlayers);
 	for (const player of sortedPlayers) {
 		playerWinConSegments.push(longformat.gameRules.winConditions[player]!.join(',')); // 'checkmate,allpiecescaptured'
 	}
@@ -501,15 +602,6 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	}
 
 
-	// Extra gamerules - Will be stringified into the ICN
-	const extraGameRules: Partial<GameRules> = {};
-	for (const key of jsutil.typedKeys(longformat.gameRules)) {
-		if (excludedGameRules.has(key)) continue;
-		extraGameRules[key] = longformat.gameRules[key];
-	}
-	if (Object.keys(extraGameRules).length > 0) positionSegments.push(JSON.stringify(extraGameRules));
-
-
 	// Position - P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
 	if (!options.skipPosition) {
 		if (longformat.position === undefined) throw Error("longformat.position must be specified when skipPosition = false");
@@ -518,14 +610,17 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	} else if (!longformat.metadata.Variant || !longformat.metadata.UTCDate || !longformat.metadata.UTCTime) throw Error("longformat.metadata's Variant, UTCDate, and UTCTime must be specified when skipPosition = true");
 
 
+	segments.push(positionSegments.join(' ')); // 'w 0/100 1 (8,17|1,10) (checkmate|checkmate,allpiecescaptured) P1,2+|P2,2+|P3,2+|P4,2+|P5,2+'
+
+
 	// =================================== Section 3: Moves ===================================
 
 
 	if (longformat.moves) {
 		const move_options = {
-			compact: false,
-			spaces: false,
-			comments: false,
+			compact: options.compact,
+			spaces: options.spaces,
+			comments: options.comments,
 			move_numbers: options.move_numbers,
 			// Required if move_numbers = true:
 			make_new_lines: options.make_new_lines,
@@ -545,305 +640,335 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 }
 
 
-
-
-
-
-
-
-const raw_piece_code_regex_source = '[a-z]{1,2}';
-
-
-
-const singleMetadataSource = '\\[([a-zA-Z]+) "([^"]+)"\\]'
-const metadataRegexSource = `(?<metadata>(?:${singleMetadataSource})?(?:\\s${singleMetadataSource})*)`
-
-// w 3,4 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
-
-
-
-const turnOrderRegexSource = `(?<turnOrder>${raw_piece_code_regex_source}(?::${raw_piece_code_regex_source})*)`;
-const enpassantRegexSource = `(${coordsKeyRegexSource})`;
-const moveRuleRegexSource = `${singleCoordSource}/${singleCoordSource}`;
-const fullMoveRegexSource = '[1-9]\\d*';
-
-const promotionRanksSource = `${singleCoordSource}?(?:,${singleCoordSource})*` // '8,16,24,32'
-const promotionsAllowedSource = `${raw_piece_code_regex_source}(?:,${raw_piece_code_regex_source})*` // 'q,r,b,n'
-const singlePlayerPromotionSource = `(?:${promotionRanksSource}(?:;${promotionsAllowedSource})?)?`
-const promotionsRegexSource = `\\((?<promotions>${singlePlayerPromotionSource}(?:|${singlePlayerPromotionSource})*)\\)`
-
-const singleWinConSource = '[a-z}{3,}'; // 'royalcapture'
-const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*` // 'royalcapture,koth'
-const winConditionRegexSource = `\\(?${singlePlayerWinConSource}(?:|${singlePlayerWinConSource})*\\)?` // '(checkmate|royalcapture,koth)'
-
-const nonCapturingPieceEntryRegexSource = getPieceEntryRegexSource(false);
-const positionRegexSource = `${nonCapturingPieceEntryRegexSource}(?:|${nonCapturingPieceEntryRegexSource})*`
-
-const moveDelimiter = `\s?[1-9]\\d*\\. ?| ?\\| ?` // " 14. " or " | "
-/** Matches any styled moves list (excluding only the initial "1. " */
-const movesRegexSource = `${getMoveRegexSource(false)}(?:${moveDelimiter}${getMoveRegexSource(false)})*`;
-
-/** Matches an entire ICN, capturing with named groups. */
-const ICNRegex = new RegExp(
-	metadataRegexSource + 
-	`\\s+` + // Whitespace
-	turnOrderRegexSource +
-
-);
-
-
-
-
-/** Converts a string in Infinite Chess Notation to game in JSON format */
+/**
+ * Converts a string in Infinite Chess Notation to game in JSON format.
+ * 
+ * Throws an error if the ICN is invalid.
+ */
 function ShortToLong_Format(icn: string): LongFormatOut {
-	icn = icn.trim(); // Trim whitespace from the start and end of the icn
 
-	const longformOut = {};
+	// console.log("====== Parsing ICN ======");
+
+	const metadata: Record<string, string> = {}; // Required
+	let turnOrder: Player[]; // Required
+	let enpassant: EnPassant | undefined;
+	let moveRule: number | undefined;
+	let moveRuleState: number | undefined;
+	let fullMove: number; // Required
+	let promotionRanks: PlayerGroup<number[]> | undefined;
+	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
+	let winConditions: PlayerGroup<string[]> = {}; // Required
+	let position: Map<CoordsKey, number> | undefined;
+	let specialRights: Set<CoordsKey> | undefined;
+	let moves: _Move_Out[] | undefined;
 
 
-	// =================================== Section 1: Metadata ===================================
+	/** The current index we are observing in the entire ICN string. Start at 0 and work up. */
+	let lastIndex = 0;
+
+	/**
+	 * Find the first non-whitespace character in the ICN,
+	 * which should be the start of the first section.
+	 */
+	const whitespaceRegex = /\s+/y; // Sticky so it only matches at lastIndex
+	whitespaceRegex.lastIndex = lastIndex; // Not needed? But safe
+	if (whitespaceRegex.exec(icn)) lastIndex = whitespaceRegex.lastIndex; // Adjust the lastIndex to the first non-whitespace character
+	if (lastIndex === icn.length) throw Error("ICN is empty.");
+	// console.log("First non-whitespace character:", icn[lastIndex], "at index", lastIndex);
 
 
-	// =================================== Section 2: Position ===================================
-
-	// =================================== Section 3: Moves ===================================
-
-	// ========================================================================================
+	// ==================================== BEGIN ===================================
 
 
+	// Metadata
+	// Test if the metadata lies at our current index being observed
+	metadataRegex.lastIndex = lastIndex;
 
+	const metadataResults = metadataRegex.exec(icn);
+	if (metadataResults) {
+		const blockEnd = metadataRegex.lastIndex; // First character index after the metadata block
 
-	// variables keeping track of whether we are currently parsing metadata
-	let in_metadata_parsing_mode = false;
-	let metadata_key = "";
-	let metadata_value = "";
+		const singleMetadataRegex = new RegExp(singleMetadataSource, 'g');
+		singleMetadataRegex.lastIndex = lastIndex;
 
-	// variables keeping track of whether we are currently parsing gamerules (can only be parsed once)
-	let in_gamerules_parsing_mode = false;
-	let gamerules_string = "";
-
-	while (icn !== "") {
-		if (/\s/.test(icn[0])) {
-			icn = icn.slice(1);
-			continue;
+		// Since the moveRegex has the global flag, exec() will return the next match each time.
+		// NO STRING SPLITTING REQUIRED
+		let match: RegExpExecArray | null;
+		while (singleMetadataRegex.lastIndex < blockEnd && (match = singleMetadataRegex.exec(icn)) !== null) {
+			const key = match[1]!;
+			const value = match[2]!;
+			metadata[key] = value;
 		}
-		let index = icn.search(/\s/);
-		if (index === -1) index = icn.length;
-		let string = icn.slice(0,index);
-		icn = icn.slice(index + 1);
 
-		// metadata key is read: enter metadata parsing mode, if string starts with [ and letter
-		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\[[a-zA-Z]/.test(string)) {
-			in_metadata_parsing_mode = true;
-			metadata_key = string.slice(1);
-			continue;
+		// console.log("Parsed metadata:", jsutil.deepCopyObject(metadata));
+		
+		lastIndex = blockEnd; // Update the ICN index being observed
+	}
+
+
+	// Turn order
+	// Test if the turn order lies at our current index being observed
+	turnOrderRegex.lastIndex = lastIndex;
+
+	const turnOrderResults = turnOrderRegex.exec(icn);
+	if (turnOrderResults) {
+		let turnOrderString = turnOrderResults.groups!['turnOrder']!;
+		// console.log(`Turn Order: "${turnOrderString}"`);
+		// Substitues
+		if (turnOrderString === 'w') turnOrderString = 'w:b'; // 'w' is short for 'w:b'
+		else if (turnOrderString === 'b') turnOrderString = 'b:w'; // 'b' is short for 'b:w'
+		const turnOrderArray = turnOrderString.split(':'); // ['w','b']
+		turnOrder = [...turnOrderArray.map(p_code => {
+			if (!(p_code in player_codes_inverted)) throw Error(`Unknown player code (${p_code}) when parsing turn order of ICN! Turn order (${turnOrderResults.groups!['turnOrder']})`);
+			return Number(player_codes_inverted[p_code]);
+		})] as Player[]; // [1,2]
+
+		lastIndex = turnOrderRegex.lastIndex; // Update the ICN index being observed
+	} else {
+		// Set default turn order
+		turnOrder = jsutil.deepCopyObject(defaultTurnOrder);
+	}
+
+	/** A sorted list (ascending) of all unique player numbers in the game. */
+	const uniquePlayers = Array.from(new Set(turnOrder)).sort((a, b) => a - b);
+
+
+	// Enpassant
+	// Test if the enpassant square lies at our current index being observed
+	enpassantRegex.lastIndex = lastIndex;
+
+	const enpassantResults = enpassantRegex.exec(icn);
+	if (enpassantResults) {
+		const enpassantString = enpassantResults.groups!['enpassant']! as CoordsKey;
+
+		const coords = coordutil.getCoordsFromKey(enpassantString);
+		const lastTurn = turnOrder[turnOrder.length - 1];
+		const yParity = lastTurn === p.WHITE ? 1 : lastTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid last turn (${lastTurn}) when parsing enpassant in ICN!`); })();
+		enpassant = { square: coords, pawn: [coords[0], coords[1] + yParity] };
+
+		lastIndex = enpassantRegex.lastIndex; // Update the ICN index being observed
+	}
+
+
+	// Move rule
+	// Test if the move rule lies at our current index being observed
+	moveRuleRegex.lastIndex = lastIndex;
+
+	const moveRuleResults = moveRuleRegex.exec(icn);
+	if (moveRuleResults) {
+		const moveRuleGroup = moveRuleResults.groups!['moveRule']!;
+
+		[moveRuleState, moveRule] = moveRuleGroup.split('/').map(Number);
+		if (moveRuleState! > moveRule!) throw Error(`Invalid move rule "${moveRuleGroup}" when parsing ICN!`);
+
+		lastIndex = moveRuleRegex.lastIndex; // Update the ICN index being observed
+	}
+
+
+	// Full move
+	// Test if the full move counter lies at our current index being observed
+	fullMoveRegex.lastIndex = lastIndex;
+
+	const fullMoveResults = fullMoveRegex.exec(icn);
+	if (fullMoveResults) {
+		fullMove = Number(fullMoveResults.groups!['fullMove']!);
+
+		lastIndex = fullMoveRegex.lastIndex; // Update the ICN index being observed
+	} else {
+		// Set default full move
+		fullMove = defaultFullMove;
+	}
+
+
+	// Promotions ranks + allowed
+	// Test if the promotions information lies at our current index being observed
+	promotionsRegex.lastIndex = lastIndex;
+
+	const promotionsResults = promotionsRegex.exec(icn);
+	if (promotionsResults) {
+		console.log("Results of promotions regex:", promotionsResults);
+		const promotionsString = promotionsResults.groups!['promotions']!;
+		
+		promotionRanks = {};
+		promotionsAllowed = {};
+		const promotions = promotionsString.split('|'); // ['8,16,24,32;q,r,b,n','1,9,17,25;q,r,b,n']
+		// Make sure the number of promotions matches the number of players
+		if (promotions.length !== uniquePlayers.length) throw new Error(`Number of promotions (${promotions.length}) does not match number of unique players (${uniquePlayers.length})! Received promotions: "${promotionsString}"`);
+		for (const player of uniquePlayers) {
+			const playerPromotions = promotions.shift()!; // '8,16,24,32;q,r,b,n'
+			promotionRanks[player] = []; // Initialize empty
+			if (playerPromotions === '') continue; // Player has no promotions. Maybe promotions were "(8|)"
+			const [ranks, allowed] = playerPromotions.split(';'); // The allowed section is optional
+			promotionRanks[player] = ranks!.split(',').map(Number);
+			promotionsAllowed[player] = allowed ? allowed.split(',').map(raw => Number(piece_codes_raw_inverted[raw.toLowerCase()]) as RawType) : jsutil.deepCopyObject(default_promotions);
 		}
 
-		// Read metadata value, if in metadata parsing mode
-		if (in_metadata_parsing_mode) {
-			// remove " from the start of string if possible
-			if (/^"/.test(string) && metadata_value === "") {
-				string = string.slice(1);
+		lastIndex = promotionsRegex.lastIndex; // Update the ICN index being observed
+	}
+
+
+	// Win conditions
+	// Test if the win conditions lie at our current index being observed
+	winConditionRegex.lastIndex = lastIndex;
+
+	const winConditionResults = winConditionRegex.exec(icn);
+	if (winConditionResults) {
+		const winConditionsString = winConditionResults.groups!['winConditions']!;
+		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate|allpiecescaptured']
+		winConditions = {};
+		// If winConStrings.length is 1, all players have the same win conditions
+		if (winConStrings.length === 1) {
+			const winConArray = winConStrings[0]!.split(','); // ['checkmate','allpiecescaptured']
+			for (const player of turnOrder) {
+				winConditions[player] = [...winConArray];
 			}
-
-			// metadata_value is not fully parsed in yet
-			if (!/"\]$/.test(string)) {
-				metadata_value += `${string} `;
-			}
-			// metadata_value is fully parsed in now: set metadata and exit metadata parsing mode
-			else {
-				metadata_value += string.slice(0, -2);
-				longformOut.metadata[metadata_key] = metadata_value;
-				in_metadata_parsing_mode = false;
-				metadata_value = "";
-			}
-			continue;
-		}
-
-		// gamerules - start: read in string and enter gamerules parsing mode, if string starts with {
-		if (!in_metadata_parsing_mode && !in_gamerules_parsing_mode && /^\{/.test(string) && gamerules_string === "") {
-			in_gamerules_parsing_mode = true;
-			gamerules_string = string;
-			string = ""; // this line is used instead of continue; so that we immediately enter the gamerules continuation below and check if isJson(gamerules_string)
-		}
-
-		// Read gamerules continuation, if in gamerules parsing mode
-		if (in_gamerules_parsing_mode) {
-			if (string !== "") gamerules_string += ` ${string}`;
-
-			// gamerules_string can be parsed into JSON now: parse it in and permanently exit gamerules parsing mode
-			if (jsutil.isJson(gamerules_string)) {
-				const parsedGameRules = JSON.parse(gamerules_string);
-				longformOut.gameRules = {...longformOut.gameRules, ...parsedGameRules};
-				in_gamerules_parsing_mode = false;
-			}
-			continue;
-		}
-
-		// turn order
-		if (!longformOut.gameRules.turnOrder && /^[a-z]{1,2}(:[a-z]{1,2})*$/.test(string)) {
-			if (string === 'w') string = 'w:b'; // 'w' is short for 'w:b'
-			else if (string === 'b') string = 'b:w'; // 'b' is short for 'b:w'
-			const turnOrderArray = string.split(':'); // ['w','b']
-			longformOut.gameRules.turnOrder = [...turnOrderArray.map(playerabbrev => {
-				if (!(playerabbrev in player_codes_inverted)) throw new Error(`Unknown color abbreviation "${playerabbrev}" when parsing turn order while pasting game!`);
-				return Number(player_codes_inverted[playerabbrev]);
-			})];
-			continue;
-		}
-
-		// en passant
-		if (!longformOut.enpassant && RegExp(`^(${scientificNumberRegex},${scientificNumberRegex})$`).test(string)) {
-			longformOut.enpassant = [Number(string.split(",")[0]), Number(string.split(",")[1])];
-			continue;
-		}
-		// if (longformIn.enpassant) { // Coords: [x,y]
-		// 	// TRANSFORM it into the gamefile's enpassant property in the form: { square: Coords, pawn: Coords }
-		// 	const firstTurn = longformIn.gameRules.turnOrder[0];
-		// 	const yParity = firstTurn === p.WHITE ? 1 : firstTurn === p.BLACK ? -1 : (() => { throw new Error(`Invalid first turn "${firstTurn}" when formulating a gamefile from an abridged one!`); })();
-		// 	const pawnExpectedSquare = [longformIn.enpassant[0], longformIn.enpassant[1] - yParity] as Coords;
-		// 	const pieceOnExpectedSquare: number | undefined = longformIn.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
-
-		// 	if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === r.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
-		// 		variantOptions.state_global.enpassant = { square: longformIn.state_global.enpassant, pawn: pawnExpectedSquare };
-		// 	}
-		// }
-
-		// if (longformOut.enpassant !== undefined) {
-		// 	// longformat.enpassant is in the form: Coords
-		// 	// need to convert it to: { square: Coords, pawn: Coords }
-		// 	const firstTurn = longformOut.gameRules.turnOrder[0];
-		// 	const yParity = firstTurn === players.WHITE ? 1 : firstTurn === players.BLACK ? -1 : (() => { throw new Error(`Invalid first turn player ${firstTurn} when pasting a game! Can't parse enpassant option.`); })();
-		// 	const pawnExpectedSquare = [longformOut.enpassant[0], longformOut.enpassant[1] - yParity];
-		// 	/**
-		// 	 * First make sure there IS a pawn on the square!
-		// 	 * If not, the ICN was likely tampered.
-		// 	 * Erase the enpassant property! (or just don't transfer it over)
-		// 	 */
-		// 	const pieceOnExpectedSquare = longformOut.startingPosition.get(coordutil.getKeyFromCoords(pawnExpectedSquare));
-		// 	if (pieceOnExpectedSquare && typeutil.getRawType(pieceOnExpectedSquare) === rawTypes.PAWN && typeutil.getColorFromType(pieceOnExpectedSquare) !== firstTurn) {
-		// 		// Valid pawn to capture via enpassant is present
-		// 		variantOptions.enpassant = { square: longformOut.enpassant, pawn: pawnExpectedSquare };
-		// 	} else console.warn("Pasted game doesn't have a pawn on the expected square for enpassant! Enpassant option will be ignored.");
-		// }
-
-
-
-		// X move rule
-		if (longformOut.moveRuleState === undefined && /^([0-9]+\/[0-9]+)$/.test(string)) {
-			const [state, rule] = string.split("/");
-			longformOut.moveRuleState = Number(state);
-			longformOut.gameRules.moveRule = Number(rule);
-			continue;
-		}
-
-		// full move counter
-		if (!longformOut.fullMove && /^([0-9]+)$/.test(string)) {
-			longformOut.fullMove = Number(string);
-			continue;
-		}
-
-		// promotion lines
-		if (RegExp(`^\\((${scientificNumberRegex})?[,;\\|]`).test(string)) {
-			
-			/**
-			 * Possible cases the string could look like:
-			 * 
-			 * (8|0)
-			 * (-8|)
-			 * (|)
-			 * (5,-6,-7|-8,9,10)
-			 * (1;N,R,AM|8)
-			 * (-3,4;|10,20;q,ca)
-			 */
-
-			string = string.slice(1, -1); // Chop off the parenthesis
-
-			const [ whiteInfo, blackInfo ] = string.split('|'); // ["-3,4;N,R", ...]
-			const [ whiteRanks, whitePromotions ] = whiteInfo.split(';'); // ["-3,4", "N,R"]
-			const [ blackRanks, blackPromotions ] = blackInfo.split(';');
-
-			const whiteRanksArray = whiteRanks.length === 0 ? [] : whiteRanks.split(','); // ['-3','4']
-			const blackRanksArray = blackRanks.length === 0 ? [] : blackRanks.split(',');
-
-			longformOut.gameRules.promotionRanks = {
-				[p.WHITE]: whiteRanksArray.map(num => Number(num)), // [-3, 4]
-				[p.BLACK]: blackRanksArray.map(num => Number(num))
-			};
-
-			longformOut.gameRules.promotionsAllowed = {
-				// If they are not provided, yet the color still has atleast one promotion line, then they can promote to the default pieces.
-				[p.WHITE]: whitePromotions === undefined && whiteInfo.length > 0 ? default_promotions : whitePromotions !== undefined && whitePromotions.length > 0 ? whitePromotions.split(',').map(abv => typeutil.getRawType(icnconverter.getTypeFromAbbr(abv))) : [],
-				[p.BLACK]: blackPromotions === undefined && blackInfo.length > 0 ? default_promotions : blackPromotions !== undefined && blackPromotions.length > 0 ? blackPromotions.split(',').map(abv => typeutil.getRawType(icnconverter.getTypeFromAbbr(abv))) : []
-			};
-
-			continue;
-		}
-
-		// win condition (has to start with a letter and not include numbers)
-		if (/^(\(?[a-zA-z][^0-9:]+)$/.test(string)) {
-
-			/**
-			 * Possible cases of what the string could look like:
-			 * 
-			 * testtest
-			 * (bliblablub|blabla)
-			 * (bliblablub,testtest|blabla)
-			 * (bliblablub,testtest|blabla,hahaha)
-			 * 
-			 * et cetera....
-			 */
-
-			if (!longformOut.gameRules.winConditions) {
-				longformOut.gameRules.winConditions = {};
-				string = string.replace(/[()]/g,"").split("|");
-				if (string.length === 1) string.push(string[0]);
-				for (let i = 0; i < 2; i++) {
-					const color = (i === 0 ? p.WHITE : p.BLACK);
-					longformOut.gameRules.winConditions[color] = [];
-					for (const wincon of string[i].split(",")) {
-						longformOut.gameRules.winConditions[color].push(wincon);
-					}
-				}
-				continue;
+		} else { // Each player has their own win conditions
+			// Make sure the number of win conditions matches the number of unique players
+			if (winConStrings.length !== uniquePlayers.length) throw new Error(`Number of win conditions (${winConStrings.length}) does not match number of players (${uniquePlayers.length})!`);
+			for (const player of uniquePlayers) {
+				const winConString = winConStrings.shift()!;
+				winConditions[player] = winConString.split(','); // ['checkmate','allpiecescaptured']
 			}
 		}
 
-		// position
-		if (!longformOut.startingPosition && RegExp(`^([0-9]*[a-zA-z]+${scientificNumberRegex},${scientificNumberRegex}\\+?($|\\|))`).test(string)) {
-			const { startingPosition, specialRights } = icnconverter.generatePositionFromShortForm(string);
-			longformOut.specialRights = specialRights;
-			longformOut.startingPosition = startingPosition;
-			longformOut.shortposition = string;
-			continue;
-		}
-
-		//moves - conversion stops here
-		if (RegExp(`^(([0-9]+\\.$)|([a-zA-Z]*${scientificNumberRegex},${scientificNumberRegex}[\\s]*(x|>)+))`).test(string)) {
-			const shortmoves = (string + "  " + icn).trimEnd();
-			const parsedMoves = icnconverter.parseShortFormMoves(shortmoves); // { moveDraft, comment }[]
-			if (parsedMoves.length > 0) longformOut.moves = parsedMoves.map(parsedMove => icnconverter.getCompactMoveFromDraft(parsedMove.moveDraft));
-			if (!longformOut.gameRules.winConditions) longformOut.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
-			longformOut.gameRules.turnOrder = longformOut.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
-			longformOut.fullMove = longformOut.fullMove ?? 1;
-			return longformOut;
+		lastIndex = winConditionRegex.lastIndex; // Update the ICN index being observed
+	} else {
+		// Set default win conditions
+		for (const player of turnOrder) {
+			winConditions[player] = [default_win_condition];
 		}
 	}
-	if (!longformOut.gameRules.winConditions) longformOut.gameRules.winConditions = default_win_conditions; // Default win conditions if none specified
-	longformOut.gameRules.turnOrder = longformOut.gameRules.turnOrder ?? [p.WHITE, p.BLACK]; // Default turn order if none specified
-	longformOut.fullMove = longformOut.fullMove ?? 1;
-	return longformOut;
+
+
+	/**
+	 * Moves
+	 * 
+	 * MUST BE TESTED BEFORE THE POSITION, as the position may
+	 * wrongfully think the moves section is the start of the position,
+	 * since the start of a move can look like a piece entry.
+	 */
+	testNextSectionForMoves();
+
+
+	/**
+	 * Position
+	 * 
+	 * SPECAIL HANDLING FOR THE POSITION (It can be too long to regex match all at once)
+	 * MUST BE TESTED AFTER THE MOVES, as this may wrongfully interpret the
+	 * start of the moves section as the start of the position, if the position isn't present.
+	 */
+	if (!moves) { // This next section GUARANTEED to not be the moves section
+		// Test if this next section is the position section
+
+		const pieceEntryRegex = new RegExp(getPieceEntryRegexSource(true), 'y');
+		const delimiter = /\|/y; // The delimiter between piece entries
+
+		// Set the lastIndex to the current index being observed in the ICN
+		pieceEntryRegex.lastIndex = lastIndex;
+
+		// Check for the present of the first piece entry
+		let match: RegExpExecArray | null = pieceEntryRegex.exec(icn);
+		if (match) { // The POSITION is present!
+			// Initialize
+			position = new Map<CoordsKey, number>();
+			specialRights = new Set<CoordsKey>();
+
+			processPieceEntry(match);
+
+			// Repeatedly check for the next piece entry.
+			// EFFICIENT. Works for arbitrarily large positions!
+			while (true) {
+				// Check if the next character is a delimiter
+				delimiter.lastIndex = pieceEntryRegex.lastIndex; // Set the lastIndex to the current index being observed
+				if (delimiter.exec(icn)) { // Delimiter found
+					pieceEntryRegex.lastIndex = delimiter.lastIndex; // Set the lastIndex to the current index being observed
+					match = pieceEntryRegex.exec(icn); // Get the next match
+					if (match) processPieceEntry(match);
+					else throw Error(`Position section is malformed! No valid piece entry follows a "|".`);
+				} else {
+					break; // No delimiter found. End of position. Exit the loop.
+				}
+			}
+
+			// console.log("Parsed position:", position);
+
+			// Make sure there's whitespace or end of string immediately following
+			whiteSpaceOrEndRegex.lastIndex = pieceEntryRegex.lastIndex;
+			if (!whiteSpaceOrEndRegex.exec(icn)) throw Error("Position section needs to be followed by whitespace or end of string!");
+
+			lastIndex = whiteSpaceOrEndRegex.lastIndex; // Update the ICN index being observed
+		}
+
+		/** Adds the matched piece entry to the position and specialRights. */
+		function processPieceEntry(match: RegExpExecArray) { // named groups are: pieceAbbr, coordsKey, specialRight
+			const pieceAbbr = match.groups!['pieceAbbr']!;
+			const coordsKey = match.groups!['coordsKey']! as CoordsKey;
+			const hasSpecialRight = match.groups!['specialRight'] === "+";
+
+			const pieceType = getTypeFromAbbr(pieceAbbr);
+
+			position!.set(coordsKey, pieceType);
+			if (hasSpecialRight) specialRights!.add(coordsKey);
+		}
+	}
+
+	if (!metadata['Variant'] && !position) throw Error("Either Variant metadata or position must be defined in the ICN!");
+
+
+	// Now we can test if the moves section came *after* the positon section.
+	if (!moves) testNextSectionForMoves();
+
+	function testNextSectionForMoves() {
+		// Test if the beginning of the string matches the moves regex
+		movesRegex.lastIndex = lastIndex;
+
+		const movesResults = movesRegex.exec(icn);
+		if (movesResults) {
+			const movesString = movesResults.groups!['moves']!;
+			moves = parseShortFormMoves(movesString);
+
+			lastIndex = movesRegex.lastIndex; // Update the ICN index being observed
+		}
+	}
+
+
+	// =================================== END ===================================
+
+
+	// Make sure there's no unmatched characters remaining
+	if (lastIndex < icn.length) {
+		const remainingICN = icn.slice(lastIndex);
+		throw Error(`Unexpected characters remaining in the ICN after parsing! "${remainingICN}"`);
+	}
+
+	// Construct the return object...
+
+	const gameRules: GameRules = {
+		turnOrder,
+		winConditions,
+	};
+	if (promotionRanks) gameRules.promotionRanks = promotionRanks;
+	if (promotionsAllowed) gameRules.promotionsAllowed = promotionsAllowed;
+	if (moveRule !== undefined) gameRules.moveRule = moveRule;
+
+	const state_global: Partial<GlobalGameState> = {};
+	if (enpassant) state_global.enpassant = enpassant;
+	if (moveRuleState !== undefined) state_global.moveRuleState = moveRuleState;
+	if (specialRights) state_global.specialRights = specialRights;
+
+	const longFormatOut: LongFormatOut = {
+		metadata: metadata as unknown as MetaData,
+		gameRules,
+		fullMove,
+		state_global,
+	};
+	if (position) longFormatOut.position = position;
+	if (moves) longFormatOut.moves = moves;
+
+	// console.log("Parsed longformat:", jsutil.deepCopyObject(longFormatOut));
+
+	return longFormatOut;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 // Compacting & Parsing Single Moves -------------------------------------------------------------------------------
@@ -879,6 +1004,8 @@ function getCompactMoveFromParts(startCoordsKey: string, endCoordsKey: string, p
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7] Capture, promotion, and a check!}'
  */
 function getShortFormMoveFromMove(move: _Move_In, options: { compact: boolean, spaces: boolean, comments: boolean }): string {
+	// console.log("Options for getShortFormMoveFromMove:", options);
+
 	if (options.compact && !options.spaces && !options.comments) console.warn("getCompactMoveFromDraft() is more efficient to get the most-compact form of a move.");
 	if (!options.compact) {
 		if (move.type === undefined) throw Error(`Move.type must be present when compact = false! (${move.compact})`);
@@ -887,7 +1014,7 @@ function getShortFormMoveFromMove(move: _Move_In, options: { compact: boolean, s
 
 	// TESTING. Randomly give the move either a comment or a clk value.
 	// if (Math.random() < 0.3) move.comment = "Comment example";
-	// if (Math.random() < 0.3) move.clk = Math.random() * 100000;
+	// if (Math.random() < 0.3) move.clockStamp = Math.random() * 100000;
 	
 	/** Each "segment" of the entire move will be separated by a space, if spaces is true */
 	const segments: string[] = [];
@@ -937,12 +1064,15 @@ function getShortFormMoveFromMove(move: _Move_In, options: { compact: boolean, s
 	return segments.join(segmentDelimiter); // 'P1,7 x 2,8 =Q + {[%clk 0:09:56.7] White captures en passant}' | 'P1,7x2,8=Q+{[%clk 0:09:56.7] White captures en passant}' | '1,7>2,8Q{[%clk 0:09:56.7]}' | '1,7>2,8Q'
 }
 
-/** Parses a shortform move IN THE MOST COMPACT FORM '1,7>2,8=Q' to a readable move draft. */
-// function parseCompactMove(compactMove: string): { startCoords: Coords, endCoords: Coords, promotion?: number } {
-// 	const match = moveRegexCompact.exec(compactMove);
-// 	if (match === null) throw Error("Invalid compact move: " + compactMove);
-// 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
-// }
+/**
+ * Parses a shortform move IN THE MOST COMPACT FORM '1,7>2,8=Q' to a readable move draft.
+ * `comment` and `clockStamp` will NOT be present.
+ */
+function parseCompactMove(compactMove: string): _Move_Out {
+	const match = moveRegexCompact.exec(compactMove);
+	if (match === null) throw Error("Invalid compact move: " + compactMove);
+	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
+}
 
 /** Parses a shortform move in any dynamic format to a readable json. */
 function parseMoveFromShortFormMove(shortFormMove: string): _Move_Out {
@@ -984,7 +1114,7 @@ function getParsedMoveFromNamedCapturedMoveGroups(capturedGroups: NamedCaptureMo
 		parsedMove.comment = parsedComment.comment;
 		parsedComment.commands.forEach(cmdObj => {
 			if (cmdObj.command === 'clk') parsedMove.clockStamp = icncommentutils.getMillisFromClkTimeValue(cmdObj.value);
-		})
+		});
 	}
 
 	return parsedMove;
@@ -1172,13 +1302,13 @@ function generateSpecialRights(position: Map<CoordsKey, number>, pawnDoublePush:
 }
 
 /**
- * Takes the position in compressed short form and returns the startingPosition and specialRights properties of the gamefile
+ * Takes the position in compressed short form and returns the position and specialRights properties of the gamefile
  * @param shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
  */
-function generatePositionFromShortForm(shortposition: string): { startingPosition: Map<CoordsKey, number>, specialRights: Set<CoordsKey> } {
+function generatePositionFromShortForm(shortposition: string): { position: Map<CoordsKey, number>, specialRights: Set<CoordsKey> } {
 	// console.log("Parsing shortposition:", shortposition);
 
-	const startingPosition = new Map<CoordsKey, number>();
+	const position = new Map<CoordsKey, number>();
 	const specialRights = new Set<CoordsKey>();
 
 	const pieceRegex = new RegExp(getPieceEntryRegexSource(true), "g"); // named groups are: pieceAbbr, coordsKey, specialRight
@@ -1193,13 +1323,13 @@ function generatePositionFromShortForm(shortposition: string): { startingPositio
 
 		const pieceType = getTypeFromAbbr(pieceAbbr);
 
-		startingPosition.set(coordsKey, pieceType);
+		position.set(coordsKey, pieceType);
 		if (hasSpecialRight) specialRights.add(coordsKey);
 	}
 
-	// console.log("Parsed position:", startingPosition);
+	// console.log("Parsed position:", position);
 
-	return { startingPosition, specialRights };
+	return { position, specialRights };
 }
 
 
@@ -1207,15 +1337,15 @@ function generatePositionFromShortForm(shortposition: string): { startingPositio
 
 
 export default {
-	isPromotionListDefaultPromotions,
+	LongToShort_Format,
+	ShortToLong_Format,
 
 	getAbbrFromType,
 	getTypeFromAbbr,
 	getCompactMoveFromDraft,
 
+	parseCompactMove,
 	parseMoveFromShortFormMove,
-	getShortFormMovesFromMoves,
-	parseShortFormMoves,
 
 	getShortFormPosition,
 	generateSpecialRights,
@@ -1226,4 +1356,6 @@ export type {
 	LongFormatIn,
 	LongFormatOut,
 	_Move_In,
-}
+	_Move_Out,
+	_Move_Compact,
+};
