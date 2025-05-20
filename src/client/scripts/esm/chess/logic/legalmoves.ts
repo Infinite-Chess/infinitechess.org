@@ -409,7 +409,7 @@ function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedG
 			return rewindGameAndReturnReason("Can't promote to opposite color.");
 		}
 		const rawPromotion = typeutil.getRawType(moveDraftCopy.promotion);
-		if (!gamefile.gameRules.promotionsAllowed[gamefile.whosTurn].includes(rawPromotion)) {
+		if (!gamefile.gameRules.promotionsAllowed![gamefile.whosTurn]!.includes(rawPromotion)) {
 			console.log(`Opponent's move is illegal because the specified promotion is illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason('Specified promotion is illegal.');
 		}

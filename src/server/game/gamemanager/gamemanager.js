@@ -231,6 +231,7 @@ function pushGameClock(game) {
  */
 function stopGameClock(game) {
 	if (game.untimed) return;
+	if (game.whosTurn === undefined) return; // Clocks already stopped (can reach this point after a cheat report and the game conclusion changes.)
 
 	if (!gameutility.isGameResignable(game)) {
 		game.whosTurn = undefined;
