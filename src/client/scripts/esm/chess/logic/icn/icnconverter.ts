@@ -477,7 +477,10 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	// Appended in the correct order given by metadata_key_ordering
 	const metadataCopy = jsutil.deepCopyObject(longformat.metadata);
 	for (const metadata_name of metadata_ordering) {
-		if (metadataCopy[metadata_name] === undefined) continue;
+		if (metadataCopy[metadata_name] === undefined) {
+			delete metadataCopy[metadata_name]; // Delete it (sometimes its DECLARED as undefined). Prevents it from increasing the key count
+			continue; // Skip to the next metadata
+		}
 		metadataSegments.push(`[${metadata_name} "${metadataCopy[metadata_name]}"]`);
 		delete metadataCopy[metadata_name];
 	}
