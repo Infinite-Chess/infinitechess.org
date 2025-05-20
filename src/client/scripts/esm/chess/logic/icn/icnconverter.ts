@@ -970,6 +970,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	if (position) longFormatOut.position = position;
 	if (moves) longFormatOut.moves = moves;
 
+	// console.log("Finished parcing ICN!");
 	// console.log("Parsed longformat:", jsutil.deepCopyObject(longFormatOut));
 
 	return longFormatOut;

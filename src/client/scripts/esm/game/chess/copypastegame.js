@@ -102,6 +102,8 @@ async function callbackPaste(event) {
 	}
 
 	if (!verifyWinConditions(longformOut.gameRules.winConditions)) return;
+
+	// console.log(jsutil.deepCopyObject(longformOut));
     
 	const success = pasteGame(longformOut);
 
@@ -162,7 +164,7 @@ function pasteGame(longformOut) {
 	}
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
+	if (longformOut.metadata.Variant) longformOut.metadata.Variant = gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 
 	// Don't transfer the pasted game's Result and Termination metadata. For all we know,
 	// the game could have ended by time, in which case we want to further analyse what could have happened.
