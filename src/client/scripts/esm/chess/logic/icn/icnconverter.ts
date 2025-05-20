@@ -630,6 +630,16 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	}
 
 
+	// Preset rays
+	if (longformat.preset_rays) {
+		positionSegments.push('Rays:' + longformat.preset_rays.map(pr => {
+			return coordutil.getKeyFromCoords(pr.start) +
+				'>' +
+				coordutil.getKeyFromCoords(pr.vector);
+		}).join('|'));
+	}
+
+
 	// Position - P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
 	if (!options.skipPosition) {
 		if (longformat.position === undefined) throw Error("longformat.position must be specified when skipPosition = false");
