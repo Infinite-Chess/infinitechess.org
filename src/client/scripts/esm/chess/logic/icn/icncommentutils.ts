@@ -126,6 +126,9 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 function createClkCommandObject(timeMillis: number): CommandObject {
 	let formattedValue: string;
 
+	if (typeof timeMillis !== 'number') throw Error(`Invalid typeof for timeMillis when constructing clk comment embeded command sequence: expected number, got ${typeof timeMillis}`);
+	if (isNaN(timeMillis)) throw Error(`timeMillis is NaN when constructing clk comment embeded command sequence!`);
+
 	// Handle edge case: if time is 0 or less, return 0 time object.
 	if (timeMillis <= 0) {
 		formattedValue = "0:00:00.0";

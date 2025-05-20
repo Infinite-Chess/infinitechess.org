@@ -24,6 +24,7 @@ import icnconverter from '../../../client/scripts/esm/chess/logic/icn/icnconvert
  * @typedef {import('../TypeDefinitions.js').Game} Game
  * @typedef {import('../../../client/scripts/esm/chess/util/coordutil.js').Coords} Coords
  * @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket
+ * @typedef {import('../../../client/scripts/esm/chess/logic/icn/icnconverter.js')._Move_Out} _Move_Out
  */
 
 /**
@@ -69,21 +70,30 @@ function submitMove(ws, game, messageContents) {
 	if (game.whosTurn !== color) return sendSocketMessage(ws, "general", "printerror", "Cannot submit a move when it's not your turn.");
 
 	// Legality checks...
-	if (!doesMoveCheckOut(messageContents.move)) {
-		const errString = `Player sent a message that doesn't check out! Invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		console.error(errString);
-		logEvents(errString, 'hackLog.txt');
+	const moveDraft = doesMoveCheckOut(messageContents.move);
+	if (moveDraft === false) {
+		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		logEvents(errString, 'hackLog.txt', { print: true });
 		return sendSocketMessage(ws, "general", "printerror", "Invalid move format.");
 	}
 	if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		console.error(errString);
-		logEvents(errString, 'hackLog.txt');
+		logEvents(errString, 'hackLog.txt', { print: true });
 		return sendSocketMessage(ws, "general", "printerror", "Invalid game conclusion.");
 	}
     
-	game.moves.push(messageContents.move); // Add the move to the list!
-	pushGameClock(game); // Flip whos turn and adjust the game properties
+	const move = {
+		startCoords: moveDraft.startCoords,
+		endCoords: moveDraft.endCoords,
+		compact: moveDraft.compact,
+		// clockStamp added below
+	};
+	if (moveDraft.promotion !== undefined) move.promotion = moveDraft.promotion;
+	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
+	game.moves.push(move); // Add the move to the list!
+	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
+	const clockStamp = pushGameClock(game); // Flip whos turn and adjust the game properties
+	if (clockStamp !== undefined) move.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
 	setGameConclusion(game, messageContents.gameConclusion);
 
 	// console.log(`Accepted a move! Their websocket message data:`)
@@ -102,23 +112,24 @@ function submitMove(ws, game, messageContents) {
 /**
  * Returns true if their submitted move is in the format `x,y>x,y=3N`.
  * @param {string} move - Their move submission.
- * @returns {boolean} *true* If the move is correctly formatted.
+ * @returns {_Move_Out | false} The move, if correctly formatted, otherwise false.
  */
 function doesMoveCheckOut(move) {
 	if (typeof move !== 'string') return false;
 
 	// Is the move in the correct format? "x,y>x,y=N"
+	let moveDraft;
 	try {
 		// THIS AUTOMATICALLY CHECKS if any coordinate would
 		// become Infinity when cast to a number!
-		icnconverter.parseMoveFromShortFormMove(move);
+		moveDraft = icnconverter.parseCompactMove(move);
 	} catch (e) {
 		// It either didn't pass the regex, or one of the coordinates is Infinity,
 		// OR the promoted piece abbreviation was invalid.
 		return false;
 	}
 
-	return true;
+	return moveDraft;
 }
 
 /**

@@ -13,7 +13,7 @@ import { addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboa
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { computeRatingDataChanges } from './ratingcalculation.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
-import icnconverter from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
+import icnconverter, { LongFormatIn } from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 // @ts-ignore
@@ -27,7 +27,6 @@ import clockutil from '../../../client/scripts/esm/chess/util/clockutil.js';
 
 
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
-import type { FormatConverterLong } from '../../../client/scripts/esm/game/chess/gameformulator.js';
 import type { RatingData } from './ratingcalculation.js';
 // @ts-ignore
 import type { Game } from '../TypeDefinitions.js';
@@ -116,9 +115,11 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string): Prom
 async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | undefined> {
 	// We need to prime the gamefile for the format converter to get the ICN of the game.
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
-	const primedGamefile = {
+	const longformIn: LongFormatIn = {
 		metadata,
-		moveRuleState: gameRules.moveRule !== undefined ? 0 : undefined,
+		state_global: {
+			moveRuleState: gameRules.moveRule !== undefined ? 0 : undefined,
+		},
 		fullMove: 1,
 		moves: game.moves,
 		gameRules
@@ -127,10 +128,10 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 	// Get ICN of game
 	let ICN: string | undefined;
 	try {
-		ICN = icnconverter.LongToShort_Format(primedGamefile as FormatConverterLong, { compact_moves: 2, make_new_lines: false, specifyPosition: false });
+		ICN = icnconverter.LongToShort_Format(longformIn, { skipPosition: true, compact: true, spaces: false, comments: true, make_new_lines: false, move_numbers: false });
 	} catch (error: unknown) {
 		const stack = error instanceof Error ? error.stack : String(error);
-		const errText = `Error when logging game and converting to ICN! The game: ${gameutility.getSimplifiedGameString(game)}. The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${stack}`;
+		const errText = `Error when logging game and converting to ICN! The game: ${gameutility.getSimplifiedGameString(game)}. The primed gamefile:\n${JSON.stringify(longformIn)}\n${stack}`;
 		await logEvents(errText, 'errLog.txt', { print: true });
 	}
 
@@ -377,46 +378,46 @@ async function migrateGameLogsToDatabase() {
 
 		// line starts with metadata
 		else if (/^\s*\[/.test(line)) {
-			const longformat = icnconverter.ShortToLong_Format(line);
+			const longformOut = icnconverter.ShortToLong_Format(line);
 			const game: Partial<Game> = {};
 
 			// set all the needed properties of the Game Object, as required in TypeDefinitions.js
 
-			longformat.metadata.Variant = translationToVariant[longformat.metadata.Variant!];
+			longformOut.metadata.Variant = translationToVariant[longformOut.metadata.Variant!];
 
-			VerifyRequiredMetadata(longformat.metadata);
+			VerifyRequiredMetadata(longformOut.metadata);
 
 			// game.id = lastread_JSON.id; // Not needed?
-			game.timeCreated = timeutil.convertUTCDateUTCTimeToTimeStamp(longformat.metadata.UTCDate, longformat.metadata.UTCTime);
+			game.timeCreated = timeutil.convertUTCDateUTCTimeToTimeStamp(longformOut.metadata.UTCDate, longformOut.metadata.UTCTime);
 			if (lastread_JSON.publicity !== 'public' && lastread_JSON.publicity !== 'private') throw Error(`Publicity "${lastread_JSON.publicity}" not valid!`);
 			game.publicity = lastread_JSON.publicity;
-			game.variant = longformat.metadata.Variant;
-			game.clock = longformat.metadata.TimeControl;
+			game.variant = longformOut.metadata.Variant;
+			game.clock = longformOut.metadata.TimeControl;
 			// Not needed?
 			// game.untimed = (longformat.metadata.TimeControl === "-");
 			// game.startTimeMillis = Number(longformat.metadata.TimeControl.split("+")[0]) * 1000;
 			// game.incrementMillis = Number(longformat.metadata.TimeControl.split("+")[1]);
 			game.rated = false;
-			game.moves = longformat.moves;
+			game.moves = longformOut.moves;
 
 			game.players = { 1: { identifier: {} } , 2: { identifier: {} } };
 			const guest_indicator = getTranslation('play.javascript.guest_indicator');
-			if (longformat.metadata.White !== guest_indicator) game.players[1].identifier = { member: longformat.metadata.White, user_id: uuid.base62ToBase10(longformat.metadata.WhiteID!) };
+			if (longformOut.metadata.White !== guest_indicator) game.players[1].identifier = { member: longformOut.metadata.White, user_id: uuid.base62ToBase10(longformOut.metadata.WhiteID!) };
 			else game.players[1].identifier = { browser: 'examplebrowserid' };
-			if (longformat.metadata.Black !== guest_indicator) game.players[2].identifier = { member: longformat.metadata.Black, user_id: uuid.base62ToBase10(longformat.metadata.BlackID!) };
+			if (longformOut.metadata.Black !== guest_indicator) game.players[2].identifier = { member: longformOut.metadata.Black, user_id: uuid.base62ToBase10(longformOut.metadata.BlackID!) };
 			else game.players[2].identifier = { browser: 'examplebrowserid' };
 
-			game.gameRules = longformat.gameRules;
+			game.gameRules = longformOut.gameRules;
 
-			if (longformat.metadata.Termination === undefined) throw Error(`Termination metadata is undefined!`);
-			else if (longformat.metadata.Termination === "Aborted") {
+			if (longformOut.metadata.Termination === undefined) throw Error(`Termination metadata is undefined!`);
+			else if (longformOut.metadata.Termination === "Aborted") {
 				game.gameConclusion = "aborted";
 			} else {
-				const winner = longformat.metadata.Result === "1-0" ? String(players.WHITE) : longformat.metadata.Result === "0-1" ? String(players.BLACK) : longformat.metadata.Result === "1/2-1/2" ? String(players.NEUTRAL) : (() => { console.error(`Unexpected result in gameLog.txt: ${longformat.metadata.Result}`); return "unknown"; })();
+				const winner = longformOut.metadata.Result === "1-0" ? String(players.WHITE) : longformOut.metadata.Result === "0-1" ? String(players.BLACK) : longformOut.metadata.Result === "1/2-1/2" ? String(players.NEUTRAL) : (() => { console.error(`Unexpected result in gameLog.txt: ${longformOut.metadata.Result}`); return "unknown"; })();
 
 				// The Termination metadata is NOT the same as the "condition" in the gameConclusion string.
-				const condition = terminationToCondition[longformat.metadata.Termination];
-				if (condition === undefined) throw Error(`Termination "${longformat.metadata.Termination}" not valid!`);
+				const condition = terminationToCondition[longformOut.metadata.Termination];
+				if (condition === undefined) throw Error(`Termination "${longformOut.metadata.Termination}" not valid!`);
 				game.gameConclusion = `${winner} ${condition}`;
 			}
 

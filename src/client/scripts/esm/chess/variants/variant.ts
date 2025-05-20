@@ -355,7 +355,7 @@ function isVariantValid(variantName: string) {
 
 
 /**
- * Given the Variant and Date, calculates the startingPosition,
+ * Given the Variant and Date, calculates the position,
  * positionString, and specialRights properties for the game.
  * @param options - An object containing the properties `Variant`, and if desired, `Date`.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
@@ -365,7 +365,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 	const variantEntry: Variant = variantDictionary[Variant]!;
 
 	let positionString: string;
-	let startingPosition: Map<CoordsKey, number>;
+	let position: Map<CoordsKey, number>;
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString) {
@@ -378,8 +378,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 			positionString = getApplicableTimestampEntry(variantEntry.positionString, { UTCDate, UTCTime });
 		}
 
-		const { startingPosition, specialRights } = icnconverter.generatePositionFromShortForm(positionString);
-		return { position: startingPosition, specialRights };
+		return icnconverter.generatePositionFromShortForm(positionString);
 
 	} else if (variantEntry.generator) {
 
@@ -387,9 +386,9 @@ function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: 
 			: getApplicableTimestampEntry(variantEntry.generator, { UTCDate, UTCTime });
 
 		// Generate the starting position
-		startingPosition = generator.algorithm();
-		const specialRights = icnconverter.generateSpecialRights(startingPosition, generator.rules.pawnDoublePush, generator.rules.castleWith);
-		return { position: startingPosition, specialRights };
+		position = generator.algorithm();
+		const specialRights = icnconverter.generateSpecialRights(position, generator.rules.pawnDoublePush, generator.rules.castleWith);
+		return { position, specialRights };
 
 	} else throw Error(`Variant entry "${Variant}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`);
 }

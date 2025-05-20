@@ -125,7 +125,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 
 	const piecesByType: Map<number, Coords[]> = new Map();
 	const existingTypesSet = new Set<number>();
-	if (!(position instanceof Map)) throw Error("Position is not a map!");
+	if (!(position instanceof Map)) throw Error(`Position is not a map! (${typeof position})`);
 	for (const [coordsKey, type] of position) {
 		if (typeof type !== "number") throw Error(`Type inside Position is not a number! ${type} ${coordsKey}`); // Bug catcher
 		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
@@ -454,7 +454,7 @@ function removePieceFromSpace(idx: number, o: {
  * Takes a Set of all types in the STARTING POSITION and adds to it other
  * potential pieces that may join the game via promotion or board editor.
  */
-function calcRemainingExistingTypes(startingPositionExistingTypes: Set<number>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
 	existingTypes: number[],
 	existingRawTypes: RawType[],
 } {
@@ -471,19 +471,19 @@ function calcRemainingExistingTypes(startingPositionExistingTypes: Set<number>, 
 				const player = Number(playerString) as Player;
 				const rawPromotions = promotionsAllowed[player]!;
 				for (const rawType of rawPromotions) {
-					startingPositionExistingTypes.add(typeutil.buildType(rawType, player));
+					positionExistingTypes.add(typeutil.buildType(rawType, player));
 				}
 			}
 		}
 		/** If Player 3 or greater is present (multiplayer game), then gargoyles may appear when a player dies.
 		 * Which means we also must add corresponding neutral for every type in the game! */
 		if (turnOrder.some(p => p >= 3)) {
-			for (const type of [...startingPositionExistingTypes]) { // Spread to avoid problems with infinite iteration when adding to it at the same time.
+			for (const type of [...positionExistingTypes]) { // Spread to avoid problems with infinite iteration when adding to it at the same time.
 				// Convert it to neutral, and add it to existingTypes
-				startingPositionExistingTypes.add(typeutil.getRawType(type) + ext.N);
+				positionExistingTypes.add(typeutil.getRawType(type) + ext.N);
 			}
 		}
-		existingTypes = [...startingPositionExistingTypes];
+		existingTypes = [...positionExistingTypes];
 		existingRawTypes = [...new Set(existingTypes.map(typeutil.getRawType))];
 	}
 

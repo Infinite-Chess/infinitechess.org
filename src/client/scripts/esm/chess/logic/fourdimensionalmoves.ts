@@ -164,7 +164,7 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
 	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.state.global.enpassant, move.enpassantCreate);
 
-	if (!move.enpassant && !move.promotion) return false; // No special move to execute, return false to signify we didn't move the piece.
+	if (!move.enpassant && move.promotion === undefined) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	const captureCoords = move.enpassant ? gamefile.state.global.enpassant!.pawn : move.endCoords;
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
@@ -172,7 +172,7 @@ function doFourDimensionalPawnMove(gamefile: gamefile, piece: Piece, move: Move)
 	if (capturedPiece !== undefined) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece); // Delete the piece captured
 	else boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Move the pawn
 
-	if (move.promotion) { // Handle promotion special move
+	if (move.promotion !== undefined) { // Handle promotion special move
 		boardchanges.queueDeletePiece(moveChanges, true, { type: piece.type, coords: move.endCoords, index: piece.index }); // Delete original pawn
 		boardchanges.queueAddPiece(moveChanges, { type: move.promotion, coords: move.endCoords, index: -1 }); // Add promoted piece
 	}

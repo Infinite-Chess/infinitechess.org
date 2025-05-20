@@ -11,7 +11,7 @@
  */
 
 import type { MetaData } from "../../chess/util/metadata.js";
-import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { JoinGameMessage, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { Additional, VariantOptions } from "./gameslot.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
@@ -249,7 +249,7 @@ async function pasteGame(options: {
 	metadata: MetaData,
 	additional: {
 		/** If we're in the board editor, this must be empty. */
-		moves?: string[],
+		moves?: ServerGameMovesMessage,
 		variantOptions: VariantOptions,
 	}
 }) {

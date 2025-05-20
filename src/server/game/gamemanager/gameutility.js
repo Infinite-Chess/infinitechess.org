@@ -353,7 +353,7 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	const opponentColor = typeutil.invertPlayer(color);
 	const messageContents = {
 		gameConclusion: game.gameConclusion,
-		moves: game.moves, // Send the final move list so they can make sure they're in sync.
+		moves: game.moves.map(m => simplyMove(m)), // Send the final move list so they can make sure they're in sync.
 		drawOffer: {
 			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
 			lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
@@ -460,7 +460,7 @@ function getSimplifiedGameString(game) {
 		clock: game.clock,
 		rated: game.rated,
 	};
-	if (game.moves.length > 0) simplifiedGame.moves = game.moves;
+	if (game.moves.length > 0) simplifiedGame.moves = game.moves.map(m => m.compact);
 	simplifiedGame.players = {};
 	for (const [c, data] of Object.entries(game.players)) {
 		simplifiedGame.players[c] = data.identifier;
@@ -578,7 +578,7 @@ function sendMoveToColor(game, color) {
 	if (!(color in game.players)) return logEvents(`Color to send move to must be white or black! ${color}`, 'errLog.txt', { print: true });
     
 	const message = {
-		move: getLastMove(game),
+		move: getSimplifiedLastMove(game),
 		gameConclusion: game.gameConclusion,
 		moveNumber: game.moves.length,
 	};
@@ -586,6 +586,25 @@ function sendMoveToColor(game, color) {
 	const sendToSocket = game.players[color].socket;
 	if (!sendToSocket) return; // They are not connected, can't send message
 	sendSocketMessage(sendToSocket, "game", "move", message);
+}
+
+/**
+ * Returns the last, or most recent, move in the provided game's move list, or undefined if there isn't one.
+ * @param {Game} game - The moves list, with the moves in most compact notation: `1,2>3,4N`
+ * @returns {string | undefined} The move, in most compact notation, or undefined if there isn't one.
+ */
+function getSimplifiedLastMove(game) {
+	const moves = game.moves;
+	if (moves.length === 0) return;
+	const move = moves[moves.length - 1];
+	return simplyMove(move);
+}
+
+/**
+ * Simplifies a game's move into the minimal info needed for the client to reconstruct the move.
+ */
+function simplyMove(move) {
+	return { compact: move.compact, };
 }
 
 /**
@@ -603,17 +622,6 @@ function cancelDeleteGameTimer(game) {
  * @returns {boolean} *true* if the game is resignable.
  */
 function isGameResignable(game) { return game.moves.length > 1; }
-
-/**
- * Returns the last, or most recent, move in the provided game's move list, or undefined if there isn't one.
- * @param {Game} game - The moves list, with the moves in most compact notation: `1,2>3,4N`
- * @returns {string | undefined} The move, in most compact notation, or undefined if there isn't one.
- */
-function getLastMove(game) {
-	const moves = game.moves;
-	if (moves.length === 0) return;
-	return moves[moves.length - 1];
-}
 
 /**
  * Returns the color of the player that played that moveIndex within the moves list.

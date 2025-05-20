@@ -12,6 +12,10 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
+import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../../game/misc/onlinegame/onlinegamerouter.js';
+
+
+
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import state from './state.js';
@@ -27,6 +31,7 @@ import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
+
 
 // Type Definitions ---------------------------------------------------------------------------------------------------------------
 
@@ -362,7 +367,7 @@ function createCheckState(gamefile: gamefile, move: Move | NullMove) {
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.state.local.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
-	const trackAttackers = gamefile.gameRules.winConditions[oppositeColor].includes('checkmate');
+	const trackAttackers = gamefile.gameRules.winConditions[oppositeColor]!.includes('checkmate');
 
 	const checkResults = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
 	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
@@ -381,10 +386,10 @@ function createCheckState(gamefile: gamefile, move: Move | NullMove) {
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
-function makeAllMovesInGame(gamefile: gamefile, moves: string[]) {
+function makeAllMovesInGame(gamefile: gamefile, moves: ServerGameMovesMessage) {
 	if (gamefile.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
-		const move = calculateMoveFromShortmove(gamefile, shortmove);
+		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
 		if (!move) throw Error(`Cannot make all moves in game! There was one invalid move: ${shortmove}. Index: ${i}`);
 		makeMove(gamefile, move);
 	});
@@ -402,18 +407,17 @@ function makeAllMovesInGame(gamefile: gamefile, moves: string[]) {
  * @param {string} shortmove - The move in most compact form: `1,2>3,4Q`
  * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
-function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move | undefined {
+function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMoveMessage): Move {
 	if (!moveutil.areWeViewingLatestMove(gamefile)) throw Error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
 
 	// Reconstruct the startCoords, endCoords, and special move properties of the MoveDraft
 
 	let moveDraft: MoveDraft;
 	try {
-		moveDraft = icnconverter.parseMoveFromShortFormMove(shortmove);
+		moveDraft = icnconverter.parseCompactMove(shortmove.compact);
 	} catch (error) {
 		console.error(error);
-		console.error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);
-		return;
+		throw Error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);
 	}
 
 	// Reconstruct the special move properties by calculating what legal
@@ -422,8 +426,8 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 
 	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
 	if (!piece) {
-		console.error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
-		return; // No piece on start coordinates, can't calculate Move, because it's illegal
+		// No piece on start coordinates, can't calculate Move, because it's illegal
+		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
 	}
 
 	const legalSpecialMoves: Coords[] = legalmoves.calculate(gamefile, piece, { onlyCalcSpecials: true }).individual;
@@ -435,7 +439,9 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: string): Move
 		break;
 	}
 
-	return generateMove(gamefile, moveDraft);
+	const move = generateMove(gamefile, moveDraft);
+	if (shortmove.clockStamp !== undefined) move.clockStamp = shortmove.clockStamp;
+	return move;
 }
 
 

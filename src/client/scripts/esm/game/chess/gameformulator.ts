@@ -4,15 +4,18 @@
  */
 
 
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
 // @ts-ignore
 import gamefile from '../../chess/logic/gamefile.js';
+import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import variant from '../../chess/variants/variant.js';
+import { CoordsKey } from '../../chess/util/coordutil.js';
+import { ServerGameMoveMessage } from '../misc/onlinegame/onlinegamerouter.js';
+
 
 import type { VariantOptions } from './gameslot.js';
-import type { MetaData } from '../../chess/util/metadata.js';
 import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
-// @ts-ignore
-import type { GameRules } from '../../chess/variants/gamerules.js';
+import type { GlobalGameState } from '../../chess/logic/state.js';
+
 
 
 /**
@@ -21,14 +24,26 @@ import type { GameRules } from '../../chess/variants/gamerules.js';
  */
 function formulateGame(longformIn: LongFormatIn) {
 
+	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
+		throw Error('Invalid longformIn when formulating game: Missing position or special rights.');
+	}
+
 	/** String array of the moves in their most compact notation (e.g. "4,7>4,8Q") */
-	const moves: string[] = longformIn.moves?.map((m: _Move_In) => m.compact) ?? [];
+	const moves: ServerGameMoveMessage[] = longformIn.moves?.map((m: _Move_In) => {
+		const move = { compact: m.compact };
+		if (m.compact) move.compact = m.compact;
+		return move;
+	}) ?? [];
 
 	const variantOptions: VariantOptions = {
 		fullMove: longformIn.fullMove,
 		gameRules: longformIn.gameRules,
-		startingPosition: longformIn.position,
-		state_global: longformIn.state_global,
+		position: longformIn.position!,
+		state_global: {
+			specialRights: longformIn.state_global.specialRights,
+			enpassant: longformIn.state_global.enpassant,
+			moveRuleState: longformIn.state_global.moveRuleState,
+		}
 	};
 
 	return new gamefile(longformIn.metadata, { moves, variantOptions });
@@ -43,11 +58,25 @@ function formulateGame(longformIn: LongFormatIn) {
 function ICNToGamefile(ICN: string): gamefile {
 	const longformOut: LongFormatOut = icnconverter.ShortToLong_Format(ICN);
 
+	let position: Map<CoordsKey, number>;
+	let specialRights: Set<CoordsKey>;
+
+	if (longformOut.position && longformOut.state_global.specialRights) {
+		position = longformOut.position;
+		specialRights = longformOut.state_global.specialRights;
+	} else {
+		({ position, specialRights } = variant.getStartingPositionOfVariant({ Variant: longformOut.metadata.Variant!, UTCDate: longformOut.metadata.UTCDate!, UTCTime: longformOut.metadata.UTCTime! }));
+	}
+
 	const variantOptions: VariantOptions = {
 		gameRules: longformOut.gameRules,
 		fullMove: longformOut.fullMove,
-		startingPosition: longformOut.position,
-		state_global: longformOut.state_global,
+		position,
+		state_global: {
+			specialRights,
+			enpassant: longformOut.state_global.enpassant,
+			moveRuleState: longformOut.state_global.moveRuleState,
+		}
 	};
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
@@ -80,8 +109,4 @@ export default {
 	formulateGame,
 	ICNToGamefile,
 	convertVariantFromSpokenLanguageToCode,
-};
-
-export type {
-	FormatConverterLong
 };
