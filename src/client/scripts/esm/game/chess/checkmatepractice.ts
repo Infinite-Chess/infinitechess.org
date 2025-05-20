@@ -95,15 +95,13 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 	setUndoingIsLegal(false);
 	initListeners();
 
-	const startingPosition = generateCheckmateStartingPosition(checkmateSelectedID);
+	const position = generateCheckmateStartingPosition(checkmateSelectedID);
 	const specialRights = new Set<CoordsKey>();
-	const positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
 	const variantOptions: VariantOptions = {
 		fullMove: 1,
-		startingPosition,
-		positionString,
-		specialRights,
-		gameRules: variant.getBareMinimumGameRules()
+		position,
+		state_global: { specialRights },
+		gameRules: variant.getBareMinimumGameRules(),
 	};
 
 	const options = {
@@ -146,13 +144,13 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 	// place the black king not so far away for specific variants
 	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
 
-	const startingPosition = new Map<CoordsKey, number>(); // the position to be generated
+	const position = new Map<CoordsKey, number>(); // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
 	let whitebishopparity: number = Math.floor(Math.random() * 2); // square color of first white bishop batch
 	
 	// read the elementID and convert it to a position
 	const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
-	if (!piecelist) return startingPosition;
+	if (!piecelist) return position;
 
 	for (const entry of piecelist) {
 		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
@@ -170,8 +168,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
-				if (!startingPosition.has(key) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
-					startingPosition.set(key, piece);
+				if (!position.has(key) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
+					position.set(key, piece);
 					amount -= 1;
 				}
 			} else {
@@ -180,8 +178,8 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 17 : 35)) - (blackroyalnearer ? 9 : 17);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 				// check if square is occupied or potentially threatened
-				if (!startingPosition.has(key) && squareNotInSight(key, startingPosition)) {
-					startingPosition.set(key, piece);
+				if (!position.has(key) && squareNotInSight(key, position)) {
+					position.set(key, piece);
 					amount -= 1;
 					blackpieceplaced = true;
 				}
@@ -192,19 +190,19 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 		whitebishopparity = 1 - whitebishopparity;
 	}
 
-	return startingPosition;
+	return position;
 }
 
 /**
- * This method checks that the input square is not on the same row, column or diagonal as any key in the startingPosition Map
+ * This method checks that the input square is not on the same row, column or diagonal as any key in the position Map
  * It also checks that it is not attacked by a knightrider
  * @param square - square of black piece
- * @param startingPosition - startingPosition Map containing all white pieces
+ * @param position - position Map containing all white pieces
  * @returns true or false, depending on if the square is in sight or not
  */
-function squareNotInSight(square: CoordsKey, startingPosition: Map<CoordsKey, number>): boolean {
+function squareNotInSight(square: CoordsKey, position: Map<CoordsKey, number>): boolean {
 	const [sx, sy]: number[] = coordutil.getCoordsFromKey(square);
-	for (const [key, value] of startingPosition) {
+	for (const [key, value] of position) {
 		const [x, y]: number[] = coordutil.getCoordsFromKey(key);
 		if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
 		if (value === r.KNIGHTRIDER + e.W) {

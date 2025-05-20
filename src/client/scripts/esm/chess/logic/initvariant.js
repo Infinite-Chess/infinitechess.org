@@ -22,8 +22,8 @@ import variant from '../variants/variant.js';
  * To load a custom position, include the options within the `options` parameter!
  * All options are a snapshot of the starting position, before any moves are forwarded.
  * @param {gamefile} gamefile - The gamefile to initialize
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
+ * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
+ * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
  */
 function setupVariantGamerules(gamefile, metadata, options) {
 	// Ignores the "Variant" metadata, and just uses the specified gameRules
@@ -37,7 +37,7 @@ function setupVariantGamerules(gamefile, metadata, options) {
 /**
  * Sets the pieceMovesets and specialMoves functions of the gamefile.
  * @param {gamefile} gamefile - The gamefile
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
+ * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
 */
 function initPieceMovesets(gamefile, metadata, slideLimit) {
@@ -53,47 +53,41 @@ function initPieceMovesets(gamefile, metadata, slideLimit) {
  * To load a custom position, include the options within the `options` parameter!
  * All options are a snapshot of the starting position, before any moves are forwarded.
  * @param {gamefile} gamefile - The gamefile to initialize
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a startingPosition. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `positionString`, `startingPosition`, `specialRights`, `gameRules`. If startingPosition is not specified, the metadata must contain the "Variant".
+ * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
+ * @param {VariantOptions} [variantOptions] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
  * @returns {StartSnapshot} The starting snapshot of the game.
  */
-function genStartSnapshot(gamefile, metadata, options) {
+function genStartSnapshot(gamefile, metadata, variantOptions) {
+	let position;
+	let fullMove;
+	// The 3 global game states
+	let specialRights;
 	let enpassant;
 	let moveRuleState;
-	let positionString;
-	let position;
-	let specialRights;
 	
-	// Even IF options are provided. If the pasted game doesn't contain position information
-	// then we still have to grab it from the Variant metadata!
-	if (!options?.startingPosition) {
-		({ positionString, position, specialRights } = variant.getStartingPositionOfVariant(metadata)); 
+	if (variantOptions) {
+		position = variantOptions.position;
+		fullMove = variantOptions.fullMove;
+		specialRights = variantOptions.state_global.specialRights;
+		enpassant = variantOptions.state_global.enpassant;
+		if (variantOptions.gameRules.moveRule !== undefined && variantOptions.state_global.moveRuleState === undefined) throw Error("If moveRule is specified, moveRuleState must also be specified.");
+		moveRuleState = variantOptions.state_global.moveRuleState;
 	} else {
-		positionString = options.positionString;
-		position = options.startingPosition;
-		specialRights = options.specialRights;
+		({ position, specialRights } = variant.getStartingPositionOfVariant(metadata));
+		fullMove = 1; // Every variant has the exact same fullMove value.
+		if (gamefile.gameRules.moveRule !== undefined) moveRuleState = 0; // Every variant has the exact same initial moveRuleState value.
 	}
 
-	if (options) {
-		enpassant = options.enpassant;
-		if (options.gameRules.moveRule) {
-			if (options.moveRuleState === undefined) throw Error("moveRuleState is required with gameRule moveRule");
-			moveRuleState = options.moveRuleState;
-		}
-	} else {
-		// Every variant has the exact same initial moveRuleState value.
-		if (gamefile.gameRules.moveRule) moveRuleState = 0;
-	}
+	// console.log("Variant options:", variantOptions);
 	
 	return {
 		position,
-		positionString,
-		specialRights,
-		enpassant,
-		moveRuleState,
-		playerCount: new Set(gamefile.gameRules.turnOrder).size,
-		fullMove: options?.fullMove ?? 1, // Every variant has the exact same fullMove value.
-		pieceCount: position.size,
+		state_global: {
+			specialRights,
+			enpassant,
+			moveRuleState,
+		},
+		fullMove,
 	};
 }
 
@@ -139,7 +133,7 @@ function genStartSnapshot(gamefile, metadata, options) {
 
 //     // const piecesByType = organizedlines.buildStateFromKeyList(piecesByKey)
 
-//     // gamefile.startingPosition = piecesByType;
+//     // gamefile.position = piecesByType;
 
 //     gamefile.gameRules = getGameRulesOfVariant(gamefile.variant)
 //     initPieceMovesets(gamefile.gameRules)

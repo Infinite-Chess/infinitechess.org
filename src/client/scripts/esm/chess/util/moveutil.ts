@@ -136,7 +136,7 @@ function getWhosTurnAtFront(gamefile: gamefile): Player {
  * @param turnOrder - The order of players turns in the game.
  */
 function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(numberOfMoves: number, turnOrder: GameRules['turnOrder']): Player {
-	return turnOrder[numberOfMoves % turnOrder.length];
+	return turnOrder[numberOfMoves % turnOrder.length]!;
 }
 
 /**

@@ -398,7 +398,7 @@ function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedG
 	}
 
 	// If there is a promotion, make sure that's legal
-	if (moveDraftCopy.promotion) {
+	if (moveDraftCopy.promotion !== undefined) {
 		if (typeutil.getRawType(piecemoved.type) !== r.PAWN) {
 			console.log(`Opponent's move is illegal because you can't promote a non-pawn. Move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason("Can't promote a non-pawn.");

@@ -14,7 +14,7 @@
 
 // @ts-ignore
 import type gamefile from "../../../chess/logic/gamefile.js";
-import type { GameUpdateMessage } from "./onlinegamerouter.js";
+import type { GameUpdateMessage, ServerGameMoveMessage } from "./onlinegamerouter.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
 
@@ -74,7 +74,7 @@ function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh | undefined, mess
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
-function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves: string[], claimedGameConclusion: string | false): { opponentPlayedIllegalMove: boolean } {
+function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves: ServerGameMoveMessage[], claimedGameConclusion: string | false): { opponentPlayedIllegalMove: boolean } {
 	// console.log("Resyncing...");
 
 	// Early exit case. If we have played exactly 1 more move than the server,
@@ -84,7 +84,7 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 	const finalMoveIsOurMove = gamefile.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === onlinegame.getOurColor();
 	const previousMove = gamefile.moves.length > 1 ? gamefile.moves[gamefile.moves.length - 2] : undefined;
 	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1)
-		|| (gamefile.moves.length > 1 && moves.length > 0 && !previousMove!.isNull && previousMove!.compact === moves[moves.length - 1]);
+		|| (gamefile.moves.length > 1 && moves.length > 0 && !previousMove!.isNull && previousMove!.compact === moves[moves.length - 1]!.compact);
 	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
 		console.log("Sending our move again after resyncing..");
 		movesendreceive.sendMove();
@@ -106,7 +106,7 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 		if (i === -1) break; // Beginning of game
 		const thisGamefileMove = gamefile.moves[i];
 		if (thisGamefileMove && !thisGamefileMove.isNull) { // The move is defined
-			if (thisGamefileMove.compact! === moves[i]) break; // The moves MATCH
+			if (thisGamefileMove.compact! === moves[i]!.compact) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
 			movesequence.rewindMove(gamefile, mesh);
 			console.log("Rewound one INCORRECT move while resyncing to online game.");
@@ -121,7 +121,7 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
-		const moveDraft = icnconverter.parseCompactMove(thisShortmove);
+		const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;

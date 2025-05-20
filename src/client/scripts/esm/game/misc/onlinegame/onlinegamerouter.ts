@@ -34,6 +34,9 @@ import board from "../../rendering/board.js";
 // Type Definitions --------------------------------------------------------------------------------------
 
 
+type ServerGameMovesMessage = ServerGameMoveMessage[];
+type ServerGameMoveMessage = { compact: string, clockStamp?: number };
+
 /**
  * The message contents expected when we receive a server websocket 'joingame' message. 
  * This contains everything a {@link GameUpdateMessage} message would have, and more!!
@@ -54,7 +57,7 @@ interface JoinGameMessage extends GameUpdateMessage {
 interface GameUpdateMessage {
 	gameConclusion: string | false,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: string[],
+	moves: ServerGameMovesMessage,
 	drawOffer: DrawOfferInfo,
 	clockValues?: ClockValues,
 	/** If our opponent has disconnected, this will be present. */
@@ -71,7 +74,7 @@ interface GameUpdateMessage {
 /** The message contents expected when we receive a server websocket 'move' message.  */
 interface OpponentsMoveMessage {
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
-	move: string,
+	move: ServerGameMoveMessage,
 	gameConclusion: string | false,
 	/** Our opponent's move number, 1-based. */
 	moveNumber: number,
@@ -277,4 +280,6 @@ export type {
 	DrawOfferInfo,
 	GameUpdateMessage,
 	OpponentsMoveMessage,
+	ServerGameMovesMessage,
+	ServerGameMoveMessage,
 };

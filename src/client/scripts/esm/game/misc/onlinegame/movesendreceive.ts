@@ -73,9 +73,9 @@ function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message
 	// Convert the move from compact short format "x,y>x,yN"
 	let moveDraft: MoveDraft; // { startCoords, endCoords, promotion }
 	try {
-		moveDraft = icnconverter.parseCompactMove(message.move); // { startCoords, endCoords, promotion }
+		moveDraft = icnconverter.parseMoveFromShortFormMove(message.move.compact); // { startCoords, endCoords, promotion }
 	} catch {
-		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move)}`);
+		console.error(`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move.compact)}`);
 		const reason = 'Incorrectly formatted.';
 		return onlinegame.reportOpponentsMove(reason);
 	}
