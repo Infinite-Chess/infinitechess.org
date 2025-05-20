@@ -71,6 +71,7 @@ function genStartSnapshot(gamefile, metadata, variantOptions) {
 		specialRights = variantOptions.state_global.specialRights;
 		enpassant = variantOptions.state_global.enpassant;
 		if (variantOptions.gameRules.moveRule !== undefined && variantOptions.state_global.moveRuleState === undefined) throw Error("If moveRule is specified, moveRuleState must also be specified.");
+		console.log("Move rule state:", variantOptions.state_global.moveRuleState);
 		moveRuleState = variantOptions.state_global.moveRuleState;
 	} else {
 		({ position, specialRights } = variant.getStartingPositionOfVariant(metadata));
@@ -79,14 +80,14 @@ function genStartSnapshot(gamefile, metadata, variantOptions) {
 	}
 
 	// console.log("Variant options:", variantOptions);
+
+	const state_global = { specialRights };
+	if (enpassant) state_global.enpassant = enpassant;
+	if (moveRuleState !== undefined) state_global.moveRuleState = moveRuleState;
 	
 	return {
 		position,
-		state_global: {
-			specialRights,
-			enpassant,
-			moveRuleState,
-		},
+		state_global,
 		fullMove,
 	};
 }
