@@ -376,7 +376,7 @@ const winConditionRegex = new RegExp(String.raw`(?<winConditions>${singlePlayerW
 const movesDelimiter = String.raw`(?:\s?${countingNumberSource}\. | ?\| ?)`; // " 14. " or " | "
 /** Matches an entire moves list in an ICN, no matter its styling. */
 const movesRegexSource =
-	possessive(String.raw`(?:${countingNumberSource}\. )?`) + 
+	possessive(String.raw`(?:${countingNumberSource}\. )?`) + // The first move number, if present
 	getMoveRegexSource(false) +
 	possessive(`(?:${movesDelimiter}${getMoveRegexSource(false)})*`);
 // console.log("MovesRegexSource:", movesRegexSource);
