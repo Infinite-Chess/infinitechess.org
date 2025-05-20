@@ -559,8 +559,11 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 		const promotionRanksCopy = jsutil.deepCopyObject(longformat.gameRules.promotionRanks);
 		const promotionsAllowedCopy = jsutil.deepCopyObject(longformat.gameRules.promotionsAllowed);
 
+		/** A sorted list (ascending) of all unique player numbers in the game. */
+		const uniquePlayers = Array.from(new Set(longformat.gameRules.turnOrder)).sort((a, b) => a - b);
+
 		const playerSegments: string[] = []; // ['8,17','1,10']
-		for (const player of longformat.gameRules.turnOrder) {
+		for (const player of uniquePlayers) {
 			const playerSegment: string[] = []; // ['8,17','n,r,b,q']
 
 			const ranks = promotionRanksCopy[player] ?? [];
@@ -791,7 +794,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 	const promotionsResults = promotionsRegex.exec(icn);
 	if (promotionsResults) {
-		console.log("Results of promotions regex:", promotionsResults);
+		// console.log("Results of promotions regex:", promotionsResults);
 		const promotionsString = promotionsResults.groups!['promotions']!;
 		
 		promotionRanks = {};
