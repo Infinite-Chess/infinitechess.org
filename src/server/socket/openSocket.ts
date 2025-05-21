@@ -96,7 +96,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 	// Make sure the connection is secure https
 	const origin = req.headers.origin;
 	if (origin === undefined || !origin.startsWith('https')) {
-		logEvents(`WebSocket connection request rejected. Reason: Not Secure. Origin: "${origin}"`, 'hackLog.txt');
+		console.error(`WebSocket connection request rejected. Reason: Not Secure. Origin: "${origin}"`);
 		socket.close(1009, "Not Secure");
 		return;
 	}

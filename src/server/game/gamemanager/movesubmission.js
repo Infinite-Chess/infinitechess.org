@@ -61,8 +61,7 @@ function submitMove(ws, game, messageContents) {
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = game.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
-		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errString, 'hackLog.txt', { print: true });
+		console.error(`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 		return resyncToGame(ws, game, game.id);
 	}
 
