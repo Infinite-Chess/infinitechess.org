@@ -27,6 +27,7 @@ import boardutil from '../../chess/util/boardutil.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import jsutil from '../../util/jsutil.js';
 import variant from '../../chess/variants/variant.js';
+import drawrays from '../rendering/highlights/annotations/drawrays.js';
 // Import End
 
 "use strict";
@@ -219,6 +220,9 @@ function pasteGame(longformOut) {
 		metadata: longformOut.metadata,
 		additional,
 	});
+
+	// If custom preset rays are specified, initiate them in drawrays.ts
+	if (longformOut.preset_rays) drawrays.setPresets(longformOut.preset_rays);
 
 	const gamefile = gameslot.getGamefile();
 
