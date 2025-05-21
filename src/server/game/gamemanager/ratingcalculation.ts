@@ -116,8 +116,8 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : Rati
 	const r2 = ratingdata[p.BLACK]!.elo_at_game;
 	const RD1 = getTrueRD(ratingdata[p.WHITE]!.rating_deviation_at_game, ratingdata[p.WHITE]!.rd_last_update_date);
 	const RD2 = getTrueRD(ratingdata[p.BLACK]!.rating_deviation_at_game, ratingdata[p.BLACK]!.rd_last_update_date);
-	const outcome_white = (victor === 1 ? 1 : (victor === 2 ? 0 : 0.5 ));
-	const outcome_black = (victor === 1 ? 0 : (victor === 2 ? 1 : 0.5 ));
+	const outcome_white = (victor === p.WHITE ? 1 : (victor === p.BLACK ? 0 : 0.5 ));
+	const outcome_black = (victor === p.WHITE ? 0 : (victor === p.BLACK ? 1 : 0.5 ));
 
 	ratingdata[p.WHITE]!.elo_after_game = new_rating(outcome_white, r1, RD1, r2, RD2);
 	ratingdata[p.WHITE]!.rating_deviation_after_game = new_RD(r1, RD1, r2, RD2);
