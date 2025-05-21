@@ -52,7 +52,7 @@ main {
     text-transform: none;
 }
 
-.content h2 {
+.content h2, .content h3 {
     margin-bottom: 1em;
 }
 

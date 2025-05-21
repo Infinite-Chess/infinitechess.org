@@ -229,7 +229,6 @@ function loadLogical(loadOptions: LoadOptions) {
 	specialrighthighlights.regenModel();
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
-	console.log(loadOptions.presetRays)
 	if (loadOptions.presetRays) drawrays.setPresetOverrides(loadOptions.presetRays);
 }
 

@@ -58,7 +58,7 @@ function PlayerData() {
 	};
 	/** Their display-elo at the time of the game start, on the leaderboard the
 	 * variant is on. This may include a '?' at the end. @type {string} */
-	this.elo = undefined,
+	this.elo = undefined;
 }
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */

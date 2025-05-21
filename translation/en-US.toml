@@ -551,7 +551,6 @@ conclusion_paragraphs = [
 "You may not perform any illegal activity on the site.",
 ["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
 ]
-update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
 thanks = "Thank you!"
 
 [login]
