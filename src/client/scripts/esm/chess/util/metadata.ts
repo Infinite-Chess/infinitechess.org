@@ -43,13 +43,15 @@ interface MetaData {
 	WhiteElo?: string,
 	/** The display elo of the black player, whihc may includ a "?" if we're uncertain about their rating. */
 	BlackElo?: string,
+	/** How much elo white gained/lost from the match. */
+	WhiteRatingDiff?: string,
+	/** How much elo black gained/lost from the match. */
+	BlackRatingDiff?: string,
 	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw) */
 	Result?: string,
 	/** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
 	Termination?: string,
 }
-
-// getMetadataOfGame()
 
 
 
@@ -66,10 +68,21 @@ function getResultFromVictor(victor?: Player): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
+/**
+ * Takes elo change, calculates the string that should go into
+ * the WhiteRatingDiff or BlackRatingDiff fields of the metadata.
+ */
+function getWhiteBlackRatingDiff(eloChange: number): string {
+	const isPositive = eloChange >= 0;
+	eloChange = Math.round(eloChange);
+	return isPositive ? `+${eloChange}` : `${eloChange}`; // negative numbers are already negative
+}
+
 
 
 export default {
 	getResultFromVictor,
+	getWhiteBlackRatingDiff,
 };
 
 export type {

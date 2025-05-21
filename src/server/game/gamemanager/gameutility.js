@@ -21,17 +21,15 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
-import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/memberManager.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { VariantLeaderboards, Leaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-
+import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
+
 // Type Definitions...
 
 /**
@@ -40,6 +38,7 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
  * @typedef {import('../../../client/scripts/esm/chess/logic/clock.js').ClockValues} ClockValues
  * @typedef {import('../../../client/scripts/esm/chess/util/typeutil.js').Player} Player
  * @typedef {import('../../../client/scripts/esm/chess/util/metadata.js').MetaData} MetaData
+ * @typedef {import('./ratingcalculation.js').RatingData} RatingData
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -101,6 +100,16 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 	const { white, black, player1Color, player2Color } = assignWhiteBlackPlayersFromInvite(inviteOptions.color, player1, player2);
 	newGame.players[players.WHITE].identifier = white;
 	newGame.players[players.BLACK].identifier = black;
+
+	if (newGame.variant in VariantLeaderboards) {
+		// Set their elos at the start of the game.
+		// Safe, avoids their elos potentially changing mid game, which should never happen.
+		// Also avoids fetching their elo from the db multiple times in a game when resyncing.
+		const whiteUserId = newGame.players[players.WHITE].identifier.user_id;
+		const blackUserId = newGame.players[players.BLACK].identifier.user_id;
+		newGame.players[players.WHITE].elo = getDisplayEloOfPlayerInLeaderboard(whiteUserId, VariantLeaderboards[newGame.variant]);
+		newGame.players[players.BLACK].elo = getDisplayEloOfPlayerInLeaderboard(blackUserId, VariantLeaderboards[newGame.variant]);
+	}
 
 	// Set whos turn
 	newGame.whosTurn = newGame.gameRules.turnOrder[0];
@@ -271,9 +280,10 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 /**
  * Generates metadata for a game including event details, player information, and timestamps.
  * @param {Game} game - The game object containing details about the game.
+ * @param {RatingData} [ratingdata] The rating data after their elos are changed after the game. Required IF you want WhiteRatingDiff & BlackRatingDiff in the metadata!
  * @returns {MetaData} - An object containing metadata for the game including event name, players, time control, and UTC timestamps.
  */
-function getMetadataOfGame(game) {
+function getMetadataOfGame(game, ratingdata) {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 	const white = game.players[players.WHITE].identifier;
@@ -293,12 +303,20 @@ function getMetadataOfGame(game) {
 	if (white.member !== undefined) {
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
-		if (game.variant in VariantLeaderboards) gameMetadata.WhiteElo = getDisplayEloOfPlayerInLeaderboard(white.user_id, VariantLeaderboards[game.variant]);
+		if (game.players[players.WHITE].elo) gameMetadata.WhiteElo = game.players[players.WHITE].elo;
 	}
 	if (black.member !== undefined) {
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
-		if (game.variant in VariantLeaderboards) gameMetadata.BlackElo = getDisplayEloOfPlayerInLeaderboard(black.user_id, VariantLeaderboards[game.variant]);
+		if (game.players[players.BLACK].elo) gameMetadata.BlackElo = game.players[players.BLACK].elo;
+	}
+
+	if (ratingdata) {
+		// console.log("Rating data: ", ratingdata);
+		// Include WhiteRatingDiff & BlackRatingDiff
+		// Players may not be defined in the rating data if the game was aborted (no ratings changed)
+		if (ratingdata[players.WHITE]) gameMetadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingdata[players.WHITE].elo_change_from_game);
+		if (ratingdata[players.BLACK]) gameMetadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingdata[players.BLACK].elo_change_from_game);
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata

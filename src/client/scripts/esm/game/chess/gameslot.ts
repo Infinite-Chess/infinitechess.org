@@ -13,11 +13,12 @@ import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
+import type { BaseRay } from "../rendering/highlights/annotations/drawrays.js";
+import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
 import enginegame from '../misc/enginegame.js';
-
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import spritesheet from "../rendering/spritesheet.js";
@@ -43,7 +44,7 @@ import annotations from "../rendering/highlights/annotations/annotations.js";
 import texturecache from "../../chess/rendering/texturecache.js";
 import sound from "../misc/sound.js";
 import guiclock from "../gui/guiclock.js";
-import { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import drawrays from "../rendering/highlights/annotations/drawrays.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
@@ -74,7 +75,9 @@ interface LoadOptions {
 	viewWhitePerspective: boolean,
 	/** Whether the coordinate field box should be editable. */
 	allowEditCoords: boolean,
-	additional?: Additional
+	/** Preset ray overrides for the variant's rays. */
+	presetRays?: BaseRay[],
+	additional?: Additional,
 }
 
 /** Additional options that may go into the gamefile constructor.
@@ -89,7 +92,7 @@ interface Additional {
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues,
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor?: true
+	editor?: true,
 }
 
 /**
@@ -106,7 +109,7 @@ interface VariantOptions {
 	/**
 	 * The starting position object, containing the pieces organized by key.
 	 * The key of the object is the coordinates of the piece as a string,
-	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
+	 * and the value is the type of piece on that coordinate (e.g. [22] pawn (neutral))
 	 */
 	position: Map<CoordsKey, number>
 	/** The 3 global game states */
@@ -224,6 +227,9 @@ function loadLogical(loadOptions: LoadOptions) {
 	loadedGamefile = newGamefile;
 
 	specialrighthighlights.regenModel();
+
+	// If custom preset rays are specified, initiate them in drawrays.ts
+	if (loadOptions.presetRays) drawrays.setPresetOverrides(loadOptions.presetRays);
 }
 
 /** Loads all of the graphical components of a game */

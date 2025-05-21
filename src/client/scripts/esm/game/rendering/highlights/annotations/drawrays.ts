@@ -37,6 +37,15 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 };
 
 
+/** The simplest form of a ray. */
+type BaseRay = { start: Coords, vector: Vec2 };
+
+/**
+ * The preset ray overrides if provided from the ICN.
+ * These override the variant's preset rays.
+ */
+let preset_rays: BaseRay[] | undefined;
+
 /** This will be defined if we are CURRENTLY drawing a ray. */
 let drag_start: Coords | undefined;
 /** The ID of the pointer that is drawing the ray. */
@@ -55,7 +64,7 @@ function areDrawing() {
 
 /** Returns all the preset rays in the current variant. */
 function getPresetRays(): Ray[] {
-	const baseRays = variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant);
+	const baseRays = preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant);
 	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
 	return baseRays.map(r => {
 		return {
@@ -345,6 +354,25 @@ function dispatchRayCountEvent(rays: Ray[]) {
 	document.dispatchEvent(new CustomEvent('ray-count-change', { detail: rays.length }));
 }
 
+/**
+ * Sets the preset rays, if they were specified in the ICN.
+ * These override the variant's preset rays.
+ */
+function setPresetOverrides(prs: BaseRay[]) {
+	if (preset_rays) throw Error("Preset rays already initialized. Did you forget to clearPresetOverrides()?");
+	preset_rays = prs;
+}
+
+/** Returns the preset ray overrides from the ICN. */
+function getPresetOverrides() {
+	return preset_rays;
+}
+
+/** Clears the preset ray overrides from the ICN. */
+function clearPresetOverrides() {
+	preset_rays = undefined;
+}
+
 
 // Rendering -----------------------------------------------------------------
 
@@ -409,5 +437,12 @@ export default {
 	getLines,
 	collapseRays,
 	dispatchRayCountEvent,
+	setPresetOverrides,
+	getPresetOverrides,
+	clearPresetOverrides,
 	render,
+};
+
+export type {
+	BaseRay
 };

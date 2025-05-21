@@ -297,6 +297,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 
 /**
  * Gets a string containing the display value for the rating of a player on a specific leaderboard.
+ * If they aren't on it yet, this returns the starting elo with a '?'
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard.
  * @returns The player's leaderboard display string

@@ -10,12 +10,12 @@ import { _Move_In, LongFormatIn } from '../../chess/logic/icn/icnconverter.js';
 import state from '../../chess/logic/state.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
-import movepiece from '../../chess/logic/movepiece.js';
 
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
+import type { BaseRay } from '../rendering/highlights/annotations/drawrays.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 
@@ -51,7 +51,7 @@ interface SimplifiedGameState {
  * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFormatIn {
+function compressGamefile(gamefile: gamefile, copySinglePosition?: boolean, preset_rays?: BaseRay[]): LongFormatIn {
 
 	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;
@@ -96,6 +96,9 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: true): LongFo
 		state_global: gamestate.state_global,
 		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(gamefile.moves),
 	};
+	
+	// Add the preset ray overrides from the previously pasted game, if present.
+	if (preset_rays) long_format_in.preset_rays = preset_rays;
 
 	console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
 

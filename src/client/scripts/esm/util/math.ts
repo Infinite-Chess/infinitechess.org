@@ -817,6 +817,7 @@ function moveTowards(s: number, e: number, progress: number): number {
 }
 
 
+
 // Easing Functions --------------------------------------------------------------------------------
 
 

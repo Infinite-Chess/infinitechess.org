@@ -51,17 +51,17 @@ async function logGame(game: Game) {
 	// Convert the Date of the game to Sqlite string
 	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated);
 
-	// 1. Enter the game into the games table
-	const results = await enterGameInGamesTable(game, dateSqliteString);
+	// 1. Update the leaderboards table
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor;
+	const ratingdata = await updateLeaderboardsTable(game, victor);
+
+	// 2. Enter the game into the games table
+	const results = await enterGameInGamesTable(game, dateSqliteString, ratingdata);
 	if (results.success === false) { // Failure to log game into database and update player stats
 		await logEvents('Failed to log game. Check unloggedGames log. Not incrementing player stats either.', 'errLog.txt', { print: true });
 		await logEvents(results.reason, 'unloggedGames.txt'); // Log into a separate log
 		return;
 	}
-
-	// 2. Update the leaderboards table
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor;
-	const ratingdata = await updateLeaderboardsTable(game, victor);
 
 	// 3. Enter the game into the player_games table
 	await updatePlayerGamesTable(game, results.game_id, victor, ratingdata);
@@ -75,9 +75,9 @@ async function logGame(game: Game) {
 type LogGameResult = { success: true; game_id: number } | { success: false; reason: string };
 
 /** Enters a game into the games table */
-async function enterGameInGamesTable(game: Game, dateSqliteString: string): Promise<LogGameResult> {
+async function enterGameInGamesTable(game: Game, dateSqliteString: string, ratingdata: RatingData): Promise<LogGameResult> {
 
-	const metadata = gameutility.getMetadataOfGame(game);
+	const metadata = gameutility.getMetadataOfGame(game, ratingdata);
 	VerifyRequiredMetadata(metadata); // TEMPORARY!!! DELETE AFTER MIGRATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	const ICN = await getICNOfGame(game, metadata);
 	if (!ICN) return { success: false, reason: `ICN undefined when logging game, cannot log or increment player stats! Game: ${gameutility.getSimplifiedGameString(game)}` };

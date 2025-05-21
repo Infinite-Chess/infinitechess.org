@@ -21,6 +21,7 @@ import icncommentutils, { CommandObject } from "./icncommentutils.js";
 import type { GameRules } from "../../variants/gamerules.js";
 import type { MetaData } from "../../util/metadata.js";
 import type { EnPassant, GlobalGameState } from "../state.js";
+import type { BaseRay } from "../../../game/rendering/highlights/annotations/drawrays.js";
 
 
 // Type Definitions -------------------------------------------------------------------
@@ -40,10 +41,17 @@ interface LongFormatOut extends LongFormatBase {
 
 /** Shared properties between in & out game formats. */
 interface LongFormatBase {
+	/**
+	 * IN => Required if you want the position specified in the ICN. Otherwise, Variant, UTCDate, and UTCTime metadata are required.
+	 * OUT => Specified if the ICN contains the position. Otherwise, Variant metadata is required in the ICN.
+	 */
 	position?: Map<CoordsKey, number>
 	gameRules: GameRules
 	fullMove: number
+	/** Same rules as for {@link LongFormatBase['position']}, but for the specialRights. */
 	state_global: Partial<GlobalGameState>
+	/** Overrides the preset rays in the variant if specified. */
+	preset_rays?: BaseRay[]
 }
 
 /** The named capture groups of a shortform move. */
@@ -53,7 +61,7 @@ type NamedCaptureMoveGroups = {
 	/** The piece abbreviation of the promoted piece, if present. */
 	promotionAbbr?: string,
 	/**
-	 * An un-parsed comment on a move. This may contain embeded command sequences.
+	 * An un-parsed comment on a move. This may contain embedded command sequences.
 	 * However it won't include the opening "{" or closing "}" braces.
 	 */
 	comment?: string
@@ -190,6 +198,8 @@ const metadata_ordering: (keyof MetaData)[] = [
     "BlackID",
 	"WhiteElo",
 	"BlackElo",
+	"WhiteRatingDiff",
+	"BlackRatingDiff",
     "Result",
     "Termination"
 ];
@@ -333,7 +343,7 @@ function getMoveRegexSource(capturing: boolean): string {
 /**
  * Construct the regexes for matching sections of the ICN.
  * 
- * [Variant "Classical"] w 3,4 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
+ * [Variant "Classical"] w 3,4 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate Rays:14,-140>-1,-1 P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
  */
 
 /**
@@ -366,6 +376,19 @@ const singleWinConSource = '[a-z]{3,100}'; // 'royalcapture'   Minimum of 3 char
 const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*`; // 'royalcapture,koth'
 /** Captures the win conditions section in the ICN. */
 const winConditionRegex = new RegExp(String.raw`(?<winConditions>${singlePlayerWinConSource}(?:\|${singlePlayerWinConSource})*)${whiteSpaceOrEnd}`, 'y');
+
+/** Matches a single preset ray, optionally capturing its properties. */
+function getRayRegexSource(capturing: boolean): string {
+	const startCoordsKey = capturing ? '<startCoordsKey>' : ':';
+	const vec2Key = capturing ? '<vec2Key>' : ':';
+	return `(?${startCoordsKey}${coordsKeyRegexSource})>(?${vec2Key}${coordsKeyRegexSource})`;
+}
+// const singleRaySource = String.raw`${coordsKeyRegexSource}>${coordsKeyRegexSource}`; // 'x,y>dx,dy'
+/**
+ * Matches the preset rays segment in ICN
+ * 'Rays:x,y>dx,dy|x,y>dx,dy'
+ */
+const presetRaysRegex = new RegExp(String.raw`Rays:(?<rayPresets>${getRayRegexSource(false)}(\|${getRayRegexSource(false)})*)${whiteSpaceOrEnd}`, 'y'); // 'Rays:x,y>dx,dy|x,y>dx,dy'
 
 // SKIP THE POSITION (It can be too big to capture all at once)
 
@@ -612,6 +635,16 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	}
 
 
+	// Preset rays
+	if (longformat.preset_rays) {
+		positionSegments.push('Rays:' + longformat.preset_rays.map(pr => {
+			return coordutil.getKeyFromCoords(pr.start) +
+				'>' +
+				coordutil.getKeyFromCoords(pr.vector);
+		}).join('|'));
+	}
+
+
 	// Position - P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
 	if (!options.skipPosition) {
 		if (longformat.position === undefined) throw Error("longformat.position must be specified when skipPosition = false");
@@ -668,6 +701,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let promotionRanks: PlayerGroup<number[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
 	let winConditions: PlayerGroup<string[]> = {}; // Required
+	let presetRays: BaseRay[] | undefined;
 	let position: Map<CoordsKey, number> | undefined;
 	let specialRights: Set<CoordsKey> | undefined;
 	let moves: _Move_Out[] | undefined;
@@ -850,6 +884,38 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 
+	// Preset Rays
+	presetRaysRegex.lastIndex = lastIndex;
+
+	const raysResult = presetRaysRegex.exec(icn);
+	if (raysResult) {
+		presetRays = [];
+		const capturingRaysRegex = new RegExp(getRayRegexSource(true), "g");
+
+		// Since the rayRegex has the global flag, exec() will return the next match each time.
+		// NO STRING SPLITTING REQUIRED
+		let match: RegExpExecArray | null;
+		while ((match = capturingRaysRegex.exec(raysResult[0]!))) {
+			const startCoordsKey = match.groups!['startCoordsKey'] as CoordsKey;
+			const vec2Key = match.groups!['vec2Key'] as CoordsKey;
+
+			const start = coordutil.getCoordsFromKey(startCoordsKey);
+			const vector = coordutil.getCoordsFromKey(vec2Key);
+
+			// Make sure neither are Infinity
+			if (!isFinite(start[0]) || !isFinite(start[1]) || !isFinite(vector[0]) || !isFinite(vector[1])) {
+				throw Error(`Ray start/vector must not be Infinite. ${JSON.stringify(match.groups)}`);
+			}
+
+			presetRays.push({ start, vector });
+		}
+
+		// console.log("Parsed rays:", presetRays);
+
+		lastIndex = presetRaysRegex.lastIndex; // Update the ICN index being observed
+	}
+
+
 	/**
 	 * Moves
 	 * 
@@ -974,6 +1040,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	};
 	if (position) longFormatOut.position = position;
 	if (moves) longFormatOut.moves = moves;
+	if (presetRays) longFormatOut.preset_rays = presetRays;
 
 	// console.log("Finished parcing ICN!");
 	// console.log("Parsed longformat:", jsutil.deepCopyObject(longFormatOut));

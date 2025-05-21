@@ -3,7 +3,7 @@
  */
 
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
-import { PlayerGroup, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { PlayerGroup, type Player, players as p } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 // Default variables, shared across all leaderboards ------------------------------------------------------------------
 
@@ -107,26 +107,25 @@ function new_RD(r: number, RD: number, r_opp: number, RD_opp: number) {
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
  */
 function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : RatingData {
-	const playerCount = Object.keys(ratingdata).length;
-
 	// Currently, only rating calculations for 2-player games with White vs Black are supported
-	if (playerCount !== 2) return ratingdata;
-	if (ratingdata[1] === undefined || ratingdata[2] === undefined) return ratingdata;
+	const playerCount = Object.keys(ratingdata).length;
+	if (playerCount !== 2) throw Error('Rating changes are only supported in two player games!');
+	if (ratingdata[p.WHITE] === undefined || ratingdata[p.BLACK] === undefined) throw Error("Missing White or Black's rating data!");
 
-	const r1 = ratingdata[1].elo_at_game;
-	const r2 = ratingdata[2].elo_at_game;
-	const RD1 = getTrueRD(ratingdata[1].rating_deviation_at_game, ratingdata[1].rd_last_update_date);
-	const RD2 = getTrueRD(ratingdata[2].rating_deviation_at_game, ratingdata[2].rd_last_update_date);
-	const outcome_white = (victor === 1 ? 1 : (victor === 2 ? 0 : 0.5 ));
-	const outcome_black = (victor === 1 ? 0 : (victor === 2 ? 1 : 0.5 ));
+	const r1 = ratingdata[p.WHITE]!.elo_at_game;
+	const r2 = ratingdata[p.BLACK]!.elo_at_game;
+	const RD1 = getTrueRD(ratingdata[p.WHITE]!.rating_deviation_at_game, ratingdata[p.WHITE]!.rd_last_update_date);
+	const RD2 = getTrueRD(ratingdata[p.BLACK]!.rating_deviation_at_game, ratingdata[p.BLACK]!.rd_last_update_date);
+	const outcome_white = (victor === p.WHITE ? 1 : (victor === p.BLACK ? 0 : 0.5 ));
+	const outcome_black = (victor === p.WHITE ? 0 : (victor === p.BLACK ? 1 : 0.5 ));
 
-	ratingdata[1].elo_after_game = new_rating(outcome_white, r1, RD1, r2, RD2);
-	ratingdata[1].rating_deviation_after_game = new_RD(r1, RD1, r2, RD2);
-	ratingdata[1].elo_change_from_game = ratingdata[1].elo_after_game - r1;
+	ratingdata[p.WHITE]!.elo_after_game = new_rating(outcome_white, r1, RD1, r2, RD2);
+	ratingdata[p.WHITE]!.rating_deviation_after_game = new_RD(r1, RD1, r2, RD2);
+	ratingdata[p.WHITE]!.elo_change_from_game = ratingdata[p.WHITE]!.elo_after_game! - r1;
 
-	ratingdata[2].elo_after_game = new_rating(outcome_black, r2, RD2, r1, RD1);
-	ratingdata[2].rating_deviation_after_game = new_RD(r2, RD2, r1, RD1);
-	ratingdata[2].elo_change_from_game = ratingdata[2].elo_after_game - r2;
+	ratingdata[p.BLACK]!.elo_after_game = new_rating(outcome_black, r2, RD2, r1, RD1);
+	ratingdata[p.BLACK]!.rating_deviation_after_game = new_RD(r2, RD2, r1, RD1);
+	ratingdata[p.BLACK]!.elo_change_from_game = ratingdata[p.BLACK]!.elo_after_game! - r2;
 
 	return ratingdata;
 }
