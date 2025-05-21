@@ -356,18 +356,18 @@ function dispatchRayCountEvent(rays: Ray[]) {
  * Sets the preset rays, if they were specified in the ICN.
  * These override the variant's preset rays.
  */
-function setPresets(prs: BaseRay[]) {
-	if (preset_rays) throw Error("Preset rays already initialized. Did you forget to clearPresets()?");
+function setPresetOverrides(prs: BaseRay[]) {
+	if (preset_rays) throw Error("Preset rays already initialized. Did you forget to clearPresetOverrides()?");
 	preset_rays = prs;
 }
 
 /** Returns the preset ray overrides from the ICN. */
-function getPresets() {
+function getPresetOverrides() {
 	return preset_rays;
 }
 
 /** Clears the preset ray overrides from the ICN. */
-function clearPresets() {
+function clearPresetOverrides() {
 	preset_rays = undefined;
 }
 
@@ -435,8 +435,8 @@ export default {
 	getLines,
 	collapseRays,
 	dispatchRayCountEvent,
-	setPresets,
-	getPresets,
-	clearPresets,
+	setPresetOverrides,
+	getPresetOverrides,
+	clearPresetOverrides,
 	render,
 };

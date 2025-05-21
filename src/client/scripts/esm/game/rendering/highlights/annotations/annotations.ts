@@ -178,7 +178,7 @@ function onGameUnload() {
 	clearAnnotes(annotes_linger);
 	drawarrows.stopDrawing();
 	drawrays.stopDrawing();
-	drawrays.clearPresets();
+	drawrays.clearPresetOverrides();
 }
 
 

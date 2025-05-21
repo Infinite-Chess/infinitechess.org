@@ -53,7 +53,10 @@ function copyGame(copySinglePosition) {
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
-	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition);
+	// Add the preset ray overrides from the previously pasted game, if present.
+	const preset_rays = drawrays.getPresetOverrides();
+
+	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition, preset_rays);
 	// Convert the variant metadata code to spoken language if translation is available
 	if (longformatIn.metadata.Variant) longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 	
@@ -222,7 +225,7 @@ function pasteGame(longformOut) {
 	});
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
-	if (longformOut.preset_rays) drawrays.setPresets(longformOut.preset_rays);
+	if (longformOut.preset_rays) drawrays.setPresetOverrides(longformOut.preset_rays);
 
 	const gamefile = gameslot.getGamefile();
 
