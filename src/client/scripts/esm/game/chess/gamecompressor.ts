@@ -12,10 +12,10 @@ import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 
 
-import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
+import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
-import type { Vec2 } from '../../util/math.js';
+import type { BaseRay } from '../rendering/highlights/annotations/drawrays.js';
 // @ts-ignore
 import type gamefile from '../../chess/logic/gamefile.js';
 
@@ -43,8 +43,6 @@ interface SimplifiedGameState {
 		moveRuleState?: number,
 	}
 }
-
-type BaseRay = { start: Coords, vector: Vec2 };
 
 
 /**

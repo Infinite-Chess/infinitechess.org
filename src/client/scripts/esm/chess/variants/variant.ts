@@ -10,7 +10,7 @@ import type { Move } from '../logic/movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { Vec2 } from '../../util/math.js';
+import type { BaseRay } from '../../game/rendering/highlights/annotations/drawrays.js';
 // @ts-ignore
 import type gamefile from '../logic/gamefile.js';
 // @ts-ignore
@@ -98,9 +98,6 @@ type SpecialVicinity = {
 	// eslint-disable-next-line no-unused-vars
 	[r in RawType]?: Coords[]
 }
-
-/** The simplest form of a ray. */
-type BaseRay = { start: Coords, vector: Vec2 };
 
 
 

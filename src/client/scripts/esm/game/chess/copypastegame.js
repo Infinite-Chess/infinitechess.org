@@ -219,13 +219,13 @@ function pasteGame(longformOut) {
 		});
 	}
 
-	gameloader.pasteGame({
+	const options = {
 		metadata: longformOut.metadata,
-		additional,
-	});
+		additional
+	};
+	if (longformOut.preset_rays) options.presetRays = longformOut.preset_rays;
 
-	// If custom preset rays are specified, initiate them in drawrays.ts
-	if (longformOut.preset_rays) drawrays.setPresetOverrides(longformOut.preset_rays);
+	gameloader.pasteGame(options);
 
 	const gamefile = gameslot.getGamefile();
 

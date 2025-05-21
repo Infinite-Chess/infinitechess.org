@@ -37,7 +37,9 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 };
 
 
+/** The simplest form of a ray. */
 type BaseRay = { start: Coords, vector: Vec2 };
+
 /**
  * The preset ray overrides if provided from the ICN.
  * These override the variant's preset rays.
@@ -439,4 +441,8 @@ export default {
 	getPresetOverrides,
 	clearPresetOverrides,
 	render,
+};
+
+export type {
+	BaseRay
 };

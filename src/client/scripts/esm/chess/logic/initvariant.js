@@ -71,7 +71,6 @@ function genStartSnapshot(gamefile, metadata, variantOptions) {
 		specialRights = variantOptions.state_global.specialRights;
 		enpassant = variantOptions.state_global.enpassant;
 		if (variantOptions.gameRules.moveRule !== undefined && variantOptions.state_global.moveRuleState === undefined) throw Error("If moveRule is specified, moveRuleState must also be specified.");
-		console.log("Move rule state:", variantOptions.state_global.moveRuleState);
 		moveRuleState = variantOptions.state_global.moveRuleState;
 	} else {
 		({ position, specialRights } = variant.getStartingPositionOfVariant(metadata));

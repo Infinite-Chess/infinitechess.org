@@ -15,6 +15,7 @@ import type { JoinGameMessage, ServerGameMovesMessage } from "../misc/onlinegame
 import type { Additional, VariantOptions } from "./gameslot.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
+import type { BaseRay } from "../rendering/highlights/annotations/drawrays.js";
 
 
 import gui from "../gui/gui.js";
@@ -251,7 +252,8 @@ async function pasteGame(options: {
 		/** If we're in the board editor, this must be empty. */
 		moves?: ServerGameMovesMessage,
 		variantOptions: VariantOptions,
-	}
+	},
+	presetRays?: BaseRay[]
 }) {
 	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online' && typeOfGameWeAreIn !== 'editor') throw Error("Can't paste a game when we're not in a local, online, or editor game.");
 	if (typeOfGameWeAreIn === 'editor' && options.additional.moves && options.additional.moves.length > 0) throw Error("Can't paste a game with moves played while in the editor.");
@@ -273,6 +275,7 @@ async function pasteGame(options: {
 		metadata: options.metadata,
 		viewWhitePerspective,
 		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
+		presetRays: options.presetRays,
 		additional: additionalToUse,
 	})
 		.then((result: any) => onFinishedLoading())

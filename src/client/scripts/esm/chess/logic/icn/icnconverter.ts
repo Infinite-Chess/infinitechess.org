@@ -21,7 +21,7 @@ import icncommentutils, { CommandObject } from "./icncommentutils.js";
 import type { GameRules } from "../../variants/gamerules.js";
 import type { MetaData } from "../../util/metadata.js";
 import type { EnPassant, GlobalGameState } from "../state.js";
-import type { Vec2 } from "../../../util/math.js";
+import type { BaseRay } from "../../../game/rendering/highlights/annotations/drawrays.js";
 
 
 // Type Definitions -------------------------------------------------------------------
@@ -100,9 +100,6 @@ interface _Move_Compact {
 	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
 	promotion?: number,
 }
-
-/** Used for preset rays */
-type BaseRay = { start: Coords, vector: Vec2 };
 
 
 // Dictionaries -----------------------------------------------------------------------
@@ -890,17 +887,15 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 	const raysResult = presetRaysRegex.exec(icn);
 	if (raysResult) {
-		console.log("Parsing rays:", raysResult);
-
 		presetRays = [];
 		const capturingRaysRegex = new RegExp(getRayRegexSource(true), "g");
 
 		// Since the rayRegex has the global flag, exec() will return the next match each time.
 		// NO STRING SPLITTING REQUIRED
 		let match: RegExpExecArray | null;
-		while (match = capturingRaysRegex.exec(raysResult[0]!)) {
-			const startCoordsKey = match.groups!.startCoordsKey as CoordsKey;
-			const vec2Key = match.groups!.vec2Key as CoordsKey;
+		while ((match = capturingRaysRegex.exec(raysResult[0]!))) {
+			const startCoordsKey = match.groups!['startCoordsKey'] as CoordsKey;
+			const vec2Key = match.groups!['vec2Key'] as CoordsKey;
 
 			const start = coordutil.getCoordsFromKey(startCoordsKey);
 			const vector = coordutil.getCoordsFromKey(vec2Key);
@@ -913,7 +908,9 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			presetRays.push({ start, vector });
 		}
 
-		console.log("Parsed rays:", presetRays);
+		// console.log("Parsed rays:", presetRays);
+
+		lastIndex = presetRaysRegex.lastIndex; // Update the ICN index being observed
 	}
 
 
