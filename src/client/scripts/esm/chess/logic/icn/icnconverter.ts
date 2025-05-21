@@ -61,7 +61,7 @@ type NamedCaptureMoveGroups = {
 	/** The piece abbreviation of the promoted piece, if present. */
 	promotionAbbr?: string,
 	/**
-	 * An un-parsed comment on a move. This may contain embeded command sequences.
+	 * An un-parsed comment on a move. This may contain embedded command sequences.
 	 * However it won't include the opening "{" or closing "}" braces.
 	 */
 	comment?: string
