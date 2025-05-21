@@ -41,10 +41,16 @@ interface LongFormatOut extends LongFormatBase {
 
 /** Shared properties between in & out game formats. */
 interface LongFormatBase {
+	/**
+	 * IN => Required if you want the position specified in the ICN. Otherwise, Variant, UTCDate, and UTCTime metadata are required.
+	 * OUT => Specified if the ICN contains the position. Otherwise, Variant metadata is required in the ICN.
+	 */
 	position?: Map<CoordsKey, number>
 	gameRules: GameRules
 	fullMove: number
+	/** Same rules as for {@link LongFormatBase['position']}, but for the specialRights. */
 	state_global: Partial<GlobalGameState>
+	/** Overrides the preset rays in the variant if specified. */
 	preset_rays?: BaseRay[]
 }
 
