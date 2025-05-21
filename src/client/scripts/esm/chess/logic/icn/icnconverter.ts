@@ -603,7 +603,7 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 			const promotions: RawType[] = promotionsAllowedCopy[player] ?? [];
 			if (promotions.length === 0) throw Error(`Player was given promotion ranks, but no promotions allowed! (${player}: ${ranksString})`);
 			if (!isPromotionListDefaultPromotions(promotions)) {
-				const promotionsAbbrevs = promotions.map(type => piece_codes_raw[type].toUpperCase()).join(','); // 'N,R,B,Q'
+				const promotionsAbbrevs = promotions.map(type => piece_codes_raw[type]).join(','); // 'N,R,B,Q'
 				playerSegment.push(promotionsAbbrevs);
 			}
 
