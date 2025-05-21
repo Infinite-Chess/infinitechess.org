@@ -144,6 +144,12 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset: PieceMoveset): IgnoreFuncti
 	return pieceMoveset.ignore || movesets.defaultIgnoreFunction;
 }
 
+/**
+ * Creates an empty LegalMoves object for a piece.
+ * Should only be used outside of {@link calculateAll} when check doesn't matter or when you don't want special or calculated moves.
+ * @param moveset the moveset belonging to the piece of the legalmoves
+ * @returns the legal moves object
+ */
 function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
 	return {
 		individual: [],
@@ -152,13 +158,26 @@ function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
 	};
 }
 
-function appendSpecialMoves(gamefile: gamefile, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves) {
+/**
+ * Adds any of the pieces movesets applicable special moves
+ * @param gamefile 
+ * @param piece 
+ * @param moveset 
+ * @param legalmoves 
+ */
+function appendSpecialMoves(gamefile: gamefile, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
 	const color = typeutil.getColorFromType(piece.type);
-	// Add any special moves!
 	if (moveset.special) legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color));
 }
 
-function appendCalculatedMoves(gamefile: gamefile, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves) {
+/**
+ * Calculates and adds any individual or sliding moves of the piece from the moveset provided.
+ * @param gamefile 
+ * @param piece 
+ * @param moveset 
+ * @param legalmoves 
+ */
+function appendCalculatedMoves(gamefile: gamefile, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
 	const color = typeutil.getColorFromType(piece.type);
 
 	// Legal jumping/individual moves
@@ -179,6 +198,21 @@ function appendCalculatedMoves(gamefile: gamefile, piece: Piece, moveset: PieceM
 			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, gamefile.pieces, lines.get(key)!, line, limits, piece.coords, color)!;
 		};
 	};
+}
+
+/**
+ * Calculates and generates all legal moves of a piece in the provided gamefile.
+ * @param gamefile 
+ * @param piece 
+ * @returns The legal moves of that piece
+ */
+function calculateAll(gamefile: gamefile, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(gamefile, piece.type);
+	const moves = getEmptyLegalMoves(moveset);
+	appendCalculatedMoves(gamefile, piece, moveset, moves);
+	appendSpecialMoves(gamefile, piece, moveset, moves);
+	checkresolver.removeCheckInvalidMoves(gamefile, piece, moves);
+	return moves;
 }
 
 /**
@@ -399,11 +433,7 @@ function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedG
 	}
 
 	// Test if that piece's legal moves contain the destinationCoords.
-	const moveset = getPieceMoveset(gamefile, piecemoved.type);
-	const legalMoves = getEmptyLegalMoves(moveset);
-	appendCalculatedMoves(gamefile, piecemoved, moveset, legalMoves);
-	appendSpecialMoves(gamefile, piecemoved, moveset, legalMoves);
-	checkresolver.removeCheckInvalidMoves(gamefile, piecemoved, legalMoves);
+	const legalMoves = calculateAll(gamefile, piecemoved);
 
 	// This should pass on any special moves tags at the same time.
 	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, moveDraftCopy.endCoords, colorOfPieceMoved)) { // Illegal move
@@ -504,6 +534,7 @@ export default {
 	getEmptyLegalMoves,
 	appendCalculatedMoves,
 	appendSpecialMoves,
+	calculateAll,
 
 	checkIfMoveLegal,
 	isOpponentsMoveLegal,

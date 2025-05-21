@@ -40,7 +40,6 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
-import checkresolver from '../../chess/logic/checkresolver.js';
 import enginegame from '../misc/enginegame.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
@@ -418,12 +417,9 @@ function unselectPiece() {
 function initSelectedPieceInfo(gamefile: gamefile, piece: Piece) {
 	// Initiate
 	pieceSelected = piece;
+
 	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-	const moveset = legalmoves.getPieceMoveset(gamefile, pieceSelected.type);
-	legalMoves = legalmoves.getEmptyLegalMoves(moveset);
-	legalmoves.appendCalculatedMoves(gamefile, pieceSelected, moveset, legalMoves);
-	legalmoves.appendSpecialMoves(gamefile, pieceSelected, moveset, legalMoves);
-	checkresolver.removeCheckInvalidMoves(gamefile, pieceSelected, legalMoves);
+	legalMoves = legalmoves.calculateAll(gamefile, piece);
 	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile, piece.type);

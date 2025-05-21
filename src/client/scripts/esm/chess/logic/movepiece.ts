@@ -25,7 +25,6 @@ import moveutil from '../util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
 import icnconverter from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
-import checkresolver from './checkresolver.js';
 import math from '../../util/math.js';
 import checkdetection from './checkdetection.js';
 // @ts-ignore
@@ -434,7 +433,6 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMov
 	const moveset = legalmoves.getPieceMoveset(gamefile, piece.type);
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
 	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves);
-	checkresolver.removeCheckInvalidMoves(gamefile, piece, legalSpecialMoves);
 	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
