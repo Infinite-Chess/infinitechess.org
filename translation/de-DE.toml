@@ -353,7 +353,7 @@ webgl_unsupported = "Bitte aktualisieren Sie Ihren Browser! Er unterstützt WebG
 bigints_unsupported = "BigInts werden nicht unterstützt. Bitte aktualisieren Sie Ihren Browser.\nBigInts werden benötigt, um das Brett unendlich zu machen."
 shaders_failed = "Shader-Programm konnte nicht initialisiert werden:"
 failed_compiling_shaders = "Beim Kompilieren der Shader ist ein Fehler aufgetreten:"
-Checkmate Practice
+# Checkmate Practice
 
 versus = "gegen"
 easy = "Leicht"
