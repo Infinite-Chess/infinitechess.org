@@ -68,10 +68,21 @@ function getResultFromVictor(victor?: Player): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
+/**
+ * Takes elo change, calculates the string that should go into
+ * the WhiteRatingDiff or BlackRatingDiff fields of the metadata.
+ */
+function getWhiteBlackRatingDiff(eloChange: number): string {
+	const isPositive = eloChange >= 0;
+	eloChange = Math.round(eloChange);
+	return isPositive ? `+${eloChange}` : `${eloChange}`; // negative numbers are already negative
+}
+
 
 
 export default {
 	getResultFromVictor,
+	getWhiteBlackRatingDiff,
 };
 
 export type {

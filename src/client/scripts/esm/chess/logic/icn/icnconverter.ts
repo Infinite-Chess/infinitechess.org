@@ -198,6 +198,8 @@ const metadata_ordering: (keyof MetaData)[] = [
     "BlackID",
 	"WhiteElo",
 	"BlackElo",
+	"WhiteRatingDiff",
+	"BlackRatingDiff",
     "Result",
     "Termination"
 ];

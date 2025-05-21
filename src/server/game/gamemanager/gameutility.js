@@ -28,7 +28,6 @@ import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 // Type Definitions...
@@ -39,6 +38,7 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
  * @typedef {import('../../../client/scripts/esm/chess/logic/clock.js').ClockValues} ClockValues
  * @typedef {import('../../../client/scripts/esm/chess/util/typeutil.js').Player} Player
  * @typedef {import('../../../client/scripts/esm/chess/util/metadata.js').MetaData} MetaData
+ * @typedef {import('./ratingcalculation.js').RatingData} RatingData
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -101,14 +101,14 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 	newGame.players[players.WHITE].identifier = white;
 	newGame.players[players.BLACK].identifier = black;
 
-	if (game.variant in VariantLeaderboards) {
+	if (newGame.variant in VariantLeaderboards) {
 		// Set their elos at the start of the game.
 		// Safe, avoids their elos potentially changing mid game, which should never happen.
 		// Also avoids fetching their elo from the db multiple times in a game when resyncing.
 		const whiteUserId = newGame.players[players.WHITE].identifier.user_id;
 		const blackUserId = newGame.players[players.BLACK].identifier.user_id;
-		newGame.players[players.WHITE].elo = getDisplayEloOfPlayerInLeaderboard(whiteUserId, VariantLeaderboards[game.variant]);
-		newGame.players[players.BLACK].elo = getDisplayEloOfPlayerInLeaderboard(blackUserId, VariantLeaderboards[game.variant]);
+		newGame.players[players.WHITE].elo = getDisplayEloOfPlayerInLeaderboard(whiteUserId, VariantLeaderboards[newGame.variant]);
+		newGame.players[players.BLACK].elo = getDisplayEloOfPlayerInLeaderboard(blackUserId, VariantLeaderboards[newGame.variant]);
 	}
 
 	// Set whos turn
@@ -312,9 +312,11 @@ function getMetadataOfGame(game, ratingdata) {
 	}
 
 	if (ratingdata) {
+		// console.log("Rating data: ", ratingdata);
 		// Include WhiteRatingDiff & BlackRatingDiff
-		gameMetadata.WhiteRatingDiff = ratingdata[players.WHITE].elo_change_from_game;
-		gameMetadata.BlackRatingDiff = ratingdata[players.BLACK].elo_change_from_game;
+		// Players may not be defined in the rating data if the game was aborted (no ratings changed)
+		if (ratingdata[players.WHITE]) gameMetadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingdata[players.WHITE].elo_change_from_game);
+		if (ratingdata[players.BLACK]) gameMetadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingdata[players.BLACK].elo_change_from_game);
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata
