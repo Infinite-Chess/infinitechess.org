@@ -117,7 +117,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// First we make checks on the username...
 	// These 'return's are so that we don't send duplicate responses, AND so we don't create the member anyway.
 	if (!doUsernameFormatChecks(username, req, res)) return;
-	if (!doEmailFormatChecks(email, req, res)) return;
+	if (!await doEmailFormatChecks(email, req, res)) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
 	await generateAccount({ username, email, password }); // { success, result: { lastInsertRowid } }
@@ -260,7 +260,7 @@ function checkProfanity(string: string): boolean {
 };
 
 /** Returns true if the email passes all the checks required for account generation. */
-function doEmailFormatChecks(string: string, req: Request, res: Response): boolean {
+async function doEmailFormatChecks(string: string, req: Request, res: Response): Promise<boolean> {
 	if (string.length > 320) {
 		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_too_long", req) }); // Max email length
 		return false;
@@ -279,7 +279,7 @@ function doEmailFormatChecks(string: string, req: Request, res: Response): boole
 		res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
 		return false;
 	}
-	if (!isEmailDNSValid(string)) {
+	if (!await isEmailDNSValid(string)) {
 		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_domain_invalid", req) });
 		return false;
 	}
