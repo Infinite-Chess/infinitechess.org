@@ -49,6 +49,7 @@ interface JoinGameMessage extends GameUpdateMessage {
 	id: string,
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData,
+	rated: boolean,
 	publicity: 'public' | 'private',
 	youAreColor: Player,
 };

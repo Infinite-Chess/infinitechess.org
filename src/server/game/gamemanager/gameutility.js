@@ -240,6 +240,7 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 		metadata,
 		id: game.id,
 		publicity: game.publicity,
+		rated: game.rated,
 		youAreColor: playerColor,
 		moves: game.moves,
 		gameConclusion: game.gameConclusion,

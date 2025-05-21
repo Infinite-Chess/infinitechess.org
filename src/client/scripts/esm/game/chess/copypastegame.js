@@ -80,7 +80,10 @@ async function callbackPaste(event) {
 	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
-	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
+	if (onlinegame.areInOnlineGame()) {
+		if (!onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
+		if (onlinegame.isRated()) return statustext.showStatus(translations.copypaste.cannot_paste_in_rated);
+	}
 	// Make sure we're not in an engine match
 	if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 	// Make sure it's legal in a private match

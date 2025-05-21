@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "54"
+version = "55"
 maintainer = "Naviary"
 
 [header]
@@ -370,6 +370,7 @@ checkmate_gold_unearned = "Complete 100% of all practice checkmates to earn this
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
 cannot_paste_in_public = "Cannot paste game in a public match!"
+cannot_paste_in_rated = "Cannot paste game in a rated match!"
 cannot_paste_in_engine = "Cannot paste game in an engine match!"
 cannot_paste_after_moves = "Cannot paste game after moves are made!"
 clipboard_denied = "Clipboard permission denied. This might be your browser."
