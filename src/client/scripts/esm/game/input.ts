@@ -1,10 +1,11 @@
 
 /**
- * Future new input script that can listen for inputs on specific elements,
- * not only on the document.
- *
- * Also, we will need built-in double-click and triple-click detection
- * for mapping tools to, such as ray/arrow drawing.
+ * This script can attach input listeners to individual elements.
+ * 
+ * Types of inputs it can hear: Keyboard, mouse, touch.
+ * 
+ * It also can detect simulated mouse clicks via the mouse or finger,
+ * and simulated double click drags!
  */
 
 

@@ -885,6 +885,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 
 	// Preset Rays
+	// Test if the preset rays lie at our current index being observed
 	presetRaysRegex.lastIndex = lastIndex;
 
 	const raysResult = presetRaysRegex.exec(icn);

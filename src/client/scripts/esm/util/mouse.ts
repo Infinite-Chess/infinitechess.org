@@ -7,7 +7,7 @@
 
 
 import { listener_document, listener_overlay } from "../game/chess/game.js";
-import input2, { Mouse, MouseButton } from "../game/input.js";
+import input2, { InputListener, Mouse, MouseButton } from "../game/input.js";
 import space from "../game/misc/space.js";
 // @ts-ignore
 import camera from "../game/rendering/camera.js";
@@ -226,9 +226,18 @@ function getMouseId(button: MouseButton): string | undefined {
  * Returns the relevant listener for the mouse events,
  * depending on whether we're in perspective mode or not.
  */
-function getRelevantListener() {
+function getRelevantListener(): InputListener {
 	if (perspective.getEnabled()) return listener_document;
 	else return listener_overlay;
+}
+
+/**
+ * Returns all the existing pointers' world coordinates,
+ * depending on the relevant listener.
+ */
+function getAllPointerWorlds(): Coords[] {
+	const allPointers = getRelevantListener().getAllPointers();
+	return allPointers.map(pointer => getPointerWorld(pointer.id)!);
 }
 
 
@@ -250,4 +259,5 @@ export default {
 	cancelMouseClick,
 	getMouseId,
 	getRelevantListener,
+	getAllPointerWorlds,
 };
