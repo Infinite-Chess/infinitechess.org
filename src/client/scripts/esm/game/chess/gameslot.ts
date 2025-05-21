@@ -106,7 +106,7 @@ interface VariantOptions {
 	/**
 	 * The starting position object, containing the pieces organized by key.
 	 * The key of the object is the coordinates of the piece as a string,
-	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
+	 * and the value is the type of piece on that coordinate (e.g. [22] pawn (neutral))
 	 */
 	position: Map<CoordsKey, number>
 	/** The 3 global game states */

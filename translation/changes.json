@@ -1,4 +1,8 @@
 {
+	"54": {
+		"note": "Reworded terms.fair_play_paragraph1 line 517, terms.fair_play_rules line 520, and added line 521.",
+		"changes": []
+	},
 	"53": {
 		"note": "Added header.leaderboard on line 14. Added leaderboard.javascript with 4 entries on line 43. Added infinity_leaderboard_rating_deviation on line 127. Added new leaderboard category with 4 entries on line 158. Added engine_indicator line 323. Deleted you_indicator line 401.",
 		"changes": []
