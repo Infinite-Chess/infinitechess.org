@@ -25,6 +25,7 @@ import moveutil from '../util/moveutil.js';
 import { rawTypes } from '../util/typeutil.js';
 import icnconverter from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
+import checkresolver from './checkresolver.js';
 import math from '../../util/math.js';
 import checkdetection from './checkdetection.js';
 // @ts-ignore
@@ -430,9 +431,11 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMov
 		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
 	}
 
-	const legalSpecialMoves: Coords[] = legalmoves.calculate(gamefile, piece, { onlyCalcSpecials: true }).individual;
-	for (let i = 0; i < legalSpecialMoves.length; i++) {
-		const thisCoord: Coords = legalSpecialMoves[i]!;
+	const moveset = legalmoves.getPieceMoveset(gamefile, piece.type);
+	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
+	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves);
+	checkresolver.removeCheckInvalidMoves(gamefile, piece, legalSpecialMoves);
+	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
 		specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, moveDraft);

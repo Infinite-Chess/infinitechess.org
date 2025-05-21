@@ -21,6 +21,7 @@ import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import checkresolver from "../../../chess/logic/checkresolver.js";
 // @ts-ignore
 import specialdetect from "../../../chess/logic/specialdetect.js";
 // @ts-ignore
@@ -90,8 +91,14 @@ function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message
 	// Forward the move...
 
 	const piecemoved = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords)!;
-	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
+
+	const moveset = legalmoves.getPieceMoveset(gamefile, piecemoved.type);
+	const legalMoves = legalmoves.getEmptyLegalMoves(moveset);
+	legalmoves.appendCalculatedMoves(gamefile, piecemoved, moveset, legalMoves);
+	legalmoves.appendSpecialMoves(gamefile, piecemoved, moveset, legalMoves);
+	checkresolver.removeCheckInvalidMoves(gamefile, piecemoved, legalMoves);
 	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
+
 	legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial, onlinegame.getOpponentColor()); // Passes on any special moves flags to the endCoords
 
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);

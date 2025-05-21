@@ -166,7 +166,11 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	 * that should go with the move. But shouldn't the engine provide that info with its move?
 	 */
 	// const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)!;
-	// const legalMoves = legalmoves.calculate(gamefile, piecemoved);
+	// const moveset = legalmoves.getPieceMoveset(gamefile, piecemoved.type);
+	// const legalMoves = legalmoves.getEmptyLegalMoves(moveset);
+	// legalmoves.appendCalculatedMoves(gamefile, piecemoved, moveset, legalMoves);
+	// legalmoves.appendSpecialMoves(gamefile, piecemoved, moveset, legalMoves);
+	// checkresolver.removeCheckInvalidMoves(gamefile, piecemoved, legalMoves);
 	// const endCoordsToAppendSpecial: CoordsSpecial = jsutil.deepCopyObject(move.endCoords);
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 

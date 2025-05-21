@@ -23,6 +23,7 @@ import moveutil from "../../../chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
 import boardpos from "../boardpos.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import checkresolver from "../../../chess/logic/checkresolver.js";
 
 // Type Definitions -------------------------------------------------------------------------------------------
 
@@ -101,7 +102,12 @@ function onPieceIndicatorHover(piece: Piece) {
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
 	const thisRider = boardutil.getPieceFromCoords(gamefile.pieces, piece.coords)!;
-	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
+
+	const moveset = legalmoves.getPieceMoveset(gamefile, thisRider.type);
+	const thisPieceLegalMoves = legalmoves.getEmptyLegalMoves(moveset);
+	legalmoves.appendCalculatedMoves(gamefile, thisRider, moveset, thisPieceLegalMoves);
+	legalmoves.appendSpecialMoves(gamefile, thisRider, moveset, thisPieceLegalMoves);
+	checkresolver.removeCheckInvalidMoves(gamefile, thisRider, thisPieceLegalMoves);
 
 	// Calculate the mesh...
 

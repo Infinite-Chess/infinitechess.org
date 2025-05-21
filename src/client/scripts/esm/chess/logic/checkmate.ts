@@ -14,6 +14,7 @@ import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
 import { players, rawTypes } from '../util/typeutil.js';
 import legalmoves from './legalmoves.js';
+import checkresolver from './checkresolver.js';
 
 
 /**
@@ -34,7 +35,11 @@ function detectCheckmateOrStalemate(gamefile: gamefile): string | false {
 		for (let idx = thesePieces.start; idx < thesePieces.end; idx++) {
 			const thisPiece = boardutil.getPieceFromIdx(gamefile.pieces, idx);
 			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const moves = legalmoves.calculate(gamefile, thisPiece);
+			const moveset = legalmoves.getPieceMoveset(gamefile, thisPiece.type);
+			const moves = legalmoves.getEmptyLegalMoves(moveset);
+			legalmoves.appendCalculatedMoves(gamefile, thisPiece, moveset, moves);
+			legalmoves.appendSpecialMoves(gamefile, thisPiece, moveset, moves);
+			checkresolver.removeCheckInvalidMoves(gamefile, thisPiece, moves);
 			if (legalmoves.hasAtleast1Move(moves)) return false; // Not checkmate
 		}
 	}

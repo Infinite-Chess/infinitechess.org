@@ -148,7 +148,10 @@ function doesSpecialAttackSquare(gamefile: gamefile, square: CoordsSpecial, frie
 		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) { // This square can POTENTIALLY be captured via special move...
 			// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
 			const pieceOnSquare = boardutil.getPieceFromCoords(gamefile.pieces, actualSquare)!;
-			const specialPiecesLegalMoves = legalmoves.calculate(gamefile, pieceOnSquare, { onlyCalcSpecials: true, ignoreCheck: true });
+
+			const moveset = legalmoves.getPieceMoveset(gamefile, pieceOnSquare.type);
+			const specialPiecesLegalMoves = legalmoves.getEmptyLegalMoves(moveset);
+			legalmoves.appendSpecialMoves(gamefile, pieceOnSquare, moveset, specialPiecesLegalMoves);
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
 

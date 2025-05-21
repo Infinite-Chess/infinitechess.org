@@ -144,58 +144,41 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset: PieceMoveset): IgnoreFuncti
 	return pieceMoveset.ignore || movesets.defaultIgnoreFunction;
 }
 
-/**
- * Calculates the legal moves of the provided piece in the provided gamefile.
- * @param gamefile - The gamefile
- * @param piece - The piece: `{ type, coords, index }`
- * @param options - An object that may contain the `onlyCalcSpecials` option, that when *true*, will only calculate the legal special moves of the piece. Default: *false*
- * @returns The legalmoves object.
- */
-function calculate(gamefile: gamefile, piece: Piece, { onlyCalcSpecials = false, ignoreCheck = false } = {}) { // piece: { type, coords }
-	const coords = piece.coords;
-	const type = piece.type;
-	const color = typeutil.getColorFromType(type); // Color of piece calculating legal moves of
-
-	const thisPieceMoveset = getPieceMoveset(gamefile, type); // Default piece moveset
-	thisPieceMoveset.individual = thisPieceMoveset.individual ?? []; // Ensure individual moves are present (more may be added during legal move calculation)
-	
-	let legalIndividualMoves: Coords[] = [];
-	const legalSliding: Record<Vec2Key, Coords> = {};
-
-	if (!onlyCalcSpecials) {
-
-		// Legal jumping/individual moves
-
-		shiftIndividualMovesetByCoords(thisPieceMoveset.individual, coords);
-		legalIndividualMoves = moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, thisPieceMoveset.individual, color);
-        
-		// Legal sliding moves
-		if (thisPieceMoveset.sliding) {
-			const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
-			for (const [linekey, limits] of Object.entries(thisPieceMoveset.sliding)) {
-				const lines = gamefile.pieces.lines.get(linekey as Vec2Key);
-				if (lines === undefined) continue;
-				const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
-				const key = organizedpieces.getKeyFromLine(line, coords);
-				legalSliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, gamefile.pieces, lines.get(key)!, line, limits, coords, color)!;
-			};
-		};
-
-	}
-    
-	// Add any special moves!
-	if (thisPieceMoveset.special) legalIndividualMoves.push(...thisPieceMoveset.special(gamefile, coords, color));
-
-	const moves: LegalMoves = {
-		individual: legalIndividualMoves,
-		sliding: legalSliding,
-		ignoreFunc: getIgnoreFuncFromPieceMoveset(thisPieceMoveset),
+function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
+	return {
+		individual: [],
+		sliding: {},
+		ignoreFunc: getIgnoreFuncFromPieceMoveset(moveset)
 	};
-    
-	if (!ignoreCheck) checkresolver.removeCheckInvalidMoves(gamefile, moves, piece, color);
+}
 
-	// console.log(`Calculated legal moves:`, moves);
-	return moves;
+function appendSpecialMoves(gamefile: gamefile, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves) {
+	const color = typeutil.getColorFromType(piece.type);
+	// Add any special moves!
+	if (moveset.special) legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color));
+}
+
+function appendCalculatedMoves(gamefile: gamefile, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves) {
+	const color = typeutil.getColorFromType(piece.type);
+
+	// Legal jumping/individual moves
+	if (moveset.individual) {
+		const movesetIndividual = shiftIndividualMovesetByCoords(moveset.individual, piece.coords);
+		moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, movesetIndividual, color);
+		legalmoves.individual = legalmoves.individual.concat(movesetIndividual);
+	}
+
+	// Legal sliding moves
+	if (moveset.sliding) {
+		const blockingFunc = getBlockingFuncFromPieceMoveset(moveset);
+		for (const [linekey, limits] of Object.entries(moveset.sliding)) {
+			const lines = gamefile.pieces.lines.get(linekey as Vec2Key);
+			if (lines === undefined) continue;
+			const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
+			const key = organizedpieces.getKeyFromLine(line, piece.coords);
+			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, gamefile.pieces, lines.get(key)!, line, limits, piece.coords, color)!;
+		};
+	};
 }
 
 /**
@@ -210,7 +193,7 @@ function calculate(gamefile: gamefile, piece: Piece, { onlyCalcSpecials = false,
 function calcPiecesLegalSlideLimitOnSpecificLine(gamefile: gamefile, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {
 	const thisPieceMoveset = getPieceMoveset(gamefile, piece.type); // Default piece moveset
 	if (!(thisPieceMoveset.sliding)) return; // This piece can't slide at all
-	if (!(slideKey in thisPieceMoveset.sliding)) return; // This piece can't slide ALONG the provided line
+	if (!(thisPieceMoveset.sliding[slideKey])) return; // This piece can't slide ALONG the provided line
 	// This piece CAN slide along the provided line.
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
@@ -223,12 +206,10 @@ function calcPiecesLegalSlideLimitOnSpecificLine(gamefile: gamefile, piece: Piec
  * of a moveset by the coordinates of a piece.
  * @param indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
  */
-function shiftIndividualMovesetByCoords(indivMoveset: Coords[], coords: Coords) {
-	if (!indivMoveset) return;
-	indivMoveset.forEach((indivMove) => {
-		indivMove[0] += coords[0];
-		indivMove[1] += coords[1];
-	});
+function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords: Coords) {
+	return indivMoveset.map((indivMove) => {
+		return [indivMove[0] + coords[0], indivMove[1] + coords[1]];
+	}) as Coords[];
 }
 
 /**
@@ -267,11 +248,8 @@ function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile: gamefile, individua
  */
 function slide_CalcLegalLimit(
 	blockingFunc: BlockingFunction, o: OrganizedPieces, line: number[], direction: Vec2,
-	slideMoveset: SlideLimits | undefined, coords: Coords, color: Player
-): SlideLimits | undefined {
-
-	if (!slideMoveset) return; // Return undefined if there is no slide moveset
-
+	slideMoveset: SlideLimits, coords: Coords, color: Player
+): SlideLimits {
 	// The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
@@ -421,7 +399,12 @@ function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedG
 	}
 
 	// Test if that piece's legal moves contain the destinationCoords.
-	const legalMoves = calculate(gamefile, piecemoved);
+	const moveset = getPieceMoveset(gamefile, piecemoved.type);
+	const legalMoves = getEmptyLegalMoves(moveset);
+	appendCalculatedMoves(gamefile, piecemoved, moveset, legalMoves);
+	appendSpecialMoves(gamefile, piecemoved, moveset, legalMoves);
+	checkresolver.removeCheckInvalidMoves(gamefile, piecemoved, legalMoves);
+
 	// This should pass on any special moves tags at the same time.
 	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, moveDraftCopy.endCoords, colorOfPieceMoved)) { // Illegal move
 		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
@@ -513,14 +496,21 @@ export type {
 export default {
 	genVicinity,
 	genSpecialVicinity,
+
 	getPieceMoveset,
-	calculate,
-	checkIfMoveLegal,
-	doesSlidingMovesetContainSquare,
-	hasAtleast1Move,
-	slide_CalcLegalLimit,
-	isOpponentsMoveLegal,
 	getBlockingFuncFromPieceMoveset,
 	getIgnoreFuncFromPieceMoveset,
+
+	getEmptyLegalMoves,
+	appendCalculatedMoves,
+	appendSpecialMoves,
+
+	checkIfMoveLegal,
+	isOpponentsMoveLegal,
+
+	hasAtleast1Move,
+	
+	doesSlidingMovesetContainSquare,
+	slide_CalcLegalLimit,
 	calcPiecesLegalSlideLimitOnSpecificLine,
 };
