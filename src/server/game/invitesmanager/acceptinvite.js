@@ -50,8 +50,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 	// Make sure they are not accepting their own.
 	if (isInviteOursByIdentifier(signedIn, identifier, invite)) {
 		sendSocketMessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
-		const errString = `Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errString, 'errLog.txt', { print: true });
+		console.error(`Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 		return;
 	}
 

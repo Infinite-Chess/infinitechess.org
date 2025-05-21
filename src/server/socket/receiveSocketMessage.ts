@@ -60,8 +60,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: any) {
 		const validEcho = deleteEchoTimerForMessageID(message.value); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
 			if (!rateLimitAndLogMessage(req, ws, rawMessage)) return; // The socket will have already been closed.
-			const errText = `User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadata: ${socketUtility.stringifySocketMetadata(ws)}`;
-			logEvents(errText, 'errLog.txt', { print: true });
+			console.error(`User detected sending invalid echo! Message: "${JSON.stringify(message)}". Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 		}
 		return;
 	}

@@ -47,7 +47,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Make sure they don't already have an existing invite
 	if (userHasInvite(ws)) {
 		sendSocketMessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);
-		logEvents("Player already has existing invite, can't create another!", 'errLog.txt', { print: true });
+		console.error("Player already has existing invite, can't create another!");
 		return;
 	}
 
