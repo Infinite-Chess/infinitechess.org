@@ -357,7 +357,11 @@ function isVariantValid(variantName: string) {
  * @param options - An object containing the properties `Variant`, and if desired, `Date`.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
  */
-function getStartingPositionOfVariant({ Variant, UTCDate, UTCTime }: { Variant: string, UTCDate: string, UTCTime: string }) {
+function getStartingPositionOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
+	Variant: string,
+	UTCDate: string,
+	UTCTime: string
+}): { position: Map<CoordsKey, number>, specialRights: Set<CoordsKey> } {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 	const variantEntry: Variant = variantDictionary[Variant]!;
 

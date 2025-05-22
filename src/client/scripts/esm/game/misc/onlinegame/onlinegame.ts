@@ -40,6 +40,11 @@ let id: string | undefined;
 let isPrivate: boolean | undefined;
 
 /**
+ * Whether the game is rated.
+ */
+let rated: boolean | undefined;
+
+/**
  * The color we are in the online game.
  */
 let ourColor: Player | undefined;
@@ -77,6 +82,11 @@ function getGameID(): string {
 function getIsPrivate(): boolean {
 	if (!inOnlineGame) throw Error("Cannot get isPrivate of online game when we're not in an online game.");
 	return isPrivate!;
+}
+
+function isRated(): boolean {
+	if (!inOnlineGame) throw Error("Cannot ask if online game is rated when we're not in one.");
+	return rated!;
 }
 
 function getOurColor(): Player {
@@ -130,6 +140,7 @@ function initOnlineGame(options: {
 	id: string,
 	youAreColor: Player,
 	publicity: 'public' | 'private',
+	rated: boolean,
 	drawOffer: DrawOfferInfo,
 	/** If our opponent has disconnected, this will be present. */
 	disconnect?: DisconnectInfo,
@@ -145,6 +156,7 @@ function initOnlineGame(options: {
 	id = options.id;
 	ourColor = options.youAreColor;
 	isPrivate = options.publicity === 'private';
+	rated = options.rated;
 	inSync = true;
 
 	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options);
@@ -189,6 +201,7 @@ function closeOnlineGame() {
 	inOnlineGame = false;
 	id = undefined;
 	isPrivate = undefined;
+	rated = undefined;
 	ourColor = undefined;
 	inSync = undefined;
 	serverHasConcludedGame = undefined;
@@ -361,6 +374,7 @@ export default {
 	onmessage,
 	getGameID,
 	getIsPrivate,
+	isRated,
 	getOurColor,
 	getOpponentColor,
 	setInSyncTrue,

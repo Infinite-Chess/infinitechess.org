@@ -125,10 +125,10 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 	const instanceData: TypeGroup<number[]> = {};
 	const instanceData_hovered: TypeGroup<number[]> = {};
 
-	const allPointers = mouse.getRelevantListener().getAllPointers();
-	const pointerWorlds = allPointers.map(pointer => mouse.getPointerWorld(pointer.id)!);
+	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	const gamefile = gameslot.getGamefile()!;
+	const pieces = gamefile.pieces;
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
@@ -141,8 +141,25 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 		instanceData_hovered[type] = [];
 	});
 
-	// Process each renderable piece
-	forEachRenderablePiece((coords, type) => {
+	if (!disabled) { // Enabled => normal behavior
+		
+		forEachRenderablePiece(processPiece); // Process each renderable piece
+
+	} else { // Disabled (too many pieces) => Only process pieces on highlights
+		
+		// Only process the pieces on top of highlights, or ray starts or intersections
+		const annotePoints = snapping.getAnnoteSnapPoints(true);
+		// For each one, calculate the instance data of the PIECE BENEATH it, if present.
+		annotePoints.forEach(ap => {
+			const piece = boardutil.getPieceFromCoords(pieces, ap);
+			if (!piece) return; // No piece beneath this highlight
+			if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
+			processPiece(piece.coords, piece.type);
+		});
+	}
+
+	/** Calculates and appends the instance data of the piece */
+	function processPiece(coords: Coords, type: number) {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
 		instanceData[type]!.push(...coordsWorld);
 
@@ -152,7 +169,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 				if (math.chebyshevDistance(coordsWorld, pointerWorld) < halfWorldWidth) instanceData_hovered[type]!.push(...coordsWorld);
 			}
 		}
-	});
+	}
 
 	return { instanceData, instanceData_hovered };
 }
@@ -184,7 +201,7 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 
 
 function render(): void {
-	if (!boardpos.areZoomedOut() || disabled) return;
+	if (!boardpos.areZoomedOut()) return;
 
 	const gamefile = gameslot.getGamefile()!;
 	const inverted = perspective.getIsViewingBlackPerspective();
@@ -196,6 +213,8 @@ function render(): void {
 
 	// Create the models
 	for (const [typeStr, thisInstanceData] of Object.entries(instanceData)) {
+		if (thisInstanceData.length === 0) continue; // No pieces of this type visible
+
 		const color = [1,1,1, MINI_IMAGE_OPACITY] as Color;
 		const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
 

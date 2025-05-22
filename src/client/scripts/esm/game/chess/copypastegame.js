@@ -41,6 +41,8 @@ import drawrays from '../rendering/highlights/annotations/drawrays.js';
  * These will overwrite the pasted game's metadata with the current game's metadata.
  */
 const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','WhiteElo','BlackElo','TimeControl','Event','Site','Round'];
+/** The pasted game will refuse to override these unless specified explicitly. This prevents them from just being deleted. */
+const retainIfNotOverridden = ['UTCDate','UTCTime'];
 
 const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', '5D_Chess'];
 
@@ -80,7 +82,10 @@ async function callbackPaste(event) {
 	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
 	
 	// Make sure we're not in a public match
-	if (onlinegame.areInOnlineGame() && !onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
+	if (onlinegame.areInOnlineGame()) {
+		if (!onlinegame.getIsPrivate()) return statustext.showStatus(translations.copypaste.cannot_paste_in_public);
+		if (onlinegame.isRated()) return statustext.showStatus(translations.copypaste.cannot_paste_in_rated);
+	}
 	// Make sure we're not in an engine match
 	if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 	// Make sure it's legal in a private match
@@ -160,11 +165,9 @@ function pasteGame(longformOut) {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformOut.metadata[metadataName] = currentGameMetadata[metadataName];
 	});
-	// Only keep the Date of the current game if the starting position of the pasted game isn't specified,
-	// because loading the variant version relies on that.
-	if (longformOut.position) {
-		longformOut.metadata.UTCDate = currentGameMetadata.UTCDate;
-		longformOut.metadata.UTCTime = currentGameMetadata.UTCTime;
+	
+	for (const metadataName of retainIfNotOverridden) {
+		if (currentGameMetadata[metadataName] && !longformOut.metadata[metadataName]) longformOut.metadata[metadataName] = currentGameMetadata[metadataName];
 	}
 
 	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same

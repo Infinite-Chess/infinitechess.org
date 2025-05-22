@@ -1,4 +1,8 @@
 {
+	"55": {
+		"note": "Added cannot_paste_in_rated line 373.",
+		"changes": []
+	},
 	"54": {
 		"note": "Reworded terms.fair_play_paragraph1 line 517, terms.fair_play_rules line 520, and added line 521. Deleted update on line 554.",
 		"changes": []

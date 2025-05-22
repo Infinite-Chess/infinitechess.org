@@ -35,7 +35,7 @@ import boardutil from '../../../chess/util/boardutil.js';
 import { rawTypes } from '../../../chess/util/typeutil.js';
 import boardchanges from '../../../chess/logic/boardchanges.js';
 import { listener_overlay } from '../../chess/game.js';
-import { Mouse } from '../../input.js';
+import { InputListener, Mouse, MouseButton } from '../../input.js';
 import mouse from '../../../util/mouse.js';
 import boardpos from '../boardpos.js';
 import legalmoves from '../../../chess/logic/legalmoves.js';
@@ -621,7 +621,7 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 	const worldWidth = width * boardpos.getBoardScale(); // The world-space width of our images
 	const worldHalfWidth = worldWidth / 2;
 
-	const mouseWorldLocation = mouse.getMouseWorld();
+	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	// Take the arrows draft, construct the actual
 	for (const [key, value] of Object.entries(slideArrowsDraft)) {
@@ -641,12 +641,12 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
 			const negDotProd: Arrow[] = [];
 			
 			arrowLineDraft.posDotProd.forEach((arrowDraft, index) => {
-				const arrow = processPiece(arrowDraft, vector, arrowLineDraft.intersections[0], index, worldHalfWidth, mouseWorldLocation, true);
+				const arrow = processPiece(arrowDraft, vector, arrowLineDraft.intersections[0], index, worldHalfWidth, pointerWorlds, true);
 				posDotProd.push(arrow);
 			});
 
 			arrowLineDraft.negDotProd.forEach((arrowDraft, index) => {
-				const arrow = processPiece(arrowDraft, negVector, arrowLineDraft.intersections[1], index, worldHalfWidth, mouseWorldLocation, true);
+				const arrow = processPiece(arrowDraft, negVector, arrowLineDraft.intersections[1], index, worldHalfWidth, pointerWorlds, true);
 				negDotProd.push(arrow);
 			});
 
@@ -670,11 +670,11 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
  * @param intersection - The intersection with the screen window that the line the piece is on intersects.
  * @param index - If there are adjacent pictures, this may be > 0
  * @param worldHalfWidth
- * @param mouseWorldLocation 
+ * @param pointerWorlds - A list of all world coordinates every existing pointer is over.
  * @param testHover - Whether the arrow, when hovered over, should add itself to the list of arrows hovered over this frame. Should be false for arrows added by other scripts.
  * @returns 
  */
-function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, index: number, worldHalfWidth: number, mouseWorldLocation: Coords | undefined, testHover: boolean): Arrow {
+function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, index: number, worldHalfWidth: number, pointerWorlds: Coords[], testHover: boolean): Arrow {
 	const renderCoords = coordutil.copyCoords(intersection);
 
 	// If this picture is an adjacent picture, adjust it's positioning
@@ -687,41 +687,55 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
 
 	// Does the mouse hover over the piece?
 	let hovered = false;
-	if (mouseWorldLocation) {
-		const chebyshevDist = math.chebyshevDistance(worldLocation, mouseWorldLocation);
-		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
-			hovered = true;
-			// ADD the piece to the list of arrows being hovered over!!!
-			if (testHover) hoveredArrows.push({ piece: arrowDraft.piece, vector });
-			// If we also clicked, then teleport!
-			teleportToPieceIfClicked(arrowDraft.piece, vector);
+	if (testHover) {
+		for (const pointerWorld of pointerWorlds) {
+			const chebyshevDist = math.chebyshevDistance(worldLocation, pointerWorld);
+			if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
+				hovered = true;
+				// ADD the piece to the list of arrows being hovered over!!!
+				hoveredArrows.push({ piece: arrowDraft.piece, vector });
+			}
 		}
 	}
+	// If we clicked, then teleport!
+	teleportToPieceIfClicked(arrowDraft.piece, worldLocation, vector, worldHalfWidth);
 
 	return { worldLocation, piece: arrowDraft.piece, hovered };
 }
 
 /**
- * Assumes the mouse is hovering over the piece's arrow.
- * This teleports you to the piece it is pointing to IF the mouse has clicked this frame.
+ * This teleports you to the piece it is pointing to IF the mouse has clicked it this frame.
  */
-function teleportToPieceIfClicked(piece: Piece, vector: Vec2) {
-	if (listener_overlay.isMouseDown(Mouse.LEFT)) listener_overlay.claimMouseDown(Mouse.LEFT); // Don't let the board be dragged by this mouse down
-	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Mouse did not click this frame
-	mouse.claimMouseClick(Mouse.LEFT); // Don't let annotations erase
+function teleportToPieceIfClicked(piece: Piece, pieceWorld: Coords, vector: Vec2, worldHalfWidth: number) {
+	// Left mouse button
+	if (mouse.isMouseDown(Mouse.LEFT) || mouse.isMouseClicked(Mouse.LEFT)) processMouseClick(Mouse.LEFT, mouse);
+	// Finger simulating right mouse down (annotations mode ON)
+	else if ((listener_overlay.isMouseDown(Mouse.RIGHT) || listener_overlay.isMouseClicked(Mouse.RIGHT)) && listener_overlay.isMouseTouch(Mouse.RIGHT)) processMouseClick(Mouse.RIGHT, listener_overlay);
 
-	// Teleport in the direction of the piece's arrow, NOT straight to the piece.
+	function processMouseClick(button: MouseButton, listener: typeof mouse | InputListener) {
+		const clickWorld = mouse.getMouseWorld(button)!;
+		const chebyshevDist = math.chebyshevDistance(pieceWorld, clickWorld);
+		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
+			if (listener.isMouseClicked(button)) {
+				listener.claimMouseClick(button); // Don't let annotations erase/draw
 
-	const startCoords = boardpos.getBoardPos();
-	// The direction we will follow when teleporting
-	const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(startCoords, vector);
-	// The line perpendicular to the target piece
-	const perpendicularSlideDir: Vec2 = [-vector[1], vector[0]]; // Rotates left 90deg
-	const line2GeneralForm = math.getLineGeneralFormFromCoordsAndVec(piece.coords, perpendicularSlideDir);
-	// The target teleport coords
-	const telCoords = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
+				// Teleport in the direction of the piece's arrow, NOT straight to the piece.
 
-	transition.panTel(startCoords, telCoords);
+				const startCoords = boardpos.getBoardPos();
+				// The direction we will follow when teleporting
+				const line1GeneralForm = math.getLineGeneralFormFromCoordsAndVec(startCoords, vector);
+				// The line perpendicular to the target piece
+				const perpendicularSlideDir: Vec2 = [-vector[1], vector[0]]; // Rotates left 90deg
+				const line2GeneralForm = math.getLineGeneralFormFromCoordsAndVec(piece.coords, perpendicularSlideDir);
+				// The target teleport coords
+				const telCoords = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm)!; // We know it will be defined because they are PERPENDICULAR
+
+				transition.panTel(startCoords, telCoords);
+			} else { // Mouse down
+				listener.claimMouseDown(button); // Don't let the board be dragged by this mouse down, or start drawing an arrow by this finger down
+			}
+		}
+	}
 }
 
 
@@ -802,7 +816,7 @@ function executeArrowShifts() {
 	const changes: Change[] = [];
 
 	const worldHalfWidth = (width * boardpos.getBoardScale()) / 2; // The world-space width of our images
-	const mouseWorldLocation = mouse.getMouseWorld();
+	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 		if (shift.start) {
@@ -839,7 +853,7 @@ function executeArrowShifts() {
 					// At what point does it intersect the screen?
 					const intersect = positiveDotProduct ? thisPieceIntersections[0]!.coords : thisPieceIntersections[1]!.coords;
 
-					const arrow: Arrow = processPiece(arrowDraft, line, intersect, 0, worldHalfWidth, mouseWorldLocation, false);
+					const arrow: Arrow = processPiece(arrowDraft, line, intersect, 0, worldHalfWidth, pointerWorlds, false);
 					const animatedArrow: AnimatedArrow = {
 						...arrow,
 						direction: line,
@@ -915,7 +929,7 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 		const worldWidth = width * boardpos.getBoardScale(); // The world-space width of our images
 		const worldHalfWidth = worldWidth / 2;
 
-		const mouseWorldLocation = mouse.getMouseWorld();
+		const pointerWorlds = mouse.getAllPointerWorlds();
 
 		const vector = slide;
 		const negVector = math.negateVector(slide);
@@ -924,12 +938,12 @@ function recalculateLinesThroughCoords(gamefile: gamefile, coords: Coords) {
 		const negDotProd: Arrow[] = [];
 		
 		arrowsLineDraft.posDotProd.forEach((arrowDraft, index) => {
-			const arrow = processPiece(arrowDraft, vector, arrowsLineDraft.intersections[0], index, worldHalfWidth, mouseWorldLocation, false);
+			const arrow = processPiece(arrowDraft, vector, arrowsLineDraft.intersections[0], index, worldHalfWidth, pointerWorlds, false);
 			posDotProd.push(arrow);
 		});
 
 		arrowsLineDraft.negDotProd.forEach((arrowDraft, index) => {
-			const arrow = processPiece(arrowDraft, negVector, arrowsLineDraft.intersections[1], index, worldHalfWidth, mouseWorldLocation, false);
+			const arrow = processPiece(arrowDraft, negVector, arrowsLineDraft.intersections[1], index, worldHalfWidth, pointerWorlds, false);
 			negDotProd.push(arrow);
 		});
 

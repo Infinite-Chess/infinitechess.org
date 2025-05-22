@@ -10,7 +10,7 @@ import drawsquares from "./annotations/drawsquares.js";
 import space from "../../misc/space.js";
 import annotations from "./annotations/annotations.js";
 import selectedpiecehighlightline from "./selectedpiecehighlightline.js";
-import math, { Color, Vec2 } from "../../../util/math.js";
+import math, { Color, Ray, Vec2 } from "../../../util/math.js";
 import gameslot from "../../chess/gameslot.js";
 import boardutil from "../../../chess/util/boardutil.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
@@ -196,21 +196,10 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	const pointerCoords = space.convertWorldSpaceToCoords(world);
 	const gamefile = gameslot.getGamefile()!;
 
-
 	const drawnRays = annotations.getRays();
-	const rayColor = preferences.getAnnoteSquareColor();
-	rayColor[3] = 1; // Highlightlines are fully opaque
-	const rayLines = drawrays.getLines(drawnRays, rayColor);
-
 	const presetRays = drawrays.getPresetRays();
-	const presetRayColor: Color = [...drawrays.PRESET_RAY_COLOR];
-	presetRayColor[3] = 1; // Highlightlines are fully opaque
-	const presetRayLines = drawrays.getLines(presetRays, presetRayColor);
-
-	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
-
-
-	const allLines: Line[] = [...rayLines, ...presetRayLines, ...selectedPieceLegalMovesLines];
+	/** All rays / selected piece legal move lines converted to SEGMENTS. */
+	const allLines: Line[] = getAllLinesSegmented(drawnRays, presetRays);
 	if (allLines.length === 0) return; // No lines to have snap
 
 	const snapDistVPixels = ENTITY_WIDTH_VPIXELS * 0.5;
@@ -258,7 +247,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 		for (let b = a + 1; b < closeLines.length; b++) {
 			const line2 = closeLines[b]!;
 			// Calculate where they intersect
-			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end);
+			const intsect = math.intersectLineSegments(...line1.line.coefficients, line1.line.start, line1.line.end, ...line2.line.coefficients, line2.line.start, line2.line.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
 			if (!line_intersections.some(i => coordutil.areCoordsEqual(i.coords, intsect))) line_intersections.push({
@@ -312,43 +301,14 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 
 	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority) ==================
 
-	// All Ray intersections & starts are temporarily added as additional Squares,
-	// Including Ray start coords
-
-	const squares = annotations.getSquares();
-	const originalSquareLength = squares.length;
-	
-	// Ray intersections (legal move & rays)
-	for (let a = 0; a < allLines.length - 1; a++) {
-		const line1 = allLines[a]!;
-		for (let b = a + 1; b < allLines.length; b++) {
-			const line2 = allLines[b]!;
-			// Calculate where they intersect
-			const intsect = math.intersectLineSegments(line1.start, line1.end, line2.start, line2.end);
-			if (intsect === undefined) continue; // Don't intersect
-			// Push it to the intersections, preventing duplicates
-			if (!squares.some(c => coordutil.areCoordsEqual(c, intsect))) squares.push(intsect);
-		}
-	}
-
-	// Add all ray start coords too, including preset ray starts
-	const rayStarts = [...drawnRays.map(r => r.start), ...presetRays.map(r => r.start)];
-	for (const start of rayStarts) {
-		// Don't add duplicates
-		if (!squares.some(c => coordutil.areCoordsEqual(c, start))) squares.push(start);
-	}
-	
-	// Now see if we should snap to any "Square"
-
-	const closestSquareSnap = findClosestEntityOfGroup(squares, closeLines, pointerCoords, searchVectors);
-	if (closestSquareSnap) {
+	const annoteSnapPoints = getAnnoteSnapPoints(false);
+	const closestAnnoteSnap = findClosestEntityOfGroup(annoteSnapPoints, closeLines, pointerCoords, searchVectors);
+	if (closestAnnoteSnap) {
 		// Is the snap within snapping distance of the mouse?
-		if (closestSquareSnap.dist < snapDistCoords) {
-			squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
-			return closestSquareSnap.snap;
+		if (closestAnnoteSnap.dist < snapDistCoords) {
+			return closestAnnoteSnap.snap;
 		}
 	}
-	squares.length = originalSquareLength; // Remove the temporary squares we added for ray intersections
 
 	// 2. Pieces ========================================
 
@@ -425,6 +385,66 @@ function findClosestEntityOfGroup(entities: Coords[], closeLines: LineSnapPoint[
 	}
 
 	return closestEntitySnap;
+}
+
+/** All rays / selected piece legal move lines converted to SEGMENTS. */
+function getAllLinesSegmented(drawnRays: Ray[], presetRays: Ray[]): Line[] {
+	// Drawn rays
+	const rayColor = preferences.getAnnoteSquareColor();
+	rayColor[3] = 1; // Highlightlines are fully opaque
+	const rayLines = drawrays.getLines(drawnRays, rayColor);
+
+	// Preset rays
+	const presetRayColor: Color = [...drawrays.PRESET_RAY_COLOR];
+	presetRayColor[3] = 1; // Highlightlines are fully opaque
+	const presetRayLines = drawrays.getLines(presetRays, presetRayColor);
+
+	// Selected piece legal move line
+	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
+
+	return [...rayLines, ...presetRayLines, ...selectedPieceLegalMovesLines];
+}
+
+/**
+ * Returns a list of coords of all the highest priority snap points.
+ * That is all Square annotations, Ray starts, and intersections of rays
+ * (which may include legal move ray intersections).
+ * @param trimDecimals - Whether to ignore points that don't end up at an integer square.
+ */
+function getAnnoteSnapPoints(trimDecimals: boolean): Coords[] {
+	// All Ray intersections & starts are temporarily added as additional Squares,
+	// Including Ray start coords
+	
+	// Squares
+	const points: Coords[] = [...annotations.getSquares()];
+	
+	const drawnRays = annotations.getRays();
+	const presetRays = drawrays.getPresetRays();
+	/** All rays / selected piece legal move lines converted to SEGMENTS. */
+	const allLines = getAllLinesSegmented(drawnRays, presetRays);
+
+	// Ray intersections (legal move & rays)
+	for (let a = 0; a < allLines.length - 1; a++) {
+		const line1 = allLines[a]!;
+		for (let b = a + 1; b < allLines.length; b++) {
+			const line2 = allLines[b]!;
+			// Calculate where they intersect
+			const intsect = math.intersectLineSegments(...line1.coefficients, line1.start, line1.end, ...line2.coefficients, line2.start, line2.end);
+			if (intsect === undefined) continue; // Don't intersect
+			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Ignore if not an integer square
+			// Push it to the intersections, preventing duplicates
+			if (!points.some(c => coordutil.areCoordsEqual(c, intsect))) points.push(intsect);
+		}
+	}
+
+	// Add all ray start coords too, including preset ray starts
+	const rayStarts = [...drawnRays.map(r => r.start), ...presetRays.map(r => r.start)];
+	for (const start of rayStarts) {
+		// Don't add duplicates
+		if (!points.some(c => coordutil.areCoordsEqual(c, start))) points.push(start);
+	}
+
+	return points;
 }
 
 
@@ -518,6 +538,7 @@ export default {
 
 	getClosestEntityToWorld,
 	teleportToEntitiesIfClicked,
+	getAnnoteSnapPoints,
 
 	getWorldSnapCoords,
 	teleportToSnapIfClicked,
