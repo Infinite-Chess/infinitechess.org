@@ -49,8 +49,19 @@ interface Line {
  * according to whether we're in perspective mode or not.
  */
 function getRenderRange(): BoundingBox {
-	const a = perspective.distToRenderBoard / boardpos.getBoardScale();
-	return perspective.getEnabled() ? { left: -a, right: a, bottom: -a, top: a } : board.gboundingBoxFloat();
+	if (!perspective.getEnabled()) { // 2D mode
+		return board.gboundingBoxFloat();
+	} else { // Perspective mode
+		const distToRenderBoard_Tiles = perspective.distToRenderBoard / boardpos.getBoardScale();
+		// Shift the box based on our current board position
+		const boardPos = boardpos.getBoardPos();
+		return {
+			left: boardPos[0] - distToRenderBoard_Tiles,
+			right: boardPos[0] + distToRenderBoard_Tiles,
+			bottom: boardPos[1] - distToRenderBoard_Tiles,
+			top: boardPos[1] + distToRenderBoard_Tiles,
+		};
+	}
 }
 
 
