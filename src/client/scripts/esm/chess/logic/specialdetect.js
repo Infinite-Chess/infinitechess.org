@@ -86,7 +86,7 @@ function kings(gamefile, coords, color) {
 
 	// 2. IF USING CHECKMATE: The king must not currently be in check,
 	// AND The square the king passes through must not be a check.
-	// The square the king lands on will be tested later, within checkresolver.()
+	// The square the king lands on will be tested later, within checkresolver.
 
 	const oppositeColor = typeutil.invertPlayer(color);
 	if (gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, 'checkmate')) {

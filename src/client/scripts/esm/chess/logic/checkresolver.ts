@@ -54,7 +54,7 @@ import specialdetect from "./specialdetect.js";
  * @param pieceSelected - The piece of which the legalMoves were calculated for
  * @param color - The color of the player owning the piece
  */
-function removeCheckInvalidMoves(gamefile: gamefile, pieceSelected: Piece, moves: LegalMoves): void { // moves: { individual: [], horizontal: [], ... }
+function removeCheckInvalidMoves(gamefile: gamefile, pieceSelected: Piece, moves: LegalMoves): void {
 	const color = typeutil.getColorFromType(pieceSelected.type);
 	if (color === players.NEUTRAL) return; // Neutral pieces can't be in check
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, color, 'checkmate')) return;

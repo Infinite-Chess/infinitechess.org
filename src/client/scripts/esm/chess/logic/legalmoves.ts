@@ -226,8 +226,8 @@ function calculateAll(gamefile: gamefile, piece: Piece): LegalMoves {
  */
 function calcPiecesLegalSlideLimitOnSpecificLine(gamefile: gamefile, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {
 	const thisPieceMoveset = getPieceMoveset(gamefile, piece.type); // Default piece moveset
-	if (!(thisPieceMoveset.sliding)) return; // This piece can't slide at all
-	if (!(thisPieceMoveset.sliding[slideKey])) return; // This piece can't slide ALONG the provided line
+	if (!thisPieceMoveset.sliding) return; // This piece can't slide at all
+	if (!thisPieceMoveset.sliding[slideKey]) return; // This piece can't slide ALONG the provided line
 	// This piece CAN slide along the provided line.
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
@@ -240,10 +240,10 @@ function calcPiecesLegalSlideLimitOnSpecificLine(gamefile: gamefile, piece: Piec
  * of a moveset by the coordinates of a piece.
  * @param indivMoveset - The list of individual/jumping moves this moveset has: `[[1,2],[2,1]]`
  */
-function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords: Coords) {
+function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords: Coords): Coords[] {
 	return indivMoveset.map((indivMove) => {
 		return [indivMove[0] + coords[0], indivMove[1] + coords[1]];
-	}) as Coords[];
+	});
 }
 
 /**
