@@ -236,8 +236,8 @@ function getRelevantListener(): InputListener {
  * depending on the relevant listener.
  */
 function getAllPointerWorlds(): Coords[] {
-	const allPointers = getRelevantListener().getAllPointers();
-	return allPointers.map(pointer => getPointerWorld(pointer.id)!);
+	const allPointersIds = getRelevantListener().getAllPointerIds();
+	return allPointersIds.map(id => getPointerWorld(id)!);
 }
 
 
