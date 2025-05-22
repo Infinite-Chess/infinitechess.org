@@ -301,7 +301,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 
 	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority) ==================
 
-	const annoteSnapPoints = getAnnoteSnapPoints();
+	const annoteSnapPoints = getAnnoteSnapPoints(false);
 	const closestAnnoteSnap = findClosestEntityOfGroup(annoteSnapPoints, closeLines, pointerCoords, searchVectors);
 	if (closestAnnoteSnap) {
 		// Is the snap within snapping distance of the mouse?
@@ -402,15 +402,17 @@ function getAllLinesSegmented(drawnRays: Ray[], presetRays: Ray[]): Line[] {
 	// Selected piece legal move line
 	const selectedPieceLegalMovesLines = selectedpiecehighlightline.getLines();
 
-	return [...rayLines, ...presetRayLines, ...selectedPieceLegalMovesLines]
+	return [...rayLines, ...presetRayLines, ...selectedPieceLegalMovesLines];
 }
 
 /**
  * Returns a list of coords of all the highest priority snap points.
  * That is all Square annotations, Ray starts, and intersections of rays
  * (which may include legal move ray intersections).
+ * @param trimDecimals - Whether to ignore points that don't end up at an integer square.
+ * This can happen if ray intersectionss is in the corner of a square.
  */
-function getAnnoteSnapPoints(): Coords[] {
+function getAnnoteSnapPoints(trimDecimals: boolean): Coords[] {
 	// All Ray intersections & starts are temporarily added as additional Squares,
 	// Including Ray start coords
 	
@@ -429,6 +431,7 @@ function getAnnoteSnapPoints(): Coords[] {
 			// Calculate where they intersect
 			const intsect = math.intersectLineSegments(line1.start, line1.end, line2.start, line2.end);
 			if (intsect === undefined) continue; // Don't intersect
+			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Ignore if not an integer square
 			// Push it to the intersections, preventing duplicates
 			if (!points.some(c => coordutil.areCoordsEqual(c, intsect))) points.push(intsect);
 		}

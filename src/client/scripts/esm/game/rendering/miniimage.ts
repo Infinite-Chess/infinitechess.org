@@ -150,14 +150,15 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 	} else { // Disabled (too many pieces) => Only process pieces on highlights
 
 		// Only process the pieces on top of highlights, or ray starts or intersections
-		const annotePoints = snapping.getAnnoteSnapPoints();
+		const annotePoints = snapping.getAnnoteSnapPoints(true);
 
 		// For each one, calculate the instance data of the PIECE BENEATH it, if present.
 		annotePoints.forEach(ap => {
-			const piece = boardutil.getPieceFromCoords(pieces, ap)
-			if (piece) processPiece(piece.coords, piece.type)
+			const piece = boardutil.getPieceFromCoords(pieces, ap);
+			if (!piece) return; // No piece beneath this highlight
+			if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
+			processPiece(piece.coords, piece.type);
 		});
-
 	}
 
 	/** Calculates and appends the instance data of the piece */
@@ -215,6 +216,8 @@ function render(): void {
 
 	// Create the models
 	for (const [typeStr, thisInstanceData] of Object.entries(instanceData)) {
+		if (thisInstanceData.length === 0) continue; // No pieces of this type visible
+
 		const color = [1,1,1, MINI_IMAGE_OPACITY] as Color;
 		const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
 
