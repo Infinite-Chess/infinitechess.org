@@ -70,25 +70,29 @@ function calcIntersectionPointOfLines(A1: number, B1: number, C1: number, A2: nu
 /**
  * Calculates the intersection point of two line SEGMENTS (not rays or infinite lines).
  * Returns undefined if there is none, or there's infinite (colinear).
+ * 
+ * THE REASON WE TAKE THE COEFFICIENTS as arguments instead of calculating them
+ * on the fly, is because the start and end segment points MAY HAVE FLOATING POINT IMPRECISION,
+ * which would bleed into coefficient imprecision, thus imprecise intersection points.
+ * By accepting the coefficients as arguments, they retain maximum precision.
+ * @param A1 Coefficient A of segment 1's line (Ax + By + C = 0)
+ * @param B1 Coefficient B of segment 1's line
+ * @param C1 Coefficient C of segment 1's line
  * @param s1p1 Start point of segment 1
  * @param s1p2 End point of segment 1
+ * @param A2 Coefficient A of segment 2's line (Ax + By + C = 0)
+ * @param B2 Coefficient B of segment 2's line
+ * @param C2 Coefficient C of segment 2's line
  * @param s2p1 Start point of segment 2
- * @param s2p2 End point of segment 2
  * @returns The intersection Coords if they intersect, otherwise undefined.
  */
-function intersectLineSegments(s1p1: Coords, s1p2: Coords, s2p1: Coords, s2p2: Coords): Coords | undefined {
-	// 1. Get general form for the line containing segment 1
-	const [A1, B1, C1] = getLineGeneralFormFrom2Coords(s1p1, s1p2);
-
-	// 2. Get general form for the line containing segment 2
-	const [A2, B2, C2] = getLineGeneralFormFrom2Coords(s2p1, s2p2);
-
-	// 3. Calculate intersection of the infinite lines
+function intersectLineSegments(A1: number, B1: number, C1: number, s1p1: Coords, s1p2: Coords, A2: number, B2: number, C2: number, s2p1: Coords, s2p2: Coords): Coords | undefined {
+	// 1. Calculate intersection of the infinite lines
 	const intersectionPoint = calcIntersectionPointOfLines(A1, B1, C1, A2, B2, C2);
 
 	if (!intersectionPoint) return undefined; // Lines are parallel or collinear.
 
-	// 4. Check if the intersection point lies on both segments
+	// 2. Check if the intersection point lies on both segments
 	if (isPointOnSegment(intersectionPoint, s1p1, s1p2) && isPointOnSegment(intersectionPoint, s2p1, s2p2)) return intersectionPoint;
 
 	return undefined; // Intersection point is not on one or both segments

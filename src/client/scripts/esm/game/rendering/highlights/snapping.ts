@@ -247,7 +247,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 		for (let b = a + 1; b < closeLines.length; b++) {
 			const line2 = closeLines[b]!;
 			// Calculate where they intersect
-			const intsect = math.intersectLineSegments(line1.line.start, line1.line.end, line2.line.start, line2.line.end);
+			const intsect = math.intersectLineSegments(...line1.line.coefficients, line1.line.start, line1.line.end, ...line2.line.coefficients, line2.line.start, line2.line.end);
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
 			if (!line_intersections.some(i => coordutil.areCoordsEqual(i.coords, intsect))) line_intersections.push({
@@ -410,7 +410,6 @@ function getAllLinesSegmented(drawnRays: Ray[], presetRays: Ray[]): Line[] {
  * That is all Square annotations, Ray starts, and intersections of rays
  * (which may include legal move ray intersections).
  * @param trimDecimals - Whether to ignore points that don't end up at an integer square.
- * This can happen if ray intersectionss is in the corner of a square.
  */
 function getAnnoteSnapPoints(trimDecimals: boolean): Coords[] {
 	// All Ray intersections & starts are temporarily added as additional Squares,
@@ -429,7 +428,7 @@ function getAnnoteSnapPoints(trimDecimals: boolean): Coords[] {
 		for (let b = a + 1; b < allLines.length; b++) {
 			const line2 = allLines[b]!;
 			// Calculate where they intersect
-			const intsect = math.intersectLineSegments(line1.start, line1.end, line2.start, line2.end);
+			const intsect = math.intersectLineSegments(...line1.coefficients, line1.start, line1.end, ...line2.coefficients, line2.start, line2.end);
 			if (intsect === undefined) continue; // Don't intersect
 			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Ignore if not an integer square
 			// Push it to the intersections, preventing duplicates
