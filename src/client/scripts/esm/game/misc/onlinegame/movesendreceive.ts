@@ -81,6 +81,7 @@ function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message
 	}
 
 	// If not legal, this will be a string for why it is illegal.
+	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
 	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
@@ -89,12 +90,6 @@ function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message
 
 	// Forward the move...
 
-	const piecemoved = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords)!;
-	const legalMoves = legalmoves.calculateAll(gamefile, piecemoved);
-	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
-	legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial, onlinegame.getOpponentColor()); // Passes on any special moves flags to the endCoords
-
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecial, moveDraft);
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 	if (mesh) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 

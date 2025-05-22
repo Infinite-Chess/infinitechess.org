@@ -363,7 +363,7 @@ function isPawnPromotion(gamefile, type, coordsClicked) {
  */
 function transferSpecialFlags_FromCoordsToMove(coords, move) {
 	for (const special of allSpecials) {
-		if (coords[special]) {
+		if (coords[special] !== undefined) {
 			move[special] = jsutil.deepCopyObject(coords[special]);
 		}
 	}

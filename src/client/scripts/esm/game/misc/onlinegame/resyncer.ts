@@ -129,6 +129,7 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 
 		if (opponentPlayedThisMove) { // Perform legality checks
 			// If not legal, this will be a string for why it is illegal.
+			// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion);
 			if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${thisShortmove} ${claimedGameConclusion}`);
 			if (moveIsLegal !== true && !onlinegame.getIsPrivate()) { // Allow illegal moves in private games

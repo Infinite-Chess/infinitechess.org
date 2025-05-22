@@ -27,7 +27,7 @@ import type { Vec2Key, Vec2 } from '../../util/math.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
-import type { MoveDraft } from './movepiece.js';
+import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 // @ts-ignore
 import type gamefile from './gamefile.js';
@@ -375,6 +375,8 @@ function checkIfMoveLegal(gamefile: gamefile, legalMoves: LegalMoves, startCoord
 /**
  * Tests if the provided move is legal to play in this game.
  * This accounts for the piece color AND legal promotions, AND their claimed game conclusion.
+ * 
+ * MODIFIES THE MOVE DRAFT to attach any special move flags it needs!
  * @param gamefile - The gamefile
  * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
  * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
@@ -436,10 +438,13 @@ function isOpponentsMoveLegal(gamefile: gamefile, moveDraft: MoveDraft, claimedG
 	const legalMoves = calculateAll(gamefile, piecemoved);
 
 	// This should pass on any special moves tags at the same time.
-	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, moveDraftCopy.endCoords, colorOfPieceMoved)) { // Illegal move
+	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveDraftCopy.endCoords);
+	if (!checkIfMoveLegal(gamefile, legalMoves, piecemoved.coords, endCoordsToAppendSpecialsTo, colorOfPieceMoved)) { // Illegal move
 		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(gamefile.state.local.inCheck)}. attackers: ${JSON.stringify(gamefile.state.local.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}
+	// Transfer the special move flag to the moveDraftCopy
+	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, moveDraft);
 
 	// Check the resulting game conclusion from the move and if that lines up with the opponents claim.
 	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
