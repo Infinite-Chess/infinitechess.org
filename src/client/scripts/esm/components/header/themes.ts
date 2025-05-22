@@ -48,7 +48,7 @@ const defaults: ThemeProperties = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
-	[annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares
+	[annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares.   This matches the Ray color exactly, though
 	[annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	[pieceTheme]: {},
 };
