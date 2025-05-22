@@ -14,7 +14,7 @@ import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_Giv
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
 import { players, TypeGroup } from '../../chess/util/typeutil.js';
-import boardutil from '../../chess/util/boardutil.js';
+import boardutil, { Piece } from '../../chess/util/boardutil.js';
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
 import snapping from './highlights/snapping.js';
@@ -22,6 +22,8 @@ import instancedshapes from './instancedshapes.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import math, { Color } from '../../util/math.js';
 import typeutil from '../../chess/util/typeutil.js';
+import selection from '../chess/selection.js';
+import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
@@ -147,20 +149,11 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 	});
 
 	if (!disabled) { // Enabled => normal behavior
-		
 		forEachRenderablePiece(processPiece); // Process each renderable piece
-
 	} else { // Disabled (too many pieces) => Only process pieces on highlights
-		
 		// Only process the pieces on top of highlights, or ray starts or intersections
-		const annotePoints = snapping.getAnnoteSnapPoints(true);
-		// For each one, calculate the instance data of the PIECE BENEATH it, if present.
-		annotePoints.forEach(ap => {
-			const piece = boardutil.getPieceFromCoords(pieces, ap);
-			if (!piece) return; // No piece beneath this highlight
-			if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
-			processPiece(piece.coords, piece.type);
-		});
+		const annotePieces = getAllPiecesBelowAnnotePoints();
+		annotePieces.forEach(ap => processPiece(ap.coords, ap.type)); // Calculate their instance data
 	}
 
 	/** Calculates and appends the instance data of the piece */
@@ -181,24 +174,60 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 
 /** Returns a list of mini image coordinates that are all being hovered over by the provided world coords. */
 function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coords[], dists?: number[] } {
-	if (disabled) return { images: [] };
-
 	const imagesHovered: Coords[] = [];
 	const dists: number[] = [];
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
 
-	// Check static and animated pieces for hover
-	forEachRenderablePiece((coords) => {
+	if (!disabled) { // Enabled => normal behavior
+		// Check static and animated pieces for hover
+		forEachRenderablePiece(processPiece);
+	} else { // Disabled (too many pieces) => Only process pieces on highlights
+		// Only process the pieces on top of highlights, or ray starts or intersections
+		const annotePieces = getAllPiecesBelowAnnotePoints();
+		annotePieces.forEach(ap => processPiece(ap.coords)); // Calculate if their underneath the world coords
+	}
+
+	function processPiece(coords: Coords) {
 		const coordsWorld = space.convertCoordToWorldSpace(coords);
 		if (math.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
 			imagesHovered.push(coords);
 			// Upgrade the distance to euclidean
 			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
 		}
-	});
+	}
 
 	return trackDists ? { images: imagesHovered, dists } : { images: imagesHovered };
+}
+
+/**
+ * Returns a list of all pieces that are either below an annotation snap point
+ * (square, ray intersection, or ray start), or is the piece selected.
+ */
+function getAllPiecesBelowAnnotePoints(): Piece[] {
+	/** Running list of all pieces below annote points. */
+	const annotePieces: Piece[] = [];
+
+	const pieces = gameslot.getGamefile()!.pieces;
+	// Only process the pieces on top of highlights, or ray starts or intersections
+	const annotePoints = snapping.getAnnoteSnapPoints(true);
+	// For each one, push it if there is a piece beneath it
+	annotePoints.forEach(ap => {
+		const piece = boardutil.getPieceFromCoords(pieces, ap);
+		if (!piece) return; // No piece beneath this highlight
+		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
+		pushPieceNoDuplicates(piece);
+	});
+
+	// Add the piece selected, if present
+	const pieceSelected = selection.getPieceSelected();
+	if (pieceSelected) pushPieceNoDuplicates(jsutil.deepCopyObject(pieceSelected));
+
+	function pushPieceNoDuplicates(piece: Piece) {
+		if (!annotePieces.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) annotePieces.push(piece);
+	}
+
+	return annotePieces;
 }
 
 
