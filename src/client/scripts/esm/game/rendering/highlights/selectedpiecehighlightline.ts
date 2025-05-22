@@ -73,7 +73,8 @@ type Segment = {
 
 /**
  * Converts the selected piece's legal move highlight lines into
- * their ray and line segment components.
+ * their ray and line segment components, depending on which slides are infinite or not.
+ * 
  * Used by drawrays.ts during collapsing, so we can add additional
  * Square annotations at all the intersections of rays with components.
  */

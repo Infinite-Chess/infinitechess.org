@@ -282,8 +282,13 @@ function findClosestPredefinedVector(targetVector: Vec2, searchHippogonals: bool
 	return closestVector;
 }
 
-/** Collapses all existing rays into a list of intersection coords points. */
-function collapseRays(rays_drawn: Ray[]): Coords[] {
+/**
+ * Collapses all existing rays into a list of intersection coords points.
+ * 
+ * This includes all drawn ray starts, all intersections between drawn & all rays,
+ * and all intersections between drawn rays and the selected piece's legal move rays/segments.
+ */
+function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): Coords[] {
 	const intersections: Coords[] = [];
 
 	const rays_preset = getPresetRays();
@@ -294,7 +299,7 @@ function collapseRays(rays_drawn: Ray[]): Coords[] {
 	// First add the start coords of all rays to the list of intersections
 	for (const ray of rays_drawn) addSquare_NoDuplicates(ray.start);
 
-	// Then add all the intersection points of the rays
+	// Then add all the intersection points of the rays (drawn against drawn + preset, SKIP preset against preset)
 	for (let a = 0; a < rays_drawn.length; a++) {
 		const ray1 = rays_drawn[a]!; // Gauranteed drawn ray
 		for (let b = a + 1; b < rays_all.length; b++) {
@@ -305,7 +310,7 @@ function collapseRays(rays_drawn: Ray[]): Coords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 			// OPTIONAL: Floor() the coords and add it anyway, even if not integer.
 			// intsect = space.roundCoords(intsect);
 
@@ -326,7 +331,7 @@ function collapseRays(rays_drawn: Ray[]): Coords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);
@@ -337,7 +342,7 @@ function collapseRays(rays_drawn: Ray[]): Coords[] {
 			if (intsect === undefined) continue; // No intersection, skip.
 
 			// Verify the intersection point is an integer
-			if (!coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
+			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);

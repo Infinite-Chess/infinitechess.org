@@ -412,39 +412,7 @@ function getAllLinesSegmented(drawnRays: Ray[], presetRays: Ray[]): Line[] {
  * @param trimDecimals - Whether to ignore points that don't end up at an integer square.
  */
 function getAnnoteSnapPoints(trimDecimals: boolean): Coords[] {
-	// All Ray intersections & starts are temporarily added as additional Squares,
-	// Including Ray start coords
-	
-	// Squares
-	const points: Coords[] = [...annotations.getSquares()];
-	
-	const drawnRays = annotations.getRays();
-	const presetRays = drawrays.getPresetRays();
-	/** All rays / selected piece legal move lines converted to SEGMENTS. */
-	const allLines = getAllLinesSegmented(drawnRays, presetRays);
-
-	// Ray intersections (legal move & rays)
-	for (let a = 0; a < allLines.length - 1; a++) {
-		const line1 = allLines[a]!;
-		for (let b = a + 1; b < allLines.length; b++) {
-			const line2 = allLines[b]!;
-			// Calculate where they intersect
-			const intsect = math.intersectLineSegments(...line1.coefficients, line1.start, line1.end, ...line2.coefficients, line2.start, line2.end);
-			if (intsect === undefined) continue; // Don't intersect
-			if (trimDecimals && !coordutil.areCoordsIntegers(intsect)) continue; // Ignore if not an integer square
-			// Push it to the intersections, preventing duplicates
-			if (!points.some(c => coordutil.areCoordsEqual(c, intsect))) points.push(intsect);
-		}
-	}
-
-	// Add all ray start coords too, including preset ray starts
-	const rayStarts = [...drawnRays.map(r => r.start), ...presetRays.map(r => r.start)];
-	for (const start of rayStarts) {
-		// Don't add duplicates
-		if (!points.some(c => coordutil.areCoordsEqual(c, start))) points.push(start);
-	}
-
-	return points;
+	return [...annotations.getSquares(), ...drawrays.collapseRays(annotations.getRays(), trimDecimals)];
 }
 
 

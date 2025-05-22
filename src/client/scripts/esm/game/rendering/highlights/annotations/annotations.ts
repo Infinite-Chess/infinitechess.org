@@ -152,7 +152,7 @@ function Collapse() {
 
 	if (annotes.Rays.length > 0) {
 		// Collapse rays instead of erasing all annotations.
-		const additionalSquares = drawrays.collapseRays(annotes.Rays);
+		const additionalSquares = drawrays.collapseRays(annotes.Rays, true);
 		for (const newSquare of additionalSquares) {
 			// Avoid adding duplicates
 			if (annotes.Squares.every(s => !coordutil.areCoordsEqual(s, newSquare))) annotes.Squares.push(newSquare);
