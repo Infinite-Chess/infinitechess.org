@@ -52,13 +52,69 @@ main {
     margin: 1em;
 }
 
-#user_ranking_text {
+/* Don't hide borders on hr tags */
+hr {
+    border: 1px solid #00000057;
+    margin-bottom: 18px;
+}
+
+
+#user_ranking_container {
+    font-size: 18px;
     font-weight: bold;
+}
+
+#user_ranking_text {
     margin-right: 10px;
 }
 
-#user_ranking {
-    font-weight: bold;
+
+/* Table styling */
+
+table {
+    width: 95%;
+    border-collapse: collapse;
+    margin: 20px;
+    align-self: center;
+    table-layout: fixed; /* Makes table width work for small screens */
+}
+
+thead tr {
+    border: none;
+}
+
+tr {
+    border: 1px solid #ccc;
+}
+
+tr:nth-child(even) {
+    background-color: #f7f7f7;
+}
+
+.logged_in_user_entry {
+    /* background-color: rgba(0, 128, 0, 0.3) !important; */
+    --mid: #cbccff;
+    --end: #eaeaff;
+    background: linear-gradient(0deg, var(--end), var(--mid), var(--mid), var(--mid), var(--end));
+}
+
+th, td {
+    padding: 8px 12px;
+    text-align: left;
+}
+
+/* Column widths (usernames might be long) */
+th:nth-child(1),
+td:nth-child(1) {
+  width: 20%;
+}
+th:nth-child(2),
+td:nth-child(2) {
+  width: 50%;
+}
+th:nth-child(3),
+td:nth-child(3) {
+  width: 30%;
 }
 
 /* Show More Button */
@@ -80,41 +136,6 @@ main {
     background-color: #dfdbdb;
 }
 
-
-/* Table styling */
-
-table {
-    width: 95%;
-    border-collapse: collapse;
-    margin: 20px;
-    font-family: Arial, sans-serif;
-    align-self: center;
-}
-
-th, td {
-    border: 1px solid #ccc;
-    padding: 8px 12px;
-    text-align: left;
-    width: 33.3333%;
-}
-
-th {
-    background-color: #f4f4f4;
-}
-
-tr:nth-child(even) {
-    background-color: #fafafa;
-}
-
-.logged_in_user_entry {
-    background-color: rgba(0, 128, 0, 0.3) !important;
-}
-
-/* Don't hide borders on hr tags */
-hr {
-    border: 1px solid #00000057;
-    margin-bottom: 12px;
-}
 
 /* Start increasing header links width */
 @media only screen and (min-width: 450px) {

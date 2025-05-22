@@ -154,6 +154,7 @@ async function populateTable(n_players: number) {
 			const usernamecontainer_options: UsernameContainerDisplayOptions = { makehyperlink: true, hyperlinktarget: "_self" };
 			const usernamecontainer_display = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_object, usernamecontainer_options);
 			usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_display, usernameCell);
+			usernameCell.classList.add('fade-element'); // Usernames fade out instead of overflowing their container
 			row.appendChild(usernameCell);
 
 			// Create and append <td> for elo

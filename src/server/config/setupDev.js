@@ -51,7 +51,7 @@ async function createDevelopmentAccounts() {
 	// 	if (!doesMemberOfUsernameExist(`Player${i}`)) {
 	// 		const user_id = await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true });
 	// 		addUserToLeaderboard(user_id, Leaderboards.INFINITY);
-	// 		updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1600 + 10 * i, 100 + i);
+	// 		updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1800 - 10 * i, 100 + i);
 	// 	}
 	// }
 }
