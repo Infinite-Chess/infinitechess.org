@@ -155,7 +155,7 @@ interface HoveredArrow {
 // Variables ----------------------------------------------------------------------------
 
 /** The maximum number of pieces in a game before we disable arrow indicator rendering, for performance. */
-const pieceCountToDisableArrows = 200_000;
+const pieceCountToDisableArrows = 50_000;
 /** The maximum number of lines in a game before we disable arrow indicator rendering, for performance. */
 const lineCountToDisableArrows = 8;
 
