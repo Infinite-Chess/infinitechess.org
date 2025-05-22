@@ -3,6 +3,8 @@
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
 
+import docutil from "./docutil.js";
+
 
 
 // Types ----------------------------------------------------------------------------------------
@@ -52,7 +54,7 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 
 	// Profile SVG element
 	const svgSource = options.isEngine ? engineSVGSource : profileSVGSource;
-	const svgElement = createSvgElementFromString(svgSource);
+	const svgElement = docutil.createSvgElementFromString(svgSource);
 	containerDiv.appendChild(svgElement);
 
 	// username element
@@ -117,19 +119,6 @@ function embedUsernameContainerDisplayIntoParent(child_element: HTMLDivElement, 
 
 	// append child to parent
 	parent_element.appendChild(child_element);
-}
-
-/**
- * Parse an SVG string into a live SVGElement.
- * @param svgText — a string containing valid `<svg>…</svg>` markup
- * @returns the newly created SVG element
- */
-function createSvgElementFromString(svgText: string): SVGElement {
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(svgText, 'image/svg+xml');
-	const svg = doc.querySelector('svg');
-	if (!svg) throw new Error('Failed to parse SVG string.');
-	return svg;
 }
 
 /**

@@ -110,6 +110,19 @@ function deleteCookie(cookieName: string) {
 	document.cookie = cookieName + '=; Max-Age=-99999999;';
 }
 
+/**
+ * Parse an SVG string into a live SVGElement.
+ * @param svgText — a string containing valid `<svg>…</svg>` markup
+ * @returns the newly created SVG element
+ */
+function createSvgElementFromString(svgText: string): SVGElement {
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(svgText, 'image/svg+xml');
+	const svg = doc.querySelector('svg');
+	if (!svg) throw new Error('Failed to parse SVG string.');
+	return svg;
+}
+
 export default {
 	isLocalEnvironment,
 	copyToClipboard,
@@ -120,4 +133,5 @@ export default {
 	getCookieValue,
 	updateCookie,
 	deleteCookie,
+	createSvgElementFromString,
 };
