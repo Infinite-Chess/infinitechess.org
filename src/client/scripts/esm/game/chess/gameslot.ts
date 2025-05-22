@@ -210,16 +210,11 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
-	// If the game has more lines than this, then we turn off arrows at the start to prevent a lag spike.
-	const lineCountToDisableArrows = 8;
-
-	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (boardutil.getPieceCountOfGame(newGamefile.pieces) >= organizedpieces.pieceCountToDisableCheckmate) {
-		miniimage.disable();
-		arrows.setMode(0); // Disable arrows too
-	} else if (newGamefile.pieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
-		arrows.setMode(0);
-	}
+	const pieceCount = boardutil.getPieceCountOfGame(newGamefile.pieces);
+	// Disable miniimages if there's too many pieces
+	if (pieceCount > miniimage.pieceCountToDisableMiniImages) miniimage.disable();
+	// Disable arrows if there's too many pieces or lines in the game
+	if (pieceCount > arrows.pieceCountToDisableArrows || newGamefile.pieces.slides.length > arrows.lineCountToDisableArrows) arrows.setMode(0);
 
 	initCopyPastGameListeners();
 

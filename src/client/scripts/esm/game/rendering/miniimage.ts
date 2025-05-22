@@ -34,6 +34,11 @@ import board from './board.js';
 
 // Variables --------------------------------------------------------------
 
+/**
+ * The maximum numbers of pieces in a game before we disable mini image rendering
+ * for all pieces that aren't underneath a square annotation or ray intersection, for performance.
+ */
+const pieceCountToDisableMiniImages = 50_000;
 
 const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
@@ -250,6 +255,8 @@ function render(): void {
 
 
 export default {
+	pieceCountToDisableMiniImages,
+	
 	isDisabled,
 	enable,
 	disable,

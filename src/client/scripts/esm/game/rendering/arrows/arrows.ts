@@ -154,6 +154,10 @@ interface HoveredArrow {
 
 // Variables ----------------------------------------------------------------------------
 
+/** The maximum number of pieces in a game before we disable arrow indicator rendering, for performance. */
+const pieceCountToDisableArrows = 200_000;
+/** The maximum number of lines in a game before we disable arrow indicator rendering, for performance. */
+const lineCountToDisableArrows = 8;
 
 /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
 const width: number = 0.65;
@@ -1101,6 +1105,9 @@ function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 
 
 export default {
+	pieceCountToDisableArrows,
+	lineCountToDisableArrows,
+
 	getMode,
 	setMode,
 	toggleArrows,
