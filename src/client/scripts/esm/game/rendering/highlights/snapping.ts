@@ -415,13 +415,14 @@ function getAnnoteSnapPoints(trimDecimals: boolean): Coords[] {
 	// All Ray intersections & starts are temporarily added as additional Squares,
 	// Including Ray start coords
 	
+	// Squares
+	const points: Coords[] = [...annotations.getSquares()];
+	
 	const drawnRays = annotations.getRays();
 	const presetRays = drawrays.getPresetRays();
 	/** All rays / selected piece legal move lines converted to SEGMENTS. */
 	const allLines = getAllLinesSegmented(drawnRays, presetRays);
 
-	const points = [...annotations.getSquares()];
-	
 	// Ray intersections (legal move & rays)
 	for (let a = 0; a < allLines.length - 1; a++) {
 		const line1 = allLines[a]!;

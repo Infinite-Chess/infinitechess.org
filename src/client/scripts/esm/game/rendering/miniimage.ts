@@ -125,8 +125,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 	const instanceData: TypeGroup<number[]> = {};
 	const instanceData_hovered: TypeGroup<number[]> = {};
 
-	const allPointers = mouse.getRelevantListener().getAllPointers();
-	const pointerWorlds = allPointers.map(pointer => mouse.getPointerWorld(pointer.id)!);
+	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.pieces;
@@ -143,15 +142,13 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 	});
 
 	if (!disabled) { // Enabled => normal behavior
-
-		// Process each renderable piece
-		forEachRenderablePiece(processPiece);
+		
+		forEachRenderablePiece(processPiece); // Process each renderable piece
 
 	} else { // Disabled (too many pieces) => Only process pieces on highlights
-
+		
 		// Only process the pieces on top of highlights, or ray starts or intersections
 		const annotePoints = snapping.getAnnoteSnapPoints(true);
-
 		// For each one, calculate the instance data of the PIECE BENEATH it, if present.
 		annotePoints.forEach(ap => {
 			const piece = boardutil.getPieceFromCoords(pieces, ap);
