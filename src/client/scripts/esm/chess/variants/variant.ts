@@ -74,9 +74,10 @@ interface Variant {
 	specialVicinity?: TimeVariantProperty<SpecialVicinity>
 	/**
 	 * Preset rays. Permanent.
-	 * Mayb helpful for showcasing very large showcasings.
+	 * Maybe helpful for showcasing very large showcasings.
+	 * In compacted string form: '23,94>-1,0|23,76>-1,0'
 	 */
-	ray_presets?: BaseRay[]
+	ray_presets?: string
 }
 
 /**
@@ -602,7 +603,8 @@ function getSpecialVicinityOfVariant({ Variant, UTCDate = timeutil.getCurrentUTC
 /** Returns the Ray presets for the given variant, if they have any. */
 function getRayPresets(Variant: string | undefined): BaseRay[] {
 	if (Variant === undefined) return [];
-	return variantDictionary[Variant]?.ray_presets ?? [];
+	const ray_presets = variantDictionary[Variant]?.ray_presets;
+	return ray_presets ? icnconverter.parsePresetRays(ray_presets) : [];
 }
 
 
