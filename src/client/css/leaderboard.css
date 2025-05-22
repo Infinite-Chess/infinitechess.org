@@ -84,7 +84,7 @@ thead tr {
 }
 
 tr {
-    border: 1px solid #ccc;
+    border: 1px solid #d2d2d2;
 }
 
 tr:nth-child(even) {
