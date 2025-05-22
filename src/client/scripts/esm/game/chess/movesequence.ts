@@ -7,8 +7,7 @@
  */
 
 
-// @ts-ignore
-import type gamefile from "../../chess/logic/gamefile.js";
+import type { Game, Board } from "../../chess/logic/game.js";
 import type { Move, MoveDraft, NullMove } from "../../chess/logic/movepiece.js";
 
 
@@ -40,10 +39,10 @@ import stats from "../gui/stats.js";
  * 
  * This returns the constructed Move object so that we have the option to animate it if we so choose.
  */
-function makeMove(gamefile: gamefile, mesh: Mesh | undefined, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
-	const move = movepiece.generateMove(gamefile, moveDraft);
+function makeMove(game: Game, board: Board, mesh: Mesh | undefined, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
+	const move = movepiece.generateMove(game, board, moveDraft);
 	
-	movepiece.makeMove(gamefile, move); // Logical changes
+	movepiece.makeMove(game, board, move); // Logical changes
 
 	/**
 	 * Check if boardchanges regenerated the organized pieces to add more undefineds,
@@ -55,7 +54,7 @@ function makeMove(gamefile: gamefile, mesh: Mesh | undefined, moveDraft: MoveDra
 	 * from the move's changes! For example, pawn deleted that promoted.
 	 */
 	if (mesh) { // Mesh is generated
-		if (gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile, mesh);
+		if (board.pieces.newlyRegenerated) piecemodels.regenAll(board, mesh);
 		else boardchanges.runChanges(mesh, move.changes, meshChanges, true); // Graphical changes
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
@@ -64,16 +63,16 @@ function makeMove(gamefile: gamefile, mesh: Mesh | undefined, moveDraft: MoveDra
 	updateGui(false);
 
 	if (!onlinegame.areInOnlineGame()) {
-		const clockStamp_ = clock.push(gamefile);
-		guiclock.push(gamefile);
+		const clockStamp_ = clock.push(game);
+		guiclock.push(game);
 		// Add the clock stamp to the move
 		if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
 	}
 
 	if (doGameOverChecks) {
-		gamefileutility.doGameOverChecks(gamefile);
+		gamefileutility.doGameOverChecks(game, board);
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
+		if (gamefileutility.isGameOver(game) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
 	// Whenever a move is made in the game, the color of the legal move highlights

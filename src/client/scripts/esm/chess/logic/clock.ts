@@ -15,8 +15,7 @@ import clockutil from '../util/clockutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
-// @ts-ignore
-import type gamefile from './gamefile.js';
+import type { Game } from './game.js';
 import type { Player } from '../util/typeutil.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
@@ -78,21 +77,18 @@ type ClockData = {
 
 // Functions -----------------------------------------------------------------------
 
-
-
-
-
 /**
  * Sets the clocks. If no current clock values are specified, clocks will
  * be set to the starting values, according to the game's TimeControl metadata.
  * @param gamefile 
  * @param [currentTimes] Optional. An object containing the current times of the players. Often used if we re-joining an online game.
  */
-function set(gamefile: gamefile, currentTimes?: ClockValues) {
-	const clock = gamefile.metadata.TimeControl; // "600+5"
-	gamefile.untimed = clockutil.isClockValueInfinite(clock);
-	if (gamefile.untimed) {
-		gamefile.clocks = undefined;
+function set(game: Game, currentTimes?: ClockValues) {
+	const clock = game.metadata.TimeControl; // "600+5"
+	game.untimed = clockutil.isClockValueInfinite(clock);
+	if (game.untimed) {
+		// @ts-ignore
+		delete game.clocks;
 		return;
 	}
 	// { minutes, increment }
@@ -111,12 +107,12 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 		timeRemainAtTurnStart: undefined
 	};
 
-	gamefile.clocks = clocks;
+	game.clocks = clocks;
 
 	// Edit the closk if we're re-loading an online game
-	if (currentTimes) edit(gamefile, currentTimes);
+	if (currentTimes) edit(game, currentTimes);
 	else { // No current time specified, start both players with the default.
-		gamefile.gameRules.turnOrder.forEach((color: Player) => {
+		game.gameRules.turnOrder.forEach((color: Player) => {
 			clocks.currentTime[color] = clocks.startTime.millis;
 		});
 	}
@@ -127,11 +123,11 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
  * @param gamefile - The current game state object containing clock information.
  * @param [clockValues] - An object containing the updated clock values.
  */
-function edit(gamefile: gamefile, clockValues?: ClockValues) {
-	if (!clockValues || gamefile.untimed) return; // Likely a no-timed game
-	const clocks = gamefile.clocks!;
+function edit(game: Game, clockValues?: ClockValues) {
+	if (!clockValues || game.untimed) return; // Likely a no-timed game
+	const clocks = game.clocks;
 
-	const colorTicking = gamefile.whosTurn;
+	const colorTicking = game.whosTurn;
 
 	if (clockValues.colorTicking !== undefined) {
 		// Adjust the clock value according to the precalculated time they will lost by timeout.
@@ -154,15 +150,16 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
  * Call after flipping whosTurn. Flips colorTicking in local games.
  * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
-function push(gamefile: gamefile): number | undefined {
-	if (gamefile.untimed) return;
+function push(game: Game): number | undefined {
+	if (game.untimed) return;
 
-	const clocks = gamefile.clocks!;
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
+	const clocks = game.clocks;
 
-	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
+	const prevcolor = moveutil.getWhosTurnAtMoveIndex(game, game.moves.length - 2);
 
-	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
+	if (!moveutil.isGameResignable(game)) return clocks.currentTime[prevcolor]!;
+
+		// Add increment to the previous player's clock and capture their remaining time to later insert into move.
 	if (clocks.timeAtTurnStart !== undefined) { // 3+ moves
 		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
@@ -175,9 +172,9 @@ function push(gamefile: gamefile): number | undefined {
 	return clocks.currentTime[prevcolor];
 }
 
-function endGame(gamefile: gamefile) {
-	if (gamefile.untimed) return;
-	const clocks = gamefile.clocks!;
+function endGame(game: Game) {
+	if (game.untimed) return;
+	const clocks = game.clocks;
 	clocks.timeRemainAtTurnStart = undefined;
 	clocks.timeAtTurnStart = undefined;
 	clocks.colorTicking = undefined;
@@ -188,10 +185,10 @@ function endGame(gamefile: gamefile) {
  * @param gamefile
  * @returns undefined if clocks still have time, otherwise it's the color who won.
 */
-function update(gamefile: gamefile): Player | undefined {
-	if (gamefile.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile)) return;
+function update(game: Game): Player | undefined {
+	if (game.untimed || gamefileutility.isGameOver(game) || !moveutil.isGameResignable(game)) return;
 	
-	const clocks = gamefile.clocks!;
+	const clocks = game.clocks;
 	if (clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
@@ -215,17 +212,17 @@ function update(gamefile: gamefile): Player | undefined {
  * Independant of reading clocks.currentTime, because that isn't updated
  * every frame if the user unfocuses the window.
  */
-function getColorTickingTrueTimeRemaining(gamefile: gamefile): number | undefined {
-	if (gamefile.untimed) return;
-	const clocks = gamefile.clocks!;
+function getColorTickingTrueTimeRemaining(game: Game): number | undefined {
+	if (game.untimed) return;
+	const clocks = game.clocks!;
 	if (clocks.colorTicking === undefined) return;
 	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
 }
 
-function printClocks(gamefile: gamefile) {
-	if (gamefile.untimed) return console.log("Game is untimed.");
-	const clocks = gamefile.clocks!;
+function printClocks(game: Game) {
+	if (game.untimed) return console.log("Game is untimed.");
+	const clocks = game.clocks!;
 	for (const color in clocks.currentTime) {
 		console.log(`${color} time: ${clocks.currentTime[color]}`);
 	}

@@ -9,7 +9,7 @@
  */
 
 // @ts-ignore
-import type gamefile from "./gamefile.js";
+import type { Game, Board } from "./game.js";
 
 import boardchanges from "./boardchanges.js";
 import { StateChange } from "./state.js";
@@ -26,9 +26,9 @@ type Flux = `${string},${string},${number|string}`; // `x,y,43` | `x,y,enpassant
  * @param gamefile - The gamefile
  * @returns Whether there is a three fold repetition present.
  */
-function detectRepetitionDraw(gamefile: gamefile): string | false {
-	const moveList = gamefile.moves;
-	const turnOrderLength = gamefile.gameRules.turnOrder.length;
+function detectRepetitionDraw(game: Game, board: Board): string | false {
+	const moveList = board.moves;
+	const turnOrderLength = game.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.
 	 * 0 => First player's turn in the turn order. */
 	const currentPlayerTurn = moveList.length % turnOrderLength;

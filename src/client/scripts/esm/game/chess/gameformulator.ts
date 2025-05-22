@@ -64,7 +64,7 @@ function ICNToGamefile(ICN: string): gamefile {
 		position = longformOut.position;
 		specialRights = longformOut.state_global.specialRights;
 	} else {
-		({ position, specialRights } = variant.getStartingPositionOfVariant({ Variant: longformOut.metadata.Variant!, UTCDate: longformOut.metadata.UTCDate!, UTCTime: longformOut.metadata.UTCTime! }));
+		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
 	}
 
 	const variantOptions: VariantOptions = {

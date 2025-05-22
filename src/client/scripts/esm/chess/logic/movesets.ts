@@ -15,7 +15,7 @@ import isprime from '../../util/isprime.js';
 
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
-import type { RawType, Player, TypeGroup } from '../util/typeutil.js';
+import type { RawTypeGroup, Player, TypeGroup } from '../util/typeutil.js';
 import type { Vec2, Vec2Key } from '../../util/math.js';
 import type { Piece } from '../util/boardutil.js';
 // @ts-ignore
@@ -25,9 +25,7 @@ import type { gamefile } from './gamefile.js';
 /**
  * A Movesets object containing the movesets for every piece type in a game
  */
-type Movesets = {
-	[IntPiece in RawType]?: PieceMoveset
-}
+type Movesets = RawTypeGroup<PieceMoveset>
 
 /**
  * A moveset for an single piece type in a game
