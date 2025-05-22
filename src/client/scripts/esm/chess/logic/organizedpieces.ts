@@ -96,12 +96,6 @@ const listExtras = 10;
 /** EDITOR-MODE-SPECIFIC {@link listExtras} */
 const listExtras_Editor = 100;
 
-/**
- * TODO: Move to a more suitable location!!!!!!!
- * The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture".
- */
-const pieceCountToDisableCheckmate = 50_000;
-
 
 // Main Functions ---------------------------------------------------------------------
 
@@ -593,7 +587,6 @@ function getXFromLine(step: Coords, coords: Coords): number {
 
 
 export default {
-	pieceCountToDisableCheckmate,
 	processInitialPosition,
 	regenerateLists,
 	generatePositionFromPieces,
