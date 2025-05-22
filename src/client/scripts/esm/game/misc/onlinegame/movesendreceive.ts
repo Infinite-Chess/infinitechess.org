@@ -90,7 +90,7 @@ function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message
 	// Forward the move...
 
 	const piecemoved = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords)!;
-	const legalMoves = legalmoves.calculate(gamefile, piecemoved);
+	const legalMoves = legalmoves.calculateAll(gamefile, piecemoved);
 	const endCoordsToAppendSpecial = jsutil.deepCopyObject(moveDraft.endCoords);
 	legalmoves.checkIfMoveLegal(gamefile, legalMoves, moveDraft.startCoords, endCoordsToAppendSpecial, onlinegame.getOpponentColor()); // Passes on any special moves flags to the endCoords
 

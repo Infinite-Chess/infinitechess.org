@@ -34,7 +34,7 @@ function detectCheckmateOrStalemate(gamefile: gamefile): string | false {
 		for (let idx = thesePieces.start; idx < thesePieces.end; idx++) {
 			const thisPiece = boardutil.getPieceFromIdx(gamefile.pieces, idx);
 			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const moves = legalmoves.calculate(gamefile, thisPiece);
+			const moves = legalmoves.calculateAll(gamefile, thisPiece);
 			if (legalmoves.hasAtleast1Move(moves)) return false; // Not checkmate
 		}
 	}
