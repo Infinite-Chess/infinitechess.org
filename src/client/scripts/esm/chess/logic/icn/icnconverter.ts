@@ -889,28 +889,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 	const raysResult = presetRaysRegex.exec(icn);
 	if (raysResult) {
-		presetRays = [];
-		const capturingRaysRegex = new RegExp(getRayRegexSource(true), "g");
-
-		// Since the rayRegex has the global flag, exec() will return the next match each time.
-		// NO STRING SPLITTING REQUIRED
-		let match: RegExpExecArray | null;
-		while ((match = capturingRaysRegex.exec(raysResult[0]!))) {
-			const startCoordsKey = match.groups!['startCoordsKey'] as CoordsKey;
-			const vec2Key = match.groups!['vec2Key'] as CoordsKey;
-
-			const start = coordutil.getCoordsFromKey(startCoordsKey);
-			const vector = coordutil.getCoordsFromKey(vec2Key);
-
-			// Make sure neither are Infinity
-			if (!isFinite(start[0]) || !isFinite(start[1]) || !isFinite(vector[0]) || !isFinite(vector[1])) {
-				throw Error(`Ray start/vector must not be Infinite. ${JSON.stringify(match.groups)}`);
-			}
-
-			presetRays.push({ start, vector });
-		}
-
-		// console.log("Parsed rays:", presetRays);
+		presetRays = parsePresetRays(raysResult.groups!['rayPresets']!);
 
 		lastIndex = presetRaysRegex.lastIndex; // Update the ICN index being observed
 	}
@@ -1411,6 +1390,41 @@ function generatePositionFromShortForm(shortposition: string): { position: Map<C
 }
 
 
+// Other --------------------------------------------------------------------------------------------------
+
+
+/**
+ * Parses the preset rays from a compacted string form.
+ * '23,94>-1,0|23,76>-1,0'
+ */
+function parsePresetRays(presetRays: string): BaseRay[] {
+	const rays: BaseRay[] = [];
+	const rayRegex = new RegExp(getRayRegexSource(true), "g");
+
+	// Since the rayRegex has the global flag, exec() will return the next match each time.
+	// NO STRING SPLITTING REQUIRED
+	let match: RegExpExecArray | null;
+	while ((match = rayRegex.exec(presetRays)) !== null) {
+		const startCoordsKey = match.groups!['startCoordsKey'] as CoordsKey;
+		const vec2Key = match.groups!['vec2Key'] as CoordsKey;
+
+		const start = coordutil.getCoordsFromKey(startCoordsKey);
+		const vector = coordutil.getCoordsFromKey(vec2Key);
+
+		// Make sure neither are Infinity
+		if (!isFinite(start[0]) || !isFinite(start[1]) || !isFinite(vector[0]) || !isFinite(vector[1])) {
+			throw Error(`Ray start/vector must not be Infinite. ${JSON.stringify(match.groups)}`);
+		}
+
+		rays.push({ start, vector });
+	}
+
+	console.log("Parsed rays:", presetRays);
+
+	return rays;
+}
+
+
 // Exports --------------------------------------------------------------------------------------------------------
 
 
@@ -1428,6 +1442,8 @@ export default {
 	getShortFormPosition,
 	generateSpecialRights,
 	generatePositionFromShortForm,
+
+	parsePresetRays,
 };
 
 export type {
