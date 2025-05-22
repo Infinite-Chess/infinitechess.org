@@ -215,7 +215,7 @@ function getDataArrow(
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
 
-	const size = boardpos.areZoomedOut() ? 1 : boardpos.getBoardScale();
+	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
 
 	const bodyWidthArg = ARROW.BODY_WIDTH * size;
 	const tipWidthArg = ARROW.TIP_WIDTH * size;
