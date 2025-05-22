@@ -11,6 +11,7 @@ import { listener_document, listener_overlay } from '../chess/game.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
+import snapping from '../rendering/highlights/snapping.js';
 // @ts-ignore
 import board from '../rendering/board.js';
 // @ts-ignore
@@ -240,7 +241,7 @@ function callback_Back() {
 function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
 	// Add the square annotation highlights, too.
-	allCoords.push(...annotations.getSquares());
+	allCoords.push(...snapping.getAnnoteSnapPoints(false));
 	area.initTelFromCoordsList(allCoords);
 }
 
