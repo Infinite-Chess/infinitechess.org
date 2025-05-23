@@ -26,6 +26,15 @@ import type { Square } from "./annotations.js";
 // Variables -----------------------------------------------------------------
 
 
+/** The color of preset squares for the variant. */
+const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.17]; // Transparent orange (makes preset squares less noticeable/distracting)
+
+/**
+ * The preset square overrides if provided from the ICN.
+ * These override the variant's preset squares.
+ */
+let preset_squares: Square[] | undefined;
+
 /**
  * To make single Square highlight more visible than rays (which
  * include a LOT of squares), lone squares get an opacity offset.
@@ -38,6 +47,19 @@ const hover_opacity = 0.5;
 
 // Updating -----------------------------------------------------------------
 
+
+/** Returns a list of all drawn-square highlights being hovered over by any pointer. */
+function getAllSquaresHovered(): Coords[] {
+	const allHovered: Square[] = [];
+	for (const pointerId of mouse.getRelevantListener().getAllPointerIds()) {
+		const pointerWorld: Coords = mouse.getPointerWorld(pointerId)!;
+		const hovered = getSquaresBelowWorld(highlights, pointerWorld, false).squares;
+		hovered.forEach(coords => {
+			// Prevent duplicates
+			if (!allHovered.some(c => coordutil.areCoordsEqual(c, coords))) allHovered.push(coords);
+		});
+	}
+}
 
 /** Returns a list of Square highlight coordinates that are all being hovered over by the provided world coords. */
 function getSquaresBelowWorld(highlights: Square[], world: Coords, trackDists: boolean): { squares: Coords[], dists?: number[] } {
@@ -100,6 +122,25 @@ function update(highlights: Square[]) {
 	}
 }
 
+/**
+ * Sets the preset squares, if they were specified in the ICN.
+ * These override the variant's preset squares.
+ */
+function setPresetOverrides(pss: Coords[]) {
+	if (preset_squares) throw Error("Preset squares already initialized. Did you forget to clearPresetOverrides()?");
+	preset_squares = pss;
+}
+
+/** Returns the preset square overrides from the ICN. */
+function getPresetOverrides() {
+	return preset_squares;
+}
+
+/** Clears the preset ray overrides from the ICN. */
+function clearPresetOverrides() {
+	preset_squares = undefined;
+}
+
 
 // Rendering -----------------------------------------------------------------
 
@@ -119,11 +160,16 @@ function genModel(highlights: Square[], color: Color): BufferModelInstanced {
 
 
 function render(highlights: Square[]) {
-	// Early exit if no squares to draw
-	if (highlights.length === 0) return;
+	const presetSquares = preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.metadata.Variant);
 
 	// If we're zoomed out, then the size of the highlights is constant.
 	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
+
+	// Render preset squares (only if zoomed in)
+	if (!boardpos.areZoomedOut()) genModel(preset_squares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
+
+	// Early exit if no drawn-squares to draw
+	if (highlights.length === 0) return;
 
 	// Render main highlights
 	const color = preferences.getAnnoteSquareColor();
@@ -135,24 +181,10 @@ function render(highlights: Square[]) {
 
 	if (!boardpos.areZoomedOut() || guipause.areWePaused()) return; // Don't increase opacity of highlighgts when zoomed in
 
-	// Prevent duplicates
-	const allHovered: Square[] = [];
-	for (const pointerId of mouse.getRelevantListener().getAllPointerIds()) {
-		const pointerWorld: Coords = mouse.getPointerWorld(pointerId)!;
-		const hovered = getSquaresBelowWorld(highlights, pointerWorld, false).squares;
-		hovered.forEach(coords => {
-			if (!allHovered.some(c => coordutil.areCoordsEqual(c, coords))) allHovered.push(coords);
-		});
-	}
-
+	const allHovered = getAllSquaresHovered();
 	if (allHovered.length > 0) {
-		const color = preferences.getAnnoteSquareColor();
-		const hoverColor = [
-			color[0],
-			color[1],
-			color[2],
-			hover_opacity
-		] as Color;
+		const hoverColor = preferences.getAnnoteSquareColor();
+		hoverColor[3] = hover_opacity;
 		genModel(allHovered, hoverColor).render(undefined, undefined, { size });
 	}
 }
@@ -164,5 +196,8 @@ function render(highlights: Square[]) {
 export default {
 	update,
 	getSquaresBelowWorld,
+	setPresetOverrides,
+	getPresetOverrides,
+	clearPresetOverrides,
 	render,
 };

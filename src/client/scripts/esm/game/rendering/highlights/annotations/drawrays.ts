@@ -29,7 +29,6 @@ import { listener_overlay } from "../../../chess/game.js";
 
 
 /** The color of preset rays for the variant. */
-// const PRESET_RAY_COLOR: Color = [0, 0, 1, 0.35]; // Blue
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.17]; // Transparent orange (makes preset rays less noticeable/distracting)
 
 const ATTRIB_INFO: AttributeInfoInstanced = {

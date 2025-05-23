@@ -50,8 +50,11 @@ interface LongFormatBase {
 	fullMove: number
 	/** Same rules as for {@link LongFormatBase['position']}, but for the specialRights. */
 	state_global: Partial<GlobalGameState>
-	/** Overrides the preset rays in the variant if specified. */
-	preset_rays?: BaseRay[]
+	/** Overrides the variant's preset annotations, if specified. */
+	presetAnnotes?: {
+		squares?: Coords[]
+		rays?: BaseRay[]
+	}
 }
 
 /** The named capture groups of a shortform move. */
@@ -377,6 +380,12 @@ const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource}
 /** Captures the win conditions section in the ICN. */
 const winConditionRegex = new RegExp(String.raw`\(?(?<winConditions>${singlePlayerWinConSource}(?:\|${singlePlayerWinConSource})*)\)?${whiteSpaceOrEnd}`, 'y');
 
+/**
+ * Matches the preset squares segment in ICN
+ * 'Squares:x,y|x,y'
+ */
+const presetSquaresRegex = new RegExp(String.raw`Squares:(?<presetSquares>${coordsKeyRegexSource}(?:\|${coordsKeyRegexSource})*)${whiteSpaceOrEnd}`, 'y');
+
 /** Matches a single preset ray, optionally capturing its properties. */
 function getRayRegexSource(capturing: boolean): string {
 	const startCoordsKey = capturing ? '<startCoordsKey>' : ':';
@@ -521,6 +530,7 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	// =================================== Section 2: Position ===================================
 
 
+	/** Each of these are separated by a space. */
 	const positionSegments: string[] = [];
 
 	/**
@@ -635,12 +645,16 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	}
 
 
+	// Preset squares
+	if (longformat.presetAnnotes?.squares) {
+		positionSegments.push('Squares:' + longformat.presetAnnotes.squares.map(coordutil.getKeyFromCoords).join('|'));
+	}
+
+
 	// Preset rays
-	if (longformat.preset_rays) {
-		positionSegments.push('Rays:' + longformat.preset_rays.map(pr => {
-			return coordutil.getKeyFromCoords(pr.start) +
-				'>' +
-				coordutil.getKeyFromCoords(pr.vector);
+	if (longformat.presetAnnotes?.rays) {
+		positionSegments.push('Rays:' + longformat.presetAnnotes.rays.map(pr => {
+			return coordutil.getKeyFromCoords(pr.start) + '>' + coordutil.getKeyFromCoords(pr.vector);
 		}).join('|'));
 	}
 
@@ -701,6 +715,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let promotionRanks: PlayerGroup<number[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
 	let winConditions: PlayerGroup<string[]> = {}; // Required
+	let presetSquares: Coords[] | undefined;
 	let presetRays: BaseRay[] | undefined;
 	let position: Map<CoordsKey, number> | undefined;
 	let specialRights: Set<CoordsKey> | undefined;
@@ -884,6 +899,18 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 
+	// Preset Squares
+	// Test if the preset rays lie at our current index being observed
+	presetSquaresRegex.lastIndex = lastIndex;
+
+	const squaresResult = presetSquaresRegex.exec(icn);
+	if (squaresResult) {
+		presetSquares = parsePresetSquares(squaresResult.groups!['squarePresets']!);
+
+		lastIndex = presetSquaresRegex.lastIndex; // Update the ICN index being observed
+	}
+
+
 	// Preset Rays
 	// Test if the preset rays lie at our current index being observed
 	presetRaysRegex.lastIndex = lastIndex;
@@ -1020,7 +1047,11 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	};
 	if (position) longFormatOut.position = position;
 	if (moves) longFormatOut.moves = moves;
-	if (presetRays) longFormatOut.preset_rays = presetRays;
+	if (presetSquares || presetRays) {
+		longFormatOut.presetAnnotes = {};
+		if (presetSquares) longFormatOut.presetAnnotes.squares = presetSquares;
+		if (presetRays) longFormatOut.presetAnnotes.rays = presetRays;
+	}
 
 	// console.log("Finished parcing ICN!");
 	// console.log("Parsed longformat:", jsutil.deepCopyObject(longFormatOut));
@@ -1395,6 +1426,24 @@ function generatePositionFromShortForm(shortposition: string): { position: Map<C
 
 
 /**
+ * Parses the preset squares from a compacted string form.
+ * '23,94|23,76'
+ */
+function parsePresetSquares(presetSquares: string): Coords[] {
+	const coordsKeys = presetSquares.split('|') as CoordsKey[];
+	const squares: Coords[] = coordsKeys.map(coordutil.getCoordsFromKey);
+
+	squares.forEach(s => {
+		// Make sure it's not Infinity
+		if (!isFinite(s[0]) || !isFinite(s[1])) throw Error(`Square must not be Infinite. ${JSON.stringify(s)}`);
+	})
+
+	console.log("Parsed squares:", squares);
+
+	return squares;
+}
+
+/**
  * Parses the preset rays from a compacted string form.
  * '23,94>-1,0|23,76>-1,0'
  */
@@ -1444,6 +1493,7 @@ export default {
 	generateSpecialRights,
 	generatePositionFromShortForm,
 
+	parsePresetSquares,
 	parsePresetRays,
 };
 
