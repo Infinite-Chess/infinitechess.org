@@ -51,16 +51,18 @@ function getWinConditionCountOfColor(gameRules: GameRules, player: Player): numb
  */
 function swapCheckmateForRoyalCapture(gameRules: GameRules): void {
 
+	let changeMade = false;
 	for (const winConditions of Object.values(gameRules.winConditions)) {
 		// Remove "checkmate" if it exists
 		const indexOf = winConditions.indexOf('checkmate');
 		if (indexOf !== -1) {
 			winConditions.splice(indexOf, 1); // Remove "checkmate'"
 			winConditions.push('royalcapture'); // Add "royalcapture"
+			changeMade = true;
 		}
 	}
 
-	console.log("Swapped checkmate win conditions for royalcapture.");
+	if (changeMade) console.log("Swapped checkmate win conditions for royalcapture.");
 }
 
 
