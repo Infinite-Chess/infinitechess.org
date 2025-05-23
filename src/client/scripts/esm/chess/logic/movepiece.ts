@@ -417,7 +417,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMov
 		moveDraft = icnconverter.parseCompactMove(shortmove.compact);
 	} catch (error) {
 		console.error(error);
-		throw Error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove}`);
+		throw Error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove.compact}`);
 	}
 
 	// Reconstruct the special move properties by calculating what legal
@@ -427,7 +427,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMov
 	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
 	if (!piece) {
 		// No piece on start coordinates, can't calculate Move, because it's illegal
-		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove}`);
+		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove.compact}`);
 	}
 
 	const moveset = legalmoves.getPieceMoveset(gamefile, piece.type);
