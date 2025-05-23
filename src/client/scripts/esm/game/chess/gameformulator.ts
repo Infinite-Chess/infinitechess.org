@@ -82,7 +82,7 @@ function ICNToGamefile(ICN: string): gamefile {
 	// EXPECT THE ICN'S Variant metadata to be the variant code!
 	longformOut.metadata.Variant = convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) || longformOut.metadata.Variant;
 
-	// TEMPORARY: Convert he LongFormatOut's moves into the gamefile's constructor's move's format's form's form for fo
+	// Convert the LongFormatOut's moves into the gamefile's constructor's moves form
 	const moves: ServerGameMoveMessage[] = longformOut.moves?.map(m => {
 		const move: ServerGameMoveMessage = { compact: m.compact };
 		if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
