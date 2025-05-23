@@ -628,14 +628,10 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	}
 	const allPlayersMatchWinConditions = playerWinConSegments.every(segment => segment === playerWinConSegments[0]);
 	if (allPlayersMatchWinConditions) {
-		if (playerWinConSegments[0]! !== default_win_condition) {
-			const singleWinCon = playerWinConSegments[0]!.split(',').length === 1; // Whether everyone has a SINGLE win condition
-			if (singleWinCon) positionSegments.push(playerWinConSegments[0]!); // Don't include parenthesis => 'royalcapture'
-			else positionSegments.push('(' + playerWinConSegments[0]! + ')'); // Include parenthesis => '(checkmate,koth)'
-		}
+		if (playerWinConSegments[0]! !== default_win_condition) positionSegments.push(playerWinConSegments[0]!); // Don't include parenthesis => 'royalcapture' | 'checkmate,koth'
 		// Else all players have checkmate, no need to specify!
-	} else {
-		positionSegments.push('(' + playerWinConSegments.join('|') + ')'); // '(checkmate|checkmate,allpiecescaptured)'
+	} else { // One or more players have differing win conditions
+		positionSegments.push('(' + playerWinConSegments.join('|') + ')'); // Include parenthesis => '(checkmate|checkmate,allpiecescaptured)'
 	}
 
 
