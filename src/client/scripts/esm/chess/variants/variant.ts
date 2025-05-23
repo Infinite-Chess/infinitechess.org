@@ -106,7 +106,8 @@ const positionStringOfClassical = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,
 const positionStringOfCoaIP = 'P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|HA-2,-6|HA11,-6|ha-2,15|ha11,15|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 
 const defaultWinConditions = { [p.WHITE]: ['checkmate'], [p.BLACK]: ['checkmate'] };
-const KOTHWinConditions = { [p.WHITE]: ['checkmate','koth'], [p.BLACK]: ['checkmate','koth'] };
+// const KOTHWinConditions = { [p.WHITE]: ['checkmate','koth'], [p.BLACK]: ['checkmate','koth'] };
+const royalCaptureWinConditions = { [p.WHITE]: ['royalcapture'], [p.BLACK]: ['royalcapture'] };
 const defaultTurnOrder = [p.WHITE, p.BLACK];
 
 const defaultPromotions = [r.KNIGHT, r.BISHOP, r.ROOK, r.QUEEN];
@@ -268,7 +269,8 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			// Additional properties that are normally stored in the position string in the form of '+', but isn't present since it's a generated position.
 			rules: { pawnDoublePush: false },
 		},
-		gameruleModifications: gameruleModificationsOfOmegaShowcasings
+		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
+		gameruleModifications: { winConditions: royalCaptureWinConditions, ...gameruleModificationsOfOmegaShowcasings }
 	},
 	Omega_Fourth: {
 		generator: {
@@ -276,7 +278,8 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			// Additional properties that are normally stored in the position string in the form of '+', but isn't present since it's a generated position.
 			rules: { pawnDoublePush: false },
 		},
-		gameruleModifications: gameruleModificationsOfOmegaShowcasings
+		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
+		gameruleModifications: { winConditions: royalCaptureWinConditions, ...gameruleModificationsOfOmegaShowcasings }
 	},
 	// Chess on an Infinite Plane - Huygens Options
 	CoaIP_HO: {
@@ -317,7 +320,8 @@ const variantDictionary: { [variantName: string]: Variant } = {
 			rules: { pawnDoublePush: true, castleWith: r.ROOK }
 		},
 		movesetGenerator: () => fourdimensionalgenerator.gen4DMoveset(8, 8, 9, true, false),
-		gameruleModifications: { promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { [p.WHITE]: [8, 17, 26, 35, 44, 53, 62, 71], [p.BLACK]: [1, 10, 19, 28, 37, 46, 55, 64] } },
+		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
+		gameruleModifications: { winConditions: royalCaptureWinConditions, promotionsAllowed: defaultPromotionsAllowed, promotionRanks: { [p.WHITE]: [8, 17, 26, 35, 44, 53, 62, 71], [p.BLACK]: [1, 10, 19, 28, 37, 46, 55, 64] } },
 		specialMoves: { pawns: fourdimensionalmoves.doFourDimensionalPawnMove },
 		specialVicinity: { 
 			[r.PAWN]: fourdimensionalgenerator.getPawnVicinity(9, false),
@@ -407,7 +411,7 @@ function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate()
 }): GameRules {
 	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
 
-	const gameruleModifications: GameRuleModifications = getVariantGameRuleModifications({ Variant, UTCDate, UTCTime });
+	const gameruleModifications: GameRuleModifications = jsutil.deepCopyObject(getVariantGameRuleModifications({ Variant, UTCDate, UTCTime }));
 	
 	return getGameRules(gameruleModifications);
 }
@@ -439,8 +443,8 @@ function getVariantGameRuleModifications({ Variant, UTCDate = timeutil.getCurren
 function getGameRules(modifications: GameRuleModifications = {}): GameRules { // { slideLimit, promotionRanks, position }
 	const gameRules: any = {
 		// REQUIRED gamerules
-		winConditions: modifications.winConditions || defaultWinConditions,
-		turnOrder: modifications.turnOrder || defaultTurnOrder,
+		winConditions: modifications.winConditions || jsutil.deepCopyObject(defaultWinConditions),
+		turnOrder: modifications.turnOrder || jsutil.deepCopyObject(defaultTurnOrder),
 	};
 
 	// GameRules that have a dedicated ICN spot...
