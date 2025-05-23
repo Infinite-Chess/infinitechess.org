@@ -320,6 +320,7 @@ import readline from 'readline';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
 import { getTranslation } from '../../utility/translate.js';
+import { LongFormatOut } from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 /**
  * TEMPORARY FUNCTION
  * This functions opens the file /logs/gameLog.txt, if it exists
@@ -331,7 +332,8 @@ async function migrateGameLogsToDatabase() {
 	if (!fs.existsSync('./logs/gameLog.txt')) {
 		console.log("File gameLog.txt not found, no migration of games to database is performed.");
 		return;
-	}	
+	}
+	console.log("Starting migration of gameLog.txt to database...");
 
 	// Create a readable stream from the file
 	const fileStream = fs.createReadStream('./logs/gameLog.txt');
@@ -348,7 +350,8 @@ async function migrateGameLogsToDatabase() {
 	});
 
 	let gamecount = 0;
-	let lastread_JSON: { id: string, publicity: 'public' | 'private' };
+	// Old game jsons have the "private" property, new ones have "publicity"
+	let lastread_JSON: { id: string, publicity?: 'public' | 'private', private?: 'public' | 'private' };
 
 	rl.on('close', () => {
 		console.log(`Finished migrating gameLog.txt with ${gamecount} games to database.`);
@@ -378,19 +381,32 @@ async function migrateGameLogsToDatabase() {
 
 		// line starts with metadata
 		else if (/^\s*\[/.test(line)) {
-			const longformOut = icnconverter.ShortToLong_Format(line);
+			let longformOut: LongFormatOut;
+			try {
+				longformOut = icnconverter.ShortToLong_Format(line);
+			} catch (e) {
+				// Rethrow with more info
+				throw Error(`Error for game of id (${lastread_JSON.id}): ${e}`);
+			}
 			const game: Partial<Game> = {};
 
 			// set all the needed properties of the Game Object, as required in TypeDefinitions.js
 
-			longformOut.metadata.Variant = translationToVariant[longformOut.metadata.Variant!];
+			// THE VARIANT METADATA IS ALREADY THE CODE OF THE VARIANT
+			// longformOut.metadata.Variant = translationToVariant[longformOut.metadata.Variant!];
 
-			VerifyRequiredMetadata(longformOut.metadata);
+			try {
+				VerifyRequiredMetadata(longformOut.metadata);
+			} catch (e) {
+				// Rethrow with more info
+				throw Error(`Error for game of id (${lastread_JSON.id}): ${e}`);
+			}
 
 			// game.id = lastread_JSON.id; // Not needed?
 			game.timeCreated = timeutil.convertUTCDateUTCTimeToTimeStamp(longformOut.metadata.UTCDate, longformOut.metadata.UTCTime);
-			if (lastread_JSON.publicity !== 'public' && lastread_JSON.publicity !== 'private') throw Error(`Publicity "${lastread_JSON.publicity}" not valid!`);
-			game.publicity = lastread_JSON.publicity;
+			const publicity = lastread_JSON.publicity ?? lastread_JSON.private!;
+			if (publicity !== 'public' && publicity !== 'private') throw Error(`Publicity "${publicity}" not valid!`);
+			game.publicity = publicity;
 			game.variant = longformOut.metadata.Variant;
 			game.clock = longformOut.metadata.TimeControl;
 			// Not needed?
@@ -527,15 +543,13 @@ function VerifyRequiredMetadata(metadata: MetaData) {
 		// Make sure it's present
 		// @ts-ignore
 		if (metadata[key] === undefined) {
-			console.log(`Missing metadata: ${key}`);
-			return false;
+			throw Error(`Missing metadata: ${key}. Received: ${JSON.stringify(metadata)}`);
 		}
 		// Make sure it's one of the allowed values, if there is a list of allowed values.
 		// @ts-ignore
 		if (Meta && !Meta.includes(metadata[key])) {
 			// @ts-ignore
-			console.log(`Invalid metadata: ${key} = ${metadata[key]}`);
-			return false;
+			throw Error(`Invalid metadata: ${key} = ${metadata[key]}`);
 		}
 	}
 	// Make sure no additional metadata is present.
@@ -543,18 +557,17 @@ function VerifyRequiredMetadata(metadata: MetaData) {
 		// @ts-ignore
 		if (MetaDataRequiredValues[key] === undefined && MetaDataOptionalValues[key] === undefined) {
 			// @ts-ignore
-			console.log(`Depricated metadata: ${key} = ${metadata[key]}`);
-			return false;
+			throw Error(`Depricated metadata: ${key} = ${metadata[key]}`);
 		}
 	}
 	// Make sure if White/Black is present, that WhiteID/BlackID is also present
 	const guest_indicator = getTranslation('play.javascript.guest_indicator');
-	if (metadata.White !== guest_indicator && !metadata.WhiteID) console.log(`WhiteID is missing, but White is present! ${metadata.White}`);
-	if (metadata.Black !== guest_indicator && !metadata.BlackID) console.log(`BlackID is missing, but Black is present! ${metadata.Black}`);
-	if (metadata.WhiteID && metadata.White === guest_indicator) console.log(`White is missing, but WhiteID is present! ${metadata.WhiteID}`);
-	if (metadata.BlackID && metadata.Black === guest_indicator) console.log(`Black is missing, but BlackID is present! ${metadata.BlackID}`);
+	if (metadata.White !== guest_indicator && !metadata.WhiteID) throw Error(`WhiteID is missing, but White is present! ${metadata.White}`);
+	if (metadata.Black !== guest_indicator && !metadata.BlackID) throw Error(`BlackID is missing, but Black is present! ${metadata.Black}`);
+	if (metadata.WhiteID && metadata.White === guest_indicator) throw Error(`White is missing, but WhiteID is present! ${metadata.WhiteID}`);
+	if (metadata.BlackID && metadata.Black === guest_indicator) throw Error(`Black is missing, but BlackID is present! ${metadata.BlackID}`);
 	// Make sure specifically TimeControl isn't in m+s, but s+s format
-	if (metadata.TimeControl === '10+4' || metadata.TimeControl === '10+6') console.log(`Time control "${metadata.TimeControl}" not valid! Should be in s+s format.`);
+	if (metadata.TimeControl === '10+4' || metadata.TimeControl === '10+6') throw Error(`Time control "${metadata.TimeControl}" not valid! Should be in s+s format.`);
 
 	return true;
 }
