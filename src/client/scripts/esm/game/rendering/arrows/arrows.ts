@@ -857,7 +857,7 @@ function executeArrowShifts() {
 					// At what point does it intersect the screen?
 					const intersect = positiveDotProduct ? thisPieceIntersections[0]!.coords : thisPieceIntersections[1]!.coords;
 
-					const arrow: Arrow = processPiece(arrowDraft, line, intersect, 0, worldHalfWidth, pointerWorlds, false);
+					const arrow: Arrow = processPiece(arrowDraft, line, intersect, 0, worldHalfWidth, pointerWorlds, true);
 					const animatedArrow: AnimatedArrow = {
 						...arrow,
 						direction: line,
