@@ -384,20 +384,16 @@ const winConditionRegex = new RegExp(String.raw`\(?(?<winConditions>${singlePlay
  * Matches the preset squares segment in ICN
  * 'Squares:x,y|x,y'
  */
-const presetSquaresRegex = new RegExp(String.raw`Squares:(?<presetSquares>${coordsKeyRegexSource}(?:\|${coordsKeyRegexSource})*)${whiteSpaceOrEnd}`, 'y');
+const presetSquaresRegex = new RegExp(String.raw`Squares:(?<presetSquares>${coordsKeyRegexSource}(?:\|${coordsKeyRegexSource})*)${whiteSpaceOrEnd}`, 'y'); // 'Squares:x,y|x,y'
+
 
 /** Matches a single preset ray, optionally capturing its properties. */
-function getRayRegexSource(capturing: boolean): string {
-	const startCoordsKey = capturing ? '<startCoordsKey>' : ':';
-	const vec2Key = capturing ? '<vec2Key>' : ':';
-	return `(?${startCoordsKey}${coordsKeyRegexSource})>(?${vec2Key}${coordsKeyRegexSource})`;
-}
-// const singleRaySource = String.raw`${coordsKeyRegexSource}>${coordsKeyRegexSource}`; // 'x,y>dx,dy'
+const singleRaySource = `${coordsKeyRegexSource}>${coordsKeyRegexSource}`; // 'x,y>dx,dy'
 /**
  * Matches the preset rays segment in ICN
  * 'Rays:x,y>dx,dy|x,y>dx,dy'
  */
-const presetRaysRegex = new RegExp(String.raw`Rays:(?<rayPresets>${getRayRegexSource(false)}(\|${getRayRegexSource(false)})*)${whiteSpaceOrEnd}`, 'y'); // 'Rays:x,y>dx,dy|x,y>dx,dy'
+const presetRaysRegex = new RegExp(String.raw`Rays:(?<rayPresets>${singleRaySource}(\|${singleRaySource})*)${whiteSpaceOrEnd}`, 'y'); // 'Rays:x,y>dx,dy|x,y>dx,dy'
 
 // SKIP THE POSITION (It can be too big to capture all at once)
 
@@ -1448,26 +1444,20 @@ function parsePresetSquares(presetSquares: string): Coords[] {
  * '23,94>-1,0|23,76>-1,0'
  */
 function parsePresetRays(presetRays: string): BaseRay[] {
-	const rays: BaseRay[] = [];
-	const rayRegex = new RegExp(getRayRegexSource(true), "g");
+	const stringRays: string[] = presetRays.split('|'); // ['75,14>-1,0', '26,29>-1,-1']
+	const rays: BaseRay[] = stringRays.map(sr => {
+		const [startCoordsKey, vec2Key] = sr.split('>'); 
 
-	// Since the rayRegex has the global flag, exec() will return the next match each time.
-	// NO STRING SPLITTING REQUIRED
-	let match: RegExpExecArray | null;
-	while ((match = rayRegex.exec(presetRays)) !== null) {
-		const startCoordsKey = match.groups!['startCoordsKey'] as CoordsKey;
-		const vec2Key = match.groups!['vec2Key'] as CoordsKey;
-
-		const start = coordutil.getCoordsFromKey(startCoordsKey);
-		const vector = coordutil.getCoordsFromKey(vec2Key);
+		const start = coordutil.getCoordsFromKey(startCoordsKey as CoordsKey);
+		const vector = coordutil.getCoordsFromKey(vec2Key as CoordsKey);
 
 		// Make sure neither are Infinity
 		if (!isFinite(start[0]) || !isFinite(start[1]) || !isFinite(vector[0]) || !isFinite(vector[1])) {
 			throw Error(`Ray start/vector must not be Infinite. ${JSON.stringify(match.groups)}`);
 		}
 
-		rays.push({ start, vector });
-	}
+		return { start, vector };
+	});
 
 	// console.log("Parsed rays:", presetRays);
 
