@@ -1420,7 +1420,7 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 		rays.push({ start, vector });
 	}
 
-	console.log("Parsed rays:", presetRays);
+	// console.log("Parsed rays:", presetRays);
 
 	return rays;
 }
