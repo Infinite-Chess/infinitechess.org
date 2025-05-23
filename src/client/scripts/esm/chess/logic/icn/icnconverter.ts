@@ -375,7 +375,7 @@ const promotionsRegex = new RegExp(String.raw`\((?<promotions>${singlePlayerProm
 const singleWinConSource = '[a-z]{3,100}'; // 'royalcapture'   Minimum of 3 characters so it's impossible to confuse with turn order.
 const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*`; // 'royalcapture,koth'
 /** Captures the win conditions section in the ICN. */
-const winConditionRegex = new RegExp(String.raw`(?<winConditions>${singlePlayerWinConSource}(?:\|${singlePlayerWinConSource})*)${whiteSpaceOrEnd}`, 'y');
+const winConditionRegex = new RegExp(String.raw`\(?(?<winConditions>${singlePlayerWinConSource}(?:\|${singlePlayerWinConSource})*)\)?${whiteSpaceOrEnd}`, 'y');
 
 /** Matches a single preset ray, optionally capturing its properties. */
 function getRayRegexSource(capturing: boolean): string {
@@ -628,7 +628,11 @@ function LongToShort_Format(longformat: LongFormatIn, options: { skipPosition?: 
 	}
 	const allPlayersMatchWinConditions = playerWinConSegments.every(segment => segment === playerWinConSegments[0]);
 	if (allPlayersMatchWinConditions) {
-		if (playerWinConSegments[0]! !== default_win_condition) positionSegments.push(playerWinConSegments[0]!); // 'royalcapture'
+		if (playerWinConSegments[0]! !== default_win_condition) {
+			const singleWinCon = playerWinConSegments[0]!.split(',').length === 1; // Whether everyone has a SINGLE win condition
+			if (singleWinCon) positionSegments.push(playerWinConSegments[0]!); // Don't include parenthesis => 'royalcapture'
+			else positionSegments.push('(' + playerWinConSegments[0]! + ')'); // Include parenthesis => '(checkmate,koth)'
+		}
 		// Else all players have checkmate, no need to specify!
 	} else {
 		positionSegments.push('(' + playerWinConSegments.join('|') + ')'); // '(checkmate|checkmate,allpiecescaptured)'
