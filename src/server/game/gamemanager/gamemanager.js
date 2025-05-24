@@ -35,7 +35,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
  * 
  * The game's ids are the same id they will receive in the database! For this reason they must
  * be unique across the games table, and all other live games.
- * @type {Record<string, Game>}
+ * @type {Record<number, Game>}
  */
 const activeGames = {};
 
@@ -134,8 +134,8 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 
 /**
  * Returns the game with the specified id.
- * @param {string} id - The id of the game to pull.
- * @returns {Game} The game
+ * @param {number} id - The id of the game to pull.
+ * @returns {Game | undefined} The game
  */
 function getGameByID(id) { return activeGames[id]; }
 
@@ -146,7 +146,7 @@ function getGameByID(id) { return activeGames[id]; }
  */
 function getGameByPlayer(player) {
 	const gameID = getIDOfGamePlayerIsIn(player);
-	if (!gameID) return; // Not in a game;
+	if (gameID === undefined) return; // Not in a game;
 	return getGameByID(gameID);
 }
 

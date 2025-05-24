@@ -161,7 +161,7 @@ async function startOnlineGame(options: JoinGameMessage) {
 
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: localstorage.loadItem(options.id) as VariantOptions,
+		variantOptions: localstorage.loadItem(String(options.id)) as VariantOptions,
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,

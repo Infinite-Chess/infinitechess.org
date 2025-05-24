@@ -48,7 +48,7 @@ function handleGameRoute(ws: CustomWebSocket, message: WebsocketInMessage): void
 			onRequestRemovalFromPlayersInActiveGames(ws, game);
 			break;
 		case 'resync':
-			resyncToGame(ws, game, message.value, message.id);
+			resyncToGame(ws, message.value, message.id);
 			break;
 		case 'abort':
 			abortGame(ws, game);

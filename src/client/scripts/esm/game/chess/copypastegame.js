@@ -55,7 +55,7 @@ function copyGame(copySinglePosition) {
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();
 	const preset_rays = drawrays.getPresetOverrides();
-	let presetAnnotes: PresetAnnotes | undefined;
+	let presetAnnotes;
 	if (preset_squares || preset_rays) {
 		presetAnnotes = {};
 		if (preset_squares) presetAnnotes.squares = preset_squares;
@@ -208,7 +208,7 @@ function pasteGame(longformOut) {
 		// Playing a custom private game! Save the pasted position in browser
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();
-		localstorage.saveItem(gameID, variantOptions);
+		localstorage.saveItem(String(gameID), variantOptions);
 	}
 
 	// What is the warning message if pasting in a private match?

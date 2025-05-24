@@ -46,7 +46,7 @@ type ServerGameMoveMessage = { compact: string, clockStamp?: number };
  */
 interface JoinGameMessage extends GameUpdateMessage {
 	/** The id of the online game */
-	id: string,
+	id: number,
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData,
 	rated: boolean,
@@ -147,7 +147,7 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 		case "login":
 			handleLogin(gamefile);
 			break;
-		case "nogame": // Game is deleted / no longer exists
+		case "nogame": // Game doesn't exist - SHOULD NEVER HAPPEN
 			handleNoGame(gamefile);
 			break;
 		case "leavegame":

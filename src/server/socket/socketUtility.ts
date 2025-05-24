@@ -22,7 +22,7 @@ interface CustomWebSocket extends WebSocket {
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
 				/** The id of the game they're in. @type {string} */
-				id: string;
+				id: number;
 				/** The color they are playing as. @type {Player} */
 				color: string;
 			};

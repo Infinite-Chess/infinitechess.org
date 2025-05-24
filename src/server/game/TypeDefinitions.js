@@ -65,7 +65,7 @@ function PlayerData() {
 function Game() {
 	console.error("THIS GAME CONSTRUCTOR should never be called! It is purely for the 'Game' type definition, for useful JSDoc dropdown info.");
 
-	/** The game's unique ID */
+	/** The game's unique ID @type {number} */
 	this.id = undefined;
 	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	this.timeCreated = undefined;
