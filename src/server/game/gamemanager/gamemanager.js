@@ -3,6 +3,9 @@
  * The script keeps track of all our active online games.
  */
 
+// System imports
+import WebSocket from 'ws';
+
 // Custom imports
 
 import gameutility from './gameutility.js';
@@ -19,6 +22,7 @@ import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, 
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+
 
 /**
  * Type Definitions
@@ -88,7 +92,7 @@ function issueUniqueGameId() {
 	do {
 		id = genUniqueGameID(); // This is already unique against all game_ids in the table.
 	} while (activeGames[id] !== undefined); // Repeat until we have an id unique against all active games.
-	console.log(`Issued game_id (${id})!`);
+	// console.log(`Issued game_id (${id})!`);
 	return id;
 }
 
@@ -397,10 +401,10 @@ async function deleteGame(game) {
 	for (const data of Object.values(game.players)) {
 		removeUserFromActiveGame(data.identifier, game.id);
 		if (!data.socket) continue; // They don't have a socket connected.
-		gameutility.unsubClientFromGame(game, data.socket);
 		// We inform their opponent they have disconnected inside js when we call this method.
 		// Tell the client to unsub on their end, IF the socket isn't closing.
 		if (data.socket.readyState === WebSocket.OPEN) sendSocketMessage(data.socket, 'game', 'unsub');
+		gameutility.unsubClientFromGame(game, data.socket);
 	}
 
 	delete activeGames[game.id]; // Delete the game

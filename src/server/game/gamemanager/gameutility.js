@@ -6,8 +6,6 @@
  * At most this ever handles a single game, not multiple.
  */
 
-// System imports
-import WebSocket from 'ws';
 
 // Middleware & other imports
 import { logEvents } from '../../middleware/logEvents.js';
