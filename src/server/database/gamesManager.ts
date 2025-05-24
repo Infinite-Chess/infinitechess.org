@@ -84,7 +84,7 @@ function addGameToGamesTable(
 		// Execute the query with the provided values
 		const result = db.run(query, 
             [
-                game_id,
+                options.game_id,
                 options.date,
 				options.base_time_seconds,
 				options.increment_seconds,
@@ -105,7 +105,7 @@ function addGameToGamesTable(
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error adding game to games table "${game_id}": ${message}`, 'errLog.txt', { print: true });
+		logEvents(`Error adding game to games table "${options.game_id}": ${message}`, 'errLog.txt', { print: true });
 
 		// Return an error message
 		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
