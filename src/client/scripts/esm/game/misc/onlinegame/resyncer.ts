@@ -117,15 +117,14 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 
 	// i is now the index of the latest move that MATCHES in both ours and the server's moves lists.
 
-	const opponentColor = onlinegame.getOpponentColor();
+	const ourColor = onlinegame.getOurColor();
 	while (i < moves.length - 1) { // Increment i, adding the server's correct moves to our moves list
 		i++;
 		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 		const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
 
 		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
-		const opponentPlayedThisMove = colorThatPlayedThisMove === opponentColor;
-
+		const opponentPlayedThisMove = colorThatPlayedThisMove !== ourColor;
 
 		if (opponentPlayedThisMove) { // Perform legality checks
 			// If not legal, this will be a string for why it is illegal.

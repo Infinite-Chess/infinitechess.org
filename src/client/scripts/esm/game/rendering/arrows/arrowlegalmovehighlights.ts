@@ -106,8 +106,8 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const opponentColor = onlinegame.areInOnlineGame() ? onlinegame.getOpponentColor() : typeutil.invertPlayer(gamefile.whosTurn);
-	const isOpponentPiece = pieceColor === opponentColor;
+	const ourColor = onlinegame.areInOnlineGame() ? onlinegame.getOurColor() : gamefile.whosTurn;
+	const isOpponentPiece = pieceColor !== ourColor;
 	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 

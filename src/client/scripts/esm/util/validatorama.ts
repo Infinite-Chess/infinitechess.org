@@ -228,6 +228,14 @@ function getOurUsername(): string | undefined {
 	return memberInfo.signedIn ? memberInfo.username : undefined;
 }
 
+/**
+ * Retrieves our user_id (base 10) if we are logged in.
+ * @returns The user_id, or undefined if not logged in.
+ */
+function getOurUserId(): number | undefined {
+	return memberInfo.signedIn ? memberInfo.user_id : undefined;
+}
+
 
 // --------------------------------------------------------------------------------
 
@@ -236,5 +244,6 @@ export default {
 	waitUntilInitialRequestBack,
 	areWeLoggedIn,
 	getOurUsername,
+	getOurUserId,
 	getAccessToken,
 };

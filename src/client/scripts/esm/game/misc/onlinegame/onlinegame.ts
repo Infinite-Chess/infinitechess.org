@@ -4,7 +4,7 @@
  * */
 
 
-import type { DisconnectInfo, DrawOfferInfo } from './onlinegamerouter.js';
+import type { DisconnectInfo, DrawOfferInfo, OnlineGameParticipantState, OnlineGameSpectatorInfoState, ServerGameParticipantInfo, ServerGameStaticProperties } from './onlinegamerouter.js';
 import type { Player } from '../../../chess/util/typeutil.js';
 import type { ClockValues } from '../../../chess/logic/clock.js';
 
@@ -43,7 +43,7 @@ let isPrivate: boolean | undefined;
 let rated: boolean | undefined;
 
 /**
- * The color we are in the online game.
+ * The color we are in the online game, if we are in it.
  */
 let ourColor: Player | undefined;
 
@@ -87,13 +87,15 @@ function isRated(): boolean {
 	return rated!;
 }
 
-function getOurColor(): Player {
-	if (!inOnlineGame) throw Error("Cannot get color we are in online game when we're not in an online game.");
-	return ourColor!; 
+/** Returns whether we are one of the players in the online game. */
+function doWeHaveRole(): boolean {
+	if (!inOnlineGame) throw Error("Cannot ask if we have a role in online game when we're not in an online game.");
+	return ourColor !== undefined;
 }
 
-function getOpponentColor(): Player {
-	return typeutil.invertPlayer(ourColor!)!;
+function getOurColor(): Player | undefined {
+	if (!inOnlineGame) throw Error("Cannot get color we are in online game when we're not in an online game.");
+	return ourColor; 
 }
 
 function areWeColorInOnlineGame(color: Player): boolean {
@@ -134,30 +136,22 @@ function setInSyncFalse() {
 
 
 function initOnlineGame(options: {
-	/** The id of the online game */
-	id: number,
-	youAreColor: Player,
-	publicity: 'public' | 'private',
-	rated: boolean,
-	drawOffer: DrawOfferInfo,
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo,
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number,
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number,
+	/** Required game information. */
+	gameInfo: ServerGameStaticProperties,
+	/** Defined if you have a role (are a player) in the game. */
+	participantInfo?: ServerGameParticipantInfo,
+	spectatorInfoState: OnlineGameSpectatorInfoState,
 }) {
 	inOnlineGame = true;
-	id = options.id;
-	ourColor = options.youAreColor;
-	isPrivate = options.publicity === 'private';
-	rated = options.rated;
 	inSync = true;
 
-	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options);
+	id = options.gameInfo.id;
+	isPrivate = options.gameInfo.publicity === 'private';
+	rated = options.gameInfo.rated;
+
+	ourColor = options.participantInfo?.youAreColor;
+	
+	if (options.participantInfo) set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options.participantInfo.state, options.spectatorInfoState);
 
 	afk.onGameStart();
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
@@ -167,30 +161,19 @@ function initOnlineGame(options: {
 	initEventListeners();
 }
 
-function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options: {
-	drawOffer: DrawOfferInfo,
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo,
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number,
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number,
-}) {
-	drawoffers.set(options.drawOffer);
+function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(participantInfoState: OnlineGameParticipantState, spectatorInfoState: OnlineGameSpectatorInfoState) {
+	if (participantInfoState.drawOffer) drawoffers.set(participantInfoState.drawOffer);
 
 	// If opponent is currently disconnected, display that countdown
-	if (options.disconnect) disconnect.startOpponentDisconnectCountdown(options.disconnect);
+	if (participantInfoState.disconnect) disconnect.startOpponentDisconnectCountdown(participantInfoState.disconnect);
 	else disconnect.stopOpponentDisconnectCountdown();
 
 	// If Opponent is currently afk, display that countdown
-	if (options.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(options.millisUntilAutoAFKResign);
+	if (participantInfoState.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(participantInfoState.millisUntilAutoAFKResign);
 	else afk.stopOpponentAFKCountdown();
 
 	// If the server is restarting, start displaying that info.
-	if (options.serverRestartingAt !== undefined) serverrestart.initServerRestart(options.serverRestartingAt);
+	if (spectatorInfoState.serverRestartingAt !== undefined) serverrestart.initServerRestart(spectatorInfoState.serverRestartingAt);
 	else serverrestart.resetServerRestarting();
 }
 
@@ -382,8 +365,8 @@ export default {
 	getGameID,
 	getIsPrivate,
 	isRated,
+	doWeHaveRole,
 	getOurColor,
-	getOpponentColor,
 	setInSyncTrue,
 	initOnlineGame,
 	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting,
