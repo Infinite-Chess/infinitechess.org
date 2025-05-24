@@ -136,22 +136,30 @@ function setInSyncFalse() {
 
 
 function initOnlineGame(options: {
-	/** Required game information. */
-	gameInfo: ServerGameStaticProperties,
-	/** Defined if you have a role (are a player) in the game. */
-	participantInfo?: ServerGameParticipantInfo,
-	spectatorInfoState: OnlineGameSpectatorInfoState,
+	/** The id of the online game */
+	id: number,
+	youAreColor: Player,
+	publicity: 'public' | 'private',
+	rated: boolean,
+	drawOffer: DrawOfferInfo,
+	/** If our opponent has disconnected, this will be present. */
+	disconnect?: DisconnectInfo,
+	/**
+	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
+	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 */
+	millisUntilAutoAFKResign?: number,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
 }) {
 	inOnlineGame = true;
+	id = options.id;
+	ourColor = options.youAreColor;
+	isPrivate = options.publicity === 'private';
+	rated = options.rated;
 	inSync = true;
 
-	id = options.gameInfo.id;
-	isPrivate = options.gameInfo.publicity === 'private';
-	rated = options.gameInfo.rated;
-
-	ourColor = options.participantInfo?.youAreColor;
-	
-	if (options.participantInfo) set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options.participantInfo.state, options.spectatorInfoState);
+	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options);
 
 	afk.onGameStart();
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
@@ -161,19 +169,30 @@ function initOnlineGame(options: {
 	initEventListeners();
 }
 
-function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(participantInfoState: OnlineGameParticipantState, spectatorInfoState: OnlineGameSpectatorInfoState) {
-	if (participantInfoState.drawOffer) drawoffers.set(participantInfoState.drawOffer);
+function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options: {
+	drawOffer: DrawOfferInfo,
+	/** If our opponent has disconnected, this will be present. */
+	disconnect?: DisconnectInfo,
+	/**
+	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
+	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 */
+	millisUntilAutoAFKResign?: number,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
+}) {
+	drawoffers.set(options.drawOffer);
 
 	// If opponent is currently disconnected, display that countdown
-	if (participantInfoState.disconnect) disconnect.startOpponentDisconnectCountdown(participantInfoState.disconnect);
+	if (options.disconnect) disconnect.startOpponentDisconnectCountdown(options.disconnect);
 	else disconnect.stopOpponentDisconnectCountdown();
 
 	// If Opponent is currently afk, display that countdown
-	if (participantInfoState.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(participantInfoState.millisUntilAutoAFKResign);
+	if (options.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(options.millisUntilAutoAFKResign);
 	else afk.stopOpponentAFKCountdown();
 
 	// If the server is restarting, start displaying that info.
-	if (spectatorInfoState.serverRestartingAt !== undefined) serverrestart.initServerRestart(spectatorInfoState.serverRestartingAt);
+	if (options.serverRestartingAt !== undefined) serverrestart.initServerRestart(options.serverRestartingAt);
 	else serverrestart.resetServerRestarting();
 }
 

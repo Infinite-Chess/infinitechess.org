@@ -68,10 +68,11 @@ function getResultFromVictor(victor?: Player): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
+/** Calculates the game conclusion from the Result metadata and termination CODE */
 function getGameConclusionFromResultAndTermination(result: string, termination: string) {
 	if (!result || !termination) throw Error("Must provide both result and termination.");
 
-	if (termination = 'aborted') return 'aborted';
+	if (termination === 'aborted') return 'aborted';
 	const victor: Player =
 		result === '1-0' ? players.WHITE :
 		result === '0-1' ? players.BLACK :

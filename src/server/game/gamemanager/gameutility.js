@@ -360,24 +360,13 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	if (playerdata.socket === undefined) return; // Not connected, can't send message
 
 	const opponentColor = typeutil.invertPlayer(color);
-
-
-	const state = {
+	const messageContents = {
 		gameConclusion: game.gameConclusion,
 		moves: game.moves.map(m => simplyMove(m)), // Send the final move list so they can make sure they're in sync.
-	}
-
-	const participantState = {
 		drawOffer: {
 			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
 			lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
 		}
-	}
-
-
-	const messageContents = {
-		state,
-		participantState,
 	};
 	// Include timer info if it's timed
 	if (!game.untimed) messageContents.clockValues = getGameClockValues(game);

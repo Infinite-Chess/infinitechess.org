@@ -11,12 +11,11 @@
  */
 
 import type { MetaData } from "../../chess/util/metadata.js";
-import type { DisconnectInfo, DrawOfferInfo, ServerGameInfo, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { JoinGameMessage, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { Additional, VariantOptions } from "./gameslot.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
-import type { ClockValues } from "../../chess/logic/clock.js";
 
 
 // @ts-ignore
@@ -150,7 +149,7 @@ async function startLocalGame(options: {
 }
 
 /** Starts an online game according to the options provided by the server. */
-async function startOnlineGame(options: ServerGameInfo) {
+async function startOnlineGame(options: JoinGameMessage) {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
 
@@ -160,19 +159,18 @@ async function startOnlineGame(options: ServerGameInfo) {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
+	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.id);
 	const additional: Additional = {
-		moves: options.state.moves,
+		moves: options.moves,
 		variantOptions: localstorage.loadItem(storageKey) as VariantOptions,
-		gameConclusion: options.state.gameConclusion,
-		clockValues: options.spectatorInfoState?.clockValues,
+		gameConclusion: options.gameConclusion,
+		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
+		clockValues: options.clockValues,
 	};
-	// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
-	if (options.spectatorInfoState?.clockValues) additional.clockValues = options.spectatorInfoState.clockValues;
 
 	gameslot.loadGamefile({
-		metadata: options.gameInfo.metadata,
-		viewWhitePerspective: options.participantInfo?.youAreColor !== players.BLACK,
+		metadata: options.metadata,
+		viewWhitePerspective: options.youAreColor === players.WHITE,
 		allowEditCoords: false,
 		additional
 	})

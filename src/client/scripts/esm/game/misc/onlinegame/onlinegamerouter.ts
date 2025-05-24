@@ -49,33 +49,15 @@ type ServerGameMoveMessage = { compact: string, clockStamp?: number };
  * The stuff included here does not need to be specified when we're resyncing to
  * a game, or receiving a game update, as we already know this stuff.
  */
-type JoinGameMessage = ServerGameStaticProperties & GameUpdateMessage & {
-	youAreColor: Player,
-}
-
-/**
- * The options that go into the gameloader for loading an online game.
- */
-type ServerGameInfo = {
-	/** Required game information. */
-	gameInfo: ServerGameStaticProperties,
-	/** Required ONLY if it's not the beginning of a game, or the 'join-game' message. */
-	state: ServerGameState,
-	spectatorInfoState?: OnlineGameSpectatorInfoState,
-	/** Defined if you have a role (are a player) in the game. */
-	participantInfo?: ServerGameParticipantInfo,
-}
-
-
-/** Static properties of an online game that don't change. */
-interface ServerGameStaticProperties {
+interface JoinGameMessage extends GameUpdateMessage {
 	/** The id of the online game */
 	id: number,
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData,
 	rated: boolean,
 	publicity: 'public' | 'private',
-}
+	youAreColor: Player,
+};
 
 /**
  * The message contents expected when the server sends us the 'logged-game-info' action.
@@ -88,25 +70,13 @@ interface LoggedGameInfoMessage {
 	icn: string,
 }
 
-interface ServerGameState {
+/** The message contents expected when we receive a server websocket 'gameupdate' message.  */
+interface GameUpdateMessage {
 	gameConclusion: string | false,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMovesMessage,
-}
-
-/** Additional info needed to load an online game IF we have a role (are a player) in it. */
-interface ServerGameParticipantInfo {
-	youAreColor: Player,
-	/** Only present if we are a participant, not a spectator. */
-	state: OnlineGameParticipantState;
-}
-
-/**
- * State of the draw offers, disconnect timer, auto afk resign timer, and server restarting timer in an online game.
- * These are only present if we are a participant, not a spectator.
- */
-type OnlineGameParticipantState = {
 	drawOffer: DrawOfferInfo,
+	clockValues?: ClockValues,
 	/** If our opponent has disconnected, this will be present. */
 	disconnect?: DisconnectInfo,
 	/**
@@ -114,19 +84,8 @@ type OnlineGameParticipantState = {
 	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
 	 */
 	millisUntilAutoAFKResign?: number,
-}
-
-type OnlineGameSpectatorInfoState = {
-	clockValues?: ClockValues,
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number,
-}
-
-/** The message contents expected when we receive a server websocket 'gameupdate' message.  */
-type GameUpdateMessage = {
-	state: ServerGameState,
-	/** Defined if you have a role (are a player) in the game. */
-	participantState: OnlineGameParticipantState,
 }
 
 /** The message contents expected when we receive a server websocket 'move' message.  */
@@ -178,7 +137,7 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	// These actions are listened to, even when we're not in a game.
 
 	if (data.action === 'joingame') return handleJoinGame(data.value);
-	else if (data.action === 'logged-game-info') 
+	else if (data.action === 'logged-game-info') return handleLoggedGameInfo(data.value);
 
 	// All other actions should be ignored if we're not in a game...
 
@@ -261,7 +220,7 @@ function handleJoinGame(message: JoinGameMessage) {
 }
 
 function handleLoggedGameInfo(message: LoggedGameInfoMessage) {
-	let parsedGame: LongFormatOut
+	let parsedGame: LongFormatOut;
 	try {
 		parsedGame = icnconverter.ShortToLong_Format(message.icn);
 	} catch (e) {
@@ -290,18 +249,15 @@ function handleLoggedGameInfo(message: LoggedGameInfoMessage) {
 		return move;
 	}) : [];
 
-	const options: ServerGameInfo & {
-		youAreColor?: Player,
-		drawOffer?: DrawOfferInfo,
-	} = {
-		gameConclusion: metadata.getGameConclusionFromResultAndTermination(parsedGame.metadata.Result!, parsedGame.metadata.Termination!),
+	const options = {
+		gameConclusion: metadata.getGameConclusionFromResultAndTermination(parsedGame.metadata.Result!, message.termination),
 		moves,
 		id: message.game_id,
 		metadata: parsedGame.metadata,
 		rated: Boolean(message.rated),
-		publicity: Boolean(message.private) ? 'private' : 'public',
+		publicity: message.private ? 'private' : 'public',
 		youAreColor: ourRole,
-	}
+	};
 
 	// Load the game
 	gameloader.startOnlineGame(options);
@@ -392,9 +348,4 @@ export type {
 	OpponentsMoveMessage,
 	ServerGameMovesMessage,
 	ServerGameMoveMessage,
-	ServerGameInfo,
-	ServerGameStaticProperties,
-	ServerGameParticipantInfo,
-	OnlineGameParticipantState,
-	OnlineGameSpectatorInfoState,
 };
