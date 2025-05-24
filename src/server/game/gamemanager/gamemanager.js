@@ -48,7 +48,7 @@ const activeGames = {};
  * has disconnected and has not yet seen the game conclusion.
  * This gives them a little bit of time to reconnect and see the results.
  */
-const timeBeforeGameDeletionMillis = 1000 * 8; // 15 seconds
+const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
 
 //--------------------------------------------------------------------------------------------------------
 
