@@ -16,9 +16,8 @@ import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers,
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
-import uuid from '../../../client/scripts/esm/util/uuid.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { genUniqueGameID } from '../../database/gamesManager.js';
 
 /**
  * Type Definitions
@@ -31,7 +30,10 @@ import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js
 
 /**
  * The object containing all currently active games. Each game's id is the key: `{ id: Game }` 
- * This may temporarily include games that are over, but not yet deleted/logged. 
+ * This may temporarily include games that are over, but not yet deleted/logged.
+ * 
+ * The game's ids are the same id they will receive in the database! For this reason they must
+ * be unique across the games table, and all other live games.
  * @type {Record<string, Game>}
  */
 const activeGames = {};
@@ -54,7 +56,7 @@ const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
 function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1 is the invite owner.
-	const gameID = uuid.genUniqueID(5, activeGames);
+	const gameID = issueUniqueGameId();
 	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
 	if (!player1Socket) {
 		// Player 1 (invite owner)'s socket closed before their invite was deleted.
@@ -72,6 +74,21 @@ function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1
 	console.log("Starting new game:");
 	gameutility.printGame(game);
 	printActiveGameCount();
+}
+
+/**
+ * Returns an id that is unique across BOTH the games table
+ * AND the live games inside {@link activeGames}.
+ * 
+ * The game will receive this same id in the database when it is logged.
+ */
+function issueUniqueGameId() {
+	let id;
+	do {
+		id = genUniqueGameID(); // This is already unique against all game_ids in the table.
+	} while (activeGames[id] !== undefined); // Repeat until we have an id unique against all active games.
+	console.log(`Issued game_id (${id})!`);
+	return id;
 }
 
 /**

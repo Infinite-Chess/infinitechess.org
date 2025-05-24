@@ -47,6 +47,7 @@ type ModifyGameQueryResult = { success: true; result: RunResult } | { success: f
  */
 function addGameToGamesTable(
 	options: {
+		game_id: number,
         date: string,
 		base_time_seconds: number | null,
 		increment_seconds: number | null,
@@ -61,9 +62,6 @@ function addGameToGamesTable(
         move_count: number,
         icn: string
     }): ModifyGameQueryResult {
-
-	// Generate a unique game ID
-	const game_id = genUniqueGameID();
 
 	const query = `
 	INSERT INTO games (
@@ -123,7 +121,7 @@ function addGameToGamesTable(
 }
 
 /**
- * Generates a **UNIQUE** game_id by testing if it's taken already.
+ * Generates a game_id **UNIQUE** to all other game ids in the games table.
  * @returns - A unique game_id.
  */
 function genUniqueGameID(): number {
@@ -304,6 +302,7 @@ function deleteGame(game_id: number): ModifyGameQueryResult {
 
 export {
 	addGameToGamesTable,
+	genUniqueGameID,
 	getGameData,
 	// Commented out to emphasize they should not ever have to be used.
 	// updateGameColumns,
