@@ -75,6 +75,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 	cancelDisconnectTimer(game, colorPlayingAs);
 }
 
+/** Sends a client a game from the database. */
 function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
 	const logged_game_info = getGameData(gameID, ['termination', 'icn']);
 	if (!logged_game_info) {
