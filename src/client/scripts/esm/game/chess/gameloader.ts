@@ -15,9 +15,13 @@ import type { JoinGameMessage, ServerGameMovesMessage } from "../misc/onlinegame
 import type { Additional, VariantOptions } from "./gameslot.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
-import type { BaseRay } from "../rendering/highlights/annotations/drawrays.js";
+import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
 
 
+// @ts-ignore
+import perspective from "../rendering/perspective.js";
+// @ts-ignore
+import transition from "../rendering/transition.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import timeutil from "../../util/timeutil.js";
@@ -30,10 +34,6 @@ import guinavigation from "../gui/guinavigation.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 import boardpos from "../rendering/boardpos.js";
-// @ts-ignore
-import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import transition from "../rendering/transition.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -253,7 +253,7 @@ async function pasteGame(options: {
 		moves?: ServerGameMovesMessage,
 		variantOptions: VariantOptions,
 	},
-	presetRays?: BaseRay[]
+	presetAnnotes?: PresetAnnotes
 }) {
 	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online' && typeOfGameWeAreIn !== 'editor') throw Error("Can't paste a game when we're not in a local, online, or editor game.");
 	if (typeOfGameWeAreIn === 'editor' && options.additional.moves && options.additional.moves.length > 0) throw Error("Can't paste a game with moves played while in the editor.");
@@ -275,7 +275,7 @@ async function pasteGame(options: {
 		metadata: options.metadata,
 		viewWhitePerspective,
 		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
-		presetRays: options.presetRays,
+		presetAnnotes: options.presetAnnotes,
 		additional: additionalToUse,
 	})
 		.then((result: any) => onFinishedLoading())

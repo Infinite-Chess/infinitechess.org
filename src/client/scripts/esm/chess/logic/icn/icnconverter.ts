@@ -392,7 +392,7 @@ const winConditionRegex = new RegExp(String.raw`\(?(?<winConditions>${singlePlay
  * Matches the preset squares segment in ICN
  * 'Squares:x,y|x,y'
  */
-const presetSquaresRegex = new RegExp(String.raw`Squares:(?<presetSquares>${coordsKeyRegexSource}(?:\|${coordsKeyRegexSource})*)${whiteSpaceOrEnd}`, 'y'); // 'Squares:x,y|x,y'
+const presetSquaresRegex = new RegExp(String.raw`Squares:(?<squarePresets>${coordsKeyRegexSource}(?:\|${coordsKeyRegexSource})*)${whiteSpaceOrEnd}`, 'y'); // 'Squares:x,y|x,y'
 
 
 /** Matches a single preset ray, optionally capturing its properties. */
@@ -1467,7 +1467,7 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 		return { start, vector };
 	});
 
-	// console.log("Parsed rays:", presetRays);
+	// console.log("Parsed rays:", rays);
 
 	return rays;
 }

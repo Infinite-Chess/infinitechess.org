@@ -29,7 +29,7 @@ import gameslot from "../../../chess/gameslot.js";
 
 
 /** The color of preset squares for the variant. */
-const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.17]; // Transparent orange (makes preset squares less noticeable/distracting)
+const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.19]; // Default: 0.18   Transparent orange (makes preset squares less noticeable/distracting)
 
 /**
  * The preset square overrides if provided from the ICN.

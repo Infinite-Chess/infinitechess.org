@@ -25,23 +25,10 @@ import legalmoveshapes from "../instancedshapes.js";
 // Variables -------------------------------------------------------------------------------------
 
 
-/** Customizations for the special rights highlights */
-const SPECIAL_RIGHTS = {
-	COLOR: [0, 1, 0.5, 0.3] as Color,
-	/** Method that returns the single-instance vertex data for the shape */
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
-	SHAPE_FUNC: legalmoveshapes.getDataPlusSign,
-};
-
-/** Customizations for the enpassant highlight */
-const ENPASSANT = {
-	COLOR: [0.5, 0, 1, 0.3] as Color,
-	/** Method that returns the single-instance vertex data for the shape */
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveDot,
-	SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
-};
+/** The color of the special rights indicator. */
+const SPECIAL_RIGHTS_COLOR: Color = [0, 1, 0.5, 0.3];
+/* The color of the enpassant indicator. */
+const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
@@ -49,6 +36,21 @@ let model: BufferModelInstanced | undefined;
 
 
 // Functions -------------------------------------------------------------------------------------
+
+/** Met
+ * hod that returns the single-instance vertex data for the special rights indicator shape. */
+function getSpecialRightsVertexData(): number[] {
+	// return legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
+	// return legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);
+	return legalmoveshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
+}
+
+/** Method that returns the single-instance vertex data for the enpassant indicator shape. */
+function getEnPassantVertexData(): number[] {
+	// return legalmoveshapes.getDataLegalMoveCornerTris(ENPASSANT_COLOR);
+	// return legalmoveshapes.getDataLegalMoveDot(ENPASSANT_COLOR);
+	return legalmoveshapes.getDataLegalMoveSquare(ENPASSANT_COLOR);
+}
 
 
 function toggle() {
@@ -78,7 +80,7 @@ function regenModel() {
 		const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
 	}
-	const vertexData: number[] = SPECIAL_RIGHTS.SHAPE_FUNC(SPECIAL_RIGHTS.COLOR);
+	const vertexData: number[] = getSpecialRightsVertexData();
 	model = createModel_Instanced(vertexData, squaresToHighlight, "TRIANGLES", true);
 }
 
@@ -112,7 +114,7 @@ function renderEnPassant() {
 	const boardScale: number = boardpos.getBoardScale();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
-	const data = ENPASSANT.SHAPE_FUNC(ENPASSANT.COLOR);
+	const data = getEnPassantVertexData();
 	const model = createModel(data, 2, "TRIANGLES", true);
 	const transformedPosition: Vec3 = [
 		position[0] + gamefile.state.global.enpassant.square[0],

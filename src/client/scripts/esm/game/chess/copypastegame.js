@@ -25,6 +25,7 @@ import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import variant from '../../chess/variants/variant.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import { pieceCountToDisableCheckmate } from '../../chess/logic/checkmate.js';
+import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 // Import End
 
 "use strict";
@@ -230,7 +231,7 @@ function pasteGame(longformOut) {
 		metadata: longformOut.metadata,
 		additional
 	};
-	if (longformOut.preset_rays) options.presetRays = longformOut.preset_rays;
+	if (longformOut.presetAnnotes) options.presetAnnotes = longformOut.presetAnnotes;
 
 	gameloader.pasteGame(options).then(() => {
 		// This isn't accessible until gameloader.pasteGame() resolves its promise.
