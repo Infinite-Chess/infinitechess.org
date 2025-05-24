@@ -27,7 +27,7 @@ function abortGame(ws, game) {
 	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
 	// Any time they click "Abort Game", they leave the game to the Main Menu, unsubbing, whether or not it ends up being legal.
-	gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
+	gameutility.unsubClientFromGame(game, ws);
 
 	// Is it legal?...
 
@@ -65,7 +65,7 @@ function resignGame(ws, game) {
 	if (!game) return console.error("Can't resign a game when player isn't in one.");
 
 	// Any time they click "Resign Game", they leave the game to the Main Menu, unsubbing, whether or not it ends up being legal.
-	gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
+	gameutility.unsubClientFromGame(game, ws);
 
 	// Is it legal?...
 

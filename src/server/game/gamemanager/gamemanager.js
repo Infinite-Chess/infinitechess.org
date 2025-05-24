@@ -18,6 +18,7 @@ import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
@@ -115,7 +116,7 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 	const game = getGameByID(gameID);
 	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 
-	gameutility.unsubClientFromGame(game, ws, { sendMessage: false }); // Don't tell the client to unsub because their socket is CLOSING
+	gameutility.unsubClientFromGame(game, ws); // Don't tell the client to unsub because their socket is CLOSING
 
 	// Let their OPPONENT know they've disconnected though...
 
@@ -394,8 +395,12 @@ async function deleteGame(game) {
 	// If the socket is undefined, they will have already been auto-unsubscribed.
 	// And remove them from the list of users in active games to allow them to join a new game.
 	for (const data of Object.values(game.players)) {
-		gameutility.unsubClientFromGame(game, data.socket);
 		removeUserFromActiveGame(data.identifier, game.id);
+		if (!data.socket) continue; // They don't have a socket connected.
+		gameutility.unsubClientFromGame(game, data.socket);
+		// We inform their opponent they have disconnected inside js when we call this method.
+		// Tell the client to unsub on their end, IF the socket isn't closing.
+		if (data.socket.readyState === WebSocket.OPEN) sendSocketMessage(data.socket, 'game', 'unsub');
 	}
 
 	delete activeGames[game.id]; // Delete the game
