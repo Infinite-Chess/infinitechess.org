@@ -51,10 +51,7 @@ interface LongFormatBase {
 	/** Same rules as for {@link LongFormatBase['position']}, but for the specialRights. */
 	state_global: Partial<GlobalGameState>
 	/** Overrides the variant's preset annotations, if specified. */
-	presetAnnotes?: {
-		squares?: Coords[]
-		rays?: BaseRay[]
-	}
+	presetAnnotes?: PresetAnnotes
 }
 
 /** The named capture groups of a shortform move. */
@@ -102,6 +99,17 @@ interface _Move_Compact {
 	endCoords: Coords,
 	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
 	promotion?: number,
+}
+
+/**
+ * Permanent preset annotations. Can't be erased.
+ * Helpful for emphasizing important lines/squares in showcasings.
+ */
+type PresetAnnotes = {
+	/** In compacted string form: '23,94|23,76' */
+	squares?: Coords[]
+	/** In compacted string form: '23,94>-1,0|23,76>-1,0' */
+	rays?: BaseRay[]
 }
 
 
@@ -1432,7 +1440,7 @@ function parsePresetSquares(presetSquares: string): Coords[] {
 	squares.forEach(s => {
 		// Make sure it's not Infinity
 		if (!isFinite(s[0]) || !isFinite(s[1])) throw Error(`Square must not be Infinite. ${JSON.stringify(s)}`);
-	})
+	});
 
 	console.log("Parsed squares:", squares);
 
@@ -1453,7 +1461,7 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 
 		// Make sure neither are Infinity
 		if (!isFinite(start[0]) || !isFinite(start[1]) || !isFinite(vector[0]) || !isFinite(vector[1])) {
-			throw Error(`Ray start/vector must not be Infinite. ${JSON.stringify(match.groups)}`);
+			throw Error(`Ray start/vector must not be Infinite. ${sr}`);
 		}
 
 		return { start, vector };
@@ -1493,4 +1501,5 @@ export type {
 	_Move_In,
 	_Move_Out,
 	_Move_Compact,
+	PresetAnnotes,
 };

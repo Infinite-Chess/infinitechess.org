@@ -21,6 +21,8 @@ import guipause from "../../../gui/guipause.js";
 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Square } from "./annotations.js";
+import variant from "../../../../chess/variants/variant.js";
+import gameslot from "../../../chess/gameslot.js";
 
 
 // Variables -----------------------------------------------------------------
@@ -49,7 +51,7 @@ const hover_opacity = 0.5;
 
 
 /** Returns a list of all drawn-square highlights being hovered over by any pointer. */
-function getAllSquaresHovered(): Coords[] {
+function getAllSquaresHovered(highlights: Square[]): Coords[] {
 	const allHovered: Square[] = [];
 	for (const pointerId of mouse.getRelevantListener().getAllPointerIds()) {
 		const pointerWorld: Coords = mouse.getPointerWorld(pointerId)!;
@@ -59,6 +61,7 @@ function getAllSquaresHovered(): Coords[] {
 			if (!allHovered.some(c => coordutil.areCoordsEqual(c, coords))) allHovered.push(coords);
 		});
 	}
+	return allHovered;
 }
 
 /** Returns a list of Square highlight coordinates that are all being hovered over by the provided world coords. */
@@ -166,7 +169,7 @@ function render(highlights: Square[]) {
 	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
 
 	// Render preset squares (only if zoomed in)
-	if (!boardpos.areZoomedOut()) genModel(preset_squares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
+	if (!boardpos.areZoomedOut()) genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
 
 	// Early exit if no drawn-squares to draw
 	if (highlights.length === 0) return;
@@ -181,7 +184,7 @@ function render(highlights: Square[]) {
 
 	if (!boardpos.areZoomedOut() || guipause.areWePaused()) return; // Don't increase opacity of highlighgts when zoomed in
 
-	const allHovered = getAllSquaresHovered();
+	const allHovered = getAllSquaresHovered(highlights);
 	if (allHovered.length > 0) {
 		const hoverColor = preferences.getAnnoteSquareColor();
 		hoverColor[3] = hover_opacity;

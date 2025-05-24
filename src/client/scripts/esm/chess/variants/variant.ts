@@ -72,7 +72,16 @@ interface Variant {
 	 * this, because it means the piece could make captures on different locations.
 	 */
 	specialVicinity?: TimeVariantProperty<SpecialVicinity>
-	annotePresets?: PresetAnnotes
+	/**
+	 * Permanent preset annotations. Can't be erased.
+	 * Helpful for emphasizing important lines/squares in showcasings.
+	 */
+	annotePresets?: {
+		/** In compacted string form: '23,94|23,76' */
+		squares?: string
+		/** In compacted string form: '23,94>-1,0|23,76>-1,0' */
+		rays?: string
+	}
 }
 
 /**
@@ -93,17 +102,6 @@ type SpecialVicinity = {
 	/** The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance. */
 	// eslint-disable-next-line no-unused-vars
 	[r in RawType]?: Coords[]
-}
-
-/**
- * Permanent preset annotations. Can't be erased.
- * Helpful for emphasizing important lines/squares in showcasings.
- */
-type PresetAnnotes = {
-	/** In compacted string form: '23,94|23,76' */
-	squares?: string
-	/** In compacted string form: '23,94>-1,0|23,76>-1,0' */
-	rays?: string
 }
 
 
@@ -646,5 +644,4 @@ export default {
 
 export type {
 	SpecialMoveFunction,
-	PresetAnnotes,
 };
