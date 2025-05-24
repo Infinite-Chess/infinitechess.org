@@ -675,10 +675,10 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft) {
  * @param index - If there are adjacent pictures, this may be > 0
  * @param worldHalfWidth
  * @param pointerWorlds - A list of all world coordinates every existing pointer is over.
- * @param testHover - Whether the arrow, when hovered over, should add itself to the list of arrows hovered over this frame. Should be false for arrows added by other scripts.
+ * @param appendHover - Whether the arrow, when hovered over, should add itself to the list of arrows hovered over this frame. Should be false for arrows added by other scripts.
  * @returns 
  */
-function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, index: number, worldHalfWidth: number, pointerWorlds: Coords[], testHover: boolean): Arrow {
+function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords, index: number, worldHalfWidth: number, pointerWorlds: Coords[], appendHover: boolean): Arrow {
 	const renderCoords = coordutil.copyCoords(intersection);
 
 	// If this picture is an adjacent picture, adjust it's positioning
@@ -691,14 +691,12 @@ function processPiece(arrowDraft: ArrowDraft, vector: Vec2, intersection: Coords
 
 	// Does the mouse hover over the piece?
 	let hovered = false;
-	if (testHover) {
-		for (const pointerWorld of pointerWorlds) {
-			const chebyshevDist = math.chebyshevDistance(worldLocation, pointerWorld);
-			if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
-				hovered = true;
-				// ADD the piece to the list of arrows being hovered over!!!
-				hoveredArrows.push({ piece: arrowDraft.piece, vector });
-			}
+	for (const pointerWorld of pointerWorlds) {
+		const chebyshevDist = math.chebyshevDistance(worldLocation, pointerWorld);
+		if (chebyshevDist < worldHalfWidth) { // Mouse inside the picture bounding box
+			hovered = true;
+			// ADD the piece to the list of arrows being hovered over!!!
+			if (appendHover) hoveredArrows.push({ piece: arrowDraft.piece, vector });
 		}
 	}
 	// If we clicked, then teleport!
@@ -857,7 +855,7 @@ function executeArrowShifts() {
 					// At what point does it intersect the screen?
 					const intersect = positiveDotProduct ? thisPieceIntersections[0]!.coords : thisPieceIntersections[1]!.coords;
 
-					const arrow: Arrow = processPiece(arrowDraft, line, intersect, 0, worldHalfWidth, pointerWorlds, true);
+					const arrow: Arrow = processPiece(arrowDraft, line, intersect, 0, worldHalfWidth, pointerWorlds, false);
 					const animatedArrow: AnimatedArrow = {
 						...arrow,
 						direction: line,

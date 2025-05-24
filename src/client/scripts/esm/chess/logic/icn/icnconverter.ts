@@ -1442,7 +1442,7 @@ function parsePresetSquares(presetSquares: string): Coords[] {
 		if (!isFinite(s[0]) || !isFinite(s[1])) throw Error(`Square must not be Infinite. ${JSON.stringify(s)}`);
 	});
 
-	console.log("Parsed squares:", squares);
+	// console.log("Parsed squares:", squares);
 
 	return squares;
 }
