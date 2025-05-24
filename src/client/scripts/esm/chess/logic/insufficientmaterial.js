@@ -15,7 +15,8 @@ import { rawTypes as r, ext as e, players } from '../util/typeutil.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('../variants/gamerules.js').GameRules} GameRules
+ * @typedef {import('./gamefile.js').Board} Board
  */
 
 "use strict";
@@ -153,28 +154,29 @@ function ordered_tuple_descending(tuple) {
 
 /**
  * Detects if the game is drawn for insufficient material
- * @param {gamefile} gamefile - The gamefile
+ * @param {GameRules} gameRules
+ * @param {Board} board
  * @returns {string | false} '0 insuffmat', if the game is over by the insufficient material, otherwise *false*.
  */
-function detectInsufficientMaterial(gamefile) {
+function detectInsufficientMaterial(gameRules, board) {
 	// Only make the draw check if the win condition is checkmate for both players
-	if (!gamerules.doesColorHaveWinCondition(gamefile.gameRules, players.WHITE, 'checkmate') || !gamerules.doesColorHaveWinCondition(gamefile.gameRules, players.BLACK, 'checkmate')) return false;
-	if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, players.WHITE) !== 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, players.BLACK) !== 1) return false;
+	if (!gamerules.doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate') || !gamerules.doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')) return false;
+	if (gamerules.getWinConditionCountOfColor(gameRules, players.WHITE) !== 1 || gamerules.getWinConditionCountOfColor(gameRules, players.BLACK) !== 1) return false;
 
 	// Only make the draw check if the last move was a capture or promotion or if there is no last move
-	const lastMove = moveutil.getLastMove(gamefile.moves);
+	const lastMove = moveutil.getLastMove(board.moves);
 	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion !== undefined)) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle or gargoyle pieces
-	if (boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(gamefile.pieces, r.VOID + e.N) >= 11) return false;
+	if (boardutil.getPieceCountOfGame(board.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(board.pieces, r.VOID + e.N) >= 11) return false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};
 	// bishops are treated specially and separated by parity
 	const bishopsW_count = [0, 0];
 	const bishopsB_count = [0, 0];
-	for (const idx of gamefile.pieces.coords.values()) {
-		const piece = boardutil.getPieceFromIdx(gamefile.pieces, idx);
+	for (const idx of board.pieces.coords.values()) {
+		const piece = boardutil.getPieceFromIdx(board.pieces, idx);
 		const [raw, color] = typeutil.splitType(piece.type);
 		if (raw === r.OBSTACLE) continue;
 		
@@ -194,9 +196,9 @@ function detectInsufficientMaterial(gamefile) {
 	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
 	// This is fully enough for the checkmate practice mode, for now
 	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
-	if (gamefile.gameRules.promotionRanks) {
-		const promotionListWhite = gamefile.gameRules.promotionsAllowed[players.WHITE];
-		const promotionListBlack = gamefile.gameRules.promotionsAllowed[players.BLACK];
+	if (gameRules.promotionRanks) {
+		const promotionListWhite = gameRules.promotionsAllowed[players.WHITE];
+		const promotionListBlack = gameRules.promotionsAllowed[players.BLACK];
 		if ((r.PAWN + e.W) in scenario && promotionListWhite.length !== 0) return false;
 		if ((r.PAWN + e.B) in scenario && promotionListBlack.length !== 0) return false;
 	}

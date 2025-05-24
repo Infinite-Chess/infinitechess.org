@@ -197,7 +197,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
 	const mouseCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
 	const vector_unnormalized = coordutil.subtractCoordinates(mouseCoords, drag_start!);
-	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.pieces.hippogonalsPresent);
+	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.board.pieces.hippogonalsPresent);
 	const line = math.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 
 	const deletedRays: Ray[] = [];

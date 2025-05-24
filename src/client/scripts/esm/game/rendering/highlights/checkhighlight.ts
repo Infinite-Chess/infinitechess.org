@@ -15,11 +15,8 @@ import bufferdata from '../bufferdata.js';
 
 // Type Definitions ----------------------------------------------------------------
 
-
-// @ts-ignore
-import type gamefile from '../../../chess/logic/gamefile.js';
+import type { Board } from '../../../chess/logic/gamefile.js';
 import type { Coords } from '../../../chess/util/coordutil.js';
-
 
 // Functions -----------------------------------------------------------------------
 
@@ -27,8 +24,8 @@ import type { Coords } from '../../../chess/util/coordutil.js';
 /**
  * Renders the red glow around all pieces in check on the currently-viewed move.
  */
-function render(gamefile: gamefile) {
-	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+function render(board: Board) {
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(board);
 	if (royalsInCheck.length === 0) return; // Nothing in check
     
 	const model = genCheckHighlightModel(royalsInCheck);

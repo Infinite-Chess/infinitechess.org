@@ -238,14 +238,14 @@ function callback_Back() {
 }
 
 function callback_Expand() {
-	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
+	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.board.pieces!);
 	// Add the square annotation highlights, too.
 	allCoords.push(...annotations.getSquares());
 	area.initTelFromCoordsList(allCoords);
 }
 
 function recenter() {
-	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!);
+	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.board);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
@@ -299,8 +299,8 @@ function isItOkayToRewindOrForward() {
  */
 function update_MoveButtons() {
 	const gamefile = gameslot.getGamefile()!;
-	const decrementingLegal = moveutil.isDecrementingLegal(gamefile);
-	const incrementingLegal = moveutil.isIncrementingLegal(gamefile);
+	const decrementingLegal = moveutil.isDecrementingLegal(gamefile.board);
+	const incrementingLegal = moveutil.isIncrementingLegal(gamefile.board);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -452,11 +452,11 @@ function testIfForwardMove() {
 function rewindMove() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
-	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
+	if (!moveutil.isDecrementingLegal(gamefile.board)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
-	movesequence.navigateMove(gamefile, mesh, false);
+	movesequence.navigateMove(gamefile, gamefile.board, mesh, false);
     
 	selection.unselectPiece();
 }
@@ -465,9 +465,9 @@ function rewindMove() {
 function forwardMove() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
-	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
+	if (!moveutil.isIncrementingLegal(gamefile.board)) return stats.showMoves();
 
-	movesequence.navigateMove(gamefile, mesh, true);
+	movesequence.navigateMove(gamefile, gamefile.board, mesh, true);
 }
 
 /**

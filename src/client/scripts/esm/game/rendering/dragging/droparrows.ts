@@ -49,7 +49,7 @@ function updateCapturedPiece(): void {
 	// For each of the hovered arrows, test if capturing is legal
 
 	const legalCaptureHoveredArrows = hoveredArrows.filter(arrow => {
-		return legalmoves.checkIfMoveLegal(gameslot.getGamefile()!, selectedPieceLegalMoves, selectedPiece.coords, arrow.piece.coords, selectedPieceColor);
+		return legalmoves.checkIfMoveLegal(gameslot.getGamefile()!, gameslot.getGamefile()!.board, selectedPieceLegalMoves, selectedPiece.coords, arrow.piece.coords, selectedPieceColor);
 	});
 
 	// console.log(JSON.stringify(legalCaptureHoveredArrows));

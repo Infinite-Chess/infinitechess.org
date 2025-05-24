@@ -13,16 +13,13 @@ import shapes from "../shapes.js";
 
 // Type Definitions -----------------------------------------------------------------------------
 
-
-// @ts-ignore
-import type gamefile from '../../../chess/logic/gamefile.js';
-
+import type { Board } from "../../../chess/logic/gamefile.js";
 
 // Variables -----------------------------------------------------------------------------
 
 
-function highlightLastMove(gamefile: gamefile) {
-	const lastMove = moveutil.getCurrentMove(gamefile);
+function highlightLastMove(board: Board) {
+	const lastMove = moveutil.getCurrentMove(board);
 	if (!lastMove || lastMove.isNull) return; // Don't render if last move is undefined.
 
 	const color = preferences.getLastMoveHighlightColor();

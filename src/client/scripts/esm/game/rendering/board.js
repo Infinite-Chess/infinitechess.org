@@ -80,11 +80,11 @@ let darkTiles;
 		if (!gamefile) return;
 		imagecache.deleteImageCache();
 		// texturecache.deleteTextureCache(gl);
-		imagecache.initImagesForGame(gamefile).then(() => {
+		imagecache.initImagesForGame(gamefile.board).then(() => {
 			// Regenerate the spritesheet with the new tinted images
-			spritesheet.initSpritesheetForGame(gl, gamefile);
-			texturecache.initTexturesForGame(gl, gamefile);
-			piecemodels.regenAll(gamefile, gameslot.getMesh());
+			spritesheet.initSpritesheetForGame(gl, gamefile.board);
+			texturecache.initTexturesForGame(gl, gamefile.board);
+			piecemodels.regenAll(gamefile.board, gameslot.getMesh());
 		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();

@@ -15,7 +15,7 @@ import clockutil from '../util/clockutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
-import type { Game } from './game.js';
+import type { Game } from './gamefile.js';
 import type { Player } from '../util/typeutil.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
@@ -159,13 +159,13 @@ function push(game: Game): number | undefined {
 
 	if (!moveutil.isGameResignable(game)) return clocks.currentTime[prevcolor]!;
 
-		// Add increment to the previous player's clock and capture their remaining time to later insert into move.
+	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
 	if (clocks.timeAtTurnStart !== undefined) { // 3+ moves
 		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
 	}
 
 	// Set up clocksticking for the new turn.
-	clocks.colorTicking = gamefile.whosTurn;
+	clocks.colorTicking = game.whosTurn;
 	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
 	clocks.timeAtTurnStart = Date.now();
 	
@@ -199,7 +199,7 @@ function update(game: Game): Player | undefined {
 	for (const [playerStr,time] of Object.entries(clocks.currentTime)) {
 		const player: Player = Number(playerStr) as Player;
 		if (time as number <= 0) {
-			clocks.currentTime[playerStr] = 0;
+			clocks.currentTime[player] = 0;
 			return typeutil.invertPlayer(player); // The color who won on time
 		}
 	}
@@ -224,7 +224,7 @@ function printClocks(game: Game) {
 	if (game.untimed) return console.log("Game is untimed.");
 	const clocks = game.clocks!;
 	for (const color in clocks.currentTime) {
-		console.log(`${color} time: ${clocks.currentTime[color]}`);
+		console.log(`${color} time: ${clocks.currentTime[Number(color) as Player]}`);
 	}
 	console.log(`timeRemainAtTurnStart: ${clocks.timeRemainAtTurnStart}`);
 	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);

@@ -9,7 +9,7 @@ import imagecache from './imagecache.js'; // Adjust path as needed
 import typeutil from '../../chess/util/typeutil.js'; // Import typeutil for filtering
 
 import type { TypeGroup } from '../util/typeutil.js';
-import type { Board } from '../logic/game.js';
+import type { Board } from '../logic/gamefile.js';
 // @ts-ignore
 import texture from '../../game/rendering/texture.js';
 

@@ -7,7 +7,7 @@
  */
 
 
-import type { Game, Board } from "../../chess/logic/game.js";
+import type { Game, Board } from "../../chess/logic/gamefile.js";
 import type { Move, MoveDraft, NullMove } from "../../chess/logic/movepiece.js";
 
 
@@ -87,15 +87,15 @@ function makeMove(game: Game, board: Board, mesh: Mesh | undefined, moveDraft: M
 /**
  * Makes a global backward move in the game.
  */
-function rewindMove(gamefile: gamefile, mesh: Mesh | undefined) {
+function rewindMove(game: Game, board: Board, mesh: Mesh | undefined) {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
-	const lastMove = moveutil.getLastMove(gamefile.moves)!;
-	movepiece.rewindMove(gamefile); // Logical changes
+	const lastMove = moveutil.getLastMove(board.moves)!;
+	movepiece.rewindMove(game, board); // Logical changes
 	if (lastMove.isNull) return;
 	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
-	if (gamefileutility.isGameOver(gamefile)) gameslot.unConcludeGame();
+	if (gamefileutility.isGameOver(game)) gameslot.unConcludeGame();
 	updateGui(false); // GUI changes
 }
 
@@ -112,8 +112,8 @@ function rewindMove(gamefile: gamefile, mesh: Mesh | undefined) {
  * 
  * But it does change the check state.
  */
-function viewMove(gamefile: gamefile, mesh: Mesh | undefined, move: Move | NullMove, forward = true) {
-	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
+function viewMove(game: Game, board: Board, mesh: Mesh | undefined, move: Move | NullMove, forward = true) {
+	movepiece.applyMove(game, board, move, forward); // Apply the logical changes.
 	if (move.isNull) return;
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
@@ -123,20 +123,19 @@ function viewMove(gamefile: gamefile, mesh: Mesh | undefined, move: Move | NullM
 
 /**
  * Makes the game view a set move index
- * @param gamefile the gamefile
  * @param index the move index to goto
  */
-function viewIndex(gamefile: gamefile, mesh: Mesh | undefined, index: number) {
-	movepiece.goToMove(gamefile, index, (move: (Move | NullMove)) => viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex));
+function viewIndex(game: Game, board: Board, mesh: Mesh | undefined, index: number) {
+	movepiece.goToMove(board, index, (move: (Move | NullMove)) => viewMove(game, board, mesh, move, index >= board.state.local.moveIndex));
 	updateGui(false);
 }
 
 /**
  * Makes the game view the last move
  */
-function viewFront(gamefile: gamefile, mesh: Mesh | undefined) {
+function viewFront(game: Game, board: Board, mesh: Mesh | undefined) {
 	/** Call {@link viewIndex} with the index of the last move in the game */
-	viewIndex(gamefile, mesh, gamefile.moves.length - 1);
+	viewIndex(game, board, mesh, board.moves.length - 1);
 }
 
 /**
@@ -148,16 +147,16 @@ function viewFront(gamefile: gamefile, mesh: Mesh | undefined) {
  * 
  * ASSUMES that it is legal to navigate in the direction.
  */
-function navigateMove(gamefile: gamefile, mesh: Mesh | undefined, forward: boolean): void {
+function navigateMove(game: Game, board: Board, mesh: Mesh | undefined, forward: boolean): void {
 	// Determine the index of the move to apply
-	const idx = forward ? gamefile.state.local.moveIndex + 1 : gamefile.state.local.moveIndex;
+	const idx = forward ? board.state.local.moveIndex + 1 : board.state.local.moveIndex;
 
 	// Make sure the move exists. Normally we'd never call this method
 	// if it does, but just in case we forget to check.
-	const move = gamefile.moves[idx];
+	const move = board.moves[idx];
 	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 	
-	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
+	viewMove(game, board, mesh, move, forward); // Apply the logical + graphical changes
 	if (move.isNull) return;
 	animateMove(move, forward); // Animate
 	updateGui(true);

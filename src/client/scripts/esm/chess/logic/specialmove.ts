@@ -10,7 +10,7 @@ import type { RawTypeGroup } from '../util/typeutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Move } from './movepiece.js';
 import type { Piece } from '../util/boardutil.js';
-import type { Board } from './game.js';
+import type { Board } from './gamefile.js';
 
 "use strict";
 

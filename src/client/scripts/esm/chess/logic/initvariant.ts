@@ -3,7 +3,7 @@
  * This script prepares our variant when a game is constructed
  */
 
-import type { Snapshot } from './game.js';
+import type { Snapshot } from './gamefile.js';
 import type { MetaData } from '../util/metadata.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
@@ -47,11 +47,10 @@ interface VariantOptions {
  * 
  * To load a custom position, include the options within the `options` parameter!
  * All options are a snapshot of the starting position, before any moves are forwarded.
- * @param {gamefile} gamefile - The gamefile to initialize
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
  */
-function getVariantGamerules(metadata: MetaData, options?: VariantOptions) {
+function getVariantGamerules(metadata: MetaData, options?: VariantOptions): GameRules {
 	// Ignores the "Variant" metadata, and just uses the specified gameRules
 	if (options) return options.gameRules;
 	// Default (built-in variant, not pasted)
@@ -80,12 +79,11 @@ function getPieceMovesets(metadata: MetaData, slideLimit?: number) {
  * 
  * To load a custom position, include the options within the `options` parameter!
  * All options are a snapshot of the starting position, before any moves are forwarded.
- * @param {gamefile} gamefile - The gamefile to initialize
  * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
  * @param {VariantOptions} [variantOptions] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
  * @returns {StartSnapshot} The starting snapshot of the game.
  */
-function genStartSnapshot(gamerules: GameRules, metadata: MetaData, variantOptions: VariantOptions): Snapshot {
+function genStartSnapshot(gamerules: GameRules, metadata: MetaData, variantOptions?: VariantOptions): Snapshot {
 	let position: Snapshot['position'];
 	let fullMove: Snapshot['fullMove'];
 	// The 3 global game states

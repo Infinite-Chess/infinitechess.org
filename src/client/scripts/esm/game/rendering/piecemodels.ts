@@ -7,7 +7,7 @@
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { TypeGroup } from '../../chess/util/typeutil.js';
-import type { Board } from '../../chess/logic/game.js';
+import type { Board } from '../../chess/logic/gamefile.js';
 
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';

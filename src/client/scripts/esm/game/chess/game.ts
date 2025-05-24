@@ -163,7 +163,7 @@ function render() {
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		selectedpiecehighlightline.render();
-		highlights.render(gamefile);
+		highlights.render(gamefile.board);
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
@@ -171,7 +171,7 @@ function render() {
     
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile, mesh);
+	pieces.renderPiecesInGame(gamefile.board, mesh);
 	
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {

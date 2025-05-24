@@ -15,9 +15,7 @@ import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import gameslot from './gameslot.js';
 import gameloader from './gameloader.js';
-import coordutil from '../../chess/util/coordutil.js';
-import typeutil from '../../chess/util/typeutil.js';
-import { players, rawTypes } from '../../chess/util/typeutil.js';
+import { players } from '../../chess/util/typeutil.js';
 import guipause from '../gui/guipause.js';
 import gamecompressor from './gamecompressor.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
@@ -25,7 +23,6 @@ import gameformulator from './gameformulator.js';
 import websocket from '../websocket.js';
 import boardutil from '../../chess/util/boardutil.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
-import jsutil from '../../util/jsutil.js';
 import variant from '../../chess/variants/variant.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 // Import End
@@ -56,7 +53,7 @@ function copyGame(copySinglePosition) {
 	// Add the preset ray overrides from the previously pasted game, if present.
 	const preset_rays = drawrays.getPresetOverrides();
 
-	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition, preset_rays);
+	const longformatIn = gamecompressor.compressGamefile(gamefile, gamefile.board, copySinglePosition, preset_rays);
 	// Convert the variant metadata code to spoken language if translation is available
 	if (longformatIn.metadata.Variant) longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 	

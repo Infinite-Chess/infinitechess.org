@@ -29,7 +29,7 @@ const oneWayActions: string[] = ['capture', 'delete'];
 import type { Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { Piece } from "../util/boardutil.js";
-import type { FullGame } from "./game.js";
+import type { FullGame } from "./gamefile.js";
 
 
 /**

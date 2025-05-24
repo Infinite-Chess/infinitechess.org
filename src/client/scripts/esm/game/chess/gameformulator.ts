@@ -4,15 +4,14 @@
  */
 
 
-// @ts-ignore
 import gamefile from '../../chess/logic/gamefile.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import variant from '../../chess/variants/variant.js';
 import { CoordsKey } from '../../chess/util/coordutil.js';
 import { ServerGameMoveMessage } from '../misc/onlinegame/onlinegamerouter.js';
 
-
-import type { VariantOptions } from './gameslot.js';
+import type { Game } from '../../chess/logic/gamefile.js';
+import type { VariantOptions } from '../../chess/logic/initvariant.js';
 import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
 
 
@@ -21,7 +20,7 @@ import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/ic
  * Formulates a whole gamefile from a smaller simpler abridged one.
  * @param longformIn - The return value of gamecompressor.compressGamefile()
  */
-function formulateGame(longformIn: LongFormatIn) {
+function formulateGame(longformIn: LongFormatIn): Game {
 
 	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
 		throw Error('Invalid longformIn when formulating game: Missing position or special rights.');
@@ -45,7 +44,11 @@ function formulateGame(longformIn: LongFormatIn) {
 		}
 	};
 
-	return new gamefile(longformIn.metadata, { moves, variantOptions });
+	const game = gamefile.initGame(longformIn.metadata, variantOptions);
+	const board = gamefile.initBoard(game.gameRules, longformIn.metadata, variantOptions);
+	gamefile.loadGameWithBoard(game, board, moves);
+
+	return game;
 }
 
 /**
@@ -54,7 +57,7 @@ function formulateGame(longformIn: LongFormatIn) {
  * * Invalid format or enpassant square
  * * Game contains an illegal move
  */
-function ICNToGamefile(ICN: string): gamefile {
+function ICNToGamefile(ICN: string): Game {
 	const longformOut: LongFormatOut = icnconverter.ShortToLong_Format(ICN);
 
 	let position: Map<CoordsKey, number>;
@@ -91,12 +94,16 @@ function ICNToGamefile(ICN: string): gamefile {
 		return move;
 	}) ?? [];
 
+
+	const game = gamefile.initGame(longformOut.metadata, variantOptions);
+	const board = gamefile.initBoard(game.gameRules, longformOut.metadata, variantOptions);
 	/**
 	 * This automatically forwards all moves to the front of the game.
 	 * It will throw an Error if there's any move with a startCoords that doesn't have any piece on it!
 	 * Some illegal moves may pass, but those aren't what we care about. We care about crashing moves!
 	 */
-	return new gamefile(longformOut.metadata, { moves, variantOptions });
+	gamefile.loadGameWithBoard(game, board, moves);
+	return game;
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant?: string) {

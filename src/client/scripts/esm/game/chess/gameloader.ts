@@ -12,7 +12,8 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { JoinGameMessage, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
-import type { Additional, VariantOptions } from "./gameslot.js";
+import type { Additional } from "./gameslot.js";
+import type { VariantOptions } from "../../chess/logic/initvariant.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { BaseRay } from "../rendering/highlights/annotations/drawrays.js";
@@ -266,7 +267,7 @@ async function pasteGame(options: {
 	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
 	const additionalToUse: Additional = {
 		...options.additional,
-		editor: gameslot.getGamefile()!.editor, // Retain the same option as the current loaded game.
+		editor: gameslot.getGamefile()!.board.editor, // Retain the same option as the current loaded game.
 	};
 
 	gameslot.unloadGame();
