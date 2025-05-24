@@ -369,6 +369,14 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	return clockValues;
 }
 
+/**
+ * Returns the key that's put in local storage to store the variant options
+ * of the current online game, if we have pasted a position in a private match.
+ */
+function getKeyForOnlineGameVariantOptions(gameID: number) {
+	return `online-game-variant-options${gameID}`;
+}
+
 export default {
 	onmessage,
 	getGameID,
@@ -392,4 +400,5 @@ export default {
 	areInOnlineGame,
 	areWeColorInOnlineGame,
 	adjustClockValuesForPing,
+	getKeyForOnlineGameVariantOptions,
 };
