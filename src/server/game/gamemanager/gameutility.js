@@ -6,8 +6,6 @@
  * At most this ever handles a single game, not multiple.
  */
 
-// System imports
-import WebSocket from 'ws';
 
 // Middleware & other imports
 import { logEvents } from '../../middleware/logEvents.js';
@@ -183,8 +181,8 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
 	const playerData = game.players[playerColor];
 	if (playerData === undefined) return console.error(`Cannot subscribe client to game when game does not expect color ${playerColor} to be present`);
 	if (playerData.socket) {
-		sendSocketMessage(playerData.socket, 'game','leavegame');
-		unsubClientFromGame(game, playerData.socket, { sendMessage: false });
+		sendSocketMessage(playerData.socket, 'game', 'leavegame');
+		unsubClientFromGame(game, playerData.socket);
 	}
 	playerData.socket = playerSocket;
 
@@ -201,15 +199,12 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
 }
 
 /**
- * Unsubscribes a websocket from the game their connected to.
- * Detaches their socket from the game, updates their metadata.subscriptions.
+ * Detaches the websocket from the game.
+ * Updates the socket's subscriptions.
  * @param {Game} game
  * @param {CustomWebSocket} ws - Their websocket.
- * @param {Object} options - Additional options.
- * @param {Object} options.sendMessage - Whether to inform the client to unsub from the game. Default: true. This should be false if we're unsubbing because the socket is closing.
  */
-function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
-	if (!ws) return; // Socket undefined, can't unsub.
+function unsubClientFromGame(game, ws) {
 	if (ws.metadata.subscriptions.game === undefined) return; // Already unsubbed (they aborted)
 
 	// 1. Detach their socket from the game so we no longer send updates
@@ -217,11 +212,6 @@ function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
 
 	// 2. Remove the game key-value pair from the sockets metadata subscription list.
 	delete ws.metadata.subscriptions.game;
-
-	// We inform their opponent they have disconnected inside js when we call this method.
-
-	// Tell the client to unsub on their end, IF the socket isn't closing.
-	if (sendMessage && ws.readyState === WebSocket.OPEN) sendSocketMessage(ws, 'game', 'unsub');
 }
 
 /**

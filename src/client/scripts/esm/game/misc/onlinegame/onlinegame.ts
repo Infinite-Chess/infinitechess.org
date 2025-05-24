@@ -29,10 +29,8 @@ import websocket from '../../websocket.js';
 /** Whether or not we are currently in an online game. */
 let inOnlineGame: boolean = false;
 
-/**
- * The id of the online game we are in, if we are in one. @type {string}
- */
-let id: string | undefined;
+/** The id of the online game we are in, if we are in one. */
+let id: number | undefined;
 
 /**
  * Whether the game is a private one (joined from an invite code).
@@ -74,7 +72,7 @@ function areInOnlineGame(): boolean {
 }
 
 /** Returns the game id of the online game we're in.  */
-function getGameID(): string {
+function getGameID(): number {
 	if (!inOnlineGame) throw Error("Cannot get id of online game when we're not in an online game.");
 	return id!;
 }
@@ -137,7 +135,7 @@ function setInSyncFalse() {
 
 function initOnlineGame(options: {
 	/** The id of the online game */
-	id: string,
+	id: number,
 	youAreColor: Player,
 	publicity: 'public' | 'private',
 	rated: boolean,
@@ -273,8 +271,9 @@ function update() {
  * Requests a game update from the server, since we are out of sync.
  */
 function resyncToGame() {
+	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
-	websocket.sendmessage('game', 'resync', id);
+	websocket.sendmessage('game', 'resync', id!);
 }
 
 function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
@@ -332,7 +331,7 @@ function onGameConclude() {
 
 function deleteCustomVariantOptions() {
 	// Delete any custom pasted position in a private game.
-	if (isPrivate) localstorage.deleteItem(id!);
+	if (isPrivate) localstorage.deleteItem(String(id!));
 }
 
 /**

@@ -25,6 +25,7 @@ import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import variant from '../../chess/variants/variant.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import { pieceCountToDisableCheckmate } from '../../chess/logic/checkmate.js';
+import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 // Import End
 
 "use strict";
@@ -52,10 +53,17 @@ function copyGame(copySinglePosition) {
 	const gamefile = gameslot.getGamefile();
 	const Variant = gamefile.metadata.Variant;
 
-	// Add the preset ray overrides from the previously pasted game, if present.
+	// Add the preset annotation overrides from the previously pasted game, if present.
+	const preset_squares = drawsquares.getPresetOverrides();
 	const preset_rays = drawrays.getPresetOverrides();
+	let presetAnnotes;
+	if (preset_squares || preset_rays) {
+		presetAnnotes = {};
+		if (preset_squares) presetAnnotes.squares = preset_squares;
+		if (preset_rays) presetAnnotes.rays = preset_rays;
+	}
 
-	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition, preset_rays);
+	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition, presetAnnotes);
 	// Convert the variant metadata code to spoken language if translation is available
 	if (longformatIn.metadata.Variant) longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 	
@@ -201,7 +209,7 @@ function pasteGame(longformOut) {
 		// Playing a custom private game! Save the pasted position in browser
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();
-		localstorage.saveItem(gameID, variantOptions);
+		localstorage.saveItem(String(gameID), variantOptions);
 	}
 
 	// What is the warning message if pasting in a private match?
@@ -223,7 +231,7 @@ function pasteGame(longformOut) {
 		metadata: longformOut.metadata,
 		additional
 	};
-	if (longformOut.preset_rays) options.presetRays = longformOut.preset_rays;
+	if (longformOut.presetAnnotes) options.presetAnnotes = longformOut.presetAnnotes;
 
 	gameloader.pasteGame(options).then(() => {
 		// This isn't accessible until gameloader.pasteGame() resolves its promise.

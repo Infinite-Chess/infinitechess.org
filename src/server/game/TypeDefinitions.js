@@ -22,7 +22,7 @@ function PlayerData() {
 	 * @type {{ member: string, user_id: number } | { browser: string }}
 	 */
 	this.identifier = undefined; // CHANGE TO { signedIn: boolean, identifier: string }
-	/** Player's socket, if they are connected. @type {CustomWebSocket} */
+	/** Player's socket, if they are connected. @type {CustomWebSocket | undefined} */
 	this.socket = undefined;
 	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. @type {number | null} */
 	this.lastOfferPly = undefined;
@@ -65,7 +65,7 @@ function PlayerData() {
 function Game() {
 	console.error("THIS GAME CONSTRUCTOR should never be called! It is purely for the 'Game' type definition, for useful JSDoc dropdown info.");
 
-	/** The game's unique ID */
+	/** The game's unique ID @type {number} */
 	this.id = undefined;
 	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	this.timeCreated = undefined;

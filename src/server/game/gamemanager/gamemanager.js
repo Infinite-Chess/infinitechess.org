@@ -3,6 +3,9 @@
  * The script keeps track of all our active online games.
  */
 
+// System imports
+import WebSocket from 'ws';
+
 // Custom imports
 
 import gameutility from './gameutility.js';
@@ -16,9 +19,10 @@ import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers,
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
-import uuid from '../../../client/scripts/esm/util/uuid.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { genUniqueGameID } from '../../database/gamesManager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+
 
 /**
  * Type Definitions
@@ -31,8 +35,11 @@ import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js
 
 /**
  * The object containing all currently active games. Each game's id is the key: `{ id: Game }` 
- * This may temporarily include games that are over, but not yet deleted/logged. 
- * @type {Record<string, Game>}
+ * This may temporarily include games that are over, but not yet deleted/logged.
+ * 
+ * The game's ids are the same id they will receive in the database! For this reason they must
+ * be unique across the games table, and all other live games.
+ * @type {Record<number, Game>}
  */
 const activeGames = {};
 
@@ -54,7 +61,7 @@ const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
 function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1 is the invite owner.
-	const gameID = uuid.genUniqueID(5, activeGames);
+	const gameID = issueUniqueGameId();
 	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
 	if (!player1Socket) {
 		// Player 1 (invite owner)'s socket closed before their invite was deleted.
@@ -72,6 +79,21 @@ function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1
 	console.log("Starting new game:");
 	gameutility.printGame(game);
 	printActiveGameCount();
+}
+
+/**
+ * Returns an id that is unique across BOTH the games table
+ * AND the live games inside {@link activeGames}.
+ * 
+ * The game will receive this same id in the database when it is logged.
+ */
+function issueUniqueGameId() {
+	let id;
+	do {
+		id = genUniqueGameID(); // This is already unique against all game_ids in the table.
+	} while (activeGames[id] !== undefined); // Repeat until we have an id unique against all active games.
+	// console.log(`Issued game_id (${id})!`);
+	return id;
 }
 
 /**
@@ -98,7 +120,7 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 	const game = getGameByID(gameID);
 	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 
-	gameutility.unsubClientFromGame(game, ws, { sendMessage: false }); // Don't tell the client to unsub because their socket is CLOSING
+	gameutility.unsubClientFromGame(game, ws); // Don't tell the client to unsub because their socket is CLOSING
 
 	// Let their OPPONENT know they've disconnected though...
 
@@ -116,8 +138,8 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 
 /**
  * Returns the game with the specified id.
- * @param {string} id - The id of the game to pull.
- * @returns {Game} The game
+ * @param {number} id - The id of the game to pull.
+ * @returns {Game | undefined} The game
  */
 function getGameByID(id) { return activeGames[id]; }
 
@@ -128,7 +150,7 @@ function getGameByID(id) { return activeGames[id]; }
  */
 function getGameByPlayer(player) {
 	const gameID = getIDOfGamePlayerIsIn(player);
-	if (!gameID) return; // Not in a game;
+	if (gameID === undefined) return; // Not in a game;
 	return getGameByID(gameID);
 }
 
@@ -377,8 +399,12 @@ async function deleteGame(game) {
 	// If the socket is undefined, they will have already been auto-unsubscribed.
 	// And remove them from the list of users in active games to allow them to join a new game.
 	for (const data of Object.values(game.players)) {
-		gameutility.unsubClientFromGame(game, data.socket);
 		removeUserFromActiveGame(data.identifier, game.id);
+		if (!data.socket) continue; // They don't have a socket connected.
+		// We inform their opponent they have disconnected inside js when we call this method.
+		// Tell the client to unsub on their end, IF the socket isn't closing.
+		if (data.socket.readyState === WebSocket.OPEN) sendSocketMessage(data.socket, 'game', 'unsub');
+		gameutility.unsubClientFromGame(game, data.socket);
 	}
 
 	delete activeGames[game.id]; // Delete the game

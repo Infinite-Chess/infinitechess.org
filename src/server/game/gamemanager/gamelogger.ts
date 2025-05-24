@@ -89,6 +89,7 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string, ratin
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(game.clock);
 
 	const gameToLog = {
+		game_id: game.id,
 		date: dateSqliteString,
 		base_time_seconds,
 		increment_seconds,

@@ -13,8 +13,8 @@ import type { CoordsKey } from "../../chess/util/coordutil.js";
 import type { EnPassant } from "../../chess/logic/state.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
-import type { BaseRay } from "../rendering/highlights/annotations/drawrays.js";
 import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
 // @ts-ignore
 import type { GameRules } from "../../chess/variants/gamerules.js";
 
@@ -30,7 +30,6 @@ import piecemodels from "../rendering/piecemodels.js";
 import movepiece from "../../chess/logic/movepiece.js";
 import miniimage from "../rendering/miniimage.js";
 import animation from "../rendering/animation.js";
-import organizedpieces from "../../chess/logic/organizedpieces.js";
 import arrows from "../rendering/arrows/arrows.js";
 import clock from "../../chess/logic/clock.js";
 import guigameinfo from "../gui/guigameinfo.js";
@@ -44,6 +43,7 @@ import annotations from "../rendering/highlights/annotations/annotations.js";
 import texturecache from "../../chess/rendering/texturecache.js";
 import sound from "../misc/sound.js";
 import guiclock from "../gui/guiclock.js";
+import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 // @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
@@ -76,7 +76,7 @@ interface LoadOptions {
 	/** Whether the coordinate field box should be editable. */
 	allowEditCoords: boolean,
 	/** Preset ray overrides for the variant's rays. */
-	presetRays?: BaseRay[],
+	presetAnnotes?: PresetAnnotes,
 	additional?: Additional,
 }
 
@@ -224,7 +224,8 @@ function loadLogical(loadOptions: LoadOptions) {
 	specialrighthighlights.regenModel();
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
-	if (loadOptions.presetRays) drawrays.setPresetOverrides(loadOptions.presetRays);
+	if (loadOptions.presetAnnotes?.squares) drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
+	if (loadOptions.presetAnnotes?.rays) drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
 }
 
 /** Loads all of the graphical components of a game */
