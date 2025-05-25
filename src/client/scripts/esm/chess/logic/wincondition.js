@@ -35,7 +35,7 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
  * @param {gamefile} gamefile - The gamefile
  * @returns {string | false} The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *false*.
  */
-function getGameConclusion(gamefile) {
+function getGameConclusion(game, board) {
 	if (!moveutil.areWeViewingLatestMove(gamefile)) throw new Error("Cannot perform game over checks when we're not on the last move.");
 	
 	return detectAllpiecescaptured(gamefile)

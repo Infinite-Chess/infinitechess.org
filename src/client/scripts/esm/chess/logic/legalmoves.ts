@@ -20,7 +20,7 @@ import checkresolver from './checkresolver.js';
 import { rawTypes as r } from '../util/typeutil.js';
 
 
-import type { TypeGroup, RawType, Player } from '../util/typeutil.js';
+import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { Vec2Key, Vec2 } from '../../util/math.js';
@@ -29,8 +29,7 @@ import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
 import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
-// @ts-ignore
-import type gamefile from './gamefile.js';
+import type { Board, Game } from './game.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -71,7 +70,7 @@ type Vicinity = Record<CoordsKey, RawType[]>
  * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
  * @returns The vicinity object
  */
-function genVicinity(pieceMovesets: TypeGroup<() => PieceMoveset>): Vicinity {
+function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity {
 	const vicinity: Record<CoordsKey, RawType[]> = {};
 	
 	// For every type in the game...
@@ -121,10 +120,10 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
 /**
  * Gets the moveset of the type of piece specified.
  */
-function getPieceMoveset(gamefile: gamefile, pieceType: number): PieceMoveset {
+function getPieceMoveset(board: Board, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
 	if (player === players.NEUTRAL) return {}; // Neutral pieces CANNOT MOVE!
-	const movesetFunc = gamefile.pieceMovesets[rawType];
+	const movesetFunc = board.pieceMovesets[rawType];
 	if (!movesetFunc) return {}; // Safety net. Piece doesn't have a specified moveset. Return empty.
 	return movesetFunc(); // Calling these parameters as a function returns their moveset.
 }
@@ -177,13 +176,13 @@ function appendSpecialMoves(gamefile: gamefile, piece: Piece, moveset: PieceMove
  * @param moveset 
  * @param legalmoves 
  */
-function appendCalculatedMoves(gamefile: gamefile, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
+function appendCalculatedMoves(board: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
 	const color = typeutil.getColorFromType(piece.type);
 
 	// Legal jumping/individual moves
 	if (moveset.individual) {
 		const movesetIndividual = shiftIndividualMovesetByCoords(moveset.individual, piece.coords);
-		moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile, movesetIndividual, color);
+		moves_RemoveOccupiedByFriendlyPieceOrVoid(board, movesetIndividual, color);
 		legalmoves.individual = legalmoves.individual.concat(movesetIndividual);
 	}
 
@@ -191,11 +190,11 @@ function appendCalculatedMoves(gamefile: gamefile, piece: Piece, moveset: PieceM
 	if (moveset.sliding) {
 		const blockingFunc = getBlockingFuncFromPieceMoveset(moveset);
 		for (const [linekey, limits] of Object.entries(moveset.sliding)) {
-			const lines = gamefile.pieces.lines.get(linekey as Vec2Key);
+			const lines = board.pieces.lines.get(linekey as Vec2Key);
 			if (lines === undefined) continue;
 			const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 			const key = organizedpieces.getKeyFromLine(line, piece.coords);
-			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, gamefile.pieces, lines.get(key)!, line, limits, piece.coords, color)!;
+			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, board.pieces, lines.get(key)!, line, limits, piece.coords, color)!;
 		};
 	};
 }
@@ -250,12 +249,12 @@ function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords:
  * Accepts array of moves, returns new array with illegal moves removed due to pieces occupying.
  * MUTATES original array.
  */
-function moves_RemoveOccupiedByFriendlyPieceOrVoid(gamefile: gamefile, individualMoves: Coords[], color: Player): Coords[] {
+function moves_RemoveOccupiedByFriendlyPieceOrVoid(board: Board, individualMoves: Coords[], color: Player): Coords[] {
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		const thisMove = individualMoves[i]!;
 
 		// Is there a piece on this square?
-		const pieceAtSquare = boardutil.getTypeFromCoords(gamefile.pieces, thisMove);
+		const pieceAtSquare = boardutil.getTypeFromCoords(board.pieces, thisMove);
 		if (pieceAtSquare === undefined) continue; // Next move if there is no square here
 
 		// Do the players match?

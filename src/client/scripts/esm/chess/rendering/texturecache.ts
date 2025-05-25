@@ -9,8 +9,7 @@ import imagecache from './imagecache.js'; // Adjust path as needed
 import typeutil from '../../chess/util/typeutil.js'; // Import typeutil for filtering
 
 import type { TypeGroup } from '../util/typeutil.js';
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
+import type { Board } from '../logic/game.js';
 // @ts-ignore
 import texture from '../../game/rendering/texture.js';
 
@@ -29,13 +28,13 @@ const textureCache: TypeGroup<WebGLTexture> = {};
  * @param gl - The WebGL2 rendering context.
  * @param gamefile - The gamefile object containing the list of piece types used.
  */
-async function initTexturesForGame(gl: WebGL2RenderingContext, gamefile: gamefile): Promise<void> {
+async function initTexturesForGame(gl: WebGL2RenderingContext, board: Board): Promise<void> {
 	// Clear existing cache before initializing for a new game
 	// if (Object.keys(textureCache).length > 0) throw Error("TextureCache: Cache already initialized. Call deleteTextureCache() when unloading games.");
 	// console.log("Initializing texture cache for game...");
 
 	// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
-	const types = gamefile.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
+	const types = board.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
 
 	if (types.length === 0) return console.log("TextureCache: No piece types with SVGs found for this game. Texture cache remains empty.");
 

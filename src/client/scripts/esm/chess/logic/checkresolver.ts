@@ -16,8 +16,7 @@ import type { Coords } from "./movesets.js";
 import type { BoundingBox, Vec2Key } from "../../util/math.js";
 import type { Player } from "../util/typeutil.js";
 import type { LegalMoves } from './legalmoves.js';
-// @ts-ignore
-import type { gamefile } from "../logic/gamefile.js";
+import type { Game, Board } from "./game.js";
 
 
 import gamefileutility from "../util/gamefileutility.js";
@@ -54,19 +53,19 @@ import specialdetect from "./specialdetect.js";
  * @param pieceSelected - The piece of which the legalMoves were calculated for
  * @param color - The color of the player owning the piece
  */
-function removeCheckInvalidMoves(gamefile: gamefile, pieceSelected: Piece, moves: LegalMoves): void {
+function removeCheckInvalidMoves(game: Game, pieceSelected: Piece, moves: LegalMoves): void {
 	const color = typeutil.getColorFromType(pieceSelected.type);
 	if (color === players.NEUTRAL) return; // Neutral pieces can't be in check
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, color, 'checkmate')) return;
+	if (!gamefileutility.isOpponentUsingWinCondition(game, color, 'checkmate')) return;
 
 	// There's a couple type of moves that put you in check:
 
 	// 1. Sliding moves. Possible they can open a discovered check, or fail to address an existing check.
 	// Check these FIRST because in situations where we are in existing check, additional individual moves may be added, which are then simulated below to see if they're legal.
-	removeCheckInvalidMoves_Sliding(gamefile, moves, pieceSelected, color);
+	removeCheckInvalidMoves_Sliding(game, moves, pieceSelected, color);
 
 	// 2. Individual moves. We can iterate through these and use detectCheck() to test them.
-	removeCheckInvalidMoves_Individual(gamefile, moves.individual, pieceSelected, color);
+	removeCheckInvalidMoves_Individual(game, moves.individual, pieceSelected, color);
 
 	// console.log("Legal moves after removing check invalid:");
 	// console.log(moves);

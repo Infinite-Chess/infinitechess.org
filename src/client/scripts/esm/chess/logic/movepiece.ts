@@ -6,8 +6,7 @@
  */
 
 
-// @ts-ignore
-import type gamefile from './gamefile.js';
+import type { Board, Game } from './game.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
@@ -179,8 +178,8 @@ interface NullMove {
  * calculating and appending its board changes to its Changes list,
  * and queueing its gamefile StateChanges.
  */
-function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
-	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
+function generateMove(board: Board, moveDraft: MoveDraft): Move {
+	const piece = boardutil.getPieceFromCoords(board.pieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
 	// Construct the full Move object
@@ -190,7 +189,7 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 		isNull: false,
 		type: piece.type,
 		changes: [],
-		generateIndex: gamefile.state.local.moveIndex + 1,
+		generateIndex: board.state.local.moveIndex + 1,
 		state: { local: [], global: [] },
 		compact: icnconverter.getCompactMoveFromDraft(moveDraft),
 		flags: {
@@ -206,31 +205,31 @@ function generateMove(gamefile: gamefile, moveDraft: MoveDraft): Move {
 	 * If any specialMove function adds a new EnPassant state,
 	 * this one's future value will be overwritten
 	 */
-	state.createEnPassantState(move, gamefile.state.global.enpassant, undefined);
+	state.createEnPassantState(move, board.state.global.enpassant, undefined);
 
 	const rawType = typeutil.getRawType(move.type);
 	let specialMoveMade: boolean = false;
 	// If a special move function exists for this piece type, run it.
 	// The actual function will return whether a special move was actually made or not.
 	// If a special move IS made, we skip the normal move piece method.
-	if (rawType in gamefile.specialMoves) specialMoveMade = gamefile.specialMoves[rawType](gamefile, piece, move);
-	if (!specialMoveMade) calcMovesChanges(gamefile, piece, move); // Move piece regularly (no special tag)
+	if (rawType in board.specialMoves) specialMoveMade = board.specialMoves[rawType]!(board, piece, move);
+	if (!specialMoveMade) calcMovesChanges(board, piece, move); // Move piece regularly (no special tag)
 
 	// Must be set before calling queueIncrementMoveRuleStateChange()
 	move.flags.capture = boardchanges.wasACapture(move);
 	
 	// Delete all special rights that should be revoked from the move.
-	queueSpecialRightDeletionStateChanges(gamefile, move);
-	queueIncrementMoveRuleStateChange(gamefile, move);
+	queueSpecialRightDeletionStateChanges(board, move);
+	queueIncrementMoveRuleStateChange(board, move);
 
 	return move;
 }
 
 /** Generates a Null Move used by engines. */
-function generateNullMove(gamefile: gamefile) {
+function generateNullMove(board: Board) {
 	const nullMove: NullMove = {
 		isNull: true,
-		generateIndex: gamefile.state.local.moveIndex + 1,
+		generateIndex: board.state.local.moveIndex + 1,
 		state: { local: [], global: [] },
 		flags: {
 			// These will be set later, but we need a default value
@@ -245,7 +244,7 @@ function generateNullMove(gamefile: gamefile) {
 	 * If any specialMove function adds a new EnPassant state,
 	 * this one's future value will be overwritten
 	 */
-	state.createEnPassantState(nullMove, gamefile.state.global.enpassant, undefined);
+	state.createEnPassantState(nullMove, board.state.global.enpassant, undefined);
 	queueIncrementMoveRuleStateChange(gamefile, nullMove);
 
 	return nullMove;
@@ -260,9 +259,9 @@ function generateNullMove(gamefile: gamefile) {
  * @param piece - The piece that's being moved
  * @param move - The move that's being made
  */
-function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
+function calcMovesChanges(board: Board, piece: Piece, move: Move) {
 
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, move.endCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(board.pieces, move.endCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
 	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);
@@ -278,22 +277,22 @@ function calcMovesChanges(gamefile: gamefile, piece: Piece, move: Move) {
  * This will upgrade the repetition algorithm to not delay declaring a draw
  * if a rook moves that had its special right, but could never castle. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
+function queueSpecialRightDeletionStateChanges(board: Board, move: Move) {
 	move.changes.forEach(change => {
 		if (change.action === 'move') {
 			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, gamefile.state.global.specialRights.has(startCoordsKey), false);
+			state.createSpecialRightsState(move, startCoordsKey, board.state.global.specialRights.has(startCoordsKey), false);
 		} else if (change.action === 'capture') {
 			// Delete the special rights off the start coords AND the capture coords, if there are ones.
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, gamefile.state.global.specialRights.has(startCoordsKey), false);
+			state.createSpecialRightsState(move, startCoordsKey, board.state.global.specialRights.has(startCoordsKey), false);
 			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
-			state.createSpecialRightsState(move, captureCoordsKey, gamefile.state.global.specialRights.has(captureCoordsKey), false);
+			state.createSpecialRightsState(move, captureCoordsKey, board.state.global.specialRights.has(captureCoordsKey), false);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.
 			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, coordsKey, gamefile.state.global.specialRights.has(coordsKey), false);
+			state.createSpecialRightsState(move, coordsKey, board.state.global.specialRights.has(coordsKey), false);
 		}
 	});
 }
@@ -301,12 +300,12 @@ function queueSpecialRightDeletionStateChanges(gamefile: gamefile, move: Move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move | NullMove) {
-	if (!gamefile.gameRules.moveRule) return; // Not using the move-rule
+function queueIncrementMoveRuleStateChange(game: Game, board: Board, move: Move | NullMove) {
+	if (!game.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? gamefile.state.global.moveRuleState! + 1 : 0;
-	state.createMoveRuleState(move, gamefile.state.global.moveRuleState!, newMoveRule);
+	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? board.state.global.moveRuleState! + 1 : 0;
+	state.createMoveRuleState(move, board.state.global.moveRuleState!, newMoveRule);
 }
 
 
@@ -316,7 +315,7 @@ function queueIncrementMoveRuleStateChange(gamefile: gamefile, move: Move | Null
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
-function makeMove(gamefile: gamefile, move: Move | NullMove) {
+function makeMove(game: Game, board: Board, move: Move | NullMove) {
 	gamefile.moves.push(move);
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
@@ -338,36 +337,36 @@ function makeMove(gamefile: gamefile, move: Move | NullMove) {
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: gamefile, move: Move | NullMove, forward = true, { global = false } = {}) {
-	gamefile.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
+function applyMove(game: Game, board: Board, move: Move | NullMove, forward = true, { global = false } = {}) {
+	board.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
-	const indexToApply = gamefile.state.local.moveIndex + Number(!forward);
+	const indexToApply = board.state.local.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
-	state.applyMove(gamefile.state, move.state, forward, { globalChange: global }); // Apply the State of the move
+	state.applyMove(board.state, move.state, forward, { globalChange: global }); // Apply the State of the move
 
 	if (move.isNull) return; // Null moves don't have changes to make
 
-	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
+	boardchanges.runChanges({game, board}, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
 /**
  * Updates the `whosTurn` property of the gamefile, according to the move index we're on.
  */
-function updateTurn(gamefile: gamefile) {
-	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.state.local.moveIndex);
+function updateTurn(game: Game, board: Board) {
+	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(game, board.state.local.moveIndex);
 }
 
 /**
  * Tests if the gamefile is currently in check,
  * then creates and set's the game state to reflect that.
  */
-function createCheckState(gamefile: gamefile, move: Move | NullMove) {
-	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.state.local.moveIndex);
+function createCheckState(game: Game, board: Board, move: Move | NullMove) {
+	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(game, game.state.local.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
-	const trackAttackers = gamefile.gameRules.winConditions[oppositeColor]!.includes('checkmate');
+	const trackAttackers = game.gameRules.winConditions[oppositeColor]!.includes('checkmate');
 
 	const checkResults = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
 	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;

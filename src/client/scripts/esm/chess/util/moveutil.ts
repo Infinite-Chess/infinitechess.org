@@ -8,8 +8,7 @@ import type { Move, MoveDraft, NullMove, castle, enpassant, promotion } from '..
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-// @ts-ignore
-import type { gamefile } from '../logic/gamefile.js';
+import type { Game, Board } from '../logic/game.js';
 // @ts-ignore
 import type { GameRules } from '../variants/gamerules.js';
 
@@ -47,26 +46,26 @@ interface DepricatedMove {
  * Returns the move one forward from the current position we're viewing, if it exists.
  * This is also the move we would execute if we forward the game 1 step.
  */
-function getMoveOneForward(gamefile: gamefile): Move | NullMove | undefined {
-	const moveIndex = gamefile.state.local.moveIndex;
+function getMoveOneForward(board: Board): Move | NullMove | undefined {
+	const moveIndex = board.state.local.moveIndex;
 	const incrementedIndex = moveIndex + 1;
-	return getMoveFromIndex(gamefile.moves, incrementedIndex);
+	return getMoveFromIndex(board.moves, incrementedIndex);
 }
 
 /**
  * Returns *true* if it is legal to forward the provided gamefile by 1 move, *false* if we're at the front of the game.
  */
-function isIncrementingLegal(gamefile: gamefile): boolean {
-	const incrementedIndex = gamefile.state.local.moveIndex + 1;
-	return !isIndexOutOfRange(gamefile.moves, incrementedIndex);
+function isIncrementingLegal(board: Board): boolean {
+	const incrementedIndex = board.state.local.moveIndex + 1;
+	return !isIndexOutOfRange(board.moves, incrementedIndex);
 }
 
 /**
  * Returns *true* if it is legal to rewind the provided gamefile by 1 move, *false* if we're at the beginning of the game.
  */
-function isDecrementingLegal(gamefile: gamefile): boolean {
-	const decrementedIndex = gamefile.state.local.moveIndex - 1;
-	return !isIndexOutOfRange(gamefile.moves, decrementedIndex);
+function isDecrementingLegal(board: Board): boolean {
+	const decrementedIndex = board.state.local.moveIndex - 1;
+	return !isIndexOutOfRange(board.moves, decrementedIndex);
 }
 
 /**
@@ -88,10 +87,10 @@ function getLastMove(moves: (Move | NullMove)[]): Move | NullMove | undefined {
 /**
  * Returns the move we're currently viewing in the provided gamefile.
  */
-function getCurrentMove(gamefile: gamefile): Move | NullMove | undefined {
-	const index = gamefile.state.local.moveIndex;
+function getCurrentMove(board: Board): Move | NullMove | undefined {
+	const index = board.state.local.moveIndex;
 	if (index < 0) return;
-	return gamefile.moves[index];
+	return board.moves[index];
 }
 
 /**
@@ -105,9 +104,9 @@ function getMoveFromIndex(moves: (Move | NullMove)[], index: number): Move | Nul
 /**
  * Tests if the provided gamefile is viewing the front of the game, or the latest move.
  */
-function areWeViewingLatestMove(gamefile: gamefile): boolean {
-	const moveIndex = gamefile.state.local.moveIndex;
-	return isIndexTheLastMove(gamefile.moves, moveIndex);
+function areWeViewingLatestMove(board: Board): boolean {
+	const moveIndex = board.state.local.moveIndex;
+	return isIndexTheLastMove(board.moves, moveIndex);
 }
 
 /**
@@ -122,8 +121,8 @@ function isIndexTheLastMove(moves: (Move | NullMove)[], index: number): boolean 
  * Gets the color of whos turn it is currently, or at the front of the game.
  * Depends on the turn order.
  */
-function getWhosTurnAtFront(gamefile: gamefile): Player {
-	return getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 1);
+function getWhosTurnAtFront(game: Game): Player {
+	return getWhosTurnAtMoveIndex(game, game.moves.length - 1);
 }
 
 /**
@@ -149,8 +148,8 @@ function getPlyCount(moves: Move[]): number { return moves.length; }
  * @param gamefile
  * @param coords - The current coordinates of the piece.
  */
-function hasPieceMoved(gamefile: gamefile, coords: Coords): boolean {
-	return gamefile.moves.some((move: Move | NullMove) => !move.isNull && coordutil.areCoordsEqual(move.endCoords, coords));
+function hasPieceMoved(board: Board, coords: Coords): boolean {
+	return board.moves.some((move: Move | NullMove) => !move.isNull && coordutil.areCoordsEqual(move.endCoords, coords));
 }
 
 // COMMENTED-OUT because it's not used anywhere in the code
@@ -167,8 +166,8 @@ function hasPieceMoved(gamefile: gamefile, coords: Coords): boolean {
 /**
  * Flags the gamefile's very last move as a "mate".
  */
-function flagLastMoveAsMate(gamefile: gamefile) {
-	const lastMove = getLastMove(gamefile.moves);
+function flagLastMoveAsMate(board: Board) {
+	const lastMove = getLastMove(board.moves);
 	if (lastMove === undefined) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
 	lastMove.flags.mate = true;
 }
@@ -207,13 +206,13 @@ function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[], t
  * Returns whether the game is resignable (atleast 2 moves have been played).
  * If not, then the game is considered abortable.
  */
-function isGameResignable(gamefile: gamefile): boolean { return gamefile.moves.length > 1; }
+function isGameResignable(game: Game | Board): boolean { return game.moves.length > 1; }
 
 /**
  * Returns the color of the player that played the provided index within the moves list.
  */
-function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): Player {
-	const turnOrder = gamefile.gameRules.turnOrder;
+function getColorThatPlayedMoveIndex(game: Game, index: number): Player {
+	const turnOrder = game.gameRules.turnOrder;
 	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
 	if (index === -1) return turnOrder[turnOrder.length - 1];
 	return turnOrder[index % turnOrder.length];
@@ -222,16 +221,16 @@ function getColorThatPlayedMoveIndex(gamefile: gamefile, index: number): Player 
 /**
  * Returns the color whos turn it is after the specified move index was played.
  */
-function getWhosTurnAtMoveIndex(gamefile: gamefile, moveIndex: number): Player {
-	return getColorThatPlayedMoveIndex(gamefile, moveIndex + 1);
+function getWhosTurnAtMoveIndex(game: Game, moveIndex: number): Player {
+	return getColorThatPlayedMoveIndex(game, moveIndex + 1);
 }
 
 /**
  * Returns true if any player in the turn order ever gets to turn in a row.
  */
-function doesAnyPlayerGet2TurnsInARow(gamefile: gamefile): boolean {
+function doesAnyPlayerGet2TurnsInARow(game:Game): boolean {
 	// If one player ever gets 2 turns in a row, then that also allows the capture of the king.
-	const turnOrder = gamefile.gameRules.turnOrder;
+	const turnOrder = game.gameRules.turnOrder;
 	for (let i = 0; i < turnOrder.length; i++) {
 		const thisColor = turnOrder[i];
 		const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.

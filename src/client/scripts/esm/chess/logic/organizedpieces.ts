@@ -103,8 +103,10 @@ const listExtras_Editor = 100;
 /**
  * Takes the source Position for the variant, and constructs the entire
  * organized pieces object, and returns other information inherited from it.
+ * 
+ * Mutates pieceMovesets to remove useless movesets
  */
-function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): {
 	pieces: OrganizedPieces,
 	/**
 	 * All existing types in the game, with their color information.
@@ -147,11 +149,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 	 * Trim the pieceMovesets to only include movesets for types in the game
 	 * This is REQUIRED for possible slides to be calculated correctly!!
 	 */
-
-	for (const typeString in pieceMovesets) {
-		const rawType = Number(typeString) as RawType;
-		if (!existingRawTypes.includes(rawType)) delete pieceMovesets[typeString];
-	}
+	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, pieceMovesets);
 
 	// We can get the possible slides now that the movesets are trimmed to only include the types in the game.
 	const slides = movesets.getPossibleSlides(pieceMovesets);
@@ -244,7 +242,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
  * Afterward, flags the pieces as newly regenerated. movesequence may
  * watch for that to know when to regenerate the piece models.
  */
-function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): void {
+function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): void {
 
 	const additionalUndefinedsNeeded: Map<number, number> = new Map();
 	const typeOffsets: Map<number, number> = new Map();
@@ -448,7 +446,7 @@ function removePieceFromSpace(idx: number, o: {
  * Takes a Set of all types in the STARTING POSITION and adds to it other
  * potential pieces that may join the game via promotion or board editor.
  */
-function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): {
 	existingTypes: number[],
 	existingRawTypes: RawType[],
 } {
@@ -491,7 +489,7 @@ function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrde
  * Returns the target number of undefineds that should be alloted for a given type.
  * @param numOfPieces - The number of pieces of this type in the position, EXCLUDING undefineds
  */
-function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): number {
+function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): number {
 	const undefinedsBehavior = getTypeUndefinedsBehavior(type, promotionsAllowed, editor);
 
 	return undefinedsBehavior === 2 ? Math.max(listExtras_Editor, numOfPieces) // Count of piece can increase RAPIDLY (editor)
@@ -507,7 +505,7 @@ function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowe
  * 1 => Can increase in count, but slowly (promotion)
  * 2 => Can increase in count rapidly (board editor)
  */
-function getTypeUndefinedsBehavior(type: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): 0 | 1 | 2 {
+function getTypeUndefinedsBehavior(type: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): 0 | 1 | 2 {
 	if (editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
 	if (!promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const [rawType, player] = typeutil.splitType(type);

@@ -10,8 +10,7 @@ import type { RawTypeGroup } from '../util/typeutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Move } from './movepiece.js';
 import type { Piece } from '../util/boardutil.js';
-// @ts-ignore
-import type gamefile from './gamefile.js';
+import type { Board } from './game.js';
 
 "use strict";
 
@@ -41,7 +40,7 @@ const defaultSpecialMoves = {
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(gamefile: gamefile, piece: Piece, move: Move) {
+function kings(board: Board, piece: Piece, move: Move) {
 
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
@@ -51,7 +50,7 @@ function kings(gamefile: gamefile, piece: Piece, move: Move) {
 	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
 
 	// Move the rook to new square
-	const pieceToCastleWith = boardutil.getPieceFromCoords(gamefile.pieces, specialTag.coord)!;
+	const pieceToCastleWith = boardutil.getPieceFromCoords(board.pieces, specialTag.coord)!;
 	const landSquare: Coords = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
 
@@ -60,19 +59,19 @@ function kings(gamefile: gamefile, piece: Piece, move: Move) {
 	return true;
 }
 
-function pawns(gamefile: gamefile, piece: Piece, move: Move) {
+function pawns(board: Board, piece: Piece, move: Move) {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
-	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.state.global.enpassant, move.enpassantCreate);
+	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, board.state.global.enpassant, move.enpassantCreate);
 
 	const enpassantTag = move.enpassant; // true | undefined
 	const promotionTag = move.promotion; // promote type
 	if (!enpassantTag && !promotionTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
-	const captureCoords = enpassantTag ? gamefile.state.global.enpassant!.pawn : move.endCoords;
+	const captureCoords = enpassantTag ? board.state.global.enpassant!.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(board.pieces, captureCoords);
 
 	// Delete the piece captured
 
@@ -95,8 +94,8 @@ function pawns(gamefile: gamefile, piece: Piece, move: Move) {
 }
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
-function roses(gamefile: gamefile, piece: Piece, move: Move) {
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, move.endCoords);
+function roses(board: Board, piece: Piece, move: Move) {
+	const capturedPiece = boardutil.getPieceFromCoords(board.pieces, move.endCoords);
 
 	// Delete the piece captured
 	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece, move.path);

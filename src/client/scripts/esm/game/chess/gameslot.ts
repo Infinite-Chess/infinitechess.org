@@ -9,8 +9,6 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
-import type { CoordsKey } from "../../chess/util/coordutil.js";
-import type { EnPassant } from "../../chess/logic/state.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
@@ -94,35 +92,6 @@ interface Additional {
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor?: true,
 }
-
-/**
- * Variant options that can be used to load a custom game,
- * whether local or online, instead of one of the default variants.
- */
-interface VariantOptions {
-	/**
-	 * The full move number of the turn at the provided position. Default: 1.
-	 * Can be higher if you copy just the positional information in a game with some moves played already.
-	 */
-	fullMove: number,
-	gameRules: GameRules,
-	/**
-	 * The starting position object, containing the pieces organized by key.
-	 * The key of the object is the coordinates of the piece as a string,
-	 * and the value is the type of piece on that coordinate (e.g. [22] pawn (neutral))
-	 */
-	position: Map<CoordsKey, number>
-	/** The 3 global game states */
-	state_global: {
-		/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
-		specialRights: Set<CoordsKey>,
-		/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-		enpassant?: EnPassant,
-		/** If the move moveRuleState gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
-		moveRuleState?: number,
-	}
-}
-
 
 // Variables ---------------------------------------------------------------
 
