@@ -122,10 +122,10 @@ iframe {
     text-align: center;
     text-decoration: none;
     color: black;
-    background-color: rgb(225, 225, 225);
+    background-color: rgb(233, 233, 233);
     border: 1px solid black;
     border-radius: 0.5em;
-    margin-bottom: 25px;
+    margin-bottom: 50px;
     overflow: hidden;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.325);
