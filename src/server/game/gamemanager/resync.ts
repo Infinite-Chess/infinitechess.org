@@ -77,7 +77,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 
 /** Sends a client a game from the database. */
 function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
-	const logged_game_info = getGameData(gameID, ['termination', 'icn']);
+	const logged_game_info = getGameData(gameID, ['game_id', 'rated', 'private', 'termination', 'icn']);
 	if (!logged_game_info) {
 		logEvents(`Unable to send player game results after game of id (${gameID}) was logged, because we weren't able to retrieve it from the games table! (Potential they just requested a non-existent game id)`, 'errLog.txt', { print: true });
 		sendSocketMessage(ws, 'game', 'nogame'); // IN THE FUTURE: The client could show a "Game not found" page

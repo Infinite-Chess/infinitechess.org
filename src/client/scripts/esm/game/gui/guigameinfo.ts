@@ -244,7 +244,7 @@ function gameEnd(conclusion: string | false) {
 
 	const gamefile = gameslot.getGamefile()!;
 
-	if (onlinegame.areInOnlineGame()) {
+	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole()) {
 
 		if (victor !== undefined && onlinegame.areInOnlineGame() && onlinegame.getOurColor() === victor) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
                                                                             : condition === 'time' ? resultTranslations.you_time
@@ -273,7 +273,7 @@ function gameEnd(conclusion: string | false) {
                                                             : condition === 'threecheck' ? resultTranslations.opponent_threecheck
                                                             : condition === 'koth' ? resultTranslations.opponent_koth
                                                             : resultTranslations.opponent_generic;
-	} else { // Local game
+	} else { // Local game, OR spectating an online game
 		if (condition === 'checkmate') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_checkmate
                                                                     : victor === players.BLACK ? resultTranslations.black_checkmate
                                                                     : resultTranslations.bug_checkmate;

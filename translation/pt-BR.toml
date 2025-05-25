@@ -51,7 +51,7 @@ how_to_paragraph = ["A versão atual é a 1.6 na página ","Jogar","!"]
 about_title = "Sobre o Projeto"
 about_paragraphs = [
 "Eu sou Naviary. Desde que descobri o Xadrez Infinito (o conceito existia muito antes deste site), fiquei muito intrigado com ele e suas possibilidades! Até pouco tempo atrás, jogar era bastante difícil, exigindo que os membros do chess.com criassem imagens do tabuleiro atual e as enviassem de um lado para o outro a cada jogada realizada. Devido a isso, poucas pessoas conhecem ou conseguiram jogar.",
-["Meu objetivo é criar uma maneira de tornar esse jogo fácil de jogar para todos e desenvolver uma comunidade em torno dele. Gastei inúmeras horas do meu tempo livre neste site, mantendo e desenvolvendo o jogo. Tenho muitas outras ideias que me manterão ocupado por algum tempo. Embora eu queira manter o jogo gratuito, a vida tem suas exigências. Para me ajudar financeiramente, considere a possibilidade de se juntar ao meu", "Patreon"]
+["Meu objetivo é criar uma maneira de tornar esse jogo fácil de jogar para todos e desenvolver uma comunidade em torno dele. Gastei inúmeras horas do meu tempo livre neste site, mantendo e desenvolvendo o jogo. Tenho muitas outras ideias que me manterão ocupado por algum tempo. Embora eu queira manter o jogo gratuito, a vida tem suas exigências. Para me ajudar financeiramente, considere a possibilidade de se juntar ao meu ", "Patreon", "."] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Apoiadores do Patreon"
 github_title = "Contribuidores do Github"

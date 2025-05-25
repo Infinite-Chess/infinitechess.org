@@ -40,7 +40,7 @@ how_to_paragraph = ["Le jeu est actuellement en version 1.6 sur la page ","Jouer
 about_title = "À Propos"
 about_paragraphs = [
 "Je m'apelle Naviary. Dès que j'ai découvert Infinite Chess (le concept existait bien avant ce site), J'ai été très intrigué par ce jeu et par les possibilités qu'il débloque ! Jusqu'à aujourd'hui, y jouer était plutôt difficile, les membres de chess.com devaient créer des images du plateau eux même et se les envoyer à chaque coup. À cause de ça, peu de gens connaissent cette variante.",
-["Mon objectif est de créer un site qui permettrait à tout le monde d'y jouer facilement, et de développer une communauté autour du jeu. J'ai passé un nombre incalculable d'heures de mon temps libre à faire ce site, à le maintenir et à developper le jeu et j'ai encore beaucoup d'idées qui vont m'occuper pendant pas mal de temps. Bien que je souhaite garder ce site gratuit, la vie a un coût et pour aider à me supporter financiérement vous pouvez rejoindre mon", "Patreon"]
+["Mon objectif est de créer un site qui permettrait à tout le monde d'y jouer facilement, et de développer une communauté autour du jeu. J'ai passé un nombre incalculable d'heures de mon temps libre à faire ce site, à le maintenir et à developper le jeu et j'ai encore beaucoup d'idées qui vont m'occuper pendant pas mal de temps. Bien que je souhaite garder ce site gratuit, la vie a un coût et pour aider à me supporter financiérement vous pouvez rejoindre mon ", "Patreon", "."] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Contributeurs Patreons"
 

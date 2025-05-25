@@ -209,7 +209,8 @@ function pasteGame(longformOut) {
 		// Playing a custom private game! Save the pasted position in browser
 		// storage so that we can remember it upon refreshing.
 		const gameID = onlinegame.getGameID();
-		localstorage.saveItem(String(gameID), variantOptions);
+		const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(gameID);
+		localstorage.saveItem(storageKey, variantOptions);
 	}
 
 	// What is the warning message if pasting in a private match?

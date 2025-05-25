@@ -348,7 +348,7 @@ function concludeGame() {
 		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		if (!onlinegame.doWeHaveRole() || victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else if (victor === players.NEUTRAL || !victor) sound.playSound_draw(delayToPlayConcludeSoundSecs);
 		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
 	}

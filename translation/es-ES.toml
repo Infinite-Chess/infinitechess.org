@@ -51,7 +51,7 @@ how_to_paragraph = ["¡La actual versión es la 1.6, y está disponible en la pa
 about_title = "Sobre el proyecto"
 about_paragraphs = [
 "Soy Naviary. Desde que descubrí Infinte Chess (el concepto existe desde hace mucho antes que esta web), ¡Me han intrigado sus posibilidades! Hasta hace muy poco, jugar ha sido bastante complicado, usuarios de chess.com tenían que crear imágenes del tablero actual y enviarlas entre ellos cada jugada. Debido a esto, no mucha gente conoce o ha sido capaz de jugar a esto.",
-["Es mi objetivo crear una manera de hacerlo fácilmente jugable por todo el mundo, y crear una comunidad rodeándolo. He invertido incontables horas de mi tiempo en esta web, manteniendo y desarrollando el juego. Aún tengo muchas más ideas que me mantendrán ocupado durante un tiempo. Aunque deseo mantener este proyecto gratis, la vida tiene requerimientos, y para ayudarme financieramente por favor considera unirte a mi ", "Patreon"]
+["Es mi objetivo crear una manera de hacerlo fácilmente jugable por todo el mundo, y crear una comunidad rodeándolo. He invertido incontables horas de mi tiempo en esta web, manteniendo y desarrollando el juego. Aún tengo muchas más ideas que me mantendrán ocupado durante un tiempo. Aunque deseo mantener este proyecto gratis, la vida tiene requerimientos, y para ayudarme financieramente por favor considera unirte a mi ", "Patreon", "."] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Contribuidores en Patreon"
 github_title = "Contribuidores en Github"

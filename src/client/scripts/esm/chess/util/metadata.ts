@@ -68,6 +68,19 @@ function getResultFromVictor(victor?: Player): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
+/** Calculates the game conclusion from the Result metadata and termination CODE. */
+function getGameConclusionFromResultAndTermination(result: string, termination: string) {
+	if (!result || !termination) throw Error("Must provide both result and termination.");
+
+	if (termination === 'aborted') return 'aborted';
+	const victor: Player =
+		result === '1-0' ? players.WHITE :
+		result === '0-1' ? players.BLACK :
+		result === '1/2-1/2' ? players.NEUTRAL :
+		(() => { throw Error(`Unsupported result (${result})!`); })();
+	return `${victor} ${termination}`;
+}
+
 /**
  * Takes elo change, calculates the string that should go into
  * the WhiteRatingDiff or BlackRatingDiff fields of the metadata.
@@ -82,6 +95,7 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 
 export default {
 	getResultFromVictor,
+	getGameConclusionFromResultAndTermination,
 	getWhiteBlackRatingDiff,
 };
 

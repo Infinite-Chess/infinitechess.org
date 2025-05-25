@@ -169,7 +169,7 @@ function render(highlights: Square[]) {
 	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();
 
 	// Render preset squares (only if zoomed in)
-	if (!boardpos.areZoomedOut()) genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
+	if (!boardpos.areZoomedOut() && presetSquares.length > 0) genModel(presetSquares, PRESET_SQUARE_COLOR).render(undefined, undefined, { size });
 
 	// Early exit if no drawn-squares to draw
 	if (highlights.length === 0) return;

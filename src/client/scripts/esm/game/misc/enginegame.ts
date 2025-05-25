@@ -46,7 +46,7 @@ function areInEngineGame(): boolean {
 	return inEngineGame;
 }
 
-function getOurColor(): Player {
+function getOurColor(): Player | undefined {
 	if (!inEngineGame) throw Error("Cannot get our color if we are not in an engine game!");
 	return ourColor!;
 }
