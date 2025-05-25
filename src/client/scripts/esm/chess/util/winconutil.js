@@ -12,7 +12,7 @@
 /** @typedef {import('./typeutil').Player} Player */
 
 /** Valid win conditions that either color can have. */
-const validWinConditions = ['checkmate','royalcapture','allroyalscaptured','allpiecescaptured','threecheck','koth'];
+const validWinConditions = ['checkmate','royalcapture','allroyalscaptured','allpiecescaptured','koth'];
 
 /**
  * List of all win conditions that happen after a move being made.
