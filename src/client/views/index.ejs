@@ -36,7 +36,7 @@
                     <p class="center"><%=t('index.secondary_title')%></p>
                 </div>
                 <div class="center">
-                    <a href="/play" class="play-button unselectable"><%=t('header.play')%></a>
+                    <a href="/play?lng=<%= language %>" class="play-button unselectable"><%=t('header.play')%></a>
                 </div>
                 <div class="center">
                     <iframe class="" src="https://www.youtube.com/embed/rav29N0-h2c" title="YouTube video: I Made Chess, but It's Infinite" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -44,7 +44,7 @@
                 <h2><%=t('index.what_is_it_title')%></h2>
                 <p><%-t('index.what_is_it_pargaraphs', { joinArrays: '</p><p>' })%></p>
                     <h3><%=t('index.how_to_title')%></h3>
-                    <p><%=t('index.how_to_paragraph.0')%><a href='/play'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
+                    <p><%=t('index.how_to_paragraph.0')%><a href='/play?lng=<%= language %>'><%=t('index.how_to_paragraph.1')%></a><%=t('index.how_to_paragraph.2')%></p>
                     
                     <br>
                     <h3 class="center"><%=t('index.about_title')%></h3>

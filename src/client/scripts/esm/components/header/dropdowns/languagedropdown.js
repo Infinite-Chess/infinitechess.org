@@ -28,28 +28,7 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 		});
 	}
 	removeLngQueryParam();
-	addLngToNavLinks();
 })();
-
-function addLngToNavLinks() {
-	const lng = docutil.getCookieValue('i18next');
-	if (!lng) return;
-
-	const home = document.querySelector('.home'); // "Infinite Chess" text
-	home.href = addLngQueryParamToLink(home.href);
-
-	const navLinks = document.querySelectorAll('nav a');
-	navLinks.forEach(link => {
-		link.href = addLngQueryParamToLink(link);
-	});
-
-	/** Adds the "lng" query parameter to the ToS link at the bottom, if it exists (it doesn't on the play page) */
-	toslink: {
-		const element_toslink = document.getElementById("toslink");
-		if (!element_toslink) break toslink;
-		element_toslink.href = addLngQueryParamToLink(element_toslink);
-	}
-}
 
 /**
  * Modifies the provided URL to include the "lng" query parameter based on the i18next cookie.
