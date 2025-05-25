@@ -168,7 +168,7 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
 			break;
 		case "gameratingchange":
-			guigameinfo.addRatingChangeToUsernameContainers(data.value);
+			guigameinfo.addRatingChangeToExistingUsernameContainers(data.value);
 			break;
 		case "unsub":
 			handleUnsubbing();

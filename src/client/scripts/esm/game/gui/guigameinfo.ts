@@ -40,6 +40,12 @@ let isOpen = false;
 /** Whether to show the practice mode game control buttons - undo move and restart. */
 let showButtons = false;
 
+// Username container objects and their respective display options:
+let usernamecontainer_white: UsernameContainer | undefined;
+let usernamecontainer_options_white: UsernameContainerDisplayOptions | undefined;
+let usernamecontainer_black: UsernameContainer | undefined;
+let usernamecontainer_options_black: UsernameContainerDisplayOptions | undefined;
+
 // Functions
 
 /**
@@ -67,29 +73,35 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 function embedUsernameContainers(metadata: MetaData) {
 	const { white, black, white_type, black_type } = getPlayerNamesForGame(metadata);
 	const white_display_rating = (white_type === 'player' && metadata?.WhiteElo !== undefined ? metadata.WhiteElo : null);
+	const white_display_rating_change = (white_type === 'player' && metadata?.WhiteRatingDiff !== undefined ? metadata.WhiteRatingDiff : null);
 	const black_display_rating = (black_type === 'player' && metadata?.BlackElo !== undefined ? metadata.BlackElo : null);
+	const black_display_rating_change = (black_type === 'player' && metadata?.BlackRatingDiff !== undefined ? metadata.BlackRatingDiff : null);
 
 	// Set white username container
-	const usernamecontainer_white: UsernameContainer = {
+	usernamecontainer_white = {
 		username: white,
-		displayrating: white_display_rating
+		displayrating: white_display_rating,
+		displayratingchange: white_display_rating_change
 	};
-	const usernamecontainer_options_white: UsernameContainerDisplayOptions = {
+	usernamecontainer_options_white = {
 		makehyperlink: white_type === 'player',
 		showrating: white_display_rating !== null,
+		showratingchange: white_display_rating_change !== null,
 		isEngine: white_type === 'engine',
 	};
 	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
 	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white_Div, element_playerWhite);
 
 	// Set black username container
-	const usernamecontainer_black: UsernameContainer = {
+	usernamecontainer_black = {
 		username: black,
-		displayrating: black_display_rating
+		displayrating: black_display_rating,
+		displayratingchange: black_display_rating_change
 	};
-	const usernamecontainer_options_black: UsernameContainerDisplayOptions = {
+	usernamecontainer_options_black = {
 		makehyperlink: black_type === 'player',
 		showrating: black_display_rating !== null,
+		showratingchange: black_display_rating_change !== null,
 		isEngine: black_type === 'engine',
 	};
 	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
@@ -334,8 +346,31 @@ function updateAlignmentOfRightUsername() {
 	}
 }
 
-function addRatingChangeToUsernameContainers(message: RatingChangeMessage) {
-	console.log(message);
+/**
+ * This gets called when the client receives a "gameratingchange" message from a websocket
+ * Displays the rating changes from the game in the existing username containers, while keeping all display options the same
+ */
+function addRatingChangeToExistingUsernameContainers(message: RatingChangeMessage) {
+	// Update white username container
+	if (usernamecontainer_white !== undefined && usernamecontainer_options_white !== undefined) {
+		usernamecontainer_white.displayratingchange = message[players.WHITE]?.elo_change_from_game ?? null;
+		usernamecontainer_options_white.showratingchange = usernamecontainer_white.displayratingchange !== null;
+
+		const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
+		usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white_Div, element_playerWhite);
+	}
+
+	// Update black username container
+	if (usernamecontainer_black !== undefined && usernamecontainer_options_black !== undefined) {
+		usernamecontainer_black.displayratingchange = message[players.BLACK]?.elo_change_from_game ?? null;
+		usernamecontainer_options_black.showratingchange = usernamecontainer_black.displayratingchange !== null;
+
+		const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
+		usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
+	}
+
+	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
+	setTimeout(updateAlignmentOfRightUsername, 0);
 }
 
 export default {
@@ -349,5 +384,5 @@ export default {
 	gameEnd,
 	getHeightOfGameInfoBar,
 	updateAlignmentOfRightUsername,
-	addRatingChangeToUsernameContainers
+	addRatingChangeToExistingUsernameContainers
 };

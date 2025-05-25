@@ -15,7 +15,8 @@ import docutil from "./docutil.js";
  */
 type UsernameContainer = {
 	username: string,
-	displayrating?: string | null
+	displayrating?: string | null,
+	displayratingchange?: string | null
 }
 
 /**
@@ -27,7 +28,9 @@ type UsernameContainerDisplayOptions = {
 	/** Hyperlink target. By default, '_blank' is used. */
 	hyperlinktarget?: string,
     /** Whether to show the displayrating entry if it exists */
-    showrating?: boolean
+    showrating?: boolean,
+	/** Whether to show the displayratingchange entry if it exists */
+    showratingchange?: boolean
 	/** Whether the player is an engine (we'll use a different svg) */
 	isEngine?: boolean
 }
@@ -81,6 +84,14 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 		containerDiv.appendChild(eloDiv);
 	}
 
+	// rating change element
+	if (options?.showratingchange && usernamecontainer?.displayratingchange !== undefined && usernamecontainer?.displayratingchange !== null ) {
+		const eloChangeDiv = document.createElement('div');
+		eloChangeDiv.textContent = usernamecontainer.displayratingchange;
+		eloChangeDiv.classList.add("eloChange");
+		containerDiv.appendChild(eloChangeDiv);
+	}
+
 	containerDiv.classList.add("username-embed");
 
 	return containerDiv;
@@ -102,6 +113,10 @@ function extractUsernameContainerFromDisplayElement(containerDiv: HTMLDivElement
 	// Find the displayrating
 	const eloElem = containerDiv.querySelector('.elo');
 	if (eloElem && eloElem?.textContent !== undefined && eloElem?.textContent !== null) result.displayrating = eloElem.textContent;
+
+	// Find the displayratingchange
+	const eloChangeElem = containerDiv.querySelector('.eloChange');
+	if (eloChangeElem && eloChangeElem?.textContent !== undefined && eloChangeElem?.textContent !== null) result.displayratingchange = eloChangeElem.textContent;
 
 	return result;
 }
