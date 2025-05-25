@@ -45,7 +45,7 @@ import perspective from '../perspective.js';
 // @ts-ignore
 import transition from '../transition.js';
 // @ts-ignore
-import board from '../board.js';
+import boardtiles from '../boardtiles.js';
 // @ts-ignore
 import shapes from '../shapes.js';
 
@@ -336,7 +336,7 @@ function update() {
 /** Whether the arrows should be calculated and rendered this frame */
 function areArrowsActiveThisFrame() {
 	// false if the arrows are off, or if the board is too zoomed out
-	return mode !== 0 && board.gtileWidth_Pixels() >= renderZoomLimitVirtualPixels;
+	return mode !== 0 && boardtiles.gtileWidth_Pixels() >= renderZoomLimitVirtualPixels;
 }
 
 /**
@@ -348,7 +348,7 @@ function areArrowsActiveThisFrame() {
  */
 function updateBoundingBoxesOfVisibleScreen() {
 	// Same as above, but doesn't round
-	boundingBoxFloat = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat();
+	boundingBoxFloat = perspective.getEnabled() ? boardtiles.generatePerspectiveBoundingBox(perspectiveDist) : boardtiles.gboundingBoxFloat();
 
 	// Apply the padding of the navigation and gameinfo bars to the screen bounding box.
 	if (!perspective.getEnabled()) { // Perspective is OFF
@@ -362,7 +362,7 @@ function updateBoundingBoxesOfVisibleScreen() {
 	}
 
 	// If any part of the square is on screen, this box rounds outward to contain it.
-	boundingBoxInt = board.roundAwayBoundingBox(boundingBoxFloat);
+	boundingBoxInt = boardtiles.roundAwayBoundingBox(boundingBoxFloat);
 	// Expand the bounding box so that it contains the whole of the squares.
 	boundingBoxInt = shapes.expandTileBoundingBoxToEncompassWholeSquare(boundingBoxInt);
 

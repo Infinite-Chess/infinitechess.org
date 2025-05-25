@@ -1,6 +1,6 @@
 
 
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
 import { players } from '../../chess/util/typeutil.js';
@@ -48,10 +48,10 @@ function render() {
  * @returns {BufferModel} The buffer model
  */
 function initModel() {
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = boardtiles.gsquareCenter();
 
 	const gamefile = gameslot.getGamefile();
-	const startPositionBox = gamefile.board.editor ? board.getBoundingBoxOfBoard() : gamefileutility.getStartingAreaBox(gamefile.board);
+	const startPositionBox = gamefile.board.editor ? boardtiles.getBoundingBoxOfBoard() : gamefileutility.getStartingAreaBox(gamefile.board);
 
 	const startX = startPositionBox.left - squareCenter - extraLength;
 	const endX = startPositionBox.right + 1 - squareCenter + extraLength;

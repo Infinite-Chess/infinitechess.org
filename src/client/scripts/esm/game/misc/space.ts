@@ -15,7 +15,7 @@ import type { Coords } from '../../chess/util/coordutil.js';
 
 
 // @ts-ignore
-import board from "../rendering/board.js";
+import board from "../rendering/boardtiles.js";
 // @ts-ignore
 import camera from "../rendering/camera.js";
 import boardpos from '../rendering/boardpos.js';

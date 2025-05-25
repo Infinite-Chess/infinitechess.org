@@ -34,7 +34,7 @@ import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
-import board from '../rendering/board.js';
+import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import webgl from '../rendering/webgl.js';
 // @ts-ignore
@@ -62,8 +62,8 @@ function init() {
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
-	board.updateTheme();
-	board.recalcVariables(); // Variables dependant on the board position & scale
+	boardtiles.updateTheme();
+	boardtiles.recalcVariables(); // Variables dependant on the board position & scale
 
 	gui.prepareForOpen();
 
@@ -103,7 +103,7 @@ function update() {
 	transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER:transition.update() since that updates the board position
-	board.recalcVariables();
+	boardtiles.recalcVariables();
 
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
@@ -144,7 +144,7 @@ function update() {
 function render() {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
-	board.render(); // Renders the infinite checkerboard
+	boardtiles.render(); // Renders the infinite checkerboard
 
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();

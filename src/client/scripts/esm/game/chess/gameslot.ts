@@ -51,7 +51,7 @@ import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore
-import board from "../rendering/board.js";
+import board from "../rendering/boardtiles.js";
 // @ts-ignore
 import area from "../rendering/area.js";
 // @ts-ignore

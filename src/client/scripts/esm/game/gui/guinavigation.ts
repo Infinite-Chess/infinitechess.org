@@ -13,7 +13,7 @@ import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 // @ts-ignore
-import board from '../rendering/board.js';
+import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
@@ -141,7 +141,7 @@ function updateElement_Coords() {
 
 	const boardPos = boardpos.getBoardPos();
 	const mouseTile = mouse.getTileMouseOver_Integer();
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = boardtiles.gsquareCenter();
 
 	// Tile camera is over
 	// element_CoordsX.textContent = Math.floor(boardPos[0] + squareCenter)

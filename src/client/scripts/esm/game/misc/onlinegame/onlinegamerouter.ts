@@ -15,7 +15,7 @@ import websocket from "../../websocket.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
 // @ts-ignore
-import board from "../../rendering/board.js";
+import board from "../../rendering/boardtiles.js";
 import disconnect from "./disconnect.js";
 import afk from "./afk.js";
 import serverrestart from "./serverrestart.js";

@@ -23,7 +23,7 @@ import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
-import board from '../board.js';
+import boardtiles from '../boardtiles.js';
 // @ts-ignore
 import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore
@@ -200,7 +200,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 
 	// The bounding box of what the camera currently sees on-screen.
 	const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
-       												   : board.gboundingBox(false);
+       												   : boardtiles.gboundingBox(false);
 
 	// If our screen bounding box is less than 4x smaller than our render range bounding box,
 	// we're wasting cpu, let's regenerate it.
@@ -265,7 +265,7 @@ function initBoundingBoxOfRenderRange() {
 function getDimensionsOfOrthographicViewRange(): Coords {
 	// New improved method of calculating render bounding box
 
-	const boardBoundingBox = board.gboundingBox();
+	const boardBoundingBox = boardtiles.gboundingBox();
 	const width = boardBoundingBox.right - boardBoundingBox.left + 1;
 	const height = boardBoundingBox.top - boardBoundingBox.bottom + 1;
 

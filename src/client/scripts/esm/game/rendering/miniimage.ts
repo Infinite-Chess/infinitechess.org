@@ -31,7 +31,7 @@ import perspective from './perspective.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 
 
 // Variables --------------------------------------------------------------
@@ -118,7 +118,7 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 	// Animated pieces
 	animation.animations.forEach(a => {
 		// Animate the main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels();
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
 		const current = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		callback(current, a.type);
 
