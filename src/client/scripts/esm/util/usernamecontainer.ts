@@ -89,6 +89,8 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 		const eloChangeDiv = document.createElement('div');
 		eloChangeDiv.textContent = usernamecontainer.displayratingchange;
 		eloChangeDiv.classList.add("eloChange");
+		if (/-/.test(usernamecontainer.displayratingchange)) eloChangeDiv.classList.add("eloChangeNegative");
+		else eloChangeDiv.classList.add("eloChangePositive");
 		containerDiv.appendChild(eloChangeDiv);
 	}
 

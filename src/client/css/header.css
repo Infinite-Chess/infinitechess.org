@@ -888,7 +888,17 @@ span.arrow-head-left {
     font-size: 0.9em;
 }
 
+.username-embed .eloChange {
+    font-size: 0.9em;
+}
 
+.username-embed .eloChangePositive {
+    color: green;
+}
+
+.username-embed .eloChangeNegative {
+    color: red;
+}
 
 
 /* Fades the right side of the element away to hide overflow text */
