@@ -128,7 +128,7 @@ iframe {
     margin-bottom: 50px;
     overflow: hidden;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.325);
+    box-shadow: 0 0 50px rgb(0 0 0 / 25%);
 }
 
 .play-button::before {
@@ -149,7 +149,7 @@ iframe {
 
 .play-button:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.54);
+    box-shadow: 0 0 50px rgb(0 0 0 / 45%);
 }
 
 .play-button:hover::before {
