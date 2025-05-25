@@ -122,12 +122,13 @@ iframe {
     text-align: center;
     text-decoration: none;
     color: black;
-    background-color: #d3d3d3;
-    border: 4px solid black;
-    border-radius: 8px;
+    background-color: rgb(225, 225, 225);
+    border: 1px solid black;
+    border-radius: 0.5em;
     margin-bottom: 25px;
     overflow: hidden;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.325);
 }
 
 .play-button::before {
@@ -147,7 +148,6 @@ iframe {
 }
 
 .play-button:hover {
-    background-color: #a9a9a9;
     transform: scale(1.05);
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
 }
