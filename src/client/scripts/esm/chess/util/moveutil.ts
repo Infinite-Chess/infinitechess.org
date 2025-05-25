@@ -8,7 +8,7 @@ import type { Move, MoveDraft, NullMove, castle, enpassant, promotion } from '..
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board } from '../logic/game.js';
+import type { Game, Board } from '../logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../variants/gamerules.js';
 
@@ -214,8 +214,8 @@ function isGameResignable(game: Game | Board): boolean { return game.moves.lengt
 function getColorThatPlayedMoveIndex(game: Game, index: number): Player {
 	const turnOrder = game.gameRules.turnOrder;
 	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
-	if (index === -1) return turnOrder[turnOrder.length - 1];
-	return turnOrder[index % turnOrder.length];
+	if (index === -1) return turnOrder[turnOrder.length - 1]!;
+	return turnOrder[index % turnOrder.length]!;
 }
 
 /**

@@ -9,7 +9,7 @@ import clock from "../../chess/logic/clock.js";
 
 import type { SoundObject } from "../misc/sound.js";
 import type { Player, PlayerGroup } from "../../chess/util/typeutil.js";
-import type { Game } from "../../chess/logic/game.js";
+import type { Game } from "../../chess/logic/gamefile.js";
 
 import type { ClockData } from "../../chess/logic/clock.js";
 type HasClocks = {

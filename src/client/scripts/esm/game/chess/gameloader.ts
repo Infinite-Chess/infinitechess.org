@@ -12,7 +12,8 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { ParticipantState, ServerGameInfo, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
-import type { Additional, VariantOptions } from "./gameslot.js";
+import type { Additional } from "./gameslot.js";
+import type { VariantOptions } from "../../chess/logic/initvariant.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
@@ -154,7 +155,7 @@ async function startOnlineGame(options: {
 	gameInfo: ServerGameInfo,
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData,
-	gameConclusion: string | false,
+	gameConclusion?: string,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMovesMessage,
 	clockValues?: ClockValues,
@@ -286,7 +287,7 @@ async function pasteGame(options: {
 	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
 	const additionalToUse: Additional = {
 		...options.additional,
-		editor: gameslot.getGamefile()!.editor, // Retain the same option as the current loaded game.
+		editor: gameslot.getGamefile()!.board.editor, // Retain the same option as the current loaded game.
 	};
 
 	gameslot.unloadGame();

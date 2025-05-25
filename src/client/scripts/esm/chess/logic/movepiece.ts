@@ -6,7 +6,7 @@
  */
 
 
-import type { Board, Game } from './game.js';
+import type { Board, Game } from './gamefile.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
@@ -178,7 +178,7 @@ interface NullMove {
  * calculating and appending its board changes to its Changes list,
  * and queueing its gamefile StateChanges.
  */
-function generateMove(board: Board, moveDraft: MoveDraft): Move {
+function generateMove(game: Game, board: Board, moveDraft: MoveDraft): Move {
 	const piece = boardutil.getPieceFromCoords(board.pieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
@@ -220,13 +220,13 @@ function generateMove(board: Board, moveDraft: MoveDraft): Move {
 	
 	// Delete all special rights that should be revoked from the move.
 	queueSpecialRightDeletionStateChanges(board, move);
-	queueIncrementMoveRuleStateChange(board, move);
+	queueIncrementMoveRuleStateChange(game, board, move);
 
 	return move;
 }
 
 /** Generates a Null Move used by engines. */
-function generateNullMove(board: Board) {
+function generateNullMove(game: Game, board: Board) {
 	const nullMove: NullMove = {
 		isNull: true,
 		generateIndex: board.state.local.moveIndex + 1,
@@ -245,7 +245,7 @@ function generateNullMove(board: Board) {
 	 * this one's future value will be overwritten
 	 */
 	state.createEnPassantState(nullMove, board.state.global.enpassant, undefined);
-	queueIncrementMoveRuleStateChange(gamefile, nullMove);
+	queueIncrementMoveRuleStateChange(game, board, nullMove);
 
 	return nullMove;
 }
@@ -316,16 +316,16 @@ function queueIncrementMoveRuleStateChange(game: Game, board: Board, move: Move 
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
 function makeMove(game: Game, board: Board, move: Move | NullMove) {
-	gamefile.moves.push(move);
+	board.moves.push(move);
 
-	applyMove(gamefile, move, true, { global: true }); // Apply the logical board changes.
+	applyMove(game, board, move, true, { global: true }); // Apply the logical board changes.
 
 	// This needs to be after the moveIndex is updated
-	updateTurn(gamefile);
+	updateTurn(game, board);
 
 	// Now we can test for check, and modify the state of the gamefile if it is.
-	createCheckState(gamefile, move);
-	if (gamefile.state.local.inCheck) move.flags.check = true;
+	createCheckState(game, board, move);
+	if (board.state.local.inCheck) move.flags.check = true;
 	// The "mate" property of the move will be added after our game conclusion checks...
 }
 
@@ -355,7 +355,7 @@ function applyMove(game: Game, board: Board, move: Move | NullMove, forward = tr
  * Updates the `whosTurn` property of the gamefile, according to the move index we're on.
  */
 function updateTurn(game: Game, board: Board) {
-	gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(game, board.state.local.moveIndex);
+	game.whosTurn = moveutil.getWhosTurnAtMoveIndex(game, board.state.local.moveIndex);
 }
 
 /**
@@ -363,16 +363,16 @@ function updateTurn(game: Game, board: Board) {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(game: Game, board: Board, move: Move | NullMove) {
-	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(game, game.state.local.moveIndex);
+	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(game, board.state.local.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
 	const trackAttackers = game.gameRules.winConditions[oppositeColor]!.includes('checkmate');
 
-	const checkResults = checkdetection.detectCheck(gamefile, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+	const checkResults = checkdetection.detectCheck(game, board, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
 	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
-	state.createCheckState(move, gamefile.state.local.inCheck, futureInCheck, gamefile.state); // Passes in the gamefile as an argument
-	state.createAttackersState(move, gamefile.state.local.attackers, checkResults.attackers ?? [], gamefile.state); // Erase the checking pieces calculated from previous turn and pass in new on
+	state.createCheckState(move, board.state.local.inCheck, futureInCheck, board.state); // Passes in the gamefile as an argument
+	state.createAttackersState(move, board.state.local.attackers, checkResults.attackers ?? [], board.state); // Erase the checking pieces calculated from previous turn and pass in new on
 }
 
 /**
@@ -385,12 +385,12 @@ function createCheckState(game: Game, board: Board, move: Move | NullMove) {
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
-function makeAllMovesInGame(gamefile: gamefile, moves: ServerGameMovesMessage) {
-	if (gamefile.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
+function makeAllMovesInGame(game: Game, board: Board, moves: ServerGameMovesMessage) {
+	if (board.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
-		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
+		const move: Move = calculateMoveFromShortmove(game, board, shortmove);
 		if (!move) throw Error(`Cannot make all moves in game! There was one invalid move: ${shortmove}. Index: ${i}`);
-		makeMove(gamefile, move);
+		makeMove(game, board, move);
 	});
 }
 
@@ -406,8 +406,8 @@ function makeAllMovesInGame(gamefile: gamefile, moves: ServerGameMovesMessage) {
  * @param {string} shortmove - The move in most compact form: `1,2>3,4Q`
  * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
-function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMoveMessage): Move {
-	if (!moveutil.areWeViewingLatestMove(gamefile)) throw Error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
+function calculateMoveFromShortmove(game: Game, board: Board, shortmove: ServerGameMoveMessage): Move {
+	if (!moveutil.areWeViewingLatestMove(board)) throw Error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
 
 	// Reconstruct the startCoords, endCoords, and special move properties of the MoveDraft
 
@@ -423,15 +423,15 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMov
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
-	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(board.pieces, moveDraft.startCoords);
 	if (!piece) {
 		// No piece on start coordinates, can't calculate Move, because it's illegal
 		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove.compact}`);
 	}
 
-	const moveset = legalmoves.getPieceMoveset(gamefile, piece.type);
+	const moveset = legalmoves.getPieceMoveset(board, piece.type);
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
-	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves);
+	legalmoves.appendSpecialMoves(game, board, piece, moveset, legalSpecialMoves);
 	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
@@ -439,7 +439,7 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMov
 		break;
 	}
 
-	const move = generateMove(gamefile, moveDraft);
+	const move = generateMove(game, board, moveDraft);
 	if (shortmove.clockStamp !== undefined) move.clockStamp = shortmove.clockStamp;
 	return move;
 }
@@ -451,14 +451,14 @@ function calculateMoveFromShortmove(gamefile: gamefile, shortmove: ServerGameMov
 /**
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
-function rewindMove(gamefile: gamefile) {
-	const move = moveutil.getMoveFromIndex(gamefile.moves, gamefile.state.local.moveIndex);
+function rewindMove(game: Game, board: Board) {
+	const move = moveutil.getMoveFromIndex(board.moves, board.state.local.moveIndex);
 
-	applyMove(gamefile, move, false, { global: true });
+	applyMove(game, board, move, false, { global: true });
 
 	// Delete the move off the end of our moves list
-	gamefile.moves.pop();
-	updateTurn(gamefile);
+	board.moves.pop();
+	updateTurn(game, board);
 }
 
 
@@ -474,18 +474,18 @@ function rewindMove(gamefile: gamefile) {
  * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
 // eslint-disable-next-line no-unused-vars
-function goToMove(gamefile: gamefile, index: number, callback: (move: Move | NullMove) => void) {
-	if (index === gamefile.state.local.moveIndex) return;
+function goToMove(board: Board, index: number, callback: (move: Move | NullMove) => void) {
+	if (index === board.state.local.moveIndex) return;
 
-	const forwards = index >= gamefile.state.local.moveIndex;
+	const forwards = index >= board.state.local.moveIndex;
 	const offset = forwards ? 0 : 1;
-	let i = gamefile.state.local.moveIndex;
+	let i = board.state.local.moveIndex;
 	
-	if (gamefile.moves.length <= index + offset || index + offset < 0) throw Error("Target index is outside of the movelist!");
+	if (board.moves.length <= index + offset || index + offset < 0) throw Error("Target index is outside of the movelist!");
 
 	while (i !== index) {
 		i = math.moveTowards(i, index, 1);
-		const move = gamefile.moves[i + offset];
+		const move = board.moves[i + offset];
 		if (move === undefined) throw Error(`Undefined move in goToMove()! ${i}, ${index}`);
 		callback(move);
 	}
@@ -502,12 +502,12 @@ function goToMove(gamefile: gamefile, index: number, callback: (move: Move | Nul
  * The move is automatically rewound when it's done.
  * @returns Whatever is returned by the callback
  */
-function simulateMoveWrapper<R>(gamefile: gamefile, moveDraft: MoveDraft, callback: () => R): R {
-	const move = generateMove(gamefile, moveDraft);
-	makeMove(gamefile, move);
+function simulateMoveWrapper<R>(game: Game, board: Board, moveDraft: MoveDraft, callback: () => R): R {
+	const move = generateMove(game, board, moveDraft);
+	makeMove(game, board, move);
 	// What info can we pull from the game after simulating this move?
 	const info = callback();
-	rewindMove(gamefile);
+	rewindMove(game, board);
 	return info;
 }
 
@@ -515,11 +515,11 @@ function simulateMoveWrapper<R>(gamefile: gamefile, moveDraft: MoveDraft, callba
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
-function getSimulatedConclusion(gamefile: gamefile, moveDraft: MoveDraft): string | false {
+function getSimulatedConclusion(game: Game, board: Board, moveDraft: MoveDraft): string | false {
 	return simulateMoveWrapper(
-		gamefile,
+		game, board,
 		moveDraft,
-		() => wincondition.getGameConclusion(gamefile)
+		() => wincondition.getGameConclusion(game, board)
 	);
 }
 

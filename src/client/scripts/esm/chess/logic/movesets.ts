@@ -15,11 +15,10 @@ import isprime from '../../util/isprime.js';
 
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
-import type { RawTypeGroup, Player, TypeGroup } from '../util/typeutil.js';
+import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
 import type { Vec2, Vec2Key } from '../../util/math.js';
 import type { Piece } from '../util/boardutil.js';
-// @ts-ignore
-import type { gamefile } from './gamefile.js';
+import type { Game, Board } from './gamefile.js';
 
 
 /**
@@ -104,7 +103,7 @@ type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Co
  * each of the coords will have a special property attached to it. castle/promote/enpassant
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: gamefile, coords: Coords, color: Player) => CoordsSpecial[]
+type SpecialFunction = (game: Game, board: Board, coords: Coords, color: Player) => CoordsSpecial[]
 
 
 
@@ -302,10 +301,10 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
  * based on the provided movesets.
  * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
  */
-function getPossibleSlides(pieceMovesets: TypeGroup<() => PieceMoveset>): Vec2[] {
+function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec2[] {
 	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
 	for (const rawtype in pieceMovesets) {
-		const moveset = pieceMovesets[rawtype]!();
+		const moveset = pieceMovesets[Number(rawtype) as RawType]!();
 		if (!moveset.sliding) continue;
 		Object.keys(moveset.sliding).forEach(slide => slides.add(slide as Vec2Key));
 	}

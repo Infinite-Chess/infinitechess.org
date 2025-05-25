@@ -11,11 +11,9 @@ import type { Piece } from '../util/boardutil.js';
 import type { RawType, Player, PlayerGroup, RawTypeGroup } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { BaseRay } from '../../game/rendering/highlights/annotations/drawrays.js';
-// @ts-ignore
-import type gamefile from '../logic/gamefile.js';
-// @ts-ignore
 import type { GameRules } from './gamerules.js';
 import type { MetaData } from '../util/metadata.js';
+import type { Game, Board } from '../logic/gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
@@ -91,7 +89,7 @@ interface Variant {
  * TODO: Move this to specialmove.ts when it's converted to typescript.
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialMoveFunction = (gamefile: gamefile, piece: Piece, move: Move) => boolean;
+type SpecialMoveFunction = (booard: Board, piece: Piece, move: Move) => boolean;
 
 /**
  * An object storing the squares in the immediate vicinity

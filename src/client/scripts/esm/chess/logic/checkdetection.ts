@@ -21,7 +21,7 @@ import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
 import type { Attacker } from './state.js';
-import type { Board, Game } from './game.js';
+import type { Board, Game } from './gamefile.js';
 
 
 // Types -------------------------------------------------------------------
@@ -38,15 +38,15 @@ import type { Board, Game } from './game.js';
  * @param trackAttackers - If true, the results object will contain a list of attackers checking the player's royals. This is useful for calculating blocking moves that may resolve the check. Should should be true if we're using checkmate, and left out if we're using royal capture, to save compute.
  * @returns An object containing information such as whether the given color is in check in the current position, which royals are in check, and if applicable, where the attacking/checking pieces are.
  */
-function detectCheck(gamefile: gamefile, color: Player, trackAttackers?: boolean): { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] } {
+function detectCheck(game: Game, board: Board, color: Player, trackAttackers?: boolean): { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] } {
 	// Coordinates of ALL royals of this color!
-	const royalCoords: Coords[] = boardutil.getRoyalCoordsOfColor(gamefile.pieces, color);
+	const royalCoords: Coords[] = boardutil.getRoyalCoordsOfColor(board.pieces, color);
 	// Array of coordinates of royal pieces that are in check
 	const royalsInCheck: Coords[] = [];
 	const attackers: Attacker[] | undefined = trackAttackers ? [] : undefined;
 
 	royalCoords.forEach(thisRoyalCoord => {
-		if (isSquareBeingAttacked(gamefile, thisRoyalCoord, color, attackers)) royalsInCheck.push(thisRoyalCoord);
+		if (isSquareBeingAttacked(game, board, thisRoyalCoord, color, attackers)) royalsInCheck.push(thisRoyalCoord);
 	});
 
 	return {
@@ -63,25 +63,25 @@ function detectCheck(gamefile: gamefile, color: Player, trackAttackers?: boolean
  * @param colorOfFriendly - The color of the friendly player. All other player colors will be tested to see if they attack the square.
  * @param [attackers] If provided, any opponent attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one attacker is discovered.
  */
-function isSquareBeingAttacked(gamefile: gamefile, coord: Coords, colorOfFriendly: Player, attackers?: Attacker[]): boolean {
+function isSquareBeingAttacked(game: Game, board: Board, coord: Coords, colorOfFriendly: Player, attackers?: Attacker[]): boolean {
 	let atleast1Attacker = false;
 
 	// How do we find out if this square is attacked?
 
 	// 1. We check every square within a 3 block radius to see if there's any attacking pieces.
 
-	if (doesVicinityAttackSquare(gamefile, coord, colorOfFriendly, attackers)) {
+	if (doesVicinityAttackSquare(board, coord, colorOfFriendly, attackers)) {
 		if (attackers) atleast1Attacker = true; // ARE keeping track of attackers, continue checking if there are more attacking the same square...
 		else return true; // Not keeping track of attackers, exit early
 	}
 	// What about specials (e.g. pawns, roses...)? Could they capture us?
-	if (doesSpecialAttackSquare(gamefile, coord, colorOfFriendly, attackers)) {
+	if (doesSpecialAttackSquare(game, board, coord, colorOfFriendly, attackers)) {
 		if (attackers) atleast1Attacker = true; // ARE keeping track of attackers, continue checking if there are more attacking the same square...
 		else return true; // Not keeping track of attackers, exit early
 	}
 
 	// 2. We check every orthogonal and diagonal to see if there's any attacking pieces.
-	if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, attackers)) {
+	if (doesSlideAttackSquare(board, coord, colorOfFriendly, attackers)) {
 		if (attackers) atleast1Attacker = true; // ARE keeping track of attackers, continue checking if there are more attacking the same square...
 		else return true; // Not keeping track of attackers, exit early
 	}
@@ -129,7 +129,7 @@ function doesVicinityAttackSquare(board: Board, square: Coords, friendlyColor: P
  * @param [attackers] If provided, any opponent jumper attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
  * @returns true if the square is being attacked by atleast one piece via a special individual move.
  */
-function doesSpecialAttackSquare(board: Board, square: CoordsSpecial, friendlyColor: Player, attackers?: Attacker[]): boolean {
+function doesSpecialAttackSquare(game: Game, board: Board, square: CoordsSpecial, friendlyColor: Player, attackers?: Attacker[]): boolean {
 	for (const [coordsKey, thisVicinity] of Object.entries(board.specialVicinity)) {
 		const thisSquare = coordutil.getCoordsFromKey(coordsKey as CoordsKey); // [1,2], [2,1], ...
 		// Subtract the offset of our square
@@ -150,11 +150,11 @@ function doesSpecialAttackSquare(board: Board, square: CoordsSpecial, friendlyCo
 
 			const moveset = legalmoves.getPieceMoveset(board, pieceOnSquare.type);
 			const specialPiecesLegalMoves = legalmoves.getEmptyLegalMoves(moveset);
-			legalmoves.appendSpecialMoves(board, pieceOnSquare, moveset, specialPiecesLegalMoves);
+			legalmoves.appendSpecialMoves(game, board, pieceOnSquare, moveset, specialPiecesLegalMoves);
 			// console.log("Calculated special pieces legal moves:");
 			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
 
-			if (!legalmoves.checkIfMoveLegal(gamefile, specialPiecesLegalMoves, actualSquare, square, friendlyColor)) continue; // This special piece can't make the capture THIS time... oof
+			if (!legalmoves.checkIfMoveLegal(game, board, specialPiecesLegalMoves, actualSquare, square, friendlyColor)) continue; // This special piece can't make the capture THIS time... oof
 
 			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
 

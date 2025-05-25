@@ -14,7 +14,7 @@ import boardpos from './boardpos.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').Board} Board
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  * @typedef {import('../../chess/util/coordutil.js').Coords} Coords
 */
@@ -261,12 +261,12 @@ function initTelFromArea(thisArea, ignoreHistory) {
 /**
  * Returns the area object that contains all pieces within
  * it from the specified gamefile, with added padding.
- * @param {gamefile} gamefile - The gamefile
+ * @param {Board} board - The gamefile
  * @returns {Area} The area object
  */
-function getAreaOfAllPieces(gamefile) {
-	if (!gamefile) return console.error("Cannot get the area of all pieces of an undefined game.");
-	return calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(gamefile));
+function getAreaOfAllPieces(board) {
+	if (!board) return console.error("Cannot get the area of all pieces of an undefined game.");
+	return calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(board));
 }
 
 export default {

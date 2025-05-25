@@ -63,7 +63,7 @@ function copyGame(copySinglePosition) {
 		if (preset_rays) presetAnnotes.rays = preset_rays;
 	}
 
-	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition, presetAnnotes);
+	const longformatIn = gamecompressor.compressGamefile(gamefile, gamefile.board, copySinglePosition, presetAnnotes);
 	// Convert the variant metadata code to spoken language if translation is available
 	if (longformatIn.metadata.Variant) longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 	

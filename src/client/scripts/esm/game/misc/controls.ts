@@ -20,8 +20,6 @@ import websocket from "../websocket.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 // @ts-ignore
-import gamefile from "../../chess/logic/gamefile.js";
-// @ts-ignore
 import statustext from "../gui/statustext.js";
 // @ts-ignore
 import copypastegame from "../chess/copypastegame.js";
@@ -44,7 +42,7 @@ import miniimage from "../rendering/miniimage.js";
 
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { Coords } from "../../chess/util/coordutil.js";
-
+import type { Game } from "../../chess/logic/gamefile.js";
 
 // Constants -------------------------------------------------------------------
 
@@ -230,7 +228,7 @@ function testOutGameToggles() {
 }
 
 /** Debug toggles that are only for in a game. */
-function testInGameToggles(gamefile: gamefile, mesh: Mesh | undefined) {
+function testInGameToggles(gamefile: Game, mesh: Mesh | undefined) {
 	if (listener_document.isKeyDown('Escape')) guipause.toggle();
 	
 	if (listener_document.isKeyDown('Digit1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
@@ -244,7 +242,7 @@ function testInGameToggles(gamefile: gamefile, mesh: Mesh | undefined) {
 	
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
-		piecemodels.regenAll(gamefile, mesh);
+		piecemodels.regenAll(gamefile.board!, mesh);
 		statustext.showStatus('Regenerated piece models.', false, 0.5);
 	}
 	if (listener_document.isKeyDown('KeyN')) {

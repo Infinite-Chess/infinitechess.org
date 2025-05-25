@@ -18,8 +18,7 @@ import jsutil from '../../../util/jsutil.js';
  * Typescript types are erased during compilation, so adding these
  * here doesn't actually mean adding dependancies.
  */
-// @ts-ignore
-import type gamefile from "../../../chess/logic/gamefile";
+import type { Game, Board } from '../../../chess/logic/gamefile.js';
 import type { MoveDraft } from "../../../chess/logic/movepiece";
 import type { Coords, CoordsKey } from "../../../chess/util/coordutil";
 import type { Vec2 } from "../../../util/math";
@@ -64,7 +63,7 @@ let rand: Function;
 let engineInitialized: boolean = false;
 
 /** Externally supplied gamefile */
-let input_gamefile : gamefile;
+let input_gamefile: Game & { board: Board };
 
 /** Start time of current engine calculation in millis */
 let engineStartTime: number;
@@ -1274,16 +1273,15 @@ function runIterativeDeepening(piecelist: number[], coordlist: Coords[], maxdept
 						}
 					}
 					const emptyPieceMovesets = {}; // <--- Is this gonna be an issue?
-					const dummy_gamefile = { 
+					const dummy_board = { 
 						moves: [],
-						gameRules: input_gamefile.gameRules,
 						// pieceMovesets is the only required gamefile property that is lost when sending the gamefile to the engine.
 						// This will cause the possible slides to be calculated incorrectly, and thus the `lines` property not entirely filled out.
 						// I THINK we are safe though, because I saw nowhere in detectInsufficientMaterial() where it reads the lines.
-						pieces: organizedpieces.processInitialPosition(piecesOrganizedByKey, emptyPieceMovesets, input_gamefile.gameRules.turnOrder, input_gamefile.gameRules.promotionsAllowed, input_gamefile.editor).pieces,
-					} as unknown as gamefile;
+						pieces: organizedpieces.processInitialPosition(piecesOrganizedByKey, emptyPieceMovesets, input_gamefile.gameRules.turnOrder, input_gamefile.gameRules.promotionsAllowed, input_gamefile.board.editor).pieces,
+					} as unknown as Board;
 
-					if (insufficientmaterial.detectInsufficientMaterial(dummy_gamefile)) break;
+					if (insufficientmaterial.detectInsufficientMaterial(input_gamefile.gameRules, dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture
@@ -1350,16 +1348,16 @@ function move_to_gamefile_move(target_square: Coords): MoveDraft {
 	return { startCoords: gamefile_royal_coords, endCoords: endCoords };
 }
 
-function doesTypeExist(gamefile: gamefile, type: number): boolean {
-	const range = gamefile.pieces.typeRanges.get(type);
+function doesTypeExist(board: Board, type: number): boolean {
+	const range = board.pieces.typeRanges.get(type);
 
 	if (range === undefined) return false;
 
 	return range.end - range.start - range.undefineds.length > 0;
 }
 
-function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
-	const range = gamefile.pieces.typeRanges.get(type);
+function getFirstOfType(board: Board, type: number): Coords | undefined {
+	const range = board.pieces.typeRanges.get(type);
 
 	if (range === undefined) return;
 	if (range.end - range.start - range.undefineds.length <= 0) return;
@@ -1370,7 +1368,7 @@ function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
 			undefinedidx++;
 			continue;
 		}
-		return [gamefile.pieces.XPositions[idx], gamefile.pieces.YPositions[idx]];
+		return [board.pieces.XPositions[idx]!, board.pieces.YPositions[idx]!];
 	}
 	return;
 }
@@ -1381,12 +1379,12 @@ function getFirstOfType(gamefile: gamefile, type: number): Coords | undefined {
 async function runEngine() {
 	try {
 		// get real coordinates and parse type of black royal piece
-		if (doesTypeExist(input_gamefile, r.KING + e.B)) {
-			gamefile_royal_coords = getFirstOfType(input_gamefile, r.KING + e.B)!;
+		if (doesTypeExist(input_gamefile.board, r.KING + e.B)) {
+			gamefile_royal_coords = getFirstOfType(input_gamefile.board, r.KING + e.B)!;
 			royal_moves = king_moves;
 			royal_type = "k";
-		} else if (doesTypeExist(input_gamefile, r.ROYALCENTAUR + e.B)) {
-			gamefile_royal_coords = getFirstOfType(input_gamefile, r.ROYALCENTAUR + e.B)!;
+		} else if (doesTypeExist(input_gamefile.board, r.ROYALCENTAUR + e.B)) {
+			gamefile_royal_coords = getFirstOfType(input_gamefile.board, r.ROYALCENTAUR + e.B)!;
 			royal_moves = centaur_moves;
 			royal_type = "rc";
 		} else {
@@ -1396,7 +1394,7 @@ async function runEngine() {
 		// create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
 		start_piecelist = [];
 		start_coordlist = [];
-		for (const [type, range] of input_gamefile.pieces.typeRanges) {
+		for (const [type, range] of input_gamefile.board.pieces.typeRanges) {
 			let undefinedidx = 0;
 			for (let idx = range.start; idx < range.end; idx++) {
 				if (idx === range.undefineds[undefinedidx]) { // Is our next undefined piece entry, skip.
@@ -1404,7 +1402,7 @@ async function runEngine() {
 					continue;
 				}
 				if (Math.floor(type / numTypes) !== players.WHITE) continue;
-				const coords = [input_gamefile.pieces.XPositions[idx], input_gamefile.pieces.YPositions[idx]];
+				const coords: Coords = [input_gamefile.board.pieces.XPositions[idx]!, input_gamefile.board.pieces.YPositions[idx]!];
 				start_piecelist.push(pieceNameDictionary[type]!);
 				// shift all white pieces, so that the black royal is at [0,0]
 				start_coordlist.push([coords[0] - gamefile_royal_coords[0], coords[1] - gamefile_royal_coords[1]]);

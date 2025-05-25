@@ -70,7 +70,7 @@ interface JoinGameMessage extends GameUpdateMessage {
 
 /** The message contents expected when we receive a server websocket 'gameupdate' message.  */
 interface GameUpdateMessage {
-	gameConclusion: string | false,
+	gameConclusion?: string,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMovesMessage,
 	participantState: ParticipantState
@@ -83,7 +83,7 @@ interface GameUpdateMessage {
 interface OpponentsMoveMessage {
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
 	move: ServerGameMoveMessage,
-	gameConclusion: string | false,
+	gameConclusion?: string,
 	/** Our opponent's move number, 1-based. */
 	moveNumber: number,
 	/** If the game is timed, this will be the current clock values. */
@@ -150,13 +150,13 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 
 	switch (data.action) {
 		case "move":
-			movesendreceive.handleOpponentsMove(gamefile, mesh, data.value);
+			movesendreceive.handleOpponentsMove(gamefile, gamefile.board, mesh, data.value);
 			break;
 		case "clock": 
 			handleUpdatedClock(gamefile, data.value);
 			break;
 		case "gameupdate":
-			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
+			resyncer.handleServerGameUpdate(gamefile, gamefile.board, mesh, data.value);
 			break;
 		case "unsub":
 			handleUnsubbing();

@@ -1,27 +1,31 @@
 import type { ClockData, ClockValues } from "./clock.js";
-import type { CoordsKey } from "../util/coordutil";
-import type { BoundingBox } from "../../util/math";
+import type { CoordsKey } from "../util/coordutil.js";
+import type { BoundingBox } from "../../util/math.js";
 import type { MetaData } from "../util/metadata.js";
-import type { GameRules } from "../variants/gamerules";
-import type { Player, RawType, RawTypeGroup } from "../util/typeutil";
-import type { Move, NullMove } from "./movepiece";
-import type { OrganizedPieces } from "./organizedpieces";
-import type { PieceMoveset } from "./movesets";
-import type { GameState, GlobalGameState } from "./state";
-import type { Piece } from "../util/boardutil";
+import type { GameRules } from "../variants/gamerules.js";
+import type { Player, RawType, RawTypeGroup } from "../util/typeutil.js";
+import type { Move, NullMove } from "./movepiece.js";
+import type { OrganizedPieces } from "./organizedpieces.js";
+import type { PieceMoveset } from "./movesets.js";
+import type { GameState, GlobalGameState } from "./state.js";
+import type { Piece } from "../util/boardutil.js";
 import type { VariantOptions } from "./initvariant.js";
 import type { ServerGameMovesMessage } from "../../game/misc/onlinegame/onlinegamerouter.js";
 
-import organizedpieces from "./organizedpieces";
+import organizedpieces from "./organizedpieces.js";
 import initvariant from "./initvariant.js";
 import jsutil from "../../util/jsutil.js";
-import typeutil from "../util/typeutil";
+import typeutil from "../util/typeutil.js";
 import legalmoves from "./legalmoves.js";
 import gamefileutility from "../util/gamefileutility.js";
-import boardutil from "../util/boardutil";
-import math from "../../util/math";
+import boardutil from "../util/boardutil.js";
+import math from "../../util/math.js";
 import clock from "./clock.js";
-import movepiece from "./movepiece";
+import movepiece from "./movepiece.js";
+import checkdetection from "./checkdetection.js";
+// @ts-ignore
+import wincondition from "./wincondition.js";
+import gamerules from "../variants/gamerules.js";
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -114,7 +118,7 @@ function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConcl
 	return game;
 }
 
-function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions: VariantOptions, editor: boolean = false): Board {
+function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false): Board {
 	const startSnapshot = initvariant.genStartSnapshot(gameRules, metadata, variantOptions);
 
 	const state: GameState = {
@@ -130,7 +134,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions: Var
 
 	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
 		startSnapshot.position,
-		this.pieceMovesets,
+		pieceMovesets,
 		gameRules.turnOrder,
 		gameRules.promotionsAllowed,
 		editor
@@ -174,13 +178,13 @@ function loadGameWithBoard(game: Game, board: Board, moves:ServerGameMovesMessag
 	game.board = board;
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(this)) gamerules.swapCheckmateForRoyalCapture(this.gameRules);
+	if (!wincondition.isCheckmateCompatibleWithGame(game, board)) gamerules.swapCheckmateForRoyalCapture(game.gameRules);
 
 	{ // Set the game's `inCheck` and `attackers` properties at the front of the game.
-		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(this, this.whosTurn, 'checkmate');
-		const checkResults = checkdetection.detectCheck(this, this.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
-		this.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackAttackers) this.state.local.attackers = checkResults.attackers;
+		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(game, game.whosTurn, 'checkmate');
+		const checkResults = checkdetection.detectCheck(game, board, game.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		board.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
+		if (trackAttackers) board.state.local.attackers = checkResults.attackers ?? [];
 	}
 
 	movepiece.makeAllMovesInGame(game, board, moves);
@@ -190,14 +194,15 @@ function loadGameWithBoard(game: Game, board: Board, moves:ServerGameMovesMessag
 	else gamefileutility.doGameOverChecks(game, board);
 }
 
-// TODO: finish this
-function GameBoardToICN(game: Game, board: Board): Object {
-	return {};
-}
-
 export type {
 	Game,
 	Board,
 	FullGame,
 	Snapshot,
+};
+
+export default {
+	initBoard,
+	initGame,
+	loadGameWithBoard,
 };

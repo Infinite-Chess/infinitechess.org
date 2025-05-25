@@ -6,7 +6,7 @@
 import type { Coords } from './coordutil.js';
 import type { Player, RawTypeGroup } from './typeutil.js';
 import type { PieceMoveset } from '../logic/movesets.js';
-import type { Game, Board } from '../logic/game.js';
+import type { Game, Board } from '../logic/gamefile.js';
 
 import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';

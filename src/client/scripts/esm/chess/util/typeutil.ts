@@ -181,7 +181,7 @@ function getPlayerFromString(string: StrPlayer): Player {
 function deleteUnusedFromRawTypeGroup<T>(existingRawTypes: RawType[], exclude: RawTypeGroup<T>) {
 	for (const key in exclude) {
 		const rawType = Number(key) as RawType;
-		if (!existingRawTypes.includes(rawType)) delete exclude[key];
+		if (!existingRawTypes.includes(rawType)) delete exclude[rawType];
 	}
 }
 

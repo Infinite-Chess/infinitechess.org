@@ -20,7 +20,7 @@ import type { LineKey } from "../util/boardutil.js";
 import type { Vec2, Vec2Key } from "../../util/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
-import type { Player, PlayerGroup, RawType, TypeGroup } from "../util/typeutil.js";
+import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../util/typeutil.js";
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -106,7 +106,7 @@ const listExtras_Editor = 100;
  * 
  * Mutates pieceMovesets to remove useless movesets
  */
-function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): {
+function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: RawTypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): {
 	pieces: OrganizedPieces,
 	/**
 	 * All existing types in the game, with their color information.

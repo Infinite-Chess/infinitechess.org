@@ -235,9 +235,9 @@ function updateWhosTurn() {
 }
 
 /** Updates the whosTurn text to say who won! */
-function gameEnd(conclusion: string | false) {
+function gameEnd(conclusion?: string) {
 	// '1 checkmate' / '2 resignation' / '0 stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
-	if (conclusion === false) throw Error("Should not call gameEnd when game isn't over.");
+	if (conclusion === undefined) throw Error("Should not call gameEnd when game isn't over.");
 
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	const resultTranslations = translations['results'];

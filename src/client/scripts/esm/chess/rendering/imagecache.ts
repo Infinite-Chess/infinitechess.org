@@ -10,7 +10,7 @@
  */
 
 import type { TypeGroup } from '../../chess/util/typeutil.js';
-import type { Board } from '../logic/game.js';
+import type { Board } from '../logic/gamefile.js';
 
 import typeutil from '../../chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';

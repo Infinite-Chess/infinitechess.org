@@ -5,7 +5,7 @@
 
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
-import type { VariantOptions } from './gameslot.js';
+import type { VariantOptions } from '../../chess/logic/initvariant.js';
 import type { Player } from '../../chess/util/typeutil.js';
 
 import typeutil from '../../chess/util/typeutil.js';
@@ -300,8 +300,8 @@ function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
 	if (!inCheckmatePractice) return; // Not in checkmate practice
 
-	const gameConclusion: string | false = gameslot.getGamefile()!.gameConclusion;
-	if (gameConclusion === false) throw Error('Game conclusion is false, should not have called onEngineGameConclude()');
+	const gameConclusion: string | undefined = gameslot.getGamefile()!.gameConclusion;
+	if (gameConclusion === undefined) throw Error('Game conclusion is undefined, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
@@ -355,11 +355,11 @@ function undoMove() {
 		animation.clearAnimations();
 
 		// go to latest move before undoing moves
-		movesequence.viewFront(gamefile, mesh);
+		movesequence.viewFront(gamefile, gamefile.board, mesh);
 
 		// If it's their turn, only rewind one move.
-		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile, mesh);
-		movesequence.rewindMove(gamefile, mesh);
+		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile, gamefile.board, mesh);
+		movesequence.rewindMove(gamefile, gamefile.board, mesh);
 		selection.reselectPiece();
 	}
 }

@@ -14,9 +14,7 @@ import specialrighthighlights from "./specialrighthighlights.js";
 import boardpos from "../boardpos.js";
 import annotations from "./annotations/annotations.js";
 
-
-// @ts-ignore
-import type gamefile from "../../../chess/logic/gamefile";
+import type { Board } from "../../../chess/logic/gamefile.js";
 
 
 /**
@@ -28,10 +26,10 @@ import type gamefile from "../../../chess/logic/gamefile";
  * Hovered arrows legal move highlights
  * Outline of highlights render box
  */
-function render(gamefile: gamefile) {
+function render(board: Board) {
 	if (!boardpos.areZoomedOut()) { // Zoomed in
-		highlightLastMove(gamefile);
-		checkhighlight.render(gamefile);
+		highlightLastMove(board);
+		checkhighlight.render(board);
 		legalmovehighlights.render();
 		specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
 	} 
