@@ -47,7 +47,7 @@ function getGameConclusion(game, board) {
         || detectCheckmateOrStalemate(game, board)
         // This needs to be last so that a draw isn't enforced in a true win
         || detectMoveRule(game, board) // 50-move-rule
-        || insufficientmaterial.detectInsufficientMaterial(game, board) // checks for insufficient material
+        || insufficientmaterial.detectInsufficientMaterial(game.gameRules, board) // checks for insufficient material
         || false; // No win condition passed. No game conclusion!
 }
 
