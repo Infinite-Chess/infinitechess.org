@@ -30,7 +30,7 @@ type UsernameContainerDisplayOptions = {
     /** Whether to show the displayrating entry if it exists */
     showrating?: boolean,
 	/** Whether to show the displayratingchange entry if it exists */
-    showratingchange?: boolean
+    showratingchange?: boolean,
 	/** Whether the player is an engine (we'll use a different svg) */
 	isEngine?: boolean
 }
@@ -89,7 +89,10 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 		const eloChangeDiv = document.createElement('div');
 		eloChangeDiv.textContent = usernamecontainer.displayratingchange;
 		eloChangeDiv.classList.add("eloChange");
+
+		// color the displayratingchange green or red, depending on whether it contains a minus sign
 		if (/-/.test(usernamecontainer.displayratingchange)) eloChangeDiv.classList.add("eloChangeNegative");
+		
 		else eloChangeDiv.classList.add("eloChangePositive");
 		containerDiv.appendChild(eloChangeDiv);
 	}

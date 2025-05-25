@@ -86,7 +86,7 @@ function embedUsernameContainers(metadata: MetaData) {
 	usernamecontainer_options_white = {
 		makehyperlink: white_type === 'player',
 		showrating: white_display_rating !== null,
-		showratingchange: white_display_rating_change !== null,
+		showratingchange: white_display_rating !== null && white_display_rating_change !== null,
 		isEngine: white_type === 'engine',
 	};
 	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
@@ -101,7 +101,7 @@ function embedUsernameContainers(metadata: MetaData) {
 	usernamecontainer_options_black = {
 		makehyperlink: black_type === 'player',
 		showrating: black_display_rating !== null,
-		showratingchange: black_display_rating_change !== null,
+		showratingchange: black_display_rating !== null && black_display_rating_change !== null,
 		isEngine: black_type === 'engine',
 	};
 	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
