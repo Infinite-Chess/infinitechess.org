@@ -546,10 +546,9 @@ async function sendmessage(route, action, value, isUserAction, onreplyFunc) { //
 
 	const stringifiedMessage = JSON.stringify(payload);
 
-	// if (DEBUG) { // Add a simulated delay to the message
-	// 	setTimeout(() => { socket.send(stringifiedMessage); }, simulatedWebsocketLatencyMillis_Debug);
-	// } else
-	socket.send(stringifiedMessage);
+	if (DEBUG) { // Add a simulated delay to the message
+		setTimeout(() => { socket.send(stringifiedMessage); }, simulatedWebsocketLatencyMillis_Debug);
+	} else socket.send(stringifiedMessage);
 	
 	return true;
 }
