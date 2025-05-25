@@ -225,47 +225,21 @@ function unsubClientFromGame(game, ws) {
  */
 function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	const metadata = getMetadataOfGame(game);
-	const opponentColor = typeutil.invertPlayer(playerColor);
-	const gameOptions = {
+
+	const gameUpdateContents = getGameUpdateMessageContents(game, playerColor);
+
+	const messageContents = {
+		gameInfo: {
+			id: game.id,
+			rated: game.rated,
+			publicity: game.publicity,
+		},
 		metadata,
-		id: game.id,
-		publicity: game.publicity,
-		rated: game.rated,
 		youAreColor: playerColor,
-		moves: game.moves,
-		gameConclusion: game.gameConclusion,
-		drawOffer: {
-			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
-			lastOfferPly: getLastDrawOfferPlyOfColor(game, playerColor) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
-		}
+		...gameUpdateContents,
 	};
-	// Include additional stuff if relevant
-	if (!game.untimed) gameOptions.clockValues = getGameClockValues(game);
 
-	const now = Date.now();
-
-	// If true, we know it's their opponent that's afk, because this client
-	// just refreshed the page and would have cancelled the timer if they were the ones afk.
-	if (isAFKTimerActive(game)) {
-		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
-		gameOptions.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
-	}
-
-	const opponentData = game.players[opponentColor];
-
-	// If their opponent has disconnected, send them that info too.
-	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
-		gameOptions.disconnect = {
-			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
-			wasByChoice: opponentData.disconnect.wasByChoice
-		};
-	}
-
-	// If the server is restarting, include the time too.
-	const timeServerRestarting = getTimeServerRestarting();
-	if (timeServerRestarting !== false) gameOptions.serverRestartingAt = timeServerRestarting;
-
-	sendSocketMessage(playerSocket, 'game', 'joingame', gameOptions, replyto);
+	sendSocketMessage(playerSocket, 'game', 'joingame', messageContents, replyto);
 }
 
 /**
@@ -359,41 +333,67 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	const playerdata = game.players[color];
 	if (playerdata.socket === undefined) return; // Not connected, can't send message
 
-	const opponentColor = typeutil.invertPlayer(color);
+	const messageContents = getGameUpdateMessageContents(game, color);
+	sendSocketMessage(playerdata.socket, "game", "gameupdate", messageContents, replyTo);
+}
+
+/**
+ * 
+ * @param {Game} game 
+ * @param {Player} color 
+ * @returns 
+ */
+function getGameUpdateMessageContents(game, color) {
 	const messageContents = {
 		gameConclusion: game.gameConclusion,
-		moves: game.moves.map(m => simplyMove(m)), // Send the final move list so they can make sure they're in sync.
-		drawOffer: {
-			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
-			lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
-		}
+		moves: game.moves.map(m => simplyMove(m)),
+		participantState: getParticipantState(game, color),
 	};
+
 	// Include timer info if it's timed
 	if (!game.untimed) messageContents.clockValues = getGameClockValues(game);
-
-	const now = Date.now();
-
-	// Include other relevant stuff if defined
-	if (isAFKTimerActive(game)) {
-		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
-		messageContents.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
-	}
-
-	const opponentData = game.players[opponentColor];
-
-	// If their opponent has disconnected, send them that info too.
-	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
-		messageContents.disconnect = {
-			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
-			wasByChoice: opponentData.disconnect.wasByChoice
-		};
-	}
 
 	// Also send the time the server is restarting, if it is
 	const timeServerRestarting = getTimeServerRestarting();
 	if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
-	sendSocketMessage(playerdata.socket, "game", "gameupdate", messageContents, replyTo);
+	return messageContents;
+}
+
+/**
+ * 
+ * @param {Game} game 
+ * @param {Player} color
+ * @returns {import('../../../client/scripts/esm/game/misc/onlinegame/onlinegamerouter.js').ParticipantState}
+ */
+function getParticipantState(game, color) {
+	const opponentColor = typeutil.invertPlayer(color);
+	const now = Date.now();
+	const opponentData = game.players[opponentColor];
+
+	const participantState = {
+		drawOffer: {
+			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
+			lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
+		}
+	};
+
+	// Include other relevant stuff if defined...
+
+	if (isAFKTimerActive(game)) {
+		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
+		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
+	}
+
+	// If their opponent has disconnected, send them that info too.
+	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
+		participantState.disconnect = {
+			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
+			wasByChoice: opponentData.disconnect.wasByChoice
+		};
+	}
+
+	return participantState;
 }
 
 /**

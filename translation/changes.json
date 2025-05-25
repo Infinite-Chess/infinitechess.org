@@ -1,4 +1,8 @@
 {
+	"56": {
+		"note": "Deleted bug_koth line 504, bug_threecheck 501, bug_allpiecescaptured 498, bug_allroyalscaptured 495, bug_royalcapture 492, bug_time 489, bug_checkmate 486, black_threecheck 495, white_threecheck 494, opponent_threecheck 481, you_threecheck 464, threecheck 448. Added white_resignation, black_resignation, white_disconnect, black_disconnect line 485, ",
+		"changes": []
+	},
 	"55": {
 		"note": "Added cannot_paste_in_rated line 373.",
 		"changes": []

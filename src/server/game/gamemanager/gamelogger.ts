@@ -461,7 +461,6 @@ const conditionToTermination = {
 	"royalcapture": "Royal capture",
 	"allroyalscaptured": "All royals captured",
 	"allpiecescaptured": "All pieces captured",
-	// "threecheck": "Three-check", // No longer supported
 	"koth": "King of the hill",
 	"resignation": "Resignation",
 	"agreement": "Agreement",
@@ -525,7 +524,9 @@ const MetaDataOptionalValues = {
 	WhiteID: null,
 	BlackID: null,
 	WhiteElo: null,
-	BlackElo: null
+	BlackElo: null,
+	WhiteRatingDiff: null,
+	BlackRatingDiff: null
 };
 
 /**

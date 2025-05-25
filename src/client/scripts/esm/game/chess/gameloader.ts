@@ -11,11 +11,12 @@
  */
 
 import type { MetaData } from "../../chess/util/metadata.js";
-import type { JoinGameMessage, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { ParticipantState, ServerGameInfo, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { Additional, VariantOptions } from "./gameslot.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
+import type { ClockValues } from "../../chess/logic/clock.js";
 
 
 // @ts-ignore
@@ -80,7 +81,7 @@ function isItOurTurn(color?: Player): boolean {
 	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
 }
 
-function getOurColor(): Player {
+function getOurColor(): Player | undefined {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't get our color when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.getOurColor();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.getOurColor();
@@ -149,7 +150,19 @@ async function startLocalGame(options: {
 }
 
 /** Starts an online game according to the options provided by the server. */
-async function startOnlineGame(options: JoinGameMessage) {
+async function startOnlineGame(options: {
+	gameInfo: ServerGameInfo,
+	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
+	metadata: MetaData,
+	gameConclusion: string | false,
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
+	moves: ServerGameMovesMessage,
+	clockValues?: ClockValues,
+	youAreColor?: Player,
+	participantState?: ParticipantState,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
+}) {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
 
@@ -159,9 +172,10 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: localstorage.loadItem(String(options.id)) as VariantOptions,
+		variantOptions: localstorage.loadItem(storageKey) as VariantOptions,
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,
@@ -173,10 +187,16 @@ async function startOnlineGame(options: JoinGameMessage) {
 		allowEditCoords: false,
 		additional
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	onlinegame.initOnlineGame(options);
+	onlinegame.initOnlineGame({
+		gameInfo: options.gameInfo,
+		youAreColor: options.youAreColor,
+		participantState: options.participantState,
+		serverRestartingAt: options.serverRestartingAt,
+	});
 	
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
