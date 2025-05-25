@@ -3,6 +3,8 @@
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
 
+// @ts-ignore
+import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
 import docutil from "./docutil.js";
 
 
@@ -60,7 +62,7 @@ function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, op
 	// username element
 	if (options?.makehyperlink) {
 		const usernameHyper = document.createElement('a');
-		usernameHyper.href = `/member/${usernamecontainer.username}`;
+		usernameHyper.href = languagedropdown.addLngQueryParamToLink(`/member/${usernamecontainer.username}`);
 		usernameHyper.textContent = usernamecontainer.username;
 		usernameHyper.target = options?.hyperlinktarget !== undefined ? options.hyperlinktarget : '_blank';
 		usernameHyper.classList.add("username");
