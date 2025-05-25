@@ -28,6 +28,7 @@ import moveutil from "../../../chess/util/moveutil.js";
 import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import animation from "../../rendering/animation.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -94,6 +95,9 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 	const originalMoveIndex = gamefile.state.local.moveIndex;
 	movesequence.viewFront(gamefile, mesh);
 	let aChangeWasMade = false;
+
+	// Terminate all current animations to avoid a crash when undoing moves
+	animation.clearAnimations();
 
 	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
 		movesequence.rewindMove(gamefile, mesh);

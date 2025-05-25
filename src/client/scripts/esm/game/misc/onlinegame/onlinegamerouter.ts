@@ -236,7 +236,7 @@ function handleLoggedGameInfo(message: {
 	} catch (e) {
 		// Hmm, this isn't good. Why is a server-sent ICN crashing?
 		console.error(e);
-		statustext.showStatus("There was an error processing the game ICN sent from the server.", true);
+		statustext.showStatus("There was an error processing the game ICN sent from the server. This is a bug, please report!", true);
 		return;
 	}
 
