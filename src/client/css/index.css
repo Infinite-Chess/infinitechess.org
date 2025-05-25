@@ -149,7 +149,7 @@ iframe {
 
 .play-button:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.54);
 }
 
 .play-button:hover::before {
