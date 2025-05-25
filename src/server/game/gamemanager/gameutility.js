@@ -361,6 +361,52 @@ function getGameUpdateMessageContents(game, color) {
 }
 
 /**
+ * Alerts all players in the game of the rating changes of the game
+ * @param {Game} game - The game
+ * @param {RatingData} ratingdata - The rating data
+ */
+function sendRatingChangeToAllPlayers(game, ratingdata) {
+	for (const player in game.players) {
+		sendRatingChangeToColor(game, Number(player), ratingdata);
+	}
+}
+
+/**
+ * Alerts the player of the specified color of the rating changes of the game
+ * @param {Game} game - The game
+ * @param {Player} color - The color of the player
+ * @param {RatingData} ratingdata - The rating data
+ * @param {Object} options - Additional options
+ * @param {number} [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
+ */
+function sendRatingChangeToColor(game, color, ratingdata, { replyTo } = {}) {
+	const playerdata = game.players[color];
+	if (playerdata.socket === undefined) return; // Not connected, can't send message
+
+	const messageContents = getRatingChangeMessageContents(ratingdata);
+	if (messageContents !== undefined) sendSocketMessage(playerdata.socket, "game", "gameratingchange", messageContents, replyTo);
+}
+
+/**
+ * 
+ * @param {RatingData} ratingdata 
+ * @returns 
+ */
+function getRatingChangeMessageContents(ratingdata) {
+	const messageContents = {};
+	for (const player in ratingdata) {
+		const player_ratingdata = ratingdata[player];
+		if (player_ratingdata?.elo_change_from_game === undefined) return undefined;
+
+		messageContents[player] = { 
+			elo_change_from_game: metadata.getWhiteBlackRatingDiff(player_ratingdata.elo_change_from_game)
+		};
+	}
+
+	return messageContents;
+}
+
+/**
  * 
  * @param {Game} game 
  * @param {Player} color
@@ -666,6 +712,7 @@ export default {
 	getMetadataOfGame,
 	sendGameUpdateToBothPlayers,
 	sendGameUpdateToColor,
+	sendRatingChangeToAllPlayers,
 	doesSocketBelongToGame_ReturnColor,
 	sendMessageToSocketOfColor,
 	printGame,

@@ -44,9 +44,9 @@ import type { Game } from '../TypeDefinitions.js';
  * the server is restarting/closing.
  * @param {Game} game - The game to log
  */
-async function logGame(game: Game) {
+async function logGame(game: Game) : Promise<RatingData | undefined> {
 	const move_count = game.moves.length; // Moves is a required property of game
-	if (move_count === 0) return; // Don't log games with zero moves
+	if (move_count === 0) return undefined; // Don't log games with zero moves
 
 	// Convert the Date of the game to Sqlite string
 	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated);
@@ -60,7 +60,7 @@ async function logGame(game: Game) {
 	if (results.success === false) { // Failure to log game into database and update player stats
 		await logEvents('Failed to log game. Check unloggedGames log. Not incrementing player stats either.', 'errLog.txt', { print: true });
 		await logEvents(results.reason, 'unloggedGames.txt'); // Log into a separate log
-		return;
+		return undefined;
 	}
 
 	// 3. Enter the game into the player_games table
@@ -69,13 +69,14 @@ async function logGame(game: Game) {
 	// 4. Update the player_stats table
 	await updatePlayerStatsTable(game, results.game_id, victor);
 
+	return ratingdata;
 }
 
 /** The return result of {@link enterGameInGamesTable} */
 type LogGameResult = { success: true; game_id: number } | { success: false; reason: string };
 
 /** Enters a game into the games table */
-async function enterGameInGamesTable(game: Game, dateSqliteString: string, ratingdata: RatingData): Promise<LogGameResult> {
+async function enterGameInGamesTable(game: Game, dateSqliteString: string, ratingdata?: RatingData): Promise<LogGameResult> {
 
 	const metadata = gameutility.getMetadataOfGame(game, ratingdata);
 	VerifyRequiredMetadata(metadata); // TEMPORARY!!! DELETE AFTER MIGRATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -142,11 +143,11 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 /**
  * If the game was ranked, also update the leaderboards table accordingly.
  */
-async function updateLeaderboardsTable(game: Game, victor: Player | undefined) : Promise<RatingData> {
-	if (!game.rated || victor === undefined) return {}; // If game is unrated or aborted, then no ratings get updated
+async function updateLeaderboardsTable(game: Game, victor: Player | undefined) : Promise<RatingData | undefined> {
+	if (!game.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
 	const leaderboard_id = VariantLeaderboards[game.variant];
-	if (leaderboard_id === undefined) return {}; // If game belongs to no valid leaderboard_id, then no ratings get updated
+	if (leaderboard_id === undefined) return undefined; // If game belongs to no valid leaderboard_id, then no ratings get updated
 
 	// Loop over all players of game in order to construct ratingdata object
 	let ratingdata : RatingData = {};
@@ -155,7 +156,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) {
 			await logEvents(`Unexpected: trying to log ranked game for a player without a user_id. Game: ${JSON.stringify(game)}`, 'errLog.txt', { print: true });
-			return {};
+			return undefined;
 		}
 
 		// If player is not on leaderboard, add him to it
@@ -165,7 +166,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
 		if (leaderboard_data === undefined || leaderboard_data?.elo === undefined || leaderboard_data?.rating_deviation === undefined) {
 			await logEvents(`Unable to correctly process leaderboard_data of user ${user_id} and leaderboard ${leaderboard_id}.`, 'errLog.txt', { print: true });
-			return {};
+			return undefined;
 		}
 
 		ratingdata[player] = {
@@ -201,15 +202,15 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 /**
  * For each member, add an entry into player_games according to the results of this game.
  */
-async function updatePlayerGamesTable(game: Game, game_id: number, victor: Player | undefined, ratingdata: RatingData) {
+async function updatePlayerGamesTable(game: Game, game_id: number, victor: Player | undefined, ratingdata?: RatingData) {
 	for (const playerStr in game.players) {
 		const player: Player = Number(playerStr) as Player;
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
 
 		const score = victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0;
-		const elo_at_game = ratingdata[player]?.elo_at_game ?? null;
-		const elo_change_from_game = ratingdata[player]?.elo_change_from_game! ?? null;
+		const elo_at_game = (ratingdata ?? {})[player]?.elo_at_game ?? null;
+		const elo_change_from_game = (ratingdata ?? {})[player]?.elo_change_from_game! ?? null;
 
 		const options = {
 			user_id: user_id,

@@ -34,6 +34,9 @@ import validatorama from "../../../util/validatorama.js";
 import uuid from "../../../util/uuid.js";
 import metadata from "../../../chess/util/metadata.js";
 import { players, Player } from "../../../chess/util/typeutil.js";
+import guigameinfo from "../../gui/guigameinfo.js";
+
+import type { PlayerGroup } from "../../../chess/util/typeutil.js";
 
 
 // Type Definitions --------------------------------------------------------------------------------------
@@ -78,6 +81,12 @@ interface GameUpdateMessage {
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number,
 }
+
+type PlayerRatingChangeInfo = {
+	elo_change_from_game: string
+}
+
+type RatingChangeMessage = PlayerGroup<PlayerRatingChangeInfo>;
 
 /** The message contents expected when we receive a server websocket 'move' message.  */
 interface OpponentsMoveMessage {
@@ -157,6 +166,9 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 			break;
 		case "gameupdate":
 			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
+			break;
+		case "gameratingchange":
+			guigameinfo.addRatingChangeToUsernameContainers(data.value);
 			break;
 		case "unsub":
 			handleUnsubbing();
@@ -351,6 +363,7 @@ export type {
 	DisconnectInfo,
 	DrawOfferInfo,
 	GameUpdateMessage,
+	RatingChangeMessage,
 	OpponentsMoveMessage,
 	ServerGameMovesMessage,
 	ServerGameMoveMessage,

@@ -6,6 +6,7 @@
 
 import type { MetaData } from '../../chess/util/metadata.js';
 import type { UsernameContainer, UsernameContainerDisplayOptions } from '../../util/usernamecontainer.js';
+import type { RatingChangeMessage } from '../misc/onlinegame/onlinegamerouter.js';
 
 
 // @ts-ignore
@@ -333,6 +334,10 @@ function updateAlignmentOfRightUsername() {
 	}
 }
 
+function addRatingChangeToUsernameContainers(message: RatingChangeMessage) {
+	console.log(message);
+}
+
 export default {
 	open,
 	close,
@@ -344,4 +349,5 @@ export default {
 	gameEnd,
 	getHeightOfGameInfoBar,
 	updateAlignmentOfRightUsername,
+	addRatingChangeToUsernameContainers
 };
