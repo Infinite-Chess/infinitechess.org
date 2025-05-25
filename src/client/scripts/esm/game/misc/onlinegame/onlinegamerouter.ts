@@ -259,7 +259,7 @@ function handleLoggedGameInfo(message: {
 		return move;
 	}) : [];
 
-	// Load the game
+	// Load the game.
 	gameloader.startOnlineGame({
 		gameInfo: {
 			id: message.game_id,
@@ -271,9 +271,6 @@ function handleLoggedGameInfo(message: {
 		moves,
 		youAreColor: ourRole,
 	});
-
-	// Conclude the game (we know it's over)
-	gameslot.concludeGame();
 }
 
 /** 
