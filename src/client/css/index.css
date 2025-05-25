@@ -112,6 +112,59 @@ iframe {
     text-shadow: -2px 0px 0.6em rgba(0, 38, 255, 0.2);
 }
 
+/* Play button */
+
+.play-button {
+    position: relative;
+    display: inline-block;
+    padding: 0.6em 1.5em;
+    font-size: 2em;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+    background-color: #d3d3d3;
+    border: 4px solid black;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    overflow: hidden;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.play-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.4) 100%
+    );
+    transform: skewX(-20deg);
+}
+
+.play-button:hover {
+    background-color: #a9a9a9;
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.play-button:hover::before {
+    animation: shine 0.75s ease-in-out;
+}
+
+@keyframes shine {
+    from {
+    left: -75%;
+    }
+    to {
+    left: 125%;
+    }
+}
+
 /* GitHub Contributors */
 
 .github-container {
