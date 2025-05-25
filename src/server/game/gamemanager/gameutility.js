@@ -227,10 +227,12 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 	const metadata = getMetadataOfGame(game);
 	const opponentColor = typeutil.invertPlayer(playerColor);
 	const gameOptions = {
+		gameInfo: {
+			id: game.id,
+			rated: game.rated,
+			publicity: game.publicity,
+		},
 		metadata,
-		id: game.id,
-		publicity: game.publicity,
-		rated: game.rated,
 		youAreColor: playerColor,
 		moves: game.moves,
 		gameConclusion: game.gameConclusion,
@@ -360,35 +362,38 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	if (playerdata.socket === undefined) return; // Not connected, can't send message
 
 	const opponentColor = typeutil.invertPlayer(color);
-	const messageContents = {
-		gameConclusion: game.gameConclusion,
-		moves: game.moves.map(m => simplyMove(m)), // Send the final move list so they can make sure they're in sync.
+
+	const participantState = {
 		drawOffer: {
 			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
 			lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
 		}
 	};
-	// Include timer info if it's timed
-	if (!game.untimed) messageContents.clockValues = getGameClockValues(game);
 
 	const now = Date.now();
-
 	// Include other relevant stuff if defined
 	if (isAFKTimerActive(game)) {
 		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
-		messageContents.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
+		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
 	}
 
 	const opponentData = game.players[opponentColor];
-
 	// If their opponent has disconnected, send them that info too.
 	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
-		messageContents.disconnect = {
+		participantState.disconnect = {
 			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
 			wasByChoice: opponentData.disconnect.wasByChoice
 		};
 	}
 
+
+	const messageContents = {
+		gameConclusion: game.gameConclusion,
+		moves: game.moves.map(m => simplyMove(m)), // Send the final move list so they can make sure they're in sync.
+		participantState
+	};
+	// Include timer info if it's timed
+	if (!game.untimed) messageContents.clockValues = getGameClockValues(game);
 	// Also send the time the server is restarting, if it is
 	const timeServerRestarting = getTimeServerRestarting();
 	if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;

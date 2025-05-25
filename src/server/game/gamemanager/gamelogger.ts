@@ -525,7 +525,9 @@ const MetaDataOptionalValues = {
 	WhiteID: null,
 	BlackID: null,
 	WhiteElo: null,
-	BlackElo: null
+	BlackElo: null,
+	WhiteRatingDiff: null,
+	BlackRatingDiff: null
 };
 
 /**

@@ -8,6 +8,8 @@
 
 // @ts-ignore
 import statustext from './statustext.js';
+// @ts-ignore
+import loadbalancer from '../misc/loadbalancer.js';
 import boardpos from '../rendering/boardpos.js';
 import math from '../../util/math.js';
 import guititle from './guititle.js';
@@ -26,6 +28,7 @@ function prepareForOpen() {
 	// Randomize pan velocity direction for the title screen and lobby menus
 	randomizePanVelDir();
 	boardpos.setBoardScale(1.8); // 1.8
+	loadbalancer.restartAFKTimer();
 }
 
 // Sets panVel to a random direction, and sets speed to titleBoardVel. Called when the title screen is initiated.

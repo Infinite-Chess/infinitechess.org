@@ -176,7 +176,6 @@ function onReturnFromAFK() {
 	// Make sure we're subbed to invites list if we're on the play page!
 	invites.subscribeToInvites();
 }
-onReturnFromAFK(); // Starts the timer on page load
 
 function restartAFKTimer() {
 	clearTimeout(AFKTimeoutID);
@@ -258,4 +257,5 @@ export default {
 	gisAFK,
 	gisHibernating,
 	isPageHidden,
+	restartAFKTimer,
 };

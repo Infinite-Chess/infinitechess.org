@@ -207,7 +207,6 @@ function createModel_GivenAttribInfo(
 ): BufferModel {
 	const stride = getStrideFromAttributeInfo(attribInfo);
 	if (data.length % stride !== 0) throw new Error("Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.");
-	if (data.length === 0) throw Error("Empty vertex data array when creating buffer model!");
 
 	data = ensureTypedArray(data); // Ensure the data is a Float32Array
 	const BYTES_PER_ELEMENT = data.BYTES_PER_ELEMENT;
@@ -244,7 +243,6 @@ function createModel_Instanced_GivenAttribInfo(
 	const vertexDataStride = getStrideFromAttributeInfo(attribInfoInstanced.vertexDataAttribInfo);
 	const instanceDataStride = getStrideFromAttributeInfo(attribInfoInstanced.instanceDataAttribInfo);
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
-	if (instanceData.length === 0) throw Error("Empty instance data array when creating buffer model!");
 	if (instanceData.length % instanceDataStride !== 0) throw new Error(`Instance data length (${instanceData.length}) is not divisible by stride (${instanceDataStride}) when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.`);
 
 	vertexData = ensureTypedArray(vertexData);

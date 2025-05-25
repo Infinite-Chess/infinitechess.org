@@ -51,7 +51,7 @@ function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh | undefined, mess
 	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
-	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(message);
+	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(message.participantState, message.serverRestartingAt);
 
 	// Must be set before editing the clocks.
 	gamefile.gameConclusion = claimedGameConclusion;
