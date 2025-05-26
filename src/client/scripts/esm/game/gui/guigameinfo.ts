@@ -315,11 +315,20 @@ function getHeightOfGameInfoBar(): number {
 }
 
 /**
- * Wide screen => Right-aligns black's username container
- * Narrow screen => Left-aligns black's username container and adds a fade effect on the right overflow
+ * Wide screen, where turn indicator does not touch anything to its right 
+ * => Right-aligns black's username container
+ * 
+ * Narrow screen, where turn indicator touches or overlaps with gameinfo element to its right 
+ * => Left-aligns black's username container and adds a fade effect on the right overflow
  */
 function updateAlignmentOfRightUsername() {
-	if (element_playerBlack.clientWidth > 0.23 * element_gameInfoBar.clientWidth) {
+	const y_right_element_whosturn = element_whosturn.getBoundingClientRect().right;
+	const y_left_element_element_practiceButtons = element_practiceButtons.getBoundingClientRect().left;
+	const y_left_element_playerBlack = element_playerBlack.getBoundingClientRect().left;
+
+	if (y_left_element_playerBlack <= y_right_element_whosturn ||
+		(!element_practiceButtons.classList.contains("hidden") && y_left_element_element_practiceButtons <= y_right_element_whosturn)
+	) {
 		element_playerBlack.classList.remove('justify-content-right');
 		element_playerBlack.classList.add('justify-content-left');
 		element_playerBlack.classList.add('fade-element');
