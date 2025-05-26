@@ -322,7 +322,7 @@ function updateAlignmentOfRightUsername() {
 	if (element_playerBlack.children.length > 1) throw Error("Update reference to the username container inside the player black div!");
 	const usernameEmbed = element_playerBlack.children[0]!;
 	if (usernameEmbed === undefined) return;
-	if (usernameEmbed.clientWidth > element_playerBlack.clientWidth) {
+	if (usernameEmbed.clientWidth > 0.23 * element_gameInfoBar.clientWidth) {
 		element_playerBlack.classList.remove('justify-content-right');
 		element_playerBlack.classList.add('justify-content-left');
 		element_playerBlack.classList.add('fade-element');
