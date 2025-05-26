@@ -332,8 +332,8 @@ function initEvalWeightsAndSearchProperties() {
 		1: 2, // queen
 		2: 2, // rook
 		3: 2, // bishop
-		7: 1, // amazon
-		9: 1, // chancellor
+		7: 2, // amazon
+		9: 2, // chancellor
 		10: 1, // archbishop
 		11: 1, // knightrider
 		12: 5 // huygen
