@@ -1201,7 +1201,7 @@ svg.collapse {
 .player-container {
     align-content: center;
     padding: 0 10px;
-    width: fit-content;
+    width: max(35%, min-content);
 }
 
 /* Stores the username containers */
