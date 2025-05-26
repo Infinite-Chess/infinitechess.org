@@ -317,6 +317,7 @@ function queueIncrementMoveRuleStateChange(game: Game, board: Board, move: Move 
  */
 function makeMove(game: Game, board: Board, move: Move | NullMove) {
 	board.moves.push(move);
+	game.moves.push(move.isNull ? "" : move.compact);
 
 	applyMove(game, board, move, true, { global: true }); // Apply the logical board changes.
 
@@ -458,6 +459,7 @@ function rewindMove(game: Game, board: Board) {
 
 	// Delete the move off the end of our moves list
 	board.moves.pop();
+	game.moves.pop();
 	updateTurn(game, board);
 }
 
@@ -515,7 +517,7 @@ function simulateMoveWrapper<R>(game: Game, board: Board, moveDraft: MoveDraft, 
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
-function getSimulatedConclusion(game: Game, board: Board, moveDraft: MoveDraft): string | false {
+function getSimulatedConclusion(game: Game, board: Board, moveDraft: MoveDraft): string | undefined {
 	return simulateMoveWrapper(
 		game, board,
 		moveDraft,

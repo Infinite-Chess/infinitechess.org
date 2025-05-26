@@ -38,11 +38,11 @@ function isWinConditionValid(winCondition) {
  * This is any conclusion that can happen after a move is made.
  * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
  * which can happen at any point in time.
- * @param {string | false} gameConclusion - The gameConclusion
+ * @param {string | undefined} gameConclusion - The gameConclusion
  * @returns {boolean} *true* if the gameConclusion is decisive.
  */
 function isGameConclusionDecisive(gameConclusion) {
-	if (gameConclusion === false) throw new Error('Should not be be testing if game conclusion is decisive when game is not over!');
+	if (gameConclusion === undefined) throw new Error('Should not be be testing if game conclusion is decisive when game is not over!');
 	const condition = getVictorAndConditionFromGameConclusion(gameConclusion).condition;
 	return isConclusionDecisive(condition);
 }

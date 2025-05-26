@@ -34,7 +34,7 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
  * returns the `gameConclusion` property of the gamefile.
  * For example, "1 checkmate", or "0 stalemate".
  * @param {gamefile} gamefile - The gamefile
- * @returns {string | false} The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *false*.
+ * @returns {string | undefined} The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *false*.
  */
 function getGameConclusion(game, board) {
 	if (!moveutil.areWeViewingLatestMove(board)) throw new Error("Cannot perform game over checks when we're not on the last move.");
@@ -48,7 +48,7 @@ function getGameConclusion(game, board) {
         // This needs to be last so that a draw isn't enforced in a true win
         || detectMoveRule(game, board) // 50-move-rule
         || insufficientmaterial.detectInsufficientMaterial(game.gameRules, board) // checks for insufficient material
-        || false; // No win condition passed. No game conclusion!
+        || undefined; // No win condition passed. No game conclusion!
 }
 
 function detectRoyalCapture(game, board) {
