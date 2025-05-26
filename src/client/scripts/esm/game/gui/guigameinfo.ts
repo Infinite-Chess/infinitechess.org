@@ -320,8 +320,27 @@ function getHeightOfGameInfoBar(): number {
  */
 function updateAlignmentOfRightUsername() {
 	if (element_playerBlack.children.length > 1) throw Error("Update reference to the username container inside the player black div!");
-	const usernameEmbed = element_playerBlack.children[0]!;
+	const usernameEmbed = element_playerBlack.children[0];
 	if (usernameEmbed === undefined) return;
+
+	// Fix right margin of practice Undo and Restart buttons, if they are shown
+	if (!element_practiceButtons.classList.contains("hidden")) {
+		let y_leftmostUsernameContainerCoordinate = Infinity;
+		for (const child of usernameEmbed.children) {
+			const rect = child.getBoundingClientRect();
+			if (rect.left < y_leftmostUsernameContainerCoordinate) {
+				y_leftmostUsernameContainerCoordinate = rect.left;
+			}
+		}
+
+		// Set right margin of practice buttons temporarily to 0
+		(element_practiceButtons as HTMLDivElement).style.marginRight = "0px";
+		const y_rightmostPracticeButtonCoordinate = element_practiceButtons.getBoundingClientRect().right;
+		const gap_size = y_leftmostUsernameContainerCoordinate - y_rightmostPracticeButtonCoordinate;
+		if (gap_size !== Infinity) (element_practiceButtons as HTMLDivElement).style.marginRight = `${-gap_size}px`;
+	}
+
+
 	if (usernameEmbed.clientWidth > element_playerBlack.clientWidth) {
 		element_playerBlack.classList.remove('justify-content-right');
 		element_playerBlack.classList.add('justify-content-left');
