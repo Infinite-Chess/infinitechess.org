@@ -1201,7 +1201,9 @@ svg.collapse {
 .player-container {
     align-content: center;
     padding: 0 10px;
-    width: 35%;
+    width: fit-content;
+    /* Capping the width to a percentage of the gameinfo bar prevents them overflowing & black's clock pushed off the screen. */
+    max-width: 35%;
 }
 
 /* Stores the username containers */
