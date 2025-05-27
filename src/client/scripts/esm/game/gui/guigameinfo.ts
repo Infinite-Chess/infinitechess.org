@@ -341,6 +341,8 @@ function getHeightOfGameInfoBar(): number {
  * Fades either if they exceed the width of their parent.
  */
 function updateAlignmentUsernames() {
+	if (!usernamecontainer_white || !usernamecontainer_black) return; // Not in a game
+
 	// Player white
 	if (usernamecontainer_white!.element.clientWidth > element_playerWhite.clientWidth) {
 		element_playerWhite.classList.add('fade-element');
@@ -389,6 +391,6 @@ export default {
 	updateWhosTurn,
 	gameEnd,
 	getHeightOfGameInfoBar,
-	updateAlignmentOfRightUsername: updateAlignmentUsernames,
+	updateAlignmentUsernames,
 	addRatingChangeToExistingUsernameContainers
 };
