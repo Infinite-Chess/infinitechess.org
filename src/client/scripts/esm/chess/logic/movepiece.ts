@@ -317,7 +317,7 @@ function queueIncrementMoveRuleStateChange(game: Game, board: Board, move: Move 
  */
 function makeMove(game: Game, board: Board, move: Move | NullMove) {
 	board.moves.push(move);
-	game.moves.push(move.isNull ? "" : move.compact);
+	game.moves.push(move.isNull ? '--' : move.compact);
 
 	applyMove(game, board, move, true, { global: true }); // Apply the logical board changes.
 
