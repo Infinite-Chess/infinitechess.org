@@ -346,9 +346,12 @@ function onAbortOrResignButtonPress() {
 	playerHasPressedAbortOrResignButton = true;
 }
 
-/** Called when the player presses the "Main Menu" button in an onlinegame, after already having pressed the "Abort / Resign" button */
+/** 
+ * Called when the player presses the "Main Menu" button in an onlinegame
+ * This can happen if the game is already over or if the player has already pressed the "Abort / Resign" button
+ * */
 function onMainMenuButtonPress() {
-	// Tell the server we no longer want game updates.
+	// Tell the server we no longer want game updates, if we are still receiving them.
 	websocket.unsubFromSub('game');
 
 	playerHasPressedMainMenuButton = true;

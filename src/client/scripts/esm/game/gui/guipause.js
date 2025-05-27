@@ -29,6 +29,7 @@ import { Mouse } from '../input.js';
 
 // Pause UI
 let isPaused = false;
+/** This is true if the main menu button says "Resign Game" or "Abort Game". In all other cases, this is false. */
 let is_main_menu_button_used_as_resign_or_abort_button = false;
 
 const element_pauseUI = document.getElementById('pauseUI');
