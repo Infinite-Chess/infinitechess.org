@@ -104,7 +104,7 @@ function embedUsernameContainers(gameMetadata: MetaData) {
 	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black.element, element_playerBlack);
 
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
-	setTimeout(updateAlignmentOfRightUsername, 0);
+	setTimeout(updateAlignmentUsernames, 0);
 }
 
 /**
@@ -338,12 +338,18 @@ function getHeightOfGameInfoBar(): number {
 /**
  * Wide screen => Right-aligns black's username container
  * Narrow screen => Left-aligns black's username container and adds a fade effect on the right overflow
+ * Fades either if they exceed the width of their parent.
  */
-function updateAlignmentOfRightUsername() {
-	if (element_playerBlack.children.length > 1) throw Error("Update reference to the username container inside the player black div!");
-	const usernameEmbed = element_playerBlack.children[0]!;
-	if (usernameEmbed === undefined) return;
-	if (usernameEmbed.clientWidth > element_playerBlack.clientWidth) {
+function updateAlignmentUsernames() {
+	// Player white
+	if (usernamecontainer_white!.element.clientWidth > element_playerWhite.clientWidth) {
+		element_playerWhite.classList.add('fade-element');
+	} else {
+		element_playerWhite.classList.remove('fade-element');
+	}
+
+	// Player black
+	if (usernamecontainer_black!.element.clientWidth > element_playerBlack.clientWidth) {
 		element_playerBlack.classList.remove('justify-content-right');
 		element_playerBlack.classList.add('justify-content-left');
 		element_playerBlack.classList.add('fade-element');
@@ -369,7 +375,7 @@ function addRatingChangeToExistingUsernameContainers(ratingChanges: PlayerGroup<
 	usernamecontainer.createEloChangeItem(usernamecontainer_black!, ratingChanges[players.BLACK]!.newRating, ratingChanges[players.BLACK]!.change);
 
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
-	setTimeout(updateAlignmentOfRightUsername, 0);
+	setTimeout(updateAlignmentUsernames, 0);
 }
 
 export default {
@@ -383,6 +389,6 @@ export default {
 	updateWhosTurn,
 	gameEnd,
 	getHeightOfGameInfoBar,
-	updateAlignmentOfRightUsername,
+	updateAlignmentOfRightUsername: updateAlignmentUsernames,
 	addRatingChangeToExistingUsernameContainers
 };
