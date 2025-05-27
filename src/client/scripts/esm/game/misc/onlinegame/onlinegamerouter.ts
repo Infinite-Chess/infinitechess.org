@@ -1,5 +1,7 @@
 
 
+import type { PlayerGroup } from "../../../chess/util/typeutil.js";
+import type { Rating } from "../../../../../../server/database/leaderboardsManager.js";
 import type { ClockValues } from "../../../chess/logic/clock.js";
 import type { MetaData } from "../../../chess/util/metadata.js";
 import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
@@ -34,6 +36,7 @@ import validatorama from "../../../util/validatorama.js";
 import uuid from "../../../util/uuid.js";
 import metadata from "../../../chess/util/metadata.js";
 import { players, Player } from "../../../chess/util/typeutil.js";
+import guigameinfo from "../../gui/guigameinfo.js";
 
 
 // Type Definitions --------------------------------------------------------------------------------------
@@ -52,6 +55,7 @@ type ServerGameInfo = {
 	id: number,
 	rated: boolean,
 	publicity: 'public' | 'private',
+	playerRatings: PlayerGroup<Rating>,
 }
 
 /**
@@ -77,6 +81,11 @@ interface GameUpdateMessage {
 	clockValues?: ClockValues,
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number,
+}
+
+type PlayerRatingChangeInfo = {
+	newRating: Rating,
+	change: number,
 }
 
 /** The message contents expected when we receive a server websocket 'move' message.  */
@@ -157,6 +166,9 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 			break;
 		case "gameupdate":
 			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
+			break;
+		case "gameratingchange":
+			guigameinfo.addRatingChangeToExistingUsernameContainers(data.value);
 			break;
 		case "unsub":
 			handleUnsubbing();
@@ -242,7 +254,7 @@ function handleLoggedGameInfo(message: {
 
 	// Unload the currently loaded game, if we are in one
 	if (gameloader.areInAGame()) {
-		gameslot.unloadGame();
+		gameloader.unloadGame();
 		websocket.deleteSub('game'); // The server will have already unsubscribed us from the previous game.
 	} // Else perhaps we need to close the title screen?? Or the loading screen??
 	
@@ -259,12 +271,18 @@ function handleLoggedGameInfo(message: {
 		return move;
 	}) : [];
 
+	// Display elo ratings, if any.
+	const playerRatings: PlayerGroup<Rating> = {};
+	if (parsedGame.metadata.WhiteElo) playerRatings[players.WHITE] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.WhiteElo);
+	if (parsedGame.metadata.BlackElo) playerRatings[players.BLACK] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.BlackElo);
+
 	// Load the game.
 	gameloader.startOnlineGame({
 		gameInfo: {
 			id: message.game_id,
 			rated: Boolean(message.rated),
 			publicity: message.private ? 'private' as const : 'public' as const,
+			playerRatings,
 		},
 		metadata: parsedGame.metadata,
 		gameConclusion: metadata.getGameConclusionFromResultAndTermination(parsedGame.metadata.Result!, message.termination),
@@ -356,4 +374,5 @@ export type {
 	ServerGameMoveMessage,
 	ServerGameInfo,
 	ParticipantState,
+	PlayerRatingChangeInfo,
 };

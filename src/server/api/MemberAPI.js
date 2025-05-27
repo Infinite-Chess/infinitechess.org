@@ -8,10 +8,11 @@ import { format, formatDistance } from 'date-fns';
 
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 import { Leaderboards } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
-import { getPlayerLeaderboardRating, getDisplayEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
+import { getPlayerLeaderboardRating, getEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
 import { logEvents } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
+import metadata from '../../client/scripts/esm/chess/util/metadata.js';
 
 // SHOULD ONLY ever return a JSON.
 const getMemberData = async(req, res) => { // route: /member/:member/data
@@ -25,7 +26,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 	verification = JSON.parse(verification);
 
 	// Get the player's display elo string from the INFINITY leaderboard
-	const ranked_elo = getDisplayEloOfPlayerInLeaderboard(user_id, Leaderboards.INFINITY);
+	const ranked_elo = getEloOfPlayerInLeaderboard(user_id, Leaderboards.INFINITY); // { value: number, confident: boolean }
 
 	// Get the player's position from the INFINITY leaderboard
 	const infinity_leaderboard_position = getPlayerRankInLeaderboard(user_id, Leaderboards.INFINITY);
@@ -50,7 +51,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 		joined: joinedPhrase,
 		seen: seenPhrase,
 		checkmates_beaten,
-		ranked_elo,
+		ranked_elo: metadata.getWhiteBlackElo(ranked_elo),
 		infinity_leaderboard_position,
 		infinity_leaderboard_rating_deviation
 	};

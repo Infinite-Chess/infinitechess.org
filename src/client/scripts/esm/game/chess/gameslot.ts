@@ -63,6 +63,8 @@ import guipause from "../gui/guipause.js";
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import winconutil from "../../chess/util/winconutil.js";
+import { Rating } from "../../../../../server/database/leaderboardsManager.js";
+import metadata from "../../chess/util/metadata.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -178,6 +180,7 @@ function isLoadedGameViewingWhitePerspective() {
  */
 function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
+	// console.log("Loading gamefile...");
 
 	// console.log('Started loading game...');
 	
@@ -267,6 +270,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 /** The canvas will no longer render the current game */
 function unloadGame() {
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
+	// console.error("Unloading gamefile...");
 	
 	loadedGamefile = undefined;
 	mesh = undefined;

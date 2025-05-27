@@ -10,7 +10,7 @@ import { Leaderboards, VariantLeaderboards } from "../chess/variants/validleader
 import usernamecontainer from "../util/usernamecontainer.js";
 import validatorama from "../util/validatorama.js";
 
-import type { UsernameContainer, UsernameContainerDisplayOptions } from '../util/usernamecontainer.js';
+import type { UsernameItem } from '../util/usernamecontainer.js';
 
 // --- DOM Element Selection ---
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
@@ -150,10 +150,9 @@ async function populateTable(n_players: number) {
 
 			// Create and append <td> for username
 			const usernameCell = document.createElement("td");
-			const usernamecontainer_object: UsernameContainer = { username: player.username };
-			const usernamecontainer_options: UsernameContainerDisplayOptions = { makehyperlink: true, hyperlinktarget: "_self" };
-			const usernamecontainer_display = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_object, usernamecontainer_options);
-			usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_display, usernameCell);
+			const username_item: UsernameItem = { value: player.username, openInNewWindow: false };
+			const usernameContainer = usernamecontainer.createUsernameContainer('player', username_item);
+			usernamecontainer.embedUsernameContainerDisplayIntoParent(usernameContainer.element, usernameCell);
 			usernameCell.classList.add('fade-element'); // Usernames fade out instead of overflowing their container
 			row.appendChild(usernameCell);
 

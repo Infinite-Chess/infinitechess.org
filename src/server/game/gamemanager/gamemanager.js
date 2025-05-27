@@ -395,6 +395,22 @@ function onPlayerLostByAbandonment(game, colorWon) {
 async function deleteGame(game) {
 	if (!game) return console.error(`Unable to delete an undefined game!`);
 
+	// If the pastedGame flag is present, skip logging to the database.
+	// We don't know the starting position.
+	if (game.positionPasted) console.log('Skipping logging custom game.');
+	else {
+		// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+		// The ratings are calculated during the logging of the game into the database
+		const ratingdata = await gamelogger.logGame(game);
+
+		// Mostly deprecated:
+		// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
+		await executeSafely_async(statlogger.logGame, `statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
+
+		// Send rating changes to all players of game, if relevant
+		if (ratingdata !== undefined) gameutility.sendRatingChangeToAllPlayers(game, ratingdata);
+	}
+
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
 	// And remove them from the list of users in active games to allow them to join a new game.
@@ -407,21 +423,9 @@ async function deleteGame(game) {
 		gameutility.unsubClientFromGame(game, data.socket);
 	}
 
-	delete activeGames[game.id]; // Delete the game
+	delete activeGames[game.id]; // Delete the game from the activeGames list
 
 	console.log(`Deleted game ${game.id}.`);
-
-	// If the pastedGame flag is present, skip logging.
-	// We don't know the starting position.
-	if (game.positionPasted) return console.log('Skipping logging custom game.');
-
-	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
-	// The ratings are calculated during the logging of the game into the database
-	await gamelogger.logGame(game);
-
-	// Mostly deprecated:
-	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-	await executeSafely_async(statlogger.logGame, `statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
 }
 
 /**

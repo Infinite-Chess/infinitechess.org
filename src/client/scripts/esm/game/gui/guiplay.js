@@ -399,7 +399,7 @@ function callback_inviteMouseLeave() {
 }
 
 function callback_inviteClicked(event) {
-	if (usernamecontainer.getUsernameEmbedFromEvent(event)) {
+	if (usernamecontainer.wasEventClickInsideUsernameContainer(event)) {
 		// console.log('Clicked on a username embed, ignoring click');
 		return;
 	}

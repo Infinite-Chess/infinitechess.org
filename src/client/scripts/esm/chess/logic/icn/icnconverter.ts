@@ -252,7 +252,8 @@ const defaultFullMove = 1;
  * using the lookahead/named backreference technique `(?:(?=(?<name>str))\k<name>)`.
  * Can essentially transform any (...?), (...+), or (...*) regex into a possessive version (...?+), (...?+), or (...*+).
  * 
- * Using this prevents catastrophic backtracking in regexes.
+ * Using this prevents catastrophic backtracking in regexes, as once a possessive group is matched,
+ * those characters can never be released to see if the string can be matched in a different way.
  * @param {string} str - Regex pattern string to make possessive.
  * @returns {string} Pattern string with possessive simulation.
  */
@@ -373,7 +374,7 @@ const turnOrderRegex = new RegExp(String.raw`(?<turnOrder>${raw_piece_code_regex
 
 const enpassantRegex = new RegExp(String.raw`(?<enpassant>${coordsKeyRegexSource})${whiteSpaceOrEnd}`, 'y');
 
-const moveRuleRegex = new RegExp(String.raw`(?<moveRule>${wholeNumberSource}\/${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
+const moveRuleRegex = new RegExp(String.raw`(?<moveRule>${wholeNumberSource}/${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
 
 const fullMoveRegex = new RegExp(String.raw`(?<fullMove>${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
 
@@ -775,7 +776,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 	const turnOrderResults = turnOrderRegex.exec(icn);
 	if (turnOrderResults) {
-		let turnOrderString = turnOrderResults.groups!['turnOrder']!;
+		let turnOrderString = turnOrderResults.groups!['turnOrder']!; // 'w:b'
 		// console.log(`Turn Order: "${turnOrderString}"`);
 		// Substitues
 		if (turnOrderString === 'w') turnOrderString = 'w:b'; // 'w' is short for 'w:b'

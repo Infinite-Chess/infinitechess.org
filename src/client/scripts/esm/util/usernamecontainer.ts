@@ -5,34 +5,64 @@
 
 // @ts-ignore
 import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
+import metadata from "../chess/util/metadata.js";
 import docutil from "./docutil.js";
 
 
+import type { Rating } from "../../../../server/database/leaderboardsManager.js";
+
 
 // Types ----------------------------------------------------------------------------------------
+
 
 
 /**
  * Such an object contains all display information for a given user
  */
 type UsernameContainer = {
-	username: string,
-	displayrating?: string | null
+	properties: UsernameContainerProperties,
+	/** A reference to the documant element container. */
+	element: HTMLDivElement,
 }
+
 
 /**
  * Settings for creating HTML elements out of username containers
  */
-type UsernameContainerDisplayOptions = {
-    /** Whether to make the username a clickable hyperlink */
-    makehyperlink?: boolean,
-	/** Hyperlink target. By default, '_blank' is used. */
-	hyperlinktarget?: string,
-    /** Whether to show the displayrating entry if it exists */
-    showrating?: boolean
-	/** Whether the player is an engine (we'll use a different svg) */
-	isEngine?: boolean
+type UsernameContainerProperties = {
+	/** 
+	 * Player => Clickable hyperlink to the user's profile
+	 * Guest => No clickable hyperlink
+	 * Engine => No clickable hyperlink, AND a unique SVG icon
+	 */
+	type: UsernameContainerType,
+	username: UsernameItem,
+	rating?: {
+		value: number,
+		confident: boolean,
+		change?: number,
+	}
 }
+
+type UsernameContainerType = 'player' | 'guest' | 'engine';
+type UsernameItem = {
+	/** The actual username. */
+	value: string,
+	/**
+	 * Whether clicking the username should open their profile in a new window or not.
+	 * IGNORED IF TYPE === 'engine' or 'guest'.
+	 */
+	openInNewWindow: boolean,
+}
+type RatingItem = {
+	/** The actual rating */
+	value: number,
+	/** Whether the rating is confident or not (low RD). If not confident, a question mark "?" is shown. */
+	confident: boolean,
+	/** The change in rating of the current match, if available. */
+	change?: number,
+}
+
 
 
 // Variables ----------------------------------------------------------------------------------------
@@ -51,59 +81,86 @@ const engineSVGSource = '<svg class="svg-engine" xmlns="http://www.w3.org/2000/s
  * @param options - settings for how to display information
  * @returns HTMLDivElement
  */
-function createUsernameContainerDisplay(usernamecontainer: UsernameContainer, options: UsernameContainerDisplayOptions = {}) : HTMLDivElement {
+function createUsernameContainer(type: UsernameContainerType, username: UsernameItem, rating?: RatingItem) : UsernameContainer {
 	const containerDiv = document.createElement('div');
 
 	// Profile SVG element
-	const svgSource = options.isEngine ? engineSVGSource : profileSVGSource;
+	const svgSource = type === 'engine' ? engineSVGSource : profileSVGSource;
 	const svgElement = docutil.createSvgElementFromString(svgSource);
 	containerDiv.appendChild(svgElement);
 
-	// username element
-	if (options?.makehyperlink) {
+	
+	if (type === 'player') { // Hyperlink
 		const usernameHyper = document.createElement('a');
-		usernameHyper.href = languagedropdown.addLngQueryParamToLink(`/member/${usernamecontainer.username}`);
-		usernameHyper.textContent = usernamecontainer.username;
-		usernameHyper.target = options?.hyperlinktarget !== undefined ? options.hyperlinktarget : '_blank';
+		usernameHyper.href = languagedropdown.addLngQueryParamToLink(`/member/${username.value}`);
+		usernameHyper.textContent = username.value;
+		if (username.openInNewWindow) usernameHyper.target = '_blank';
 		usernameHyper.classList.add("username");
+		usernameHyper.setAttribute('user-type', type); // Alows this container's properties to be reconstructed by other scripts from just the HTML element
 		containerDiv.appendChild(usernameHyper);
-	}
-	else {
+	} else { // No hyperlink
 		const usernameDiv = document.createElement('div');
-		usernameDiv.textContent = usernamecontainer.username;
+		usernameDiv.textContent = username.value;
 		usernameDiv.classList.add("username");
+		usernameDiv.setAttribute('user-type', type); // Alows this container's properties to be reconstructed by other scripts from just the HTML element
 		containerDiv.appendChild(usernameDiv);
 	}
 
 	// rating element
-	if (options?.showrating && usernamecontainer?.displayrating !== undefined && usernamecontainer?.displayrating !== null ) {
+	if (rating) {
 		const eloDiv = document.createElement('div');
-		eloDiv.textContent = `(${usernamecontainer.displayrating})`;
 		eloDiv.classList.add("elo");
 		containerDiv.appendChild(eloDiv);
+
+		// Rating change element
+		if (rating.change !== undefined) {
+			const eloChangeDiv = document.createElement('div');
+			eloChangeDiv.classList.add("eloChange");
+			containerDiv.appendChild(eloChangeDiv);
+		}
 	}
 
 	containerDiv.classList.add("username-embed");
 
-	return containerDiv;
+	// Construct the UsernameContainer object
+
+	const properties: UsernameContainerProperties = {
+		type,
+		username,
+	};
+	if (rating) properties.rating = rating;
+
+	const usernameContainer: UsernameContainer = {
+		properties,
+		element: containerDiv,
+	};
+
+	updateUsernameContainerRatingTextContent(usernameContainer);
+
+	return usernameContainer;
 }
 
 /**
- * Extracts a UsernameContainer object from a display HTML element
+ * Extracts the UsernameContainerProperties from a physical html element username container.
  * @param containerDiv - the HTMLDivElement to extract information from
  * @returns a freshly created UsernameContainer or undefined, if this failed
  */
-function extractUsernameContainerFromDisplayElement(containerDiv: HTMLDivElement) : UsernameContainer | undefined {
-	const result: UsernameContainer = { username: "" };
+function extractPropertiesFromUsernameContainerElement(containerDiv: HTMLDivElement) : UsernameContainerProperties {
+	if (!containerDiv.classList.contains('username-embed')) throw Error("Cannot extract username container from element that is not a username embed!");
 
-	// Find the username
-	const usernameElem = containerDiv.querySelector('.username');
-	if (usernameElem && usernameElem?.textContent !== undefined && usernameElem?.textContent !== null) result.username = usernameElem.textContent;
-	else return undefined;
+	// Reconstruct type and username
+	const usernameElem = containerDiv.querySelector('.username')!;
+	const result: UsernameContainerProperties = {
+		type: containerDiv.getAttribute('user-type') as UsernameContainerType,
+		username: {
+			value: usernameElem.textContent!,
+			openInNewWindow: usernameElem.getAttribute('target') === '_blank'
+		}
+	};
 
-	// Find the displayrating
+	// Reconstruct rating
 	const eloElem = containerDiv.querySelector('.elo');
-	if (eloElem && eloElem?.textContent !== undefined && eloElem?.textContent !== null) result.displayrating = eloElem.textContent;
+	if (eloElem) result.rating = JSON.parse(eloElem.getAttribute('rating')!) as RatingItem;
 
 	return result;
 }
@@ -119,7 +176,7 @@ function embedUsernameContainerDisplayIntoParent(child_element: HTMLDivElement, 
 		parent_element.removeChild(parent_element.firstChild);
 	}
 
-	// append child to parent
+	// Append child to parent
 	parent_element.appendChild(child_element);
 }
 
@@ -128,21 +185,73 @@ function embedUsernameContainerDisplayIntoParent(child_element: HTMLDivElement, 
  * @param event
  * @returns The nearest .username-embed element, or null if the click was outside
  */
-function getUsernameEmbedFromEvent(event: MouseEvent): HTMLDivElement | null {
+function wasEventClickInsideUsernameContainer(event: MouseEvent): boolean {
 	const targetNode = event.target as Node;
 	const el = targetNode instanceof Element ? targetNode : targetNode.parentElement;
-	return el?.closest<HTMLDivElement>('.username-embed') || null;
+	return el?.closest<HTMLDivElement>('.username-embed') !== null;
+}
+
+/** Adds the elo change div to an existing username container. */
+function createEloChangeItem(usernamecontainer: UsernameContainer, newRating: Rating, ratingChange: number) {
+	if (!usernamecontainer.properties.rating) throw Error("Cannot create elo change item for usernamecontainer without rating!");
+
+	// Update rating in usernamecontainer
+	usernamecontainer.properties.rating = {
+		value: newRating.value,
+		confident: newRating.confident,
+		change: ratingChange,
+	};
+
+	// rating change element
+	const eloChangeDiv = document.createElement('div');
+	eloChangeDiv.classList.add("eloChange");
+	usernamecontainer.element.appendChild(eloChangeDiv);
+
+	updateUsernameContainerRatingTextContent(usernamecontainer);
+}
+
+/**
+ * Updates the text contents of each of the username container element's rating elements,
+ * according to the values in the usernamecontainer properties..
+ */
+function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameContainer) {
+	const element = usernamecontainer.element;
+
+	// Update the rating
+	if (usernamecontainer.properties.rating) {
+		const eloElem = element.querySelector('.elo') as HTMLDivElement;
+		const displayRating = metadata.getWhiteBlackElo(usernamecontainer.properties.rating);
+		eloElem.textContent = `(${displayRating})`;
+		eloElem.setAttribute('rating', JSON.stringify(usernamecontainer.properties.rating)); // Allows this container's properties to be reconstructed by other scripts from just the HTML element
+
+		// Update the rating change, if available
+		if (usernamecontainer.properties.rating.change !== undefined) {
+			const eloChangeDiv = element.querySelector('.eloChange')!;
+			eloChangeDiv.textContent = metadata.getWhiteBlackRatingDiff(usernamecontainer.properties.rating.change);
+			// Color the ratingchange green or red, depending on its positivity
+			if (usernamecontainer.properties.rating.change >= 0) {
+				eloChangeDiv.classList.add("positive");
+				eloChangeDiv.classList.remove("negative");
+			} else {
+				eloChangeDiv.classList.add("negative");
+				eloChangeDiv.classList.remove("positive");
+			}
+		}
+	}
 }
 
 
 export default {
-	createUsernameContainerDisplay,
-	extractUsernameContainerFromDisplayElement,
+	createUsernameContainer,
+	extractPropertiesFromUsernameContainerElement,
 	embedUsernameContainerDisplayIntoParent,
-	getUsernameEmbedFromEvent,
+	wasEventClickInsideUsernameContainer,
+	createEloChangeItem,
 };
 
 export type {
 	UsernameContainer,
-	UsernameContainerDisplayOptions
+	UsernameContainerProperties,
+	UsernameItem,
+	RatingItem,
 };

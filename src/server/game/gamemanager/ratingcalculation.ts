@@ -25,7 +25,7 @@ const DEFAULT_LEADERBOARD_RD = 350.0;
 const MIMIMUM_LEADERBOARD_RD = 50.0;
 
 /** Rating deviations above this are considered to be too uncertain and the user is excluded from leaderboards */
-const UNCERTAIN_LEADERBOARD_RD = 250.0;
+const UNCERTAIN_LEADERBOARD_RD = 220.0; // Requires 3 games to be placed on the leaderboard.
 
 /** Constant c, used for Glicko-1 */
 const c = 70;

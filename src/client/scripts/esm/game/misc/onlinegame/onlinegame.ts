@@ -5,8 +5,9 @@
 
 
 import type { ParticipantState, ServerGameInfo } from './onlinegamerouter.js';
-import type { Player } from '../../../chess/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../chess/util/typeutil.js';
 import type { ClockValues } from '../../../chess/logic/clock.js';
+import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
 // @ts-ignore
 import websocket from '../../websocket.js';
@@ -45,6 +46,12 @@ let rated: boolean | undefined;
  * The color we are in the online game, if we are in it.
  */
 let ourColor: Player | undefined;
+
+/**
+ * The ratings of the non-guest players in the game.
+ * If the variant doesn't have a leaderboard, we fall back to the INFINITY leaderboard.
+ */
+let playerRatings: PlayerGroup<Rating> | undefined;
 
 /**
  * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
@@ -95,6 +102,11 @@ function doWeHaveRole(): boolean {
 function getOurColor(): Player | undefined {
 	if (!inOnlineGame) throw Error("Cannot get color we are in online game when we're not in an online game.");
 	return ourColor; 
+}
+
+function getPlayerRatings(): PlayerGroup<Rating> | undefined {
+	if (!inOnlineGame) throw Error("Cannot get player ratings when we're not in an online game.");
+	return playerRatings;
 }
 
 function areWeColorInOnlineGame(color: Player): boolean {
@@ -150,6 +162,7 @@ function initOnlineGame(options: {
 	id = options.gameInfo.id;
 	rated = options.gameInfo.rated;
 	isPrivate = options.gameInfo.publicity === 'private';
+	playerRatings = options.gameInfo.playerRatings;
 
 	ourColor = options.youAreColor;
 
@@ -192,6 +205,7 @@ function closeOnlineGame() {
 	inSync = undefined;
 	serverHasConcludedGame = undefined;
 	afk.onGameClose();
+	disconnect.stopOpponentDisconnectCountdown();
 	tabnameflash.onGameClose();
 	serverrestart.onGameClose();
 	drawoffers.onGameClose();
@@ -376,6 +390,7 @@ export default {
 	isRated,
 	doWeHaveRole,
 	getOurColor,
+	getPlayerRatings,
 	setInSyncTrue,
 	initOnlineGame,
 	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting,

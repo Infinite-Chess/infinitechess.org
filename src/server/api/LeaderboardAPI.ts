@@ -5,7 +5,7 @@
  * Sends the client the information about the leaderboard they are currently profile viewing.
  */
 
-import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getDisplayEloOfPlayerInLeaderboard } from "../database/leaderboardsManager.js";
+import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getEloOfPlayerInLeaderboard } from "../database/leaderboardsManager.js";
 import { Leaderboard } from "../../client/scripts/esm/chess/variants/validleaderboard.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
@@ -86,9 +86,8 @@ const getLeaderboardData = async(req: CustomRequest, res: Response) => { // rout
 			rank_string = `#${requester_rank}`;
 
 			// If the display elo contains a ?, then the rank_string should also contain a ?
-			const requester_elo = getDisplayEloOfPlayerInLeaderboard(requester_userid, leaderboard_id);
-			const is_requester_elo_uncertain = /\?/.test(requester_elo);
-			if (is_requester_elo_uncertain) rank_string += "?";
+			const requester_elo = getEloOfPlayerInLeaderboard(requester_userid, leaderboard_id); // { value: number, confident: boolean }
+			if (!requester_elo.confident) rank_string += "?";
 		}
 		else rank_string = "?";
 	}
