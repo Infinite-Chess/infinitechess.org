@@ -142,7 +142,7 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	// console.log(`Received ${data.action} from server! Message contents:`)
 	// console.log(data.value)
 	
-	// This actions is listened to, even when we're not in a game and even when we don't care about the previous game.
+	// This action is listened to, even when we're not in a game and even when we don't care about the previous game.
 	if (data.action === 'joingame') return handleJoinGame(data.value);
 
 	// If the player has already willingly pressed the "Main Menu" button after already having pressed the "Resign/Abort" button,

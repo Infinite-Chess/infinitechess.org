@@ -66,9 +66,10 @@ let serverHasConcludedGame: boolean | undefined;
 let playerHasPressedAbortOrResignButton: boolean | undefined;
 
 /**
- * True, if the player willingly presses the "Main Menu" button after already having pressed the "Resign/Abort" button at some time during this game.
- * This means that the player is no longer interested in seeing the result the game when the server answers him.
- * This can be accessed even after the player has already left his last onlinegame.
+ * True, if the player willingly presses the "Main Menu" button at some time during an onlinegame
+ * (only possible if the server informed him that the game has ended or if he has pressed the "Resign/Abort" button).
+ * This means that the player is no longer interested in seeing anything related to the previous game when the server sends him information.
+ * This variable is useful even after the player has already left his last onlinegame.
  */
 let playerHasPressedMainMenuButton: boolean = false;
 
