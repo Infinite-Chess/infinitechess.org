@@ -195,13 +195,15 @@ function callback_MainMenu() {
 
 	// Unload and exit game immediately if the button text says "Main Menu"
 	if (!is_main_menu_button_used_as_resign_or_abort_button) {
-		// Let the onlinegame script know that the player willingly presses the "Main Menu" button after already having pressed the "Resign" or "Abort" in an online game
+
+		// Let the onlinegame script know that the player willingly presses the "Main Menu" button.
+		// This can happen if the server has informed him that game has ended or if the player has already pressed the "Resign" or "Abort" during this game.
 		if (onlinegame.areInOnlineGame) onlinegame.onMainMenuButtonPress();
 
 		gameloader.unloadGame();
 		guititle.open();
 	}
-	// If the button text says "Resign" or "Abort" in an online game, remember the button press and change it to "Main Menu" in the future
+	// If the button text says "Resign" or "Abort" in an online game, remember the button press in order to change the button text to "Main Menu" in the future
 	// Thus, even a player disconnected from the server can leave the game, without having to wait for the server informing him about the game conclusion
 	else onlinegame.onAbortOrResignButtonPress();
 }
