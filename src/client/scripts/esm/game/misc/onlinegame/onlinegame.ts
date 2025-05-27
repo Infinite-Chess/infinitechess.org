@@ -21,6 +21,8 @@ import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
 import moveutil from '../../../chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
+// @ts-ignore
+import guipause from '../../gui/guipause.js';
 
 
 // Variables ------------------------------------------------------------------------------------------------------
@@ -358,6 +360,7 @@ function onGameConclude() {
 	if (!inOnlineGame) return; // The game concluded wasn't an online game.
 
 	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
+	guipause.onReceiveGameConclusion();
 	afk.onGameClose();
 	tabnameflash.onGameClose();
 	serverrestart.onGameClose();
