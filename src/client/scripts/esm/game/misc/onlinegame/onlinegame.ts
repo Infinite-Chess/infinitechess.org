@@ -60,6 +60,19 @@ let playerRatings: PlayerGroup<Rating> | undefined;
 let serverHasConcludedGame: boolean | undefined;
 
 /**
+ * Different from gamefile.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
+ * and NOT if the SERVER tells us that the game is concluded.
+ */
+let playerHasPressedAbortOrResignButton: boolean | undefined;
+
+/**
+ * True, if the player willingly presses the "Main Menu" button after already having pressed the "Resign/Abort" button at some time during this game.
+ * This means that the player is no longer interested in seeing the result the game when the server answers him.
+ * This can be accessed even after the player has already left his last onlinegame.
+ */
+let playerHasPressedMainMenuButton: boolean = false;
+
+/**
  * Whether we are in sync with the game on the server.
  * If false, we do not submit our move. (move will be auto-submitted upon resyncing)
  * Set to false whenever we lose connection, or the socket closes.
@@ -119,6 +132,15 @@ function isItOurTurn(): boolean {
 	return gameslot.getGamefile()!.whosTurn === ourColor;
 }
 
+function hasPlayerPressedAbortOrResignButton(): boolean {
+	if (!inOnlineGame) throw Error("Cannot get playerHasPressedAbortOrResignButton of online game when we're not in an online game.");
+	return playerHasPressedAbortOrResignButton!;
+}
+
+function hasPlayerPressedMainMenuButton(): boolean {
+	return playerHasPressedMainMenuButton;
+}
+
 function areInSync(): boolean {
 	if (!inOnlineGame) throw Error("Cannot get inSync of online game when we're not in an online game.");
 	return inSync!;
@@ -173,6 +195,8 @@ function initOnlineGame(options: {
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
 
 	serverHasConcludedGame = false;
+	playerHasPressedAbortOrResignButton = false;
+	playerHasPressedMainMenuButton = false;
 
 	initEventListeners();
 }
@@ -204,6 +228,7 @@ function closeOnlineGame() {
 	ourColor = undefined;
 	inSync = undefined;
 	serverHasConcludedGame = undefined;
+	playerHasPressedAbortOrResignButton = undefined;
 	afk.onGameClose();
 	disconnect.stopOpponentDisconnectCountdown();
 	tabnameflash.onGameClose();
@@ -305,12 +330,26 @@ function onMainMenuPress() {
 	if (!inOnlineGame) return;
 	
 	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
+	if (playerHasPressedAbortOrResignButton) return; // Don't need to abort/resign, we have already done this during this game
 
 	const gamefile = gameslot.getGamefile()!;
 	if (moveutil.isGameResignable(gamefile)) websocket.sendmessage('game','resign');
 	else 									 websocket.sendmessage('game','abort');
 }
 
+/** Called when the player presses the "Abort / Resign" button for the first time in an onlinegame */
+function onAbortOrResignButtonPress() {
+	if (!inOnlineGame) return;
+	playerHasPressedAbortOrResignButton = true;
+}
+
+/** Called when the player presses the "Main Menu" button in an onlinegame, after already having pressed the "Abort / Resign" button */
+function onMainMenuButtonPress() {
+	// Tell the server we no longer want game updates.
+	websocket.unsubFromSub('game');
+
+	playerHasPressedMainMenuButton = true;
+}
 
 
 /** Called when an online game is concluded (termination shown on-screen) */
@@ -391,10 +430,14 @@ export default {
 	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting,
 	closeOnlineGame,
 	isItOurTurn,
+	hasPlayerPressedAbortOrResignButton,
+	hasPlayerPressedMainMenuButton,
 	areInSync,
 	onMainMenuPress,
 	resyncToGame,
 	update,
+	onAbortOrResignButtonPress,
+	onMainMenuButtonPress,
 	onGameConclude,
 	hasServerConcludedGame,
 	reportOpponentsMove,
