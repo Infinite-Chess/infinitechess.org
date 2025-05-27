@@ -29,6 +29,8 @@ import { Mouse } from '../input.js';
 
 // Pause UI
 let isPaused = false;
+let is_main_menu_button_used_as_resign_or_abort_button = false;
+
 const element_pauseUI = document.getElementById('pauseUI');
 const element_resume = document.getElementById('resume');
 const element_pointers = document.getElementById('togglepointers');
@@ -128,7 +130,11 @@ function onReceiveOpponentsMove() {
 function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
 	if (!isPaused) return;
 
-	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame()) return element_mainmenu.textContent = translations.main_menu;
+	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame()) {
+		element_mainmenu.textContent = translations.main_menu;
+		is_main_menu_button_used_as_resign_or_abort_button = false;
+		return;
+	}
 
 	if (moveutil.isGameResignable(gameslot.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
@@ -141,10 +147,12 @@ function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = 
 			}, 1000);
 		}
 		element_mainmenu.textContent = translations.resign_game;
+		is_main_menu_button_used_as_resign_or_abort_button = true;
 		return;
 	}
 
 	element_mainmenu.textContent = translations.abort_game;
+	is_main_menu_button_used_as_resign_or_abort_button = true;
 }
 
 function initListeners() {
@@ -184,9 +192,11 @@ function callback_Resume() {
 function callback_MainMenu() {
 	onlinegame.onMainMenuPress();
 	callback_Resume();
-	gameloader.unloadGame();
 
-	guititle.open();
+	if (!is_main_menu_button_used_as_resign_or_abort_button) {
+		gameloader.unloadGame();
+		guititle.open();
+	}
 }
 
 function callback_PracticeMenu() {

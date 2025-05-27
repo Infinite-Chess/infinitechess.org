@@ -304,11 +304,6 @@ function reportOpponentsMove(reason: string) {
 function onMainMenuPress() {
 	if (!inOnlineGame) return;
 	
-	// Tell the server we no longer want game updates.
-	// Just resigning isn't enough for the server
-	// to deduce we don't want future game updates.
-	websocket.unsubFromSub('game');
-	
 	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
 
 	const gamefile = gameslot.getGamefile()!;

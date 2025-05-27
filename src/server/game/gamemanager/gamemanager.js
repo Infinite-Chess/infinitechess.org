@@ -192,8 +192,12 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
 	// and the game is scheduled to be deleted, just delete it now!
     
 	if (game.deleteTimeoutID === undefined) return; // Not scheduled to be deleted
-	// Is the opponent still in the players in active games list? (has not seen the game results)
+
+	// Is the player still in the players active games list? (has not seen the game results)
 	const color = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	if (!hasColorInGameSeenConclusion(game, color)) return; // They are still in the active games list because they have not seen the game conclusion yet.
+
+	// Is the opponent still in the players active games list? (has not seen the game results)
 	const opponentColor = typeutil.invertPlayer(color);
 	if (!hasColorInGameSeenConclusion(game, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
 
