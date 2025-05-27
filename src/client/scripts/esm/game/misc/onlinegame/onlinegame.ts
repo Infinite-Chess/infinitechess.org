@@ -353,6 +353,8 @@ function onAbortOrResignButtonPress() {
 function onMainMenuButtonPress() {
 	// Tell the server we no longer want game updates, if we are still receiving them.
 	websocket.unsubFromSub('game');
+	
+	requestRemovalFromPlayersInActiveGames();
 
 	playerHasPressedMainMenuButton = true;
 }
