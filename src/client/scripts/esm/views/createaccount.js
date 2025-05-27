@@ -1,6 +1,9 @@
 
 // The script on the createaccount page
 
+
+import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
+
 const element_usernameInput = document.getElementById('username');
 const element_emailInput = document.getElementById('email');
 const element_passwordInput = document.getElementById('password');
@@ -222,9 +225,9 @@ function sendForm(username, email, password) {
 			if (OK) { // Account created!
 				// We also received the refresh token cookie to start a session.
 				// token = docutil.getCookieValue('token') // Cookie expires in 60s
-				window.location.href = `/member/${username.toLowerCase()}`;
+				window.location.href = languagedropdown.addLngQueryParamToLink(`/member/${username.toLowerCase()}`);
 			} else { // Conflict, unable to make account. 409 CONFLICT
-				window.location.href = '/409';
+				window.location.href = languagedropdown.addLngQueryParamToLink('/409');
 			}
 		});
 }

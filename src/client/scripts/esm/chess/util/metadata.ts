@@ -6,6 +6,7 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
+import { Rating } from "../../../../../server/database/leaderboardsManager.js";
 import { players } from "./typeutil.js";
 
 import type { Player } from "./typeutil.js";
@@ -81,6 +82,25 @@ function getGameConclusionFromResultAndTermination(result: string, termination: 
 	return `${victor} ${termination}`;
 }
 
+/** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */
+function getWhiteBlackElo(rating: Rating): string {
+	const roundedElo = Math.round(rating.value);
+	return rating.confident ? `${roundedElo}` : `${roundedElo}?`;
+}
+
+/**
+ * Parses the elo and confidence from WhiteElo/BlackElo metadata.
+ * ONLY HAS AS MUCH PRECISION as what's in the metadata.
+ * DOES NOT KNOW whether their current rating is now confident, if thir WhiteElo/BlackElo was not confident.
+ */
+function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
+	const [elo, emptyStr] = whiteBlackElo.split('?'); // emptyStr will be '' if the '?' is present, otherwise it will be undefined.
+	return {
+		value: Number(elo),
+		confident: emptyStr === undefined,
+	};
+}
+
 /**
  * Takes elo change, calculates the string that should go into
  * the WhiteRatingDiff or BlackRatingDiff fields of the metadata.
@@ -96,6 +116,8 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 export default {
 	getResultFromVictor,
 	getGameConclusionFromResultAndTermination,
+	getWhiteBlackElo,
+	getRatingFromWhiteBlackElo,
 	getWhiteBlackRatingDiff,
 };
 

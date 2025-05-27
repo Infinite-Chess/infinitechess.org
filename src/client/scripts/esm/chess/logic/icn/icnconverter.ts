@@ -86,7 +86,7 @@ interface _Move_Out extends _Move_Compact {
 	compact: string,
 	/**
 	 * Any human-readable comment made on the move, specified in the ICN.
-	 * This will go back into the ICN when copying the game.
+	 * FUTURE: This should go back into the ICN when copying the game.
 	 */
 	comment?: string,
 	/** How much time the player had left after they made their move, in millis. */
@@ -252,7 +252,8 @@ const defaultFullMove = 1;
  * using the lookahead/named backreference technique `(?:(?=(?<name>str))\k<name>)`.
  * Can essentially transform any (...?), (...+), or (...*) regex into a possessive version (...?+), (...?+), or (...*+).
  * 
- * Using this prevents catastrophic backtracking in regexes.
+ * Using this prevents catastrophic backtracking in regexes, as once a possessive group is matched,
+ * those characters can never be released to see if the string can be matched in a different way.
  * @param {string} str - Regex pattern string to make possessive.
  * @returns {string} Pattern string with possessive simulation.
  */
@@ -373,7 +374,7 @@ const turnOrderRegex = new RegExp(String.raw`(?<turnOrder>${raw_piece_code_regex
 
 const enpassantRegex = new RegExp(String.raw`(?<enpassant>${coordsKeyRegexSource})${whiteSpaceOrEnd}`, 'y');
 
-const moveRuleRegex = new RegExp(String.raw`(?<moveRule>${wholeNumberSource}\/${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
+const moveRuleRegex = new RegExp(String.raw`(?<moveRule>${wholeNumberSource}/${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
 
 const fullMoveRegex = new RegExp(String.raw`(?<fullMove>${countingNumberSource})${whiteSpaceOrEnd}`, 'y');
 
@@ -775,7 +776,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 	const turnOrderResults = turnOrderRegex.exec(icn);
 	if (turnOrderResults) {
-		let turnOrderString = turnOrderResults.groups!['turnOrder']!;
+		let turnOrderString = turnOrderResults.groups!['turnOrder']!; // 'w:b'
 		// console.log(`Turn Order: "${turnOrderString}"`);
 		// Substitues
 		if (turnOrderString === 'w') turnOrderString = 'w:b'; // 'w' is short for 'w:b'
@@ -877,7 +878,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	const winConditionResults = winConditionRegex.exec(icn);
 	if (winConditionResults) {
 		const winConditionsString = winConditionResults.groups!['winConditions']!;
-		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate|allpiecescaptured']
+		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate,allpiecescaptured']
 		winConditions = {};
 		// If winConStrings.length is 1, all players have the same win conditions
 		if (winConStrings.length === 1) {
@@ -904,7 +905,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 
 	// Preset Squares
-	// Test if the preset rays lie at our current index being observed
+	// Test if the preset squares lie at our current index being observed
 	presetSquaresRegex.lastIndex = lastIndex;
 
 	const squaresResult = presetSquaresRegex.exec(icn);
@@ -1142,7 +1143,6 @@ function getShortFormMoveFromMove(move: _Move_In, options: { compact: boolean, s
 		/**
 		 * Everything in a comment that has to be separated by a space.
 		 * This should include all embeded command sequences, like [%clk 0:09:56.7]
-		 * 
 		 */
 		const cmdObjs: CommandObject[] = [];
 		// Include the clk embeded command sequence, if the player's clockStamp is present on the move.

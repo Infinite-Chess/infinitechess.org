@@ -15,7 +15,7 @@
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
-        <script defer src="/scripts/cjs/views/createaccount.js"></script>
+        <script defer src="/scripts/esm/views/createaccount.js" type="module"></script>
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
@@ -44,7 +44,7 @@
                         
                     </div>
                     <input type="submit" value="<%=t('create-account.create_button')%>" class="unavailable" id="submit">
-                    <p class="agreement"><%=t('create-account.agreement.0')%><a href='/termsofservice' target='_blank'><%=t('create-account.agreement.1')%></a><%=t('create-account.agreement.2')%></p>
+                    <p class="agreement"><%=t('create-account.agreement.0')%><a href='/termsofservice?lng=<%= language %>' target='_blank'><%=t('create-account.agreement.1')%></a><%=t('create-account.agreement.2')%></p>
                 </form>
             </div>
         </main>
