@@ -88,6 +88,8 @@ function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
 
 	// Send them the actual game info.
 	sendSocketMessage(ws, 'game', 'logged-game-info', logged_game_info);
+
+	console.log(`Sent client game from the database of id (${gameID})!`);
 }
 
 export {

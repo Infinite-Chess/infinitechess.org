@@ -86,7 +86,7 @@ interface _Move_Out extends _Move_Compact {
 	compact: string,
 	/**
 	 * Any human-readable comment made on the move, specified in the ICN.
-	 * This will go back into the ICN when copying the game.
+	 * FUTURE: This should go back into the ICN when copying the game.
 	 */
 	comment?: string,
 	/** How much time the player had left after they made their move, in millis. */
@@ -878,7 +878,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	const winConditionResults = winConditionRegex.exec(icn);
 	if (winConditionResults) {
 		const winConditionsString = winConditionResults.groups!['winConditions']!;
-		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate|allpiecescaptured']
+		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate,allpiecescaptured']
 		winConditions = {};
 		// If winConStrings.length is 1, all players have the same win conditions
 		if (winConStrings.length === 1) {
@@ -905,7 +905,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 
 	// Preset Squares
-	// Test if the preset rays lie at our current index being observed
+	// Test if the preset squares lie at our current index being observed
 	presetSquaresRegex.lastIndex = lastIndex;
 
 	const squaresResult = presetSquaresRegex.exec(icn);
@@ -1143,7 +1143,6 @@ function getShortFormMoveFromMove(move: _Move_In, options: { compact: boolean, s
 		/**
 		 * Everything in a comment that has to be separated by a space.
 		 * This should include all embeded command sequences, like [%clk 0:09:56.7]
-		 * 
 		 */
 		const cmdObjs: CommandObject[] = [];
 		// Include the clk embeded command sequence, if the player's clockStamp is present on the move.

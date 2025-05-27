@@ -14,6 +14,8 @@
 import docutil from "../util/docutil.js";
 import validatorama from "../util/validatorama.js";
 import validcheckmates from "../chess/util/validcheckmates.js";
+// @ts-ignore
+import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
 
 // --- Type Definitions ---
 
@@ -83,11 +85,11 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		const response = await fetch(`/member/${member}/data`, config);
 
 		if (response.status === 404) {
-			window.location.href = '/404'; // Use href for navigation
+			window.location.href = languagedropdown.addLngQueryParamToLink('/404'); // Use href for navigation
 			return;
 		}
 		if (response.status === 500) {
-			window.location.href = '/500';
+			window.location.href = languagedropdown.addLngQueryParamToLink('/500');
 			return;
 		}
 		if (!response.ok) {
@@ -147,7 +149,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 	} catch (error) {
 		console.error("Error loading member data:", error);
 		// Redirect to a generic error page or display an error message
-		// window.location.href = '/500'; // Example
+		// window.location.href = languagedropdown.addLngQueryParamToLink('/500'); // Example
 	}
 })();
 
@@ -217,7 +219,7 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 			removeAccount(false); // Re-prompt without initial confirmation
 		} else {
 			// Deletion successful, redirect to homepage
-			window.location.href = '/';
+			window.location.href = languagedropdown.addLngQueryParamToLink('/');
 		}
 	} catch (error) {
 		console.error("Network or other error during account deletion:", error);
@@ -241,7 +243,7 @@ function resendConfirmEmail(): void {
 	fetch(`/member/${member}/send-email`, config)
 		.then((response) => {
 			if (response.status === 401) {
-				window.location.href = '/401'; // Unauthorized
+				window.location.href = languagedropdown.addLngQueryParamToLink('/401'); // Unauthorized
 				return Promise.reject(new Error('Unauthorized')); // Stop processing
 			}
 			if (!response.ok) {
