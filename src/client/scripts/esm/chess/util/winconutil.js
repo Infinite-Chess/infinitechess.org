@@ -70,7 +70,7 @@ function isConclusionDecisive(condition) {
  * @returns {{ victor?: Player, condition: string }} An object containing 2 properties: `victor` and `condition`
  */
 function getVictorAndConditionFromGameConclusion(gameConclusion) {
-	if (gameConclusion === false) throw new Error('Should not be getting victor and condition from false gameConclusion! Game is not over.');
+	if (gameConclusion === undefined) throw new Error('Should not be getting victor and condition from false gameConclusion! Game is not over.');
 	let [victorStr, condition] = gameConclusion.split(' ');
 	if (victorStr === 'aborted') { // If the conclusion is "aborted", then the victor isn't specified.
 		condition = victorStr;

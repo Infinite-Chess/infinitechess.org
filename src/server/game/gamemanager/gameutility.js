@@ -82,7 +82,6 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 		rated: inviteOptions.rated === "rated",
 		moves: [],
 		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
-		gameConclusion: false,
 		positionPasted: false,
 	};
 
@@ -537,7 +536,7 @@ function getSimplifiedGameString(game) {
  * @param {Game} game - The game
  * @returns {boolean} - true if the game is over (gameConclusion truthy)
  */
-function isGameOver(game) { return game.gameConclusion !== false; }
+function isGameOver(game) { return game.gameConclusion !== undefined; }
 
 /**
  * Returns true if the color whos turn it is has an AFK

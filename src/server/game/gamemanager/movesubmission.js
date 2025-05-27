@@ -141,7 +141,7 @@ function doesMoveCheckOut(move) {
  * @returns {boolean} *true* if their claimed conclusion seems reasonable.
  */
 function doesGameConclusionCheckOut(game, gameConclusion, color) {
-	if (gameConclusion === false) return true;
+	if (gameConclusion === undefined) return true;
 	if (typeof gameConclusion !== 'string') return false;
 
 	// If conclusion is "aborted", victor will not be specified.
