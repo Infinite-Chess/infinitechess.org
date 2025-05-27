@@ -23,7 +23,7 @@ import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getTranslation } from '../../utility/translate.js'; 
-import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
 /**
  * Type Definitions
@@ -113,8 +113,13 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username, user_id: ws.metadata.memberInfo.user_id } : { browser: ws.metadata.cookies["browser-id"] };
 	invite.owner = owner;
 	invite.usernamecontainer = {};
+	invite.usernamecontainer.type = owner.member ? 'player' : 'guest';
 	invite.usernamecontainer.username = owner.member || "(Guest)"; // Protect browser's browser-id cookie
-	invite.usernamecontainer.displayrating = (ws.metadata.memberInfo.signedIn && messageContents.variant in VariantLeaderboards ? getDisplayEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, VariantLeaderboards[messageContents.variant]) : null);
+	if (ws.metadata.memberInfo.signedIn) {
+		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
+		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
+		invite.usernamecontainer.rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
+	}
 
 	invite.variant = messageContents.variant;
 	invite.clock = messageContents.clock;

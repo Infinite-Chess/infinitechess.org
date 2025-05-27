@@ -343,11 +343,14 @@ function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameContro
 }
 
 function unloadGame() {
+	// console.log("Game loader unloading game...");
+	
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
 	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
 	
 	guinavigation.close();
 	guigameinfo.close();
+	guigameinfo.clearUsernameContainers();
 	gameslot.unloadGame();
 	perspective.disable();
 	typeOfGameWeAreIn = undefined;

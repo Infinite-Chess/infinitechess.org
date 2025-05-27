@@ -892,11 +892,11 @@ span.arrow-head-left {
     font-size: 0.9em;
 }
 
-.username-embed .eloChangePositive {
+.username-embed .eloChange.positive {
     color: green;
 }
 
-.username-embed .eloChangeNegative {
+.username-embed .eloChange.negative {
     color: red;
 }
 

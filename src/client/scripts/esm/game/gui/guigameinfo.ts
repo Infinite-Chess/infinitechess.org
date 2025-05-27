@@ -5,8 +5,9 @@
  */
 
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { UsernameContainer, UsernameContainerDisplayOptions } from '../../util/usernamecontainer.js';
-import type { RatingChangeMessage } from '../misc/onlinegame/onlinegamerouter.js';
+import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
+import type { PlayerRatingChangeInfo } from '../misc/onlinegame/onlinegamerouter.js';
+import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 
 
 // @ts-ignore
@@ -17,10 +18,10 @@ import gamefileutility from '../../chess/util/gamefileutility.js';
 import gameslot from '../chess/gameslot.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
-import { players } from '../../chess/util/typeutil.js';
+import { PlayerGroup, players } from '../../chess/util/typeutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+import metadata from '../../chess/util/metadata.js';
 
-"use strict";
 
 
 // Variables
@@ -42,9 +43,7 @@ let showButtons = false;
 
 // Username container objects and their respective display options:
 let usernamecontainer_white: UsernameContainer | undefined;
-let usernamecontainer_options_white: UsernameContainerDisplayOptions | undefined;
 let usernamecontainer_black: UsernameContainer | undefined;
-let usernamecontainer_options_black: UsernameContainerDisplayOptions | undefined;
 
 // Functions
 
@@ -54,10 +53,15 @@ let usernamecontainer_options_black: UsernameContainerDisplayOptions | undefined
  * @param {boolean} showGameControlButtons
  */
 function open(metadata: MetaData, showGameControlButtons?: boolean) {
+	// console.log("Opening game info bar");
+
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
 
-	embedUsernameContainers(metadata);
+	if (!usernamecontainer_white || !usernamecontainer_black) {
+		// Generate username containers
+		embedUsernameContainers(metadata);
+	} // Else username containers already exist ("N" key toggled bar)
 
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
@@ -70,51 +74,46 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	isOpen = true;
 }
 
-function embedUsernameContainers(metadata: MetaData) {
-	const { white, black, white_type, black_type } = getPlayerNamesForGame(metadata);
-	const white_display_rating = (white_type === 'player' && metadata?.WhiteElo !== undefined ? metadata.WhiteElo : null);
-	const white_display_rating_change = (white_type === 'player' && metadata?.WhiteRatingDiff !== undefined ? metadata.WhiteRatingDiff : null);
-	const black_display_rating = (black_type === 'player' && metadata?.BlackElo !== undefined ? metadata.BlackElo : null);
-	const black_display_rating_change = (black_type === 'player' && metadata?.BlackRatingDiff !== undefined ? metadata.BlackRatingDiff : null);
+function embedUsernameContainers(gameMetadata: MetaData) {
+	// console.log("Embedding username containers");
+
+	const { white, black, white_type, black_type } = getPlayerNamesForGame(gameMetadata);
+
+	const playerRatings: PlayerGroup<Rating> | undefined = onlinegame.areInOnlineGame() ? onlinegame.getPlayerRatings() : undefined;
 
 	// Set white username container
-	usernamecontainer_white = {
-		username: white,
-		displayrating: white_display_rating,
-		displayratingchange: white_display_rating_change
-	};
-	usernamecontainer_options_white = {
-		makehyperlink: white_type === 'player',
-		showrating: white_display_rating !== null,
-		showratingchange: white_display_rating !== null && white_display_rating_change !== null,
-		isEngine: white_type === 'engine',
-	};
-	const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
-	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white_Div, element_playerWhite);
+	const username_item_white: UsernameItem = { value: white, openInNewWindow: true };
+	const change_white = gameMetadata.WhiteRatingDiff ? Number(gameMetadata.WhiteRatingDiff) : undefined;
+	const rating_item_white: RatingItem | undefined = playerRatings?.[players.WHITE] ? {
+		value: playerRatings[players.WHITE]!.value + (change_white ?? 0),
+		confident: playerRatings[players.WHITE]!.confident,
+		change: change_white,
+	} : undefined;
+	usernamecontainer_white = usernamecontainer.createUsernameContainer(white_type, username_item_white, rating_item_white);
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white.element, element_playerWhite);
 
 	// Set black username container
-	usernamecontainer_black = {
-		username: black,
-		displayrating: black_display_rating,
-		displayratingchange: black_display_rating_change
-	};
-	usernamecontainer_options_black = {
-		makehyperlink: black_type === 'player',
-		showrating: black_display_rating !== null,
-		showratingchange: black_display_rating !== null && black_display_rating_change !== null,
-		isEngine: black_type === 'engine',
-	};
-	const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
-	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
+	const username_item_black: UsernameItem = { value: black, openInNewWindow: true };
+	const change_black = gameMetadata.BlackRatingDiff ? Number(gameMetadata.BlackRatingDiff) : undefined;
+	const rating_item_black: RatingItem | undefined = playerRatings?.[players.BLACK] ? {
+		value: playerRatings[players.BLACK]!.value + (change_black ?? 0),
+		confident: playerRatings[players.BLACK]!.confident,
+		change: change_black
+	} : undefined;
+	usernamecontainer_black = usernamecontainer.createUsernameContainer(black_type, username_item_black, rating_item_black);
+	usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black.element, element_playerBlack);
+
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
 	setTimeout(updateAlignmentOfRightUsername, 0);
 }
 
+/**
+ * Hides the game info bar.
+ * Does NOT clear/erase the username containers.
+ */
 function close() {
-	// Restore the player names to original content
-	element_playerWhite.innerHTML = '';
-	element_playerBlack.innerHTML = '';
-	// revealPlayerNames();
+	// console.log("Closing game info bar");
+
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
 	
@@ -126,6 +125,15 @@ function close() {
 	element_practiceButtons.classList.add('hidden');
 
 	isOpen = false;
+}
+
+/** Erases the username containers, removing them from the document. */
+function clearUsernameContainers() {
+	console.log("Clearing username containers");
+	usernamecontainer_white!.element.remove();
+	usernamecontainer_black!.element.remove();
+	usernamecontainer_white = undefined;
+	usernamecontainer_black = undefined;
 }
 
 function initListeners_Gamecontrol() {
@@ -350,24 +358,15 @@ function updateAlignmentOfRightUsername() {
  * This gets called when the client receives a "gameratingchange" message from a websocket
  * Displays the rating changes from the game in the existing username containers, while keeping all display options the same
  */
-function addRatingChangeToExistingUsernameContainers(message: RatingChangeMessage) {
-	// Update white username container
-	if (usernamecontainer_white !== undefined && usernamecontainer_options_white !== undefined) {
-		usernamecontainer_white.displayratingchange = message[players.WHITE]?.elo_change_from_game ?? null;
-		usernamecontainer_options_white.showratingchange = usernamecontainer_white.displayratingchange !== null;
+function addRatingChangeToExistingUsernameContainers(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>) {
+	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
+	const gamefile = gameslot.getGamefile()!;
+	gamefile.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.WHITE]!.change);
+	gamefile.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.BLACK]!.change);
 
-		const usernamecontainer_white_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_white, usernamecontainer_options_white);
-		usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_white_Div, element_playerWhite);
-	}
-
-	// Update black username container
-	if (usernamecontainer_black !== undefined && usernamecontainer_options_black !== undefined) {
-		usernamecontainer_black.displayratingchange = message[players.BLACK]?.elo_change_from_game ?? null;
-		usernamecontainer_options_black.showratingchange = usernamecontainer_black.displayratingchange !== null;
-
-		const usernamecontainer_black_Div = usernamecontainer.createUsernameContainerDisplay(usernamecontainer_black, usernamecontainer_options_black);
-		usernamecontainer.embedUsernameContainerDisplayIntoParent(usernamecontainer_black_Div, element_playerBlack);
-	}
+	// Update username containers
+	usernamecontainer.createEloChangeItem(usernamecontainer_white!, ratingChanges[players.WHITE]!.newRating, ratingChanges[players.WHITE]!.change);
+	usernamecontainer.createEloChangeItem(usernamecontainer_black!, ratingChanges[players.BLACK]!.newRating, ratingChanges[players.BLACK]!.change);
 
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.
 	setTimeout(updateAlignmentOfRightUsername, 0);
@@ -376,6 +375,7 @@ function addRatingChangeToExistingUsernameContainers(message: RatingChangeMessag
 export default {
 	open,
 	close,
+	clearUsernameContainers,
 	update_GameControlButtons,
 	revealPlayerNames,
 	hidePlayerNames,

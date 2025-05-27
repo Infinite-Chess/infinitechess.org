@@ -24,9 +24,10 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
-import { getDisplayEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 
 // Type Definitions...
 
@@ -37,6 +38,8 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
  * @typedef {import('../../../client/scripts/esm/chess/util/typeutil.js').Player} Player
  * @typedef {import('../../../client/scripts/esm/chess/util/metadata.js').MetaData} MetaData
  * @typedef {import('./ratingcalculation.js').RatingData} RatingData
+ * @typedef {import('../../database/leaderboardsManager.js').Rating} Rating
+ * @typedef {import('../../../client/scripts/esm/chess/util/typeutil.js').PlayerGroup} PlayerGroup
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -98,16 +101,6 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 	const { white, black, player1Color, player2Color } = assignWhiteBlackPlayersFromInvite(inviteOptions.color, player1, player2);
 	newGame.players[players.WHITE].identifier = white;
 	newGame.players[players.BLACK].identifier = black;
-
-	if (newGame.variant in VariantLeaderboards) {
-		// Set their elos at the start of the game.
-		// Safe, avoids their elos potentially changing mid game, which should never happen.
-		// Also avoids fetching their elo from the db multiple times in a game when resyncing.
-		const whiteUserId = newGame.players[players.WHITE].identifier.user_id;
-		const blackUserId = newGame.players[players.BLACK].identifier.user_id;
-		newGame.players[players.WHITE].elo = getDisplayEloOfPlayerInLeaderboard(whiteUserId, VariantLeaderboards[newGame.variant]);
-		newGame.players[players.BLACK].elo = getDisplayEloOfPlayerInLeaderboard(blackUserId, VariantLeaderboards[newGame.variant]);
-	}
 
 	// Set whos turn
 	newGame.whosTurn = newGame.gameRules.turnOrder[0];
@@ -224,7 +217,9 @@ function unsubClientFromGame(game, ws) {
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
-	const metadata = getMetadataOfGame(game);
+
+	const ratings = getRatingDataForGamePlayers(game);
+	const metadata = getMetadataOfGame(game, ratings);
 
 	const gameUpdateContents = getGameUpdateMessageContents(game, playerColor);
 
@@ -233,6 +228,7 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 			id: game.id,
 			rated: game.rated,
 			publicity: game.publicity,
+			playerRatings: ratings,
 		},
 		metadata,
 		youAreColor: playerColor,
@@ -243,12 +239,34 @@ function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
 }
 
 /**
+ * Returns the current elo of all players in the game on the leaderboard
+ * of the variant being played, or the INFINITY leaderboard if the variant does not have a leaderboard.
+ * @param {Game} game 
+ * @returns {PlayerGroup<Rating>} - An object containing the rating for non-guest in the game, and whether we are confident in that rating, IF the variant has a leaderboard.
+ */
+function getRatingDataForGamePlayers(game) {
+	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
+	const leaderboardId = VariantLeaderboards[game.variant] ?? Leaderboards.INFINITY;
+
+	/** @type {PlayerGroup<Rating>} */
+	const ratingData = {};
+	for (const [color, playerData] of Object.entries(game.players)) {
+		if (playerData.identifier.member === undefined) continue; // Not a member, no rating to send
+		const user_id = playerData.identifier.user_id;
+		ratingData[color] = getEloOfPlayerInLeaderboard(user_id, leaderboardId);
+	}
+
+	return ratingData;
+}
+
+/**
  * Generates metadata for a game including event details, player information, and timestamps.
  * @param {Game} game - The game object containing details about the game.
+ * @param {PlayerGroup<Rating>} ratings - Each players rating. Used to enter WhiteElo & BlackElo in the metadata.
  * @param {RatingData} [ratingdata] The rating data after their elos are changed after the game. Required IF you want WhiteRatingDiff & BlackRatingDiff in the metadata!
  * @returns {MetaData} - An object containing metadata for the game including event name, players, time control, and UTC timestamps.
  */
-function getMetadataOfGame(game, ratingdata) {
+function getMetadataOfGame(game, ratings, ratingdata) {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 	const white = game.players[players.WHITE].identifier;
@@ -265,15 +283,15 @@ function getMetadataOfGame(game, ratingdata) {
 		UTCDate,
 		UTCTime,
 	};
-	if (white.member !== undefined) {
+	if (white.member !== undefined) { // White is a member
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
-		if (game.players[players.WHITE].elo) gameMetadata.WhiteElo = game.players[players.WHITE].elo;
+		if (ratings[players.WHITE]) gameMetadata.WhiteElo = metadata.getWhiteBlackElo(ratings[players.WHITE]);
 	}
-	if (black.member !== undefined) {
+	if (black.member !== undefined) { // Black is a member
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
-		if (game.players[players.BLACK].elo) gameMetadata.BlackElo = game.players[players.BLACK].elo;
+		if (ratings[players.BLACK]) gameMetadata.BlackElo = metadata.getWhiteBlackElo(ratings[players.BLACK]);
 	}
 
 	if (ratingdata) {
@@ -366,40 +384,28 @@ function getGameUpdateMessageContents(game, color) {
  * @param {RatingData} ratingdata - The rating data
  */
 function sendRatingChangeToAllPlayers(game, ratingdata) {
-	for (const player in game.players) {
-		sendRatingChangeToColor(game, Number(player), ratingdata);
+	const messageContents = getRatingChangeMessageContents(ratingdata);
+	for (const playerdata of Object.values(game.players)) {
+		if (playerdata.socket === undefined) continue; // Not connected, can't send message
+		sendSocketMessage(playerdata.socket, "game", "gameratingchange", messageContents);
 	}
 }
 
 /**
- * Alerts the player of the specified color of the rating changes of the game
- * @param {Game} game - The game
- * @param {Player} color - The color of the player
- * @param {RatingData} ratingdata - The rating data
- * @param {Object} options - Additional options
- * @param {number} [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
- */
-function sendRatingChangeToColor(game, color, ratingdata, { replyTo } = {}) {
-	const playerdata = game.players[color];
-	if (playerdata.socket === undefined) return; // Not connected, can't send message
-
-	const messageContents = getRatingChangeMessageContents(ratingdata);
-	if (messageContents !== undefined) sendSocketMessage(playerdata.socket, "game", "gameratingchange", messageContents, replyTo);
-}
-
-/**
- * 
+ * Calculates the json object we send to the client's containing the
+ * rating changes from the results of the rated game.
  * @param {RatingData} ratingdata 
- * @returns 
+ * @returns {PlayerGroup<{ newRating: { value: number, confident: boolean }, change: number }>
  */
 function getRatingChangeMessageContents(ratingdata) {
 	const messageContents = {};
-	for (const player in ratingdata) {
-		const player_ratingdata = ratingdata[player];
-		if (player_ratingdata?.elo_change_from_game === undefined) return undefined;
-
-		messageContents[player] = { 
-			elo_change_from_game: metadata.getWhiteBlackRatingDiff(player_ratingdata.elo_change_from_game)
+	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
+		messageContents[playerStr] = {
+			newRating: {
+				value: playerRating.elo_after_game,
+				confident: playerRating.rating_deviation_after_game <= UNCERTAIN_LEADERBOARD_RD
+			},
+			change: playerRating.elo_change_from_game,
 		};
 	}
 
@@ -726,4 +732,5 @@ export default {
 	cancelDeleteGameTimer,
 	isGameResignable,
 	getColorThatPlayedMoveIndex,
+	getRatingDataForGamePlayers,
 };

@@ -19,7 +19,7 @@ import jsutil from '../../util/jsutil.js';
 
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
- * @property {UsernameContainer} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
+ * @property {UsernameContainerProperties} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
  * If it's a guest, then "(Guest)".
  * @property {string} id - A unique identifier
  * @property {string} tag - Used to verify if an invite is your own.
@@ -31,7 +31,7 @@ import jsutil from '../../util/jsutil.js';
  */
 
 /** @typedef {import('../gui/guiplay.js').InviteOptions} InviteOptions */
-/** @typedef {import('../../util/usernamecontainer.js').UsernameContainer} UsernameContainer */
+/** @typedef {import('../../util/usernamecontainer.js').UsernameContainerProperties} UsernameContainerProperties */
 
 
 /** This script manages the invites on the Play page. */
@@ -196,13 +196,13 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		// <div class="invite-child">Casual</div>
 		// <div class="invite-child accept">Accept</div>
 
-		const display_usernamecontainer = jsutil.deepCopyObject(invite.usernamecontainer);
-		const user_type = display_usernamecontainer.username === "(Guest)" ? 'guest' : 'user';
-		const display_usernamecontainer_options = {
-			makehyperlink: user_type === 'user',
-			showrating: true
-		};
-		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainerDisplay(display_usernamecontainer, display_usernamecontainer_options);
+		if (invite.usernamecontainer.type === 'guest') {
+			// Standardize the name according to our language.
+			if (ours) invite.usernamecontainer.username = translations.you_indicator;
+			else invite.usernamecontainer.username = translations.guest_indicator;
+		}
+		const username_item = { value: invite.usernamecontainer.username, openInNewWindow: false };
+		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainer(invite.usernamecontainer.type, username_item, invite.usernamecontainer.rating).element;
 		displayelement_usernamecontainer.classList.add("invite-child");
 		newInvite.appendChild(displayelement_usernamecontainer);
 
@@ -302,7 +302,7 @@ function clearIfOnPlayPage() {
  * @returns {boolean} true if it is our
  */
 function isInviteOurs(invite) {
-	if (validatorama.getOurUsername() === invite.usernamecontainer.username) return true;
+	if (validatorama.areWeLoggedIn() && invite.usernamecontainer.type === 'player' && validatorama.getOurUsername() === invite.usernamecontainer.username.value) return true;
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 
@@ -329,7 +329,7 @@ function getInviteFromElement(inviteElement) {
      */
 
 	return {
-		usernamecontainer: usernamecontainer.extractUsernameContainerFromDisplayElement(inviteElement.children[0]),
+		usernamecontainer: usernamecontainer.extractPropertiesFromUsernameContainerElement(inviteElement.children[0]),
 		variant: inviteElement.children[1].textContent,
 		clock: inviteElement.children[2].textContent,
 		color: inviteElement.children[3].textContent,

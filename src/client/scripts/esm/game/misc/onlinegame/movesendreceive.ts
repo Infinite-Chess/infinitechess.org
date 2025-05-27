@@ -11,9 +11,7 @@ import type { Mesh } from "../../rendering/piecemodels.js";
 
 import onlinegame from "./onlinegame.js";
 import gamefileutility from "../../../chess/util/gamefileutility.js";
-import boardutil from "../../../chess/util/boardutil.js";
 import clock from "../../../chess/logic/clock.js";
-import jsutil from "../../../util/jsutil.js";
 import selection from "../../chess/selection.js";
 import gameslot from "../../chess/gameslot.js";
 import moveutil from "../../../chess/util/moveutil.js";
@@ -21,8 +19,6 @@ import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
-// @ts-ignore
-import specialdetect from "../../../chess/logic/specialdetect.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
@@ -83,7 +79,7 @@ function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
-	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
+	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move.compact)}. Move number: ${message.moveNumber}`);
 	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
 	movesequence.viewFront(gamefile, mesh);

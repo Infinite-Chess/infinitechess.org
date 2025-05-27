@@ -9,9 +9,9 @@ import { addGameToGamesTable } from '../../database/gamesManager.js';
 import { getPlayerStatsData, updatePlayerStatsColumns } from "../../database/playerStatsManager.js";
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { PlayerGroup, players, type Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating, isPlayerInLeaderboard } from "../../database/leaderboardsManager.js";
+import { addUserToLeaderboard, updatePlayerLeaderboardRating, getPlayerLeaderboardRating, isPlayerInLeaderboard, Rating } from "../../database/leaderboardsManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-import { computeRatingDataChanges } from './ratingcalculation.js';
+import { computeRatingDataChanges, UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
 import icnconverter, { LongFormatIn } from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 // @ts-ignore
@@ -78,7 +78,26 @@ type LogGameResult = { success: true; game_id: number } | { success: false; reas
 /** Enters a game into the games table */
 async function enterGameInGamesTable(game: Game, dateSqliteString: string, ratingdata?: RatingData): Promise<LogGameResult> {
 
-	const metadata = gameutility.getMetadataOfGame(game, ratingdata);
+	let ratings: PlayerGroup<Rating>;
+	if (ratingdata) {
+		// Construct the ratings for each player based on the ratingdata.
+		// CAN'T USE gameutility.getRatingDataForGamePlayers() HERE because
+		// the players elos have CHANGED in the database since the start of the game.
+		ratings = {};
+		for (const [playerStr, data] of Object.entries(ratingdata)) {
+			ratings[Number(playerStr) as Player] = {
+				value: data.elo_at_game,
+				confident: data.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD
+			};
+		}
+	} else {
+		// No ratingdata, which means the players elos in the database
+		// correctly represents their elo at the start of the game.
+		ratings = gameutility.getRatingDataForGamePlayers(game);
+	}
+
+	const metadata = gameutility.getMetadataOfGame(game, ratings, ratingdata);
+
 	VerifyRequiredMetadata(metadata); // TEMPORARY!!! DELETE AFTER MIGRATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	const ICN = await getICNOfGame(game, metadata);
 	if (!ICN) return { success: false, reason: `ICN undefined when logging game, cannot log or increment player stats! Game: ${gameutility.getSimplifiedGameString(game)}` };
@@ -142,6 +161,7 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 
 /**
  * If the game was ranked, also update the leaderboards table accordingly.
+ * Returns rating data IF ratings were changed, otherwise returns undefined.
  */
 async function updateLeaderboardsTable(game: Game, victor: Player | undefined) : Promise<RatingData | undefined> {
 	if (!game.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
@@ -164,15 +184,15 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 
 		// Access the player leaderboard data
 		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
-		if (leaderboard_data === undefined || leaderboard_data?.elo === undefined || leaderboard_data?.rating_deviation === undefined) {
-			await logEvents(`Unable to correctly process leaderboard_data of user ${user_id} and leaderboard ${leaderboard_id}.`, 'errLog.txt', { print: true });
+		if (leaderboard_data === undefined) {
+			await logEvents(`Unable to read leaderboard_data of user ${user_id} while updating leaderboard ${leaderboard_id}!`, 'errLog.txt', { print: true });
 			return undefined;
 		}
 
 		ratingdata[player] = {
 			elo_at_game: leaderboard_data.elo,
 			rating_deviation_at_game: leaderboard_data.rating_deviation,
-			rd_last_update_date: leaderboard_data.rd_last_update_date ?? null,
+			rd_last_update_date: leaderboard_data.rd_last_update_date,
 		};
 	}
 

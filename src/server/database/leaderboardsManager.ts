@@ -29,6 +29,9 @@ interface LeaderboardEntry {
 /** The result of add/update operations */
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
 
+/** A rating value and whether we are confident about it. */
+type Rating = { value: number, confident: boolean}
+
 
 // Methods --------------------------------------------------------------------------------------------
 
@@ -167,7 +170,11 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
  * @param leaderboard_id - The id for the specific leaderboard.
  * @returns The player's leaderboard entry object or undefined if not found or on error.
  */
-function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): LeaderboardEntry | undefined {
+function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): {
+	elo: number,
+	rating_deviation: number,
+	rd_last_update_date: string | null, // Can be null if no games played yet
+} | undefined {
 	// Changed table name, column names, added leaderboard_id to WHERE, selected new columns
 	const query = `
 		SELECT elo, rating_deviation, rd_last_update_date
@@ -178,7 +185,7 @@ function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard
 	try {
 		// Execute the query with user_id and leaderboard_id parameters
 		// Added leaderboard_id to parameters
-		const row = db.get(query, [user_id, leaderboard_id]) as LeaderboardEntry | undefined;
+		const row = db.get(query, [user_id, leaderboard_id]) as { elo: number, rating_deviation: number, rd_last_update_date: string | null } | undefined;
 		return row; // Returns the record or undefined if not found
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -296,21 +303,18 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 
 
 /**
- * Gets a string containing the display value for the rating of a player on a specific leaderboard.
- * If they aren't on it yet, this returns the starting elo with a '?'
+ * Returns the elo of a player on a specific leaderboard, or their elo if they were
+ * to join it now, and whether we are confident about it.
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard.
- * @returns The player's leaderboard display string
+ * @returns The player's leaderboard elo and whether we are confident about it.
  */
-function getDisplayEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): string {
-	let ranked_elo = `${String(DEFAULT_LEADERBOARD_ELO)}?`; // Fallback if they aren't in the leaderboard
+function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): Rating {
 	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, rd_last_update_date } | undefined
-	if (rating_values?.elo !== undefined) {
-		ranked_elo = String(Math.round(rating_values.elo));
-		if (rating_values.rating_deviation !== undefined && rating_values.rating_deviation > UNCERTAIN_LEADERBOARD_RD) ranked_elo += "?";
-	}
+	if (!rating_values) return { value: DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
-	return ranked_elo;
+	const confident = rating_values.rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
+	return { value: rating_values.elo!, confident };
 }
 
 
@@ -354,6 +358,10 @@ export {
 	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
-	getDisplayEloOfPlayerInLeaderboard,
-	startPeriodicLeaderboardRatingDeviationUpdate
+	getEloOfPlayerInLeaderboard,
+	startPeriodicLeaderboardRatingDeviationUpdate,
+};
+
+export type {
+	Rating,
 };

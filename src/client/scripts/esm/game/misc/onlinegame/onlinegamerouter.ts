@@ -1,5 +1,7 @@
 
 
+import type { PlayerGroup } from "../../../chess/util/typeutil.js";
+import type { Rating } from "../../../../../../server/database/leaderboardsManager.js";
 import type { ClockValues } from "../../../chess/logic/clock.js";
 import type { MetaData } from "../../../chess/util/metadata.js";
 import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
@@ -36,8 +38,6 @@ import metadata from "../../../chess/util/metadata.js";
 import { players, Player } from "../../../chess/util/typeutil.js";
 import guigameinfo from "../../gui/guigameinfo.js";
 
-import type { PlayerGroup } from "../../../chess/util/typeutil.js";
-
 
 // Type Definitions --------------------------------------------------------------------------------------
 
@@ -55,6 +55,7 @@ type ServerGameInfo = {
 	id: number,
 	rated: boolean,
 	publicity: 'public' | 'private',
+	playerRatings: PlayerGroup<Rating>,
 }
 
 /**
@@ -83,10 +84,9 @@ interface GameUpdateMessage {
 }
 
 type PlayerRatingChangeInfo = {
-	elo_change_from_game: string
+	newRating: Rating,
+	change: number,
 }
-
-type RatingChangeMessage = PlayerGroup<PlayerRatingChangeInfo>;
 
 /** The message contents expected when we receive a server websocket 'move' message.  */
 interface OpponentsMoveMessage {
@@ -254,7 +254,7 @@ function handleLoggedGameInfo(message: {
 
 	// Unload the currently loaded game, if we are in one
 	if (gameloader.areInAGame()) {
-		gameslot.unloadGame();
+		gameloader.unloadGame();
 		websocket.deleteSub('game'); // The server will have already unsubscribed us from the previous game.
 	} // Else perhaps we need to close the title screen?? Or the loading screen??
 	
@@ -271,12 +271,18 @@ function handleLoggedGameInfo(message: {
 		return move;
 	}) : [];
 
+	// Display elo ratings, if any.
+	const playerRatings: PlayerGroup<Rating> = {};
+	if (parsedGame.metadata.WhiteElo) playerRatings[players.WHITE] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.WhiteElo);
+	if (parsedGame.metadata.BlackElo) playerRatings[players.BLACK] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.BlackElo);
+
 	// Load the game.
 	gameloader.startOnlineGame({
 		gameInfo: {
 			id: message.game_id,
 			rated: Boolean(message.rated),
 			publicity: message.private ? 'private' as const : 'public' as const,
+			playerRatings,
 		},
 		metadata: parsedGame.metadata,
 		gameConclusion: metadata.getGameConclusionFromResultAndTermination(parsedGame.metadata.Result!, message.termination),
@@ -363,10 +369,10 @@ export type {
 	DisconnectInfo,
 	DrawOfferInfo,
 	GameUpdateMessage,
-	RatingChangeMessage,
 	OpponentsMoveMessage,
 	ServerGameMovesMessage,
 	ServerGameMoveMessage,
 	ServerGameInfo,
 	ParticipantState,
+	PlayerRatingChangeInfo,
 };
