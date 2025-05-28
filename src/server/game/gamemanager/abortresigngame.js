@@ -24,7 +24,6 @@ import { sendNotify } from '../../socket/sendSocketMessage.js';
  */
 function abortGame(ws, game) {
 	if (!game) return console.error("Can't abort a game when player isn't in one.");
-	const colorPlayingAs = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
 	// Is it legal?...
 
