@@ -257,14 +257,14 @@ function stopGameClock(game) {
 
 	if (!gameutility.isGameResignable(game)) {
 		game.whosTurn = undefined;
-		return; 
+		return;
 	}
 
 	const timeSpent = Date.now() - game.timeAtTurnStart;
 	let newTime = game.timeRemainAtTurnStart - timeSpent;
 	if (newTime < 0) newTime = 0;
 
-	game.players[game.whosTurn].clock = newTime;
+	game.players[game.whosTurn].timer = newTime;
 
 	game.whosTurn = undefined;
 
