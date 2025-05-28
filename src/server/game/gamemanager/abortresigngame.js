@@ -46,11 +46,8 @@ function abortGame(ws, game) {
 	}
 
 	// Abort
-
-	const opponentColor = typeutil.invertPlayer(colorPlayingAs);
 	setGameConclusion(game, 'aborted');
-	gameutility.sendGameUpdateToColor(game, colorPlayingAs);
-	gameutility.sendGameUpdateToColor(game, opponentColor);
+	gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 /**
@@ -79,8 +76,7 @@ function resignGame(ws, game) {
 	const opponentColor = typeutil.invertPlayer(ourColor);
 	const gameConclusion = `${opponentColor} resignation`;
 	setGameConclusion(game, gameConclusion);
-	gameutility.sendGameUpdateToColor(game, ourColor);
-	gameutility.sendGameUpdateToColor(game, opponentColor);
+	gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 
