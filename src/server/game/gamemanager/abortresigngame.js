@@ -6,7 +6,6 @@
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { sendNotify } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
