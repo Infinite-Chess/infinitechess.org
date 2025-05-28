@@ -39,16 +39,16 @@ function isGameOver(game: Game): boolean {
 /**
  * Returns true if the currently-viewed position of the game file is in check
  */
-function isCurrentViewedPositionInCheck(board: Board): boolean {
-	return board.state.local.inCheck !== false;
+function isCurrentViewedPositionInCheck(boardsim: Board): boolean {
+	return boardsim.state.local.inCheck !== false;
 }
 
 /**
  * Returns a list of coordinates of all royals
  * in check in the currently-viewed position.
  */
-function getCheckCoordsOfCurrentViewedPosition(board: Board): Coords[] {
-	return board.state.local.inCheck || []; // Return an empty array if we're not in check.
+function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
+	return boardsim.state.local.inCheck || []; // Return an empty array if we're not in check.
 }
 
 /**
@@ -90,17 +90,17 @@ function isOpponentUsingWinCondition(game: Game, friendlyColor: Player, winCondi
 /**
  * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
  */
-function doGameOverChecks(game: Game, board: Board) {
-	game.gameConclusion = wincondition.getGameConclusion(game, board);
-	if (isGameOver(game) && winconutil.isGameConclusionDecisive(game.gameConclusion)) moveutil.flagLastMoveAsMate(board);
+function doGameOverChecks(game: Game, boardsim: Board) {
+	game.gameConclusion = wincondition.getGameConclusion(game, boardsim);
+	if (isGameOver(game) && winconutil.isGameConclusionDecisive(game.gameConclusion)) moveutil.flagLastMoveAsMate(boardsim);
 }
 
 /**
  * Gets the bounding box of the game's starting position
  */
-function getStartingAreaBox(board: Board) {
-	if (board.startSnapshot?.box) return board.startSnapshot.box;
-	const coordsList = boardutil.getCoordsOfAllPieces(board.pieces);
+function getStartingAreaBox(boardsim: Board) {
+	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
+	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
 	return math.getBoxFromCoordsList(coordsList);
 }
 

@@ -24,8 +24,8 @@ import type { Coords } from '../../../chess/util/coordutil.js';
 /**
  * Renders the red glow around all pieces in check on the currently-viewed move.
  */
-function render(board: Board) {
-	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(board);
+function render(boardsim: Board) {
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(boardsim);
 	if (royalsInCheck.length === 0) return; // Nothing in check
     
 	const model = genCheckHighlightModel(royalsInCheck);

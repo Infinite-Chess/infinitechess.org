@@ -56,10 +56,10 @@ function sendMove() {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(game: Game, board: Board, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
+function handleOpponentsMove(game: Game, boardsim: Board, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
 	// Make sure the move number matches the expected.
 	// Otherwise, we need to re-sync
-	const expectedMoveNumber = board.moves.length + 1;
+	const expectedMoveNumber = boardsim.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
 		console.error(`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
 		return onlinegame.resyncToGame();
@@ -77,15 +77,15 @@ function handleOpponentsMove(game: Game, board: Board, mesh: Mesh | undefined, m
 
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(game, board, moveDraft, message.gameConclusion);
+	const moveIsLegal = legalmoves.isOpponentsMoveLegal(game, boardsim, moveDraft, message.gameConclusion);
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move.compact)}. Move number: ${message.moveNumber}`);
 	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movesequence.viewFront(game, board, mesh);
+	movesequence.viewFront(game, boardsim, mesh);
 
 	// Forward the move...
 
-	const move = movesequence.makeMove(game, board, mesh, moveDraft);
+	const move = movesequence.makeMove(game, boardsim, mesh, moveDraft);
 	if (mesh) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.

@@ -50,24 +50,24 @@ interface SimplifiedGameState {
  * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile(game: Game, board: Board, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
+function compressGamefile(game: Game, boardsim: Board, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
 
 	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;
 	let fullMove: number;
 
-	if (board.startSnapshot) {
-		position = jsutil.deepCopyObject(board.startSnapshot.position);
-		state_global = jsutil.deepCopyObject(board.startSnapshot.state_global);
-		fullMove = board.startSnapshot.fullMove!;
+	if (boardsim.startSnapshot) {
+		position = jsutil.deepCopyObject(boardsim.startSnapshot.position);
+		state_global = jsutil.deepCopyObject(boardsim.startSnapshot.state_global);
+		fullMove = boardsim.startSnapshot.fullMove!;
 	} else { // editor game,   also copySinglePosition is false
-		if (!board.editor) throw Error("startSnapshot missing in non-editor mode");
-		if (board.moves.length > 0) throw Error("Should not be moves present in editor mode");
+		if (!boardsim.editor) throw Error("startSnapshot missing in non-editor mode");
+		if (boardsim.moves.length > 0) throw Error("Should not be moves present in editor mode");
 		if (copySinglePosition) throw Error('copySinglePosition has no effect in editor mode');
 
-		position = organizedpieces.generatePositionFromPieces(board.pieces);
+		position = organizedpieces.generatePositionFromPieces(boardsim.pieces);
 		// Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
-		state_global = jsutil.deepCopyObject(board.state.global);
+		state_global = jsutil.deepCopyObject(boardsim.state.global);
 		fullMove = 1;
 	}
 
@@ -84,7 +84,7 @@ function compressGamefile(game: Game, board: Board, copySinglePosition?: boolean
 	};
 
 	// Modify the state if we're applying moves to match a single position
-	if (copySinglePosition) gamestate = GameToPosition(gamestate, board.moves, board.state.local.moveIndex + 1); // Convert -1 based to 0 based
+	if (copySinglePosition) gamestate = GameToPosition(gamestate, boardsim.moves, boardsim.state.local.moveIndex + 1); // Convert -1 based to 0 based
 
 	// Start constructing the abridged gamefile
 	const long_format_in: LongFormatIn = {
@@ -93,7 +93,7 @@ function compressGamefile(game: Game, board: Board, copySinglePosition?: boolean
 		gameRules: gameRulesCopy,
 		fullMove: gamestate.fullMove,
 		state_global: gamestate.state_global,
-		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(board.moves),
+		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(boardsim.moves),
 	};
 	
 	// Add the preset annotation overrides from the previously pasted game, if present.

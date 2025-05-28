@@ -1348,16 +1348,16 @@ function move_to_gamefile_move(target_square: Coords): MoveDraft {
 	return { startCoords: gamefile_royal_coords, endCoords: endCoords };
 }
 
-function doesTypeExist(board: Board, type: number): boolean {
-	const range = board.pieces.typeRanges.get(type);
+function doesTypeExist(boardsim: Board, type: number): boolean {
+	const range = boardsim.pieces.typeRanges.get(type);
 
 	if (range === undefined) return false;
 
 	return range.end - range.start - range.undefineds.length > 0;
 }
 
-function getFirstOfType(board: Board, type: number): Coords | undefined {
-	const range = board.pieces.typeRanges.get(type);
+function getFirstOfType(boardsim: Board, type: number): Coords | undefined {
+	const range = boardsim.pieces.typeRanges.get(type);
 
 	if (range === undefined) return;
 	if (range.end - range.start - range.undefineds.length <= 0) return;
@@ -1368,7 +1368,7 @@ function getFirstOfType(board: Board, type: number): Coords | undefined {
 			undefinedidx++;
 			continue;
 		}
-		return [board.pieces.XPositions[idx]!, board.pieces.YPositions[idx]!];
+		return [boardsim.pieces.XPositions[idx]!, boardsim.pieces.YPositions[idx]!];
 	}
 	return;
 }

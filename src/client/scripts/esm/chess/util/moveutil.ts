@@ -46,26 +46,26 @@ interface DepricatedMove {
  * Returns the move one forward from the current position we're viewing, if it exists.
  * This is also the move we would execute if we forward the game 1 step.
  */
-function getMoveOneForward(board: Board): Move | NullMove | undefined {
-	const moveIndex = board.state.local.moveIndex;
+function getMoveOneForward(boardsim: Board): Move | NullMove | undefined {
+	const moveIndex = boardsim.state.local.moveIndex;
 	const incrementedIndex = moveIndex + 1;
-	return getMoveFromIndex(board.moves, incrementedIndex);
+	return getMoveFromIndex(boardsim.moves, incrementedIndex);
 }
 
 /**
  * Returns *true* if it is legal to forward the provided gamefile by 1 move, *false* if we're at the front of the game.
  */
-function isIncrementingLegal(board: Board): boolean {
-	const incrementedIndex = board.state.local.moveIndex + 1;
-	return !isIndexOutOfRange(board.moves, incrementedIndex);
+function isIncrementingLegal(boardsim: Board): boolean {
+	const incrementedIndex = boardsim.state.local.moveIndex + 1;
+	return !isIndexOutOfRange(boardsim.moves, incrementedIndex);
 }
 
 /**
  * Returns *true* if it is legal to rewind the provided gamefile by 1 move, *false* if we're at the beginning of the game.
  */
-function isDecrementingLegal(board: Board): boolean {
-	const decrementedIndex = board.state.local.moveIndex - 1;
-	return !isIndexOutOfRange(board.moves, decrementedIndex);
+function isDecrementingLegal(boardsim: Board): boolean {
+	const decrementedIndex = boardsim.state.local.moveIndex - 1;
+	return !isIndexOutOfRange(boardsim.moves, decrementedIndex);
 }
 
 /**
@@ -87,10 +87,10 @@ function getLastMove(moves: (Move | NullMove)[]): Move | NullMove | undefined {
 /**
  * Returns the move we're currently viewing in the provided gamefile.
  */
-function getCurrentMove(board: Board): Move | NullMove | undefined {
-	const index = board.state.local.moveIndex;
+function getCurrentMove(boardsim: Board): Move | NullMove | undefined {
+	const index = boardsim.state.local.moveIndex;
 	if (index < 0) return;
-	return board.moves[index];
+	return boardsim.moves[index];
 }
 
 /**
@@ -104,9 +104,9 @@ function getMoveFromIndex(moves: (Move | NullMove)[], index: number): Move | Nul
 /**
  * Tests if the provided gamefile is viewing the front of the game, or the latest move.
  */
-function areWeViewingLatestMove(board: Board): boolean {
-	const moveIndex = board.state.local.moveIndex;
-	return isIndexTheLastMove(board.moves, moveIndex);
+function areWeViewingLatestMove(boardsim: Board): boolean {
+	const moveIndex = boardsim.state.local.moveIndex;
+	return isIndexTheLastMove(boardsim.moves, moveIndex);
 }
 
 /**
@@ -148,8 +148,8 @@ function getPlyCount(moves: Move[]): number { return moves.length; }
  * @param gamefile
  * @param coords - The current coordinates of the piece.
  */
-function hasPieceMoved(board: Board, coords: Coords): boolean {
-	return board.moves.some((move: Move | NullMove) => !move.isNull && coordutil.areCoordsEqual(move.endCoords, coords));
+function hasPieceMoved(boardsim: Board, coords: Coords): boolean {
+	return boardsim.moves.some((move: Move | NullMove) => !move.isNull && coordutil.areCoordsEqual(move.endCoords, coords));
 }
 
 // COMMENTED-OUT because it's not used anywhere in the code
@@ -166,8 +166,8 @@ function hasPieceMoved(board: Board, coords: Coords): boolean {
 /**
  * Flags the gamefile's very last move as a "mate".
  */
-function flagLastMoveAsMate(board: Board) {
-	const lastMove = getLastMove(board.moves);
+function flagLastMoveAsMate(boardsim: Board) {
+	const lastMove = getLastMove(boardsim.moves);
 	if (lastMove === undefined) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
 	lastMove.flags.mate = true;
 }

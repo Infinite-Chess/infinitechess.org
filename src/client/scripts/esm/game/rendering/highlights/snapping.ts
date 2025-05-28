@@ -194,7 +194,7 @@ type LineSnapPoint = {
  */
 function snapPointerWorld(world: Coords): Snap | undefined {
 	const pointerCoords = space.convertWorldSpaceToCoords(world);
-	const board = gameslot.getGamefile()!.board;
+	const boardsim = gameslot.getGamefile()!.board;
 
 	const drawnRays = annotations.getRays();
 	const presetRays = drawrays.getPresetRays();
@@ -296,7 +296,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	// Allows snapping to all hippogonals, even the ones in 4D variants.
 	// const allPrimitiveSlidesInGame = board.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
-	const searchVectors = board.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
+	const searchVectors = boardsim.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
 
 
 	// 1. Square Annotes & Intersections of Rays & Ray starts (same priority) ==================
@@ -313,8 +313,8 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	// 2. Pieces ========================================
 
 	// Only snap to these if there isn't too many pieces (slow)
-	if (boardutil.getPieceCountOfGame(board.pieces) < THRESHOLD_TO_SNAP_PIECES) {
-		const pieces = boardutil.getCoordsOfAllPieces(board.pieces);
+	if (boardutil.getPieceCountOfGame(boardsim.pieces) < THRESHOLD_TO_SNAP_PIECES) {
+		const pieces = boardutil.getCoordsOfAllPieces(boardsim.pieces);
 		const closestPieceSnap = findClosestEntityOfGroup(pieces, closeLines, pointerCoords, searchVectors);
 		if (closestPieceSnap) {
 			// Is the snap within snapping distance of the mouse?
@@ -324,7 +324,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 
 	// 3. Origin (Center of Play) ==============================
 
-	const startingBox = gamefileutility.getStartingAreaBox(board);
+	const startingBox = gamefileutility.getStartingAreaBox(boardsim);
 	const origin = math.calcCenterOfBoundingBox(startingBox);
 	const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, pointerCoords, searchVectors);
 	if (closestOriginSnap) {

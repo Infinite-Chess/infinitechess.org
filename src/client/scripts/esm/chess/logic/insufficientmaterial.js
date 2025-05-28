@@ -155,28 +155,28 @@ function ordered_tuple_descending(tuple) {
 /**
  * Detects if the game is drawn for insufficient material
  * @param {GameRules} gameRules
- * @param {Board} board
+ * @param {Board} boardsim
  * @returns {string | false} '0 insuffmat', if the game is over by the insufficient material, otherwise *false*.
  */
-function detectInsufficientMaterial(gameRules, board) {
+function detectInsufficientMaterial(gameRules, boardsim) {
 	// Only make the draw check if the win condition is checkmate for both players
 	if (!gamerules.doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate') || !gamerules.doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')) return false;
 	if (gamerules.getWinConditionCountOfColor(gameRules, players.WHITE) !== 1 || gamerules.getWinConditionCountOfColor(gameRules, players.BLACK) !== 1) return false;
 
 	// Only make the draw check if the last move was a capture or promotion or if there is no last move
-	const lastMove = moveutil.getLastMove(board.moves);
+	const lastMove = moveutil.getLastMove(boardsim.moves);
 	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion !== undefined)) return false;
 
 	// Only make the draw check if there are less than 11 non-obstacle or gargoyle pieces
-	if (boardutil.getPieceCountOfGame(board.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(board.pieces, r.VOID + e.N) >= 11) return false;
+	if (boardutil.getPieceCountOfGame(boardsim.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) >= 11) return false;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};
 	// bishops are treated specially and separated by parity
 	const bishopsW_count = [0, 0];
 	const bishopsB_count = [0, 0];
-	for (const idx of board.pieces.coords.values()) {
-		const piece = boardutil.getPieceFromIdx(board.pieces, idx);
+	for (const idx of boardsim.pieces.coords.values()) {
+		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx);
 		const [raw, color] = typeutil.splitType(piece.type);
 		if (raw === r.OBSTACLE) continue;
 		

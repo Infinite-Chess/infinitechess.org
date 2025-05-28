@@ -424,7 +424,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
  * next to each other one the same line, since Huygens
  * can jump/skip over other pieces.
  */
-function calcArrowsLineDraft(board: Board, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: number[]): ArrowsLineDraft | undefined {
+function calcArrowsLineDraft(boardsim: Board, boundingBoxInt: BoundingBox, boundingBoxFloat: BoundingBox, slideDir: Vec2, slideKey: Vec2Key, organizedline: number[]): ArrowsLineDraft | undefined {
 
 	const negDotProd: ArrowDraft[] = [];
 	const posDotProd: ArrowDraft[] = [];
@@ -436,7 +436,7 @@ function calcArrowsLineDraft(board: Board, boundingBoxInt: BoundingBox, bounding
 
 	const axis = slideDir[0] === 0 ? 1 : 0;
 
-	const firstPiece = boardutil.getPieceFromIdx(board.pieces, organizedline[0]!)!;
+	const firstPiece = boardutil.getPieceFromIdx(boardsim.pieces, organizedline[0]!)!;
 
 	/**
 	 * The 2 intersections points of the whole organized line, consistent for every piece on it.
@@ -447,7 +447,7 @@ function calcArrowsLineDraft(board: Board, boundingBoxInt: BoundingBox, bounding
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
 
 	organizedline.forEach(idx => {
-		const piece = boardutil.getPieceFromIdx(board.pieces, idx)!;
+		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
 
 		// Is the piece off-screen?
 		if (math.boxContainsSquare(boundingBoxInt, piece.coords)) return; // On-screen, no arrow needed
@@ -479,7 +479,7 @@ function calcArrowsLineDraft(board: Board, boundingBoxInt: BoundingBox, bounding
 		 * (which would mean it phased/skipped over pieces due to a custom blocking function)
 		 */
 
-		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(board, piece, slideDir, slideKey, organizedline);
+		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(boardsim, piece, slideDir, slideKey, organizedline);
 		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
 
 		/**
@@ -573,12 +573,12 @@ function removeUnnecessaryArrows(slideArrowsDraft: SlideArrowsDraft) {
 }
 
 /** Checks if a single animated arrow is needed, based on our current mode, and its direction. */
-function isAnimatedArrowUnnecessary(board: Board, type: number, direction: Vec2, dirKey: Vec2Key): boolean {
+function isAnimatedArrowUnnecessary(boardsim: Board, type: number, direction: Vec2, dirKey: Vec2Key): boolean {
 	if (mode === 3) return false; // Keep it, whether hippogonal orthogonal or diagonal
 	if (mode === 2) return math.chebyshevDistance([0,0], direction) !== 1; // Only keep orthogonals and diagonals, NO hippogonals.
 
 	// mode must === 1, only keep it if it can slide in the direction, whether blocked or not
-	const thisPieceMoveset = legalmoves.getPieceMoveset(board, type); // Default piece moveset
+	const thisPieceMoveset = legalmoves.getPieceMoveset(boardsim, type); // Default piece moveset
 	if (!thisPieceMoveset.sliding) return true; // This piece can't slide at all
 	if (!thisPieceMoveset.sliding[dirKey]) return true; // This piece can't slide ALONG the provided line
 	// This piece CAN slide along the provided line...
@@ -869,7 +869,7 @@ function executeArrowShifts() {
 	// console.log(changes);
 
 	// Apply the board changes
-	boardchanges.runChanges({game: gamefile, board: gamefile.board}, changes, boardchanges.changeFuncs, true);
+	boardchanges.runChanges({game: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, true);
 
 	shifts.forEach(shift => {
 		// Recalculate every single line on the start.
@@ -882,14 +882,14 @@ function executeArrowShifts() {
 	// console.log(animatedArrows);
 
 	// Restore the board state
-	boardchanges.runChanges({game: gamefile, board: gamefile.board}, changes, boardchanges.changeFuncs, false);
+	boardchanges.runChanges({game: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, false);
 }
 
 /**
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLinesThroughCoords(board: Board, coords: Coords) {
+function recalculateLinesThroughCoords(boardsim: Board, coords: Coords) {
 	// console.log("Recalculating lines through coords: ", coords);
 	// Recalculate every single line it is on.
 
@@ -897,7 +897,7 @@ function recalculateLinesThroughCoords(board: Board, coords: Coords) {
 	// the currently animated arrow indicator when hovering over its destination
 	// hoveredArrows = hoveredArrows.filter(hoveredArrow => !coordutil.areCoordsEqual(hoveredArrow.piece.coords, coords));
 
-	for (const [slideKey, linegroup] of board.pieces.lines) { // For each slide direction in the game...
+	for (const [slideKey, linegroup] of boardsim.pieces.lines) { // For each slide direction in the game...
 		const slide = coordutil.getCoordsFromKey(slideKey);
 
 		const lineKey = organizedpieces.getKeyFromLine(slide, coords);
@@ -914,7 +914,7 @@ function recalculateLinesThroughCoords(board: Board, coords: Coords) {
 		const organizedLine = linegroup.get(lineKey);
 		if (organizedLine === undefined) continue; // No pieces on line, empty
 
-		const arrowsLineDraft = calcArrowsLineDraft(board, boundingBoxInt!, boundingBoxFloat!, slide, slideKey, organizedLine);
+		const arrowsLineDraft = calcArrowsLineDraft(boardsim, boundingBoxInt!, boundingBoxFloat!, slide, slideKey, organizedLine);
 		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
 
 		// Remove Unnecessary arrows...

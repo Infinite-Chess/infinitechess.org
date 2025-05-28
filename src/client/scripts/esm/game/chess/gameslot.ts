@@ -180,16 +180,16 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 function loadLogical(loadOptions: LoadOptions) {
 
 	const newgame = gamefile.initGame(loadOptions.metadata, loadOptions.additional?.variantOptions, loadOptions.additional?.gameConclusion, loadOptions.additional?.clockValues);
-	const board = gamefile.initBoard(newgame.gameRules, loadOptions.metadata, loadOptions.additional?.variantOptions, loadOptions.additional?.editor);
-	gamefile.loadGameWithBoard(newgame, board, loadOptions.additional?.moves);
+	const boardsim = gamefile.initBoard(newgame.gameRules, loadOptions.metadata, loadOptions.additional?.variantOptions, loadOptions.additional?.editor);
+	gamefile.loadGameWithBoard(newgame, boardsim, loadOptions.additional?.moves);
 
 	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
-	const pieceCount = boardutil.getPieceCountOfGame(board.pieces);
+	const pieceCount = boardutil.getPieceCountOfGame(boardsim.pieces);
 	// Disable miniimages if there's too many pieces
 	if (pieceCount > miniimage.pieceCountToDisableMiniImages) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
-	if (pieceCount > arrows.pieceCountToDisableArrows || board.pieces.slides.length > arrows.lineCountToDisableArrows) arrows.setMode(0);
+	if (pieceCount > arrows.pieceCountToDisableArrows || boardsim.pieces.slides.length > arrows.lineCountToDisableArrows) arrows.setMode(0);
 
 	initCopyPastGameListeners();
 

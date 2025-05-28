@@ -202,15 +202,15 @@ function applyChanges<T>(actiondata: T, changes: Array<Change>, funcs: ActionLis
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists
  */
-function addPiece({board, game}: FullGame, change: Change) { // desiredIndex optional
-	const pieces = board.pieces;
+function addPiece({boardsim, game}: FullGame, change: Change) { // desiredIndex optional
+	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
-			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, game.gameRules.promotionsAllowed, board.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
-			organizedpieces.regenerateLists(board.pieces, game.gameRules.promotionsAllowed, board.editor);
+			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, game.gameRules.promotionsAllowed, boardsim.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
+			organizedpieces.regenerateLists(boardsim.pieces, game.gameRules.promotionsAllowed, boardsim.editor);
 		}
 
 		idx = typedata.undefineds.shift()!;
@@ -232,8 +232,8 @@ function addPiece({board, game}: FullGame, change: Change) { // desiredIndex opt
  * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
  * from the organized lists.
  */
-function deletePiece({board}: FullGame, change: Change) {
-	const pieces = board.pieces;
+function deletePiece({boardsim}: FullGame, change: Change) {
+	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
 	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
@@ -259,10 +259,10 @@ function deletePiece({board}: FullGame, change: Change) {
  * @param gamefile - The gamefile
  * @param change - the move data
  */
-function movePiece({board}: FullGame, change: Change) {
+function movePiece({boardsim}: FullGame, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
-	const pieces = board.pieces;
+	const pieces = boardsim.pieces;
 	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
@@ -274,10 +274,10 @@ function movePiece({board}: FullGame, change: Change) {
 /**
  * Reverses `movePiece`
  */
-function returnPiece({board}: FullGame, change: Change) {
+function returnPiece({boardsim}: FullGame, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
-	const pieces = board.pieces;
+	const pieces = boardsim.pieces;
 	const range = pieces.typeRanges.get(change.piece.type)!;
 	const idx = change.piece.index + range.start;
 

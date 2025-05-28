@@ -18,8 +18,8 @@ import type { Board } from "../../../chess/logic/gamefile.js";
 // Variables -----------------------------------------------------------------------------
 
 
-function highlightLastMove(board: Board) {
-	const lastMove = moveutil.getCurrentMove(board);
+function highlightLastMove(boardsim: Board) {
+	const lastMove = moveutil.getCurrentMove(boardsim);
 	if (!lastMove || lastMove.isNull) return; // Don't render if last move is undefined.
 
 	const color = preferences.getLastMoveHighlightColor();

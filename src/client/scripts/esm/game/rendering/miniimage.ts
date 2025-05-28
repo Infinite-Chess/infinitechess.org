@@ -134,14 +134,14 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
-	const board = gameslot.getGamefile()!.board;
-	const pieces = board.pieces;
+	const boardsim = gameslot.getGamefile()!.board;
+	const pieces = boardsim.pieces;
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 
 	// Prepare empty arrays by type
-	board.existingTypes.forEach((type: number) => {
+	boardsim.existingTypes.forEach((type: number) => {
 		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
 		instanceData[type] = [];
@@ -237,7 +237,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 function render(): void {
 	if (!boardpos.areZoomedOut()) return;
 
-	const board = gameslot.getGamefile()!.board;
+	const boardsim = gameslot.getGamefile()!.board;
 	const inverted = perspective.getIsViewingBlackPerspective();
 
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
@@ -264,8 +264,8 @@ function render(): void {
 	}
 
 	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
-	const sortedNeutrals = board.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
-	const sortedColors = board.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedNeutrals = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedColors = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
 
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		for (const neut of sortedNeutrals) {

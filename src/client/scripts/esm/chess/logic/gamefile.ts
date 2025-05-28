@@ -61,7 +61,7 @@ type Game = {
 
 type FullGame = {
 	game: Game,
-	board: Board
+	boardsim: Board
 }
 
 /**
@@ -81,7 +81,7 @@ type Board = {
 	colinearsPresent: boolean
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>
 	// eslint-disable-next-line no-unused-vars
-	specialMoves: RawTypeGroup<(board: Board, piece: Piece, move: Move) => boolean>
+	specialMoves: RawTypeGroup<(boardsim: Board, piece: Piece, move: Move) => boolean>
 
 	specialVicinity: Record<CoordsKey, RawType[]>
 	vicinity: Record<CoordsKey, RawType[]>
@@ -174,24 +174,24 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 	};
 }
 
-function loadGameWithBoard(game: Game, board: Board, moves:ServerGameMovesMessage = [], gameConclusion?: string) {
-	game.board = board;
+function loadGameWithBoard(game: Game, boardsim: Board, moves:ServerGameMovesMessage = [], gameConclusion?: string) {
+	game.board = boardsim;
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(game, board)) gamerules.swapCheckmateForRoyalCapture(game.gameRules);
+	if (!wincondition.isCheckmateCompatibleWithGame(game, boardsim)) gamerules.swapCheckmateForRoyalCapture(game.gameRules);
 
 	{ // Set the game's `inCheck` and `attackers` properties at the front of the game.
 		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(game, game.whosTurn, 'checkmate');
-		const checkResults = checkdetection.detectCheck(game, board, game.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
-		board.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackAttackers) board.state.local.attackers = checkResults.attackers ?? [];
+		const checkResults = checkdetection.detectCheck(game, boardsim, game.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
+		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
 	}
 
-	movepiece.makeAllMovesInGame(game, board, moves);
+	movepiece.makeAllMovesInGame(game, boardsim, moves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
 	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) game.gameConclusion = gameConclusion;
-	else gamefileutility.doGameOverChecks(game, board);
+	else gamefileutility.doGameOverChecks(game, boardsim);
 }
 
 export type {

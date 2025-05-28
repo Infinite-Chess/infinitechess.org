@@ -39,15 +39,15 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * @param {Player} color - The color of the king selected
  * @returns {CoordsSpecial[]}
  */
-function kings(game: Game, board: Board, coords: Coords, color: Player): CoordsSpecial[] {
+function kings(game: Game, boardsim: Board, coords: Coords, color: Player): CoordsSpecial[] {
 	const individualMoves: CoordsSpecial[] = [];
 
-	if (!doesPieceHaveSpecialRight(board, coords)) return individualMoves; // King doesn't have castling rights
+	if (!doesPieceHaveSpecialRight(boardsim, coords)) return individualMoves; // King doesn't have castling rights
 
 	const x = coords[0];
 	const y = coords[1];
 	const key = organizedpieces.getKeyFromLine([1,0],coords);
-	const row = board.pieces.lines.get('1,0')!.get(key)!;
+	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
 
 
 	// Castling. What makes a castle legal?
@@ -61,7 +61,7 @@ function kings(game: Game, board: Board, coords: Coords, color: Player): CoordsS
 	let left = -Infinity; // Piece directly left of king. (Infinity if none)
 	let right = Infinity; // Piece directly right of king. (Infinity if none)
 	for (const idx of row) {
-		const thisCoord = boardutil.getCoordsFromIdx(board.pieces, idx); // [x,y]
+		const thisCoord = boardutil.getCoordsFromIdx(boardsim.pieces, idx); // [x,y]
 
 		if (thisCoord[0] < x && thisCoord[0] > left) left = thisCoord[0];
 		else if (thisCoord[0] > x && thisCoord[0] < right) right = thisCoord[0];
@@ -72,13 +72,13 @@ function kings(game: Game, board: Board, coords: Coords, color: Player): CoordsS
 	// GAME IS NOT COMPATIBLE WITH INFINITE COORDS
 	const leftCoord = left === -Infinity ? undefined : [left, y] as Coords;
 	const rightCoord = right === Infinity ? undefined : [right, y] as Coords;
-	const leftPieceType = leftCoord ? boardutil.getTypeFromCoords(board.pieces, leftCoord) : undefined;
-	const rightPieceType = rightCoord ? boardutil.getTypeFromCoords(board.pieces, rightCoord) : undefined;
+	const leftPieceType = leftCoord ? boardutil.getTypeFromCoords(boardsim.pieces, leftCoord) : undefined;
+	const rightPieceType = rightCoord ? boardutil.getTypeFromCoords(boardsim.pieces, rightCoord) : undefined;
 	const leftColor = leftPieceType !== undefined ? typeutil.getColorFromType(leftPieceType) : undefined;
 	const rightColor = rightPieceType !== undefined ? typeutil.getColorFromType(rightPieceType) : undefined;
 
-	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(board, leftCoord!) || leftColor !== color || typeutil.getRawType(leftPieceType!) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(leftPieceType!) === type)) leftLegal = false;
-	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(board, rightCoord!) || rightColor !== color || typeutil.getRawType(rightPieceType!) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(rightPieceType!) === type)) rightLegal = false;
+	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(boardsim, leftCoord!) || leftColor !== color || typeutil.getRawType(leftPieceType!) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(leftPieceType!) === type)) leftLegal = false;
+	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(boardsim, rightCoord!) || rightColor !== color || typeutil.getRawType(rightPieceType!) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(rightPieceType!) === type)) rightLegal = false;
 	if (!leftLegal && !rightLegal) return individualMoves;
 
 	// 2. IF USING CHECKMATE: The king must not currently be in check,
@@ -87,17 +87,17 @@ function kings(game: Game, board: Board, coords: Coords, color: Player): CoordsS
 
 	const oppositeColor = typeutil.invertPlayer(color);
 	if (gamerules.doesColorHaveWinCondition(game.gameRules, oppositeColor, 'checkmate')) {
-		if (gamefileutility.isCurrentViewedPositionInCheck(board)) return individualMoves; // Not legal if in check
+		if (gamefileutility.isCurrentViewedPositionInCheck(boardsim)) return individualMoves; // Not legal if in check
 
 		// Simulate the space in-between
 
-		const king = boardutil.getPieceFromCoords(board.pieces, coords); // { type, index, coords }
+		const king = boardutil.getPieceFromCoords(boardsim.pieces, coords); // { type, index, coords }
 		if (leftLegal) {
 			const middleSquare: Coords = [x - 1, y];
-			if (checkresolver.isMoveCheckInvalid(game, board, king!, middleSquare, color)) leftLegal = false;
+			if (checkresolver.isMoveCheckInvalid(game, boardsim, king!, middleSquare, color)) leftLegal = false;
 		} if (rightLegal) {
 			const middleSquare: Coords = [x + 1, y];
-			if (checkresolver.isMoveCheckInvalid(game, board, king!, middleSquare, color)) rightLegal = false;
+			if (checkresolver.isMoveCheckInvalid(game, boardsim, king!, middleSquare, color)) rightLegal = false;
 		}
 	}
 
@@ -127,7 +127,7 @@ function kings(game: Game, board: Board, coords: Coords, color: Player): CoordsS
  * @param {Player} color - The color of the pawn selected
  * @returns {CoordsSpecial[]}
  */
-function pawns(game: Game, board: Board, coords: Coords, color: Player) {
+function pawns(game: Game, boardsim: Board, coords: Coords, color: Player) {
 
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === players.WHITE ? 1 : -1; 
@@ -138,13 +138,13 @@ function pawns(game: Game, board: Board, coords: Coords, color: Player) {
 
 	// Is there a piece in front of it?
 	const coordsInFront: Coords = [coords[0], coords[1] + yOneorNegOne];
-	if (boardutil.getTypeFromCoords(board.pieces, coordsInFront) === undefined) { // No piece in front of it.
+	if (boardutil.getTypeFromCoords(boardsim.pieces, coordsInFront) === undefined) { // No piece in front of it.
 		appendPawnMoveAndAttachPromoteFlag(game, individualMoves, coordsInFront, color); // No piece, add the move
 
 		// Further... Is the double push legal?
 		const doublePushCoord: CoordsSpecial = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
-		const pieceAtCoords = boardutil.getTypeFromCoords(board.pieces, doublePushCoord);
-		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(board, coords)) { // Add the double push!
+		const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, doublePushCoord);
+		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(boardsim, coords)) { // Add the double push!
 			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
 			appendPawnMoveAndAttachPromoteFlag(game, individualMoves, doublePushCoord, color); 
 		}
@@ -160,7 +160,7 @@ function pawns(game: Game, board: Board, coords: Coords, color: Player) {
 		const thisCoordsToCapture: Coords = coordsToCapture[i]!;
 
 		// Is there an enemy piece at this coords?
-		const pieceAtCoords = boardutil.getTypeFromCoords(board.pieces, thisCoordsToCapture);
+		const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, thisCoordsToCapture);
 		if (pieceAtCoords === undefined) continue; // No piece, skip
 
 		// There is a piece. Make sure it's a different color
@@ -174,7 +174,7 @@ function pawns(game: Game, board: Board, coords: Coords, color: Player) {
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
-	addPossibleEnPassant(game, board, individualMoves, coords, color);
+	addPossibleEnPassant(game, boardsim, individualMoves, coords, color);
 
 	return individualMoves;
 }
@@ -199,21 +199,21 @@ function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Co
  * @param {string} color - The color of the pawn selected
  */
 // If it can capture en passant, the move is appended to  legalmoves
-function addPossibleEnPassant(game: Game, board: Board, individualMoves: Coords[], coords: Coords, color: Player) {
-	if (board.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
+function addPossibleEnPassant(game: Game, boardsim: Board, individualMoves: Coords[], coords: Coords, color: Player) {
+	if (boardsim.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== game.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
-	const enpassantCapturedPawn = boardutil.getTypeFromCoords(board.pieces, board.state.global.enpassant.pawn)!;
+	const enpassantCapturedPawn = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
 	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
-	const xDifference = board.state.global.enpassant.square[0] - coords[0];
+	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
 	if (Math.abs(xDifference) !== 1) return; // Not immediately left or right of us
 	const yParity = color === players.WHITE ? 1 : -1;
-	if (coords[1] + yParity !== board.state.global.enpassant.square[1]) return; // Not one in front of us
+	if (coords[1] + yParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(board.state.global.enpassant.square);
+	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(boardsim.state.global.enpassant.square);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
@@ -241,7 +241,7 @@ function appendPawnMoveAndAttachPromoteFlag(game: Game, individualMoves: CoordsS
  * @param {Player} color - The color of the rose selected
  * @returns {CoordsSpecial[]}
  */
-function roses(game: Game, board: Board, coords: Coords, color: Player): CoordsSpecial[] {
+function roses(game: Game, boardsim: Board, coords: Coords, color: Player): CoordsSpecial[] {
 	const movements: Coords[] = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
 	const individualMoves: CoordsSpecial[] = [];
@@ -256,7 +256,7 @@ function roses(game: Game, board: Board, coords: Coords, color: Player): CoordsS
 				const movement = movements[math.posMod(b, movements.length)]!;
 				currentCoord = coordutil.addCoordinates(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
-				const pieceOnSquare = boardutil.getPieceFromCoords(board.pieces, currentCoord); // { type, index, coords }
+				const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, currentCoord); // { type, index, coords }
 				if (pieceOnSquare) {
 					const colorOfPiece = typeutil.getColorFromType(pieceOnSquare.type);
 					// eslint-disable-next-line max-depth
@@ -292,14 +292,14 @@ function roses(game: Game, board: Board, coords: Coords, color: Player): CoordsS
 			if (coord.path!.length < newCoord.path.length) individualMoves[i] = coord; // First path shorter
 			else if (coord.path!.length > newCoord.path.length) individualMoves[i] = newCoord; // Second path shorter
 			else if (coord.path!.length === newCoord.path.length) { // Path are equal length
-				if (!board.startSnapshot) {
+				if (!boardsim.startSnapshot) {
 					// Center of play hasn't been calculated, choose a random one instead of curving towards the center.
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
 					return;
 				}
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
-				const centerOfPlay = math.calcCenterOfBoundingBox(board.startSnapshot.box);
+				const centerOfPlay = math.calcCenterOfBoundingBox(boardsim.startSnapshot.box);
 				const vectorToCenter = math.calculateVectorFromPoints(coords, centerOfPlay);
 				const existingCoordVector = math.calculateVectorFromPoints(coords, coord.path![1]!);
 				const newCoordVector = math.calculateVectorFromPoints(coords, newCoord.path[1]!);
@@ -328,9 +328,9 @@ function roses(game: Game, board: Board, coords: Coords, color: Player): CoordsS
  * @param {number[]} coords - The coordinates of the piece
  * @returns {boolean} *true* if it has it's special move rights.
  */
-function doesPieceHaveSpecialRight(board: Board, coords: Coords): boolean {
+function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 	const key = coordutil.getKeyFromCoords(coords);
-	return board.state.global.specialRights.has(key);
+	return boardsim.state.global.specialRights.has(key);
 }
 
 // Returns true if the type is a pawn and the coords it moved to is a promotion line

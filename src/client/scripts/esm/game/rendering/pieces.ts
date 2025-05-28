@@ -29,8 +29,8 @@ const ghostOpacity: number = 0.4;
  * Renders all of our pieces on the board,
  * including voids, and mini images, if visible.
  */
-function renderPiecesInGame(board: Board, mesh: Mesh | undefined) {
-	if (mesh) piecemodels.renderAll(board, mesh);
+function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined) {
+	if (mesh) piecemodels.renderAll(boardsim, mesh);
 	miniimage.render();
 }
 

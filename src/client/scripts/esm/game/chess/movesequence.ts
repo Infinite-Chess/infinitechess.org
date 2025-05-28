@@ -39,10 +39,10 @@ import stats from "../gui/stats.js";
  * 
  * This returns the constructed Move object so that we have the option to animate it if we so choose.
  */
-function makeMove(game: Game, board: Board, mesh: Mesh | undefined, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
-	const move = movepiece.generateMove(game, board, moveDraft);
+function makeMove(game: Game, boardsim: Board, mesh: Mesh | undefined, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
+	const move = movepiece.generateMove(game, boardsim, moveDraft);
 	
-	movepiece.makeMove(game, board, move); // Logical changes
+	movepiece.makeMove(game, boardsim, move); // Logical changes
 
 	/**
 	 * Check if boardchanges regenerated the organized pieces to add more undefineds,
@@ -54,7 +54,7 @@ function makeMove(game: Game, board: Board, mesh: Mesh | undefined, moveDraft: M
 	 * from the move's changes! For example, pawn deleted that promoted.
 	 */
 	if (mesh) { // Mesh is generated
-		if (board.pieces.newlyRegenerated) piecemodels.regenAll(board, mesh);
+		if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
 		else boardchanges.runChanges(mesh, move.changes, meshChanges, true); // Graphical changes
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
@@ -70,7 +70,7 @@ function makeMove(game: Game, board: Board, mesh: Mesh | undefined, moveDraft: M
 	}
 
 	if (doGameOverChecks) {
-		gamefileutility.doGameOverChecks(game, board);
+		gamefileutility.doGameOverChecks(game, boardsim);
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
 		if (gamefileutility.isGameOver(game) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
@@ -87,10 +87,10 @@ function makeMove(game: Game, board: Board, mesh: Mesh | undefined, moveDraft: M
 /**
  * Makes a global backward move in the game.
  */
-function rewindMove(game: Game, board: Board, mesh: Mesh | undefined) {
+function rewindMove(game: Game, boardsim: Board, mesh: Mesh | undefined) {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
-	const lastMove = moveutil.getLastMove(board.moves)!;
-	movepiece.rewindMove(game, board); // Logical changes
+	const lastMove = moveutil.getLastMove(boardsim.moves)!;
+	movepiece.rewindMove(game, boardsim); // Logical changes
 	if (lastMove.isNull) return;
 	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
@@ -112,8 +112,8 @@ function rewindMove(game: Game, board: Board, mesh: Mesh | undefined) {
  * 
  * But it does change the check state.
  */
-function viewMove(game: Game, board: Board, mesh: Mesh | undefined, move: Move | NullMove, forward = true) {
-	movepiece.applyMove(game, board, move, forward); // Apply the logical changes.
+function viewMove(game: Game, boardsim: Board, mesh: Mesh | undefined, move: Move | NullMove, forward = true) {
+	movepiece.applyMove(game, boardsim, move, forward); // Apply the logical changes.
 	if (move.isNull) return;
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
@@ -125,17 +125,17 @@ function viewMove(game: Game, board: Board, mesh: Mesh | undefined, move: Move |
  * Makes the game view a set move index
  * @param index the move index to goto
  */
-function viewIndex(game: Game, board: Board, mesh: Mesh | undefined, index: number) {
-	movepiece.goToMove(board, index, (move: (Move | NullMove)) => viewMove(game, board, mesh, move, index >= board.state.local.moveIndex));
+function viewIndex(game: Game, boardsim: Board, mesh: Mesh | undefined, index: number) {
+	movepiece.goToMove(boardsim, index, (move: (Move | NullMove)) => viewMove(game, boardsim, mesh, move, index >= boardsim.state.local.moveIndex));
 	updateGui(false);
 }
 
 /**
  * Makes the game view the last move
  */
-function viewFront(game: Game, board: Board, mesh: Mesh | undefined) {
+function viewFront(game: Game, boardsim: Board, mesh: Mesh | undefined) {
 	/** Call {@link viewIndex} with the index of the last move in the game */
-	viewIndex(game, board, mesh, board.moves.length - 1);
+	viewIndex(game, boardsim, mesh, boardsim.moves.length - 1);
 }
 
 /**
@@ -147,16 +147,16 @@ function viewFront(game: Game, board: Board, mesh: Mesh | undefined) {
  * 
  * ASSUMES that it is legal to navigate in the direction.
  */
-function navigateMove(game: Game, board: Board, mesh: Mesh | undefined, forward: boolean): void {
+function navigateMove(game: Game, boardsim: Board, mesh: Mesh | undefined, forward: boolean): void {
 	// Determine the index of the move to apply
-	const idx = forward ? board.state.local.moveIndex + 1 : board.state.local.moveIndex;
+	const idx = forward ? boardsim.state.local.moveIndex + 1 : boardsim.state.local.moveIndex;
 
 	// Make sure the move exists. Normally we'd never call this method
 	// if it does, but just in case we forget to check.
-	const move = board.moves[idx];
+	const move = boardsim.moves[idx];
 	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 	
-	viewMove(game, board, mesh, move, forward); // Apply the logical + graphical changes
+	viewMove(game, boardsim, mesh, move, forward); // Apply the logical + graphical changes
 	if (move.isNull) return;
 	animateMove(move, forward); // Animate
 	updateGui(true);

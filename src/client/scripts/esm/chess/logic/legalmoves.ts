@@ -120,10 +120,10 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
 /**
  * Gets the moveset of the type of piece specified.
  */
-function getPieceMoveset(board: Board, pieceType: number): PieceMoveset {
+function getPieceMoveset(boardsim: Board, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
 	if (player === players.NEUTRAL) return {}; // Neutral pieces CANNOT MOVE!
-	const movesetFunc = board.pieceMovesets[rawType];
+	const movesetFunc = boardsim.pieceMovesets[rawType];
 	if (!movesetFunc) return {}; // Safety net. Piece doesn't have a specified moveset. Return empty.
 	return movesetFunc(); // Calling these parameters as a function returns their moveset.
 }
@@ -164,9 +164,9 @@ function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
  * @param moveset 
  * @param legalmoves 
  */
-function appendSpecialMoves(game: Game, board: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
+function appendSpecialMoves(game: Game, boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
 	const color = typeutil.getColorFromType(piece.type);
-	if (moveset.special) legalmoves.individual.push(...moveset.special(game, board, piece.coords, color));
+	if (moveset.special) legalmoves.individual.push(...moveset.special(game, boardsim, piece.coords, color));
 }
 
 /**
@@ -176,13 +176,13 @@ function appendSpecialMoves(game: Game, board: Board, piece: Piece, moveset: Pie
  * @param moveset 
  * @param legalmoves 
  */
-function appendCalculatedMoves(board: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
+function appendCalculatedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
 	const color = typeutil.getColorFromType(piece.type);
 
 	// Legal jumping/individual moves
 	if (moveset.individual) {
 		const movesetIndividual = shiftIndividualMovesetByCoords(moveset.individual, piece.coords);
-		moves_RemoveOccupiedByFriendlyPieceOrVoid(board, movesetIndividual, color);
+		moves_RemoveOccupiedByFriendlyPieceOrVoid(boardsim, movesetIndividual, color);
 		legalmoves.individual = legalmoves.individual.concat(movesetIndividual);
 	}
 
@@ -190,11 +190,11 @@ function appendCalculatedMoves(board: Board, piece: Piece, moveset: PieceMoveset
 	if (moveset.sliding) {
 		const blockingFunc = getBlockingFuncFromPieceMoveset(moveset);
 		for (const [linekey, limits] of Object.entries(moveset.sliding)) {
-			const lines = board.pieces.lines.get(linekey as Vec2Key);
+			const lines = boardsim.pieces.lines.get(linekey as Vec2Key);
 			if (lines === undefined) continue;
 			const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 			const key = organizedpieces.getKeyFromLine(line, piece.coords);
-			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, board.pieces, lines.get(key)!, line, limits, piece.coords, color)!;
+			legalmoves.sliding[linekey as Vec2Key] = slide_CalcLegalLimit(blockingFunc, boardsim.pieces, lines.get(key)!, line, limits, piece.coords, color)!;
 		};
 	};
 }
@@ -205,12 +205,12 @@ function appendCalculatedMoves(board: Board, piece: Piece, moveset: PieceMoveset
  * @param piece 
  * @returns The legal moves of that piece
  */
-function calculateAll(game: Game, board: Board, piece: Piece): LegalMoves {
-	const moveset = getPieceMoveset(board, piece.type);
+function calculateAll(game: Game, boardsim: Board, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
-	appendCalculatedMoves(board, piece, moveset, moves);
-	appendSpecialMoves(game, board, piece, moveset, moves);
-	checkresolver.removeCheckInvalidMoves(game, board, piece, moves);
+	appendCalculatedMoves(boardsim, piece, moveset, moves);
+	appendSpecialMoves(game, boardsim, piece, moveset, moves);
+	checkresolver.removeCheckInvalidMoves(game, boardsim, piece, moves);
 	return moves;
 }
 
@@ -223,15 +223,15 @@ function calculateAll(game: Game, board: Board, piece: Piece): LegalMoves {
  * @param lineKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
  * @param organizedLine - The organized line of the above key that our piece is on
  */
-function calcPiecesLegalSlideLimitOnSpecificLine(board: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {
-	const thisPieceMoveset = getPieceMoveset(board, piece.type); // Default piece moveset
+function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {
+	const thisPieceMoveset = getPieceMoveset(boardsim, piece.type); // Default piece moveset
 	if (!thisPieceMoveset.sliding) return; // This piece can't slide at all
 	if (!thisPieceMoveset.sliding[slideKey]) return; // This piece can't slide ALONG the provided line
 	// This piece CAN slide along the provided line.
 	// Calculate how far it can slide...
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = typeutil.getColorFromType(piece.type);
-	return slide_CalcLegalLimit(blockingFunc, board.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
+	return slide_CalcLegalLimit(blockingFunc, boardsim.pieces, organizedLine, slide, thisPieceMoveset.sliding[slideKey], piece.coords, friendlyColor);
 }
 
 /**
@@ -249,12 +249,12 @@ function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords:
  * Accepts array of moves, returns new array with illegal moves removed due to pieces occupying.
  * MUTATES original array.
  */
-function moves_RemoveOccupiedByFriendlyPieceOrVoid(board: Board, individualMoves: Coords[], color: Player): Coords[] {
+function moves_RemoveOccupiedByFriendlyPieceOrVoid(boardsim: Board, individualMoves: Coords[], color: Player): Coords[] {
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		const thisMove = individualMoves[i]!;
 
 		// Is there a piece on this square?
-		const pieceAtSquare = boardutil.getTypeFromCoords(board.pieces, thisMove);
+		const pieceAtSquare = boardutil.getTypeFromCoords(boardsim.pieces, thisMove);
 		if (pieceAtSquare === undefined) continue; // Next move if there is no square here
 
 		// Do the players match?
@@ -337,7 +337,7 @@ function slide_CalcLegalLimit(
  * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
  * @returns *true* if the provided legalMoves object contains the provided endCoords.
  */
-function checkIfMoveLegal(game: Game, board: Board, legalMoves: LegalMoves, startCoords: Coords, endCoords: Coords, colorOfFriendly: Player, { ignoreIndividualMoves = false } = {}) {
+function checkIfMoveLegal(game: Game, boardsim: Board, legalMoves: LegalMoves, startCoords: Coords, endCoords: Coords, colorOfFriendly: Player, { ignoreIndividualMoves = false } = {}) {
 	// Return if it's the same exact square
 	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
@@ -364,7 +364,7 @@ function checkIfMoveLegal(game: Game, board: Board, legalMoves: LegalMoves, star
 		if (!doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc)) continue; // Sliding this direction 
 		if (legalMoves.brute) { // Don't allow the slide if it results in check
 			const moveDraft = { startCoords: startCoords, endCoords };
-			if (checkresolver.getSimulatedCheck(game, board, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
+			if (checkresolver.getSimulatedCheck(game, boardsim, moveDraft, colorOfFriendly).check) return false; // The move results in check => not legal
 		}
 		return true; // Move is legal
 	}
@@ -380,7 +380,7 @@ function checkIfMoveLegal(game: Game, board: Board, legalMoves: LegalMoves, star
  * @param moveDraft - The move, with the bare minimum properties: `{ startCoords, endCoords, promotion }`
  * @returns *true* If the move is legal, otherwise a string containing why it is illegal.
  */
-function isOpponentsMoveLegal(game: Game, board: Board, moveDraft: MoveDraft, claimedGameConclusion: string | undefined): string | true {
+function isOpponentsMoveLegal(game: Game, boardsim: Board, moveDraft: MoveDraft, claimedGameConclusion: string | undefined): string | true {
 	if (!moveDraft) {
 		console.log("Opponents move is illegal because it is not defined. There was likely an error in converting it to long format.");
 		return 'Move is not defined. Probably an error in converting it to long format.';
@@ -389,15 +389,15 @@ function isOpponentsMoveLegal(game: Game, board: Board, moveDraft: MoveDraft, cl
 	// more properties are added such as `rewindInfo`.
 	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 
-	const inCheckB4Forwarding = jsutil.deepCopyObject(board.state.local.inCheck);
-	const attackersB4Forwarding = jsutil.deepCopyObject(board.state.local.attackers);
+	const inCheckB4Forwarding = jsutil.deepCopyObject(boardsim.state.local.inCheck);
+	const attackersB4Forwarding = jsutil.deepCopyObject(boardsim.state.local.attackers);
 
-	const originalMoveIndex = board.state.local.moveIndex; // Used to return to this move after we're done simulating
+	const originalMoveIndex = boardsim.state.local.moveIndex; // Used to return to this move after we're done simulating
 	// Go to the front of the game, making zero graphical changes (we'll return to this spot after simulating)
-	movepiece.goToMove(board, board.moves.length - 1, (move) => movepiece.applyMove(game, board, move, true));
+	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) => movepiece.applyMove(game, boardsim, move, true));
 
 	// Make sure a piece exists on the start coords
-	const piecemoved = boardutil.getPieceFromCoords(board.pieces, moveDraftCopy.startCoords); // { type, index, coords }
+	const piecemoved = boardutil.getPieceFromCoords(boardsim.pieces, moveDraftCopy.startCoords); // { type, index, coords }
 	if (!piecemoved) {
 		console.log(`Opponent's move is illegal because no piece exists at the startCoords. Move: ${JSON.stringify(moveDraftCopy)}`);
 		return rewindGameAndReturnReason('No piece exists at start coords.');
@@ -434,13 +434,13 @@ function isOpponentsMoveLegal(game: Game, board: Board, moveDraft: MoveDraft, cl
 	}
 
 	// Test if that piece's legal moves contain the destinationCoords.
-	const legalMoves = calculateAll(game, board, piecemoved);
+	const legalMoves = calculateAll(game, boardsim, piecemoved);
 
 	// This should pass on any special moves tags at the same time.
 	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveDraftCopy.endCoords);
-	if (!checkIfMoveLegal(game, board, legalMoves, piecemoved.coords, endCoordsToAppendSpecialsTo, colorOfPieceMoved)) { // Illegal move
+	if (!checkIfMoveLegal(game, boardsim, legalMoves, piecemoved.coords, endCoordsToAppendSpecialsTo, colorOfPieceMoved)) { // Illegal move
 		console.log(`Opponent's move is illegal because the destination coords are illegal. Move: ${JSON.stringify(moveDraftCopy)}`);
-		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(board.state.local.inCheck)}. attackers: ${JSON.stringify(board.state.local.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
+		return rewindGameAndReturnReason(`Destination coordinates are illegal. inCheck: ${JSON.stringify(boardsim.state.local.inCheck)}. attackers: ${JSON.stringify(boardsim.state.local.attackers)}. originalMoveIndex: ${originalMoveIndex}. inCheckB4Forwarding: ${inCheckB4Forwarding}. attackersB4Forwarding: ${JSON.stringify(attackersB4Forwarding)}`);
 	}
 	// Transfer the special move flag to the moveDraftCopy
 	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, moveDraft);
@@ -449,7 +449,7 @@ function isOpponentsMoveLegal(game: Game, board: Board, moveDraft: MoveDraft, cl
 	// Only do so if the win condition is decisive (exclude win conditions declared by the server,
 	// such as time, aborted, resignation, disconnect)
 	if (claimedGameConclusion === undefined || winconutil.isGameConclusionDecisive(claimedGameConclusion)) {
-		const simulatedConclusion = movepiece.getSimulatedConclusion(game, board, moveDraftCopy);
+		const simulatedConclusion = movepiece.getSimulatedConclusion(game, boardsim, moveDraftCopy);
 		if (simulatedConclusion !== claimedGameConclusion) {
 			console.log(`Opponent's move is illegal because gameConclusion doesn't match. Should be "${simulatedConclusion}", received "${claimedGameConclusion}". Their move: ${JSON.stringify(moveDraftCopy)}`);
 			return rewindGameAndReturnReason(`Game conclusion isn't correct. Received: ${claimedGameConclusion}. Should be ${simulatedConclusion}`);
@@ -464,13 +464,13 @@ function isOpponentsMoveLegal(game: Game, board: Board, moveDraft: MoveDraft, cl
 	// ...
 
 	// Rewind the game back to the index we were originally on before simulating
-	movepiece.goToMove(board, originalMoveIndex, (move) => movepiece.applyMove(game, board, move, false));
+	movepiece.goToMove(boardsim, originalMoveIndex, (move) => movepiece.applyMove(game, boardsim, move, false));
 
 	return true; // By this point, nothing illegal!
 
 	function rewindGameAndReturnReason(reasonIllegal: string) {
 		// Rewind the game back to the index we were originally on
-		movepiece.goToMove(board, originalMoveIndex, (move) => movepiece.applyMove(game, board, move, false));
+		movepiece.goToMove(boardsim, originalMoveIndex, (move) => movepiece.applyMove(game, boardsim, move, false));
 		return reasonIllegal;
 	}
 }
