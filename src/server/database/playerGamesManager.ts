@@ -233,6 +233,7 @@ function updatePlayerGamesColumns(user_id: number, game_id: number, columnsAndVa
 
 /**
  * Retrieves the most recent N rated entries for a user on a specific leaderboard, returning only the specified columns from player_games.
+ * Aborted games (where score is null) are skipped.
  * @param user_id - The ID of the user
  * @param leaderboard_id - The ID of the leaderboard to filter rated games
  * @param limit - Maximum number of recent games to fetch
@@ -253,6 +254,7 @@ function getRecentNRatedGamesForUser(user_id: number, leaderboard_id: number, li
 	// Dynamically build SELECT clause from requested columns
 	const selectClause = columns.map(col => `pg.${col}`).join(', ');
 
+	// Only include rated, non-aborted games on the specified leaderboard, sorted by game date
 	const query = `
 		SELECT ${selectClause}
 		FROM player_games pg
@@ -260,6 +262,7 @@ function getRecentNRatedGamesForUser(user_id: number, leaderboard_id: number, li
 		WHERE pg.user_id = ?
 		  AND g.rated = 1
 		  AND g.leaderboard_id = ?
+		  AND pg.score IS NOT NULL
 		ORDER BY g.date DESC
 		LIMIT ?
 	`;
