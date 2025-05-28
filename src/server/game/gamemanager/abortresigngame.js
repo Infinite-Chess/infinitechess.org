@@ -4,7 +4,7 @@
  */
 
 import gameutility from './gameutility.js';
-import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
+import { setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { sendNotify } from '../../socket/sendSocketMessage.js';
 
@@ -28,18 +28,16 @@ function abortGame(ws, game) {
 
 	// Is it legal?...
 
-	if (game.gameConclusion === 'aborted') { // Opponent aborted first.
-		console.log(`Player tried to abort game ${game.id} when the game is already aborted!`);
-		onRequestRemovalFromPlayersInActiveGames(ws, game);
-		return;
-	} else if (gameutility.isGameOver(game)) {
+	if (gameutility.isGameOver(game)) {
+		// Return if game is already over
 		console.log(`Player tried to abort game ${game.id} when the game is already over!`);
 		return;
 	} else if (gameutility.isGameBorderlineResignable(game)) {
 		// A player might try to abort a game after his opponent has just played the second move due to latency issues...
-		// In doubt, be lenient and allow this here. DO NOT RETURN
+		// In doubt, be lenient and allow him to abort here. DO NOT RETURN
 		console.log(`Player tried to abort game ${game.id} when there's been exactly 2 moves played! Aborting game anyways...`);
 	} else if (gameutility.isGameResignable(game)) {
+		// Return if player tries to abort when he does not have the right
 		console.error(`Player tried to abort game ${game.id} when there's been at least 3 moves played!`);
 		sendNotify(ws, "server.javascript.ws-no_abort_after_moves");
 		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
@@ -62,9 +60,11 @@ function resignGame(ws, game) {
 	// Is it legal?...
 
 	if (gameutility.isGameOver(game)) {
+		// Return if game is already over
 		console.log(`Player resign to resign game ${game.id} when the game is already over!`);
 		return;
 	} else if (!gameutility.isGameResignable(game)) {
+		// Return if player tries to resign when he does not have the right
 		console.error(`Player tried to resign game ${game.id} when there's less than 2 moves played! Ignoring..`);
 		return;
 	}
