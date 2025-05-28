@@ -178,7 +178,7 @@ interface NullMove {
  * calculating and appending its board changes to its Changes list,
  * and queueing its gamefile StateChanges.
  */
-function generateMove(game: Game, boardsim: Board, moveDraft: MoveDraft): Move {
+function generateMove(basegame: Game, boardsim: Board, moveDraft: MoveDraft): Move {
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
@@ -220,13 +220,13 @@ function generateMove(game: Game, boardsim: Board, moveDraft: MoveDraft): Move {
 	
 	// Delete all special rights that should be revoked from the move.
 	queueSpecialRightDeletionStateChanges(boardsim, move);
-	queueIncrementMoveRuleStateChange(game, boardsim, move);
+	queueIncrementMoveRuleStateChange(basegame, boardsim, move);
 
 	return move;
 }
 
 /** Generates a Null Move used by engines. */
-function generateNullMove(game: Game, boardsim: Board) {
+function generateNullMove(basegame: Game, boardsim: Board) {
 	const nullMove: NullMove = {
 		isNull: true,
 		generateIndex: boardsim.state.local.moveIndex + 1,
@@ -245,7 +245,7 @@ function generateNullMove(game: Game, boardsim: Board) {
 	 * this one's future value will be overwritten
 	 */
 	state.createEnPassantState(nullMove, boardsim.state.global.enpassant, undefined);
-	queueIncrementMoveRuleStateChange(game, boardsim, nullMove);
+	queueIncrementMoveRuleStateChange(basegame, boardsim, nullMove);
 
 	return nullMove;
 }
@@ -300,8 +300,8 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, move: Move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange(game: Game, boardsim: Board, move: Move | NullMove) {
-	if (!game.gameRules.moveRule) return; // Not using the move-rule
+function queueIncrementMoveRuleStateChange(basegame: Game, boardsim: Board, move: Move | NullMove) {
+	if (!basegame.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
 	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? boardsim.state.global.moveRuleState! + 1 : 0;
@@ -315,17 +315,17 @@ function queueIncrementMoveRuleStateChange(game: Game, boardsim: Board, move: Mo
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
-function makeMove(game: Game, boardsim: Board, move: Move | NullMove) {
+function makeMove(basegame: Game, boardsim: Board, move: Move | NullMove) {
 	boardsim.moves.push(move);
-	game.moves.push(move.isNull ? '--' : move.compact);
+	basegame.moves.push(move.isNull ? '--' : move.compact);
 
-	applyMove(game, boardsim, move, true, { global: true }); // Apply the logical boardsim changes.
+	applyMove(basegame, boardsim, move, true, { global: true }); // Apply the logical boardsim changes.
 
 	// This needs to be after the moveIndex is updated
-	updateTurn(game, boardsim);
+	updateTurn(basegame, boardsim);
 
 	// Now we can test for check, and modify the state of the gamefile if it is.
-	createCheckState(game, boardsim, move);
+	createCheckState(basegame, boardsim, move);
 	if (boardsim.state.local.inCheck) move.flags.check = true;
 	// The "mate" property of the move will be added after our game conclusion checks...
 }
@@ -338,7 +338,7 @@ function makeMove(game: Game, boardsim: Board, move: Move | NullMove) {
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(game: Game, boardsim: Board, move: Move | NullMove, forward = true, { global = false } = {}) {
+function applyMove(basegame: Game, boardsim: Board, move: Move | NullMove, forward = true, { global = false } = {}) {
 	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
@@ -349,27 +349,27 @@ function applyMove(game: Game, boardsim: Board, move: Move | NullMove, forward =
 
 	if (move.isNull) return; // Null moves don't have changes to make
 
-	boardchanges.runChanges({game, boardsim}, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
+	boardchanges.runChanges({basegame, boardsim}, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
 /**
  * Updates the `whosTurn` property of the gamefile, according to the move index we're on.
  */
-function updateTurn(game: Game, boardsim: Board) {
-	game.whosTurn = moveutil.getWhosTurnAtMoveIndex(game, boardsim.state.local.moveIndex);
+function updateTurn(basegame: Game, boardsim: Board) {
+	basegame.whosTurn = moveutil.getWhosTurnAtMoveIndex(basegame, boardsim.state.local.moveIndex);
 }
 
 /**
  * Tests if the gamefile is currently in check,
  * then creates and set's the game state to reflect that.
  */
-function createCheckState(game: Game, boardsim: Board, move: Move | NullMove) {
-	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(game, boardsim.state.local.moveIndex);
+function createCheckState(basegame: Game, boardsim: Board, move: Move | NullMove) {
+	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(basegame, boardsim.state.local.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
-	const trackAttackers = game.gameRules.winConditions[oppositeColor]!.includes('checkmate');
+	const trackAttackers = basegame.gameRules.winConditions[oppositeColor]!.includes('checkmate');
 
-	const checkResults = checkdetection.detectCheck(game, boardsim, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+	const checkResults = checkdetection.detectCheck(basegame, boardsim, whosTurnItWasAtMoveIndex, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
 	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
 	state.createCheckState(move, boardsim.state.local.inCheck, futureInCheck, boardsim.state); // Passes in the gamefile as an argument
@@ -386,12 +386,12 @@ function createCheckState(game: Game, boardsim: Board, move: Move | NullMove) {
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
-function makeAllMovesInGame(game: Game, boardsim: Board, moves: ServerGameMovesMessage) {
+function makeAllMovesInGame(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage) {
 	if (boardsim.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
-		const move: Move = calculateMoveFromShortmove(game, boardsim, shortmove);
+		const move: Move = calculateMoveFromShortmove(basegame, boardsim, shortmove);
 		if (!move) throw Error(`Cannot make all moves in game! There was one invalid move: ${shortmove}. Index: ${i}`);
-		makeMove(game, boardsim, move);
+		makeMove(basegame, boardsim, move);
 	});
 }
 
@@ -407,7 +407,7 @@ function makeAllMovesInGame(game: Game, boardsim: Board, moves: ServerGameMovesM
  * @param {string} shortmove - The move in most compact form: `1,2>3,4Q`
  * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
-function calculateMoveFromShortmove(game: Game, boardsim: Board, shortmove: ServerGameMoveMessage): Move {
+function calculateMoveFromShortmove(basegame: Game, boardsim: Board, shortmove: ServerGameMoveMessage): Move {
 	if (!moveutil.areWeViewingLatestMove(boardsim)) throw Error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
 
 	// Reconstruct the startCoords, endCoords, and special move properties of the MoveDraft
@@ -432,7 +432,7 @@ function calculateMoveFromShortmove(game: Game, boardsim: Board, shortmove: Serv
 
 	const moveset = legalmoves.getPieceMoveset(boardsim, piece.type);
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
-	legalmoves.appendSpecialMoves(game, boardsim, piece, moveset, legalSpecialMoves);
+	legalmoves.appendSpecialMoves(basegame, boardsim, piece, moveset, legalSpecialMoves);
 	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
@@ -440,7 +440,7 @@ function calculateMoveFromShortmove(game: Game, boardsim: Board, shortmove: Serv
 		break;
 	}
 
-	const move = generateMove(game, boardsim, moveDraft);
+	const move = generateMove(basegame, boardsim, moveDraft);
 	if (shortmove.clockStamp !== undefined) move.clockStamp = shortmove.clockStamp;
 	return move;
 }
@@ -452,15 +452,15 @@ function calculateMoveFromShortmove(game: Game, boardsim: Board, shortmove: Serv
 /**
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
-function rewindMove(game: Game, boardsim: Board) {
+function rewindMove(basegame: Game, boardsim: Board) {
 	const move = moveutil.getMoveFromIndex(boardsim.moves, boardsim.state.local.moveIndex);
 
-	applyMove(game, boardsim, move, false, { global: true });
+	applyMove(basegame, boardsim, move, false, { global: true });
 
 	// Delete the move off the end of our moves list
 	boardsim.moves.pop();
-	game.moves.pop();
-	updateTurn(game, boardsim);
+	basegame.moves.pop();
+	updateTurn(basegame, boardsim);
 }
 
 
@@ -504,12 +504,12 @@ function goToMove(boardsim: Board, index: number, callback: (move: Move | NullMo
  * The move is automatically rewound when it's done.
  * @returns Whatever is returned by the callback
  */
-function simulateMoveWrapper<R>(game: Game, boardsim: Board, moveDraft: MoveDraft, callback: () => R): R {
-	const move = generateMove(game, boardsim, moveDraft);
-	makeMove(game, boardsim, move);
+function simulateMoveWrapper<R>(basegame: Game, boardsim: Board, moveDraft: MoveDraft, callback: () => R): R {
+	const move = generateMove(basegame, boardsim, moveDraft);
+	makeMove(basegame, boardsim, move);
 	// What info can we pull from the game after simulating this move?
 	const info = callback();
-	rewindMove(game, boardsim);
+	rewindMove(basegame, boardsim);
 	return info;
 }
 
@@ -517,11 +517,11 @@ function simulateMoveWrapper<R>(game: Game, boardsim: Board, moveDraft: MoveDraf
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
-function getSimulatedConclusion(game: Game, boardsim: Board, moveDraft: MoveDraft): string | undefined {
+function getSimulatedConclusion(basegame: Game, boardsim: Board, moveDraft: MoveDraft): string | undefined {
 	return simulateMoveWrapper(
-		game, boardsim,
+		basegame, boardsim,
 		moveDraft,
-		() => wincondition.getGameConclusion(game, boardsim)
+		() => wincondition.getGameConclusion(basegame, boardsim)
 	);
 }
 

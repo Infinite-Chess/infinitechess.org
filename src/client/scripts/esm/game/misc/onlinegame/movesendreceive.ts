@@ -56,7 +56,7 @@ function sendMove() {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(game: Game, boardsim: Board, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
+function handleOpponentsMove(basegame: Game, boardsim: Board, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
 	// Make sure the move number matches the expected.
 	// Otherwise, we need to re-sync
 	const expectedMoveNumber = boardsim.moves.length + 1;
@@ -77,15 +77,15 @@ function handleOpponentsMove(game: Game, boardsim: Board, mesh: Mesh | undefined
 
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(game, boardsim, moveDraft, message.gameConclusion);
+	const moveIsLegal = legalmoves.isOpponentsMoveLegal(basegame, boardsim, moveDraft, message.gameConclusion);
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move.compact)}. Move number: ${message.moveNumber}`);
 	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movesequence.viewFront(game, boardsim, mesh);
+	movesequence.viewFront(basegame, boardsim, mesh);
 
 	// Forward the move...
 
-	const move = movesequence.makeMove(game, boardsim, mesh, moveDraft);
+	const move = movesequence.makeMove(basegame, boardsim, mesh, moveDraft);
 	if (mesh) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
@@ -94,11 +94,11 @@ function handleOpponentsMove(game: Game, boardsim: Board, mesh: Mesh | undefined
 	
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-	clock.edit(game, message.clockValues);
-	guiclock.edit(game);
+	clock.edit(basegame, message.clockValues);
+	guiclock.edit(basegame);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
-	if (gamefileutility.isGameOver(game)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
 
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons

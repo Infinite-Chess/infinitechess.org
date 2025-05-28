@@ -202,15 +202,15 @@ function applyChanges<T>(actiondata: T, changes: Array<Change>, funcs: ActionLis
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists
  */
-function addPiece({boardsim, game}: FullGame, change: Change) { // desiredIndex optional
+function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIndex optional
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
-			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, game.gameRules.promotionsAllowed, boardsim.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
-			organizedpieces.regenerateLists(boardsim.pieces, game.gameRules.promotionsAllowed, boardsim.editor);
+			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, basegame.gameRules.promotionsAllowed, boardsim.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
+			organizedpieces.regenerateLists(boardsim.pieces, basegame.gameRules.promotionsAllowed, boardsim.editor);
 		}
 
 		idx = typedata.undefineds.shift()!;

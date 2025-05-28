@@ -39,7 +39,7 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
  * @param {Player} color - The color of the king selected
  * @returns {CoordsSpecial[]}
  */
-function kings(game: Game, boardsim: Board, coords: Coords, color: Player): CoordsSpecial[] {
+function kings(basegame: Game, boardsim: Board, coords: Coords, color: Player): CoordsSpecial[] {
 	const individualMoves: CoordsSpecial[] = [];
 
 	if (!doesPieceHaveSpecialRight(boardsim, coords)) return individualMoves; // King doesn't have castling rights
@@ -86,7 +86,7 @@ function kings(game: Game, boardsim: Board, coords: Coords, color: Player): Coor
 	// The square the king lands on will be tested later, within checkresolver.
 
 	const oppositeColor = typeutil.invertPlayer(color);
-	if (gamerules.doesColorHaveWinCondition(game.gameRules, oppositeColor, 'checkmate')) {
+	if (gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, 'checkmate')) {
 		if (gamefileutility.isCurrentViewedPositionInCheck(boardsim)) return individualMoves; // Not legal if in check
 
 		// Simulate the space in-between
@@ -94,10 +94,10 @@ function kings(game: Game, boardsim: Board, coords: Coords, color: Player): Coor
 		const king = boardutil.getPieceFromCoords(boardsim.pieces, coords); // { type, index, coords }
 		if (leftLegal) {
 			const middleSquare: Coords = [x - 1, y];
-			if (checkresolver.isMoveCheckInvalid(game, boardsim, king!, middleSquare, color)) leftLegal = false;
+			if (checkresolver.isMoveCheckInvalid(basegame, boardsim, king!, middleSquare, color)) leftLegal = false;
 		} if (rightLegal) {
 			const middleSquare: Coords = [x + 1, y];
-			if (checkresolver.isMoveCheckInvalid(game, boardsim, king!, middleSquare, color)) rightLegal = false;
+			if (checkresolver.isMoveCheckInvalid(basegame, boardsim, king!, middleSquare, color)) rightLegal = false;
 		}
 	}
 
@@ -127,7 +127,7 @@ function kings(game: Game, boardsim: Board, coords: Coords, color: Player): Coor
  * @param {Player} color - The color of the pawn selected
  * @returns {CoordsSpecial[]}
  */
-function pawns(game: Game, boardsim: Board, coords: Coords, color: Player) {
+function pawns(basegame: Game, boardsim: Board, coords: Coords, color: Player) {
 
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === players.WHITE ? 1 : -1; 
@@ -139,14 +139,14 @@ function pawns(game: Game, boardsim: Board, coords: Coords, color: Player) {
 	// Is there a piece in front of it?
 	const coordsInFront: Coords = [coords[0], coords[1] + yOneorNegOne];
 	if (boardutil.getTypeFromCoords(boardsim.pieces, coordsInFront) === undefined) { // No piece in front of it.
-		appendPawnMoveAndAttachPromoteFlag(game, individualMoves, coordsInFront, color); // No piece, add the move
+		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, coordsInFront, color); // No piece, add the move
 
 		// Further... Is the double push legal?
 		const doublePushCoord: CoordsSpecial = [coordsInFront[0], coordsInFront[1] + yOneorNegOne];
 		const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, doublePushCoord);
 		if (pieceAtCoords === undefined && doesPieceHaveSpecialRight(boardsim, coords)) { // Add the double push!
 			doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(coords, doublePushCoord);
-			appendPawnMoveAndAttachPromoteFlag(game, individualMoves, doublePushCoord, color); 
+			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color); 
 		}
 	}
 
@@ -170,11 +170,11 @@ function pawns(game: Game, boardsim: Board, coords: Coords, color: Player) {
 		// Make sure it isn't a void
 		if (typeutil.getRawType(pieceAtCoords) === rawTypes.VOID) continue;
 
-		appendPawnMoveAndAttachPromoteFlag(game, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
+		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, thisCoordsToCapture, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
-	addPossibleEnPassant(game, boardsim, individualMoves, coords, color);
+	addPossibleEnPassant(basegame, boardsim, individualMoves, coords, color);
 
 	return individualMoves;
 }
@@ -199,9 +199,9 @@ function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Co
  * @param {string} color - The color of the pawn selected
  */
 // If it can capture en passant, the move is appended to  legalmoves
-function addPossibleEnPassant(game: Game, boardsim: Board, individualMoves: Coords[], coords: Coords, color: Player) {
+function addPossibleEnPassant(basegame: Game, boardsim: Board, individualMoves: Coords[], coords: Coords, color: Player) {
 	if (boardsim.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
-	if (color !== game.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
+	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawn = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
 	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
@@ -218,16 +218,16 @@ function addPossibleEnPassant(game: Game, boardsim: Board, individualMoves: Coor
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
 	enPassantSquare.enpassant = true;
-	appendPawnMoveAndAttachPromoteFlag(game, individualMoves, enPassantSquare, color);
+	appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, enPassantSquare, color);
 }
 
 /**
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(game: Game, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player) {
-	if (game.gameRules.promotionRanks !== undefined) {
-		const teamPromotionRanks = game.gameRules.promotionRanks[color]!;
+function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: CoordsSpecial[], landCoords: CoordsSpecial, color: Player) {
+	if (basegame.gameRules.promotionRanks !== undefined) {
+		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
 		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
@@ -241,7 +241,7 @@ function appendPawnMoveAndAttachPromoteFlag(game: Game, individualMoves: CoordsS
  * @param {Player} color - The color of the rose selected
  * @returns {CoordsSpecial[]}
  */
-function roses(game: Game, boardsim: Board, coords: Coords, color: Player): CoordsSpecial[] {
+function roses(basegame: Game, boardsim: Board, coords: Coords, color: Player): CoordsSpecial[] {
 	const movements: Coords[] = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
 	const individualMoves: CoordsSpecial[] = [];
@@ -342,12 +342,12 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
  * @param {number[]} coordsClicked 
  * @returns {boolean}
  */
-function isPawnPromotion(game: Game, type: number, coordsClicked: Coords): boolean {
+function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): boolean {
 	if (typeutil.getRawType(type) !== rawTypes.PAWN) return false;
-	if (!game.gameRules.promotionRanks) return false; // This game doesn't have promotion.
+	if (!basegame.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = typeutil.getColorFromType(type);
-	const promotionRanks = game.gameRules.promotionRanks[color]!;
+	const promotionRanks = basegame.gameRules.promotionRanks[color]!;
 
 	return promotionRanks.includes(coordsClicked[1]);
 }

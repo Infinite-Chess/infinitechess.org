@@ -180,11 +180,11 @@ function update() {
  * it turns out the new piece is legal to move to, we don't want
  * to select it instead, but capture it.
  */
-function updateHoverSquareLegal(game: Game, boardsim: Board): void {
+function updateHoverSquareLegal(basegame: Game, boardsim: Board): void {
 	if (!pieceSelected) return;
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
 	// Required to pass on the special flag
-	const legal = legalmoves.checkIfMoveLegal(game, boardsim, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
+	const legal = legalmoves.checkIfMoveLegal(basegame, boardsim, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(boardsim.pieces, hoverSquare);
 	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
 }
@@ -194,7 +194,7 @@ function updateHoverSquareLegal(game: Game, boardsim: Board): void {
 
 
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
-function testIfPieceSelected(game: Game, boardsim: Board, mesh: Mesh | undefined) {
+function testIfPieceSelected(basegame: Game, boardsim: Board, mesh: Mesh | undefined) {
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
 	// If we did not click, exit...
 	const dragEnabled = preferences.getDragEnabled();
@@ -209,7 +209,7 @@ function testIfPieceSelected(game: Game, boardsim: Board, mesh: Mesh | undefined
 	// if (pieceClicked) console.log(typeutil.debugType(pieceClicked?.type));
 
 	// Is the type selectable by us? (not necessarily moveable)
-	const selectionLevel = canSelectPieceType(game, pieceClicked?.type);
+	const selectionLevel = canSelectPieceType(basegame, pieceClicked?.type);
 	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0) return; // Can't select this piece type
 	else if (selectionLevel === 1 && mouse.isMouseClicked(Mouse.LEFT)) { // CAN select this piece type
@@ -219,8 +219,8 @@ function testIfPieceSelected(game: Game, boardsim: Board, mesh: Mesh | undefined
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		// If we are viewing past moves, forward to front instead!!
-		if (viewFrontIfNotViewingLatestMove(game, boardsim, mesh)) return; // Forwarded to front, DON'T select the piece.
-		selectPiece(game, boardsim, pieceClicked!, false); // Select, but don't start dragging
+		if (viewFrontIfNotViewingLatestMove(basegame, boardsim, mesh)) return; // Forwarded to front, DON'T select the piece.
+		selectPiece(basegame, boardsim, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(Mouse.LEFT)) { // Can DRAG this piece type
 		if (listener_document.isKeyHeld('ControlLeft')) return; // Control key force drags the board, disallowing picking up a piece.
 		// If this is the second total pointer, then skip picking it up so that board dragging can pinch the board!
@@ -231,13 +231,13 @@ function testIfPieceSelected(game: Game, boardsim: Board, mesh: Mesh | undefined
 		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
 		mouse.claimMouseDown(Mouse.LEFT); // Claim the mouse down so board dragging doesn't use it
 		mouse.cancelMouseClick(Mouse.LEFT); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
-		if (viewFrontIfNotViewingLatestMove(game, boardsim, mesh)) return; // Forwarded to front, DON'T select the piece.
-		selectPiece(game, boardsim, pieceClicked!, true); // Select, AND start dragging if that's enabled.
+		if (viewFrontIfNotViewingLatestMove(basegame, boardsim, mesh)) return; // Forwarded to front, DON'T select the piece.
+		selectPiece(basegame, boardsim, pieceClicked!, true); // Select, AND start dragging if that's enabled.
 	}
 }
 
 /** If a piece is being dragged, this will test if it was dropped, making the move if it is legal. */
-function testIfPieceDropped(game: Game, boardsim: Board, mesh: Mesh | undefined): void {
+function testIfPieceDropped(basegame: Game, boardsim: Board, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return; // No piece selected, can't move nor drop anything.
 	if (!draganimation.areDraggingPiece()) return; // The selected piece is not being dragged.
 	droparrows.updateCapturedPiece(); // Update the piece that would be captured if we were to let go of the dragged piece right now.
@@ -253,34 +253,34 @@ function testIfPieceDropped(game: Game, boardsim: Board, mesh: Mesh | undefined)
 
 	// If it was dropped an an arrow indicator pointing to a legal piece to capture, capture that!
 	const dropArrowsCaptureCoords = droparrows.getCaptureCoords();
-	if (dropArrowsCaptureCoords) return moveGamefilePiece(game, boardsim, mesh, dropArrowsCaptureCoords);
+	if (dropArrowsCaptureCoords) return moveGamefilePiece(basegame, boardsim, mesh, dropArrowsCaptureCoords);
 
 	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.
 
 	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
 	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
-	else if (hoverSquareLegal) moveGamefilePiece(game, boardsim, mesh, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+	else if (hoverSquareLegal) moveGamefilePiece(basegame, boardsim, mesh, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
 	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
-function testIfPieceMoved(game: Game, boardsim: Board, mesh: Mesh | undefined): void {
+function testIfPieceMoved(basegame: Game, boardsim: Board, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return;
 	if (arrows.areHoveringAtleastOneArrow()) return; // Don't move a piece if we're hovering over an arrow
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
-	else moveGamefilePiece(game, boardsim, mesh, hoverSquare);
+	else moveGamefilePiece(basegame, boardsim, mesh, hoverSquare);
 	
 	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
-function viewFrontIfNotViewingLatestMove(game: Game, boardsim: Board, mesh: Mesh | undefined): boolean {
+function viewFrontIfNotViewingLatestMove(basegame: Game, boardsim: Board, mesh: Mesh | undefined): boolean {
 	// If we're viewing history, return.
 	if (moveutil.areWeViewingLatestMove(boardsim)) return false;
 
-	movesequence.viewFront(game, boardsim, mesh);
+	movesequence.viewFront(basegame, boardsim, mesh);
 	// Also animate the last move
 	const lastMove = moveutil.getLastMove(boardsim.moves)!;
 	if (!lastMove.isNull) movesequence.animateMove(lastMove);
@@ -299,13 +299,13 @@ function viewFrontIfNotViewingLatestMove(game: Game, boardsim: Board, mesh: Mesh
  * A piece will not be considered draggable (level 2) if the user disabled dragging.
  * This means more information is needed to tell if the piece is moveable.
  */
-function canSelectPieceType(game: Game, type: number | undefined): 0 | 1 | 2 {
+function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
 	const [raw, player] = typeutil.splitType(type);
 	if (raw === rawTypes.VOID) return 0; // Can't select voids
 	if (editMode) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
 	if (player === players.NEUTRAL) return 0; // Can't select neutrals, period.
-	if (isOpponentType(game, type)) return 1; // Can select opponent pieces, but not draggable..
+	if (isOpponentType(basegame, type)) return 1; // Can select opponent pieces, but not draggable..
 	const isOurTurn = gameloader.isItOurTurn(player);
 	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
 	// The piece is also not considered draggable if this is exactly the second pointer down.
@@ -340,10 +340,10 @@ function canDropOnPieceTypeInEditMode(type?: number) {
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
-function isOpponentType(game: Game, type: number) {
+function isOpponentType(basegame: Game, type: number) {
 	const pieceColor = typeutil.getColorFromType(type);
 	return !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
-	/* Local Game */ : pieceColor !== game.whosTurn;
+	/* Local Game */ : pieceColor !== basegame.whosTurn;
 }
 
 
@@ -356,7 +356,7 @@ function isOpponentType(game: Game, type: number) {
  * @param piece 
  * @param drag - If true, the piece starts being dragged. This also means it won't be deselected if you clicked the selected piece again.
  */
-function selectPiece(game: Game, boardsim: Board, piece: Piece, drag: boolean) {
+function selectPiece(basegame: Game, boardsim: Board, piece: Piece, drag: boolean) {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
 
 	annotations.onPieceSelection();
@@ -371,7 +371,7 @@ function selectPiece(game: Game, boardsim: Board, piece: Piece, drag: boolean) {
 		if (alreadySelected) return unselectPiece();
 	}
 
-	initSelectedPieceInfo(game, boardsim, piece);
+	initSelectedPieceInfo(basegame, boardsim, piece);
 }
 
 /**
@@ -414,16 +414,16 @@ function unselectPiece() {
 }
 
 /** Initializes the selected piece, and calculates its legal moves. */
-function initSelectedPieceInfo(game: Game, boardsim: Board, piece: Piece) {
+function initSelectedPieceInfo(basegame: Game, boardsim: Board, piece: Piece) {
 	// Initiate
 	pieceSelected = piece;
 
 	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-	legalMoves = legalmoves.calculateAll(game, boardsim, piece);
+	legalMoves = legalmoves.calculateAll(basegame, boardsim, piece);
 	// console.log('Selected Legal Moves:', legalMoves);
 
-	isOpponentPiece = isOpponentType(game, piece.type);
-	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(game, piece.type);
+	isOpponentPiece = isOpponentType(basegame, piece.type);
+	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(basegame, piece.type);
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
@@ -433,7 +433,7 @@ function initSelectedPieceInfo(game: Game, boardsim: Board, piece: Piece) {
  * The destination coordinates MUST contain any special move flags.
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(game: Game, boardsim: Board, mesh: Mesh | undefined, coords: CoordsSpecial) {
+function moveGamefilePiece(basegame: Game, boardsim: Board, mesh: Mesh | undefined, coords: CoordsSpecial) {
 	// Check if the move is a pawn promotion
 	if (coords.promoteTrigger) {
 		const color = typeutil.getColorFromType(pieceSelected!.type);
@@ -452,7 +452,7 @@ function moveGamefilePiece(game: Game, boardsim: Board, mesh: Mesh | undefined, 
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(game, boardsim, mesh, moveDraft);
+	const move = movesequence.makeMove(basegame, boardsim, mesh, moveDraft);
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
@@ -465,12 +465,12 @@ function moveGamefilePiece(game: Game, boardsim: Board, mesh: Mesh | undefined, 
 }
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
-function makePromotionMove(game: Game, boardsim: Board, mesh: Mesh | undefined) {
+function makePromotionMove(basegame: Game, boardsim: Board, mesh: Mesh | undefined) {
 	const coords = pawnIsPromotingOn!;
 	// DELETE THE promoteTrigger flag, and add the promoteTo flag
 	delete coords.promoteTrigger;
 	coords.promotion = promoteTo!;
-	moveGamefilePiece(game, boardsim, mesh, coords);
+	moveGamefilePiece(basegame, boardsim, mesh, coords);
 	perspective.relockMouse();
 }
 

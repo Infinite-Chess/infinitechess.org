@@ -26,9 +26,9 @@ type Flux = `${string},${string},${number|string}`; // `x,y,43` | `x,y,enpassant
  * @param gamefile - The gamefile
  * @returns Whether there is a three fold repetition present.
  */
-function detectRepetitionDraw(game: Game, boardsim: Board): string | false {
+function detectRepetitionDraw(basegame: Game, boardsim: Board): string | false {
 	const moveList = boardsim.moves;
-	const turnOrderLength = game.gameRules.turnOrder.length;
+	const turnOrderLength = basegame.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.
 	 * 0 => First player's turn in the turn order. */
 	const currentPlayerTurn = moveList.length % turnOrderLength;

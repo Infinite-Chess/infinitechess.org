@@ -60,7 +60,7 @@ type Game = {
 )
 
 type FullGame = {
-	game: Game,
+	basegame: Game,
 	boardsim: Board
 }
 
@@ -174,24 +174,24 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 	};
 }
 
-function loadGameWithBoard(game: Game, boardsim: Board, moves:ServerGameMovesMessage = [], gameConclusion?: string) {
-	game.board = boardsim;
+function loadGameWithBoard(basegame: Game, boardsim: Board, moves:ServerGameMovesMessage = [], gameConclusion?: string) {
+	basegame.board = boardsim;
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(game, boardsim)) gamerules.swapCheckmateForRoyalCapture(game.gameRules);
+	if (!wincondition.isCheckmateCompatibleWithGame(basegame, boardsim)) gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
 
 	{ // Set the game's `inCheck` and `attackers` properties at the front of the game.
-		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(game, game.whosTurn, 'checkmate');
-		const checkResults = checkdetection.detectCheck(game, boardsim, game.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'checkmate');
+		const checkResults = checkdetection.detectCheck(basegame, boardsim, basegame.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
 		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
 	}
 
-	movepiece.makeAllMovesInGame(game, boardsim, moves);
+	movepiece.makeAllMovesInGame(basegame, boardsim, moves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
 	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
-	if (gameConclusion) game.gameConclusion = gameConclusion;
-	else gamefileutility.doGameOverChecks(game, boardsim);
+	if (gameConclusion) basegame.gameConclusion = gameConclusion;
+	else gamefileutility.doGameOverChecks(basegame, boardsim);
 }
 
 export type {

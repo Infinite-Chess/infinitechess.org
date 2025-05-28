@@ -869,7 +869,7 @@ function executeArrowShifts() {
 	// console.log(changes);
 
 	// Apply the board changes
-	boardchanges.runChanges({game: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, true);
+	boardchanges.runChanges({basegame: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, true);
 
 	shifts.forEach(shift => {
 		// Recalculate every single line on the start.
@@ -882,7 +882,7 @@ function executeArrowShifts() {
 	// console.log(animatedArrows);
 
 	// Restore the board state
-	boardchanges.runChanges({game: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, false);
+	boardchanges.runChanges({basegame: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, false);
 }
 
 /**

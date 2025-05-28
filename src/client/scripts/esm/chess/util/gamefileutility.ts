@@ -31,8 +31,8 @@ import wincondition from '../logic/wincondition.js';
  * @param gamefile - The gamefile.
  * @returns true if over
  */
-function isGameOver(game: Game): boolean {
-	if (game.gameConclusion) return true;
+function isGameOver(basegame: Game): boolean {
+	if (basegame.gameConclusion) return true;
 	return false;
 }
 
@@ -54,22 +54,22 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
 /**
  * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
  */
-function setTerminationMetadata(game: Game) {
-	if (!game.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
+function setTerminationMetadata(basegame: Game) {
+	if (!basegame.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
-	const victorAndCondition: { victor?: Player, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
-	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(game.gameRules, victorAndCondition.condition);
-	game.metadata.Termination = conditionInPlainEnglish;
+	const victorAndCondition: { victor?: Player, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion);
+	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(basegame.gameRules, victorAndCondition.condition);
+	basegame.metadata.Termination = conditionInPlainEnglish;
 
-	game.metadata.Result = metadata.getResultFromVictor(victorAndCondition.victor); // white/black/draw/undefined
+	basegame.metadata.Result = metadata.getResultFromVictor(victorAndCondition.victor); // white/black/draw/undefined
 }
 
 /**
  * Deletes the `Termination` and `Result` metadata from the gamefile.
  */
-function eraseTerminationMetadata(game: Game) {
-	delete game.metadata.Termination;
-	delete game.metadata.Result;
+function eraseTerminationMetadata(basegame: Game) {
+	delete basegame.metadata.Termination;
+	delete basegame.metadata.Result;
 }
 
 /**
@@ -79,10 +79,10 @@ function eraseTerminationMetadata(game: Game) {
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.
  */
-function isOpponentUsingWinCondition(game: Game, friendlyColor: Player, winCondition: string): boolean {
+function isOpponentUsingWinCondition(basegame: Game, friendlyColor: Player, winCondition: string): boolean {
 	if (!winconutil.isWinConditionValid(winCondition)) throw new Error(`Cannot test if opponent of color "${friendlyColor}" is using invalid win condition "${winCondition}"!`);
 	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
-	return gamerules.doesColorHaveWinCondition(game.gameRules, oppositeColor, winCondition);
+	return gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, winCondition);
 }
 
 // FUNCTIONS THAT SHOULD BE MOVED ELSEWHERE!!!!! They introduce too many dependancies ----------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -90,9 +90,9 @@ function isOpponentUsingWinCondition(game: Game, friendlyColor: Player, winCondi
 /**
  * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
  */
-function doGameOverChecks(game: Game, boardsim: Board) {
-	game.gameConclusion = wincondition.getGameConclusion(game, boardsim);
-	if (isGameOver(game) && winconutil.isGameConclusionDecisive(game.gameConclusion)) moveutil.flagLastMoveAsMate(boardsim);
+function doGameOverChecks(basegame: Game, boardsim: Board) {
+	basegame.gameConclusion = wincondition.getGameConclusion(basegame, boardsim);
+	if (isGameOver(basegame) && winconutil.isGameConclusionDecisive(basegame.gameConclusion)) moveutil.flagLastMoveAsMate(boardsim);
 }
 
 /**
@@ -146,8 +146,8 @@ function areColinearSlidesPresentInGame(pieceMovesets: RawTypeGroup<() => PieceM
 }
 
 /** Returns the number of players in the game (unique players in the turnOrder). */
-function getPlayerCount(game: Game) {
-	return new Set(game.gameRules.turnOrder).size;
+function getPlayerCount(basegame: Game) {
+	return new Set(basegame.gameRules.turnOrder).size;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -50,7 +50,7 @@ interface SimplifiedGameState {
  * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile(game: Game, boardsim: Board, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
+function compressGamefile(basegame: Game, boardsim: Board, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
 
 	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;
@@ -75,7 +75,7 @@ function compressGamefile(game: Game, boardsim: Board, copySinglePosition?: bool
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
-	const gameRulesCopy = jsutil.deepCopyObject(game.gameRules);
+	const gameRulesCopy = jsutil.deepCopyObject(basegame.gameRules);
 	let gamestate: SimplifiedGameState = {
 		position,
 		turnOrder: gameRulesCopy.turnOrder,
@@ -88,7 +88,7 @@ function compressGamefile(game: Game, boardsim: Board, copySinglePosition?: bool
 
 	// Start constructing the abridged gamefile
 	const long_format_in: LongFormatIn = {
-		metadata: jsutil.deepCopyObject(game.metadata),
+		metadata: jsutil.deepCopyObject(basegame.metadata),
 		position: gamestate.position,
 		gameRules: gameRulesCopy,
 		fullMove: gamestate.fullMove,

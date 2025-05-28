@@ -44,11 +44,11 @@ function formulateGame(longformIn: LongFormatIn): Game {
 		}
 	};
 
-	const game = gamefile.initGame(longformIn.metadata, variantOptions);
-	const boardsim = gamefile.initBoard(game.gameRules, longformIn.metadata, variantOptions);
-	gamefile.loadGameWithBoard(game, boardsim, moves);
+	const basegame = gamefile.initGame(longformIn.metadata, variantOptions);
+	const boardsim = gamefile.initBoard(basegame.gameRules, longformIn.metadata, variantOptions);
+	gamefile.loadGameWithBoard(basegame, boardsim, moves);
 
-	return game;
+	return basegame;
 }
 
 /**
@@ -95,15 +95,15 @@ function ICNToGamefile(ICN: string): Game {
 	}) ?? [];
 
 
-	const game = gamefile.initGame(longformOut.metadata, variantOptions);
-	const boardsim = gamefile.initBoard(game.gameRules, longformOut.metadata, variantOptions);
+	const basegame = gamefile.initGame(longformOut.metadata, variantOptions);
+	const boardsim = gamefile.initBoard(basegame.gameRules, longformOut.metadata, variantOptions);
 	/**
 	 * This automatically forwards all moves to the front of the game.
 	 * It will throw an Error if there's any move with a startCoords that doesn't have any piece on it!
 	 * Some illegal moves may pass, but those aren't what we care about. We care about crashing moves!
 	 */
-	gamefile.loadGameWithBoard(game, boardsim, moves);
-	return game;
+	gamefile.loadGameWithBoard(basegame, boardsim, moves);
+	return basegame;
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant?: string) {
