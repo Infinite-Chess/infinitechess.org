@@ -29,13 +29,18 @@ function abortGame(ws, game) {
 	// Is it legal?...
 
 	if (game.gameConclusion === 'aborted') { // Opponent aborted first.
+		console.log(`Player tried to abort game ${game.id} when the game is already aborted!`);
 		onRequestRemovalFromPlayersInActiveGames(ws, game);
 		return;
+	} else if (gameutility.isGameOver(game)) {
+		console.log(`Player tried to abort game ${game.id} when the game is already over!`);
+		return;
 	} else if (gameutility.isGameBorderlineResignable(game)) {
-		// A player might try to abort a game after his opponent has just played the second move due to latency issues... In doubt, be lenient and allow this here.
+		// A player might try to abort a game after his opponent has just played the second move due to latency issues...
+		// In doubt, be lenient and allow this here. DO NOT RETURN
 		console.log(`Player tried to abort game ${game.id} when there's been exactly 2 moves played! Aborting game anyways...`);
 	} else if (gameutility.isGameResignable(game)) {
-		console.error("Player tried to abort game when there's been at least 3 moves played!");
+		console.error(`Player tried to abort game ${game.id} when there's been at least 3 moves played!`);
 		sendNotify(ws, "server.javascript.ws-no_abort_after_moves");
 		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
 		return;
@@ -56,7 +61,13 @@ function resignGame(ws, game) {
 
 	// Is it legal?...
 
-	if (!gameutility.isGameResignable(game)) console.error("Player tried to resign game when there's less than 2 moves played! Ignoring..");
+	if (gameutility.isGameOver(game)) {
+		console.log(`Player resign to resign game ${game.id} when the game is already over!`);
+		return;
+	} else if (!gameutility.isGameResignable(game)) {
+		console.error(`Player tried to resign game ${game.id} when there's less than 2 moves played! Ignoring..`);
+		return;
+	}
 
 	// Resign
 

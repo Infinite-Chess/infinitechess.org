@@ -31,6 +31,8 @@ import { Mouse } from '../input.js';
 let isPaused = false;
 /** This is true if the main menu button says "Resign Game" or "Abort Game". In all other cases, this is false. */
 let is_main_menu_button_used_as_resign_or_abort_button = false;
+/** Amount of milliseconds to freeze the Main Menu button after the text on it changes */
+const MAIN_MENU_BUTTON_CHANGE_FREEZE_DURATION_MILLIS = 1000;
 
 const element_pauseUI = document.getElementById('pauseUI');
 const element_resume = document.getElementById('resume');
@@ -137,7 +139,7 @@ function updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange } = {}) {
 
 	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame() || onlinegame.hasPlayerPressedAbortOrResignButton() ) {
 		// If the text currently says "Abort Game" or "Resign Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort or resign and actually not want to exit to main menu.
-		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.main_menu) freezeMainMenuButton(1000);
+		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.main_menu) freezeMainMenuButton(MAIN_MENU_BUTTON_CHANGE_FREEZE_DURATION_MILLIS);
 		element_mainmenu.textContent = translations.main_menu;
 		is_main_menu_button_used_as_resign_or_abort_button = false;
 		return;
@@ -146,7 +148,7 @@ function updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange } = {}) {
 	is_main_menu_button_used_as_resign_or_abort_button = true;
 	if (moveutil.isGameResignable(gameslot.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
-		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.resign_game) freezeMainMenuButton(1000);
+		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.resign_game) freezeMainMenuButton(MAIN_MENU_BUTTON_CHANGE_FREEZE_DURATION_MILLIS);
 		element_mainmenu.textContent = translations.resign_game;
 		return;
 	}
@@ -201,11 +203,11 @@ function callback_Resume() {
 }
 
 function callback_MainMenu() {
-	onlinegame.onAbortOrResignButtonPress();
 	callback_Resume();
 
+	if (is_main_menu_button_used_as_resign_or_abort_button) onlinegame.onAbortOrResignButtonPress();
 	// Unload and exit game immediately if the button text says "Main Menu"
-	if (!is_main_menu_button_used_as_resign_or_abort_button) {
+	else {
 
 		// Let the onlinegame script know that the player willingly presses the "Main Menu" button.
 		// This can happen if the server has informed him that game has ended or if the player has already pressed the "Resign" or "Abort" during this game.
