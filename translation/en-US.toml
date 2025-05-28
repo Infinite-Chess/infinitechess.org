@@ -598,7 +598,6 @@ ws-server_restarting = "The server is restarting in" # The server inserts a numb
 ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time
 ws-minute = "minute" # unit of time
-ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played."
 ws-game_aborted_cheating = "Game aborted for probable cheating."
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites

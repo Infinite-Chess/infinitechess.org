@@ -24,7 +24,7 @@ import { sendNotify } from '../../socket/sendSocketMessage.js';
  */
 function abortGame(ws, game) {
 	if (!game) return console.error("Can't abort a game when player isn't in one.");
-	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	const colorPlayingAs = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 
 	// Is it legal?...
 
@@ -39,8 +39,6 @@ function abortGame(ws, game) {
 	} else if (gameutility.isGameResignable(game)) {
 		// Return if player tries to abort when he does not have the right
 		console.error(`Player tried to abort game ${game.id} when there's been at least 3 moves played!`);
-		sendNotify(ws, "server.javascript.ws-no_abort_after_moves");
-		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
 		return;
 	}
 

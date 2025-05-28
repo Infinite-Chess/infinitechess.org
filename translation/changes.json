@@ -1,6 +1,6 @@
 {
 	"57": {
-		"note": "Deleted ws-no_abort_game_over on line 601.",
+		"note": "Deleted ws-no_abort_game_over and ws-no_abort_after_moves on lines 601-602.",
 		"changes": []
 	},
 	"56": {
