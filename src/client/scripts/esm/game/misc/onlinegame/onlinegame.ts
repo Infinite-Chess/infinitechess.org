@@ -68,14 +68,6 @@ let serverHasConcludedGame: boolean | undefined;
 let playerHasPressedAbortOrResignButton: boolean | undefined;
 
 /**
- * True, if the player willingly presses the "Main Menu" button at some time during an onlinegame
- * (only possible if the server informed him that the game has ended or if he has pressed the "Resign/Abort" button).
- * This means that the player is no longer interested in seeing anything related to the previous game when the server sends him information.
- * This variable is useful even after the player has already left his last onlinegame.
- */
-let playerHasPressedMainMenuButton: boolean = false;
-
-/**
  * Whether we are in sync with the game on the server.
  * If false, we do not submit our move. (move will be auto-submitted upon resyncing)
  * Set to false whenever we lose connection, or the socket closes.
@@ -140,10 +132,6 @@ function hasPlayerPressedAbortOrResignButton(): boolean {
 	return playerHasPressedAbortOrResignButton!;
 }
 
-function hasPlayerPressedMainMenuButton(): boolean {
-	return playerHasPressedMainMenuButton;
-}
-
 function areInSync(): boolean {
 	if (!inOnlineGame) throw Error("Cannot get inSync of online game when we're not in an online game.");
 	return inSync!;
@@ -199,7 +187,6 @@ function initOnlineGame(options: {
 
 	serverHasConcludedGame = false;
 	playerHasPressedAbortOrResignButton = false;
-	playerHasPressedMainMenuButton = false;
 
 	initEventListeners();
 }
@@ -350,8 +337,6 @@ function onMainMenuButtonPress() {
 	websocket.unsubFromSub('game');
 	
 	requestRemovalFromPlayersInActiveGames();
-
-	playerHasPressedMainMenuButton = true;
 }
 
 
@@ -435,7 +420,6 @@ export default {
 	closeOnlineGame,
 	isItOurTurn,
 	hasPlayerPressedAbortOrResignButton,
-	hasPlayerPressedMainMenuButton,
 	areInSync,
 	resyncToGame,
 	update,

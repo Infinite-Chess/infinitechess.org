@@ -142,17 +142,8 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	// console.log(`Received ${data.action} from server! Message contents:`)
 	// console.log(data.value)
 	
-	// This action is listened to, even when we're not in a game and even when we don't care about the previous game.
+	// These actions are listened to, even when we're not in a game.
 	if (data.action === 'joingame') return handleJoinGame(data.value);
-
-	// If the player has already willingly pressed the "Main Menu" button after already having pressed the "Resign/Abort" button,
-	// he is no longer interested in seeing anything related to his previous game when the server sends him messages.
-	if (onlinegame.hasPlayerPressedMainMenuButton()) {
-		console.log(`Received server 'game' message when we've already willingly exited to the main menu after having resigned or aborted the game. Ignoring. Message: ${JSON.stringify(data)}`);
-		return;
-	}
-
-	// This action is listened to, even when we're not in a game.
 	if (data.action === 'logged-game-info') return handleLoggedGameInfo(data.value);
 
 	// All other actions should be ignored if we're not in a game...
