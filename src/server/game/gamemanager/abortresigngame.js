@@ -31,16 +31,11 @@ function abortGame(ws, game) {
 	if (game.gameConclusion === 'aborted') { // Opponent aborted first.
 		onRequestRemovalFromPlayersInActiveGames(ws, game);
 		return;
-	} else if (gameutility.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
-		console.error("Player tried to abort game when the game is already over!");
-		sendNotify(ws, "server.javascript.ws-no_abort_game_over");
-		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
-		return;
 	} else if (gameutility.isGameBorderlineResignable(game)) {
 		// A player might try to abort a game after his opponent has just played the second move due to latency issues... In doubt, be lenient and allow this here.
 		console.log(`Player tried to abort game ${game.id} when there's been exactly 2 moves played! Aborting game anyways...`);
 	} else if (gameutility.isGameResignable(game)) {
-		console.error("Player tried to abort game when there's been atleast 2 moves played!");
+		console.error("Player tried to abort game when there's been at least 3 moves played!");
 		sendNotify(ws, "server.javascript.ws-no_abort_after_moves");
 		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
 		return;
@@ -60,14 +55,6 @@ function resignGame(ws, game) {
 	if (!game) return console.error("Can't resign a game when player isn't in one.");
 
 	// Is it legal?...
-
-	if (gameutility.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
-		console.error("Player tried to resign game when the game is already over!");
-		sendNotify(ws, "server.javascript.ws-cannot_resign_finished_game");
-		const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
-		return;
-	}
 
 	if (!gameutility.isGameResignable(game)) console.error("Player tried to resign game when there's less than 2 moves played! Ignoring..");
 
