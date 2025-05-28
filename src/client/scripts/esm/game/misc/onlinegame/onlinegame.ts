@@ -326,24 +326,19 @@ function reportOpponentsMove(reason: string) {
 	websocket.sendmessage('game', 'report', message);
 }
 
-
-
-// Aborts / Resigns
-function onMainMenuPress() {
+/** 
+ * Called when the player presses the "Abort / Resign" button for the first time in an onlinegame
+ */
+function onAbortOrResignButtonPress() {
 	if (!inOnlineGame) return;
-	
 	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
 	if (playerHasPressedAbortOrResignButton) return; // Don't need to abort/resign, we have already done this during this game
+
+	playerHasPressedAbortOrResignButton = true;
 
 	const gamefile = gameslot.getGamefile()!;
 	if (moveutil.isGameResignable(gamefile)) websocket.sendmessage('game','resign');
 	else 									 websocket.sendmessage('game','abort');
-}
-
-/** Called when the player presses the "Abort / Resign" button for the first time in an onlinegame */
-function onAbortOrResignButtonPress() {
-	if (!inOnlineGame) return;
-	playerHasPressedAbortOrResignButton = true;
 }
 
 /** 
@@ -442,7 +437,6 @@ export default {
 	hasPlayerPressedAbortOrResignButton,
 	hasPlayerPressedMainMenuButton,
 	areInSync,
-	onMainMenuPress,
 	resyncToGame,
 	update,
 	onAbortOrResignButtonPress,
