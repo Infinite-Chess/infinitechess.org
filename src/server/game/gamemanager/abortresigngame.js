@@ -36,9 +36,10 @@ function abortGame(ws, game) {
 		sendNotify(ws, "server.javascript.ws-no_abort_game_over");
 		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
 		return;
-	}
-
-	if (gameutility.isGameResignable(game)) {
+	} else if (gameutility.isGameBorderlineResignable(game)) {
+		// A player might try to abort a game after his opponent has just played the second move due to latency issues... In doubt, be lenient and allow this here.
+		console.log(`Player tried to abort game ${game.id} when there's been exactly 2 moves played! Aborting game anyways...`);
+	} else if (gameutility.isGameResignable(game)) {
 		console.error("Player tried to abort game when there's been atleast 2 moves played!");
 		sendNotify(ws, "server.javascript.ws-no_abort_after_moves");
 		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
