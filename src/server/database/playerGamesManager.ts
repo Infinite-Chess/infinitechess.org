@@ -231,6 +231,47 @@ function updatePlayerGamesColumns(user_id: number, game_id: number, columnsAndVa
 	}
 }
 
+/**
+ * Retrieves the most recent N entries for a user, returning only the specified columns from player_games.
+ * @param user_id - The ID of the user
+ * @param limit - Maximum number of recent games to fetch
+ * @param columns - Array of column names from player_games to return (e.g., ['game_id', 'score']).
+ * @returns Array of objects containing only the requested columns.
+ */
+function getRecentNGamesForUser(user_id: number, limit: number, columns: string[]): PlayerGamesRecord[] {
+	// Validate columns argument
+	if (!Array.isArray(columns)) {
+		logEvents(`When fetching recent games, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		return [];
+	}
+	if (!columns.every(col => typeof col === 'string' && allPlayerGamesColumns.includes(col))) {
+		logEvents(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		return [];
+	}
+
+	// Dynamically build SELECT clause from requested columns
+	const selectClause = columns.map(col => `pg.${col}`).join(', ');
+
+	// Join only to read date for sorting, but return only player_games columns
+	const query = `
+		SELECT ${selectClause}
+		FROM player_games pg
+		JOIN games g ON g.game_id = pg.game_id
+		WHERE pg.user_id = ?
+		ORDER BY g.date DESC
+		LIMIT ?
+	`;
+
+	try {
+		const rows = db.all(query, [user_id, limit]) as PlayerGamesRecord[];
+		return rows;
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEvents(`Error fetching recent games for user ${user_id}: ${message}`, 'errLog.txt', { print: true });
+		return [];
+	}
+}
+
 
 // Exports --------------------------------------------------------------------------------------------
 
@@ -241,4 +282,5 @@ export {
 	getPlayersInGame,
 	// Commented out to emphasize this should not ever have to be used:
 	// updatePlayerGamesColumns,
+	getRecentNGamesForUser,
 };	
