@@ -143,8 +143,9 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	// console.log(data.value)
 	
 	// These actions are listened to, even when we're not in a game.
+
 	if (data.action === 'joingame') return handleJoinGame(data.value);
-	if (data.action === 'logged-game-info') return handleLoggedGameInfo(data.value);
+	else if (data.action === 'logged-game-info') return handleLoggedGameInfo(data.value);
 
 	// All other actions should be ignored if we're not in a game...
 
