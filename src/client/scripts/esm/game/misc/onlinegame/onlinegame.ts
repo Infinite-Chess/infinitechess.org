@@ -127,6 +127,7 @@ function isItOurTurn(): boolean {
 	return gameslot.getGamefile()!.whosTurn === ourColor;
 }
 
+/** Whether we have pressed the Abort/Resign game button this game. NOT when it says main menu. */
 function hasPlayerPressedAbortOrResignButton(): boolean {
 	if (!inOnlineGame) throw Error("Cannot get playerHasPressedAbortOrResignButton of online game when we're not in an online game.");
 	return playerHasPressedAbortOrResignButton!;
@@ -313,9 +314,7 @@ function reportOpponentsMove(reason: string) {
 	websocket.sendmessage('game', 'report', message);
 }
 
-/** 
- * Called when the player presses the "Abort / Resign" button for the first time in an onlinegame
- */
+/**  Called when the player presses the "Abort / Resign" button for the first time in an onlinegame. */
 function onAbortOrResignButtonPress() {
 	if (!inOnlineGame) return;
 	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
@@ -330,8 +329,9 @@ function onAbortOrResignButtonPress() {
 
 /** 
  * Called when the player presses the "Main Menu" button in an onlinegame
- * This can happen if the game is already over or if the player has already pressed the "Abort / Resign" button
- * */
+ * This can happen if the game is already over or if the player has already pressed the "Abort / Resign" button.
+ * This requests the server to stop serving us game updates, and allow us to join a new game.
+ */
 function onMainMenuButtonPress() {
 	// Tell the server we no longer want game updates, if we are still receiving them.
 	websocket.unsubFromSub('game');
@@ -345,7 +345,6 @@ function onGameConclude() {
 	if (!inOnlineGame) return; // The game concluded wasn't an online game.
 
 	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
-	guipause.onReceiveGameConclusion();
 	afk.onGameClose();
 	tabnameflash.onGameClose();
 	serverrestart.onGameClose();
