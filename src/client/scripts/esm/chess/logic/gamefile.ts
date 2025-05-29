@@ -65,7 +65,7 @@ type FullGame = {
 }
 
 /**
- * Game data used for simulating game logic
+ * Game data used for simulating game logic and board state
  * Use by client always, may not be used by the server.
  */
 type Board = {
@@ -87,13 +87,12 @@ type Board = {
 	vicinity: Record<CoordsKey, RawType[]>
 } & EditorDependent
 
+/** Some information should be left out when the editor is being used as it will slow processing down */
 type EditorDependent = {
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor: false
 	/**
 	 * Information about the beginning of the game (position, positionString, specialRights, turn)
-	 * Not included when we're in editor mode
-	 * Too many changes slows it down.
 	*/
 	startSnapshot: Snapshot
 } | {
@@ -101,6 +100,7 @@ type EditorDependent = {
 	startSnapshot: undefined
 }
 
+/** Creates a new {@link Game} object from provided arguments */
 function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string, clockValues?: ClockValues): Game {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
 	const game = {
@@ -118,6 +118,7 @@ function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConcl
 	return game;
 }
 
+/** Creates a new {@link Board} object from provided arguements */
 function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false): Board {
 	const startSnapshot = initvariant.genStartSnapshot(gameRules, metadata, variantOptions);
 
@@ -174,7 +175,8 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 	};
 }
 
-function loadGameWithBoard(basegame: Game, boardsim: Board, moves:ServerGameMovesMessage = [], gameConclusion?: string) {
+/** Attaches a board to a specific game. Used for loading a game after it was started. */
+function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage = [], gameConclusion?: string) {
 	basegame.board = boardsim;
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
