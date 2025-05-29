@@ -7,8 +7,7 @@ import type { MetaData } from "../../../chess/util/metadata.js";
 import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
-// @ts-ignore
-import type gamefile from "../../chess/logic/gamefile.js";
+import type { Game } from "../../../chess/logic/gamefile.js";
 
 // @ts-ignore
 import guiplay from "../../gui/guiplay.js";
@@ -294,11 +293,11 @@ function handleLoggedGameInfo(message: {
 /** 
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(gamefile: gamefile, clockValues: ClockValues) {
+function handleUpdatedClock(basegame: Game, clockValues: ClockValues) {
 	// Adjust the timer whos turn it is depending on ping.
 	if (clockValues) clockValues = onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(gamefile, clockValues); // Edit the clocks
-	guiclock.edit(gamefile);
+	clock.edit(basegame, clockValues); // Edit the clocks
+	guiclock.edit(basegame);
 }
 
 /**
@@ -318,11 +317,11 @@ function handleUnsubbing() {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(gamefile: gamefile) {
+function handleLogin(basegame: Game) {
 	statustext.showStatus(translations['onlinegame'].not_logged_in, true, 100);
 	websocket.deleteSub('game');
-	clock.endGame(gamefile);
-	guiclock.stopClocks(gamefile);
+	clock.endGame(basegame);
+	guiclock.stopClocks(basegame);
 	selection.unselectPiece();
 	board.darkenColor();
 }
@@ -337,10 +336,10 @@ function handleLogin(gamefile: gamefile) {
  * * Your page tries to resync to the game after it's long over.
  * * The server restarts mid-game.
  */
-function handleNoGame(gamefile: gamefile) {
+function handleNoGame(basegame: Game) {
 	statustext.showStatus(translations['onlinegame'].game_no_longer_exists, false, 1.5);
 	websocket.deleteSub('game');
-	gamefile.gameConclusion = 'aborted';
+	basegame.gameConclusion = 'aborted';
 	gameslot.concludeGame();
 }
 
