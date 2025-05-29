@@ -29,6 +29,11 @@ import { Mouse } from '../input.js';
 
 // Pause UI
 let isPaused = false;
+/** This is true if the main menu button says "Resign Game" or "Abort Game". In all other cases, this is false. */
+let is_main_menu_button_used_as_resign_or_abort_button = false;
+/** Amount of milliseconds to freeze the Main Menu button after the text on it changes */
+const MAIN_MENU_BUTTON_CHANGE_FREEZE_DURATION_MILLIS = 1000;
+
 const element_pauseUI = document.getElementById('pauseUI');
 const element_resume = document.getElementById('resume');
 const element_pointers = document.getElementById('togglepointers');
@@ -112,8 +117,12 @@ function updateDrawOfferButton() {
 }
 
 function onReceiveOpponentsMove() {
-	updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable: true });
+	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
 	updateDrawOfferButton();
+}
+
+function onReceiveGameConclusion() {
+	updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange: true });
 }
 
 /**
@@ -121,30 +130,40 @@ function onReceiveOpponentsMove() {
  * "Main Menu", "Abort Game", or "Resign Game", whichever is relevant
  * in the situation.
  * @param {Object} options - Additional options
- * @param {boolean} [options.freezeResignButtonIfNoLongerAbortable] - If true, and the main menu changes from "Abort" to "Resign",
- * we will disable it and grey it out for 1 second so the player doesn't accidentally click resign when they wanted to abort.
- * This should only be true when called from onReceiveOpponentsMove(), not on open()
+ * @param {boolean} [options.freezeMainMenuButtonUponChange] - If true, and the main menu changes from "Abort" to "Resign" or from "Resign"/"Abort" to "Main Menu",
+ * we will disable it and grey it out for 1 second so the player doesn't accidentally click resign when they wanted to abort or "Main Menu" when they wanted to resign.
+ * This should only be true when called from onReceiveOpponentsMove() or onReceiveGameConclusion(), not on open()
  */
-function updateTextOfMainMenuButton({ freezeResignButtonIfNoLongerAbortable } = {}) {
+function updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange } = {}) {
 	if (!isPaused) return;
 
-	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame()) return element_mainmenu.textContent = translations.main_menu;
+	if (!onlinegame.areInOnlineGame() || onlinegame.hasServerConcludedGame() || onlinegame.hasPlayerPressedAbortOrResignButton() ) {
+		// If the text currently says "Abort Game" or "Resign Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort or resign and actually not want to exit to main menu.
+		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.main_menu) freezeMainMenuButton();
+		element_mainmenu.textContent = translations.main_menu;
+		is_main_menu_button_used_as_resign_or_abort_button = false;
+		return;
+	}
 
+	is_main_menu_button_used_as_resign_or_abort_button = true;
 	if (moveutil.isGameResignable(gameslot.getGamefile())) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
-		if (freezeResignButtonIfNoLongerAbortable && element_mainmenu.textContent === translations.abort_game) {
-			element_mainmenu.disabled = true;
-			element_mainmenu.classList.add('opacity-0_5');
-			setTimeout(() => {
-				element_mainmenu.disabled = false;
-				element_mainmenu.classList.remove('opacity-0_5');
-			}, 1000);
-		}
+		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.resign_game) freezeMainMenuButton();
 		element_mainmenu.textContent = translations.resign_game;
 		return;
 	}
 
 	element_mainmenu.textContent = translations.abort_game;
+}
+
+/** Temporarily disable the main menu button for a certain number of milliseconds */
+function freezeMainMenuButton() {
+	element_mainmenu.disabled = true;
+	element_mainmenu.classList.add('opacity-0_5');
+	setTimeout(() => {
+		element_mainmenu.disabled = false;
+		element_mainmenu.classList.remove('opacity-0_5');
+	}, MAIN_MENU_BUTTON_CHANGE_FREEZE_DURATION_MILLIS);
 }
 
 function initListeners() {
@@ -182,11 +201,18 @@ function callback_Resume() {
 }
 
 function callback_MainMenu() {
-	onlinegame.onMainMenuPress();
 	callback_Resume();
-	gameloader.unloadGame();
 
-	guititle.open();
+	if (is_main_menu_button_used_as_resign_or_abort_button) onlinegame.onAbortOrResignButtonPress();
+	// Unload and exit game immediately if the button text says "Main Menu"
+	else {
+		// Let the onlinegame script know that the player willingly presses the "Main Menu" button.
+		// This can happen if the server has informed him that game has ended or if the player has already pressed the "Resign" or "Abort" during this game.
+		if (onlinegame.areInOnlineGame()) onlinegame.onMainMenuButtonPress();
+
+		gameloader.unloadGame();
+		guititle.open();
+	}
 }
 
 function callback_PracticeMenu() {
@@ -239,6 +265,7 @@ export default {
 	toggle,
 	updateDrawOfferButton,
 	onReceiveOpponentsMove,
+	onReceiveGameConclusion,
 	updateTextOfMainMenuButton,
 	callback_Resume,
 	callback_ToggleArrows,

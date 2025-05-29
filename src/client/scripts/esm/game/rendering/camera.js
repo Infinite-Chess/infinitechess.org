@@ -271,7 +271,7 @@ function onScreenResize() {
 	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 	guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
-	guigameinfo.updateAlignmentOfRightUsername();
+	guigameinfo.updateAlignmentUsernames();
 	// console.log('Resized window.')
 }
 

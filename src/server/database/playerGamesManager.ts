@@ -231,6 +231,52 @@ function updatePlayerGamesColumns(user_id: number, game_id: number, columnsAndVa
 	}
 }
 
+/**
+ * Retrieves the most recent N rated entries for a user on a specific leaderboard, returning only the specified columns from player_games.
+ * Aborted games (where score is null) are skipped.
+ * @param user_id - The ID of the user
+ * @param leaderboard_id - The ID of the leaderboard to filter rated games
+ * @param limit - Maximum number of recent games to fetch
+ * @param columns - Array of column names from player_games to return (e.g., ['game_id', 'score']).
+ * @returns Array of objects containing only the requested columns.
+ */
+function getRecentNRatedGamesForUser(user_id: number, leaderboard_id: number, limit: number, columns: string[]): PlayerGamesRecord[] {
+	// Validate columns argument
+	if (!Array.isArray(columns)) {
+		logEvents(`When fetching recent games, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		return [];
+	}
+	if (!columns.every(col => typeof col === 'string' && allPlayerGamesColumns.includes(col))) {
+		logEvents(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		return [];
+	}
+
+	// Dynamically build SELECT clause from requested columns
+	const selectClause = columns.map(col => `pg.${col}`).join(', ');
+
+	// Only include rated, non-aborted games on the specified leaderboard, sorted by game date
+	const query = `
+		SELECT ${selectClause}
+		FROM player_games pg
+		JOIN games g ON g.game_id = pg.game_id
+		WHERE pg.user_id = ?
+		  AND g.rated = 1
+		  AND g.leaderboard_id = ?
+		  AND pg.score IS NOT NULL
+		ORDER BY g.date DESC
+		LIMIT ?
+	`;
+
+	try {
+		// Bind parameters: user, leaderboard, and limit
+		return db.all(query, [user_id, leaderboard_id, limit]) as PlayerGamesRecord[];
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEvents(`Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}: ${message}`, 'errLog.txt', { print: true });
+		return [];
+	}
+}
+
 
 // Exports --------------------------------------------------------------------------------------------
 
@@ -241,4 +287,5 @@ export {
 	getPlayersInGame,
 	// Commented out to emphasize this should not ever have to be used:
 	// updatePlayerGamesColumns,
+	getRecentNRatedGamesForUser,
 };	

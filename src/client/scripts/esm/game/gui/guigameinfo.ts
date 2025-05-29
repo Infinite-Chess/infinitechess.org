@@ -130,6 +130,11 @@ function close() {
 /** Erases the username containers, removing them from the document. */
 function clearUsernameContainers() {
 	console.log("Clearing username containers");
+
+	// Stop any running number animations
+	usernamecontainer_white!.animationCancels.forEach(fn => fn());
+	usernamecontainer_black!.animationCancels.forEach(fn => fn());
+
 	usernamecontainer_white!.element.remove();
 	usernamecontainer_black!.element.remove();
 	usernamecontainer_white = undefined;
@@ -341,6 +346,8 @@ function getHeightOfGameInfoBar(): number {
  * Fades either if they exceed the width of their parent.
  */
 function updateAlignmentUsernames() {
+	if (!usernamecontainer_white || !usernamecontainer_black) return; // Not in a game
+
 	// Player white
 	if (usernamecontainer_white!.element.clientWidth > element_playerWhite.clientWidth) {
 		element_playerWhite.classList.add('fade-element');
@@ -389,6 +396,6 @@ export default {
 	updateWhosTurn,
 	gameEnd,
 	getHeightOfGameInfoBar,
-	updateAlignmentOfRightUsername: updateAlignmentUsernames,
+	updateAlignmentUsernames,
 	addRatingChangeToExistingUsernameContainers
 };

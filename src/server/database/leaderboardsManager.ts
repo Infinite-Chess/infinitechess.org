@@ -321,7 +321,7 @@ function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboar
 // Regular Table Utility Functions -------------------------------------------------------------------
 
 
-/** Calls updateAllRatingDeviationsofLeaderboardTable() every RD_UPDATE_FREQUENCY milliseconds */
+/** Calls updateAllRatingDeviationsofLeaderboardTable() every {@link RD_UPDATE_FREQUENCY} milliseconds */
 function startPeriodicLeaderboardRatingDeviationUpdate() {
 	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
 }
@@ -339,7 +339,6 @@ function updateAllRatingDeviationsofLeaderboardTable() {
 			updatePlayerLeaderboardRating(entry.user_id!, entry.leaderboard_id! as Leaderboard, entry.elo!, updatedRD);
 		}
 		logEvents(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt', { print: true });
-
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEvents(`Error updating all rating deviations in leaderboard table: ${message}`, 'errLog.txt', { print: true });

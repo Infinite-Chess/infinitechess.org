@@ -684,6 +684,13 @@ function cancelDeleteGameTimer(game) {
 function isGameResignable(game) { return game.moves.length > 1; }
 
 /**
+ * Tests if the game has just become resignable with the latest move (exactly 2 moves have been played).
+ * @param {Game} game - The game
+ * @returns {boolean} *true* if the game has just become resignable after the last move.
+ */
+function isGameBorderlineResignable(game) { return game.moves.length === 2; }
+
+/**
  * Returns the color of the player that played that moveIndex within the moves list.
  * Returns error if index -1
  * @param {Game} game
@@ -730,6 +737,7 @@ export default {
 	sendMoveToColor,
 	cancelDeleteGameTimer,
 	isGameResignable,
+	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,
 	getRatingDataForGamePlayers,
 };

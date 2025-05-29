@@ -15,7 +15,6 @@ import type { Rating } from "../../../../server/database/leaderboardsManager.js"
 // Types ----------------------------------------------------------------------------------------
 
 
-
 /**
  * Such an object contains all display information for a given user
  */
@@ -23,6 +22,8 @@ type UsernameContainer = {
 	properties: UsernameContainerProperties,
 	/** A reference to the documant element container. */
 	element: HTMLDivElement,
+	/** Cancel functions for any running `animateNumber` calls. */
+	animationCancels: Function[]
 }
 
 
@@ -130,12 +131,20 @@ function createUsernameContainer(type: UsernameContainerType, username: Username
 	};
 	if (rating) properties.rating = rating;
 
+	// Build the container object
 	const usernameContainer: UsernameContainer = {
 		properties,
 		element: containerDiv,
+		animationCancels: []
 	};
 
 	updateUsernameContainerRatingTextContent(usernameContainer);
+
+	// If we have a rating change, animate that text
+	if (rating?.change !== undefined) {
+		const oldValue = rating.value - rating.change;
+		animateRatingChange(usernameContainer, oldValue, rating.value, rating.change, rating.confident);
+	}
 
 	return usernameContainer;
 }
@@ -195,6 +204,9 @@ function wasEventClickInsideUsernameContainer(event: MouseEvent): boolean {
 function createEloChangeItem(usernamecontainer: UsernameContainer, newRating: Rating, ratingChange: number) {
 	if (!usernamecontainer.properties.rating) throw Error("Cannot create elo change item for usernamecontainer without rating!");
 
+	// Previous rating value
+	const oldValue = usernamecontainer.properties.rating.value;
+	
 	// Update rating in usernamecontainer
 	usernamecontainer.properties.rating = {
 		value: newRating.value,
@@ -208,6 +220,9 @@ function createEloChangeItem(usernamecontainer: UsernameContainer, newRating: Ra
 	usernamecontainer.element.appendChild(eloChangeDiv);
 
 	updateUsernameContainerRatingTextContent(usernamecontainer);
+
+	// Animate...
+	animateRatingChange(usernamecontainer, oldValue, newRating.value, ratingChange, newRating.confident);
 }
 
 /**
@@ -239,6 +254,126 @@ function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameCon
 		}
 	}
 }
+
+
+// Animating Elo Changes ----------------------------------------------------------------------------------------
+
+
+/**
+ * Returns a function that formats an elo value into a string for going into the `.elo` element's textContent.
+ * This function goes into the {@link animateNumber} as the `valueFormatter` parameter.
+ * @param confident - Whether the new rating is confident or not.
+ * @returns A function that takes a numeric value and returns the formatted text content for the elo rating.
+ */
+function createEloFormatter(confident: boolean) {
+	// Create a text content generator
+	return (value: number) => {
+		const rating: Rating = { value, confident };
+		const displayRating = metadata.getWhiteBlackElo(rating);
+		return `(${displayRating})`;
+	};
+}
+
+/**
+ * Animate both the main Elo and its Δ for a given container.
+ * @param container — the UsernameContainer whose elements we’ll animate
+ * @param oldValue  — rating before the change
+ * @param newValue  — rating after the change
+ * @param change    — the Δ to display (can be positive or negative)
+ * @param confident — whether the rating is “confident” (for formatting)
+ */
+function animateRatingChange(
+	container: UsernameContainer,
+	oldValue: number,
+	newValue: number,
+	change: number,
+	confident: boolean,
+) {
+	const DURATION = 1000;  // ms for both animations
+
+	// find our two elements
+	const eloElem   = container.element.querySelector('.elo')! as HTMLElement;
+	const deltaElem = container.element.querySelector('.eloChange')! as HTMLElement;
+
+	// tween the main rating
+	const mainAnim = animateNumber(
+		eloElem,
+		oldValue,
+		newValue,
+		DURATION,
+		undefined,
+		createEloFormatter(confident),
+	);
+	container.animationCancels.push(mainAnim.cancel);
+
+	// tween the change Δ
+	const changeAnim = animateNumber(
+		deltaElem,
+		0,
+		change,
+		DURATION,
+		undefined,
+		metadata.getWhiteBlackRatingDiff,
+	);
+	container.animationCancels.push(changeAnim.cancel);
+}
+
+
+/**
+ * Animate a numeric text value in an element from `start` to `end` over `duration` ms,
+ * using a custom easing function and optional text content formatter.
+ * @param element — the element whose `.textContent` will be updated
+ * @param start — starting number
+ * @param end — ending number
+ * @param durationMillis — total time, in milliseconds, for the animation
+ * @param easingFn — easing function (t from 0→1); defaults to an ease-out curve
+ * @param valueFormatter — optional function that receives the current numeric value
+ *     and returns the string to set as textContent; defaults to `v => v.toLocaleString()`
+ * @returns An object with a `cancel()` method to stop the animation early.
+ */
+function animateNumber(
+	element: HTMLElement,
+	start: number,
+	end: number,
+	durationMillis: number,
+	// eslint-disable-next-line no-unused-vars
+	easingFn: (t: number) => number = t => 1 - Math.pow(1 - t, 2), // Default: ease-out
+	// eslint-disable-next-line no-unused-vars
+	valueFormatter: (value: number) => string = v => v.toLocaleString(),
+): { cancel(): void } {
+	let frameId: number | null = null;
+	let cancelled = false;
+	const range = end - start;
+	const startTime = performance.now();
+
+	/**
+	 * Internal step function for requestAnimationFrame
+	 * @param now — high-resolution timestamp passed by rAF
+	 */
+	function step(now: DOMHighResTimeStamp) {
+		if (cancelled) return;
+		const elapsed = now - startTime;
+		const progress = Math.min(elapsed / durationMillis, 1);
+		const eased = easingFn(progress);
+		const current = Math.round(start + range * eased);
+		element.textContent = valueFormatter(current);
+
+		if (progress < 1) frameId = requestAnimationFrame(step);
+	}
+
+	frameId = requestAnimationFrame(step);
+
+	return {
+		/** Cancel the animation at its next opportunity */
+		cancel() {
+			cancelled = true;
+			if (frameId !== null) cancelAnimationFrame(frameId);
+		}
+	};
+}
+
+
+// Exports ----------------------------------------------------------------------------------------
 
 
 export default {
