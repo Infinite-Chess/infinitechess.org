@@ -345,6 +345,7 @@ function concludeGame() {
 	guigameinfo.gameEnd(loadedGamefile.gameConclusion);
 	onlinegame.onGameConclude();
 	enginegame.onGameConclude();
+	guipause.onReceiveGameConclusion();
 
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(loadedGamefile.gameConclusion).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
