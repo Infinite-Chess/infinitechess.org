@@ -7,7 +7,6 @@
  * or pinned pieces opening a discovered.
  */
 
-/* eslint-disable max-depth */
 
 import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";

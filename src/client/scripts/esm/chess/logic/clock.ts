@@ -15,6 +15,7 @@ import clockutil from '../util/clockutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
+
 import type { Game } from './gamefile.js';
 import type { Player } from '../util/typeutil.js';
 
@@ -75,7 +76,9 @@ type ClockData = {
 	timeAtTurnStart: undefined
 })
 
+
 // Functions -----------------------------------------------------------------------
+
 
 /**
  * Sets the clocks. If no current clock values are specified, clocks will
