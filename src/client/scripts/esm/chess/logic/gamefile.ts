@@ -145,6 +145,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 
 	startSnapshot.box = math.getBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces));
 
+	const vicinity = legalmoves.genVicinity(pieceMovesets);
 	const specialVicinity = legalmoves.genSpecialVicinity(metadata, existingRawTypes);
 
 	const moves: (Move|NullMove)[] = [];
