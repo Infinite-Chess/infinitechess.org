@@ -9,11 +9,18 @@
  * Naviary is notified by email of any flagged users.
  */
 
-import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager";
+import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager.js";
+import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+// @ts-ignore
+import { logEvents } from '../../middleware/logEvents.js';
 
 
-/** How many games played to measure their ratin abuse probability again. */
-const GAME_INTERVAL_TO_MEASURE = 4;
+// @ts-ignore
+import type { Game } from '../TypeDefinitions.js';
+
+
+/** How many games played to measure their rating abuse probability again. */
+const GAME_INTERVAL_TO_MEASURE = 5;
 
 
 
@@ -34,12 +41,33 @@ const GAME_INTERVAL_TO_MEASURE = 4;
  */
 
 
+/**
+ * Monitor suspicion levels for all players who played a particular game in a particular leaderboard
+ */
+async function measureRatingAbuseAfterGame(game: Game) {
+	// Do not monitor suspicion levels, if game was unrated 
+	if (!game.rated) return;
+
+	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
+	const leaderboard_id = VariantLeaderboards[game.variant];
+	if (leaderboard_id === undefined) return;
+
+	for (const playerStr in game.players) {
+		const user_id = game.players[playerStr].identifier.user_id;
+		if (user_id === undefined) {
+			await logEvents(`Unexpected: trying to access user_id of player in ranked game but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt', { print: true });
+			continue;
+		}
+
+		await measurePlayerRatingAbuse(user_id, leaderboard_id);
+	}
+}
 
 /**
- * Weights a specific user's probability of rating abuse.
+ * Weights a specific user's probability of rating abuse on a specified leaderboard.
  * If it flags a user, it sends Naviary an email with data on them.
  */
-function measurePlayerRatingAbuse(user_id: number, leaderboardId: number) {
+async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number) {
 
 	/** 1. Early exit if it hasn't been {@link GAME_INTERVAL_TO_MEASURE} games since the last measure. */
 
@@ -48,7 +76,7 @@ function measurePlayerRatingAbuse(user_id: number, leaderboardId: number) {
 
 	const recentGames = getRecentNRatedGamesForUser(
 		user_id,
-		leaderboardId,
+		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
         ['elo_change_from_game']
 	) as { elo_change_from_game: number }[];
@@ -86,6 +114,6 @@ function measurePlayerRatingAbuse(user_id: number, leaderboardId: number) {
 
 
 export default {
-	measurePlayerRatingAbuse,
+	measureRatingAbuseAfterGame,
 };
 
