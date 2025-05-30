@@ -20,7 +20,7 @@ import type { Game } from '../TypeDefinitions.js';
 
 
 /** How many games played to measure their rating abuse probability again. */
-const GAME_INTERVAL_TO_MEASURE = 5;
+const GAME_INTERVAL_TO_MEASURE = 4;
 
 
 
@@ -55,7 +55,7 @@ async function measureRatingAbuseAfterGame(game: Game) {
 	for (const playerStr in game.players) {
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) {
-			await logEvents(`Unexpected: trying to access user_id of player in ranked game but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt', { print: true });
+			await logEvents(`Unexpected: trying to access user_id of player in ranked game suspicion monitoring but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt', { print: true });
 			continue;
 		}
 
