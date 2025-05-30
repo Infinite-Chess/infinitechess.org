@@ -152,8 +152,6 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	const colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(pieceMovesets, pieces.slides);
 
-	const vicinity = legalmoves.genVicinity(pieceMovesets);
-
 	const refSnapshot = startSnapshot;
 
 	const editorDependentVars = {
