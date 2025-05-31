@@ -3,20 +3,22 @@
  * This script creates our database tables if they aren't already present.
  */
 
+
+// @ts-ignore
 import db from './database.js';
 
 
 // Variables -----------------------------------------------------------------------------------
 
 
-const user_id_upper_cap = 14_776_336; // 62**4: Limit of unique user id with 4-digit base-62 user ids!
-const game_id_upper_cap = 14_776_336; // 62**4: Limit of unique game id with 4-digit base-62 game ids!
+const user_id_upper_cap: number = 14_776_336; // 62**4: Limit of unique user id with 4-digit base-62 user ids!
+const game_id_upper_cap: number = 14_776_336; // 62**4: Limit of unique game id with 4-digit base-62 game ids!
 
 /** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
-const uniqueMemberKeys = ['user_id', 'username', 'email'];
+const uniqueMemberKeys: string[] = ['user_id', 'username', 'email'];
 
 /** All columns of the members table. Each of these would be valid to retrieve from any member. */
-const allMemberColumns = [
+const allMemberColumns: string[] = [
 	'user_id',
 	'username',
 	'username_history',
@@ -33,7 +35,7 @@ const allMemberColumns = [
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
-const allPlayerStatsColumns = [
+const allPlayerStatsColumns: string[] = [
 	'user_id',
 	'moves_played',
 	'game_count',
@@ -54,7 +56,7 @@ const allPlayerStatsColumns = [
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
-const allPlayerGamesColumns = [
+const allPlayerGamesColumns: string[] = [
 	'user_id',
 	'game_id',
 	'player_number',
@@ -64,7 +66,7 @@ const allPlayerGamesColumns = [
 ];
 
 /** All columns of the games table. Each of these would be valid to retrieve from any game. */
-const allGamesColumns = [
+const allGamesColumns: string[] = [
 	'game_id',
 	'date',
 	'base_time_seconds',
@@ -84,7 +86,7 @@ const allGamesColumns = [
 
 
 /** Creates the tables in our database if they do not exist. */
-function generateTables() {
+function generateTables(): void {
 	// Members table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS members (
@@ -213,9 +215,9 @@ function generateTables() {
 
 /**
  * Deletes a table from the database by its name.
- * @param {string} tableName - The name of the table to delete.
+ * @param tableName - The name of the table to delete.
  */
-function deleteTable(tableName) {
+function deleteTable(tableName: string) {
 	try {
 		// Prepare the SQL query to drop the table
 		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
