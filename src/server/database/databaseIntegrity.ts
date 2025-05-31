@@ -23,7 +23,7 @@ function checkDatabaseIntegrity() {
 		// else console.log('Database integrity check passed.');
 
 	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred during database integrity check.';
+		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt');
 	}
 }

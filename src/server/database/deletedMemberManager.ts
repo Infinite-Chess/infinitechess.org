@@ -26,7 +26,7 @@ function addDeletedMemberToDeletedMembersTable(user_id: number, reason_deleted: 
 		db.run(query, [user_id, reason_deleted]); // { changes: 1, lastInsertRowid: 7656846 }
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred while adding deleted member to table.';
+		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Failed to add user ID "${user_id}" to deleted_members table for reason "${reason_deleted}": ${errorMessage}`, 'errLog.txt');
 	}
 }

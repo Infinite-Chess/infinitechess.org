@@ -37,7 +37,7 @@ function cleanUpExpiredRefreshTokens() {
 				tokensArray = JSON.parse(refresh_tokens);
 			} catch (error: unknown) {
 				// Log the error and continue to the next member
-				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+				const errorMessage = error instanceof Error ? error.message : String(error);
 				logEventsAndPrint(`Error parsing refresh tokens for member "${username}" of id "${user_id}" when checking for expired refresh tokens: ${errorMessage}`, 'errLog.txt');
 				continue;
 			}
@@ -55,7 +55,7 @@ function cleanUpExpiredRefreshTokens() {
 			}
 		}
 	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error cleaning up expired refresh tokens: ${errorMessage}`, 'errLog.txt');
 		return;
 	}
