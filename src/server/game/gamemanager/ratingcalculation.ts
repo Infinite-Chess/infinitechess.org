@@ -11,6 +11,9 @@ import { PlayerGroup, type Player, players as p } from '../../../client/scripts/
 /** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
 const DEFAULT_LEADERBOARD_ELO = 1500.0;
 
+/** Minimum elo for a player on a leaderboard. */
+const MINIMUM_LEADERBOARD_ELO = 400.0;
+
 /** Default rating deviation, used for Glicko-1 */
 const DEFAULT_LEADERBOARD_RD = 350.0;
 
@@ -94,7 +97,7 @@ function d_squared(r: number, r_opp: number, RD_opp: number) : number {
 
 /** Given a game outcome for a player, his rating r, his RD, and the opponent'S rating r_opp and RD_opp, compute his new rating with glicko-1 */
 function new_rating(outcome: 0 | 0.5 | 1, r: number, RD: number, r_opp: number, RD_opp: number) {
-	return r + ( q / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) * g(RD_opp) * (outcome - E(r, r_opp, RD_opp));
+	return Math.max(MINIMUM_LEADERBOARD_ELO, r + ( q / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) * g(RD_opp) * (outcome - E(r, r_opp, RD_opp)) );
 }
 
 /** Given a player's rating r, his RD, and the opponent'S rating r_opp and RD_opp, compute his new rating with glicko-1 */
