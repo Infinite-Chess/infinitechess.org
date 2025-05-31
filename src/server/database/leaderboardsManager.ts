@@ -4,7 +4,6 @@
 
 // @ts-ignore
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
-// @ts-ignore
 import db from './database.js';
 import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';

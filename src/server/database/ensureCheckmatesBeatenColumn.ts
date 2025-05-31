@@ -5,7 +5,6 @@
  * This makes sure the member table has the new checkmates_beaten column.
  */
 
-// @ts-ignore
 import database from "./database.js";
 
 // Use synchronous query execution since better-sqlite3 doesn't use callbacks

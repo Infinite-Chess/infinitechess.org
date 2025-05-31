@@ -5,9 +5,7 @@
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
 // @ts-ignore
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
-// @ts-ignore
 import db from './database.js';
-// @ts-ignore
 import { allPlayerStatsColumns } from './databaseTables.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
