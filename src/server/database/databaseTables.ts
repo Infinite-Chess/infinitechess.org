@@ -243,7 +243,6 @@ function deleteTable(tableName: string) {
 function initDatabase(): void {
 	generateTables();
 	startPeriodicDatabaseIntegrityCheck();
-	// migrateUsers();
 	migrateMembersToPlayerStatsTable();
 	gamelogger.migrateGameLogsToDatabase();
 	startPeriodicDeleteUnverifiedMembers();
