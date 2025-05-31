@@ -7,9 +7,8 @@
 // @ts-ignore
 import { migrateMembersToPlayerStatsTable } from './migrateMembers.js';
 // @ts-ignore
-import { startPeriodicRefreshTokenCleanup } from './deleteExpiredRefreshTokens.js';
-// @ts-ignore
 import { startPeriodicDeleteUnverifiedMembers } from './deleteUnverifiedMembers.js';
+import { startPeriodicRefreshTokenCleanup } from './deleteExpiredRefreshTokens.js';
 import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
 import { startPeriodicDatabaseIntegrityCheck } from './databaseIntegrity.js';
