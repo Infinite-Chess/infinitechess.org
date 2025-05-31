@@ -45,7 +45,7 @@ function addGameToPlayerGamesTable(
 		user_id: number,
 		game_id: number,
 		player_number: Player,
-		score?: number | null,
+		score: number | null,
 		elo_at_game: number | null,
 		elo_change_from_game: number | null,
 	}): ModifyQueryResult {
@@ -130,7 +130,7 @@ function getPlayerGamesData(user_id: number, game_id: number, columns: string[])
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get(query, [user_id, game_id]) as PlayerGamesRecord | undefined;
+		const row = db.get<PlayerGamesRecord>(query, [user_id, game_id]);
 
 		// If no row is found, return undefined
 		if (!row) {

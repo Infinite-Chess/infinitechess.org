@@ -146,7 +146,7 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
     `;
 
 	try {
-		const result = db.get(query, [user_id, leaderboard_id]);
+		const result = db.get<{ '1': 1 }>(query, [user_id, leaderboard_id]);
 
 		// If db.get returns anything (even an object like { '1': 1 }), it means a row was found.
 		// If no row is found, db.get returns undefined.
@@ -164,17 +164,20 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
 	}
 }
 
+/** The return type of {@link getPlayerLeaderboardRating} */
+type PlayerLeaderboardRating = {
+	elo: number;
+	rating_deviation: number;
+	rd_last_update_date: string | null; // Can be null if no games played yet
+};
+
 /**
  * Gets the rating values for a player on a specific leaderboard.
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard.
  * @returns The player's leaderboard entry object or undefined if not found or on error.
  */
-function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): {
-	elo: number,
-	rating_deviation: number,
-	rd_last_update_date: string | null, // Can be null if no games played yet
-} | undefined {
+function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
 	// Changed table name, column names, added leaderboard_id to WHERE, selected new columns
 	const query = `
 		SELECT elo, rating_deviation, rd_last_update_date
@@ -185,7 +188,7 @@ function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard
 	try {
 		// Execute the query with user_id and leaderboard_id parameters
 		// Added leaderboard_id to parameters
-		const row = db.get(query, [user_id, leaderboard_id]) as { elo: number, rating_deviation: number, rd_last_update_date: string | null } | undefined;
+		const row = db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
 		return row; // Returns the record or undefined if not found
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -285,7 +288,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 
 	try {
 		// Execute the query, expecting at most one row containing the rank
-		const result = db.get(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, user_id, user_id]) as { rank: number } | undefined;
+		const result = db.get<{ rank: number }>(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, user_id, user_id]);
 
 		// If a result is found, return the rank, otherwise return undefined
 		return result?.rank;

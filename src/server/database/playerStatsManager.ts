@@ -108,7 +108,7 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get(query, [user_id]) as PlayerStatsRecord | undefined;
+		const row = db.get<PlayerStatsRecord>(query, [user_id]);
 
 		// If no row is found, return undefined
 		if (!row) {

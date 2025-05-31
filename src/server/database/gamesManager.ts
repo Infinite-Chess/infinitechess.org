@@ -151,7 +151,7 @@ function isGameIdTaken(game_id: number): boolean {
 		const query = 'SELECT 1 FROM games WHERE game_id = ?';
 
 		// Execute query to check if the game_id exists in the games table
-		const row = db.get(query, [game_id]); // { '1': 1 }
+		const row = db.get<{ '1': number }>(query, [game_id]);
 
 		// If a row is found, the game_id exists
 		return row !== undefined;
@@ -189,7 +189,7 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get(query, [game_id]) as GamesRecord | undefined;
+		const row = db.get<GamesRecord>(query, [game_id]);
 
 		// If no row is found, return undefined
 		if (!row) {

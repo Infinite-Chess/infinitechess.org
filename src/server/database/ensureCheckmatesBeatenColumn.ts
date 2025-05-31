@@ -9,9 +9,9 @@
 import database from "./database.js";
 
 // Use synchronous query execution since better-sqlite3 doesn't use callbacks
-const rows = database.all(`PRAGMA table_info(members);`);
+const rows = database.all<{ name: string }>(`PRAGMA table_info(members);`);
 
-const columnExists = rows.some((row: { name: string }) => row.name === 'checkmates_beaten');
+const columnExists = rows.some(row => row.name === 'checkmates_beaten');
 
 if (!columnExists) {
 	try {
