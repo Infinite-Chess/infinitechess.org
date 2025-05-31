@@ -1,4 +1,4 @@
-import { startPeriodicIntegrityCheck } from "./databaseIntegrity.js";
+import { startPeriodicDatabaseIntegrityCheck } from "./databaseIntegrity.js";
 import { generateTables } from "./databaseTables.js";
 import { startPeriodicRefreshTokenCleanup } from "./deleteExpiredRefreshTokens.js";
 import { startPeriodicDeleteUnverifiedMembers } from "./deleteUnverifiedMembers.js";
@@ -10,7 +10,7 @@ import { startPeriodicLeaderboardRatingDeviationUpdate } from "./leaderboardsMan
 
 function initDatabase() {
 	generateTables();
-	startPeriodicIntegrityCheck();
+	startPeriodicDatabaseIntegrityCheck();
 	// migrateUsers();
 	migrateMembersToPlayerStatsTable();
 	gamelogger.migrateGameLogsToDatabase();
