@@ -41,7 +41,7 @@ async function removeAccount(req, res) {
 	const reason_deleted = "user request";
 	const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
 	if (result.success) { // Success!!
-		logEvents(`User ${claimedUsername} deleted their account.`, "deletedAccounts.txt", { print: true });
+		logEvents(`Deleted account "${claimedUsername}" for reason "${reason_deleted}".`, "deletedAccounts.txt", { print: true });
 		return res.send('OK'); // 200 is default code
 	} else { // Failure
 		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt', { print: true });
