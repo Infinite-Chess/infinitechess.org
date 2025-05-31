@@ -5,7 +5,15 @@
 
 
 // @ts-ignore
+import { migrateMembersToPlayerStatsTable } from './migrateMembers.js';
+// @ts-ignore
+import { startPeriodicRefreshTokenCleanup } from './deleteExpiredRefreshTokens.js';
+// @ts-ignore
+import { startPeriodicDeleteUnverifiedMembers } from './deleteUnverifiedMembers.js';
+import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
+import { startPeriodicDatabaseIntegrityCheck } from './databaseIntegrity.js';
+import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -232,6 +240,16 @@ function deleteTable(tableName: string) {
 // deleteTable('test');
 
 
+function initDatabase(): void {
+	generateTables();
+	startPeriodicDatabaseIntegrityCheck();
+	// migrateUsers();
+	migrateMembersToPlayerStatsTable();
+	gamelogger.migrateGameLogsToDatabase();
+	startPeriodicDeleteUnverifiedMembers();
+	startPeriodicRefreshTokenCleanup();
+	startPeriodicLeaderboardRatingDeviationUpdate();
+}
 
 
 export {
@@ -242,5 +260,5 @@ export {
 	allPlayerStatsColumns,
 	allPlayerGamesColumns,
 	allGamesColumns,
-	generateTables,
+	initDatabase,
 };
