@@ -9,10 +9,6 @@ import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 
 function addDeletedMemberToDeletedMembersTable(user_id: number, reason_deleted: string): void {
-	if (user_id === undefined || reason_deleted === undefined) {
-		logEventsAndPrint(`Not all required params are met to add member to deleted members table! ${user_id}, ${reason_deleted}`, 'errLog.txt');
-		return;
-	}
 	
 	// The table looks like:
 	// CREATE TABLE IF NOT EXISTS deleted_members (
