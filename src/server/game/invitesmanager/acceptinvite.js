@@ -5,7 +5,7 @@
  */
 
 // Middleware imports
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
 import { isInviteOursByIdentifier } from './inviteutility.js';

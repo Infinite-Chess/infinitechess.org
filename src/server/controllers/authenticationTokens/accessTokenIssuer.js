@@ -3,7 +3,7 @@
 // Returns a new access token if refresh token hasn't expired.
 // Called by a fetch(). ALWAYS RETURN a json!
 
-import { logEvents } from "../../middleware/logEvents.js";
+import { logEventsAndPrint } from "../../middleware/logEvents.js";
 import { signAccessToken } from "./tokenSigner.js";
 
 
@@ -26,7 +26,7 @@ const expireTimeOfTokenCookieMillis = 1000 * 10; // 10 seconds
  */
 function accessTokenIssuer(req, res) {
 	if (!req.memberInfo) {
-		logEvents("req.memberInfo must be defined for access token issuer route!", 'errLog.txt', { print: true });
+		logEventsAndPrint("req.memberInfo must be defined for access token issuer route!", 'errLog.txt');
 		return res.status(500).json({'message' : "Server Error" });
 	}
 

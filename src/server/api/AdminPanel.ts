@@ -7,7 +7,7 @@
 import { manuallyVerifyUser } from "../controllers/verifyAccountController.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 // @ts-ignore
 import { deleteAccount } from "../controllers/deleteAccountController.js";
 // @ts-ignore
@@ -269,14 +269,14 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 
 function logCommand(command: string, req: CustomRequest) {
 	if (req.memberInfo.signedIn) {
-		logEvents(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt", { print: true });
+		logEventsAndPrint(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt");
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
 }
 
 function sendAndLogResponse(res: Response, code: number, message: any) {
 	res.status(code).send(message);
 	// Also log the sent response
-	logEvents("Result:   " + message + "\n", "adminCommands.txt", { print: true });
+	logEventsAndPrint("Result:   " + message + "\n", "adminCommands.txt");
 }
 
 export {

@@ -1,6 +1,5 @@
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
-
 import { promises as fsPromises } from 'fs';
 import path from 'path';
 
@@ -22,14 +21,11 @@ const giveLoggedItemsUUID = false;
  * Logs the provided message by appending a line to the end of the specified log file.
  * @param message - The message to log.
  * @param logName - The name of the log file.
- * @param [options] - Optional parameters.
- * @param [options.print] - If true, prints the message to the console as an error.
  */
-async function logEvents(message: string, logName: string, { print = false } = {}) {
+async function logEvents(message: string, logName: string) {
 	if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
 	if (!logName) return console.trace("Log name MUST be provided when logging an event!");
 
-	if (print) console.error(message);
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
 	const logItem = giveLoggedItemsUUID ? `${dateTime}   ${uuid()}   ${message}\n` // With unique UUID
                                         : `${dateTime}   ${message}\n`;
@@ -38,18 +34,25 @@ async function logEvents(message: string, logName: string, { print = false } = {
 		const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
 		ensureDirectoryExists(logsPath);
 		await fsPromises.appendFile(path.join(logsPath, logName), logItem);
-	} catch (err) {
-		console.log(err);
+	} catch (err: unknown) {
+		if (err instanceof Error) console.error(`Error logging event: ${err.message}`);
+		else console.error('Error logging event:', err);
 	}
 };
 
 /**
- * Middleware that logs the incoming request, then calls `next()`.
- * @param req - The request object
- * @param res - The response object
- * @param next - The function to call, once finished, to continue down the middleware waterfall.
+ * Logs the provided message by appending a line to the end of the specified log file,
+ * and prints it to the console as an error.
+ * @param message - The message to log.
+ * @param logName - The name of the log file.
  */
-function logger(req: Request, res: Response, next: () => void) {
+async function logEventsAndPrint(message: string, logName: string) {
+	console.error(message);
+	logEvents(message, logName);
+}
+
+/** Middleware that logs the incoming request, then calls `next()`. */
+function reqLogger(req: Request, res: Response, next: () => void) {
 	const clientIP = getClientIP(req);
 
 	const origin = req.headers.origin || 'Unknown origin';
@@ -108,7 +111,8 @@ function logReqWebsocketOut(ws: CustomWebSocket, messageData: string) {
 
 export {
 	logEvents,
-	logger,
+	logEventsAndPrint,
+	reqLogger,
 	logWebsocketStart,
 	logReqWebsocketIn,
 	logReqWebsocketOut

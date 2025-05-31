@@ -1,5 +1,5 @@
 import db from './database.js';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { intervalForRefreshTokenCleanupMillis } from '../config/config.js';
 import { removeExpiredTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
 
@@ -22,7 +22,7 @@ function cleanUpExpiredRefreshTokens() {
 			try {
 				tokensArray = JSON.parse(refresh_tokens);
 			} catch (error) {
-				logEvents(`Error parsing refresh tokens for member "${username}" of id "${user_id}" when checking for expired refresh tokens: ${error.message}`, 'errLog.txt', { print: true });
+				logEventsAndPrint(`Error parsing refresh tokens for member "${username}" of id "${user_id}" when checking for expired refresh tokens: ${error.message}`, 'errLog.txt');
 				continue;
 			}
 
@@ -35,11 +35,11 @@ function cleanUpExpiredRefreshTokens() {
 				const newValue = updatedTokens.length === 0 ? null : JSON.stringify(updatedTokens);
 				db.run(updateQuery, [newValue, user_id]);
 
-				logEvents(`Deleted atleast one expired token from member "${username}" of id "${user_id}".`, 'tokenCleanupLog.txt', { print: true });
+				logEventsAndPrint(`Deleted atleast one expired token from member "${username}" of id "${user_id}".`, 'tokenCleanupLog.txt');
 			}
 		}
 	} catch (error) {
-		logEvents(`Error cleaning up expired refresh tokens: ${error.stack}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error cleaning up expired refresh tokens: ${error.stack}`, 'errLog.txt');
 		return;
 	}
 	// console.log("Finished cleaning up refresh tokens!");

@@ -4,7 +4,7 @@
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import { intervalForRemovalOfOldUnverifiedAccountsMillis, maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js';
 import db from './database.js';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 
 // Automatic deletion of old, unverified accounts...
@@ -40,16 +40,16 @@ function removeOldUnverifiedMembers() {
 				// Delete the account.
 				const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
 				if (result.success) {
-					logEvents(`Removed unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt', { print: true });
+					logEventsAndPrint(`Removed unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days.`, 'deletedAccounts.txt');
 				} else { // Failure, either invalid delete reason, or they do not exist.
-					logEvents(`FAILED to remove unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days!!! Reason: ${result.reason}`, 'errorLog.txt', { print: true });
+					logEventsAndPrint(`FAILED to remove unverified account of id "${user_id}" for being unverified more than ${maxExistenceTimeForUnverifiedAccountMillis / millisecondsInADay} days!!! Reason: ${result.reason}`, 'errorLog.txt');
 				}
 			}
 		}
 		// console.log("Done!");
 	} catch (error) {
 		// Log any error that occurs during the process
-		logEvents(`Error removing old unverified accounts: ${error.stack}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error removing old unverified accounts: ${error.stack}`, 'errLog.txt');
 	}
 }
 

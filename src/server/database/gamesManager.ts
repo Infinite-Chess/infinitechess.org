@@ -3,7 +3,7 @@
  */
 
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
@@ -102,7 +102,7 @@ function addGameToGamesTable(
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error adding game to games table "${options.game_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error adding game to games table "${options.game_id}": ${message}`, 'errLog.txt');
 
 		// Return an error message
 		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
@@ -155,7 +155,7 @@ function isGameIdTaken(game_id: number): boolean {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error if the query fails
-		logEvents(`Error checking if game_id "${game_id}" is taken: ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error checking if game_id "${game_id}" is taken: ${message}`, 'errLog.txt');
 		return false; // Return false if an error occurs
 	}
 }
@@ -171,11 +171,11 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
-		logEvents(`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
 		return undefined;
 	}
 	if (!columns.every(column => typeof column === 'string' && allGamesColumns.includes(column))) {
-		logEvents(`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
 		return undefined;
 	}
 
@@ -190,7 +190,7 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 
 		// If no row is found, return undefined
 		if (!row) {
-			logEvents(`No matches found in games table for game_id = ${game_id}.`, 'errLog.txt', { print: true });
+			logEventsAndPrint(`No matches found in games table for game_id = ${game_id}.`, 'errLog.txt');
 			return undefined;
 		}
 
@@ -199,7 +199,7 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error and return undefined
-		logEvents(`Error executing query when getting game data of game_id ${game_id}: ${message}. The query: "${query}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error executing query when getting game data of game_id ${game_id}: ${message}. The query: "${query}"`, 'errLog.txt');
 		return undefined;
 	}
 }
@@ -217,14 +217,14 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyGameQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEvents(`Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEventsAndPrint(`Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
 		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
 	}
 
 	for (const column in columnsAndValues) {
 		// Validate all provided columns
 		if (!allGamesColumns.includes(column)) {
-			logEvents(`Invalid column "${column}" provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEventsAndPrint(`Invalid column "${column}" provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
 			return { success: false, reason: 'Invalid column.' }; // Generic error message
 		}
 	}
@@ -246,13 +246,13 @@ function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): Modi
 		// Check if the update was successful
 		if (result.changes > 0) return { success: true, result };
 		else {
-			logEvents(`No changes made when updating games table columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEventsAndPrint(`No changes made when updating games table columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
 			return { success: false, reason: 'No changes made.' }; // Generic error message
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error updating games table columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEventsAndPrint(`Error updating games table columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
 		// Return an error message
 		return { success: false, reason: `Database error.` }; // Generic error message
 	}
@@ -278,7 +278,7 @@ function deleteGame(game_id: number): ModifyGameQueryResult {
 
 		// Check if any rows were deleted
 		if (result.changes === 0) {
-			logEvents(`Cannot delete game of ID "${game_id}", it was not found.`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEventsAndPrint(`Cannot delete game of ID "${game_id}", it was not found.`, 'errLog.txt'); // Detailed logging for debugging
 			return { success: false, reason: 'Game not found.' }; // Generic error message
 		}
 
@@ -287,7 +287,7 @@ function deleteGame(game_id: number): ModifyGameQueryResult {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error deleting game with ID "${game_id}": ${message}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEventsAndPrint(`Error deleting game with ID "${game_id}": ${message}`, 'errLog.txt'); // Detailed logging for debugging
 		// Return an error message
 		return { success: false, reason: 'Database error.' }; // Generic error message
 	}

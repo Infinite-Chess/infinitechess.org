@@ -11,7 +11,7 @@
 
 import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 
 // @ts-ignore
@@ -54,7 +54,7 @@ async function measureRatingAbuseAfterGame(game: Game) {
 	for (const playerStr in game.players) {
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) {
-			await logEvents(`Unexpected: trying to access user_id of player in ranked game suspicion monitoring but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt', { print: true });
+			await logEventsAndPrint(`Unexpected: trying to access user_id of player in ranked game suspicion monitoring but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt');
 			continue;
 		}
 

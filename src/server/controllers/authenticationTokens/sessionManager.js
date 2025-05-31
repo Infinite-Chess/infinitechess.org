@@ -1,6 +1,6 @@
 import { deletePreferencesCookie } from "../../api/Prefs.js";
 import { deletePracticeProgressCookie } from "../../api/PracticeProgress.js";
-import { logEvents } from "../../middleware/logEvents.js";
+import { logEventsAndPrint } from "../../middleware/logEvents.js";
 import { addRefreshTokenToMemberData, deleteRefreshTokenFromMemberData, deleteRefreshTokensOfUser, getRefreshTokensByUserID, saveRefreshTokens } from "../../database/refreshTokenManager.js";
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, getTimeMillisSinceIssued, removeExpiredTokens } from "./refreshTokenObject.js";
 import { signRefreshToken } from "./tokenSigner.js";
@@ -30,7 +30,7 @@ function doesMemberHaveRefreshToken_RenewSession(userId, username, roles, token,
 	// Get the valid refresh tokens for the user
 	const refreshTokens = getRefreshTokensByUserID(userId);
 	if (refreshTokens === undefined) {
-		logEvents(`Cannot test if non-existent member of id "${userId}" has refresh token "${token}"!`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Cannot test if non-existent member of id "${userId}" has refresh token "${token}"!`, 'errLog.txt');
 		return false;
 	}
 

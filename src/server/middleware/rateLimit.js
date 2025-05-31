@@ -1,4 +1,4 @@
-import { logEvents } from './logEvents.js';
+import { logEvents, logEventsAndPrint } from './logEvents.js';
 import { getClientIP } from '../utility/IP.js';
 
 import { isIPBanned } from './banned.js';
@@ -183,7 +183,7 @@ setInterval(() => {
 		// Check if there are no timestamps
 		if (timestamps.length === 0) {
 			const logMessage = "Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.";
-			logEvents(logMessage, 'errLog.txt', { print: true });
+			logEventsAndPrint(logMessage, 'errLog.txt');
 			delete rateLimitHash[key];
 			continue;
 		}
@@ -247,14 +247,14 @@ setInterval(() => {
 
 function logAttackBegin() {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
-	logEvents(logText, 'reqLogRateLimited.txt', { print: true });
-	logEvents(logText, 'hackLog.txt', { print: true });
+	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
+	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
 function logAttackEnd() {
 	const logText = `DDOS attack has ended.`;
-	logEvents(logText, 'reqLogRateLimited.txt', { print: true });
-	logEvents(logText, 'hackLog.txt', { print: true });
+	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
+	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
 export {

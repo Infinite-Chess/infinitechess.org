@@ -10,7 +10,7 @@ import { getMemberDataByCriteria, updateMemberColumns } from "../database/member
 import { Leaderboards } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getPlayerLeaderboardRating, getEloOfPlayerInLeaderboard, getPlayerRankInLeaderboard } from '../database/leaderboardsManager.js';
 import { getTranslationForReq } from "../utility/translate.js";
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 import metadata from '../../client/scripts/esm/chess/util/metadata.js';
 
@@ -58,7 +58,7 @@ const getMemberData = async(req, res) => { // route: /member/:member/data
 
 	// If they are the same person as who their requesting data, also include these.
 	if (req.memberInfo === undefined) {
-		logEvents("req.memberInfo must be defined when requesting member data from API!", 'errLog.txt', { print: true });
+		logEventsAndPrint("req.memberInfo must be defined when requesting member data from API!", 'errLog.txt');
 		res.status(500).send('Internal Server Error');
 	}
 	if (req.memberInfo.signedIn && req.memberInfo.username.toLowerCase() === claimedUsername.toLowerCase()) { // Their page

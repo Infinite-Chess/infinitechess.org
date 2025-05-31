@@ -13,7 +13,7 @@ import cookieParser from 'cookie-parser';
 import credentials from './credentials.js';
 import secureRedirect from './secureRedirect.js';
 import errorHandler from './errorHandler.js';
-import { logger } from './logEvents.js';
+import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
 
@@ -62,7 +62,7 @@ function configureMiddleware(app) {
 	// The logger can't log the request body without this
 	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
-	app.use(logger); // Log the request
+	app.use(reqLogger); // Log the request
 
 	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https

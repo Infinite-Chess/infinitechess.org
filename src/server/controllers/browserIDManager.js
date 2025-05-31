@@ -2,7 +2,7 @@
 
 import uuid from "../../client/scripts/esm/util/uuid.js";
 import { isBrowserIDBanned } from "../middleware/banned.js";
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 
 
@@ -20,7 +20,7 @@ const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
  */
 function assignOrRenewBrowserID(req, res, next) {
 	if (!req.cookies) {
-		logEvents("req.cookies must be parsed before setting browser-id cookie!", 'errLog.txt', { print: true });
+		logEventsAndPrint("req.cookies must be parsed before setting browser-id cookie!", 'errLog.txt');
 		return next();
 	}
 
@@ -64,7 +64,7 @@ function makeBrowserIDPermanent(req, res, browserID) {
 	res.cookie('browser-id', browserID, { httpOnly: true, sameSite: 'None', secure: true, maxAge: Number.MAX_SAFE_INTEGER /* FOREVER!! */ });
 
 	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!!!!!!!!!!!!!!!!!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
-	logEvents(logThis, 'bannedIPLog.txt', { print: true });
+	logEventsAndPrint(logThis, 'bannedIPLog.txt');
 }
 
 export {

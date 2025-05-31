@@ -2,7 +2,7 @@
  * This module handles account deletion.
  */
 
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 import { getTranslationForReq } from "../utility/translate.js";
 import { deleteUser, getMemberDataByCriteria } from "../database/memberManager.js";
 import { testPasswordForRequest } from './authController.js';
@@ -24,15 +24,15 @@ async function removeAccount(req, res) {
 	// already in the body, so we set that here.
 	req.body.username = claimedUsername;
 	if (!(await testPasswordForRequest(req, res))) { // It will have already sent a response
-		return logEvents(`Incorrect password for user "${claimedUsername}" attempting to remove account!`, "loginAttempts.txt", { print: true });
+		return logEventsAndPrint(`Incorrect password for user "${claimedUsername}" attempting to remove account!`, "loginAttempts.txt");
 	}
 
 	// DELETE ACCOUNT..
 
 	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
 	if (user_id === undefined) {
-		return logEvents(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt', { print: true });
-		// if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
+		return logEventsAndPrint(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt');
+		// if (user_id === undefined) return logEventsAndPrint(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt');
 	}
 	
 	// Close their sockets, delete their invites, delete their session cookies...
@@ -41,10 +41,10 @@ async function removeAccount(req, res) {
 	const reason_deleted = "user request";
 	const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
 	if (result.success) { // Success!!
-		logEvents(`Deleted account "${claimedUsername}" for reason "${reason_deleted}".`, "deletedAccounts.txt", { print: true });
+		logEventsAndPrint(`Deleted account "${claimedUsername}" for reason "${reason_deleted}".`, "deletedAccounts.txt");
 		return res.send('OK'); // 200 is default code
 	} else { // Failure
-		logEvents(`Can't delete ${claimedUsername}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Can't delete ${claimedUsername}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt');
 		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
 	}
 }

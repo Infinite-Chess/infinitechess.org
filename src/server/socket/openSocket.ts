@@ -15,7 +15,7 @@ import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
-import { logEvents, logWebsocketStart } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
 // @ts-ignore
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 // @ts-ignore
@@ -142,7 +142,7 @@ function addListenersToSocket(req: Request, ws: CustomWebSocket) {
 
 function onerror(ws: CustomWebSocket, error: Error) {
 	const errText = `An error occurred in a websocket. The socket: ${socketUtility.stringifySocketMetadata(ws)}\n${error.stack}`;
-	logEvents(errText, 'errLog.txt', { print: true });
+	logEventsAndPrint(errText, 'errLog.txt');
 }
 
 

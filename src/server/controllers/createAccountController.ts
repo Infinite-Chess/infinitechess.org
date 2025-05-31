@@ -28,7 +28,7 @@ import emailValidator from 'node-email-verifier';
 import { Request, Response } from 'express';
 // @ts-ignore
 import { addUserToPlayerStatsTable } from '../database/playerStatsManager.js';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Variables -------------------------------------------------------------------------
 
@@ -139,7 +139,7 @@ async function generateAccount({ username, email, password, autoVerify = false }
 	const membersResult = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
 	if (!membersResult.success) {
 		// Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
-		logEvents(`Failed to create new member "${username}".`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Failed to create new member "${username}".`, 'errLog.txt');
 		return;
 	}
     
@@ -147,11 +147,11 @@ async function generateAccount({ username, email, password, autoVerify = false }
 	const user_id = membersResult.result.lastInsertRowid;
 	const playerStatsResult = addUserToPlayerStatsTable(user_id);
 	if (!playerStatsResult.success) {
-		logEvents(`Failed to add user "${username}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Failed to add user "${username}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt');
 		return;
 	}
 
-	logEvents(`Created new member: ${username}`, 'newMemberLog.txt', { print: true });
+	logEventsAndPrint(`Created new member: ${username}`, 'newMemberLog.txt');
 
 	// SEND EMAIL CONFIRMATION
 	if (!autoVerify) {
@@ -274,7 +274,7 @@ async function doEmailFormatChecks(string: string, req: Request, res: Response):
 	}
 	if (isEmailBanned(string)) {
 		const errMessage = `Banned user with email ${string} tried to recreate their account!`;
-		logEvents(errMessage, 'bannedIPLog.txt', { print: true });
+		logEventsAndPrint(errMessage, 'bannedIPLog.txt');
 		res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
 		return false;
 	}
@@ -300,7 +300,7 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 		return await emailValidator(email, { checkMx: true });
 	} catch (error) {
 		const err = error as Error; // Type assertion
-		logEvents(`Error when validating domain for email "${email}": ${err.stack}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error when validating domain for email "${email}": ${err.stack}`, 'errLog.txt');
 		return true; // Default to true to avoid blocking users.
 	}
 }

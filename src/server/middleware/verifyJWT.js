@@ -9,7 +9,7 @@
 
 import { isTokenValid } from '../controllers/authenticationTokens/tokenValidator.js';
 import { getClientIP } from '../utility/IP.js';
-import { logEvents } from './logEvents.js';
+import { logEventsAndPrint } from './logEvents.js';
 
 /** @typedef {import('../socket/socketUtility.js').CustomWebSocket} CustomWebSocket */
 
@@ -51,7 +51,7 @@ function verifyAccessToken(req, res) {
 	// { isValid (boolean), user_id, username, roles }
 	const result = isTokenValid(accessToken, false, getClientIP(req)); // False for access token
 	if (!result.isValid) {
-		logEvents(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog.txt');
 		return false; //Token was expired or tampered
 	}
 
@@ -76,7 +76,7 @@ function verifyAccessToken(req, res) {
  */
 function verifyRefreshToken(req, res) {
 	const cookies = req.cookies;
-	if (!cookies) return logEvents("Cookie parser didn't set the req.cookies property!", 'errLog.txt', { print: true });
+	if (!cookies) return logEventsAndPrint("Cookie parser didn't set the req.cookies property!", 'errLog.txt');
 
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // No refresh token present
@@ -118,7 +118,7 @@ function verifyJWTWebSocket(ws) {
  */
 function verifyRefreshToken_WebSocket(ws) {
 	const cookies = ws.metadata.cookies;
-	if (!cookies) return logEvents("Websocket needs to have the cookies property before verifying JWT!", 'errLog.txt', { print: true });
+	if (!cookies) return logEventsAndPrint("Websocket needs to have the cookies property before verifying JWT!", 'errLog.txt');
 
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return false; // Not logged in, don't set their user property

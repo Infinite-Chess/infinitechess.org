@@ -8,7 +8,7 @@
 
 import db from './database.js';
 // @ts-ignore
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
 const INTEGRITY_CHECK_INTERVAL_MILLIS: number = 24 * 60 * 60 * 1000; // 24 hours
@@ -19,12 +19,12 @@ function checkDatabaseIntegrity() {
 	try {
 		const result = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
 
-		if (!(result?.integrity_check === 'ok')) logEvents(`Database integrity check failed: ${result?.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt', { print: true });
+		if (!(result?.integrity_check === 'ok')) logEventsAndPrint(`Database integrity check failed: ${result?.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt');
 		// else console.log('Database integrity check passed.');
 
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred during database integrity check.';
-		logEvents(`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt');
 	}
 }
 

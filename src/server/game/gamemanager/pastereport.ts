@@ -5,7 +5,7 @@
 
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 // @ts-ignore
 import gameutility from './gameutility.js';
 // @ts-ignore
@@ -30,7 +30,7 @@ function onPaste(ws: CustomWebSocket, game?: Game) { // { reason, opponentsMoveN
 	if (game.publicity !== 'private') {
 		const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 		const errString = `Player reported pasting in a non-private game. Reporter color: ${ourColor}. Number of moves played: ${game.moves.length}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
-		logEvents(errString, 'errLog.txt', { print: true });
+		logEventsAndPrint(errString, 'errLog.txt');
 		return;
 	}
 

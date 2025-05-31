@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import db from './database.js';
 import { genUniqueUserID } from './memberManager.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
@@ -24,7 +24,7 @@ function migrateMembersToPlayerStatsTable() {
 		if (!user_ids_player_stats.includes(user_id)) {
 			const playerStatsResult = addUserToPlayerStatsTable(user_id);
 			if (!playerStatsResult.success) {
-				logEvents(`Failed to add user ID "${user_id}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt', { print: true });
+				logEventsAndPrint(`Failed to add user ID "${user_id}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt');
 			} else migrated_player_stats++;
 		}
 	}

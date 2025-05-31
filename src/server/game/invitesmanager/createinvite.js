@@ -8,7 +8,7 @@
 
 
 // Middleware imports
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
@@ -177,7 +177,7 @@ function reportForExploitingInvite(ws, invite, replyto) {
 	const logText = ws.metadata.memberInfo.signedIn ? `User ${ws.metadata.memberInfo.username} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
                                      : `Browser ${ws.metadata.cookies["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
 
-	logEvents(logText, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
+	logEventsAndPrint(logText, 'hackLog.txt'); // Log the exploit to the hackLog!
 }
 
 /**

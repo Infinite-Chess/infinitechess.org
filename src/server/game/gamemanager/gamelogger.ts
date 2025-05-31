@@ -14,7 +14,7 @@ import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/
 import { computeRatingDataChanges, UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { addGameToPlayerGamesTable } from '../../database/playerGamesManager.js';
 import icnconverter, { LongFormatIn } from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 // @ts-ignore
@@ -57,7 +57,7 @@ async function logGame(game: Game) : Promise<RatingData | undefined> {
 	// 2. Enter the game into the games table
 	const results = await enterGameInGamesTable(game, dateSqliteString, ratingdata);
 	if (results.success === false) { // Failure to log game into database and update player stats
-		await logEvents('Failed to log game. Check unloggedGames log. Not incrementing player stats either.', 'errLog.txt', { print: true });
+		await logEventsAndPrint('Failed to log game. Check unloggedGames log. Not incrementing player stats either.', 'errLog.txt');
 		await logEvents(results.reason, 'unloggedGames.txt'); // Log into a separate log
 		return undefined;
 	}
@@ -152,7 +152,7 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 	} catch (error: unknown) {
 		const stack = error instanceof Error ? error.stack : String(error);
 		const errText = `Error when logging game and converting to ICN! The game: ${gameutility.getSimplifiedGameString(game)}. The primed gamefile:\n${JSON.stringify(longformIn)}\n${stack}`;
-		await logEvents(errText, 'errLog.txt', { print: true });
+		await logEventsAndPrint(errText, 'errLog.txt');
 	}
 
 	return ICN;
@@ -174,7 +174,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		const player: Player = Number(playerStr) as Player;
 		const user_id = game.players[playerStr].identifier.user_id;
 		if (user_id === undefined) {
-			await logEvents(`Unexpected: trying to log ranked game for a player without a user_id. Game: ${JSON.stringify(game)}`, 'errLog.txt', { print: true });
+			await logEventsAndPrint(`Unexpected: trying to log ranked game for a player without a user_id. Game: ${JSON.stringify(game)}`, 'errLog.txt');
 			return undefined;
 		}
 
@@ -184,7 +184,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		// Access the player leaderboard data
 		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
 		if (leaderboard_data === undefined) {
-			await logEvents(`Unable to read leaderboard_data of user ${user_id} while updating leaderboard ${leaderboard_id}!`, 'errLog.txt', { print: true });
+			await logEventsAndPrint(`Unable to read leaderboard_data of user ${user_id} while updating leaderboard ${leaderboard_id}!`, 'errLog.txt');
 			return undefined;
 		}
 
@@ -210,7 +210,7 @@ async function updateLeaderboardsTable(game: Game, victor: Player | undefined) :
 		const results = updatePlayerLeaderboardRating(user_id, leaderboard_id, elo, rd);
 
 		if (!results.success) {
-			await logEvents(`Failed to update leaderboard data for player ${user_id} and leaderboard ${leaderboard_id}.`, 'errLog.txt', { print: true });
+			await logEventsAndPrint(`Failed to update leaderboard data for player ${user_id} and leaderboard ${leaderboard_id}.`, 'errLog.txt');
 			continue;
 		}
 	}
@@ -243,7 +243,7 @@ async function updatePlayerGamesTable(game: Game, game_id: number, victor: Playe
 		// Add game to player_games table in database
 		const results = addGameToPlayerGamesTable(options);
 		if (!results.success) {
-			await logEvents('Failed to add game to player_games table after game. Check unloggedGames log.', 'errLog.txt', { print: true });
+			await logEventsAndPrint('Failed to add game to player_games table after game. Check unloggedGames log.', 'errLog.txt');
 			const errText = `Error when adding game to player_games when logging game: ${results.reason}  Member "${game.players[playerStr].identifier.member}", user_id "${user_id}". Their color: ${playerStr}. Game ID: ${game_id}. The game: ${gameutility.getSimplifiedGameString(game)}`;
 			await logEvents(errText, 'unloggedGames.txt');
 			continue;
@@ -295,7 +295,7 @@ async function updatePlayerStatsTable(game: Game, game_id: number, victor: Playe
 		const results = updatePlayerStatsColumns(user_id, player_stats);
 
 		if (!results.success) {
-			await logEvents('Failed to increment player stats after game. Check unloggedGames log.', 'errLog.txt', { print: true });
+			await logEventsAndPrint('Failed to increment player stats after game. Check unloggedGames log.', 'errLog.txt');
 			const errText = `Error when UPDATING player stats when logging game: ${results.reason}  Member "${game.players[playerStr].identifier.member}", user_id "${user_id}". Their color: ${playerStr}. Game ID: ${game_id}. The game: ${gameutility.getSimplifiedGameString(game)}`;
 			await logEvents(errText, 'unloggedGames.txt');
 			continue;
