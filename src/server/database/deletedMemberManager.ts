@@ -8,9 +8,10 @@ import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 
 
-function addDeletedMemberToDeletedMembersTable(user_id, reason_deleted) {
+function addDeletedMemberToDeletedMembersTable(user_id: number, reason_deleted: string): void {
 	if (user_id === undefined || reason_deleted === undefined) {
-		return logEventsAndPrint(`Not all required params are met to add member to deleted members table! ${user_id}, ${reason_deleted}`, 'errLog.txt');
+		logEventsAndPrint(`Not all required params are met to add member to deleted members table! ${user_id}, ${reason_deleted}`, 'errLog.txt');
+		return;
 	}
 	
 	// The table looks like:
@@ -27,9 +28,10 @@ function addDeletedMemberToDeletedMembersTable(user_id, reason_deleted) {
 	try {
 		// Execute the query with the provided values
 		db.run(query, [user_id, reason_deleted]); // { changes: 1, lastInsertRowid: 7656846 }
-	} catch (error) {
+	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		logEventsAndPrint(`Failed to add user ID "${user_id}" to deleted_members table for reason "${reason_deleted}": ${error.message}`, 'errLog.txt');
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred while adding deleted member to table.';
+		logEventsAndPrint(`Failed to add user ID "${user_id}" to deleted_members table for reason "${reason_deleted}": ${errorMessage}`, 'errLog.txt');
 	}
 }
 
