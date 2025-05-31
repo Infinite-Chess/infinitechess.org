@@ -10,8 +10,7 @@
  */
 
 import type { TypeGroup } from '../../chess/util/typeutil.js';
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
+import type { Board } from '../logic/gamefile.js';
 
 import typeutil from '../../chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
@@ -32,12 +31,12 @@ let cachedImages: TypeGroup<HTMLImageElement> = {};
  * Fetches necessary SVGs (using svgcache), converts them to images,
  * normalizes them, and stores them in the cache.
  */
-async function initImagesForGame(gamefile: gamefile): Promise<void> {
+async function initImagesForGame(boardsim: Board): Promise<void> {
 	if (Object.keys(cachedImages).length > 0) throw Error("Image cache already initialized. Call deleteImageCache() when unloading games.");
 	// console.log("Initializing image cache for game...");
 
 	// 1. Determine required piece types (excluding SVG-less ones)
-	const types = gamefile.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
+	const types = boardsim.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
 	if (types.length === 0) return console.log("No piece types with SVGs found for this game. Image cache remains empty.");
 
 	// console.log("Required piece types for image cache:", types);

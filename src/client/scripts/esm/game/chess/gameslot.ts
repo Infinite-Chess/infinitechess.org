@@ -9,14 +9,12 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
-import type { CoordsKey } from "../../chess/util/coordutil.js";
-import type { EnPassant } from "../../chess/logic/state.js";
 import type { Player } from "../../chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
-// @ts-ignore
-import type { GameRules } from "../../chess/variants/gamerules.js";
+import type { Game, Board } from "../../chess/logic/gamefile.js";
+import type { VariantOptions } from "../../chess/logic/initvariant.js";
 
 import enginegame from '../misc/enginegame.js';
 import guinavigation from "../gui/guinavigation.js";
@@ -45,7 +43,6 @@ import sound from "../misc/sound.js";
 import guiclock from "../gui/guiclock.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
-// @ts-ignore
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
@@ -54,7 +51,7 @@ import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore
-import board from "../rendering/board.js";
+import board from "../rendering/boardtiles.js";
 // @ts-ignore
 import area from "../rendering/area.js";
 // @ts-ignore
@@ -90,47 +87,20 @@ interface Additional {
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions,
 	/** The conclusion of the game, if loading an online game that has already ended. */
-	gameConclusion?: string | false,
+	gameConclusion?: string,
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues,
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor?: true,
+	editor?: boolean,
 }
 
-/**
- * Variant options that can be used to load a custom game,
- * whether local or online, instead of one of the default variants.
- */
-interface VariantOptions {
-	/**
-	 * The full move number of the turn at the provided position. Default: 1.
-	 * Can be higher if you copy just the positional information in a game with some moves played already.
-	 */
-	fullMove: number,
-	gameRules: GameRules,
-	/**
-	 * The starting position object, containing the pieces organized by key.
-	 * The key of the object is the coordinates of the piece as a string,
-	 * and the value is the type of piece on that coordinate (e.g. [22] pawn (neutral))
-	 */
-	position: Map<CoordsKey, number>
-	/** The 3 global game states */
-	state_global: {
-		/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
-		specialRights: Set<CoordsKey>,
-		/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-		enpassant?: EnPassant,
-		/** If the move moveRuleState gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
-		moveRuleState?: number,
-	}
-}
-
+type GameFile = Game & { board: Board }
 
 // Variables ---------------------------------------------------------------
 
 
 /** The currently loaded game. */
-let loadedGamefile: gamefile | undefined;
+let loadedGamefile: GameFile | undefined;
 
 /** The mesh of the gamefile, if it is loaded. */
 let mesh: Mesh | undefined;
@@ -154,7 +124,7 @@ const delayOfLatestMoveAnimationOnRejoinMillis = 150;
 
 
 /**  Returns the gamefile currently loaded */
-function getGamefile(): gamefile | undefined {
+function getGamefile(): GameFile | undefined {
 	return loadedGamefile;
 }
 
@@ -209,20 +179,22 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 /** Loads all of the logical components of a game */
 function loadLogical(loadOptions: LoadOptions) {
 
-	const newGamefile = new gamefile(loadOptions.metadata, loadOptions.additional);
+	const newgame = gamefile.initGame(loadOptions.metadata, loadOptions.additional?.variantOptions, loadOptions.additional?.gameConclusion, loadOptions.additional?.clockValues);
+	const boardsim = gamefile.initBoard(newgame.gameRules, loadOptions.metadata, loadOptions.additional?.variantOptions, loadOptions.additional?.editor);
+	gamefile.loadGameWithBoard(newgame, boardsim, loadOptions.additional?.moves);
 
 	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
-	const pieceCount = boardutil.getPieceCountOfGame(newGamefile.pieces);
+	const pieceCount = boardutil.getPieceCountOfGame(boardsim.pieces);
 	// Disable miniimages if there's too many pieces
 	if (pieceCount > miniimage.pieceCountToDisableMiniImages) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
-	if (pieceCount > arrows.pieceCountToDisableArrows || newGamefile.pieces.slides.length > arrows.lineCountToDisableArrows) arrows.setMode(0);
+	if (pieceCount > arrows.pieceCountToDisableArrows || boardsim.pieces.slides.length > arrows.lineCountToDisableArrows) arrows.setMode(0);
 
 	initCopyPastGameListeners();
 
 	// Immediately conclude the game if we loaded a game that's over already
-	loadedGamefile = newGamefile;
+	loadedGamefile = newgame as GameFile;
 
 	specialrighthighlights.regenModel();
 
@@ -238,16 +210,16 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	guiclock.set(loadedGamefile!);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
-	await imagecache.initImagesForGame(loadedGamefile!);
-	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
-	texturecache.initTexturesForGame(gl, loadedGamefile!);
+	await imagecache.initImagesForGame(loadedGamefile!.board);
+	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!.board);
+	texturecache.initTexturesForGame(gl, loadedGamefile!.board);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
 	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
-	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
-	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
+	const lastmove = moveutil.getLastMove(loadedGamefile!.board.moves);
+	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, loadedGamefile!.board, lastmove, false); // Rewind one move
 
 	// Initialize the mesh empty
 	mesh = {
@@ -257,12 +229,12 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	};
 
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(loadedGamefile!, mesh);
+	piecemodels.regenAll(loadedGamefile!.board, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined && !lastmove.isNull) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
-		if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
-		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
+		if (moveutil.areWeViewingLatestMove(loadedGamefile!.board)) return; // Already viewing the lastest move
+		movesequence.viewFront(loadedGamefile!, loadedGamefile!.board, mesh!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 }
@@ -307,7 +279,7 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!));
+	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.board));
 	boardpos.setBoardPos(centerArea.coords);
 	boardpos.setBoardScale(centerArea.scale * 1.75);
 	guinavigation.recenter();
@@ -337,7 +309,7 @@ function callbackCopy(event: Event) {
  */
 function concludeGame() {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
-	if (loadedGamefile.gameConclusion === false) throw Error("Cannot conclude game when the game hasn't ended.");
+	if (loadedGamefile.gameConclusion === undefined) throw Error("Cannot conclude game when the game hasn't ended.");
 
 	clock.endGame(loadedGamefile);
 	guiclock.stopClocks(loadedGamefile);
@@ -367,7 +339,7 @@ function concludeGame() {
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame() {
-	loadedGamefile!.gameConclusion = false;
+	delete loadedGamefile!.gameConclusion;
 	// Delete the Result and Condition metadata
 	gamefileutility.eraseTerminationMetadata(loadedGamefile!);
 	board.resetColor();
@@ -388,5 +360,4 @@ export default {
 
 export type {
 	Additional,
-	VariantOptions
 };

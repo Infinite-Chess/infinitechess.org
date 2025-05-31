@@ -2,7 +2,7 @@
 // Import Start
 import transition from './transition.js';
 import camera from './camera.js';
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 import math from '../../util/math.js';
 import jsutil from '../../util/jsutil.js';
 import space from '../misc/space.js';
@@ -14,7 +14,7 @@ import boardpos from './boardpos.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js').gamefile} gamefile
+ * @typedef {import('../../chess/logic/gamefile.js').Board} Board
  * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
  * @typedef {import('../../chess/util/coordutil.js').Coords} Coords
 */
@@ -94,7 +94,7 @@ function applyPaddingToBox(box) { // { left, right, bottom, top }
 	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
     
 	// Round to the furthest away edge of the square.
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = boardtiles.gsquareCenter();
 	boxCopy.left -= squareCenter;
 	boxCopy.right += 1 - squareCenter;
 	boxCopy.bottom -= squareCenter;
@@ -148,7 +148,7 @@ function calculateFromBox(box) { // { left, right, bottom, top }
 	// Now maximize the bounding box to fill entire screen when at position and scale, so that
 	// we don't have long thin slices of a bounding box that will fail the math.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
-	box = board.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
+	box = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
 	math;
 	// PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
@@ -228,7 +228,7 @@ function initTelFromArea(thisArea, ignoreHistory) {
 	const startCoords = boardpos.getBoardPos();
 	const endCoords = thisArea.coords;
 
-	const currentBoardBoundingBox = board.gboundingBox(); // Tile/board space, NOT world-space
+	const currentBoardBoundingBox = boardtiles.gboundingBox(); // Tile/board space, NOT world-space
 
 	// Will a teleport to this area be a zoom out or in?
 	const isAZoomOut = thisArea.scale < boardpos.getBoardScale();
@@ -261,12 +261,12 @@ function initTelFromArea(thisArea, ignoreHistory) {
 /**
  * Returns the area object that contains all pieces within
  * it from the specified gamefile, with added padding.
- * @param {gamefile} gamefile - The gamefile
+ * @param {Board} board - The gamefile
  * @returns {Area} The area object
  */
-function getAreaOfAllPieces(gamefile) {
-	if (!gamefile) return console.error("Cannot get the area of all pieces of an undefined game.");
-	return calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(gamefile));
+function getAreaOfAllPieces(board) {
+	if (!board) return console.error("Cannot get the area of all pieces of an undefined game.");
+	return calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(board));
 }
 
 export default {

@@ -22,7 +22,7 @@ import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -333,7 +333,7 @@ function generatePieceData(type: number, coords: Coords): number[] {
 function calculateBoardPosition(coords: Coords) {
 	const boardPos = boardpos.getBoardPos();
 	const boardScale = boardpos.getBoardScale();
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = boardtiles.gsquareCenter();
 	const startX = (coords[0] - boardPos[0] - squareCenter) * boardScale;
 	const startY = (coords[1] - boardPos[1] - squareCenter) * boardScale;
 	return {

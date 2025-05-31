@@ -14,7 +14,6 @@ import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 import arrows from "./arrows.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
-import boardutil from "../../../chess/util/boardutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
@@ -67,7 +66,7 @@ function update() {
 
 	// Do not render line highlights upon arrow hover, when game is rewinded,
 	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile)) {
+	if (!moveutil.areWeViewingLatestMove(gamefile.board)) {
 		hoveredArrowsLegalMoves.length = 0;
 		return;
 	}
@@ -100,7 +99,7 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
-	const thisPieceLegalMoves = legalmoves.calculateAll(gamefile, piece);
+	const thisPieceLegalMoves = legalmoves.calculateAll(gamefile, gamefile.board, piece);
 
 	// Calculate the mesh...
 

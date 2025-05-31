@@ -19,7 +19,7 @@ import type { Color } from "../../util/math.js";
 // @ts-ignore
 import bufferdata from "./bufferdata.js";
 // @ts-ignore
-import board from "./board.js";
+import board from "./boardtiles.js";
 // @ts-ignore
 import shapes from "./shapes.js";
 

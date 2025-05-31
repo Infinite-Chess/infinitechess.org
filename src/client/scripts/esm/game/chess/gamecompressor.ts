@@ -11,13 +11,10 @@ import state from '../../chess/logic/state.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 
-
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
-
+import type { Game, Board } from '../../chess/logic/gamefile.js';
 
 
 /**
@@ -32,7 +29,7 @@ interface SimplifiedGameState {
 	// The pieces
 	position: Map<CoordsKey, number>,
 	// The turnOrder rotating essentially keeps track of whos turn it is in the position.
-	turnOrder: gamefile['gameRules']['turnOrder'],
+	turnOrder: Game['gameRules']['turnOrder'],
 	// The fullMove number increments with every turn cycle
 	fullMove: number,
 	// For state.ts, the 3 global game states
@@ -51,24 +48,24 @@ interface SimplifiedGameState {
  * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile(gamefile: gamefile, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
+function compressGamefile(basegame: Game, boardsim: Board, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
 
 	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;
 	let fullMove: number;
 
-	if (gamefile.startSnapshot) {
-		position = jsutil.deepCopyObject(gamefile.startSnapshot.position);
-		state_global = jsutil.deepCopyObject(gamefile.startSnapshot.state_global);
-		fullMove = gamefile.startSnapshot.fullMove;
+	if (boardsim.startSnapshot) {
+		position = jsutil.deepCopyObject(boardsim.startSnapshot.position);
+		state_global = jsutil.deepCopyObject(boardsim.startSnapshot.state_global);
+		fullMove = boardsim.startSnapshot.fullMove!;
 	} else { // editor game,   also copySinglePosition is false
-		if (!gamefile.editor) throw Error("startSnapshot missing in non-editor mode");
-		if (gamefile.moves.length > 0) throw Error("Should not be moves present in editor mode");
+		if (!boardsim.editor) throw Error("startSnapshot missing in non-editor mode");
+		if (boardsim.moves.length > 0) throw Error("Should not be moves present in editor mode");
 		if (copySinglePosition) throw Error('copySinglePosition has no effect in editor mode');
 
-		position = organizedpieces.generatePositionFromPieces(gamefile.pieces);
+		position = organizedpieces.generatePositionFromPieces(boardsim.pieces);
 		// Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
-		state_global = jsutil.deepCopyObject(gamefile.state.global);
+		state_global = jsutil.deepCopyObject(boardsim.state.global);
 		fullMove = 1;
 	}
 
@@ -76,7 +73,7 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: boolean, pres
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
-	const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
+	const gameRulesCopy = jsutil.deepCopyObject(basegame.gameRules);
 	let gamestate: SimplifiedGameState = {
 		position,
 		turnOrder: gameRulesCopy.turnOrder,
@@ -85,16 +82,16 @@ function compressGamefile(gamefile: gamefile, copySinglePosition?: boolean, pres
 	};
 
 	// Modify the state if we're applying moves to match a single position
-	if (copySinglePosition) gamestate = GameToPosition(gamestate, gamefile.moves, gamefile.state.local.moveIndex + 1); // Convert -1 based to 0 based
+	if (copySinglePosition) gamestate = GameToPosition(gamestate, boardsim.moves, boardsim.state.local.moveIndex + 1); // Convert -1 based to 0 based
 
 	// Start constructing the abridged gamefile
 	const long_format_in: LongFormatIn = {
-		metadata: jsutil.deepCopyObject(gamefile.metadata),
+		metadata: jsutil.deepCopyObject(basegame.metadata),
 		position: gamestate.position,
 		gameRules: gameRulesCopy,
 		fullMove: gamestate.fullMove,
 		state_global: gamestate.state_global,
-		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(gamefile.moves),
+		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(boardsim.moves),
 	};
 	
 	// Add the preset annotation overrides from the previously pasted game, if present.

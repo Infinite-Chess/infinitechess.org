@@ -13,7 +13,7 @@
 
 
 // @ts-ignore
-import type gamefile from "../../../chess/logic/gamefile.js";
+import type { Game, Board } from "../../../chess/logic/gamefile.js";
 import type { GameUpdateMessage, ServerGameMoveMessage } from "./onlinegamerouter.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
@@ -38,7 +38,7 @@ import animation from "../../rendering/animation.js";
  * Called when the server sends us the conclusion of the game when it ends,
  * OR we just need to resync! The game may not always be over.
  */
-function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh | undefined, message: GameUpdateMessage) {
+function handleServerGameUpdate(basegame: Game, boardsim: Board, mesh: Mesh | undefined, message: GameUpdateMessage) {
 	const claimedGameConclusion = message.gameConclusion;
 
 	// This needs to be BEFORE synchronizeMovesList(), otherwise it won't resend our move since it thinks we're not in sync
@@ -49,20 +49,20 @@ function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh | undefined, mess
      * We need to do this because sometimes the game can end before the
      * server sees our move, but on our screen we have still played it.
      */
-	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion); // { opponentPlayedIllegalMove }
+	const result = synchronizeMovesList(basegame, boardsim, mesh, message.moves, claimedGameConclusion); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
 	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(message.participantState, message.serverRestartingAt);
 
 	// Must be set before editing the clocks.
-	gamefile.gameConclusion = claimedGameConclusion;
+	basegame.gameConclusion = claimedGameConclusion;
 
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-	clock.edit(gamefile, message.clockValues);
+	clock.edit(basegame, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
-	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
 }
 
 
@@ -75,32 +75,32 @@ function handleServerGameUpdate(gamefile: gamefile, mesh: Mesh | undefined, mess
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
-function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves: ServerGameMoveMessage[], claimedGameConclusion: string | false): { opponentPlayedIllegalMove: boolean } {
+function synchronizeMovesList(basegame: Game, boardsim: Board, mesh: Mesh | undefined, moves: ServerGameMoveMessage[], claimedGameConclusion: string | undefined): { opponentPlayedIllegalMove: boolean } {
 	// console.log("Resyncing...");
 
 	// Early exit case. If we have played exactly 1 more move than the server,
 	// and the rest of the moves list matches, don't modify our moves,
 	// just re-submit our move!
-	const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
-	const finalMoveIsOurMove = gamefile.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) === onlinegame.getOurColor();
-	const previousMove = gamefile.moves.length > 1 ? gamefile.moves[gamefile.moves.length - 2] : undefined;
-	const previousMoveMatches = (moves.length === 0 && gamefile.moves.length === 1)
-		|| (gamefile.moves.length > 1 && moves.length > 0 && !previousMove!.isNull && previousMove!.compact === moves[moves.length - 1]!.compact);
+	const hasOneMoreMoveThanServer = boardsim.moves.length === moves.length + 1;
+	const finalMoveIsOurMove = boardsim.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1) === onlinegame.getOurColor();
+	const previousMove = boardsim.moves.length > 1 ? boardsim.moves[boardsim.moves.length - 2] : undefined;
+	const previousMoveMatches = (moves.length === 0 && boardsim.moves.length === 1)
+		|| (boardsim.moves.length > 1 && moves.length > 0 && !previousMove!.isNull && previousMove!.compact === moves[moves.length - 1]!.compact);
 	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
 		console.log("Sending our move again after resyncing..");
 		movesendreceive.sendMove();
 		return { opponentPlayedIllegalMove: false };
 	}
 
-	const originalMoveIndex = gamefile.state.local.moveIndex;
-	movesequence.viewFront(gamefile, mesh);
+	const originalMoveIndex = boardsim.state.local.moveIndex;
+	movesequence.viewFront(basegame, boardsim, mesh);
 	let aChangeWasMade = false;
 
 	// Terminate all current animations to avoid a crash when undoing moves
 	animation.clearAnimations();
 
-	while (gamefile.moves.length > moves.length) { // While we have more moves than what the server does..
-		movesequence.rewindMove(gamefile, mesh);
+	while (boardsim.moves.length > moves.length) { // While we have more moves than what the server does..
+		movesequence.rewindMove(basegame, boardsim, mesh);
 		console.log("Rewound one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
@@ -108,12 +108,12 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 	let i = moves.length - 1;
 	while (true) { // Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
 		if (i === -1) break; // Beginning of game
-		const thisGamefileMove = gamefile.moves[i];
+		const thisGamefileMove = boardsim.moves[i];
 		if (thisGamefileMove && !thisGamefileMove.isNull) { // The move is defined
 			if (thisGamefileMove.compact! === moves[i]!.compact) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
-			movesequence.rewindMove(gamefile, mesh);
-			console.log("Rewound one INCORRECT move while resyncing to online game.");
+			movesequence.rewindMove(basegame, boardsim, mesh);
+			console.log("Rewound one INCORRECT move while resyncing to online basegame.");
 			aChangeWasMade = true;
 		}
 		i--;
@@ -127,13 +127,13 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 		const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
 
-		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
+		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(basegame, i);
 		const opponentPlayedThisMove = colorThatPlayedThisMove !== ourColor;
 
 		if (opponentPlayedThisMove) { // Perform legality checks
 			// If not legal, this will be a string for why it is illegal.
 			// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-			const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, claimedGameConclusion);
+			const moveIsLegal = legalmoves.isOpponentsMoveLegal(basegame, boardsim, moveDraft, claimedGameConclusion);
 			if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${thisShortmove} ${claimedGameConclusion}`);
 			if (moveIsLegal !== true && !onlinegame.getIsPrivate()) { // Allow illegal moves in private games
 				onlinegame.reportOpponentsMove(moveIsLegal);
@@ -144,14 +144,14 @@ function synchronizeMovesList(gamefile: gamefile, mesh: Mesh | undefined, moves:
 		onlinegame.onMovePlayed({ isOpponents: opponentPlayedThisMove });
         
 		const isLastMove = i === moves.length - 1;		// Animate only if it's the last move.
-		const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks: isLastMove});
+		const move = movesequence.makeMove(basegame, boardsim, mesh, moveDraft, { doGameOverChecks: isLastMove});
 		if (isLastMove) movesequence.animateMove(move, true); // Only animate on the last forwarded move.
 
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;
 	}
 
-	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex);
+	if (!aChangeWasMade) movesequence.viewIndex(basegame, boardsim, mesh, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return { opponentPlayedIllegalMove: false }; // No cheating detected

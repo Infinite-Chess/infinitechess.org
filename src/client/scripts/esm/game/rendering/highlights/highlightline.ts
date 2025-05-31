@@ -8,7 +8,7 @@
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
-import board from '../board.js';
+import boardtiles from '../boardtiles.js';
 import { createModel } from '../buffermodel.js';
 import space from '../../misc/space.js';
 
@@ -50,7 +50,7 @@ interface Line {
  */
 function getRenderRange(): BoundingBox {
 	if (!perspective.getEnabled()) { // 2D mode
-		return board.gboundingBoxFloat();
+		return boardtiles.gboundingBoxFloat();
 	} else { // Perspective mode
 		const distToRenderBoard_Tiles = perspective.distToRenderBoard / boardpos.getBoardScale();
 		// Shift the box based on our current board position

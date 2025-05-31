@@ -15,8 +15,8 @@ import clockutil from '../util/clockutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
-// @ts-ignore
-import type gamefile from './gamefile.js';
+
+import type { Game } from './gamefile.js';
 import type { Player } from '../util/typeutil.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
@@ -76,10 +76,8 @@ type ClockData = {
 	timeAtTurnStart: undefined
 })
 
+
 // Functions -----------------------------------------------------------------------
-
-
-
 
 
 /**
@@ -88,11 +86,12 @@ type ClockData = {
  * @param gamefile 
  * @param [currentTimes] Optional. An object containing the current times of the players. Often used if we re-joining an online game.
  */
-function set(gamefile: gamefile, currentTimes?: ClockValues) {
-	const clock = gamefile.metadata.TimeControl; // "600+5"
-	gamefile.untimed = clockutil.isClockValueInfinite(clock);
-	if (gamefile.untimed) {
-		gamefile.clocks = undefined;
+function set(basegame: Game, currentTimes?: ClockValues) {
+	const clock = basegame.metadata.TimeControl; // "600+5"
+	basegame.untimed = clockutil.isClockValueInfinite(clock);
+	if (basegame.untimed) {
+		// @ts-ignore
+		delete basegame.clocks;
 		return;
 	}
 	// { minutes, increment }
@@ -111,12 +110,12 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
 		timeRemainAtTurnStart: undefined
 	};
 
-	gamefile.clocks = clocks;
+	basegame.clocks = clocks;
 
 	// Edit the closk if we're re-loading an online game
-	if (currentTimes) edit(gamefile, currentTimes);
+	if (currentTimes) edit(basegame, currentTimes);
 	else { // No current time specified, start both players with the default.
-		gamefile.gameRules.turnOrder.forEach((color: Player) => {
+		basegame.gameRules.turnOrder.forEach((color: Player) => {
 			clocks.currentTime[color] = clocks.startTime.millis;
 		});
 	}
@@ -127,11 +126,11 @@ function set(gamefile: gamefile, currentTimes?: ClockValues) {
  * @param gamefile - The current game state object containing clock information.
  * @param [clockValues] - An object containing the updated clock values.
  */
-function edit(gamefile: gamefile, clockValues?: ClockValues) {
-	if (!clockValues || gamefile.untimed) return; // Likely a no-timed game
-	const clocks = gamefile.clocks!;
+function edit(basegame: Game, clockValues?: ClockValues) {
+	if (!clockValues || basegame.untimed) return; // Likely a no-timed game
+	const clocks = basegame.clocks;
 
-	const colorTicking = gamefile.whosTurn;
+	const colorTicking = basegame.whosTurn;
 
 	if (clockValues.colorTicking !== undefined) {
 		// Adjust the clock value according to the precalculated time they will lost by timeout.
@@ -154,13 +153,14 @@ function edit(gamefile: gamefile, clockValues?: ClockValues) {
  * Call after flipping whosTurn. Flips colorTicking in local games.
  * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
-function push(gamefile: gamefile): number | undefined {
-	if (gamefile.untimed) return;
+function push(basegame: Game): number | undefined {
+	if (basegame.untimed) return;
 
-	const clocks = gamefile.clocks!;
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
+	const clocks = basegame.clocks;
 
-	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
+	const prevcolor = moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 2);
+
+	if (!moveutil.isGameResignable(basegame)) return clocks.currentTime[prevcolor]!;
 
 	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
 	if (clocks.timeAtTurnStart !== undefined) { // 3+ moves
@@ -168,16 +168,16 @@ function push(gamefile: gamefile): number | undefined {
 	}
 
 	// Set up clocksticking for the new turn.
-	clocks.colorTicking = gamefile.whosTurn;
+	clocks.colorTicking = basegame.whosTurn;
 	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
 	clocks.timeAtTurnStart = Date.now();
 	
 	return clocks.currentTime[prevcolor];
 }
 
-function endGame(gamefile: gamefile) {
-	if (gamefile.untimed) return;
-	const clocks = gamefile.clocks!;
+function endGame(basegame: Game) {
+	if (basegame.untimed) return;
+	const clocks = basegame.clocks;
 	clocks.timeRemainAtTurnStart = undefined;
 	clocks.timeAtTurnStart = undefined;
 	clocks.colorTicking = undefined;
@@ -188,10 +188,10 @@ function endGame(gamefile: gamefile) {
  * @param gamefile
  * @returns undefined if clocks still have time, otherwise it's the color who won.
 */
-function update(gamefile: gamefile): Player | undefined {
-	if (gamefile.untimed || gamefileutility.isGameOver(gamefile) || !moveutil.isGameResignable(gamefile)) return;
+function update(basegame: Game): Player | undefined {
+	if (basegame.untimed || gamefileutility.isGameOver(basegame) || !moveutil.isGameResignable(basegame)) return;
 	
-	const clocks = gamefile.clocks!;
+	const clocks = basegame.clocks;
 	if (clocks.timeAtTurnStart === undefined) return;
 
 	// Update current values
@@ -202,7 +202,7 @@ function update(gamefile: gamefile): Player | undefined {
 	for (const [playerStr,time] of Object.entries(clocks.currentTime)) {
 		const player: Player = Number(playerStr) as Player;
 		if (time as number <= 0) {
-			clocks.currentTime[playerStr] = 0;
+			clocks.currentTime[player] = 0;
 			return typeutil.invertPlayer(player); // The color who won on time
 		}
 	}
@@ -215,19 +215,19 @@ function update(gamefile: gamefile): Player | undefined {
  * Independant of reading clocks.currentTime, because that isn't updated
  * every frame if the user unfocuses the window.
  */
-function getColorTickingTrueTimeRemaining(gamefile: gamefile): number | undefined {
-	if (gamefile.untimed) return;
-	const clocks = gamefile.clocks!;
+function getColorTickingTrueTimeRemaining(basegame: Game): number | undefined {
+	if (basegame.untimed) return;
+	const clocks = basegame.clocks!;
 	if (clocks.colorTicking === undefined) return;
 	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
 }
 
-function printClocks(gamefile: gamefile) {
-	if (gamefile.untimed) return console.log("Game is untimed.");
-	const clocks = gamefile.clocks!;
+function printClocks(basegame: Game) {
+	if (basegame.untimed) return console.log("Game is untimed.");
+	const clocks = basegame.clocks!;
 	for (const color in clocks.currentTime) {
-		console.log(`${color} time: ${clocks.currentTime[color]}`);
+		console.log(`${color} time: ${clocks.currentTime[Number(color) as Player]}`);
 	}
 	console.log(`timeRemainAtTurnStart: ${clocks.timeRemainAtTurnStart}`);
 	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);

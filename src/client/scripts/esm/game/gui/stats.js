@@ -49,8 +49,8 @@ function hideMoves() {
 
 function updateTextContentOfMoves() {
 
-	const currentPly = gameslot.getGamefile().state.local.moveIndex + 1;
-	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile().moves);
+	const currentPly = gameslot.getGamefile().board.state.local.moveIndex + 1;
+	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile().board.moves);
 
 	elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
 }
