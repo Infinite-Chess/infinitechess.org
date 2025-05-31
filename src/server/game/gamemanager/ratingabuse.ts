@@ -11,7 +11,6 @@
 
 import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-// @ts-ignore
 import { logEvents } from '../../middleware/logEvents.js';
 
 

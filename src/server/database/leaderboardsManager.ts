@@ -2,7 +2,6 @@
  * This script handles queries to the leaderboards table.
  */
 
-// @ts-ignore
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';

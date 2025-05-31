@@ -25,10 +25,10 @@ import { executeSafely } from '../utility/errorGuard.js';
 // Type Definitions ---------------------------------------------------------------------------
 
 
-import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
 import type { CustomWebSocket } from './socketUtility.js';
 import type { Verification } from '../controllers/verifyAccountController.js';
+import type { Request } from "express";
 
 
 // Variables ---------------------------------------------------------------------------
@@ -40,7 +40,7 @@ import type { Verification } from '../controllers/verifyAccountController.js';
 // Functions ---------------------------------------------------------------------------
 
 
-function onConnectionRequest(socket: WebSocket, req: IncomingMessage) { 
+function onConnectionRequest(socket: WebSocket, req: Request) { 
 
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
@@ -91,7 +91,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage) {
 	sendSocketMessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
 
-function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): CustomWebSocket | undefined {
+function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWebSocket | undefined {
 	
 	// Make sure the connection is secure https
 	const origin = req.headers.origin;
@@ -134,7 +134,7 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: IncomingMessage): 
 /**
  * Adds the 'message', 'close', and 'error' event listeners to the socket
  */
-function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket) {
+function addListenersToSocket(req: Request, ws: CustomWebSocket) {
 	ws.on('message', (message) => { executeSafely(onmessage, 'Error caught within websocket on-message event:', req, ws, message); });
 	ws.on('close', (code, reason) => { executeSafely(onclose, 'Error caught within websocket on-close event:', ws, code, reason); });
 	ws.on('error', (error) => { executeSafely(onerror, 'Error caught within websocket on-error event:', ws, error); });

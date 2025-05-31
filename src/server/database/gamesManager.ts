@@ -3,7 +3,6 @@
  */
 
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-// @ts-ignore
 import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';

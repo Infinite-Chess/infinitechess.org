@@ -5,7 +5,6 @@
 
 import validcheckmates from "../../client/scripts/esm/chess/util/validcheckmates.js";
 import jsutil from "../../client/scripts/esm/util/jsutil.js";
-// @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 // @ts-ignore
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';

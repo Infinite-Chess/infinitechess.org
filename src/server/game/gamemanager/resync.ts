@@ -17,7 +17,6 @@ import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
 // @ts-ignore
 import { cancelDisconnectTimer } from './afkdisconnect.js';
-// @ts-ignore
 import { logEvents } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getGameData } from '../../database/gamesManager.js';

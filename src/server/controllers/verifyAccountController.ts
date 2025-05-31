@@ -7,7 +7,6 @@
  */
 
 import { AddVerificationToAllSocketsOfMember } from "../socket/socketManager.js";
-// @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 // @ts-ignore
 import { getTranslationForReq } from "../utility/translate.js";

@@ -17,8 +17,6 @@ import { getTranslationForReq } from '../utility/translate.js';
 // @ts-ignore
 import { isEmailBanned } from '../middleware/banned.js';
 // @ts-ignore
-import { logEvents } from '../middleware/logEvents.js';
-// @ts-ignore
 import { sendEmailConfirmation } from './sendMail.js';
 // @ts-ignore
 import { handleLogin } from './loginController.js';
@@ -30,6 +28,7 @@ import emailValidator from 'node-email-verifier';
 import { Request, Response } from 'express';
 // @ts-ignore
 import { addUserToPlayerStatsTable } from '../database/playerStatsManager.js';
+import { logEvents } from '../middleware/logEvents.js';
 
 // Variables -------------------------------------------------------------------------
 

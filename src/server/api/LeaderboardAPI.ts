@@ -9,7 +9,6 @@ import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getEloOfPlayer
 import { Leaderboard } from "../../client/scripts/esm/chess/variants/validleaderboard.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
-// @ts-ignore
 import { logEvents } from "../middleware/logEvents.js";
 
 import type { Response } from "express";

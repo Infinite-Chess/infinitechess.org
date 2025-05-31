@@ -5,7 +5,6 @@
 
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-// @ts-ignore
 import { logEvents } from '../../middleware/logEvents.js';
 // @ts-ignore
 import gameutility from './gameutility.js';
