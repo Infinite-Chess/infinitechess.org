@@ -6,7 +6,7 @@
  */
 
 
-import type { Board, Game } from './gamefile.js';
+import type { Board, FullGame } from './gamefile.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
@@ -179,6 +179,7 @@ interface NullMove {
  * and queueing its gamefile StateChanges.
  */
 function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
+	const {boardsim} = gamefile;
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
@@ -229,7 +230,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 function generateNullMove(gamefile: FullGame) {
 	const nullMove: NullMove = {
 		isNull: true,
-		generateIndex: boardsim.state.local.moveIndex + 1,
+		generateIndex: gamefile.boardsim.state.local.moveIndex + 1,
 		state: { local: [], global: [] },
 		flags: {
 			// These will be set later, but we need a default value
@@ -244,7 +245,7 @@ function generateNullMove(gamefile: FullGame) {
 	 * If any specialMove function adds a new EnPassant state,
 	 * this one's future value will be overwritten
 	 */
-	state.createEnPassantState(nullMove, boardsim.state.global.enpassant, undefined);
+	state.createEnPassantState(nullMove, gamefile.boardsim.state.global.enpassant, undefined);
 	queueIncrementMoveRuleStateChange(gamefile, nullMove);
 
 	return nullMove;
@@ -300,7 +301,7 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, move: Move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange(gamefile: FullGame, move: Move | NullMove) {
+function queueIncrementMoveRuleStateChange({basegame, boardsim}: FullGame, move: Move | NullMove) {
 	if (!basegame.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
@@ -316,8 +317,8 @@ function queueIncrementMoveRuleStateChange(gamefile: FullGame, move: Move | Null
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
 function makeMove(gamefile: FullGame, move: Move | NullMove) {
-	boardsim.moves.push(move);
-	basegame.moves.push(move.isNull ? '--' : move.compact);
+	gamefile.boardsim.moves.push(move);
+	gamefile.basegame.moves.push(move.isNull ? '--' : move.compact);
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical boardsim changes.
 
@@ -326,7 +327,7 @@ function makeMove(gamefile: FullGame, move: Move | NullMove) {
 
 	// Now we can test for check, and modify the state of the gamefile if it is.
 	createCheckState(gamefile, move);
-	if (boardsim.state.local.inCheck) move.flags.check = true;
+	if (gamefile.boardsim.state.local.inCheck) move.flags.check = true;
 	// The "mate" property of the move will be added after our game conclusion checks...
 }
 
@@ -339,24 +340,24 @@ function makeMove(gamefile: FullGame, move: Move | NullMove) {
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
 function applyMove(gamefile: FullGame, move: Move | NullMove, forward = true, { global = false } = {}) {
-	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
+	gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
-	const indexToApply = boardsim.state.local.moveIndex + Number(!forward);
+	const indexToApply = gamefile.boardsim.state.local.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
-	state.applyMove(boardsim.state, move.state, forward, { globalChange: global }); // Apply the State of the move
+	state.applyMove(gamefile.boardsim.state, move.state, forward, { globalChange: global }); // Apply the State of the move
 
 	if (move.isNull) return; // Null moves don't have changes to make
 
-	boardchanges.runChanges({gamefile}, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
+	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
 /**
  * Updates the `whosTurn` property of the gamefile, according to the move index we're on.
  */
 function updateTurn(gamefile: FullGame) {
-	basegame.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile.state.local.moveIndex);
+	gamefile.basegame.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile.basegame, gamefile.boardsim.state.local.moveIndex);
 }
 
 /**
@@ -364,7 +365,8 @@ function updateTurn(gamefile: FullGame) {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(gamefile: FullGame, move: Move | NullMove) {
-	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(gamefile.state.local.moveIndex);
+	const {boardsim, basegame} = gamefile;
+	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(basegame, boardsim.state.local.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track attackers if we're using checkmate win condition.
 	const trackAttackers = basegame.gameRules.winConditions[oppositeColor]!.includes('checkmate');
@@ -387,7 +389,7 @@ function createCheckState(gamefile: FullGame, move: Move | NullMove) {
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
 function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMovesMessage) {
-	if (boardsim.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
+	if (gamefile.boardsim.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
 		if (!move) throw Error(`Cannot make all moves in game! There was one invalid move: ${shortmove}. Index: ${i}`);
@@ -408,7 +410,7 @@ function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMovesMessage) {
  * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
 function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMoveMessage): Move {
-	if (!moveutil.areWeViewingLatestMove(boardsim)) throw Error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
+	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim)) throw Error("Cannot calculate Move object from shortmove when we're not viewing the most recently played move.");
 
 	// Reconstruct the startCoords, endCoords, and special move properties of the MoveDraft
 
@@ -424,13 +426,13 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
-	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.startCoords);
 	if (!piece) {
 		// No piece on start coordinates, can't calculate Move, because it's illegal
 		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove.compact}`);
 	}
 
-	const moveset = legalmoves.getPieceMoveset(boardsim, piece.type);
+	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
 	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves);
 	for (const thisCoord of legalSpecialMoves.individual) {
@@ -453,13 +455,13 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
 function rewindMove(gamefile: FullGame) {
-	const move = moveutil.getMoveFromIndex(boardsim.moves, boardsim.state.local.moveIndex);
+	const move = moveutil.getMoveFromIndex(gamefile.boardsim.moves, gamefile.boardsim.state.local.moveIndex);
 
 	applyMove(gamefile, move, false, { global: true });
 
 	// Delete the move off the end of our moves list
-	boardsim.moves.pop();
-	basegame.moves.pop();
+	gamefile.boardsim.moves.pop();
+	gamefile.basegame.moves.pop();
 	updateTurn(gamefile);
 }
 

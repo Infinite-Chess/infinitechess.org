@@ -53,7 +53,7 @@ function getOurColor(): Player | undefined {
 
 function isItOurTurn(): boolean {
 	if (!inEngineGame) throw Error("Cannot get isItOurTurn of engine game when we're not in an engine game.");
-	return gameslot.getGamefile()!.whosTurn === ourColor;
+	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
 }
 
 function getCurrentEngine() {
@@ -137,10 +137,10 @@ async function onMovePlayed() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
-	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
+	if (gamefile.basegame.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
-	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-	const longformIn = gamecompressor.compressGamefile(gamefile, gamefile.board); // Compress the gamefile to send to the engine in a simpler json format
+	if (gamefile.basegame.gameConclusion) return; // Don't do anything if the game is over
+	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
 	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);
@@ -160,7 +160,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	const mesh = gameslot.getMesh();
 
 	// Go to latest move before making a new move
-	movesequence.viewFront(gamefile, gamefile.board, mesh);
+	movesequence.viewFront(gamefile, mesh);
 	/**
 	 * PERHAPS we don't need this stuff? It's just to find and apply any special move flag
 	 * that should go with the move. But shouldn't the engine provide that info with its move?
@@ -170,7 +170,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	// const endCoordsToAppendSpecial: CoordsSpecial = jsutil.deepCopyObject(move.endCoords);
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	const move = movesequence.makeMove(gamefile, gamefile.board, mesh, moveDraft);
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 	if (mesh) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.

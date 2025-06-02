@@ -64,7 +64,7 @@ function areDrawing() {
 
 /** Returns all the preset rays in the current variant. */
 function getPresetRays(): Ray[] {
-	const baseRays = preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.metadata.Variant);
+	const baseRays = preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.basegame.metadata.Variant);
 	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
 	return baseRays.map(r => {
 		return {
@@ -197,7 +197,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean, deletedRays?: Ray[] } {
 	// const vector_unnormalized = coordutil.subtractCoordinates(drag_end, drag_start!);
 	const mouseCoords = mouse.getTileMouseOver_Float(Mouse.RIGHT)!;
 	const vector_unnormalized = coordutil.subtractCoordinates(mouseCoords, drag_start!);
-	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.board.pieces.hippogonalsPresent);
+	const vector = findClosestPredefinedVector(vector_unnormalized, gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent);
 	const line = math.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 
 	const deletedRays: Ray[] = [];

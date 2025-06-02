@@ -96,13 +96,13 @@ function toggle(): void {
 // eslint-disable-next-line no-unused-vars
 function forEachRenderablePiece(callback: (coords: Coords, type: number) => void) {
 	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.board.pieces;
+	const pieces = gamefile.boardsim.pieces;
 
 	// Helper to test if a static piece is being animated
 	const isAnimatedStatic = (coords: Coords) => animation.animations.some(a => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!));
 
 	// Static pieces
-	gamefile.board.existingTypes.forEach((type: number) => {
+	gamefile.boardsim.existingTypes.forEach((type: number) => {
 		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
 		const range = pieces.typeRanges.get(type)!;
@@ -134,8 +134,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
-	const boardsim = gameslot.getGamefile()!.board;
-	const pieces = boardsim.pieces;
+	const boardsim = gameslot.getGamefile()!.boardsim;
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
@@ -208,7 +207,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	/** Running list of all pieces below annote points. */
 	const annotePieces: Piece[] = [];
 
-	const pieces = gameslot.getGamefile()!.board.pieces;
+	const pieces = gameslot.getGamefile()!.boardsim.pieces;
 	// Only process the pieces on top of highlights, or ray starts or intersections
 	const annotePoints = snapping.getAnnoteSnapPoints(true);
 	// For each one, push it if there is a piece beneath it
@@ -237,7 +236,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 function render(): void {
 	if (!boardpos.areZoomedOut()) return;
 
-	const boardsim = gameslot.getGamefile()!.board;
+	const boardsim = gameslot.getGamefile()!.boardsim;
 	const inverted = perspective.getIsViewingBlackPerspective();
 
 	const { instanceData, instanceData_hovered } = getImageInstanceData();

@@ -66,7 +66,7 @@ function update() {
 
 	// Do not render line highlights upon arrow hover, when game is rewinded,
 	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile.board)) {
+	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim)) {
 		hoveredArrowsLegalMoves.length = 0;
 		return;
 	}
@@ -99,15 +99,15 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
-	const thisPieceLegalMoves = legalmoves.calculateAll(gamefile, gamefile.board, piece);
+	const thisPieceLegalMoves = legalmoves.calculateAll(gamefile, piece);
 
 	// Calculate the mesh...
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const ourColor = onlinegame.areInOnlineGame() ? onlinegame.getOurColor() : gamefile.whosTurn;
+	const ourColor = onlinegame.areInOnlineGame() ? onlinegame.getOurColor() : gamefile.basegame.whosTurn;
 	const isOpponentPiece = pieceColor !== ourColor;
-	const isOurTurn = gamefile.whosTurn === pieceColor;
+	const isOurTurn = gamefile.basegame.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 
 	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);

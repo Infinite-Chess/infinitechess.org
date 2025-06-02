@@ -261,7 +261,7 @@ function toggleArrows() {
 	// Have to do it weirdly like this, instead of using '++', because typescript complains that nextMode is of type number.
 	let nextMode: typeof mode = mode === 0 ? 1 : mode === 1 ? 2 : mode === 2 ? 3 : /* mode === 3 ? */ 0;
 	// Calculate the cap
-	const cap = gameslot.getGamefile()!.board.pieces.hippogonalsPresent ? 3 : 2;
+	const cap = gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent ? 3 : 2;
 	if (nextMode > cap) nextMode = 0; // Wrap back to zero
 	setMode(nextMode);
 }
@@ -385,7 +385,7 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
-	gamefile.board.pieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
+	gamefile.boardsim.pieces.slides.forEach((slide: Vec2) => { // For each slide direction in the game...
 		const slideKey = math.getKeyFromVec2(slide);
 
 		// Find the 2 points on opposite sides of the bounding box
@@ -399,14 +399,14 @@ function generateArrowsDraft(boundingBoxInt: BoundingBox, boundingBoxFloat: Boun
 		containingPointsLineC.sort((a, b) => a - b); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
 
 		// For all our lines in the game with this slope...
-		const organizedLinesOfDir = gamefile.board.pieces.lines.get(slideKey)!;
+		const organizedLinesOfDir = gamefile.boardsim.pieces.lines.get(slideKey)!;
 		for (const [lineKey, organizedLine] of organizedLinesOfDir) {
 			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
 			const C = organizedpieces.getCFromKey(lineKey as LineKey);
 			if (C < containingPointsLineC[0] || C > containingPointsLineC[1]) continue; // Next line, this one is off-screen, so no piece arrows are visible
 
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
-			const arrowsLine = calcArrowsLineDraft(gamefile.board, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine);
+			const arrowsLine = calcArrowsLineDraft(gamefile.boardsim, boundingBoxInt, boundingBoxFloat, slide, slideKey, organizedLine);
 			if (arrowsLine === undefined) continue;
 			if (!slideArrowsDraft[slideKey]) slideArrowsDraft[slideKey] = {}; // Make sure this exists first
 			slideArrowsDraft[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
@@ -595,7 +595,7 @@ function getSlideExceptions(): Vec2Key[] {
 	const gamefile = gameslot.getGamefile()!;
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
-	if (mode === 2) slideExceptions = gamefile.board.pieces.slides.filter((slideDir: Vec2) => math.chebyshevDistance([0,0], slideDir) === 1).map(math.getKeyFromVec2); // Filter out all hippogonal and greater vectors
+	if (mode === 2) slideExceptions = gamefile.boardsim.pieces.slides.filter((slideDir: Vec2) => math.chebyshevDistance([0,0], slideDir) === 1).map(math.getKeyFromVec2); // Filter out all hippogonal and greater vectors
 	return slideExceptions;
 }
 
@@ -822,7 +822,7 @@ function executeArrowShifts() {
 	shifts.forEach(shift => { // { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
 		if (shift.start) {
 			// Delete the piece from the gamefile, so that we can calculate the arrow lines correctly
-			const originalPiece = boardutil.getPieceFromCoords(gamefile.board.pieces, shift.start);
+			const originalPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, shift.start);
 			if (originalPiece === undefined) throw Error('Arrow shift delete piece does not exist! start: ' + shift.start + ' Perhaps we are animating a move we are not viewing?');
 			boardchanges.queueDeletePiece(changes, true, originalPiece);
 		}
@@ -840,10 +840,10 @@ function executeArrowShifts() {
 				const arrowDraft: ArrowDraft = { piece, canSlideOntoScreen: true };
 
 				// Add an arrow for every applicable direction
-				for (const lineKey of gamefile.board.pieces.lines.keys()) {
+				for (const lineKey of gamefile.boardsim.pieces.lines.keys()) {
 					let line = math.getVec2FromKey(lineKey);
 					
-					if (isAnimatedArrowUnnecessary(gamefile.board, shift.type, line, lineKey)) continue; // Arrow mode isn't high enough, and the piece can't slide in the vector direction
+					if (isAnimatedArrowUnnecessary(gamefile.boardsim, shift.type, line, lineKey)) continue; // Arrow mode isn't high enough, and the piece can't slide in the vector direction
 
 					// Determine the line's dot product with the screen box.
 					// Flip the vector if need be, to point it in the right direction.
@@ -869,20 +869,20 @@ function executeArrowShifts() {
 	// console.log(changes);
 
 	// Apply the board changes
-	boardchanges.runChanges({basegame: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, true);
+	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, true);
 
 	shifts.forEach(shift => {
 		// Recalculate every single line on the start.
-		if (shift.start) recalculateLinesThroughCoords(gamefile.board, shift.start);
+		if (shift.start) recalculateLinesThroughCoords(gamefile.boardsim, shift.start);
 		// Only recalculate through the end coordinate if the animation doesn't move for its duration
-		if (shift.end && shift.still) recalculateLinesThroughCoords(gamefile.board, shift.end);
+		if (shift.end && shift.still) recalculateLinesThroughCoords(gamefile.boardsim, shift.end);
 	});
 
 	// console.log("Animated arrows:");
 	// console.log(animatedArrows);
 
 	// Restore the board state
-	boardchanges.runChanges({basegame: gamefile, boardsim: gamefile.board}, changes, boardchanges.changeFuncs, false);
+	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, false);
 }
 
 /**

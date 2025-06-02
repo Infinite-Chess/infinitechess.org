@@ -78,7 +78,7 @@ function isItOurTurn(color?: Player): boolean {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't tell if it's our turn when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
-	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.whosTurn === color;
+	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.basegame.whosTurn === color;
 	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
 }
 
@@ -287,7 +287,7 @@ async function pasteGame(options: {
 	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
 	const additionalToUse: Additional = {
 		...options.additional,
-		editor: gameslot.getGamefile()!.board.editor, // Retain the same option as the current loaded game.
+		editor: gameslot.getGamefile()!.boardsim.editor, // Retain the same option as the current loaded game.
 	};
 
 	gameslot.unloadGame();
@@ -340,7 +340,7 @@ function onCatchLoadingError(err: Error) {
  */
 function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
 	guigameinfo.open(metadata, showGameControlButtons);
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
 }
 
 function unloadGame() {

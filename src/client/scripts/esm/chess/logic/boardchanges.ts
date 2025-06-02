@@ -209,8 +209,8 @@ function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIn
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
-			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, basegame.gameRules.promotionsAllowed, boardsim.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
-			organizedpieces.regenerateLists(boardsim.pieces, basegame.gameRules.promotionsAllowed, boardsim.editor);
+			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, boardsim.editor, basegame.gameRules.promotionsAllowed) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
+			organizedpieces.regenerateLists(boardsim.pieces, boardsim.editor, basegame.gameRules.promotionsAllowed);
 		}
 
 		idx = typedata.undefineds.shift()!;

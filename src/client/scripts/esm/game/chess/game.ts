@@ -88,12 +88,12 @@ function update() {
 
 	perspective.update(); // Update perspective camera according to mouse movement
 
-	const timeWinner = clock.update(gamefile);
+	const timeWinner = clock.update(gamefile.basegame);
 	if (timeWinner && !onlinegame.areInOnlineGame()) { // undefined if no clock has ran out
-		gamefile.gameConclusion = `${timeWinner} time`;
+		gamefile.basegame.gameConclusion = `${timeWinner} time`;
 		gameslot.concludeGame();
 	}
-	guiclock.update(gamefile);
+	guiclock.update(gamefile.basegame);
 
 	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	boardpos.update(); // Updates the board's position and scale according to its velocity
@@ -163,7 +163,7 @@ function render() {
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		selectedpiecehighlightline.render();
-		highlights.render(gamefile.board);
+		highlights.render(gamefile.boardsim);
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
@@ -171,7 +171,7 @@ function render() {
     
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile.board, mesh);
+	pieces.renderPiecesInGame(gamefile.boardsim, mesh);
 	
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
