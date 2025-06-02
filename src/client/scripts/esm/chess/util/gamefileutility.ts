@@ -6,7 +6,7 @@
 import type { Coords } from './coordutil.js';
 import type { Player, RawTypeGroup } from './typeutil.js';
 import type { PieceMoveset } from '../logic/movesets.js';
-import type { Game, Board } from '../logic/gamefile.js';
+import type { Game, Board, FullGame } from '../logic/gamefile.js';
 
 import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
@@ -90,9 +90,9 @@ function isOpponentUsingWinCondition(basegame: Game, friendlyColor: Player, winC
 /**
  * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
  */
-function doGameOverChecks(basegame: Game, boardsim: Board) {
-	basegame.gameConclusion = wincondition.getGameConclusion(basegame, boardsim);
-	if (isGameOver(basegame) && winconutil.isGameConclusionDecisive(basegame.gameConclusion)) moveutil.flagLastMoveAsMate(boardsim);
+function doGameOverChecks(gamefile: FullGame) {
+	gamefile.basegame.gameConclusion = wincondition.getGameConclusion(gamefile);
+	if (isGameOver(gamefile.basegame) && winconutil.isGameConclusionDecisive(gamefile.basegame.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile.boardsim);
 }
 
 /**

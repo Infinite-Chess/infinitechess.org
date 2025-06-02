@@ -36,22 +36,22 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
  * @param {gamefile} gamefile - The gamefile
  * @returns {string | undefined} The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *false*.
  */
-function getGameConclusion(basegame, boardsim) {
-	if (!moveutil.areWeViewingLatestMove(boardsim)) throw new Error("Cannot perform game over checks when we're not on the last move.");
+function getGameConclusion(gamefile) {
+	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim)) throw new Error("Cannot perform game over checks when we're not on the last move.");
 	
-	return detectAllpiecescaptured(basegame, boardsim)
-        || detectRoyalCapture(basegame, boardsim)
-        || detectAllroyalscaptured(basegame, boardsim)
-        || detectKoth(basegame, boardsim)
-        || detectRepetitionDraw(basegame, boardsim)
-        || detectCheckmateOrStalemate(basegame, boardsim)
+	return detectAllpiecescaptured(gamefile)
+        || detectRoyalCapture(gamefile)
+        || detectAllroyalscaptured(gamefile)
+        || detectKoth(gamefile)
+        || detectRepetitionDraw(gamefile)
+        || detectCheckmateOrStalemate(gamefile)
         // This needs to be last so that a draw isn't enforced in a true win
-        || detectMoveRule(basegame, boardsim) // 50-move-rule
-        || insufficientmaterial.detectInsufficientMaterial(basegame.gameRules, boardsim) // checks for insufficient material
+        || detectMoveRule(gamefile) // 50-move-rule
+        || insufficientmaterial.detectInsufficientMaterial(gamefile.basegame.gameRules, gamefile.boardsim) // checks for insufficient material
         || undefined; // No win condition passed. No game conclusion!
 }
 
-function detectRoyalCapture(basegame, boardsim) {
+function detectRoyalCapture({boardsim, basegame}) {
 	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture')) return false; // Not using this gamerule
 
 	// Was the last move capturing a royal piece?
@@ -63,7 +63,7 @@ function detectRoyalCapture(basegame, boardsim) {
 	return false;
 }
 
-function detectAllroyalscaptured(basegame, boardsim) {
+function detectAllroyalscaptured({boardsim, basegame}) {
 	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allroyalscaptured')) return false; // Not using this gamerule
 	if (!wasLastMoveARoyalCapture(boardsim)) return false; // Last move wasn't a royal capture.
 
@@ -72,28 +72,28 @@ function detectAllroyalscaptured(basegame, boardsim) {
 	const royalCount = boardutil.getRoyalCoordsOfColor(boardsim.pieces, basegame.whosTurn);
 
 	if (royalCount === 0) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame.moves.length - 1);
 		return `${colorThatWon} allroyalscaptured`;
 	}
 
 	return false;
 }
 
-function detectAllpiecescaptured(basegame, boardsim) {
+function detectAllpiecescaptured({boardsim, basegame}) {
 	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
 	const count = boardutil.getPieceCountOfColor(boardsim.pieces, basegame.whosTurn);
 
 	if (count === 0) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame.moves.length - 1);
 		return `${colorThatWon} allpiecescaptured`;
 	}
 
 	return false;
 }
 
-function detectKoth(basegame, boardsim) {
+function detectKoth({boardsim, basegame}) {
 	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth')) return false; // Not using this gamerule
 
 	// Was the last move a king move?
@@ -114,7 +114,7 @@ function detectKoth(basegame, boardsim) {
 	}
 
 	if (kingInCenter) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame.moves.length - 1);
 		return `${colorThatWon} koth`;
 	}
 
@@ -126,7 +126,7 @@ function detectKoth(basegame, boardsim) {
  * @param {gamefile} gamefile - The gamefile
  * @returns {string | false} '0 moverule', if the game is over by the move-rule, otherwise *false*.
  */
-function detectMoveRule(basegame, boardsim) {
+function detectMoveRule({boardsim, basegame}) {
 	if (!basegame.gameRules.moveRule) return false; // No move-rule being used
 	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
 	return false;
@@ -160,7 +160,7 @@ function wasLastMoveARoyalCapture(boardsim) {
  * @param {gamefile} gamefile
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
-function isCheckmateCompatibleWithGame(basegame, boardsim) {
+function isCheckmateCompatibleWithGame({boardsim, basegame}) {
 	if (boardutil.getPieceCountOfGame(boardsim.pieces) >= pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (boardsim.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefileutility.getPlayerCount(basegame) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE

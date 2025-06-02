@@ -4,7 +4,7 @@
  */
 
 
-import type { Game, Board } from './gamefile.js';
+import type { FullGame } from './gamefile.js';
 
 import typeutil from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
@@ -23,7 +23,8 @@ const pieceCountToDisableCheckmate = 50_000;
  * @param gamefile - The gamefile to detect if it's in checkmate
  * @returns The color of the player who won by checkmate. '1 checkmate', '2 checkmate', or '0 stalemate'. Or *false* if the game isn't over.
  */
-function detectCheckmateOrStalemate(basegame: Game, boardsim: Board): string | false {
+function detectCheckmateOrStalemate(gamefile: FullGame): string | false {
+	const {basegame, boardsim} = gamefile;
 
 	// The game will be over when the player has zero legal moves remaining, lose or draw.
 	// Iterate through every piece, calculating its legal moves. The first legal move we find, we
@@ -36,7 +37,7 @@ function detectCheckmateOrStalemate(basegame: Game, boardsim: Board): string | f
 		for (let idx = thesePieces.start; idx < thesePieces.end; idx++) {
 			const thisPiece = boardutil.getPieceFromIdx(boardsim.pieces, idx);
 			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const moves = legalmoves.calculateAll(basegame, boardsim, thisPiece);
+			const moves = legalmoves.calculateAll(gamefile, thisPiece);
 			if (legalmoves.hasAtleast1Move(moves)) return false; // Not checkmate
 		}
 	}

@@ -158,13 +158,13 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 
 	switch (data.action) {
 		case "move":
-			movesendreceive.handleOpponentsMove(gamefile, gamefile.board, mesh, data.value);
+			movesendreceive.handleOpponentsMove(gamefile, mesh, data.value);
 			break;
 		case "clock": 
-			handleUpdatedClock(gamefile, data.value);
+			handleUpdatedClock(gamefile.basegame, data.value);
 			break;
 		case "gameupdate":
-			resyncer.handleServerGameUpdate(gamefile, gamefile.board, mesh, data.value);
+			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
 			break;
 		case "gameratingchange":
 			guigameinfo.addRatingChangeToExistingUsernameContainers(data.value);
@@ -173,10 +173,10 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 			handleUnsubbing();
 			break;
 		case "login":
-			handleLogin(gamefile);
+			handleLogin(gamefile.basegame);
 			break;
 		case "nogame": // Game doesn't exist - SHOULD NEVER HAPPEN
-			handleNoGame(gamefile);
+			handleNoGame(gamefile.basegame);
 			break;
 		case "leavegame":
 			handleLeaveGame();

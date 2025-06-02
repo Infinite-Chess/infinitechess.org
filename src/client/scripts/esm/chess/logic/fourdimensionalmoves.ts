@@ -13,7 +13,7 @@ import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { Player } from "../util/typeutil.js";
-import type { Game, Board } from "./gamefile.js";
+import type { Game, Board, FullGame } from "./gamefile.js";
 
 import typeutil from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
@@ -30,10 +30,10 @@ import specialdetect from "./specialdetect.js";
 
 
 /** Calculates the legal pawn moves in the four dimensional variant. */
-function fourDimensionalPawnMove(basegame: Game, boardsim: Board, coords: Coords, color: Player): Coords[] {
+function fourDimensionalPawnMove(gamefile: FullGame, coords: Coords, color: Player): Coords[] {
 	const legalMoves: Coords[] = [];
-	legalMoves.push(...pawnLegalMoves(basegame, boardsim, coords, color, "spacelike")); // Spacelike
-	legalMoves.push(...pawnLegalMoves(basegame, boardsim, coords, color, "timelike")); // Timelike
+	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "spacelike")); // Spacelike
+	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, "timelike")); // Timelike
 	return legalMoves;
 }
 
@@ -44,7 +44,8 @@ function fourDimensionalPawnMove(basegame: Game, boardsim: Board, coords: Coords
  * @param color - The color of the pawn
  * @param movetype - spacelike move or timelike move
  */
-function pawnLegalMoves(basegame: Game, boardsim: Board, coords: Coords, color: Player, movetype: "spacelike" | "timelike"): Coords[] {
+function pawnLegalMoves(gamefile: FullGame, coords: Coords, color: Player, movetype: "spacelike" | "timelike"): Coords[] {
+	const {basegame, boardsim} = gamefile;
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 	const distance = (movetype === "spacelike" ? 1 : dim.BOARD_SPACING);
 	const distance_complement = (movetype === "spacelike" ? dim.BOARD_SPACING : 1);
@@ -100,8 +101,8 @@ function pawnLegalMoves(basegame: Game, boardsim: Board, coords: Coords, color: 
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
-	addPossibleEnPassant(basegame, boardsim, individualMoves, coords, color, distance, distance);
-	if (strong_pawns) addPossibleEnPassant(basegame, boardsim, individualMoves, coords, color, distance_complement, distance);
+	addPossibleEnPassant(gamefile, individualMoves, coords, color, distance, distance);
+	if (strong_pawns) addPossibleEnPassant(gamefile, individualMoves, coords, color, distance_complement, distance);
 	return individualMoves;
 }
 
@@ -114,7 +115,7 @@ function pawnLegalMoves(basegame: Game, boardsim: Board, coords: Coords, color: 
  * @param xdistance
  * @param ydistance
  */
-function addPossibleEnPassant(basegame: Game, boardsim: Board, individualMoves: Coords[], coords: Coords, color: Player, xdistance: number, ydistance: number): void {
+function addPossibleEnPassant({basegame, boardsim}: FullGame, individualMoves: Coords[], coords: Coords, color: Player, xdistance: number, ydistance: number): void {
 	if (!boardsim.state.global.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawn = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
@@ -190,7 +191,7 @@ function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: Move): b
  * @param coords - The coordinates of the knight
  * @param color - The color of the knight
  */
-function fourDimensionalKnightMove(basegame: Game, boardsim: Board, coords: Coords, color: Player): Coords[] {
+function fourDimensionalKnightMove({boardsim}: FullGame, coords: Coords, color: Player): Coords[] {
 	const individualMoves: Coords[] = [];
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
@@ -230,9 +231,9 @@ function fourDimensionalKnightMove(basegame: Game, boardsim: Board, coords: Coor
 
 
 /** Calculates the legal king moves in the four dimensional variant. */
-function fourDimensionalKingMove(basegame: Game, boardsim: Board, coords: Coords, color: Player): Coords[] {
-	const legalMoves: Coords[] = kingLegalMoves(boardsim, coords, color);
-	legalMoves.push(...specialdetect.kings(basegame, boardsim, coords, color)); // Adds legal castling
+function fourDimensionalKingMove(gamefile: FullGame, coords: Coords, color: Player): Coords[] {
+	const legalMoves: Coords[] = kingLegalMoves(gamefile.boardsim, coords, color);
+	legalMoves.push(...specialdetect.kings(gamefile, coords, color)); // Adds legal castling
 	return legalMoves;
 }
 

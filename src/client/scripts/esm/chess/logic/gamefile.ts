@@ -1,4 +1,4 @@
-import type { ClockData, ClockValues } from "./clock.js";
+import type { ClockDependant, ClockValues } from "./clock.js";
 import type { CoordsKey } from "../util/coordutil.js";
 import type { BoundingBox } from "../../util/math.js";
 import type { MetaData } from "../util/metadata.js";
@@ -23,9 +23,9 @@ import math from "../../util/math.js";
 import clock from "./clock.js";
 import movepiece from "./movepiece.js";
 import checkdetection from "./checkdetection.js";
+import gamerules from "../variants/gamerules.js";
 // @ts-ignore
 import wincondition from "./wincondition.js";
-import gamerules from "../variants/gamerules.js";
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -33,7 +33,7 @@ interface Snapshot {
 	/** The global state of the game beginning */
 	state_global: GlobalGameState,
 	/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
-	fullMove?: number,
+	fullMove: number,
 	/** The bounding box surrounding the starting position, without padding.*/
 	box: BoundingBox
 }
@@ -49,20 +49,7 @@ type Game = {
 	gameRules: GameRules
 	whosTurn: Player
 	gameConclusion?: string
-	board?: Board
-} & ({
-	untimed: true,
-	clocks: undefined,
-} | {
-	untimed: false,
-	clocks: ClockData
-}
-)
-
-type FullGame = {
-	basegame: Game,
-	boardsim: Board
-}
+} & ClockDependant
 
 /**
  * Game data used for simulating game logic and board state
@@ -100,27 +87,36 @@ type EditorDependent = {
 	startSnapshot: undefined
 }
 
+type FullGame = {
+	basegame: Game,
+	boardsim: Board
+}
+
 /** Creates a new {@link Game} object from provided arguments */
 function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string, clockValues?: ClockValues): Game {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
+	const {untimed, clocks} = clock.init(new Set(gameRules.turnOrder), metadata.TimeControl);
 	const game = {
 		gameRules,
 		metadata,
 		moves: [],
 		whosTurn: gameRules.turnOrder[0],
-		untimed: true,
-		clocks: undefined,
+		untimed,
+		clocks,
 		gameConclusion
 	} as Game;
-
-	clock.set(game, clockValues);
+	
+	if (clockValues) {
+		if (game. untimed) throw Error("Clock values provided for untimed game");
+		clock.edit(game, clockValues);
+	}
 
 	return game;
 }
 
 /** Creates a new {@link Board} object from provided arguements */
 function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false): Board {
-	const startSnapshot = initvariant.genStartSnapshot(gameRules, metadata, variantOptions);
+	const startSnapshot = initvariant.getVariantVariantOptions(gameRules, metadata, variantOptions) as Snapshot;
 
 	const state: GameState = {
 		local: {
@@ -137,8 +133,8 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 		startSnapshot.position,
 		pieceMovesets,
 		gameRules.turnOrder,
-		gameRules.promotionsAllowed,
-		editor
+		editor,
+		gameRules.promotionsAllowed
 	);
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
@@ -175,24 +171,25 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 }
 
 /** Attaches a board to a specific game. Used for loading a game after it was started. */
-function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage = [], gameConclusion?: string) {
-	basegame.board = boardsim;
+function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage = [], gameConclusion?: string): FullGame {
+	const gamefile = {basegame, boardsim};
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(basegame, boardsim)) gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
+	if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
 
 	{ // Set the game's `inCheck` and `attackers` properties at the front of the game.
 		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'checkmate');
-		const checkResults = checkdetection.detectCheck(basegame, boardsim, basegame.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		const checkResults = checkdetection.detectCheck(gamefile, basegame.whosTurn, trackAttackers); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
 		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
 	}
 
-	movepiece.makeAllMovesInGame(basegame, boardsim, moves);
+	movepiece.makeAllMovesInGame(gamefile, moves);
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
 	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) basegame.gameConclusion = gameConclusion;
-	else gamefileutility.doGameOverChecks(basegame, boardsim);
+	else gamefileutility.doGameOverChecks(gamefile);
+	return gamefile;
 }
 
 export type {

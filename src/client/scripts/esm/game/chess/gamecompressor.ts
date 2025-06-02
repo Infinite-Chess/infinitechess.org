@@ -14,7 +14,8 @@ import organizedpieces from '../../chess/logic/organizedpieces.js';
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Move, NullMove } from '../../chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
-import type { Game, Board } from '../../chess/logic/gamefile.js';
+import type { GameRules } from '../../chess/variants/gamerules.js';
+import type { FullGame } from '../../chess/logic/gamefile.js';
 
 
 /**
@@ -29,7 +30,7 @@ interface SimplifiedGameState {
 	// The pieces
 	position: Map<CoordsKey, number>,
 	// The turnOrder rotating essentially keeps track of whos turn it is in the position.
-	turnOrder: Game['gameRules']['turnOrder'],
+	turnOrder: GameRules['turnOrder'],
 	// The fullMove number increments with every turn cycle
 	fullMove: number,
 	// For state.ts, the 3 global game states
@@ -48,7 +49,7 @@ interface SimplifiedGameState {
  * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile(basegame: Game, boardsim: Board, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
+function compressGamefile({basegame, boardsim}: FullGame, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
 
 	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;

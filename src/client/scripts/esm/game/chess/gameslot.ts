@@ -13,7 +13,7 @@ import type { Player } from "../../chess/util/typeutil.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
-import type { Game, Board } from "../../chess/logic/gamefile.js";
+import type { FullGame } from "../../chess/logic/gamefile.js";
 import type { VariantOptions } from "../../chess/logic/initvariant.js";
 
 import enginegame from '../misc/enginegame.js';
@@ -60,8 +60,6 @@ import guipause from "../gui/guipause.js";
 import perspective from "../rendering/perspective.js";
 // @ts-ignore
 import winconutil from "../../chess/util/winconutil.js";
-import { Rating } from "../../../../../server/database/leaderboardsManager.js";
-import metadata from "../../chess/util/metadata.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -94,13 +92,11 @@ interface Additional {
 	editor?: boolean,
 }
 
-type GameFile = Game & { board: Board }
-
 // Variables ---------------------------------------------------------------
 
 
 /** The currently loaded game. */
-let loadedGamefile: GameFile | undefined;
+let loadedGamefile: FullGame | undefined;
 
 /** The mesh of the gamefile, if it is loaded. */
 let mesh: Mesh | undefined;
@@ -124,7 +120,7 @@ const delayOfLatestMoveAnimationOnRejoinMillis = 150;
 
 
 /**  Returns the gamefile currently loaded */
-function getGamefile(): GameFile | undefined {
+function getGamefile(): FullGame | undefined {
 	return loadedGamefile;
 }
 
@@ -181,7 +177,7 @@ function loadLogical(loadOptions: LoadOptions) {
 
 	const newgame = gamefile.initGame(loadOptions.metadata, loadOptions.additional?.variantOptions, loadOptions.additional?.gameConclusion, loadOptions.additional?.clockValues);
 	const boardsim = gamefile.initBoard(newgame.gameRules, loadOptions.metadata, loadOptions.additional?.variantOptions, loadOptions.additional?.editor);
-	gamefile.loadGameWithBoard(newgame, boardsim, loadOptions.additional?.moves);
+	loadedGamefile = gamefile.loadGameWithBoard(newgame, boardsim, loadOptions.additional?.moves);
 
 	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
@@ -192,9 +188,6 @@ function loadLogical(loadOptions: LoadOptions) {
 	if (pieceCount > arrows.pieceCountToDisableArrows || boardsim.pieces.slides.length > arrows.lineCountToDisableArrows) arrows.setMode(0);
 
 	initCopyPastGameListeners();
-
-	// Immediately conclude the game if we loaded a game that's over already
-	loadedGamefile = newgame as GameFile;
 
 	specialrighthighlights.regenModel();
 
@@ -207,19 +200,19 @@ function loadLogical(loadOptions: LoadOptions) {
 async function loadGraphical(loadOptions: LoadOptions) {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(loadedGamefile!);
+	guiclock.set(loadedGamefile!.basegame);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
-	await imagecache.initImagesForGame(loadedGamefile!.board);
-	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!.board);
-	texturecache.initTexturesForGame(gl, loadedGamefile!.board);
+	await imagecache.initImagesForGame(loadedGamefile!.boardsim);
+	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!.boardsim);
+	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
-	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
+	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotionsAllowed);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
-	const lastmove = moveutil.getLastMove(loadedGamefile!.board.moves);
-	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, loadedGamefile!.board, lastmove, false); // Rewind one move
+	const lastmove = moveutil.getLastMove(loadedGamefile!.boardsim.moves);
+	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
 	// Initialize the mesh empty
 	mesh = {
@@ -229,12 +222,12 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	};
 
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(loadedGamefile!.board, mesh);
+	piecemodels.regenAll(loadedGamefile!.boardsim, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined && !lastmove.isNull) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
-		if (moveutil.areWeViewingLatestMove(loadedGamefile!.board)) return; // Already viewing the lastest move
-		movesequence.viewFront(loadedGamefile!, loadedGamefile!.board, mesh!); // Updates to front even when they view different moves
+		if (moveutil.areWeViewingLatestMove(loadedGamefile!.boardsim)) return; // Already viewing the lastest move
+		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 }
@@ -279,7 +272,7 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.board));
+	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim));
 	boardpos.setBoardPos(centerArea.coords);
 	boardpos.setBoardScale(centerArea.scale * 1.75);
 	guinavigation.recenter();
@@ -309,17 +302,18 @@ function callbackCopy(event: Event) {
  */
 function concludeGame() {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
-	if (loadedGamefile.gameConclusion === undefined) throw Error("Cannot conclude game when the game hasn't ended.");
+	const basegame = loadedGamefile.basegame;
+	if (basegame.gameConclusion === undefined) throw Error("Cannot conclude game when the game hasn't ended.");
 
-	clock.endGame(loadedGamefile);
-	guiclock.stopClocks(loadedGamefile);
+	clock.endGame(basegame);
+	guiclock.stopClocks(basegame);
 	board.darkenColor();
-	guigameinfo.gameEnd(loadedGamefile.gameConclusion);
+	guigameinfo.gameEnd(basegame.gameConclusion);
 	onlinegame.onGameConclude();
 	enginegame.onGameConclude();
 	guipause.onReceiveGameConclusion();
 
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(loadedGamefile.gameConclusion).victor; // undefined if aborted
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {
 		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
@@ -331,7 +325,7 @@ function concludeGame() {
 	}
 	
 	// Set the Result and Condition metadata
-	gamefileutility.setTerminationMetadata(loadedGamefile);
+	gamefileutility.setTerminationMetadata(basegame);
 
 	selection.unselectPiece();
 	guipause.updateTextOfMainMenuButton();
@@ -339,9 +333,9 @@ function concludeGame() {
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame() {
-	delete loadedGamefile!.gameConclusion;
+	delete loadedGamefile!.basegame.gameConclusion;
 	// Delete the Result and Condition metadata
-	gamefileutility.eraseTerminationMetadata(loadedGamefile!);
+	gamefileutility.eraseTerminationMetadata(loadedGamefile!.basegame);
 	board.resetColor();
 }
 

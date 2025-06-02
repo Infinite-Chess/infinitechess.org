@@ -10,12 +10,12 @@ import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil from '../util/typeutil.js';
-import type { PlayerGroup } from '../util/typeutil.js';
 import clockutil from '../util/clockutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
-
+import type { PlayerGroup } from '../util/typeutil.js';
+import type { MetaData } from '../util/metadata.js';
 import type { Game } from './gamefile.js';
 import type { Player } from '../util/typeutil.js';
 
@@ -76,6 +76,13 @@ type ClockData = {
 	timeAtTurnStart: undefined
 })
 
+type ClockDependant = {
+	untimed: true,
+	clocks: undefined,
+} | {
+	untimed: false,
+	clocks: ClockData
+}
 
 // Functions -----------------------------------------------------------------------
 
@@ -86,13 +93,10 @@ type ClockData = {
  * @param gamefile 
  * @param [currentTimes] Optional. An object containing the current times of the players. Often used if we re-joining an online game.
  */
-function set(basegame: Game, currentTimes?: ClockValues) {
-	const clock = basegame.metadata.TimeControl; // "600+5"
-	basegame.untimed = clockutil.isClockValueInfinite(clock);
-	if (basegame.untimed) {
-		// @ts-ignore
-		delete basegame.clocks;
-		return;
+function init(players: Iterable<Player>, clock: MetaData["TimeControl"]): ClockDependant {
+	const untimed = clockutil.isClockValueInfinite(clock);
+	if (untimed) {
+		return {untimed: true, clocks: undefined};
 	}
 	// { minutes, increment }
 	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock)!;
@@ -110,15 +114,12 @@ function set(basegame: Game, currentTimes?: ClockValues) {
 		timeRemainAtTurnStart: undefined
 	};
 
-	basegame.clocks = clocks;
+	// start both players with the default.
+	for (const color of players) {
+		clocks.currentTime[color] = clocks.startTime.millis;
+	};
 
-	// Edit the closk if we're re-loading an online game
-	if (currentTimes) edit(basegame, currentTimes);
-	else { // No current time specified, start both players with the default.
-		basegame.gameRules.turnOrder.forEach((color: Player) => {
-			clocks.currentTime[color] = clocks.startTime.millis;
-		});
-	}
+	return {untimed: false, clocks};
 }
 
 /**
@@ -215,9 +216,7 @@ function update(basegame: Game): Player | undefined {
  * Independant of reading clocks.currentTime, because that isn't updated
  * every frame if the user unfocuses the window.
  */
-function getColorTickingTrueTimeRemaining(basegame: Game): number | undefined {
-	if (basegame.untimed) return;
-	const clocks = basegame.clocks!;
+function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined {
 	if (clocks.colorTicking === undefined) return;
 	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
@@ -234,7 +233,7 @@ function printClocks(basegame: Game) {
 }
 
 export default {
-	set,
+	init,
 	edit,
 	endGame,
 	update,
@@ -245,5 +244,6 @@ export default {
 
 export type {
 	ClockValues,
-	ClockData
+	ClockData,
+	ClockDependant,
 };

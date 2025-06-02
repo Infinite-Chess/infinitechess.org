@@ -10,7 +10,7 @@ import variant from '../../chess/variants/variant.js';
 import { CoordsKey } from '../../chess/util/coordutil.js';
 import { ServerGameMoveMessage } from '../misc/onlinegame/onlinegamerouter.js';
 
-import type { Game } from '../../chess/logic/gamefile.js';
+import type { FullGame } from '../../chess/logic/gamefile.js';
 import type { VariantOptions } from '../../chess/logic/initvariant.js';
 import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
 
@@ -20,7 +20,7 @@ import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/ic
  * Formulates a whole gamefile from a smaller simpler abridged one.
  * @param longformIn - The return value of gamecompressor.compressGamefile()
  */
-function formulateGame(longformIn: LongFormatIn): Game {
+function formulateGame(longformIn: LongFormatIn): FullGame {
 
 	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
 		throw Error('Invalid longformIn when formulating game: Missing position or special rights.');
@@ -46,9 +46,7 @@ function formulateGame(longformIn: LongFormatIn): Game {
 
 	const basegame = gamefile.initGame(longformIn.metadata, variantOptions);
 	const boardsim = gamefile.initBoard(basegame.gameRules, longformIn.metadata, variantOptions);
-	gamefile.loadGameWithBoard(basegame, boardsim, moves);
-
-	return basegame;
+	return gamefile.loadGameWithBoard(basegame, boardsim, moves);
 }
 
 /**
@@ -57,7 +55,7 @@ function formulateGame(longformIn: LongFormatIn): Game {
  * * Invalid format or enpassant square
  * * Game contains an illegal move
  */
-function ICNToGamefile(ICN: string): Game {
+function ICNToGamefile(ICN: string): FullGame {
 	const longformOut: LongFormatOut = icnconverter.ShortToLong_Format(ICN);
 
 	let position: Map<CoordsKey, number>;
@@ -102,8 +100,7 @@ function ICNToGamefile(ICN: string): Game {
 	 * It will throw an Error if there's any move with a startCoords that doesn't have any piece on it!
 	 * Some illegal moves may pass, but those aren't what we care about. We care about crashing moves!
 	 */
-	gamefile.loadGameWithBoard(basegame, boardsim, moves);
-	return basegame;
+	return gamefile.loadGameWithBoard(basegame, boardsim, moves);
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant?: string) {

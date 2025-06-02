@@ -42,7 +42,7 @@ import miniimage from "../rendering/miniimage.js";
 
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { Coords } from "../../chess/util/coordutil.js";
-import type { Game } from "../../chess/logic/gamefile.js";
+import type { FullGame } from "../../chess/logic/gamefile.js";
 
 // Constants -------------------------------------------------------------------
 
@@ -228,7 +228,7 @@ function testOutGameToggles() {
 }
 
 /** Debug toggles that are only for in a game. */
-function testInGameToggles(gamefile: Game, mesh: Mesh | undefined) {
+function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined) {
 	if (listener_document.isKeyDown('Escape')) guipause.toggle();
 	
 	if (listener_document.isKeyDown('Digit1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
@@ -242,7 +242,7 @@ function testInGameToggles(gamefile: Game, mesh: Mesh | undefined) {
 	
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
-		piecemodels.regenAll(gamefile.board!, mesh);
+		piecemodels.regenAll(gamefile.boardsim, mesh);
 		statustext.showStatus('Regenerated piece models.', false, 0.5);
 	}
 	if (listener_document.isKeyDown('KeyN')) {

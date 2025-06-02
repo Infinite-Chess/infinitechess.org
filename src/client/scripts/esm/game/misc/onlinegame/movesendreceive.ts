@@ -3,7 +3,7 @@
  * and receiving moves from our opponent.
  */
 
-import type { Game, Board } from "../../../chess/logic/gamefile.js";
+import type { FullGame } from "../../../chess/logic/gamefile.js";
 import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
 import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
@@ -36,14 +36,14 @@ function sendMove() {
 	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
-	const lastMove = moveutil.getLastMove(gamefile.board.moves)!;
+	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
 	if (lastMove.isNull) throw Error('Cannot submit null move to online game.');
 	const shortmove = lastMove.compact; // "x,y>x,yN"
 
 	const data = {
 		move: shortmove,
-		moveNumber: gamefile.moves.length,
-		gameConclusion: gamefile.gameConclusion,
+		moveNumber: gamefile.basegame.moves.length,
+		gameConclusion: gamefile.basegame.gameConclusion,
 	};
 
 	websocket.sendmessage('game', 'submitmove', data, true);
@@ -56,10 +56,10 @@ function sendMove() {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(basegame: Game, boardsim: Board, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
+function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
 	// Make sure the move number matches the expected.
 	// Otherwise, we need to re-sync
-	const expectedMoveNumber = boardsim.moves.length + 1;
+	const expectedMoveNumber = gamefile.boardsim.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
 		console.error(`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
 		return onlinegame.resyncToGame();
@@ -77,21 +77,22 @@ function handleOpponentsMove(basegame: Game, boardsim: Board, mesh: Mesh | undef
 
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-	const moveIsLegal = legalmoves.isOpponentsMoveLegal(basegame, boardsim, moveDraft, message.gameConclusion);
+	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
 	if (moveIsLegal !== true) console.log(`Buddy made an illegal play: ${JSON.stringify(message.move.compact)}. Move number: ${message.moveNumber}`);
 	if (moveIsLegal !== true && !onlinegame.getIsPrivate()) return onlinegame.reportOpponentsMove(moveIsLegal); // Allow illegal moves in private games
 
-	movesequence.viewFront(basegame, boardsim, mesh);
+	movesequence.viewFront(gamefile, mesh);
 
 	// Forward the move...
 
-	const move = movesequence.makeMove(basegame, boardsim, mesh, moveDraft);
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 	if (mesh) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
-	
+	const { basegame } = gamefile;
+
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
 	clock.edit(basegame, message.clockValues);

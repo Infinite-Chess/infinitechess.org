@@ -106,7 +106,7 @@ const listExtras_Editor = 100;
  * 
  * Mutates pieceMovesets to remove useless movesets
  */
-function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: RawTypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): {
+function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: RawTypeGroup<() => PieceMoveset>, turnOrder: Player[], editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): {
 	pieces: OrganizedPieces,
 	/**
 	 * All existing types in the game, with their color information.
@@ -132,14 +132,14 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 
 	// Calculate the possible types
 
-	const { existingTypes, existingRawTypes } = calcRemainingExistingTypes(existingTypesSet, turnOrder, promotionsAllowed, editor);
+	const { existingTypes, existingRawTypes } = calcRemainingExistingTypes(existingTypesSet, turnOrder, editor, promotionsAllowed);
 
 	// Determine how many undefineds each type needs
 
 	const listExtrasByType: TypeGroup<number> = {};
 	for (const type of existingTypes) {
 		const numOfPieceInStartingPos = piecesByType.get(type)?.length ?? 0;
-		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, promotionsAllowed, editor);
+		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, editor, promotionsAllowed);
 	}
 
 	// console.log("List extras by type:");
@@ -242,7 +242,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
  * Afterward, flags the pieces as newly regenerated. movesequence may
  * watch for that to know when to regenerate the piece models.
  */
-function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): void {
+function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): void {
 
 	const additionalUndefinedsNeeded: Map<number, number> = new Map();
 	const typeOffsets: Map<number, number> = new Map();
@@ -254,7 +254,7 @@ function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<Raw
 	// for (const [type, range] of typesAndRanges) {
 	for (const [type, range] of o.typeRanges) {
 		const pieceTypeCount = (range.end - range.start) - range.undefineds.length; // The type of this piece, excluding undefineds
-		const targetUndefineds = getListExtrasOfType(type, pieceTypeCount, promotionsAllowed, editor);
+		const targetUndefineds = getListExtrasOfType(type, pieceTypeCount, editor, promotionsAllowed);
 		const needed = Math.max(0, targetUndefineds - range.undefineds.length);
 
 		additionalUndefinedsNeeded.set(type, needed);
@@ -446,7 +446,7 @@ function removePieceFromSpace(idx: number, o: {
  * Takes a Set of all types in the STARTING POSITION and adds to it other
  * potential pieces that may join the game via promotion or board editor.
  */
-function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): {
+function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrder: Player[], editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): {
 	existingTypes: number[],
 	existingRawTypes: RawType[],
 } {
@@ -489,8 +489,8 @@ function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrde
  * Returns the target number of undefineds that should be alloted for a given type.
  * @param numOfPieces - The number of pieces of this type in the position, EXCLUDING undefineds
  */
-function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): number {
-	const undefinedsBehavior = getTypeUndefinedsBehavior(type, promotionsAllowed, editor);
+function getListExtrasOfType(type: number, numOfPieces: number, editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): number {
+	const undefinedsBehavior = getTypeUndefinedsBehavior(type, editor, promotionsAllowed);
 
 	return undefinedsBehavior === 2 ? Math.max(listExtras_Editor, numOfPieces) // Count of piece can increase RAPIDLY (editor)
 		 : undefinedsBehavior === 1 ? listExtras // Count of piece can increase slowly (promotion)
@@ -505,7 +505,7 @@ function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowe
  * 1 => Can increase in count, but slowly (promotion)
  * 2 => Can increase in count rapidly (board editor)
  */
-function getTypeUndefinedsBehavior(type: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: boolean): 0 | 1 | 2 {
+function getTypeUndefinedsBehavior(type: number, editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): 0 | 1 | 2 {
 	if (editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
 	if (!promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const [rawType, player] = typeutil.splitType(type);

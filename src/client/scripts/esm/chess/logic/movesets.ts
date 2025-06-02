@@ -18,7 +18,7 @@ import type { CoordsSpecial } from './movepiece.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
 import type { Vec2, Vec2Key } from '../../util/math.js';
 import type { Piece } from '../util/boardutil.js';
-import type { Game, Board } from './gamefile.js';
+import type { FullGame } from './gamefile.js';
 
 
 /**
@@ -103,7 +103,7 @@ type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Co
  * each of the coords will have a special property attached to it. castle/promote/enpassant
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (basegame: Game, boardsim: Board, coords: Coords, color: Player) => CoordsSpecial[]
+type SpecialFunction = (gamefile: FullGame, coords: Coords, color: Player) => CoordsSpecial[]
 
 
 

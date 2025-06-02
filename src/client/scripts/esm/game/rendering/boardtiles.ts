@@ -12,16 +12,16 @@ import bufferdata from './bufferdata.js';
 import perspective from './perspective.js';
 // @ts-ignore
 import camera from './camera.js';
+// @ts-ignore
+import { gl } from './webgl.js';
+// @ts-ignore
+import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import frametracker from './frametracker.js';
-// @ts-ignore
-import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-// @ts-ignore
-import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
@@ -84,15 +84,15 @@ let darkTiles: Color;
 		if (!gamefile) return;
 		imagecache.deleteImageCache();
 		// texturecache.deleteTextureCache(gl);
-		imagecache.initImagesForGame(gamefile.board).then(() => {
+		imagecache.initImagesForGame(gamefile.boardsim).then(() => {
 			// Regenerate the spritesheet with the new tinted images
-			spritesheet.initSpritesheetForGame(gl, gamefile.board);
-			texturecache.initTexturesForGame(gl, gamefile.board);
-			piecemodels.regenAll(gamefile.board, gameslot.getMesh());
+			spritesheet.initSpritesheetForGame(gl, gamefile.boardsim);
+			texturecache.initTexturesForGame(gl, gamefile.boardsim);
+			piecemodels.regenAll(gamefile.boardsim, gameslot.getMesh());
 		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();
-		guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
+		guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed);
 	});
 })();
 
@@ -230,7 +230,7 @@ function renderMainBoard() {
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme() {
 	const gamefile = gameslot.getGamefile();
-	if (gamefile && gamefileutility.isGameOver(gamefile)) darkenColor(); // Reset to slightly darkened board
+	if (gamefile && gamefileutility.isGameOver(gamefile.basegame)) darkenColor(); // Reset to slightly darkened board
 	else resetColor(); // Reset to defaults
 	updateSkyColor();
 	updateNavColor();

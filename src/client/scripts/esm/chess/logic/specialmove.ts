@@ -15,6 +15,23 @@ import type { Board } from './gamefile.js';
 "use strict";
 
 
+/**
+ * Function that queues all of the changes a special move makes when executed.
+ */
+// eslint-disable-next-line no-unused-vars
+type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: Move) => boolean;
+
+/**
+ * An object storing the squares in the immediate vicinity
+ * a piece has a CHANCE of making a special-move capture from.
+ * 
+ * TODO: Move this to specialmove.ts when it's converted to typescript.
+ */
+type SpecialVicinity = RawTypeGroup<
+/** The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance. */
+	Coords[]
+>
+
 // This returns the functions for executing special moves,
 // it does NOT calculate if they're legal.
 // In the future, parameters can be added if variants have
@@ -111,7 +128,7 @@ function roses(boardsim: Board, piece: Piece, move: Move) {
  * Returns the coordinate distances certain piece types have a chance
  * of special-move capturing on, according to the default specialMove functions.
  */
-function getDefaultSpecialVicinitiesByPiece(): RawTypeGroup<Coords[]> {
+function getDefaultSpecialVicinitiesByPiece(): SpecialVicinity {
 	return {
 		[rawTypes.PAWN]: [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
 		// All squares a rose piece could potentially capture on.
@@ -119,9 +136,12 @@ function getDefaultSpecialVicinitiesByPiece(): RawTypeGroup<Coords[]> {
 	};
 }
 
-
-
 export default {
 	defaultSpecialMoves,
 	getDefaultSpecialVicinitiesByPiece,
 };	
+
+export type {
+	SpecialMoveFunction,
+	SpecialVicinity
+};

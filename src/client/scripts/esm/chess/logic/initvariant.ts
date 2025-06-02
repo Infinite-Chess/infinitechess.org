@@ -7,7 +7,7 @@ import type { Snapshot } from './gamefile.js';
 import type { MetaData } from '../util/metadata.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { EnPassant } from './state.js';
+import type { GlobalGameState } from './state.js';
 
 import variant from '../variants/variant.js';
 
@@ -31,14 +31,7 @@ interface VariantOptions {
 	 */
 	position: Map<CoordsKey, number>
 	/** The 3 global game states */
-	state_global: {
-		/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
-		specialRights: Set<CoordsKey>,
-		/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-		enpassant?: EnPassant,
-		/** If the move moveRuleState gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
-		moveRuleState?: number,
-	}
+	state_global: GlobalGameState
 }
 
 /**
@@ -83,7 +76,11 @@ function getPieceMovesets(metadata: MetaData, slideLimit?: number) {
  * @param {VariantOptions} [variantOptions] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
  * @returns {StartSnapshot} The starting snapshot of the game.
  */
-function genStartSnapshot(gamerules: GameRules, metadata: MetaData, variantOptions?: VariantOptions): Snapshot {
+function getVariantVariantOptions(gamerules: GameRules, metadata: MetaData, variantOptions?: VariantOptions): {
+	position: Snapshot['position'],
+	state_global: Snapshot['state_global'],
+	fullMove: number
+} {
 	let position: Snapshot['position'];
 	let fullMove: Snapshot['fullMove'];
 	// The 3 global game states
@@ -116,12 +113,6 @@ function genStartSnapshot(gamerules: GameRules, metadata: MetaData, variantOptio
 		position,
 		state_global,
 		fullMove,
-		box: {
-			left: NaN,
-			right: NaN,
-			bottom: NaN,
-			top: NaN
-		}
 	};
 }
 
@@ -180,5 +171,5 @@ export type {
 export default {
 	getVariantGamerules,
 	getPieceMovesets,
-	genStartSnapshot,
+	getVariantVariantOptions,
 };
