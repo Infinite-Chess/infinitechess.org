@@ -11,7 +11,7 @@
 
 import lockfile from 'proper-lockfile';
 import fs from 'fs';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Locks the file while reading, then immediately unlocks and returns the data.
 // MUST BE CALLED WITH 'await' or this returns a promise!
@@ -31,7 +31,7 @@ const readFile = async(path, errorString) => {
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
 			const errText = `Error when reading file in lockFile: ${errorString}${e.stack}`;
-			logEvents(errText, 'errLog.txt', { print: true });
+			logEventsAndPrint(errText, 'errLog.txt');
 		});
 	return data;
 };
@@ -56,7 +56,7 @@ const writeFile = async(path, object, errorString) => {
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
 			const errText = `Error while writing file in lockFile: ${errorString}${e.stack}`;
-			logEvents(errText, 'errLog.txt', { print: true });
+			logEventsAndPrint(errText, 'errLog.txt');
 			status = false;
 		});
 	return status;
@@ -80,7 +80,7 @@ const editFile = async(path, callback, errorString) => {
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
 			const errText = `Error while editing file in lockFile: ${errorString}${e.stack}`;
-			logEvents(errText, 'errLog.txt', { print: true });
+			logEventsAndPrint(errText, 'errLog.txt');
 			status = false;
 		});
 	return status;

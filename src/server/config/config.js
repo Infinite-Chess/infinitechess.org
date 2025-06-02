@@ -1,4 +1,11 @@
 
+/**
+ * This script contains various server configuration settings.
+ * 
+ * IT MUST remain javascript since build.js imports it, and that must remain javascript
+ * as it's what compiles all typescript files into javascript.
+ */
+
 import { NODE_ENV } from './env.js';
 
 

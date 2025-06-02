@@ -8,7 +8,7 @@
 
 
 // Middleware & other imports
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
 
 // Custom imports
@@ -485,7 +485,7 @@ function doesPlayerBelongToGame_ReturnColor(game, player) {
  */
 function sendMessageToSocketOfColor(game, color, sub, action, value) {
 	const data = game.players[color];
-	if (data === undefined) return logEvents(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt', { print: true });
+	if (data === undefined) return logEventsAndPrint(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt');
 	const ws = data.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
@@ -578,7 +578,7 @@ function isAutoResignDisconnectTimerActiveForColor(game, color) {
  * @param {Game} game - The game
  */
 function sendUpdatedClockToColor(game, color) {
-	if (color !== players.BLACK && color !== players.WHITE) return logEvents(`Color must be white or black when sending clock to color! Got: ${color}`, 'errLog.txt', { print: true });
+	if (color !== players.BLACK && color !== players.WHITE) return logEventsAndPrint(`Color must be white or black when sending clock to color! Got: ${color}`, 'errLog.txt');
 	if (game.untimed) return; // Don't send clock values in an untimed game
 
 	const message = getGameClockValues(game);
@@ -625,7 +625,7 @@ function updateClockValues(game) {
 	const timeElapsedSinceTurnStart = now - game.timeAtTurnStart;
 	const newTime = game.timeRemainAtTurnStart - timeElapsedSinceTurnStart;
 	const playerdata = game.players[game.whosTurn];
-	if (playerdata === undefined) return logEvents(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`, 'errLog.txt', { print: true });
+	if (playerdata === undefined) return logEventsAndPrint(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`, 'errLog.txt');
 	playerdata.timer = newTime;
 }
 
@@ -635,7 +635,7 @@ function updateClockValues(game) {
  * @param {string} color - The color of the player to send the latest move to
  */
 function sendMoveToColor(game, color) {
-	if (!(color in game.players)) return logEvents(`Color to send move to must be white or black! ${color}`, 'errLog.txt', { print: true });
+	if (!(color in game.players)) return logEventsAndPrint(`Color to send move to must be white or black! ${color}`, 'errLog.txt');
     
 	const message = {
 		move: getSimplifiedLastMove(game),

@@ -1,6 +1,6 @@
 
 import { getClientIP } from "../utility/IP.js";
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 import { getTranslationForReq } from "../utility/translate.js";
 
 
@@ -155,7 +155,7 @@ function onIncorrectPassword(browserAgent, username) {
 	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) return; // Don't lock them yet
 	// Lock them!
 	loginAttemptData[browserAgent].cooldownTimeSecs += loginCooldownIncrementorSecs;
-	logEvents(`${username} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt", { print: true });
+	logEventsAndPrint(`${username} got login locked for ${loginAttemptData[browserAgent].cooldownTimeSecs} seconds`, "loginAttempts.txt");
 }
 
 /**

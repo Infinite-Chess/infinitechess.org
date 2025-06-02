@@ -1,33 +1,31 @@
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
-
 import { promises as fsPromises } from 'fs';
 import path from 'path';
 
+// @ts-ignore
 import { getClientIP } from '../utility/IP.js';
-import socketUtility from '../socket/socketUtility.js';
+import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
+// @ts-ignore
 import { ensureDirectoryExists } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** @typedef {import("../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+import { Request, Response } from "express";
 
 const giveLoggedItemsUUID = false;
 
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.
- * @param {string} message - The message to log.
- * @param {string} logName - The name of the log file.
- * @param {Object} [options] - Optional parameters.
- * @param {boolean} [options.print] - If true, prints the message to the console as an error.
+ * @param message - The message to log.
+ * @param logName - The name of the log file.
  */
-const logEvents = async(message, logName, { print } = {}) => {
+async function logEvents(message: string, logName: string) {
 	if (typeof message !== 'string') return console.trace("Cannot log message when it is not a string.");
 	if (!logName) return console.trace("Log name MUST be provided when logging an event!");
 
-	if (print) console.error(message);
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
 	const logItem = giveLoggedItemsUUID ? `${dateTime}   ${uuid()}   ${message}\n` // With unique UUID
                                         : `${dateTime}   ${message}\n`;
@@ -36,18 +34,25 @@ const logEvents = async(message, logName, { print } = {}) => {
 		const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
 		ensureDirectoryExists(logsPath);
 		await fsPromises.appendFile(path.join(logsPath, logName), logItem);
-	} catch (err) {
-		console.log(err);
+	} catch (err: unknown) {
+		if (err instanceof Error) console.error(`Error logging event: ${err.message}`);
+		else console.error('Error logging event:', err);
 	}
 };
 
 /**
- * Middleware that logs the incoming request, then calls `next()`.
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @param {Function} next - The function to call, once finished, to continue down the middleware waterfall.
+ * Logs the provided message by appending a line to the end of the specified log file,
+ * and prints it to the console as an error.
+ * @param message - The message to log.
+ * @param logName - The name of the log file.
  */
-const logger = (req, res, next) => {
+async function logEventsAndPrint(message: string, logName: string) {
+	console.error(message);
+	logEvents(message, logName);
+}
+
+/** Middleware that logs the incoming request, then calls `next()`. */
+function reqLogger(req: Request, res: Response, next: () => void) {
 	const clientIP = getClientIP(req);
 
 	const origin = req.headers.origin || 'Unknown origin';
@@ -70,10 +75,10 @@ const logger = (req, res, next) => {
 
 /**
  * Logs websocket connection upgrade requests into `wsInLog.txt`
- * @param {Object} req - The request object
- * @param {CustomWebSocket} ws - The websocket object
+ * @param req - The request object
+ * @param ws - The websocket object
  */
-function logWebsocketStart(req, ws) {
+function logWebsocketStart(req: Request, ws: CustomWebSocket) {
 	const socketID = ws.metadata.id;
 	const stringifiedSocketMetadata = socketUtility.stringifySocketMetadata(ws);
 	const userAgent = req.headers['user-agent'];
@@ -84,10 +89,10 @@ function logWebsocketStart(req, ws) {
 
 /**
  * Logs incoming websocket messages into `wsInLog.txt`
- * @param {CustomWebSocket} ws - The websocket object
- * @param {string} messageData - The raw data of the incoming message, as a string
+ * @param ws - The websocket object
+ * @param messageData - The raw data of the incoming message, as a string
  */
-function logReqWebsocketIn(ws, messageData) {
+function logReqWebsocketIn(ws: CustomWebSocket, messageData: string) {
 	const socketID = ws.metadata.id;
 	const logThis = `From socket of ID "${socketID}":   ${messageData}`;
 	logEvents(logThis, 'wsInLog.txt');
@@ -95,10 +100,10 @@ function logReqWebsocketIn(ws, messageData) {
 
 /**
  * Logs outgoing websocket messages into `wsOutLog.txt`
- * @param {CustomWebSocket} ws - The websocket object
- * @param {string} messageData - The raw data of the outgoing message, as a string
+ * @param ws - The websocket object
+ * @param messageData - The raw data of the outgoing message, as a string
  */
-function logReqWebsocketOut(ws, messageData) {
+function logReqWebsocketOut(ws: CustomWebSocket, messageData: string) {
 	const socketID = ws.metadata.id;
 	const logThis = `To socket of ID "${socketID}":   ${messageData}`;
 	logEvents(logThis, 'wsOutLog.txt');
@@ -106,7 +111,8 @@ function logReqWebsocketOut(ws, messageData) {
 
 export {
 	logEvents,
-	logger,
+	logEventsAndPrint,
+	reqLogger,
 	logWebsocketStart,
 	logReqWebsocketIn,
 	logReqWebsocketOut

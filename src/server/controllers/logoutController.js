@@ -1,12 +1,12 @@
 
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { deleteRefreshTokenFromMemberData } from '../database/refreshTokenManager.js';
 
 
 async function handleLogout(req, res) {
 	if (!req.memberInfo) {
-		logEvents("req.memberInfo must be defined for us to log out!", 'errLog.txt', { print: true });
+		logEventsAndPrint("req.memberInfo must be defined for us to log out!", 'errLog.txt');
 		return res.status(500).json({'message' : "Server Error" });
 	}
 
@@ -30,7 +30,7 @@ async function handleLogout(req, res) {
 
 	res.redirect('/');
 
-	logEvents(`Logged out member "${username}".`, "loginAttempts.txt", { print: true });
+	logEventsAndPrint(`Logged out member "${username}".`, "loginAttempts.txt");
 };
 
 export {

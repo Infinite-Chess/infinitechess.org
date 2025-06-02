@@ -22,6 +22,7 @@ import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, 
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import ratingabuse from './ratingabuse.js';
 
 
 /**
@@ -426,6 +427,9 @@ async function deleteGame(game) {
 	delete activeGames[game.id]; // Delete the game from the activeGames list
 
 	console.log(`Deleted game ${game.id}.`);
+
+	// Monitor suspicion levels for all players who participated in the game
+	await ratingabuse.measureRatingAbuseAfterGame(game);
 }
 
 /**

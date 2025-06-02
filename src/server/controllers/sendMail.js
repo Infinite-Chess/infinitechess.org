@@ -1,7 +1,7 @@
 
 import nodemailer from 'nodemailer';
 import { DEV_BUILD, HOST_NAME } from '../config/config.js';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 /**
@@ -15,7 +15,7 @@ function sendEmailConfirmation(user_id) {
 
 	// eslint-disable-next-line prefer-const
 	let { username, email, verification } = getMemberDataByCriteria(['username', 'email', 'verification'], 'user_id', user_id);
-	if (username === undefined) return logEvents(`Unable to send email confirmation of non-existent member of id "${user_id}"!`, 'errLog.txt', { print: true });
+	if (username === undefined) return logEventsAndPrint(`Unable to send email confirmation of non-existent member of id "${user_id}"!`, 'errLog.txt');
 	verification = JSON.parse(verification); // { verified, code }
 
 	const url_string = `https://${host}/verify/${username.toLowerCase()}/${verification.code}`;
@@ -73,7 +73,7 @@ function sendEmailConfirmation(user_id) {
 	};
 
 	transporter.sendMail(mailOptions, function(err, info) {
-		if (err) logEvents(`Error when sending verification email: ${err.stack}`, 'errLog.txt', { print: true });
+		if (err) logEventsAndPrint(`Error when sending verification email: ${err.stack}`, 'errLog.txt');
 		else console.log(`Email is sent to member ${username} of ID ${user_id}!`);
 	});
 };
@@ -88,12 +88,12 @@ function sendEmailConfirmation(user_id) {
  */
 function requestConfirmEmail(req, res) {
 	if (req.memberInfo === undefined) {
-		logEvents("req.memberInfo needs to be defined before handling confirmation email request route!", 'errLog.txt', { print: true });
+		logEventsAndPrint("req.memberInfo needs to be defined before handling confirmation email request route!", 'errLog.txt');
 		return res.status(500).json({ message: 'Internal Server Error' });
 	}
 
 	if (!req.memberInfo.signedIn) {
-		logEvents("User tried to resend the account verification email when they're not signed in! Their page should have auto-refreshed.", 'errLog.txt', { print: true });
+		logEventsAndPrint("User tried to resend the account verification email when they're not signed in! Their page should have auto-refreshed.", 'errLog.txt');
 		return res.status(401).json({ message: "Not signed in. Can't resent verification email." });
 	}
 
@@ -106,14 +106,14 @@ function requestConfirmEmail(req, res) {
 
 		const { verification } = getMemberDataByCriteria(['verification'], 'user_id', user_id);
 		if (verification === undefined) {
-			logEvents(`Could not find member "${req.memberInfo.username}" of ID "${user_id}" when requesting confirmation email! This should never happen.`, 'errLog.txt', { print: true });
+			logEventsAndPrint(`Could not find member "${req.memberInfo.username}" of ID "${user_id}" when requesting confirmation email! This should never happen.`, 'errLog.txt');
 			return res.status(500).json({ message: 'Server error. Member not found.', sent: false });
 		}
 
 		// ONLY send email if they haven't already verified!
 		if (verification === null || verification.verified) {
 			const hackText = `Member "${username}" of ID "${user_id}" tried requesting another verification email after they've already verified!`;
-			logEvents(hackText, 'hackLog.txt', { print: true });
+			logEventsAndPrint(hackText, 'hackLog.txt');
 			return res.status(401).json({ sent: false });
 		}
 
@@ -123,7 +123,7 @@ function requestConfirmEmail(req, res) {
 		return res.json({ sent: true });
 	} else { // Wrong person
 		const errText = `Member ${req.memberInfo.username} of ID "${user_id}" attempted to send verification email for user ${username}!`;
-		logEvents(errText, 'hackLog.txt', { print: true });
+		logEventsAndPrint(errText, 'hackLog.txt');
 		return res.status(401).json({ sent: false });
 	}
 };

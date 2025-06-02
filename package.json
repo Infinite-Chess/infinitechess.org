@@ -42,6 +42,7 @@
 		"@types/better-sqlite3": "^7.6.12",
 		"@types/express": "^5.0.0",
 		"@types/node": "^22.10.1",
+		"@types/uuid": "^10.0.0",
 		"@types/ws": "^8.5.13",
 		"@typescript-eslint/eslint-plugin": "^8.18.2",
 		"@typescript-eslint/parser": "^8.18.2",

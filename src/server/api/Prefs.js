@@ -7,7 +7,7 @@
 import themes from "../../client/scripts/esm/components/header/themes.js";
 import jsutil from "../../client/scripts/esm/util/jsutil.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 
 // Variables -------------------------------------------------------------
@@ -35,7 +35,7 @@ const legal_move_shapes = ['squares', 'dots'];
  */
 function setPrefsCookie(req, res, next) {
 	if (!req.cookies) {
-		logEvents("req.cookies must be parsed before setting preferences cookie!", 'errLog.txt', { print: true });
+		logEventsAndPrint("req.cookies must be parsed before setting preferences cookie!", 'errLog.txt');
 		return next();
 	}
 
@@ -54,18 +54,18 @@ function setPrefsCookie(req, res, next) {
 	try {
 		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
 	} catch (error) {
-		logEvents(`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${error.stack}`, 'errLog.txt');
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
 	if (typeof memberInfoCookie !== "object") {
-		logEvents(`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
 	const user_id = memberInfoCookie.user_id;
 	if (typeof user_id !== 'number') {
-		logEvents(`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`, 'errLog.txt');
 		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
 	}
 
@@ -126,12 +126,12 @@ function getPrefs(userId) {
  */
 function postPrefs(req, res) {
 	if (!req.memberInfo) { // { user_id, username, roles }
-		logEvents("Can't save user preferences when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt', { print: true });
+		logEventsAndPrint("Can't save user preferences when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt');
 		return res.status(500).json({ message: "Server Error: No Authorization"});
 	}
 
 	if (!req.memberInfo.signedIn) {
-		logEvents("User tried to save preferences when they weren't signed in!", 'errLog.txt', { print: true });
+		logEventsAndPrint("User tried to save preferences when they weren't signed in!", 'errLog.txt');
 		return res.status(401).json({ message: "Can't save preferences, not signed in."});
 	}
 
@@ -140,7 +140,7 @@ function postPrefs(req, res) {
 	const preferences = req.body.preferences;
 
 	if (!arePrefsValid(preferences)) {
-		logEvents(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${jsutil.ensureJSONString(preferences)}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database! The preferences: "${jsutil.ensureJSONString(preferences)}"`, 'errLog.txt');
 		return res.status(400).json({ message: "Preferences not valid, cannot save on the server."});
 	}
 
@@ -152,7 +152,7 @@ function postPrefs(req, res) {
 		console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`);
 		res.status(200).json({ message: 'Preferences updated successfully' });
 	} else {
-		logEvents(`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Failed to save preferences for member "${username}" id "${user_id}". No lines changed. Do they exist?`, 'errLog.txt');
 		res.status(500).json({ message: 'Failed to update preferences: user_id not found' });
 	}
 }

@@ -1,6 +1,6 @@
 
 import jwt from 'jsonwebtoken';
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessionManager.js';
 
@@ -30,7 +30,7 @@ import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessio
 function isTokenValid(token, isRefreshToken, IP, req, res) {
 	if (isRefreshToken === undefined) {
 		const reason = "When validating token, you must include the isRefreshToken parameter!";
-		logEvents(reason, 'errLog.txt', { print: true });
+		logEventsAndPrint(reason, 'errLog.txt');
 		return { isValid: false, reason };
 	}
 
@@ -98,7 +98,7 @@ function getTokenPayload(token, isRefreshToken) {
 		return jwt.verify(token, secret);
 	} catch (err) {
 		// Log the error event when verification fails
-		logEvents(`Failed to verify token (isRefreshToken: ${isRefreshToken}): ${err.message}. Token: "${token}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Failed to verify token (isRefreshToken: ${isRefreshToken}): ${err.message}. Token: "${token}"`, 'errLog.txt');
 		// Return undefined if verification fails (e.g., token is invalid or expired)
 		return undefined;
 	}

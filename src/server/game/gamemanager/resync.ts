@@ -17,8 +17,7 @@ import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
 // @ts-ignore
 import { cancelDisconnectTimer } from './afkdisconnect.js';
-// @ts-ignore
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getGameData } from '../../database/gamesManager.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
@@ -43,14 +42,14 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 	if (typeof gameID !== 'number') {
 		// Tampered message
 		const log = `Socket sent 'resync', but gameID is in the wrong form! Received: (${jsutil.ensureJSONString(gameID)}). The socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(log, 'errLog.txt', { print: true });
+		logEventsAndPrint(log, 'errLog.txt');
 		return;
 	}
 
 	// Make sure their pre-subbed game and game they requested to resync to match.
 	const preSubbedGameId = ws.metadata.subscriptions.game?.id;
 	if (preSubbedGameId !== undefined && preSubbedGameId !== gameID) {
-		logEvents(`Client tried to resync to game of id (${gameID}) when they are actually subbed to game of id (${preSubbedGameId})!!`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Client tried to resync to game of id (${gameID}) when they are actually subbed to game of id (${preSubbedGameId})!!`, 'errLog.txt');
 		return;
 	}
 
@@ -79,7 +78,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
 	const logged_game_info = getGameData(gameID, ['game_id', 'rated', 'private', 'termination', 'icn']);
 	if (!logged_game_info) {
-		logEvents(`Unable to send player game results after game of id (${gameID}) was logged, because we weren't able to retrieve it from the games table! (Potential they just requested a non-existent game id)`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Unable to send player game results after game of id (${gameID}) was logged, because we weren't able to retrieve it from the games table! (Potential they just requested a non-existent game id)`, 'errLog.txt');
 		sendSocketMessage(ws, 'game', 'nogame'); // IN THE FUTURE: The client could show a "Game not found" page
 		return;
 	}

@@ -8,7 +8,7 @@
  * NOR does it send any websocket messages.
  */
 
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
 
@@ -69,7 +69,7 @@ function hasColorOfferedDrawTooFast(game, color) {
  * @param {Player} color - The color of the player extending the offer
  */
 function openDrawOffer(game, color) {
-	if (isDrawOfferOpen(game)) return logEvents("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt", { print: true });
+	if (isDrawOfferOpen(game)) return logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt");
 	const data = game.players[color];
 	data.lastOfferPly = game.moves.length;
 	game.drawOfferState = color;

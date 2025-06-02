@@ -9,8 +9,7 @@ import { getTopPlayersForLeaderboard, getPlayerRankInLeaderboard, getEloOfPlayer
 import { Leaderboard } from "../../client/scripts/esm/chess/variants/validleaderboard.js";
 // @ts-ignore
 import { getMemberDataByCriteria } from "../database/memberManager.js";
-// @ts-ignore
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 import type { Response } from "express";
 import { CustomRequest } from "../../types.js";
@@ -50,7 +49,7 @@ const getLeaderboardData = async(req: CustomRequest, res: Response) => { // rout
 	// Query leaderboard database
 	const top_players = getTopPlayersForLeaderboard(leaderboard_id, start_rank, n_players);
 	if (top_players === undefined) {
-		logEvents(`Retrieval of top ${n_players} players from start rank ${start_rank} of leaderboard ${leaderboard_id} upon user request failed.`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Retrieval of top ${n_players} players from start rank ${start_rank} of leaderboard ${leaderboard_id} upon user request failed.`, 'errLog.txt');
 		return res.status(500).json({ message: "Server error." }); // Generic message for database retrieval failed
 	}
 
@@ -62,7 +61,7 @@ const getLeaderboardData = async(req: CustomRequest, res: Response) => { // rout
 	for (const player of top_players) {
 		const username = getMemberDataByCriteria(['username'], 'user_id', player.user_id!, { skipErrorLogging: true }).username;
 		if (username === undefined) {
-			logEvents(`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by getTopPlayersForLeaderboard().`, 'errLog.txt', { print: true });
+			logEventsAndPrint(`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by getTopPlayersForLeaderboard().`, 'errLog.txt');
 			continue;
 		}
 		const playerData = {

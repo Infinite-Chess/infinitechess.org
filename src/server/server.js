@@ -1,5 +1,5 @@
 
-import { initDatabase } from './database/databaseSetup.js';
+import { initDatabase } from './database/databaseTables.js';
 initDatabase();
 // Ensure our workspace is ready for the dev environment
 import { initDevEnvironment } from './config/setupDev.js';

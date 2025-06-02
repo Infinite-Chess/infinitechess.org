@@ -5,7 +5,7 @@
  */
 
 // Middleware imports
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
 import gameutility from './gameutility.js';
@@ -72,12 +72,12 @@ function submitMove(ws, game, messageContents) {
 	const moveDraft = doesMoveCheckOut(messageContents.move);
 	if (moveDraft === false) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errString, 'hackLog.txt', { print: true });
+		logEventsAndPrint(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, "general", "printerror", "Invalid move format.");
 	}
 	if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errString, 'hackLog.txt', { print: true });
+		logEventsAndPrint(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, "general", "printerror", "Invalid game conclusion.");
 	}
     

@@ -3,7 +3,7 @@
  * and removal of roles from members.
  */
 
-import { logEvents } from "../middleware/logEvents.js";
+import { logEventsAndPrint } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from "../database/memberManager.js";
 
 /**
@@ -19,16 +19,16 @@ const validRoles = ['patron', 'admin', 'owner'];
  * @param {string} role - The role to add (e.g., 'owner', 'patron').
  */
 function giveRole(userId, role) {
-	if (userId === undefined) return logEvents(`Cannot give undefined user ID the role "${role}"!`, 'errLog.txt', { print: true });
-	if (!validRoles.includes(role)) return logEvents(`Cannot give INVALID role "${role}" to user of ID "${userId}"!`, 'errLog.txt', { print: true });
+	if (userId === undefined) return logEventsAndPrint(`Cannot give undefined user ID the role "${role}"!`, 'errLog.txt');
+	if (!validRoles.includes(role)) return logEventsAndPrint(`Cannot give INVALID role "${role}" to user of ID "${userId}"!`, 'errLog.txt');
 
 	// Fetch the member's current roles from the database
 	let { roles } = getMemberDataByCriteria(['roles'], 'user_id', userId);
-	if (roles === undefined) return logEvents(`Cannot give role "${role}" to user of ID "${userId}" when they don't exist!`, 'errLog.txt', { print: true });
+	if (roles === undefined) return logEventsAndPrint(`Cannot give role "${role}" to user of ID "${userId}" when they don't exist!`, 'errLog.txt');
 	roles = roles === null ? [] : JSON.parse(roles); // ['role1','role2', ...]
 
 	// If the role already exists, return early
-	if (roles.includes(role)) return logEvents(`Role "${role}" already exists for member with user ID "${userId}".`, 'errLog.txt', { print: true });
+	if (roles.includes(role)) return logEventsAndPrint(`Role "${role}" already exists for member with user ID "${userId}".`, 'errLog.txt');
 
 	// Add the new role to the roles array
 	roles.push(role);
@@ -36,8 +36,8 @@ function giveRole(userId, role) {
 	// Save the updated roles back to the database
 	const success = updateMemberColumns(userId, { roles });
 
-	if (success) logEvents(`Added role "${role}" to member with user ID "${userId}".`, 'loginAttempts.txt', { print: true });
-	else logEvents(`Failed to add role "${role}" to member with user ID "${userId}".`, 'errLog.txt', { print: true });
+	if (success) logEventsAndPrint(`Added role "${role}" to member with user ID "${userId}".`, 'loginAttempts.txt');
+	else logEventsAndPrint(`Failed to add role "${role}" to member with user ID "${userId}".`, 'errLog.txt');
 }
 
 /**
@@ -45,12 +45,12 @@ function giveRole(userId, role) {
  * @param {number} userId - The user ID of the member whose roles are to be deleted.
  */
 function removeAllRoles(userId) {
-	if (userId === undefined) return logEvents(`Cannot remove roles from an undefined user ID!`, 'errLog.txt', { print: true });
+	if (userId === undefined) return logEventsAndPrint(`Cannot remove roles from an undefined user ID!`, 'errLog.txt');
 
 	// Set roles to null (no roles left)
 	updateMemberColumns(userId, { roles: null });
 
-	logEvents(`Deleted all roles of member with user ID "${userId}".`, 'loginAttempts.txt', { print: true });
+	logEventsAndPrint(`Deleted all roles of member with user ID "${userId}".`, 'loginAttempts.txt');
 }
 // removeAllRoles(11784992);
 

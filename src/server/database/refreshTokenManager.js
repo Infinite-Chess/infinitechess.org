@@ -1,6 +1,6 @@
 
 import { getMemberDataByCriteria, updateMemberColumns } from './memberManager.js';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { addTokenToRefreshTokens, deleteRefreshTokenFromTokenList, removeExpiredTokens, trimTokensToSessionCap } from '../controllers/authenticationTokens/refreshTokenObject.js';
 import { closeAllSocketsOfMember, closeAllSocketsOfSession } from '../socket/socketManager.js';
 
@@ -24,7 +24,7 @@ function getRefreshTokensByUserID(userId) {
 
 	// If the user doesn't exist (row is undefined), return undefined.
 	if (refresh_tokens === undefined) {
-		logEvents(`Cannot get refresh tokens of a non-existent member of id "${userId}"!`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Cannot get refresh tokens of a non-existent member of id "${userId}"!`, 'errLog.txt');
 		return;
 	}
 
@@ -43,7 +43,7 @@ function getRefreshTokensByUserID(userId) {
 function addRefreshTokenToMemberData(req, userId, token) {
 	// Get the current refresh tokens
 	let refreshTokens = getRefreshTokensByUserID(userId);
-	if (refreshTokens === undefined) return logEvents(`Cannot add refresh token to non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
+	if (refreshTokens === undefined) return logEventsAndPrint(`Cannot add refresh token to non-existent member with id "${userId}"!`, 'errLog.txt');
 
 	// Remove any expired tokens
 	refreshTokens = removeExpiredTokens(refreshTokens);
@@ -71,7 +71,7 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 
 	// Fetch the current refresh tokens for the user
 	const refreshTokens = getRefreshTokensByUserID(userId);
-	if (refreshTokens === undefined) return logEvents(`Cannot delete refresh token from non-existent member with id "${userId}"!`, 'errLog.txt', { print: true });
+	if (refreshTokens === undefined) return logEventsAndPrint(`Cannot delete refresh token from non-existent member with id "${userId}"!`, 'errLog.txt');
 
 	// Remove any expired tokens. Do this whenever we read and write it.
 	let newRefreshTokens = removeExpiredTokens(refreshTokens);
@@ -81,7 +81,7 @@ function deleteRefreshTokenFromMemberData(userId, deleteToken) {
 
 	// Save the updated refresh tokens
 	if (newRefreshTokens.length !== refreshTokens.length) saveRefreshTokens(userId, newRefreshTokens);
-	else logEvents(`Unable to find refresh token to delete of member with id "${userId}"!`, 'errLog.txt', { print: true });
+	else logEventsAndPrint(`Unable to find refresh token to delete of member with id "${userId}"!`, 'errLog.txt');
 }
 
 /**
@@ -98,7 +98,7 @@ function saveRefreshTokens(userId, tokens) {
 	const updateResult = updateMemberColumns(userId, { refresh_tokens: tokens });
 
 	// If no changes were made, log the event
-	if (!updateResult) logEvents(`No changes made when saving refresh_tokens of member with id "${userId}"!`, 'errLog.txt', { print: true });
+	if (!updateResult) logEventsAndPrint(`No changes made when saving refresh_tokens of member with id "${userId}"!`, 'errLog.txt');
 }
 
 /**

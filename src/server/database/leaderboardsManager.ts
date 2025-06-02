@@ -2,9 +2,7 @@
  * This script handles queries to the leaderboards table.
  */
 
-// @ts-ignore
-import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
-// @ts-ignore
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
@@ -68,7 +66,7 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo:
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Updated log message
-		logEvents(`Error adding user "${user_id}" to leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error adding user "${user_id}" to leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 
 		// Return an error message
 		let reason = 'Failed to add user to ratings table.';
@@ -111,7 +109,7 @@ function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderbo
 		if (result.changes === 0) {
 			// Updated reason message
 			const reason = `User with ID "${user_id}" not found on leaderboard "${leaderboard_id} for update.`;
-			logEvents(reason, 'errLog.txt', { print: false }); // Log quietly
+			logEvents(reason, 'errLog.txt'); // Log quietly
 			return { success: false, reason };
 		}
 
@@ -120,7 +118,7 @@ function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderbo
 
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEvents(`Error modifying leaderboard ratings data for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error modifying leaderboard ratings data for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 
 		// Return an error message
 		return { success: false, reason: `Database error updating ratings for user ${user_id} on leaderboard ${leaderboard_id}.` };
@@ -146,7 +144,7 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
     `;
 
 	try {
-		const result = db.get(query, [user_id, leaderboard_id]);
+		const result = db.get<{ '1': 1 }>(query, [user_id, leaderboard_id]);
 
 		// If db.get returns anything (even an object like { '1': 1 }), it means a row was found.
 		// If no row is found, db.get returns undefined.
@@ -157,12 +155,19 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
 	} catch (error: unknown) {
 		// Log any potential database errors during the check
 		const message = error instanceof Error ? error.message : String(error);
-		logEvents(`Error checking existence of user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error checking existence of user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 
 		// On error, we cannot confirm existence, so return false.
 		return false;
 	}
 }
+
+/** The return type of {@link getPlayerLeaderboardRating} */
+type PlayerLeaderboardRating = {
+	elo: number;
+	rating_deviation: number;
+	rd_last_update_date: string | null; // Can be null if no games played yet
+};
 
 /**
  * Gets the rating values for a player on a specific leaderboard.
@@ -170,11 +175,7 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
  * @param leaderboard_id - The id for the specific leaderboard.
  * @returns The player's leaderboard entry object or undefined if not found or on error.
  */
-function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): {
-	elo: number,
-	rating_deviation: number,
-	rd_last_update_date: string | null, // Can be null if no games played yet
-} | undefined {
+function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
 	// Changed table name, column names, added leaderboard_id to WHERE, selected new columns
 	const query = `
 		SELECT elo, rating_deviation, rd_last_update_date
@@ -185,12 +186,12 @@ function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard
 	try {
 		// Execute the query with user_id and leaderboard_id parameters
 		// Added leaderboard_id to parameters
-		const row = db.get(query, [user_id, leaderboard_id]) as { elo: number, rating_deviation: number, rd_last_update_date: string | null } | undefined;
+		const row = db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
 		return row; // Returns the record or undefined if not found
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error getting leaderboard rating data for member "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error getting leaderboard rating data for member "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 		return undefined; // Return undefined on error
 	}
 }
@@ -214,7 +215,7 @@ function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 		return entries;
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEvents(`Error getting all leaderboard entries for user "${user_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error getting all leaderboard entries for user "${user_id}": ${message}`, 'errLog.txt');
 		return []; // Return an empty array on error
 	}
 }
@@ -247,7 +248,7 @@ function getTopPlayersForLeaderboard(leaderboard_id: Leaderboard, start_rank: nu
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Updated log message
-		logEvents(`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 		return []; // Return an empty array on error
 	}
 }
@@ -285,7 +286,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 
 	try {
 		// Execute the query, expecting at most one row containing the rank
-		const result = db.get(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, user_id, user_id]) as { rank: number } | undefined;
+		const result = db.get<{ rank: number }>(query, [leaderboard_id, UNCERTAIN_LEADERBOARD_RD, user_id, user_id]);
 
 		// If a result is found, return the rank, otherwise return undefined
 		return result?.rank;
@@ -293,7 +294,7 @@ function getPlayerRankInLeaderboard(user_id: number, leaderboard_id: Leaderboard
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log message remains appropriate
-		logEvents(`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 		return undefined; // Return undefined on error
 	}
 }
@@ -338,10 +339,10 @@ function updateAllRatingDeviationsofLeaderboardTable() {
 			const updatedRD = getTrueRD(entry.rating_deviation!, entry?.rd_last_update_date ?? null);
 			updatePlayerLeaderboardRating(entry.user_id!, entry.leaderboard_id! as Leaderboard, entry.elo!, updatedRD);
 		}
-		logEvents(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt', { print: true });
+		logEventsAndPrint(`Finished updating all rating deviations in leaderboard table.`, 'leaderboardLog.txt');
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEvents(`Error updating all rating deviations in leaderboard table: ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error updating all rating deviations in leaderboard table: ${message}`, 'errLog.txt');
 	}
 }
 

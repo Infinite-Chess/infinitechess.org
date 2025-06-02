@@ -10,7 +10,7 @@
  */
 
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { testPasswordForRequest } from './authController.js';
 
@@ -31,7 +31,7 @@ async function handleLogin(req, res) {
 	const usernameCaseInsensitive = req.body.username; // We already know this property is present on the request
 
 	const { user_id, username, roles } = getMemberDataByCriteria(['user_id', 'username', 'roles'], 'username', usernameCaseInsensitive);
-	if (user_id === undefined) return logEvents(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt', { print: true });
+	if (user_id === undefined) return logEventsAndPrint(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt');
 
 	// The roles fetched from the database is a stringified json string array, parse it here!
 	const parsedRoles = roles !== null ? JSON.parse(roles) : null;
@@ -43,7 +43,7 @@ async function handleLogin(req, res) {
 	// Update our member's statistics in their data file!
 	updateLoginCountAndLastSeen(user_id);
     
-	logEvents(`Logged in member "${username}".`, "loginAttempts.txt", { print: true });
+	logEventsAndPrint(`Logged in member "${username}".`, "loginAttempts.txt");
 }
 
 
