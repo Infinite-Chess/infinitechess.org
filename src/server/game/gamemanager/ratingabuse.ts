@@ -69,8 +69,6 @@ async function measureRatingAbuseAfterGame(game: Game) {
  */
 async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number) {
 
-	/** 1. Early exit if it hasn't been {@link GAME_INTERVAL_TO_MEASURE} games since the last measure. */
-
 	// If player is not in rating_abuse table, add him to it
 	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) addEntryToRatingAbuseTable(user_id, leaderboard_id);
 
@@ -80,18 +78,17 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		await logEventsAndPrint(`Unable to read rating_abuse_data of user ${user_id} on leaderboard ${leaderboard_id} while making RatingAbuse check!`, 'errLog.txt');
 		return;
 	}
+
 	// Increment game_count_since_last_check by 1
 	const game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check ? rating_abuse_data.game_count_since_last_check : 0);
-	const last_alerted_at = rating_abuse_data.last_alerted_at;
 
+	// Early exit condition if the newly incremented game_count_since_last_check is not a multiple of GAME_INTERVAL_TO_MEASURE
 	if (game_count_since_last_check % GAME_INTERVAL_TO_MEASURE !== 0) {
-		updateRatingAbuseColumns(user_id, leaderboard_id, {game_count_since_last_check, last_alerted_at});
+		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
 		return;
 	}
 
-
-	/** 2. If they have net lost elo the past {@link GAME_INTERVAL_TO_MEASURE} games, no risk. */
-
+	// If the player has net lost elo the past GAME_INTERVAL_TO_MEASURE games, no risk.
 	const recentGames = getRecentNRatedGamesForUser(
 		user_id,
 		leaderboard_id,
@@ -104,9 +101,15 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		0
 	);
 
-	if (netRatingChange <= 0) return; // They have lost elo. No cause for concern.
+	// The player has lost elo. No cause for concern, early exit
+	if (netRatingChange <= 0) {
+		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
+		return;
+	}
 
-	// FINISH...
+	// Now do all the actual suspicion level checks, notify Naviary by email if necessary and call updateRatingAbuseColumns in the end
+	// ...
+
 }
 
 
