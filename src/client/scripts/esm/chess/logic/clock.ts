@@ -82,8 +82,6 @@ type ClockData = {
 /**
  * Sets the clocks. If no current clock values are specified, clocks will
  * be set to the starting values, according to the game's TimeControl metadata.
- * @param gamefile 
- * @param [currentTimes] Optional. An object containing the current times of the players. Often used if we re-joining an online game.
  */
 function init(players: Iterable<Player>, time_control: MetaData["TimeControl"]): ClockDependant {
 	const untimed = clockutil.isClockValueInfinite(time_control);
@@ -113,8 +111,8 @@ function init(players: Iterable<Player>, time_control: MetaData["TimeControl"]):
 
 /**
  * Updates the gamefile with new clock information received from the server.
- * @param gamefile - The current game state object containing clock information.
- * @param [clockValues] - An object containing the updated clock values.
+ * @param basegame - The game to update the clocks of.
+ * @param clockValues - The new clock values to set.
  */
 function edit(basegame: Game, clockValues: ClockValues) {
 	if (basegame.untimed) throw Error("Don't call edit() on untimed games!");
@@ -171,7 +169,7 @@ function endGame(basegame: Game) {
 
 /**
  * Called every frame, updates values.
- * @param gamefile
+ * @param basegame
  * @returns undefined if clocks still have time, otherwise it's the color who won.
  */
 function update(basegame: Game): Player | undefined {

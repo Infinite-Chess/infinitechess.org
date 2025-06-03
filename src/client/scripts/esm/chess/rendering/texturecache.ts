@@ -26,7 +26,7 @@ const textureCache: TypeGroup<WebGLTexture> = {};
  * (with mipmaps enabled) for each, and stores them in the cache.
  * MUST be called after {@link imagecache.initImagesForGame}` has successfully completed.
  * @param gl - The WebGL2 rendering context.
- * @param gamefile - The gamefile object containing the list of piece types used.
+ * @param boardsim - The board containing the list of piece types used.
  */
 async function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: Board): Promise<void> {
 	// Clear existing cache before initializing for a new game

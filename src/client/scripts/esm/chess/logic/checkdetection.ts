@@ -91,7 +91,7 @@ function isSquareBeingAttacked(gamefile: FullGame, coord: Coords, colorOfFriendl
 
 /**
  * Checks to see if any opponent jumper within the immediate vicinity of the coordinates can attack them with an individual move (discounting special movers).
- * @param gamefile 
+ * @param boardsim 
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
  * @param [attackers] If provided, any opponent jumper attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
@@ -178,7 +178,7 @@ function doesSpecialAttackSquare(gamefile: FullGame, square: CoordsSpecial, frie
 
 /**
  * Calculates if any sliding piece can attack the specified square.
- * @param gamefile 
+ * @param boardsim 
  * @param square - The square to check if any opponent sliders are attacking.
  * @param friendlyColor - The friendly player color
  * @param [attackers] If provided, any opponent slider attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one slider attacker is discovered.

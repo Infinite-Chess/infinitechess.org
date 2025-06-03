@@ -163,9 +163,6 @@ function removeBorder(element: HTMLElement) {
 
 /**
  * Changes the border color gradually
- * @param gamefile 
- * @param element 
- * @param currentTimeRemain 
  */
 function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeRemain: number) {
 	const percRemain = currentTimeRemain / (clocks.startTime.minutes * 60 * 1000);

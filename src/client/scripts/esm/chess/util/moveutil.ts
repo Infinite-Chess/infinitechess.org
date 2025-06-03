@@ -145,7 +145,7 @@ function getPlyCount(moves: Move[]): number { return moves.length; }
 
 /**
  * Tests if the piece on the provided coordinates at moved atleast once in the gamefile.
- * @param gamefile
+ * @param boardsim
  * @param coords - The current coordinates of the piece.
  */
 function hasPieceMoved(boardsim: Board, coords: Coords): boolean {

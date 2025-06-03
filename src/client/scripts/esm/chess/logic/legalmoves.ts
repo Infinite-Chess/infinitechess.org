@@ -171,10 +171,6 @@ function appendSpecialMoves(gamefile: FullGame, piece: Piece, moveset: PieceMove
 
 /**
  * Calculates and adds any individual or sliding moves of the piece from the moveset provided.
- * @param gamefile 
- * @param piece 
- * @param moveset 
- * @param legalmoves 
  */
 function appendCalculatedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
 	const color = typeutil.getColorFromType(piece.type);
@@ -217,10 +213,10 @@ function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
 /**
  * Calculates how far a given piece can legally slide (ignoring ignore functions, and ignoring check respection)
  * on the given line of a specific slope.
- * @param gamefile
+ * @param boardsim
  * @param piece
  * @param slide
- * @param lineKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
+ * @param slideKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
  * @param organizedLine - The organized line of the above key that our piece is on
  */
 function calcPiecesLegalSlideLimitOnSpecificLine(boardsim: Board, piece: Piece, slide: Vec2, slideKey: Vec2Key, organizedLine: number[]) {

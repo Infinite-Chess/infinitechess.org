@@ -28,8 +28,6 @@ import wincondition from '../logic/wincondition.js';
 /**
  * Returns true if the game is over (gameConclusion is truthy).
  * If the game is over, it will be a string. If not, it will be false.
- * @param gamefile - The gamefile.
- * @returns true if over
  */
 function isGameOver(basegame: Game): boolean {
 	if (basegame.gameConclusion) return true;
@@ -74,7 +72,7 @@ function eraseTerminationMetadata(basegame: Game) {
 
 /**
  * Tests if the color's opponent can win from the specified win condition.
- * @param gamefile - The gamefile.
+ * @param basegame
  * @param friendlyColor - The color of friendlies.
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.

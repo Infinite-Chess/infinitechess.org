@@ -256,7 +256,7 @@ function generateNullMove(gamefile: FullGame) {
  * adding them to the move's Changes list.
  * 
  * This should NOT be used if the move is a special move.
- * @param gamefile - The gamefile
+ * @param boardsim - The board
  * @param piece - The piece that's being moved
  * @param move - The move that's being made
  */

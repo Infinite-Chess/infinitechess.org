@@ -52,7 +52,6 @@ function getVariantGamerules(metadata: MetaData, options?: VariantOptions): Game
 
 /**
  * Sets the pieceMovesets and specialMoves functions of the gamefile.
- * @param gamefile - The gamefile
  * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. 
  * @param [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
 */

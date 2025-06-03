@@ -334,7 +334,6 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 /**
  * Generates the renderable instanced rendering buffer models for the
  * legal move highlights of the given piece's legal moves.
- * @param gamefile
  * @param coords - The coordinates of the piece with the provided legal moves
  * @param legalMoves - The legal moves of which to generate the highlights models for.
  * @param friendlyColor - The color of friendly pieces
@@ -396,7 +395,7 @@ function renderSelectedPiecesLegalMoves() {
  * @param instanceData_NonCapture - The running array of instance data for the NON-CAPTURING legal moves highlights mesh.
  * @param instanceData_Capture - The running array of instance data for the CAPTURING legal moves highlights mesh.
  * @param legalMoves - The piece legal moves to highlight
- * @param gamefile - A reference to the current loaded gamefile
+ * @param boardsim - A reference to the current loaded gamefile's board
  */
 function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[], instanceData_Capture: number[], legalMoves: LegalMoves, boardsim: Board) {
 	// Get an array of the list of individual legal squares the current selected piece can move to
