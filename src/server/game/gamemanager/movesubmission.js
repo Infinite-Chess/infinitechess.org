@@ -82,8 +82,6 @@ function submitMove(ws, game, messageContents) {
 	}
     
 	const move = {
-		startCoords: moveDraft.startCoords,
-		endCoords: moveDraft.endCoords,
 		compact: moveDraft.compact,
 		// clockStamp added below
 	};
