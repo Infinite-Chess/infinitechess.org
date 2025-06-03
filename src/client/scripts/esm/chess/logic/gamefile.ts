@@ -215,7 +215,11 @@ function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMov
 	return gamefile;
 }
 
-function initFullGame(metadata: MetaData, {variantOptions, moves, gameConclusion, editor, clockValues}: {
+/**
+ * Initiates both the base game and board of the FullGame at the same time.
+ * Used on just the client.
+ */
+function initFullGame(metadata: MetaData, { variantOptions, moves, gameConclusion, editor, clockValues }: {
 	variantOptions?: VariantOptions,
 	moves?: ServerGameMovesMessage,
 	gameConclusion?: string,
@@ -236,8 +240,8 @@ export type {
 };
 
 export default {
-	initBoard,
 	initGame,
+	initBoard,
 	loadGameWithBoard,
 	initFullGame,
 };
