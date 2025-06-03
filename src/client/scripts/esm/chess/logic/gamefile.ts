@@ -113,14 +113,14 @@ type FullGame = {
 function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string, clockValues?: ClockValues): Game {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
 	const clockDependantVars: ClockDependant = clock.init(new Set(gameRules.turnOrder), metadata.TimeControl);
-	const game = {
-		gameRules,
+	const game: Game = {
 		metadata,
 		moves: [],
-		whosTurn: gameRules.turnOrder[0],
+		gameRules,
+		whosTurn: gameRules.turnOrder[0]!,
 		gameConclusion,
 		...clockDependantVars,
-	} as Game;
+	};
 	
 	if (clockValues) clock.edit(game, clockValues);
 
@@ -168,10 +168,15 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 
 	const refSnapshot = startSnapshot;
 
-	const editorDependentVars = {
-		editor,
-		startSnapshot: (editor ? undefined : refSnapshot)
-	} as EditorDependent;
+	// Have to assign it this weird way to make typescript happy.
+	// We don't have to cast to EditorDependent this way.
+	const editorDependentVars: EditorDependent = editor ? {
+		editor: true,
+		startSnapshot: undefined
+	} : {
+		editor: false,
+		startSnapshot: refSnapshot
+	};
 
 	return {
 		pieces,
