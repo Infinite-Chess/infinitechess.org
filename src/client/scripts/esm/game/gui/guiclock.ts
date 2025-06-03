@@ -2,7 +2,7 @@
 import moveutil from "../../chess/util/moveutil.js";
 import sound from "../misc/sound.js";
 import clockutil from "../../chess/util/clockutil.js";
-import gamefileutility from "../../chess/util/gamefileutility.js";
+import onlinegame from "../misc/onlinegame/onlinegame.js";
 import { players } from "../../chess/util/typeutil.js";
 import clock from "../../chess/logic/clock.js";
 
@@ -101,22 +101,32 @@ function showClocks() {
  * Stops clock sounds and removes all borders
  */
 function stopClocks(basegame?: Game) {
-	clearTimeout(lowtimeNotif.timeoutID);
-	clearTimeout(countdown.ticking.timeoutID);
-	clearTimeout(countdown.tick.timeoutID);
-	clearTimeout(countdown.drum.timeoutID);
-	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
-	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
-	countdown.drum.timeoutID = undefined;
-	countdown.tick.sound = undefined;
-	countdown.ticking.sound = undefined;
-	countdown.tick.timeoutID = undefined;
-	countdown.ticking.timeoutID = undefined;
+	cancelSoundEffectTimers();
 
 	if (basegame && !basegame.untimed) updateTextContent(basegame.clocks); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
 	for (const clockElements of Object.values(element_timers)) {
 		removeBorder(clockElements.timer);
 	}
+}
+
+function cancelSoundEffectTimers() {
+	// Minute Tick
+	clearTimeout(lowtimeNotif.timeoutID);
+	lowtimeNotif.timeoutID = undefined;
+
+	// 10-second Countdown
+	clearTimeout(countdown.ticking.timeoutID);
+	clearTimeout(countdown.tick.timeoutID);
+	clearTimeout(countdown.drum.timeoutID);
+	countdown.ticking.timeoutID = undefined;
+	countdown.tick.timeoutID = undefined;
+	countdown.drum.timeoutID = undefined;
+
+	// Stop any sounds currently playing
+	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
+	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
+	countdown.tick.sound = undefined;
+	countdown.ticking.sound = undefined;
 }
 
 /**
@@ -128,12 +138,11 @@ function resetClocks() {
 }
 
 function update(basegame: Game) {
-	
 	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
 	const clocks = basegame.clocks!;
-	if (clocks.timeAtTurnStart === undefined) return;
+	
 	// Update border color
-	updateBorderColor(basegame.clocks, element_timers[clocks.colorTicking]!.timer, clocks.currentTime[clocks.colorTicking]!);
+	if (clocks.colorTicking !== undefined) updateBorderColor(basegame.clocks, element_timers[clocks.colorTicking]!.timer, clocks.currentTime[clocks.colorTicking]!);
 	updateTextContent(basegame.clocks);
 }
 
@@ -152,9 +161,13 @@ function edit(basegame: Game) {
 }
 
 function rescheduleSoundEffects(clocks: ClockData) {
+	cancelSoundEffectTimers(); // Clear the previous timeouts
+
 	if (clocks.colorTicking === undefined) return; // Don't reschedule sound effects if no clocks are ticking
-	rescheduleMinuteTick(clocks); // Lowtime notif at 1 minute left
-	rescheduleCountdown(clocks); // Schedule 10s drum countdown
+	if (onlinegame.areInOnlineGame() && clocks.colorTicking! !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
+
+	scheduleMinuteTick(clocks); // Lowtime notif at 1 minute left
+	scheduleCountdown(clocks); // Schedule 10s drum countdown
 }
 
 function removeBorder(element: HTMLElement) {
@@ -209,9 +222,8 @@ function updateTextContent(clocks: ClockData) {
 /** 
  * Reschedules the timer to play the ticking sound effect at 1 minute remaining.
  */
-function rescheduleMinuteTick(clocks: ClockData) {
+function scheduleMinuteTick(clocks: ClockData) {
 	if (clocks.startTime.minutes < lowtimeNotif.clockMinsRequiredToUse) return; // 1 minute lowtime notif is not used in bullet games.
-	clearTimeout(lowtimeNotif.timeoutID);
 	if (lowtimeNotif.playersNotified.has(clocks.colorTicking!)) return;
 	const timeRemainAtTurnStart = clocks.timeRemainAtTurnStart!;
 	const timeRemain = timeRemainAtTurnStart - lowtimeNotif.timeToStartFromEnd; // Time remaining until sound it should start playing
@@ -233,10 +245,10 @@ function set(basegame: Game) {
 
 // The 10s drum countdown...
 /** Reschedules the timer to play the 10-second countdown effect. */
-function rescheduleCountdown(clocks: ClockData) {
-	rescheduleDrum(clocks);
-	rescheduleTicking(clocks);
-	rescheduleTick(clocks);
+function scheduleCountdown(clocks: ClockData) {
+	scheduleDrum(clocks);
+	scheduleTicking(clocks);
+	scheduleTick(clocks);
 }
 
 function push(clocks: ClockData) {
@@ -250,8 +262,7 @@ function push(clocks: ClockData) {
 	}
 }
 
-function rescheduleDrum(clocks: ClockData) {
-	clearTimeout(countdown.drum.timeoutID);
+function scheduleDrum(clocks: ClockData) {
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
 	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
@@ -267,9 +278,7 @@ function rescheduleDrum(clocks: ClockData) {
 	countdown.drum.timeoutID = setTimeout(() => playDrumAndQueueNext(clocks, secsRemaining), timeNextDrum);
 }
 
-function rescheduleTicking(clocks: ClockData) {
-	clearTimeout(countdown.ticking.timeoutID);
-	countdown.ticking.sound?.fadeOut(countdown.ticking.fadeOutDuration);
+function scheduleTicking(clocks: ClockData) {
 	if (clocks.timeAtTurnStart! < 10000) return;
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
@@ -283,9 +292,7 @@ function rescheduleTicking(clocks: ClockData) {
 }
 
 // Tick sound effect right BEFORE 10 seconds is hit
-function rescheduleTick(clocks: ClockData) {
-	clearTimeout(countdown.tick.timeoutID);
-	countdown.tick.sound?.fadeOut(countdown.tick.fadeOutDuration);
+function scheduleTick(clocks: ClockData) {
 	// We have to use this instead of reading the current clock values
 	// because those aren't updated every frame when the page isn't focused!!
 	const playerTrueTimeRemaining = clock.getColorTickingTrueTimeRemaining(clocks)!;
