@@ -140,7 +140,7 @@ function resetClocks() {
 function update(basegame: Game) {
 	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
 	const clocks = basegame.clocks!;
-	
+
 	// Update border color
 	if (clocks.colorTicking !== undefined) updateBorderColor(basegame.clocks, element_timers[clocks.colorTicking]!.timer, clocks.currentTime[clocks.colorTicking]!);
 	updateTextContent(basegame.clocks);

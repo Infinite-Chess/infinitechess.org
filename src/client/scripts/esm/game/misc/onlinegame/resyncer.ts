@@ -29,6 +29,7 @@ import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 import animation from "../../rendering/animation.js";
+import guiclock from "../../gui/guiclock.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -61,6 +62,7 @@ function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, mess
 	if (message.clockValues) {
 		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
 		clock.edit(gamefile.basegame, message.clockValues);
+		guiclock.edit(gamefile.basegame);
 	}
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
