@@ -13,7 +13,7 @@ import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 // @ts-ignore
-import board from '../rendering/board.js';
+import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
@@ -141,7 +141,7 @@ function updateElement_Coords() {
 
 	const boardPos = boardpos.getBoardPos();
 	const mouseTile = mouse.getTileMouseOver_Integer();
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = boardtiles.gsquareCenter();
 
 	// Tile camera is over
 	// element_CoordsX.textContent = Math.floor(boardPos[0] + squareCenter)
@@ -239,14 +239,14 @@ function callback_Back() {
 }
 
 function callback_Expand() {
-	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
+	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
 	// Add the square annotation highlights, too.
 	allCoords.push(...snapping.getAnnoteSnapPoints(false));
 	area.initTelFromCoordsList(allCoords);
 }
 
 function recenter() {
-	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!);
+	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
@@ -300,8 +300,8 @@ function isItOkayToRewindOrForward() {
  */
 function update_MoveButtons() {
 	const gamefile = gameslot.getGamefile()!;
-	const decrementingLegal = moveutil.isDecrementingLegal(gamefile);
-	const incrementingLegal = moveutil.isIncrementingLegal(gamefile);
+	const decrementingLegal = moveutil.isDecrementingLegal(gamefile.boardsim);
+	const incrementingLegal = moveutil.isIncrementingLegal(gamefile.boardsim);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -453,7 +453,7 @@ function testIfForwardMove() {
 function rewindMove() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
-	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
+	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
@@ -466,7 +466,7 @@ function rewindMove() {
 function forwardMove() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
-	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
+	if (!moveutil.isIncrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
 	movesequence.navigateMove(gamefile, mesh, true);
 }

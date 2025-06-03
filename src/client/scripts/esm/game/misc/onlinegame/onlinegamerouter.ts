@@ -7,8 +7,7 @@ import type { MetaData } from "../../../chess/util/metadata.js";
 import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
-// @ts-ignore
-import type gamefile from "../../chess/logic/gamefile.js";
+import type { Game } from "../../../chess/logic/gamefile.js";
 
 // @ts-ignore
 import guiplay from "../../gui/guiplay.js";
@@ -17,7 +16,7 @@ import websocket from "../../websocket.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
 // @ts-ignore
-import board from "../../rendering/board.js";
+import board from "../../rendering/boardtiles.js";
 import disconnect from "./disconnect.js";
 import afk from "./afk.js";
 import serverrestart from "./serverrestart.js";
@@ -74,7 +73,7 @@ interface JoinGameMessage extends GameUpdateMessage {
 
 /** The message contents expected when we receive a server websocket 'gameupdate' message.  */
 interface GameUpdateMessage {
-	gameConclusion: string | false,
+	gameConclusion?: string,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMovesMessage,
 	participantState: ParticipantState
@@ -92,7 +91,7 @@ type PlayerRatingChangeInfo = {
 interface OpponentsMoveMessage {
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
 	move: ServerGameMoveMessage,
-	gameConclusion: string | false,
+	gameConclusion?: string,
 	/** Our opponent's move number, 1-based. */
 	moveNumber: number,
 	/** If the game is timed, this will be the current clock values. */
@@ -162,7 +161,7 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 			movesendreceive.handleOpponentsMove(gamefile, mesh, data.value);
 			break;
 		case "clock": 
-			handleUpdatedClock(gamefile, data.value);
+			handleUpdatedClock(gamefile.basegame, data.value);
 			break;
 		case "gameupdate":
 			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
@@ -174,10 +173,10 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 			handleUnsubbing();
 			break;
 		case "login":
-			handleLogin(gamefile);
+			handleLogin(gamefile.basegame);
 			break;
 		case "nogame": // Game doesn't exist - SHOULD NEVER HAPPEN
-			handleNoGame(gamefile);
+			handleNoGame(gamefile.basegame);
 			break;
 		case "leavegame":
 			handleLeaveGame();
@@ -294,11 +293,11 @@ function handleLoggedGameInfo(message: {
 /** 
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(gamefile: gamefile, clockValues: ClockValues) {
+function handleUpdatedClock(basegame: Game, clockValues: ClockValues) {
 	// Adjust the timer whos turn it is depending on ping.
-	if (clockValues) clockValues = onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(gamefile, clockValues); // Edit the clocks
-	guiclock.edit(gamefile);
+	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
+	clock.edit(basegame, clockValues); // Edit the clocks
+	guiclock.edit(basegame);
 }
 
 /**
@@ -318,11 +317,11 @@ function handleUnsubbing() {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(gamefile: gamefile) {
+function handleLogin(basegame: Game) {
 	statustext.showStatus(translations['onlinegame'].not_logged_in, true, 100);
 	websocket.deleteSub('game');
-	clock.endGame(gamefile);
-	guiclock.stopClocks(gamefile);
+	clock.endGame(basegame);
+	guiclock.stopClocks(basegame);
 	selection.unselectPiece();
 	board.darkenColor();
 }
@@ -337,10 +336,10 @@ function handleLogin(gamefile: gamefile) {
  * * Your page tries to resync to the game after it's long over.
  * * The server restarts mid-game.
  */
-function handleNoGame(gamefile: gamefile) {
+function handleNoGame(basegame: Game) {
 	statustext.showStatus(translations['onlinegame'].game_no_longer_exists, false, 1.5);
 	websocket.deleteSub('game');
-	gamefile.gameConclusion = 'aborted';
+	basegame.gameConclusion = 'aborted';
 	gameslot.concludeGame();
 }
 

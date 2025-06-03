@@ -34,7 +34,7 @@ import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
-import board from '../rendering/board.js';
+import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import webgl from '../rendering/webgl.js';
 // @ts-ignore
@@ -62,8 +62,8 @@ function init() {
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
-	board.updateTheme();
-	board.recalcVariables(); // Variables dependant on the board position & scale
+	boardtiles.updateTheme();
+	boardtiles.recalcVariables(); // Variables dependant on the board position & scale
 
 	gui.prepareForOpen();
 
@@ -88,12 +88,12 @@ function update() {
 
 	perspective.update(); // Update perspective camera according to mouse movement
 
-	const timeWinner = clock.update(gamefile);
+	const timeWinner = clock.update(gamefile.basegame);
 	if (timeWinner && !onlinegame.areInOnlineGame()) { // undefined if no clock has ran out
-		gamefile.gameConclusion = `${timeWinner} time`;
+		gamefile.basegame.gameConclusion = `${timeWinner} time`;
 		gameslot.concludeGame();
 	}
-	guiclock.update(gamefile);
+	guiclock.update(gamefile.basegame);
 
 	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	boardpos.update(); // Updates the board's position and scale according to its velocity
@@ -103,7 +103,7 @@ function update() {
 	transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER:transition.update() since that updates the board position
-	board.recalcVariables();
+	boardtiles.recalcVariables();
 
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
@@ -144,7 +144,7 @@ function update() {
 function render() {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
-	board.render(); // Renders the infinite checkerboard
+	boardtiles.render(); // Renders the infinite checkerboard
 
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
@@ -163,7 +163,7 @@ function render() {
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		selectedpiecehighlightline.render();
-		highlights.render(gamefile);
+		highlights.render(gamefile.boardsim);
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
@@ -171,7 +171,7 @@ function render() {
     
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile, mesh);
+	pieces.renderPiecesInGame(gamefile.boardsim, mesh);
 	
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {

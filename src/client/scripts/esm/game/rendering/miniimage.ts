@@ -31,7 +31,7 @@ import perspective from './perspective.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 
 
 // Variables --------------------------------------------------------------
@@ -96,13 +96,13 @@ function toggle(): void {
 // eslint-disable-next-line no-unused-vars
 function forEachRenderablePiece(callback: (coords: Coords, type: number) => void) {
 	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.pieces;
+	const pieces = gamefile.boardsim.pieces;
 
 	// Helper to test if a static piece is being animated
 	const isAnimatedStatic = (coords: Coords) => animation.animations.some(a => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!));
 
 	// Static pieces
-	gamefile.existingTypes.forEach((type: number) => {
+	gamefile.boardsim.existingTypes.forEach((type: number) => {
 		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
 		const range = pieces.typeRanges.get(type)!;
@@ -118,7 +118,7 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 	// Animated pieces
 	animation.animations.forEach(a => {
 		// Animate the main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels();
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
 		const current = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
 		callback(current, a.type);
 
@@ -134,14 +134,13 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
-	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.pieces;
+	const boardsim = gameslot.getGamefile()!.boardsim;
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
 	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
 
 	// Prepare empty arrays by type
-	gamefile.existingTypes.forEach((type: number) => {
+	boardsim.existingTypes.forEach((type: number) => {
 		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
 		instanceData[type] = [];
@@ -208,7 +207,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	/** Running list of all pieces below annote points. */
 	const annotePieces: Piece[] = [];
 
-	const pieces = gameslot.getGamefile()!.pieces;
+	const pieces = gameslot.getGamefile()!.boardsim.pieces;
 	// Only process the pieces on top of highlights, or ray starts or intersections
 	const annotePoints = snapping.getAnnoteSnapPoints(true);
 	// For each one, push it if there is a piece beneath it
@@ -237,7 +236,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 function render(): void {
 	if (!boardpos.areZoomedOut()) return;
 
-	const gamefile = gameslot.getGamefile()!;
+	const boardsim = gameslot.getGamefile()!.boardsim;
 	const inverted = perspective.getIsViewingBlackPerspective();
 
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
@@ -264,8 +263,8 @@ function render(): void {
 	}
 
 	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
-	const sortedNeutrals = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
-	const sortedColors = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedNeutrals = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedColors = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
 
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		for (const neut of sortedNeutrals) {

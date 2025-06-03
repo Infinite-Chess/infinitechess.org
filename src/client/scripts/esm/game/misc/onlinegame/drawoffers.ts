@@ -53,7 +53,7 @@ let isAcceptingDraw: boolean = false;
 function isOfferingDrawLegal(): boolean {
 	const gamefile = gameslot.getGamefile()!;
 	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
-	if (!moveutil.isGameResignable(gamefile)) return false; // Not atleast 2+ moves
+	if (!moveutil.isGameResignable(gamefile.basegame)) return false; // Not atleast 2+ moves
 	if (onlinegame.hasServerConcludedGame()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND
@@ -67,7 +67,7 @@ function isTooSoonToOfferDraw(): boolean {
 	const gamefile = gameslot.getGamefile()!;
 	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
-	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
+	const movesSinceLastOffer = gamefile.basegame.moves.length - plyOfLastOfferedDraw;
 	if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
 	return false;
 }
@@ -99,7 +99,7 @@ function onOpponentDeclinedOffer() {
 function extendOffer() {
 	websocket.sendmessage('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
-	plyOfLastOfferedDraw = gamefile.moves.length;
+	plyOfLastOfferedDraw = gamefile.basegame.moves.length;
 	statustext.showStatus(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 	guipause.updateDrawOfferButton();
 }

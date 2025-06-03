@@ -4,7 +4,7 @@ import perspective from './perspective.js';
 import area from './area.js';
 import camera from './camera.js';
 import space from '../misc/space.js';
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 import frametracker from './frametracker.js';
 import boarddrag from './boarddrag.js';
 import boardpos from './boardpos.js';
@@ -256,7 +256,7 @@ function telToPrevTel() {
 		const thisArea = {
 			coords: previousTel.endCoords,
 			scale: previousTel.endScale,
-			boundingBox: board.getBoundingBoxOfBoard(previousTel.endCoords, previousTel.endScale, camera.getScreenBoundingBox())
+			boundingBox: boardtiles.getBoundingBoxOfBoard(previousTel.endCoords, previousTel.endScale, camera.getScreenBoundingBox())
 		};
 		area.initTelFromArea(thisArea, true);
 	}

@@ -198,7 +198,7 @@ function hidePlayerNames() {
 
 function toggle() {
 	if (isOpen) close();
-	else open(gameslot.getGamefile()!.metadata, showButtons);
+	else open(gameslot.getGamefile()!.basegame.metadata, showButtons);
 	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
 	frametracker.onVisualChange();
 }
@@ -241,13 +241,13 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
  * Call this after flipping the gamefile's `whosTurn` property.
  */
 function updateWhosTurn() {
-	const gamefile = gameslot.getGamefile()!;
+	const { basegame } = gameslot.getGamefile()!;
 
 	// In the scenario we forward the game to front after the game has adjudicated,
 	// don't modify the game over text saying who won!
-	if (gamefileutility.isGameOver(gamefile)) return gameEnd(gamefile.gameConclusion);
+	if (gamefileutility.isGameOver(basegame)) return gameEnd(basegame.gameConclusion);
 
-	const color = gamefile.whosTurn;
+	const color = basegame.whosTurn;
 
 	if (color !== players.WHITE && color !== players.BLACK) throw Error(`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`);
 
@@ -261,14 +261,14 @@ function updateWhosTurn() {
 }
 
 /** Updates the whosTurn text to say who won! */
-function gameEnd(conclusion: string | false) {
+function gameEnd(conclusion?: string) {
 	// '1 checkmate' / '2 resignation' / '0 stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
-	if (conclusion === false) throw Error("Should not call gameEnd when game isn't over.");
+	if (conclusion === undefined) throw Error("Should not call gameEnd when game isn't over.");
 
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	const resultTranslations = translations['results'];
 
-	const gamefile = gameslot.getGamefile()!;
+	const { basegame } = gameslot.getGamefile()!;
 
 	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole()) {
 
@@ -283,7 +283,7 @@ function gameEnd(conclusion: string | false) {
                                                                             : resultTranslations.you_generic;
 		else if (victor === players.NEUTRAL) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                     : condition === 'repetition' ? resultTranslations.draw_repetition
-                                                                    : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(gamefile.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
+                                                                    : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
                                                                     : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
                                                                     : condition === 'agreement' ? resultTranslations.draw_agreement
                                                                     : resultTranslations.draw_generic;
@@ -324,7 +324,7 @@ function gameEnd(conclusion: string | false) {
                                                                     : `${resultTranslations.bug_generic} Ending: koth`;
 		else if (condition === 'stalemate') element_whosturn.textContent = resultTranslations.draw_stalemate;
 		else if (condition === 'repetition') element_whosturn.textContent = resultTranslations.draw_repetition;
-		else if (condition === 'moverule') element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${(gamefile.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`;
+		else if (condition === 'moverule') element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`;
 		else if (condition === 'insuffmat') element_whosturn.textContent = resultTranslations.draw_insuffmat;
 		else if (condition === 'agreement') element_whosturn.textContent = resultTranslations.draw_agreement;
 		else if (condition === 'aborted') element_whosturn.textContent = resultTranslations.aborted;
@@ -373,9 +373,9 @@ function updateAlignmentUsernames() {
  */
 function addRatingChangeToExistingUsernameContainers(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>) {
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
-	const gamefile = gameslot.getGamefile()!;
-	gamefile.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.WHITE]!.change);
-	gamefile.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.BLACK]!.change);
+	const { basegame } = gameslot.getGamefile()!;
+	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.WHITE]!.change);
+	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.BLACK]!.change);
 
 	// Update username containers
 	usernamecontainer.createEloChangeItem(usernamecontainer_white!, ratingChanges[players.WHITE]!.newRating, ratingChanges[players.WHITE]!.change);

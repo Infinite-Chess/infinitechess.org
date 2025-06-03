@@ -56,13 +56,13 @@ let ourColor: Player | undefined;
 let playerRatings: PlayerGroup<Rating> | undefined;
 
 /**
- * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
+ * Different from gamefile.basegame.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
  * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
  */
 let serverHasConcludedGame: boolean | undefined;
 
 /**
- * Different from gamefile.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
+ * Different from gamefile.basegame.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
  * and NOT if the SERVER tells us that the game is concluded.
  */
 let playerHasPressedAbortOrResignButton: boolean | undefined;
@@ -124,7 +124,7 @@ function areWeColorInOnlineGame(color: Player): boolean {
 
 function isItOurTurn(): boolean {
 	if (!inOnlineGame) throw Error("Cannot get isItOurTurn of online game when we're not in an online game.");
-	return gameslot.getGamefile()!.whosTurn === ourColor;
+	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
 }
 
 /** Whether we have pressed the Abort/Resign game button this game. NOT when it says main menu. */
@@ -263,7 +263,7 @@ function closeEventListeners() {
 function confirmNavigationAwayFromGame(event: MouseEvent) {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) return;
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
 	if (userConfirmed) return; // Follow link like normal. Server then starts a 20-second auto-resign timer for disconnecting on purpose.
@@ -304,7 +304,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
 
 function reportOpponentsMove(reason: string) {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
-	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
+	const opponentsMoveNumber = gameslot.getGamefile()!.basegame.moves.length + 1;
 
 	const message = {
 		reason,
@@ -323,7 +323,7 @@ function onAbortOrResignButtonPress() {
 	playerHasPressedAbortOrResignButton = true;
 
 	const gamefile = gameslot.getGamefile()!;
-	if (moveutil.isGameResignable(gamefile)) websocket.sendmessage('game','resign');
+	if (moveutil.isGameResignable(gamefile.basegame)) websocket.sendmessage('game','resign');
 	else 									 websocket.sendmessage('game','abort');
 }
 

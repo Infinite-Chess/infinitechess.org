@@ -95,7 +95,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }) {
 }
 
 function updateAFK() {
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return; // Game is over
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) return; // Game is over
 	if (!listener_overlay.atleastOneInput() && !listener_document.atleastOneInput()) return; // No input this frame, don't reset the timer to tell the server we are afk.
 	// There has been mouse movement, restart the afk auto-resign timer.
 	if (isOurAFKAutoResignTimerRunning()) tellServerWeBackFromAFK(); // Also tell the server we are back, IF it had started an auto-resign timer!
@@ -108,13 +108,13 @@ function updateAFK() {
  */
 function rescheduleAlertServerWeAFK() {
 	clearTimeout(timeoutID);
-	const gamefile = gameslot.getGamefile()!;
-	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(gamefile) || onlinegame.getIsPrivate() && gamefile.untimed) return;
+	const { basegame } = gameslot.getGamefile()!;
+	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(basegame) || onlinegame.getIsPrivate() && basegame.untimed) return;
 	// Timed resignable games cannot be auto-resigned from going afk (to make tournament games more fair)
-	if (!gamefile.untimed && moveutil.isGameResignable(gamefile)) return;
+	if (!basegame.untimed && moveutil.isGameResignable(basegame)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
-	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(gamefile) ? timeUntilAFKSecs_Abortable
-										: gamefile.untimed ? timeUntilAFKSecs_Untimed
+	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(basegame) ? timeUntilAFKSecs_Abortable
+										: basegame.untimed ? timeUntilAFKSecs_Untimed
 										: timeUntilAFKSecs;
 	timeoutID = setTimeout(tellServerWeAFK, timeUntilAlertServerWeAFKSecs * 1000);
 }
@@ -149,7 +149,7 @@ function tellServerWeBackFromAFK() {
 }
 
 function displayWeAFK(secsRemaining: number) {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
 	statustext.showStatusForDuration(`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
@@ -193,7 +193,7 @@ function stopOpponentAFKCountdown() {
 }
 
 function displayOpponentAFK(secsRemaining: number) {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame) ? translations['onlinegame'].auto_resigning_in : translations['onlinegame'].auto_aborting_in;
 	statustext.showStatusForDuration(`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`, 1000);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop

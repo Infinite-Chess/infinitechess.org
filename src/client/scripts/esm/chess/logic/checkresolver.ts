@@ -7,8 +7,6 @@
  * or pinned pieces opening a discovered.
  */
 
-/* eslint-disable max-depth */
-
 
 import type { Piece } from "../util/boardutil.js";
 import type { CoordsSpecial, MoveDraft, path } from "./movepiece.js";
@@ -16,8 +14,7 @@ import type { Coords } from "./movesets.js";
 import type { BoundingBox, Vec2Key } from "../../util/math.js";
 import type { Player } from "../util/typeutil.js";
 import type { LegalMoves } from './legalmoves.js';
-// @ts-ignore
-import type { gamefile } from "../logic/gamefile.js";
+import type { FullGame } from "./gamefile.js";
 
 
 import gamefileutility from "../util/gamefileutility.js";
@@ -54,10 +51,10 @@ import specialdetect from "./specialdetect.js";
  * @param pieceSelected - The piece of which the legalMoves were calculated for
  * @param color - The color of the player owning the piece
  */
-function removeCheckInvalidMoves(gamefile: gamefile, pieceSelected: Piece, moves: LegalMoves): void {
+function removeCheckInvalidMoves(gamefile: FullGame, pieceSelected: Piece, moves: LegalMoves): void {
 	const color = typeutil.getColorFromType(pieceSelected.type);
 	if (color === players.NEUTRAL) return; // Neutral pieces can't be in check
-	if (!gamefileutility.isOpponentUsingWinCondition(gamefile, color, 'checkmate')) return;
+	if (!gamefileutility.isOpponentUsingWinCondition(gamefile.basegame, color, 'checkmate')) return;
 
 	// There's a couple type of moves that put you in check:
 
@@ -83,7 +80,7 @@ function removeCheckInvalidMoves(gamefile: gamefile, pieceSelected: Piece, moves
  * @param piece - The piece of which the legal individual moves are for.
  * @param color - The color of the player the piece belongs to.
  */
-function removeCheckInvalidMoves_Individual(gamefile: gamefile, individualMoves: CoordsSpecial[], piece: Piece, color: Player): void { // [ [x,y], [x,y] ]
+function removeCheckInvalidMoves_Individual(gamefile: FullGame, individualMoves: CoordsSpecial[], piece: Piece, color: Player): void { // [ [x,y], [x,y] ]
 	// Simulate the move, then check the game state for check
 	for (let i = individualMoves.length - 1; i >= 0; i--) { // Iterate backwards so we don't run into issues as we delete indices while iterating
 		const thisMove: CoordsSpecial = individualMoves[i]!; // [x,y]
@@ -103,11 +100,11 @@ function removeCheckInvalidMoves_Individual(gamefile: gamefile, individualMoves:
  * @param piece - The piece of which the running legal moves are for.
  * @param color - The color of the player the piece belongs to.
  */
-function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, piece: Piece, color: Player): void {
+function removeCheckInvalidMoves_Sliding(gamefile: FullGame, moves: LegalMoves, piece: Piece, color: Player): void {
 	if (!moves.sliding) return; // No sliding moves to remove
 
 	/** List of coordinates of all our royal jumping pieces */
-	const royalCoords: Coords[] = boardutil.getJumpingRoyalCoordsOfColor(gamefile.pieces, color);
+	const royalCoords: Coords[] = boardutil.getJumpingRoyalCoordsOfColor(gamefile.boardsim.pieces, color);
 	if (royalCoords.length === 0) return; // No royals, no open discoveries, don't remove any sliding moves
 
 	// There are 3 ways a sliding move can put you in check...
@@ -121,7 +118,7 @@ function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, 
 	}
 
 	// 1. By not blocking, or capturing an already-existing check.
-	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile);
+	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile.boardsim);
 	if (addressExistingChecks(gamefile, moves, royalsInCheck, piece.coords, color)) return;
 	/**
 	 * 2. By opening a discovered attack on one of our royals.
@@ -142,25 +139,26 @@ function removeCheckInvalidMoves_Sliding(gamefile: gamefile, moves: LegalMoves, 
  * @param color - The color of friendlies
  * @returns true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
-function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royalCoords: Coords[], selectedPieceCoords: Coords, color: Player): boolean {
+function addressExistingChecks(gamefile: FullGame, legalMoves: LegalMoves, royalCoords: Coords[], selectedPieceCoords: Coords, color: Player): boolean {
+	const { boardsim } = gamefile;
 	if (royalCoords.length === 0) return false; // Exit if nothing in check
-	if (!checkdetection.isPlayerInCheck(gamefile, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
+	if (!checkdetection.isPlayerInCheck(boardsim, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
-	const attackerCount = gamefile.state.local.attackers.length;
+	const attackerCount = boardsim.state.local.attackers.length;
 	if (attackerCount === 0) throw new Error("We are in check, but there is no specified attacker!");
 
 	// To know how to address the check, we have to know where the check is coming from.
 	// For now, add legal blocks for the first attacker, not the others. Since legal blocks
 	// are added as extra individual moves, they will be simulated afterward. And if
 	// the inCheck property comes back as false, then it will block ALL attackers!
-	const attacker = gamefile.state.local.attackers[0]; // { coords, slidingCheck }
+	const attacker = boardsim.state.local.attackers[0]!; // { coords, slidingCheck }
 
 	// Does this piece have a sliding moveset that will either...
 
 	// 1. Capture the checking piece
 
 	let capturingMove: Coords | undefined; // We will ONLY add this move if all sliding moves are deleted, otherwise it may be a duplicate.
-	const capturingImpossible = attackerCount > 1 && !gamefile.colinearsPresent; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
+	const capturingImpossible = attackerCount > 1 && !boardsim.colinearsPresent; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
 	// Check if the piece has the ability to capture
 	if (!capturingImpossible && legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, attacker.coords, color, { ignoreIndividualMoves: true })) {
 		capturingMove = attacker.coords;
@@ -215,8 +213,8 @@ function addressExistingChecks(gamefile: gamefile, legalMoves: LegalMoves, royal
  * @param pieceSelected - The piece with the provided running legal moves
  * @param color - The color of the player the piece belongs to.
  */
-function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMoves, pieceSelected: Piece, color: Player): void {
-	if (checkdetection.isPlayerInCheck(gamefile, color)) throw Error('We should not be in check when calling removeSlidingMovesThatOpenDiscovered!'); // Safety net
+function removeSlidingMovesThatOpenDiscovered(gamefile: FullGame, moves: LegalMoves, pieceSelected: Piece, color: Player): void {
+	if (checkdetection.isPlayerInCheck(gamefile.boardsim, color)) throw Error('We should not be in check when calling removeSlidingMovesThatOpenDiscovered!'); // Safety net
 	if (!moves.sliding) return; // No sliding moves to remove
 
 	/**
@@ -280,7 +278,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
 
 		if (Object.keys(moves.sliding).length === 0) moves.sliding = {}; // No sliding moves left
 		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
-		else if (gamefile.colinearsPresent) moves.brute = true;
+		else if (gamefile.boardsim.colinearsPresent) moves.brute = true;
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
@@ -302,7 +300,7 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: gamefile, moves: LegalMo
  * @param coords - The coordinates of the piece with the provided legal moves: `[x,y]`
  * @param color - The color of friendlies
  */
-function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coords, moves: LegalMoves, coords: Coords, color: Player): void { // coords is of the selected piece
+function appendBlockingMoves(gamefile: FullGame, square1: Coords, square2: Coords, moves: LegalMoves, coords: Coords, color: Player): void { // coords is of the selected piece
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. */
 	const box: BoundingBox = {
 		left: Math.min(square1[0],square2[0]),
@@ -319,7 +317,7 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 		const blockPoint = math.calcIntersectionPointOfLines(...line1GeneralForm, ...line2GeneralForm); // The intersection point of the 2 lines.
 
 		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
-		if (blockPoint === undefined && gamefile.colinearsPresent && math.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) {
+		if (blockPoint === undefined && gamefile.boardsim.colinearsPresent && math.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm)) {
 			// The piece lies on the same line from the attacker to the royal!
 			// Flag this slide direction to brute force check each move for legality.
 			moves.brute = true;
@@ -340,7 +338,7 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
 		if (coordutil.areCoordsEqual(blockPoint, square1)) continue; // Can't move onto our piece that's in check..
 		if (coordutil.areCoordsEqual(blockPoint, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
 		// Don't add the move if it's already in the list. This can happen with colinear lines, since different slide direction can have the same exact vector, and thus blocking point.
-		if (gamefile.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
+		if (gamefile.boardsim.colinearsPresent && moves.individual.some((move: CoordsSpecial) => move[0] === blockPoint[0] && move[1] === blockPoint[1])) continue;
 
 		// Can our piece legally move there?
 		if (legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPoint, color, { ignoreIndividualMoves: true })) moves.individual.push(blockPoint); // Can block!
@@ -356,7 +354,7 @@ function appendBlockingMoves(gamefile: gamefile, square1: Coords, square2: Coord
  * @param selectedPieceCoords 
  * @param color - The color of friendlies
  */
-function appendPathBlockingMoves(gamefile: gamefile, path: path, legalMoves: LegalMoves, selectedPieceCoords: Coords, color: Player): void {
+function appendPathBlockingMoves(gamefile: FullGame, path: path, legalMoves: LegalMoves, selectedPieceCoords: Coords, color: Player): void {
 
 	/**
 	 * How do we tell if our selected piece can block an individual move with a path (Rose piece)?
@@ -382,7 +380,7 @@ function appendPathBlockingMoves(gamefile: gamefile, path: path, legalMoves: Leg
  * @param color - The color of the player the piece belongs to.
  * @returns Whether the move would result in the player owning the piece being in check.
  */
-function isMoveCheckInvalid(gamefile: gamefile, piece: Piece, destCoords: CoordsSpecial, color: Player) { // pieceSelected: { type, index, coords }
+function isMoveCheckInvalid(gamefile: FullGame, piece: Piece, destCoords: CoordsSpecial, color: Player) { // pieceSelected: { type, index, coords }
 	const moveDraft: MoveDraft = { startCoords: jsutil.deepCopyObject(piece.coords), endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords) };
 	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
 	return getSimulatedCheck(gamefile, moveDraft, color).check;
@@ -392,7 +390,7 @@ function isMoveCheckInvalid(gamefile: gamefile, piece: Piece, destCoords: Coords
  * Simulates a move to get the check
  * @returns false if the move does not result in check, otherwise a list of the coords of all the royals in check.
  */
-function getSimulatedCheck(gamefile: gamefile, moveDraft: MoveDraft, colorToTestInCheck: Player): ReturnType<typeof checkdetection.detectCheck> {
+function getSimulatedCheck(gamefile: FullGame, moveDraft: MoveDraft, colorToTestInCheck: Player): ReturnType<typeof checkdetection.detectCheck> {
 	return movepiece.simulateMoveWrapper(
 		gamefile,
 		moveDraft,

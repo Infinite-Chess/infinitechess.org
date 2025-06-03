@@ -15,7 +15,8 @@ import { rawTypes as r, ext as e, players } from '../util/typeutil.js';
 
 /** 
  * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('../variants/gamerules.js').GameRules} GameRules
+ * @typedef {import('./gamefile.js').Board} Board
  */
 
 "use strict";
@@ -153,28 +154,29 @@ function ordered_tuple_descending(tuple) {
 
 /**
  * Detects if the game is drawn for insufficient material
- * @param {gamefile} gamefile - The gamefile
- * @returns {string | false} '0 insuffmat', if the game is over by the insufficient material, otherwise *false*.
+ * @param {GameRules} gameRules
+ * @param {Board} boardsim
+ * @returns {string | undefined} '0 insuffmat', if the game is over by the insufficient material, otherwise *undefined*.
  */
-function detectInsufficientMaterial(gamefile) {
+function detectInsufficientMaterial(gameRules, boardsim) {
 	// Only make the draw check if the win condition is checkmate for both players
-	if (!gamerules.doesColorHaveWinCondition(gamefile.gameRules, players.WHITE, 'checkmate') || !gamerules.doesColorHaveWinCondition(gamefile.gameRules, players.BLACK, 'checkmate')) return false;
-	if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, players.WHITE) !== 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, players.BLACK) !== 1) return false;
+	if (!gamerules.doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate') || !gamerules.doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')) return undefined;
+	if (gamerules.getWinConditionCountOfColor(gameRules, players.WHITE) !== 1 || gamerules.getWinConditionCountOfColor(gameRules, players.BLACK) !== 1) return undefined;
 
 	// Only make the draw check if the last move was a capture or promotion or if there is no last move
-	const lastMove = moveutil.getLastMove(gamefile.moves);
-	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion !== undefined)) return false;
+	const lastMove = moveutil.getLastMove(boardsim.moves);
+	if (lastMove && ! (lastMove.flags.capture || lastMove.promotion !== undefined)) return undefined;
 
 	// Only make the draw check if there are less than 11 non-obstacle or gargoyle pieces
-	if (boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(gamefile.pieces, r.VOID + e.N) >= 11) return false;
+	if (boardutil.getPieceCountOfGame(boardsim.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) >= 11) return undefined;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario = {};
 	// bishops are treated specially and separated by parity
 	const bishopsW_count = [0, 0];
 	const bishopsB_count = [0, 0];
-	for (const idx of gamefile.pieces.coords.values()) {
-		const piece = boardutil.getPieceFromIdx(gamefile.pieces, idx);
+	for (const idx of boardsim.pieces.coords.values()) {
+		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx);
 		const [raw, color] = typeutil.splitType(piece.type);
 		if (raw === r.OBSTACLE) continue;
 		
@@ -194,11 +196,11 @@ function detectInsufficientMaterial(gamefile) {
 	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
 	// This is fully enough for the checkmate practice mode, for now
 	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
-	if (gamefile.gameRules.promotionRanks) {
-		const promotionListWhite = gamefile.gameRules.promotionsAllowed[players.WHITE];
-		const promotionListBlack = gamefile.gameRules.promotionsAllowed[players.BLACK];
-		if ((r.PAWN + e.W) in scenario && promotionListWhite.length !== 0) return false;
-		if ((r.PAWN + e.B) in scenario && promotionListBlack.length !== 0) return false;
+	if (gameRules.promotionRanks) {
+		const promotionListWhite = gameRules.promotionsAllowed[players.WHITE];
+		const promotionListBlack = gameRules.promotionsAllowed[players.BLACK];
+		if ((r.PAWN + e.W) in scenario && promotionListWhite.length !== 0) return undefined;
+		if ((r.PAWN + e.B) in scenario && promotionListBlack.length !== 0) return undefined;
 	}
 
 	// Create scenario object with inverted players
@@ -211,7 +213,7 @@ function detectInsufficientMaterial(gamefile) {
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
 	if (isScenarioInsuffMat(scenario)) return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
 	else if (isScenarioInsuffMat(invertedScenario)) return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
-	else return false;
+	else return undefined;
 }
 
 export default {

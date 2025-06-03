@@ -87,7 +87,7 @@ function getRelevantAnnotes(): Annotes {
 	const enabled = preferences.getLingeringAnnotationsMode();
 	if (enabled) return annotes_linger;
 	else {
-		const index = gameslot.getGamefile()!.state.local.moveIndex + 1; // Change -1 based to 0 based index
+		const index = gameslot.getGamefile()!.boardsim.state.local.moveIndex + 1; // Change -1 based to 0 based index
 		// Ensure its initialized
 		if (!annotes_plies[index]) annotes_plies[index] = getEmptyAnnotes();
 		return annotes_plies[index];
@@ -98,7 +98,7 @@ function getRelevantAnnotes(): Annotes {
 document.addEventListener('lingering-annotations-toggle', (e: CustomEvent) => {
 	if (!gameloader.areInAGame()) return;
 	const enabled: boolean = e.detail;
-	const ply = gameslot.getGamefile()!.state.local.moveIndex + 1; // Change -1 based to 0 based index
+	const ply = gameslot.getGamefile()!.boardsim.state.local.moveIndex + 1; // Change -1 based to 0 based index
 	if (enabled) { /** Transfer annotes from the ply to {@link annotes_linger} */ 
 		annotes_linger = jsutil.deepCopyObject(annotes_plies[ply]!);
 	} else { /** Transfer annotes from {@link annotes_linger} to the current ply */ 

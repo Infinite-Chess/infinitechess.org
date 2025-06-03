@@ -5,7 +5,7 @@
 
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
-import type { VariantOptions } from './gameslot.js';
+import type { VariantOptions } from '../../chess/logic/initvariant.js';
 import type { Player } from '../../chess/util/typeutil.js';
 
 import typeutil from '../../chess/util/typeutil.js';
@@ -300,8 +300,8 @@ function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
 	if (!inCheckmatePractice) return; // Not in checkmate practice
 
-	const gameConclusion: string | false = gameslot.getGamefile()!.gameConclusion;
-	if (gameConclusion === false) throw Error('Game conclusion is false, should not have called onEngineGameConclude()');
+	const gameConclusion: string | undefined = gameslot.getGamefile()!.basegame.gameConclusion;
+	if (gameConclusion === undefined) throw Error('Game conclusion is undefined, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
 	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
@@ -321,11 +321,11 @@ function onEngineGameConclude(): void {
 function registerHumanMove() {
 	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
 
-	const gamefile = gameslot.getGamefile()!;
-	if (!undoingIsLegal && gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 0) {
+	const { basegame } = gameslot.getGamefile()!;
+	if (!undoingIsLegal && gamefileutility.isGameOver(basegame) && basegame.moves.length > 0) {
 		// allow player to undo move if it ended the game
 		setUndoingIsLegal(true);
-	} else if (undoingIsLegal && !gamefileutility.isGameOver(gamefile)) {
+	} else if (undoingIsLegal && !gamefileutility.isGameOver(basegame)) {
 		// don't allow player to undo move while engine thinks
 		setUndoingIsLegal(false);
 	}
@@ -337,8 +337,8 @@ function registerHumanMove() {
 function registerEngineMove() {
 	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
 
-	const gamefile = gameslot.getGamefile()!;
-	if (!undoingIsLegal && gamefile.moves.length > 1) {
+	const { basegame } = gameslot.getGamefile()!;
+	if (!undoingIsLegal && basegame.moves.length > 1) {
 		// allow player to undo move after engine has moved
 		setUndoingIsLegal(true);
 	}
@@ -348,7 +348,7 @@ function undoMove() {
 	if (!inCheckmatePractice) return console.error("Undoing moves is currently not allowed for non-practice mode games");
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
-	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) && gamefile.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
+	if (undoingIsLegal && (enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile.basegame)) && gamefile.basegame.moves.length > 0) { // > 0 catches scenarios where stalemate occurs on the first move
 		setUndoingIsLegal(false);
 
 		// Terminate all current animations to avoid a crash when undoing moves
@@ -358,7 +358,7 @@ function undoMove() {
 		movesequence.viewFront(gamefile, mesh);
 
 		// If it's their turn, only rewind one move.
-		if (enginegame.isItOurTurn() && gamefile.moves.length > 1) movesequence.rewindMove(gamefile, mesh);
+		if (enginegame.isItOurTurn() && gamefile.basegame.moves.length > 1) movesequence.rewindMove(gamefile, mesh);
 		movesequence.rewindMove(gamefile, mesh);
 		selection.reselectPiece();
 	}

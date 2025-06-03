@@ -1,19 +1,27 @@
 
 // Import Start
+// @ts-ignore
 import webgl from './webgl.js';
+// @ts-ignore
 import texture from './texture.js';
+// @ts-ignore
 import style from '../gui/style.js';
+// @ts-ignore
 import bufferdata from './bufferdata.js';
+// @ts-ignore
 import perspective from './perspective.js';
+// @ts-ignore
 import camera from './camera.js';
+// @ts-ignore
+import { gl } from './webgl.js';
+// @ts-ignore
+import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import frametracker from './frametracker.js';
-import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
-import { gl } from './webgl.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
@@ -23,11 +31,10 @@ import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 // Import End
 
-/** 
- * Type Definitions
- * @typedef {import('./buffermodel.js').BufferModel} BufferModel
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- */
+import type { BufferModel } from './buffermodel.js';
+import type { BoundingBox } from '../../util/math.js';
+import type { Color } from '../../util/math.js';
+import type { Coords } from '../../chess/util/coordutil.js';
 
 "use strict";
 
@@ -37,39 +44,36 @@ import texturecache from '../../chess/rendering/texturecache.js';
  */
 
 /** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
-let tilesTexture_2; // Opaque, no mipmaps
+let tilesTexture_2: WebGLTexture; // Opaque, no mipmaps
 /** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
-let tilesTexture_256mips;
+let tilesTexture_256mips: WebGLTexture;
 
 const squareCenter = 0.5; // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
 
 /**
  * The *exact* bounding box of the board currently visible on the canvas.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
- * @type {BoundingBox}
  */
-let boundingBoxFloat;
+let boundingBoxFloat: BoundingBox;
 /**
  * The bounding box of the board currently visible on the canvas,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
- * @type {BoundingBox}
  */
-let boundingBox;
+let boundingBox: BoundingBox;
 /**
  * The bounding box of the board currently visible on the canvas when the CAMERA IS IN DEBUG MODE,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
- * @type {BoundingBox}
  */
-let boundingBox_debugMode;
+let boundingBox_debugMode: BoundingBox;
 
 const perspectiveMode_z = -0.01;
 
 //const limitToDampScale = 0.15; // FOR RECORDING. This slows down very fast.
 
-let lightTiles; // [r,g,b,a]
-let darkTiles;
+let lightTiles: Color; // [r,g,b,a]
+let darkTiles: Color;
 
 
 (function() {
@@ -80,15 +84,15 @@ let darkTiles;
 		if (!gamefile) return;
 		imagecache.deleteImageCache();
 		// texturecache.deleteTextureCache(gl);
-		imagecache.initImagesForGame(gamefile).then(() => {
+		imagecache.initImagesForGame(gamefile.boardsim).then(() => {
 			// Regenerate the spritesheet with the new tinted images
-			spritesheet.initSpritesheetForGame(gl, gamefile);
-			texturecache.initTexturesForGame(gl, gamefile);
-			piecemodels.regenAll(gamefile, gameslot.getMesh());
+			spritesheet.initSpritesheetForGame(gl, gamefile.boardsim);
+			texturecache.initTexturesForGame(gl, gamefile.boardsim);
+			piecemodels.regenAll(gamefile.boardsim, gameslot.getMesh());
 		});
 		// Reinit the promotion UI
 		guipromotion.resetUI();
-		guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
+		guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed);
 	});
 })();
 
@@ -141,7 +145,7 @@ function recalcVariables() {
 	recalcBoundingBox();
 }
 
-function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
+function gtileCoordsOver(x: number, y: number) { // Takes xy in screen coords from center
 	const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
 
 	const tileWidthPixels = gtileWidth_Pixels();
@@ -150,8 +154,8 @@ function gtileCoordsOver(x, y) { // Takes xy in screen coords from center
 	const tileXFloat = n * x / tileWidthPixels + boardPos[0];
 	const tileYFloat = n * y / tileWidthPixels + boardPos[1];
 
-	const tile_Float = [tileXFloat, tileYFloat];
-	const tile_Int = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
+	const tile_Float: Coords = [tileXFloat, tileYFloat];
+	const tile_Int: Coords = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
 
 	return { tile_Float, tile_Int };
 }
@@ -171,7 +175,7 @@ function recalcBoundingBox() {
  * @param {BoundingBox} src - The source board bounding box
  * @returns {BoundingBox} The rounded bounding box
  */
-function roundAwayBoundingBox(src) {
+function roundAwayBoundingBox(src: BoundingBox) {
 
 	const left = Math.floor(src.left + squareCenter);
 	const right = Math.ceil(src.right - 1 + squareCenter);
@@ -184,9 +188,8 @@ function roundAwayBoundingBox(src) {
 /**
  * Generates the buffer model of the light tiles.
  * The dark tiles are rendered separately and underneath.
- * @returns {BufferModel} The buffer model
  */
-function regenBoardModel() {
+function regenBoardModel(): BufferModel | undefined {
 	const boardTexture = perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
 	if (!boardTexture) return; // Can't create buffer model if texture not loaded.
 
@@ -227,7 +230,7 @@ function renderMainBoard() {
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme() {
 	const gamefile = gameslot.getGamefile();
-	if (gamefile && gamefileutility.isGameOver(gamefile)) darkenColor(); // Reset to slightly darkened board
+	if (gamefile && gamefileutility.isGameOver(gamefile.basegame)) darkenColor(); // Reset to slightly darkened board
 	else resetColor(); // Reset to defaults
 	updateSkyColor();
 	updateNavColor();
@@ -364,7 +367,7 @@ function renderSolidCover() {
 	model.render();
 }
 
-function renderZoomedBoard(zoom, opacity) {
+function renderZoomedBoard(zoom: number, opacity: number) {
 	const boardTexture = tilesTexture_2; 
 	if (!boardTexture) return; // Can't create buffer model if texture not defined.
 
@@ -412,7 +415,7 @@ function renderZoomedBoard(zoom, opacity) {
  * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {BoundingBox} The bounding box
  */
-function getBoundingBoxOfBoard(position = boardpos.getBoardPos(), scale = boardpos.getBoardScale(), debugMode) {
+function getBoundingBoxOfBoard(position: Coords = boardpos.getBoardPos(), scale: number = boardpos.getBoardScale(), debugMode: boolean): BoundingBox {
 
 	const distToHorzEdgeDivScale = camera.getScreenBoundingBox(debugMode).right / scale;
 
@@ -432,7 +435,7 @@ function getBoundingBoxOfBoard(position = boardpos.getBoardPos(), scale = boardp
  * @param {number} rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
  * @returns {BoundingBox} The perspective mode render range bounding box
  */
-function generatePerspectiveBoundingBox(rangeOfView) { // ~18
+function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBox { // ~18
 	const coords = boardpos.getBoardPos();
 	const renderDistInSquares = rangeOfView / boardpos.getBoardScale();
 

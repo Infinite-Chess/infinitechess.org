@@ -53,7 +53,7 @@ function getOurColor(): Player | undefined {
 
 function isItOurTurn(): boolean {
 	if (!inEngineGame) throw Error("Cannot get isItOurTurn of engine game when we're not in an engine game.");
-	return gameslot.getGamefile()!.whosTurn === ourColor;
+	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
 }
 
 function getCurrentEngine() {
@@ -137,9 +137,9 @@ async function onMovePlayed() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
-	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
+	if (gamefile.basegame.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
-	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
+	if (gamefile.basegame.gameConclusion) return; // Don't do anything if the game is over
 	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */

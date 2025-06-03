@@ -51,7 +51,7 @@ const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omeg
  */
 function copyGame(copySinglePosition) {
 	const gamefile = gameslot.getGamefile();
-	const Variant = gamefile.metadata.Variant;
+	const Variant = gamefile.basegame.metadata.Variant;
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();
@@ -94,7 +94,7 @@ async function callbackPaste(event) {
 	// Make sure we're not in an engine match
 	if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 	// Make sure it's legal in a private match
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().boardsim.moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard;
@@ -165,7 +165,7 @@ function pasteGame(longformOut) {
 
 	// Retain most of the existing metadata on the currently loaded gamefile
 	const currentGamefile = gameslot.getGamefile();
-	const currentGameMetadata = currentGamefile.metadata;
+	const currentGameMetadata = currentGamefile.basegame.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformOut.metadata[metadataName] = currentGameMetadata[metadataName];
@@ -239,7 +239,7 @@ function pasteGame(longformOut) {
 		const gamefile = gameslot.getGamefile();
 		
 		// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-		const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
+		const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
 		if (pieceCount >= pieceCountToDisableCheckmate) { // TOO MANY pieces!
 			statustext.showStatus(`${translations.copypaste.piece_count} ${pieceCount} ${translations.copypaste.exceeded} ${pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`, false, 1.5);
 		} else { // Only print "Loaded game from clipboard." if we haven't already shown a different status message cause of too many pieces

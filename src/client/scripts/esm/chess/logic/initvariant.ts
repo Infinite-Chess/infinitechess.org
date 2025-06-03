@@ -3,17 +3,36 @@
  * This script prepares our variant when a game is constructed
  */
 
-import variant from '../variants/variant.js';
+import type { Snapshot } from './gamefile.js';
+import type { MetaData } from '../util/metadata.js';
+import type { GameRules } from '../variants/gamerules.js';
+import type { CoordsKey } from '../util/coordutil.js';
+import type { GlobalGameState } from './state.js';
 
-/** 
- * Type Definitions 
- * @typedef {import('./gamefile.js').gamefile} gamefile
- * @typedef {import('./gamefile.js').StartSnapshot} StartSnapshot
- * @typedef {import('../../game/chess/gameslot.js').VariantOptions} VariantOptions
- */
+import variant from '../variants/variant.js';
 
 "use strict";
 
+/**
+ * Variant options that can be used to load a custom game,
+ * whether local or online, instead of one of the default variants.
+ */
+interface VariantOptions {
+	/**
+	 * The full move number of the turn at the provided position. Default: 1.
+	 * Can be higher if you copy just the positional information in a game with some moves played already.
+	 */
+	fullMove: number,
+	gameRules: GameRules,
+	/**
+	 * The starting position object, containing the pieces organized by key.
+	 * The key of the object is the coordinates of the piece as a string,
+	 * and the value is the type of piece on that coordinate (e.g. [22] pawn (neutral))
+	 */
+	position: Map<CoordsKey, number>
+	/** The 3 global game states */
+	state_global: GlobalGameState
+}
 
 /**
  * Initializes gameRules of the provided gamefile.
@@ -21,50 +40,53 @@ import variant from '../variants/variant.js';
  * 
  * To load a custom position, include the options within the `options` parameter!
  * All options are a snapshot of the starting position, before any moves are forwarded.
- * @param {gamefile} gamefile - The gamefile to initialize
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
+ * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position.
+ * @param [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
  */
-function setupVariantGamerules(gamefile, metadata, options) {
+function getVariantGamerules(metadata: MetaData, options?: VariantOptions): GameRules {
 	// Ignores the "Variant" metadata, and just uses the specified gameRules
-	if (options) gamefile.gameRules = options.gameRules;
+	if (options) return options.gameRules;
 	// Default (built-in variant, not pasted)
-	else gamefile.gameRules = variant.getGameRulesOfVariant(metadata); 
-
-	initPieceMovesets(gamefile, metadata, options?.gameRules.slideLimit);
+	else return variant.getGameRulesOfVariant(metadata); 
 }
 
 /**
  * Sets the pieceMovesets and specialMoves functions of the gamefile.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
+ * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. 
+ * @param [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
 */
-function initPieceMovesets(gamefile, metadata, slideLimit) {
+function getPieceMovesets(metadata: MetaData, slideLimit?: number) {
 	// The movesets and methods for detecting and executing special moves
 	// are attached to the gamefile. This is because different variants
 	// can have different movesets for each piece. For example, the slideLimit gamerule.
-	gamefile.pieceMovesets = variant.getMovesetsOfVariant(metadata, slideLimit);
-	gamefile.specialMoves = variant.getSpecialMovesOfVariant(metadata);
+	const pieceMovesets = variant.getMovesetsOfVariant(metadata, slideLimit);
+	const specialMoves = variant.getSpecialMovesOfVariant(metadata);
+	return {
+		pieceMovesets,
+		specialMoves
+	};
 }
 
 /**
- * 
- * To load a custom position, include the options within the `options` parameter!
- * All options are a snapshot of the starting position, before any moves are forwarded.
- * @param {gamefile} gamefile - The gamefile to initialize
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [variantOptions] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
- * @returns {StartSnapshot} The starting snapshot of the game.
+ * Fills in any holes in the provided variant options with the variant defaults.
+ * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `variantOptions` is specified with a position.
+ * @param [variantOptions] - The variant options. If position is not specified, the metadata must contain the "Variant".
+ * @returns The completed variant options.
  */
-function genStartSnapshot(gamefile, metadata, variantOptions) {
-	let position;
-	let fullMove;
+function getVariantVariantOptions(gamerules: GameRules, metadata: MetaData, variantOptions?: VariantOptions): {
+	position: Snapshot['position'],
+	state_global: Snapshot['state_global'],
+	fullMove: number
+} {
+	let position: Snapshot['position'];
+	let fullMove: Snapshot['fullMove'];
 	// The 3 global game states
-	let specialRights;
-	let enpassant;
-	let moveRuleState;
+	let specialRights: Snapshot['state_global']['specialRights'];
+	let enpassant: Snapshot['state_global']['enpassant'];
+	let moveRuleState: Snapshot['state_global']['moveRuleState'];
 	
+	// Even IF options are provided. If the pasted game doesn't contain position information
+	// then we still have to grab it from the Variant metadata!
 	if (variantOptions) {
 		position = variantOptions.position;
 		fullMove = variantOptions.fullMove;
@@ -75,12 +97,12 @@ function genStartSnapshot(gamefile, metadata, variantOptions) {
 	} else {
 		({ position, specialRights } = variant.getStartingPositionOfVariant(metadata));
 		fullMove = 1; // Every variant has the exact same fullMove value.
-		if (gamefile.gameRules.moveRule !== undefined) moveRuleState = 0; // Every variant has the exact same initial moveRuleState value.
+		if (gamerules.moveRule !== undefined) moveRuleState = 0; // Every variant has the exact same initial moveRuleState value.
 	}
 
 	// console.log("Variant options:", variantOptions);
 
-	const state_global = { specialRights };
+	const state_global: Snapshot['state_global'] = { specialRights };
 	if (enpassant) state_global.enpassant = enpassant;
 	if (moveRuleState !== undefined) state_global.moveRuleState = moveRuleState;
 	
@@ -139,7 +161,12 @@ function genStartSnapshot(gamefile, metadata, variantOptions) {
 //     initPieceMovesets(gamefile.gameRules)
 // }
 
+export type { 
+	VariantOptions,
+};
+
 export default {
-	setupVariantGamerules,
-	genStartSnapshot,
+	getVariantGamerules,
+	getPieceMovesets,
+	getVariantVariantOptions,
 };

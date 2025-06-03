@@ -7,8 +7,7 @@
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { TypeGroup } from '../../chess/util/typeutil.js';
-// @ts-ignore
-import type { gamefile } from '../../chess/logic/gamefile.js';
+import type { Board } from '../../chess/logic/gamefile.js';
 
 import { AttributeInfoInstanced, BufferModelInstanced, createModel_Instanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import coordutil from '../../chess/util/coordutil.js';
@@ -92,7 +91,7 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  * 
  * SLOWEST. Minimize calling.
  */
-function regenAll(gamefile: gamefile, mesh: Mesh | undefined) {
+function regenAll(boardsim: Board, mesh: Mesh | undefined) {
 	if (!mesh) return;
 	console.log("Regenerating all piece type meshes.");
 
@@ -102,14 +101,14 @@ function regenAll(gamefile: gamefile, mesh: Mesh | undefined) {
 	mesh.inverted = perspective.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
-	for (const type of gamefile.existingTypes) { // [43] pawn(white)
-		if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(gamefile, mesh, type); // Custom mesh generation logic for voids
-		else mesh.types[type] = genTypeModel(gamefile, mesh, type); // Normal generation logic for all pieces with a texture
+	for (const type of boardsim.existingTypes) { // [43] pawn(white)
+		if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
+		else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 	}
 
 	frametracker.onVisualChange();
 
-	delete gamefile.pieces.newlyRegenerated; // Delete this flag now. It was to let us know the piece models needed to be regen'd.
+	delete boardsim.pieces.newlyRegenerated; // Delete this flag now. It was to let us know the piece models needed to be regen'd.
 }
 
 /**
@@ -117,14 +116,15 @@ function regenAll(gamefile: gamefile, mesh: Mesh | undefined) {
  * 
  * Regenerates the single model of the provided type.
  * Call externally after adding more undefined placeholders to a type list.
- * @param gamefile
+ * @param boardsim
+ * @param mesh
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
-function regenType(gamefile: gamefile, mesh: Mesh, type: number) {
+function regenType(boardsim: Board, mesh: Mesh, type: number) {
 	console.log(`Regenerating mesh of type ${type}.`);
 
-	if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(gamefile, mesh, type); // Custom mesh generation logic for voids
-	else mesh.types[type] = genTypeModel(gamefile, mesh, type); // Normal generation logic for all pieces with a texture
+	if (typeutil.getRawType(type) === rawTypes.VOID) mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
+	else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 
 	frametracker.onVisualChange();
 }
@@ -134,13 +134,14 @@ function regenType(gamefile: gamefile, mesh: Mesh, type: number) {
  * Must be called whenever we add more undefineds placeholders to the this piece list.
  * 
  * SLOWEST. Minimize calling.
- * @param gamefile
+ * @param boardsim
+ * @param mesh
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
-function genTypeModel(gamefile: gamefile, mesh: Mesh, type: number): MeshData {
+function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	// const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(VOID_COLOR); // VOIDS
 	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, mesh, type);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(boardsim, mesh, type);
 
 	const tex = texturecache.getTexture(type);
 	return {
@@ -155,9 +156,9 @@ function genTypeModel(gamefile: gamefile, mesh: Mesh, type: number): MeshData {
  * 
  * SLOWEST. Minimize calling.
  */
-function genVoidModel(gamefile: gamefile, mesh: Mesh, type: number): MeshData {
+function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(preferences.getTintColorOfType(type));
-	const instanceData64: Float64Array = getInstanceDataForTypeRange(gamefile, mesh, type);
+	const instanceData64: Float64Array = getInstanceDataForTypeRange(boardsim, mesh, type);
 
 	return {
 		instanceData64,
@@ -170,18 +171,18 @@ function genVoidModel(gamefile: gamefile, mesh: Mesh, type: number): MeshData {
  * The instance data contains only the offset of each piece instance, with a stride of 2.
  * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
-function getInstanceDataForTypeRange(gamefile: gamefile, mesh: Mesh, type: number): Float64Array {
-	const range = gamefile.pieces.typeRanges.get(type)!;
+function getInstanceDataForTypeRange(boardsim: Board, mesh: Mesh, type: number): Float64Array {
+	const range = boardsim.pieces.typeRanges.get(type)!;
 	const instanceData64: Float64Array = new Float64Array((range.end - range.start) * STRIDE_PER_PIECE); // Initialize with all 0's
 
 	let currIndex: number = 0;
-	boardutil.iteratePiecesInTypeRange_IncludeUndefineds(gamefile.pieces, type, (idx: number, isUndefined: boolean) => {
+	boardutil.iteratePiecesInTypeRange_IncludeUndefineds(boardsim.pieces, type, (idx: number, isUndefined: boolean) => {
 		if (isUndefined) {
 			// Undefined placeholder, this one should not be visible. If we leave it at 0, then there would be a visible void at [0,0]
 			instanceData64[currIndex] = Infinity;
 			instanceData64[currIndex + 1] = Infinity;
 		} else { // NOT undefined
-			const coords = boardutil.getCoordsFromIdx(gamefile.pieces, idx);
+			const coords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
 			// Apply the piece mesh offset to the coordinates
 			instanceData64[currIndex] = coords[0] - mesh.offset[0];
 			instanceData64[currIndex + 1] = coords[1] - mesh.offset[1];
@@ -201,7 +202,7 @@ function getInstanceDataForTypeRange(gamefile: gamefile, mesh: Mesh, type: numbe
  * uniform translations upon rendering, and reinits them on the gpu.
  * Faster than {@link regenAll}.
  */
-function shiftAll(gamefile: gamefile, mesh: Mesh) {
+function shiftAll(boardsim: Board, mesh: Mesh) {
 	console.log("Shifting all piece meshes.");
 
 	const newOffset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
@@ -212,7 +213,7 @@ function shiftAll(gamefile: gamefile, mesh: Mesh) {
 	const chebyshevDistance = math.chebyshevDistance(mesh.offset, newOffset);
 	if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
 		console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
-		regenAll(gamefile, mesh);
+		regenAll(boardsim, mesh);
 		return;
 	}
 
@@ -331,7 +332,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece) {
  * Renders ever piece type mesh of the game, including voids,
  * translating and scaling them into position.
  */
-function renderAll(gamefile: gamefile, mesh: Mesh) {
+function renderAll(boardsim: Board, mesh: Mesh) {
 
 	const boardPos = boardpos.getBoardPos();
 	const position: [number,number,number] = [ // Translate
@@ -351,7 +352,7 @@ function renderAll(gamefile: gamefile, mesh: Mesh) {
 	// We can render everything...
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
-	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset)) shiftAll(gamefile, mesh);
+	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset)) shiftAll(boardsim, mesh);
 
 	// Test if the rotation has changed
 	const correctInverted = perspective.getIsViewingBlackPerspective();

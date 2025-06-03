@@ -163,7 +163,7 @@ function genModel(highlights: Square[], color: Color): BufferModelInstanced {
 
 
 function render(highlights: Square[]) {
-	const presetSquares = preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.metadata.Variant);
+	const presetSquares = preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.basegame.metadata.Variant);
 
 	// If we're zoomed out, then the size of the highlights is constant.
 	const size = boardpos.areZoomedOut() ? snapping.getEntityWidthWorld() : boardpos.getBoardScale();

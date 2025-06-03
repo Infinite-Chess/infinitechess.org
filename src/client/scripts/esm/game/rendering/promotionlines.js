@@ -1,6 +1,6 @@
 
 
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 import { createModel } from './buffermodel.js';
 import gameslot from '../chess/gameslot.js';
 import { players } from '../../chess/util/typeutil.js';
@@ -22,7 +22,7 @@ const extraLength = 2; // Default: 4
 const thickness = 0.010;
 
 function render() {
-	if (gameslot.getGamefile().gameRules.promotionRanks === undefined) return; // No promotion ranks in this game
+	if (gameslot.getGamefile().basegame.gameRules.promotionRanks === undefined) return; // No promotion ranks in this game
 	const model = initModel();
 
 	const boardPos = boardpos.getBoardPos();
@@ -48,10 +48,10 @@ function render() {
  * @returns {BufferModel} The buffer model
  */
 function initModel() {
-	const squareCenter = board.gsquareCenter();
+	const squareCenter = boardtiles.gsquareCenter();
 
 	const gamefile = gameslot.getGamefile();
-	const startPositionBox = gamefile.editor ? board.getBoundingBoxOfBoard() : gamefileutility.getStartingAreaBox(gamefile);
+	const startPositionBox = gamefile.boardsim.editor ? boardtiles.getBoundingBoxOfBoard() : gamefileutility.getStartingAreaBox(gamefile.boardsim);
 
 	const startX = startPositionBox.left - squareCenter - extraLength;
 	const endX = startPositionBox.right + 1 - squareCenter + extraLength;
@@ -60,8 +60,8 @@ function initModel() {
 
 	const vertexData = [];
 
-	addDataForSide(gamefile.gameRules.promotionRanks[players.WHITE], 1);
-	addDataForSide(gamefile.gameRules.promotionRanks[players.BLACK], 0);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.WHITE], 1);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.BLACK], 0);
 
 	function addDataForSide(ranks, zeroOrOne) {
 		ranks.forEach(rank => {

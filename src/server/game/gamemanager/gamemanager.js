@@ -277,12 +277,12 @@ function stopGameClock(game) {
  * Sets the new conclusion for the game. May be *false*.
  * If truthy, it will fire {@link onGameConclusion()}.
  * @param {Game} game - The game
- * @param {string} conclusion - The new game conclusion
+ * @param {string | undefined} conclusion - The new game conclusion
  */
 function setGameConclusion(game, conclusion) {
-	const dontDecrementActiveGames = game.gameConclusion !== false; // Game already over, active game count already decremented.
+	const dontDecrementActiveGames = game.gameConclusion !== undefined; // Game already over, active game count already decremented.
 	game.gameConclusion = conclusion;
-	if (conclusion) onGameConclusion(game, { dontDecrementActiveGames });
+	if (conclusion !== undefined) onGameConclusion(game, { dontDecrementActiveGames });
 }
 
 /**

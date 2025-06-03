@@ -6,15 +6,12 @@
 
 
 import type { Coords, Movesets, PieceMoveset } from '../logic/movesets.js';
-import type { Move } from '../logic/movepiece.js';
-import type { Piece } from '../util/boardutil.js';
-import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
+import type { RawType, Player, PlayerGroup, RawTypeGroup } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { BaseRay } from '../../game/rendering/highlights/annotations/drawrays.js';
-// @ts-ignore
-import type gamefile from '../logic/gamefile.js';
-// @ts-ignore
 import type { GameRules } from './gamerules.js';
+import type { MetaData } from '../util/metadata.js';
+import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
 
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
@@ -34,7 +31,7 @@ import omega4generator from './omega4generator.js';
 interface GameRuleModifications {
 	promotionRanks?: { [color: string]: number[] } | null,
 	moveRule?: number | null,
-	turnOrder?: string[],
+	turnOrder?: Player[],
 	promotionsAllowed?: PlayerGroup<RawType[]>,
 	winConditions?: PlayerGroup<string[]>,
 	slideLimit?: number
@@ -84,28 +81,6 @@ interface Variant {
 	}
 }
 
-/**
- * Function that queues all of the changes a special move makes when executed.
- * 
- * TODO: Move this to specialmove.ts when it's converted to typescript.
- */
-// eslint-disable-next-line no-unused-vars
-type SpecialMoveFunction = (gamefile: gamefile, piece: Piece, move: Move) => boolean;
-
-/**
- * An object storing the squares in the immediate vicinity
- * a piece has a CHANCE of making a special-move capture from.
- * 
- * TODO: Move this to specialmove.ts when it's converted to typescript.
- */
-type SpecialVicinity = {
-	/** The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance. */
-	// eslint-disable-next-line no-unused-vars
-	[r in RawType]?: Coords[]
-}
-
-
-
 const positionStringOfClassical = 'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 const positionStringOfCoaIP = 'P-2,1+|P-1,2+|P0,2+|P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|P9,2+|P10,2+|P11,1+|P-4,-6+|P-3,-5+|P-2,-4+|P-1,-5+|P0,-6+|P9,-6+|P10,-5+|P11,-4+|P12,-5+|P13,-6+|p-2,8+|p-1,7+|p0,7+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|p9,7+|p10,7+|p11,8+|p-4,15+|p-3,14+|p-2,13+|p-1,14+|p0,15+|p9,15+|p10,14+|p11,13+|p12,14+|p13,15+|HA-2,-6|HA11,-6|ha-2,15|ha11,15|R-1,1|R10,1|r-1,8|r10,8|CH0,1|CH9,1|ch0,8|ch9,8|GU1,1+|GU8,1+|gu1,8+|gu8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 
@@ -119,7 +94,7 @@ const defaultPromotionsAllowed = repeatPromotionsAllowedForEachColor(defaultProm
 const coaIPPromotions = [...defaultPromotions, r.GUARD, r.CHANCELLOR, r.HAWK];
 const coaIPPromotionsAllowed = repeatPromotionsAllowedForEachColor(coaIPPromotions);
 
-const gameruleModificationsOfOmegaShowcasings = { promotionRanks: null, moveRule: null, turnOrder: [p.BLACK, p.WHITE] }; // No promotions, no 50-move rule, and reversed turn order.
+const gameruleModificationsOfOmegaShowcasings: GameRuleModifications = { promotionRanks: null, moveRule: null, turnOrder: [p.BLACK, p.WHITE] }; // No promotions, no 50-move rule, and reversed turn order.
 
 
 /**
@@ -357,7 +332,8 @@ function repeatPromotionsAllowedForEachColor(promotions: RawType[], players: Pla
  * @param variantName - The name of the variant
  * @returns *true* if the variant is a valid variant
  */
-function isVariantValid(variantName: string) {
+function isVariantValid(variantName?: string) {
+	if (variantName === undefined) return false;
 	return variantDictionary[variantName] !== undefined;
 }
 
@@ -368,13 +344,9 @@ function isVariantValid(variantName: string) {
  * @param options - An object containing the properties `Variant`, and if desired, `Date`.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
  */
-function getStartingPositionOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}): { position: Map<CoordsKey, number>, specialRights: Set<CoordsKey> } {
-	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
-	const variantEntry: Variant = variantDictionary[Variant]!;
+function getStartingPositionOfVariant(metadata: MetaData) {
+	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get starting position of invalid variant "${metadata.Variant}"!`);
+	const variantEntry: Variant = variantDictionary[metadata.Variant!]!;
 
 	let positionString: string;
 	let position: Map<CoordsKey, number>;
@@ -387,7 +359,7 @@ function getStartingPositionOfVariant({ Variant, UTCDate = timeutil.getCurrentUT
 		if (typeof variantEntry.positionString === 'string') { // Single position string
 			positionString = variantEntry.positionString;
 		} else { // Multiple position string entries for different timestamps
-			positionString = getApplicableTimestampEntry(variantEntry.positionString, { UTCDate, UTCTime });
+			positionString = getApplicableTimestampEntry(variantEntry.positionString, { UTCDate: metadata.UTCDate, UTCTime: metadata.UTCTime });
 		}
 
 		return icnconverter.generatePositionFromShortForm(positionString);
@@ -395,14 +367,14 @@ function getStartingPositionOfVariant({ Variant, UTCDate = timeutil.getCurrentUT
 	} else if (variantEntry.generator) {
 
 		const generator = 'algorithm' in variantEntry.generator ? variantEntry.generator
-			: getApplicableTimestampEntry(variantEntry.generator, { UTCDate, UTCTime });
+			: getApplicableTimestampEntry(variantEntry.generator, { UTCDate: metadata.UTCDate, UTCTime: metadata.UTCTime });
 
 		// Generate the starting position
 		position = generator.algorithm();
 		const specialRights = icnconverter.generateSpecialRights(position, generator.rules.pawnDoublePush, generator.rules.castleWith);
 		return { position, specialRights };
 
-	} else throw Error(`Variant entry "${Variant}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`);
+	} else throw Error(`Variant entry "${metadata.Variant}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`);
 }
 
 /**
@@ -411,32 +383,24 @@ function getStartingPositionOfVariant({ Variant, UTCDate = timeutil.getCurrentUT
  * @param options.Variant - The name of the variant for which to get the gamerules.
  * @returns The gamerules object for the variant.
  */
-function getGameRulesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}): GameRules {
-	if (!isVariantValid(Variant)) throw new Error(`Cannot get starting position of invalid variant "${Variant}"!`);
+function getGameRulesOfVariant(metadata: MetaData): GameRules {
+	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get starting position of invalid variant "${metadata.Variant}"!`);
 
-	const gameruleModifications: GameRuleModifications = jsutil.deepCopyObject(getVariantGameRuleModifications({ Variant, UTCDate, UTCTime }));
+	const gameruleModifications: GameRuleModifications = jsutil.deepCopyObject(getVariantGameRuleModifications(metadata));
 	
 	return getGameRules(gameruleModifications);
 }
 
-function getVariantGameRuleModifications({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}): GameRuleModifications {
+function getVariantGameRuleModifications(metadata: MetaData): GameRuleModifications {
 
-	const variantEntry = variantDictionary[Variant];
-	if (!variantEntry) throw Error(`Cannot get gameruleModifications of invalid variant "${Variant}".`);
+	const variantEntry = variantDictionary[metadata.Variant!];
+	if (!variantEntry) throw Error(`Cannot get gameruleModifications of invalid variant "${metadata.Variant}".`);
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
 	
 	// We use hasOwnProperty() because it is true even if the property is set as `undefined`, which in this case would mean zero gamerule modifications.
 	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
-		return getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime });
+		return getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate: metadata.UTCDate, UTCTime: metadata.UTCTime });
 	} else { // Just one gameruleModifications entry
 		return variantEntry.gameruleModifications;
 	}
@@ -529,21 +493,17 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
  * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
  * @returns {Object} The pieceMovesets property of the gamefile.
  */
-function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-	Variant: string,
-	UTCDate: string,
-	UTCTime: string
-}, slideLimit?: number) {
+function getMovesetsOfVariant(metadata: MetaData, slideLimit?: number) {
 	// Pasted games with no variant specified use the default movesets
 	// TODO: Transfer the slide limit game rule of pasted games
-	if (Variant === undefined) return getMovesets(undefined, slideLimit);
-	if (!isVariantValid(Variant)) throw new Error(`Cannot get movesets of invalid variant "${Variant}"!`);
-	const variantEntry: Variant = variantDictionary[Variant]!;
+	if (metadata.Variant === undefined) return getMovesets(undefined, slideLimit);
+	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get movesets of invalid variant "${metadata.Variant}"!`);
+	const variantEntry: Variant = variantDictionary[metadata.Variant]!;
 
 	if (!variantEntry.movesetGenerator) {
 		// console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) { // Multiple UTC timestamps
-			return getMovesets({}, slideLimit ?? getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate, UTCTime }).slideLimit);
+			return getMovesets({}, slideLimit ?? getApplicableTimestampEntry(variantEntry.gameruleModifications, { UTCDate: metadata.UTCDate, UTCTime: metadata.UTCTime }).slideLimit);
 		} else { // Just one movesetGenerator entry
 			return getMovesets({}, slideLimit ?? (variantEntry.gameruleModifications as GameRuleModifications)?.slideLimit);
 		}
@@ -551,7 +511,7 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
 
 	let movesetModifications: Movesets;
 	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) { // Multiple UTC timestamps
-		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, { UTCDate, UTCTime })();
+		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, { UTCDate: metadata.UTCDate, UTCTime: metadata.UTCTime })();
 	} else { // Just one movesetGenerator entry
 		movesetModifications = (<() => Movesets>variantEntry.movesetGenerator)();
 	}
@@ -567,13 +527,10 @@ function getMovesetsOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(),
  * @param [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
  * @returns The pieceMovesets property of the gamefile.
  */
-function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOldVariants?: number) {
+function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOldVariants?: number): RawTypeGroup<() => PieceMoveset> {
 	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
 	// The running piece movesets property of the gamefile.
-	const pieceMovesets: {
-		// eslint-disable-next-line no-unused-vars
-		[_pieceType in RawType]?: () => PieceMoveset
-	} = {};
+	const pieceMovesets: RawTypeGroup<() => PieceMoveset> = {};
 
 	for (const [piece, moves] of Object.entries(origMoveset)) {
 		const intPiece = Number(piece) as RawType;
@@ -584,31 +541,31 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	return pieceMovesets;
 }
 
-function getSpecialMovesOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: { Variant: string, UTCDate: string, UTCTime: string }) {
+function getSpecialMovesOfVariant(metadata: MetaData) {
 	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	// Pasted games with no variant specified use the default
-	if (Variant === undefined) return defaultSpecialMoves;
-	if (!isVariantValid(Variant)) throw new Error(`Cannot get specialMoves of invalid variant "${Variant}"!`);
-	const variantEntry: Variant = variantDictionary[Variant]!;
+	if (metadata.Variant === undefined) return defaultSpecialMoves;
+	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get specialMoves of invalid variant "${metadata.Variant}"!`);
+	const variantEntry: Variant = variantDictionary[metadata.Variant]!;
 
 	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
 
-	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, { UTCDate, UTCTime });
+	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, { UTCDate: metadata.UTCDate, UTCTime: metadata.UTCTime });
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
 	return defaultSpecialMoves;
 }
 
 
-function getSpecialVicinityOfVariant({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: { Variant: string, UTCDate: string, UTCTime: string }) {
+function getSpecialVicinityOfVariant(metadata: MetaData) {
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
-	if (Variant === undefined) return defaultSpecialVicinityByPiece;
-	if (!isVariantValid(Variant)) throw new Error(`Cannot get specialVicinity of invalid variant "${Variant}"!`);
-	const variantEntry: Variant = variantDictionary[Variant]!;
+	if (metadata.Variant === undefined) return defaultSpecialVicinityByPiece;
+	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get specialVicinity of invalid variant "${metadata.Variant}"!`);
+	const variantEntry: Variant = variantDictionary[metadata.Variant]!;
 
 	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
 
-	const overrides = getApplicableTimestampEntry(variantEntry.specialVicinity, { UTCDate, UTCTime });
+	const overrides = getApplicableTimestampEntry(variantEntry.specialVicinity, { UTCDate: metadata.UTCDate, UTCTime: metadata.UTCTime });
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
 	return defaultSpecialVicinityByPiece;
 }
@@ -640,8 +597,4 @@ export default {
 	getBareMinimumGameRules,
 	getSquarePresets,
 	getRayPresets,
-};
-
-export type {
-	SpecialMoveFunction,
 };

@@ -23,7 +23,7 @@ import perspective from '../perspective.js';
 // @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
-import board from '../board.js';
+import boardtiles from '../boardtiles.js';
 // @ts-ignore
 import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore
@@ -40,8 +40,7 @@ import type { Ray } from './annotations/annotations.js';
 import type { Piece } from '../../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../../chess/logic/movepiece.js';
 import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
-// @ts-ignore
-import type gamefile from '../../../chess/logic/gamefile.js';
+import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
 
 
 
@@ -201,7 +200,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 
 	// The bounding box of what the camera currently sees on-screen.
 	const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
-       												   : board.gboundingBox(false);
+       												   : boardtiles.gboundingBox(false);
 
 	// If our screen bounding box is less than 4x smaller than our render range bounding box,
 	// we're wasting cpu, let's regenerate it.
@@ -266,7 +265,7 @@ function initBoundingBoxOfRenderRange() {
 function getDimensionsOfOrthographicViewRange(): Coords {
 	// New improved method of calculating render bounding box
 
-	const boardBoundingBox = board.gboundingBox();
+	const boardBoundingBox = boardtiles.gboundingBox();
 	const width = boardBoundingBox.right - boardBoundingBox.left + 1;
 	const height = boardBoundingBox.top - boardBoundingBox.bottom + 1;
 
@@ -335,7 +334,6 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 /**
  * Generates the renderable instanced rendering buffer models for the
  * legal move highlights of the given piece's legal moves.
- * @param gamefile
  * @param coords - The coordinates of the piece with the provided legal moves
  * @param legalMoves - The legal moves of which to generate the highlights models for.
  * @param friendlyColor - The color of friendly pieces
@@ -356,7 +354,7 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
 	const gamefile = gameslot.getGamefile()!;
 
 	// Data of short range moves within 3 tiles
-	concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, legalMoves!, gamefile);
+	concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, legalMoves!, gamefile.boardsim);
 	// Potentially infinite data on sliding moves...
 	concatData_HighlightedMoves_Sliding(instanceData_NonCapture, instanceData_Capture, coords, legalMoves!, gamefile, friendlyColor);
 
@@ -397,16 +395,16 @@ function renderSelectedPiecesLegalMoves() {
  * @param instanceData_NonCapture - The running array of instance data for the NON-CAPTURING legal moves highlights mesh.
  * @param instanceData_Capture - The running array of instance data for the CAPTURING legal moves highlights mesh.
  * @param legalMoves - The piece legal moves to highlight
- * @param gamefile - A reference to the current loaded gamefile
+ * @param boardsim - A reference to the current loaded gamefile's board
  */
-function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[], instanceData_Capture: number[], legalMoves: LegalMoves, gamefile: gamefile) {
+function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[], instanceData_Capture: number[], legalMoves: LegalMoves, boardsim: Board) {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const legalIndividuals: Coords[] = legalMoves.individual;
 	if (!legalIndividuals) return; // This piece doesn't have any legal jumping/individual moves.
 
 	// For each of these squares, calculate it's buffer data
 	for (const coord of legalIndividuals) {
-		const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, coord);
+		const isPieceOnCoords = boardutil.isPieceOnCoords(boardsim.pieces, coord);
 		const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 		if (isPieceOnCoords) instanceData_Capture.push(...offsetCoord);
 		else instanceData_NonCapture.push(...offsetCoord);
@@ -422,7 +420,7 @@ function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[
  * @param gamefile - A reference to the current loaded gamefile
  * @param friendlyColor - The color of friendly pieces
  */
-function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, legalMoves: LegalMoves, gamefile: gamefile, friendlyColor: Player) { // { left, right, bottom, top} The size of the box we should render within
+function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, legalMoves: LegalMoves, gamefile: FullGame, friendlyColor: Player) { // { left, right, bottom, top} The size of the box we should render within
 	if (!legalMoves.sliding) return; // No sliding moves
 
 	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) { // '1,0'
@@ -450,7 +448,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: boolean) {
+function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	// Right moveset
 	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		    ignoreFunc, gamefile, friendlyColor, brute);
     
@@ -473,7 +471,7 @@ function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[],
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: boolean) {
+function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	if (limit === 0) return; // Quick exit
 
 	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, limit, false);
@@ -554,7 +552,7 @@ function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, i
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: boolean) {
+function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	for (let i = 0; i < iterateCount; i++) { 
 		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
 		legal: if (ignoreFunc(pieceCoords, thisCoord)) { // Ignore function PASSED. This move is LEGAL
@@ -566,7 +564,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 			}
 
 			// Should we add instance data to the capturing or non-capturing model?
-			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, thisCoord);
+			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.boardsim.pieces, thisCoord);
 			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);
 			else                 instanceData_NonCapture.push(...firstInstancePositionOffset);
 		}

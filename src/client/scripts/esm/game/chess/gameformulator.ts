@@ -4,15 +4,14 @@
  */
 
 
-// @ts-ignore
 import gamefile from '../../chess/logic/gamefile.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import variant from '../../chess/variants/variant.js';
 import { CoordsKey } from '../../chess/util/coordutil.js';
 import { ServerGameMoveMessage } from '../misc/onlinegame/onlinegamerouter.js';
 
-
-import type { VariantOptions } from './gameslot.js';
+import type { FullGame } from '../../chess/logic/gamefile.js';
+import type { VariantOptions } from '../../chess/logic/initvariant.js';
 import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
 
 
@@ -21,7 +20,7 @@ import type { _Move_In, LongFormatIn, LongFormatOut } from '../../chess/logic/ic
  * Formulates a whole gamefile from a smaller simpler abridged one.
  * @param longformIn - The return value of gamecompressor.compressGamefile()
  */
-function formulateGame(longformIn: LongFormatIn) {
+function formulateGame(longformIn: LongFormatIn): FullGame {
 
 	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
 		throw Error('Invalid longformIn when formulating game: Missing position or special rights.');
@@ -45,7 +44,7 @@ function formulateGame(longformIn: LongFormatIn) {
 		}
 	};
 
-	return new gamefile(longformIn.metadata, { moves, variantOptions });
+	return gamefile.initFullGame(longformIn.metadata, {variantOptions, moves});
 }
 
 /**
@@ -54,7 +53,7 @@ function formulateGame(longformIn: LongFormatIn) {
  * * Invalid format or enpassant square
  * * Game contains an illegal move
  */
-function ICNToGamefile(ICN: string): gamefile {
+function ICNToGamefile(ICN: string): FullGame {
 	const longformOut: LongFormatOut = icnconverter.ShortToLong_Format(ICN);
 
 	let position: Map<CoordsKey, number>;
@@ -64,7 +63,7 @@ function ICNToGamefile(ICN: string): gamefile {
 		position = longformOut.position;
 		specialRights = longformOut.state_global.specialRights;
 	} else {
-		({ position, specialRights } = variant.getStartingPositionOfVariant({ Variant: longformOut.metadata.Variant!, UTCDate: longformOut.metadata.UTCDate!, UTCTime: longformOut.metadata.UTCTime! }));
+		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
 	}
 
 	const variantOptions: VariantOptions = {
@@ -96,7 +95,7 @@ function ICNToGamefile(ICN: string): gamefile {
 	 * It will throw an Error if there's any move with a startCoords that doesn't have any piece on it!
 	 * Some illegal moves may pass, but those aren't what we care about. We care about crashing moves!
 	 */
-	return new gamefile(longformOut.metadata, { moves, variantOptions });
+	return gamefile.initFullGame(longformOut.metadata, {variantOptions, moves});
 }
 
 function convertVariantFromSpokenLanguageToCode(Variant?: string) {

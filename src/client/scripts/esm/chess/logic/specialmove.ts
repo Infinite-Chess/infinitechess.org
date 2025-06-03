@@ -10,11 +10,24 @@ import type { RawTypeGroup } from '../util/typeutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Move } from './movepiece.js';
 import type { Piece } from '../util/boardutil.js';
-// @ts-ignore
-import type gamefile from './gamefile.js';
+import type { Board } from './gamefile.js';
 
 "use strict";
 
+
+/**
+ * Function that queues all of the changes a special move makes when executed.
+ */
+// eslint-disable-next-line no-unused-vars
+type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: Move) => boolean;
+
+/**
+ * An object storing the squares in the immediate vicinity
+ * a piece has a CHANCE of making a special-move capture from.
+ * 
+ * The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance.
+ */
+type SpecialVicinity = RawTypeGroup<Coords[]>
 
 // This returns the functions for executing special moves,
 // it does NOT calculate if they're legal.
@@ -41,7 +54,7 @@ const defaultSpecialMoves = {
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(gamefile: gamefile, piece: Piece, move: Move) {
+function kings(boardsim: Board, piece: Piece, move: Move) {
 
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
@@ -51,7 +64,7 @@ function kings(gamefile: gamefile, piece: Piece, move: Move) {
 	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
 
 	// Move the rook to new square
-	const pieceToCastleWith = boardutil.getPieceFromCoords(gamefile.pieces, specialTag.coord)!;
+	const pieceToCastleWith = boardutil.getPieceFromCoords(boardsim.pieces, specialTag.coord)!;
 	const landSquare: Coords = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
 
@@ -60,19 +73,19 @@ function kings(gamefile: gamefile, piece: Piece, move: Move) {
 	return true;
 }
 
-function pawns(gamefile: gamefile, piece: Piece, move: Move) {
+function pawns(boardsim: Board, piece: Piece, move: Move) {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
-	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, gamefile.state.global.enpassant, move.enpassantCreate);
+	if (move.enpassantCreate !== undefined) state.createEnPassantState(move, boardsim.state.global.enpassant, move.enpassantCreate);
 
 	const enpassantTag = move.enpassant; // true | undefined
 	const promotionTag = move.promotion; // promote type
 	if (!enpassantTag && !promotionTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
-	const captureCoords = enpassantTag ? gamefile.state.global.enpassant!.pawn : move.endCoords;
+	const captureCoords = enpassantTag ? boardsim.state.global.enpassant!.pawn : move.endCoords;
 	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, captureCoords);
+	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, captureCoords);
 
 	// Delete the piece captured
 
@@ -95,8 +108,8 @@ function pawns(gamefile: gamefile, piece: Piece, move: Move) {
 }
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
-function roses(gamefile: gamefile, piece: Piece, move: Move) {
-	const capturedPiece = boardutil.getPieceFromCoords(gamefile.pieces, move.endCoords);
+function roses(boardsim: Board, piece: Piece, move: Move) {
+	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
 	// Delete the piece captured
 	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece, move.path);
@@ -112,7 +125,7 @@ function roses(gamefile: gamefile, piece: Piece, move: Move) {
  * Returns the coordinate distances certain piece types have a chance
  * of special-move capturing on, according to the default specialMove functions.
  */
-function getDefaultSpecialVicinitiesByPiece(): RawTypeGroup<Coords[]> {
+function getDefaultSpecialVicinitiesByPiece(): SpecialVicinity {
 	return {
 		[rawTypes.PAWN]: [[-1,1],[1,1],[-1,-1],[1,-1]], // All squares a pawn could potentially capture on.
 		// All squares a rose piece could potentially capture on.
@@ -120,9 +133,12 @@ function getDefaultSpecialVicinitiesByPiece(): RawTypeGroup<Coords[]> {
 	};
 }
 
-
-
 export default {
 	defaultSpecialMoves,
 	getDefaultSpecialVicinitiesByPiece,
 };	
+
+export type {
+	SpecialMoveFunction,
+	SpecialVicinity
+};

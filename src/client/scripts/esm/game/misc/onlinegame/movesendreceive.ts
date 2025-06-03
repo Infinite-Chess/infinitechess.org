@@ -3,8 +3,7 @@
  * and receiving moves from our opponent.
  */
 
-// @ts-ignore
-import type gamefile from "../../../chess/logic/gamefile.js";
+import type { FullGame } from "../../../chess/logic/gamefile.js";
 import type { OpponentsMoveMessage } from "./onlinegamerouter.js";
 import type { MoveDraft } from "../../../chess/logic/movepiece.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
@@ -37,14 +36,14 @@ function sendMove() {
 	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
-	const lastMove = moveutil.getLastMove(gamefile.moves)!;
+	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
 	if (lastMove.isNull) throw Error('Cannot submit null move to online game.');
 	const shortmove = lastMove.compact; // "x,y>x,yN"
 
 	const data = {
 		move: shortmove,
-		moveNumber: gamefile.moves.length,
-		gameConclusion: gamefile.gameConclusion,
+		moveNumber: gamefile.basegame.moves.length,
+		gameConclusion: gamefile.basegame.gameConclusion,
 	};
 
 	websocket.sendmessage('game', 'submitmove', data, true);
@@ -57,10 +56,10 @@ function sendMove() {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
+function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message: OpponentsMoveMessage) {
 	// Make sure the move number matches the expected.
 	// Otherwise, we need to re-sync
-	const expectedMoveNumber = gamefile.moves.length + 1;
+	const expectedMoveNumber = gamefile.boardsim.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
 		console.error(`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`);
 		return onlinegame.resyncToGame();
@@ -93,13 +92,17 @@ function handleOpponentsMove(gamefile: gamefile, mesh: Mesh | undefined, message
 
 	// Edit the clocks
 	
+	const { basegame } = gamefile;
+
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-	clock.edit(gamefile, message.clockValues);
-	guiclock.edit(gamefile);
+	if (message.clockValues) {
+		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
+		clock.edit(basegame, message.clockValues);
+		guiclock.edit(basegame);
+	}
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
-	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
 
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons

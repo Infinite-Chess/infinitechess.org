@@ -37,7 +37,7 @@ import perspective from "../perspective.js";
 // @ts-ignore
 import camera from "../camera.js";
 // @ts-ignore
-import board from "../board.js";
+import board from "../boardtiles.js";
 
 
 // Variables --------------------------------------------------------------------------------------

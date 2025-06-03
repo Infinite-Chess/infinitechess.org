@@ -1,5 +1,5 @@
 
-import board from "./board.js";
+import board from "./boardtiles.js";
 import boardpos from "./boardpos.js";
 import bufferdata from "./bufferdata.js";
 import { createModel } from "./buffermodel.js";

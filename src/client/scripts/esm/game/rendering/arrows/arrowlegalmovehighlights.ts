@@ -14,7 +14,6 @@ import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 import arrows from "./arrows.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
-import boardutil from "../../../chess/util/boardutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
@@ -67,7 +66,7 @@ function update() {
 
 	// Do not render line highlights upon arrow hover, when game is rewinded,
 	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile)) {
+	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim)) {
 		hoveredArrowsLegalMoves.length = 0;
 		return;
 	}
@@ -106,9 +105,9 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const ourColor = onlinegame.areInOnlineGame() ? onlinegame.getOurColor() : gamefile.whosTurn;
+	const ourColor = onlinegame.areInOnlineGame() ? onlinegame.getOurColor() : gamefile.basegame.whosTurn;
 	const isOpponentPiece = pieceColor !== ourColor;
-	const isOurTurn = gamefile.whosTurn === pieceColor;
+	const isOurTurn = gamefile.basegame.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 
 	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);

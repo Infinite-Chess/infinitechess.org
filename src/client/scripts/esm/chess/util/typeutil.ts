@@ -103,6 +103,7 @@ type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]
 type Player = typeof players[keyof typeof players]
 
+/** A dictionary type with raw types for keys */
 type RawTypeGroup<T> = {
 	// eslint-disable-next-line no-unused-vars
 	[t in RawType]?: T
@@ -111,7 +112,7 @@ type RawTypeGroup<T> = {
 /** A dictionary type with all types for keys */
 type TypeGroup<T> = { [t: number]: T }
 
-/** A dictionary type with all player colors for keys */
+/** A dictionary type with player colors for keys */
 type PlayerGroup<T> = {
 	// eslint-disable-next-line no-unused-vars
 	[p in Player]?: T
@@ -174,6 +175,17 @@ function getPlayerFromString(string: StrPlayer): Player {
 	return strcolors.indexOf(string) as Player;
 }
 
+/**
+ * Deletes for pieces that aren't included in this game.
+ */
+function deleteUnusedFromRawTypeGroup<T>(existingRawTypes: RawType[], exclude: RawTypeGroup<T>) {
+	for (const key in exclude) {
+		const rawType = Number(key) as RawType;
+		if (!existingRawTypes.includes(rawType)) delete exclude[rawType];
+	}
+}
+
+
 /** 
  * Returns the english string of a piece type.
  * 30 => "[30] queen(white)"
@@ -216,5 +228,6 @@ export default {
 	getRawTypeStr,
 	invertPlayer,
 	getPlayerFromString,
-	debugType
+	debugType,
+	deleteUnusedFromRawTypeGroup,
 };
