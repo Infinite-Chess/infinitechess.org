@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "46"
+version = "57"
 maintainer = "xa31"
 
 [header]
@@ -11,6 +11,7 @@ login = "Iniciar Sesión"
 profile = "Perfíl"
 createaccount = "Crear Cuenta"
 logout = "Cerrar sesión"
+leaderboard = "Clasificaciónes"
 
 [header.settings]
 language = "Idioma"
@@ -21,6 +22,8 @@ legalmoves-dots = "Puntos" # Dots and 4 corner triangles
 selection = "Selección"
 selection-drag = "Arrastrar piezas"
 selection-premove = "Premovimientos (Premoves)"
+selection-animations = "Animaciones"
+selection-lingering_annotations = "Anotaciones duraderas"
 perspective = "Perspectiva" # Perspective-mode
 perspective-mouse-sensitivity = "Sensibilidad del ratón"
 perspective-fov = "Campo de visión (FOV)"
@@ -36,6 +39,12 @@ language = "Idioma"
 [member.javascript]
 js-confirm_delete = "¿Esta seguro que desea eliminar su cuenta? !Esta acción NO puede ser deshecha! Haga clic en OK para introducir su contraseña."
 js-enter_password = "Introduzca su contraseña para eliminar su cuenta PERMANENTEMENTE:"
+
+[leaderboard.javascript]
+supported_variants = "Esta tabla se usa para las siguientes variantes: "
+rank = "Clasificación"
+player = "Jugador"
+rating = "Puntuación"
 
 [index]
 title = "Infinite Chess | Página principal – La web oficial" # The tab title
@@ -85,9 +94,6 @@ variants_credits = [
 ]
 textures_heading = "Texturas"
 textures_licensed_under = "texturas bajo la licencia"
-textures_credits = [
-"Gold coin por Quolte",
-]
 sounds_heading = "Sonidos"
 sounds_credits = [
 ["Algunos sonidos han sido proporcionados por el provecto", "bajo la licencia"],
@@ -116,6 +122,9 @@ verify_confirm = "¡Gracias! Tu cuenta ha sido verificada."
 joined = "Se unió:"
 seen = ["Visto hace:", ""]
 practice_progress = "Progreso del modo práctica"
+ranked_elo = "Puntuación:"
+infinity_leaderboard_position = "Clasificación global:"
+infinity_leaderboard_rating_deviation = "Desviación de la puntuación:"
 reveal_info = "Mostrar información de la Cuenta"
 account_info_heading = "Información de la Cuenta"
 email = "E-mail:"
@@ -145,6 +154,12 @@ js-pwd_incorrect_format = "La contraseña está en un formato incorrecto"
 js-pwd_too_short = "La contraseña debe tener 6 o más caracteres"
 js-pwd_too_long = "La contraseña no puede tener mas de 72 caracteres"
 js-pwd_not_pwd = "La contraseña no debe ser 'password'"
+
+[leaderboard]
+title = "Tabla de clasificaciones"
+inactive_players = "Jugadores inactivos con una gran incertidumbre de puntuación (RD) son omitidos de la tabla."
+your_global_ranking = "Tu clasificación global:"
+show_more = "Mostrar más..."
 
 [play]
 title = "Infinite Chess - Jugar" # The tab title
@@ -279,6 +294,9 @@ code = "Codigo"
 undo_transition = "Deshacer transición"
 expand_fit_all = "Expandir para ver todo"
 recenter = "Recentrar"
+annotations = "Dibujar anotaciones"
+erase = "Borrar anotaciones"
+collapse = "Ocultar anotaciones"
 rewind_move = "Deshacer movimiento"
 forward_move = "Rehacer movimiento"
 pause = "Pausa"
@@ -302,6 +320,7 @@ question = "Aceptar tablas?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Invitado)"
 you_indicator = "(Tú)"
+engine_indicator = "Ordenador"
 player_name_white_generic = "Blancas"
 player_name_black_generic = "Negras"
 white_to_move = "Juegan blancas"
@@ -351,6 +370,7 @@ checkmate_gold_unearned = "Completa el 100% de los mates de práctica."
 [play.javascript.copypaste]
 copied_game = "¡Posición copiada en el portapapeles!"
 cannot_paste_in_public = "¡No se pueden pegar posiciones en una partida pública"
+cannot_paste_in_rated = "¡No se pueden pegar posiciones en una partida por puntos!"
 cannot_paste_in_engine = "¡No se pueden pegar posiciones en una partida con el ordenador!"
 cannot_paste_after_moves = "¡No se pueden pegar posiciones si ya se han hecho movimientos!"
 clipboard_denied = "Permiso de portapapeles denegado. Esto puede ser tu navegador."
@@ -379,7 +399,6 @@ regenerated_pieces = "Piezas regeneradas."
 [play.javascript.invites]
 move_mouse = "Mueve el ratón para reconectarte"
 cannot_cancel = "No se puede cancelar una invitación de ID indefinido."
-you_indicator = "(Tú)"
 you_are_white = "Eres: Blancas"
 you_are_black = "Eres: Negras"
 random = "Aleatorio"
@@ -426,7 +445,6 @@ insuffmat = "Material insuficiente"
 royalcapture = "Captura real"
 allroyalscaptured = "Todas las piezas reales capturadas"
 allpiecescaptured = "Todas las piezas capturadas"
-threecheck = "Triple jaque"
 koth = "King of the hill"
 resignation = "Resignación"
 agreement = "Acuerdo" 
@@ -442,7 +460,6 @@ you_disconnect = "¡Ganas por abandono!"
 you_royalcapture = "¡Ganas por captura real!"
 you_allroyalscaptured = "¡Ganas al capturar todas las piezas reales!"
 you_allpiecescaptured = "¡Ganas al capturar todas las piezas!"
-you_threecheck = "¡Ganas por triple jaque!"
 you_koth = "¡Ganas por king of the hill!"
 you_generic = "¡Ganas!"
 draw_stalemate = "¡Tablas por ahogamiento!"
@@ -459,30 +476,24 @@ opponent_disconnect = "¡Pierdes por abandono!"
 opponent_royalcapture = "¡Pierdes por captura real!"
 opponent_allroyalscaptured = "¡Pierdes por captura real total!"
 opponent_allpiecescaptured = "¡Pierdes por captura de todas las piezas!"
-opponent_threecheck = "¡Pierdes por jaque triple!"
 opponent_koth = "¡Pierdes por king of the hill!"
 opponent_generic = "¡Pierdes!"
 white_checkmate = "¡Las blancas ganan por jaque mate!"
 black_checkmate = "¡Las negras ganan por jaque mate!"
-bug_checkmate = "Esto es un bug, por favor repórtalo. El juego acaba en jaque mate."
 white_time = "¡Las blancas ganan por tiempo!"
 black_time = "¡Las negras ganan por tiempo!"
-bug_time = "Esto es un bug, por favor repórtalo. El juego acaba por tiempo."
+white_resignation = "¡Las blancas ganan por abandono!"
+black_resignation = "¡Las negras ganan por abandono!"
+white_disconnect = "¡Las blancas ganan por desconexión!"
+black_disconnect = "¡Las negras ganan por desconexión!"
 white_royalcapture = "¡Las blancas ganan por captura real!"
 black_royalcapture = "¡Las negras ganan por captura real!"
-bug_royalcapture = "Esto es un bug, por favor repórtalo. El juego acaba por captura real."
 white_allroyalscaptured = "¡Las blancas ganan por captura real total!"
 black_allroyalscaptured = "¡Las negras ganan por captura real total!"
-bug_allroyalscaptured = "Esto es un bug, por favor repórtalo. El juego acaba por captura real total."
 white_allpiecescaptured = "¡Las blancas ganan por captura de todas las piezas!"
 black_allpiecescaptured = "¡Las negras ganan por captura de todas las piezas!"
-bug_allpiecescaptured = "Esto es un bug, por favor repórtalo. El juego acaba por captura de todas las piezas."
-white_threecheck = "¡Las blancas ganan por jaque triple!"
-black_threecheck = "¡Las negras ganan por jaque triple!"
-bug_threecheck = "Esto es un bug, por favor repórtalo. El juego acaba por jaque triple."
 white_koth = "¡Las blancas ganan por king of the hill!"
 black_koth = "¡Las negras ganan por king of the hill!"
-bug_koth = "Esto es un bug, por favor repórtalo. El juego acaba por king of the hill."
 bug_generic = "¡Esto es un bug, por favor repórtalo!"
 
 [terms]
@@ -500,6 +511,7 @@ fair_play_paragraph1 = ["No puedes crear mas de una cuenta. Si te gustaría camb
 fair_play_paragraph2 = "Para mantener el juego limpio y justo para todos, NO debes:"
 fair_play_rules = [
 "Modificar o manipular el código de cualquier manera, incluyendo, pero no solo: Utilizar comandos de consola, controles locales, scripts personales, modificar peticiones http, etc. Esto puede hacerse intencionalmente para romper el juego, o para darte una ventaja.",
+"Abusar errores para abortar la partida, conseguir una ventaja, o hacer que el juego sea injugable. Esto puede incluír mover una pieza a distancias extremas, como a 10^15 casillas del origen.",
 "En partidas por puntos, recibir ayuda/consejos de otra persona o programa sobre lo que deberías hacer. (Crear un bot está bien y te animamos a hacerlo, pero debes limitar su uso a partidas amistosas, sin puntos)",
 "intercambiar puntos elo con otras personas al perder de manera intencionada para subir su nivel, o recibiendo puntos elo de un oponente que quiere perder para subir tu nivel. Esto abusa el sistema y crea niveles de puntuación poco precisos que no representan tu nivel de habilidad."
 ]
@@ -532,7 +544,6 @@ conclusion_paragraphs = [
 "No puedes realizar ninguna actividad ilegal en esta página web.",
 ["Si tienes alguna pregunta sobre estos términos, o cualquier otra pregunta sobre la página,", "¡Mándanos un correo!"]
 ]
-update = "(Ultima actualización: 13/7/24. Añadida una advertencia de que todas las partidas jugadas se convierten en información pública, incluyendo el tiempo aproximado desde la última vez que estuviste activo en la web, y es tu responsabilidad asegurarte de que te mantienes actualizado.)"
 thanks = "¡Gracias!"
 
 [login]
@@ -587,9 +598,8 @@ ws-server_restarting = "El servidor se reiniciará en" # The server inserts a nu
 ws-server_under_maintenance = "El servidor esta bajo mantenimiento. ¡Vuelve en un rato!" # Can be changed at will to change the display message.
 ws-minutes = "minutos" # unit of time
 ws-minute = "minuto" # unit of time
-ws-no_abort_game_over = "No se puede abortar la partida, ya ha acabado."
-ws-no_abort_after_moves = "No se puede abortar la partida, se tienen que jugar al menos 2 movimientos."
 ws-game_aborted_cheating = "Partida abortada por trampas probables.."
 ws-cannot_resign_finished_game = "No se puede conceder la partida, ya ha acabado."
 ws-invalid_code = "¡Código invalido!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Partida abortada." # Invite was cancelled as you clicked on it
+ws-rated_invite_verification_needed = "Para jugar partidas por puntos, necesitas iniciar sesión con una cuenta verificada."
