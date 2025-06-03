@@ -67,7 +67,7 @@ const allPlayerGamesColumns: string[] = [
 	'game_id',
 	'player_number',
 	'score',
-	'time_at_end',
+	'clock_at_end_millis',
 	'elo_at_game',
 	'elo_change_from_game'
 ];
@@ -85,7 +85,7 @@ const allGamesColumns: string[] = [
 	'result',
 	'termination',
 	'move_count',
-	'time_duration',
+	'time_duration_millis',
 	'icn'
 ];
 
@@ -164,7 +164,7 @@ function generateTables(): void {
 			result TEXT NOT NULL,
 			termination TEXT NOT NULL,
 			move_count INTEGER NOT NULL,
-			time_duration INTEGER, -- Number of milliseconds that the game lasted in total on the server. Null if info is missing.
+			time_duration_millis INTEGER, -- Number of milliseconds that the game lasted in total on the server. Null if info is missing.
 			icn TEXT NOT NULL -- Also includes clock timestamps after each move
 
 			-- Add a CHECK constraint to ensure consistency:
@@ -187,7 +187,7 @@ function generateTables(): void {
 			game_id INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number INTEGER NOT NULL, -- 1 => White  2 => Black
 			score REAL, -- 1 => Win   0.5 => Draw   0 => Loss   NULL => Aborted
-			time_at_end INTEGER, -- Number of milliseconds that player still has left on his clock when the game ended. Null if game has no clock or info is missing.
+			clock_at_end_millis INTEGER, -- Number of milliseconds that player still has left on his clock when the game ended. Null if game has no clock or info is missing.
 			elo_at_game REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
 			elo_change_from_game REAL, -- Specified only if the game was rated
 			PRIMARY KEY (user_id, game_id) -- Ensures unique link

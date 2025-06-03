@@ -80,7 +80,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	}
 
 	// Increment game_count_since_last_check by 1
-	const game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check ? rating_abuse_data.game_count_since_last_check : 0);
+	const game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
 
 	// Early exit condition if the newly incremented game_count_since_last_check is not a multiple of GAME_INTERVAL_TO_MEASURE
 	if (game_count_since_last_check % GAME_INTERVAL_TO_MEASURE !== 0) {

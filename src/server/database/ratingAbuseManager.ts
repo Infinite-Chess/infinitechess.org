@@ -60,7 +60,7 @@ function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): Mo
 		if (error instanceof Error && 'code' in error) {
 			// Example check for better-sqlite3 specific error codes
 			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = '(User ID, Leaderboard ID) does not exist in the rating_abuse table.';
+				reason = '(User ID, Leaderboard ID) does not exist in the leaderboards table.';
 			} else if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
 				reason = '(User ID, Leaderboard ID) already exists in the rating_abuse table.';
 			}
@@ -70,7 +70,7 @@ function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): Mo
 }
 
 /**
- * Checks if an entry exists in the rating_abuse.
+ * Checks if an entry exists in the rating_abuse table.
  * Relies on the composite primary key (user_id, leaderboard_id).
  * @param user_id - The ID of the user to check.
  * @param leaderboard_id - The ID of the leaderboard to check within.
@@ -181,8 +181,7 @@ function updateRatingAbuseColumns(user_id: number, leaderboard_id: number, colum
 	const values = Object.values(columnsAndValues);
 
 	// Add the user_id and leaderboard_id as the last parameters for the WHERE clause
-	values.push(user_id);
-	values.push(leaderboard_id);
+	values.push(user_id, leaderboard_id);
 
 	// Update query to modify multiple columns
 	const updateQuery = `UPDATE rating_abuse SET ${setStatements} WHERE user_id = ? AND leaderboard_id = ?`;
@@ -200,7 +199,7 @@ function updateRatingAbuseColumns(user_id: number, leaderboard_id: number, colum
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEventsAndPrint(`Error updating rating_abuse table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}" and leaderboard ID "${leaderboard_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
+		logEventsAndPrint(`Error updating rating_abuse table columns ${JSON.stringify(Object.keys(columnsAndValues))} for user ID "${user_id}" and leaderboard ID "${leaderboard_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
 		// Return an error message
 		return { success: false, reason: 'Database error.' }; // Generic error message
 	}
