@@ -51,7 +51,7 @@ const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omeg
  */
 function copyGame(copySinglePosition) {
 	const gamefile = gameslot.getGamefile();
-	const Variant = gamefile.metadata.Variant;
+	const Variant = gamefile.basegame.metadata.Variant;
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();

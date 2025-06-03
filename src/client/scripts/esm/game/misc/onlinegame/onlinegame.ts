@@ -56,13 +56,13 @@ let ourColor: Player | undefined;
 let playerRatings: PlayerGroup<Rating> | undefined;
 
 /**
- * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
+ * Different from gamefile.basegame.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
  * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
  */
 let serverHasConcludedGame: boolean | undefined;
 
 /**
- * Different from gamefile.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
+ * Different from gamefile.basegame.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
  * and NOT if the SERVER tells us that the game is concluded.
  */
 let playerHasPressedAbortOrResignButton: boolean | undefined;
