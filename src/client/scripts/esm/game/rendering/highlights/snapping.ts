@@ -294,7 +294,7 @@ function snapPointerWorld(world: Coords): Snap | undefined {
 	 */
 
 	// Allows snapping to all hippogonals, even the ones in 4D variants.
-	// const allPrimitiveSlidesInGame = board.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
+	// const allPrimitiveSlidesInGame = boardsim.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
 	const searchVectors = boardsim.pieces.hippogonalsPresent ? [...VECTORS, ...VECTORS_HIPPOGONAL] : [...VECTORS];
 

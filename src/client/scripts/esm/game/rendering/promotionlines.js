@@ -22,7 +22,7 @@ const extraLength = 2; // Default: 4
 const thickness = 0.010;
 
 function render() {
-	if (gameslot.getGamefile().gameRules.promotionRanks === undefined) return; // No promotion ranks in this game
+	if (gameslot.getGamefile().basegame.gameRules.promotionRanks === undefined) return; // No promotion ranks in this game
 	const model = initModel();
 
 	const boardPos = boardpos.getBoardPos();
@@ -51,7 +51,7 @@ function initModel() {
 	const squareCenter = boardtiles.gsquareCenter();
 
 	const gamefile = gameslot.getGamefile();
-	const startPositionBox = gamefile.board.editor ? boardtiles.getBoundingBoxOfBoard() : gamefileutility.getStartingAreaBox(gamefile.board);
+	const startPositionBox = gamefile.boardsim.editor ? boardtiles.getBoundingBoxOfBoard() : gamefileutility.getStartingAreaBox(gamefile.boardsim);
 
 	const startX = startPositionBox.left - squareCenter - extraLength;
 	const endX = startPositionBox.right + 1 - squareCenter + extraLength;
@@ -60,8 +60,8 @@ function initModel() {
 
 	const vertexData = [];
 
-	addDataForSide(gamefile.gameRules.promotionRanks[players.WHITE], 1);
-	addDataForSide(gamefile.gameRules.promotionRanks[players.BLACK], 0);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.WHITE], 1);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.BLACK], 0);
 
 	function addDataForSide(ranks, zeroOrOne) {
 		ranks.forEach(rank => {
