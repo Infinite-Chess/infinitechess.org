@@ -165,7 +165,7 @@ function pasteGame(longformOut) {
 
 	// Retain most of the existing metadata on the currently loaded gamefile
 	const currentGamefile = gameslot.getGamefile();
-	const currentGameMetadata = currentGamefile.metadata;
+	const currentGameMetadata = currentGamefile.basegame.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined) longformOut.metadata[metadataName] = currentGameMetadata[metadataName];
