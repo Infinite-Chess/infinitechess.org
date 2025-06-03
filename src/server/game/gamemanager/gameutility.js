@@ -363,7 +363,7 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 function getGameUpdateMessageContents(game, color) {
 	const messageContents = {
 		gameConclusion: game.gameConclusion,
-		moves: game.moves.map(m => simplifyMove(m)),
+		moves: game.moves.map(m => simplyMove(m)),
 		participantState: getParticipantState(game, color),
 	};
 
@@ -657,14 +657,14 @@ function getSimplifiedLastMove(game) {
 	const moves = game.moves;
 	if (moves.length === 0) return;
 	const move = moves[moves.length - 1];
-	return simplifyMove(move);
+	return simplyMove(move);
 }
 
 /**
  * Simplifies a game's move into the minimal info needed for the client to reconstruct the move.
  */
-function simplifyMove(move) {
-	return { compact: move.compact };
+function simplyMove(move) {
+	return { compact: move.compact, };
 }
 
 /**

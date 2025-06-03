@@ -80,7 +80,7 @@ function Game() {
 	this.incrementMillis = undefined;
 	/** Whether the game is rated. @type {boolean}*/
 	this.rated = undefined;
-	/** The moves list of the game. @type {{ compact: string, clockStamp?: number }[]} */
+	/** The moves list of the game. @type {{ startCoords: Coords, endCoords: Coords, promotion?: number, compact: string, clockStamp?: number }[]} */
 	this.moves = undefined;
 	/** The players in the game @type {PlayerGroup<PlayerData>}} */
 	this.players = undefined;
