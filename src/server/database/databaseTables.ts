@@ -89,6 +89,14 @@ const allGamesColumns: string[] = [
 	'icn'
 ];
 
+/** All columns of the rating_abuse table. Each of these would be valid to retrieve from any member and/or leaderboard. */
+const allRatingAbuseColumns: string[] = [
+	'user_id',
+	'leaderboard_id',
+	'game_count_since_last_check',
+	'last_alerted_at'
+];
+
 
 // Functions -----------------------------------------------------------------------------------
 
@@ -212,6 +220,23 @@ function generateTables(): void {
 		);
 	`);
 
+	// Rating Abuse table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS rating_abuse (
+			user_id INTEGER NOT NULL,
+			leaderboard_id INTEGER NOT NULL,
+			game_count_since_last_check INTEGER,
+			last_alerted_at TIMESTAMP,
+
+			PRIMARY KEY (user_id, leaderboard_id),
+			FOREIGN KEY (user_id, leaderboard_id)
+				REFERENCES leaderboards(user_id, leaderboard_id) ON DELETE CASCADE
+		);
+	`);
+
+	// To quickly get all leaderboard rating_abuse entries for a specific user
+	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
+
 	// Bans table
 	// createTableSQLQuery = `
 	// 	CREATE TABLE IF NOT EXISTS bans (
@@ -261,5 +286,6 @@ export {
 	allPlayerStatsColumns,
 	allPlayerGamesColumns,
 	allGamesColumns,
+	allRatingAbuseColumns,
 	initDatabase,
 };
