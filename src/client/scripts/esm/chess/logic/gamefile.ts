@@ -215,6 +215,18 @@ function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMov
 	return gamefile;
 }
 
+function initFullGame(metadata: MetaData, {variantOptions, moves, gameConclusion, editor, clockValues}: {
+	variantOptions?: VariantOptions,
+	moves?: ServerGameMovesMessage,
+	gameConclusion?: string,
+	editor?: boolean,
+	clockValues?: ClockValues
+} = {}): FullGame {
+	const basegame = initGame(metadata, variantOptions, gameConclusion, clockValues);
+	const boardsim = initBoard(basegame.gameRules, basegame.metadata, variantOptions, editor);
+	return loadGameWithBoard(basegame, boardsim, moves, gameConclusion);
+}
+
 export type {
 	Game,
 	Board,
@@ -227,4 +239,5 @@ export default {
 	initBoard,
 	initGame,
 	loadGameWithBoard,
+	initFullGame,
 };
