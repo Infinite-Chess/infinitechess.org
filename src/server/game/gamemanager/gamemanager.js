@@ -396,6 +396,9 @@ function onPlayerLostByAbandonment(game, colorWon) {
 async function deleteGame(game) {
 	if (!game) return console.error(`Unable to delete an undefined game!`);
 
+	// The ending time of the game object is set now as the game is deleted.
+	game.timeEnded = Date.now();
+
 	// If the pastedGame flag is present, skip logging to the database.
 	// We don't know the starting position.
 	if (game.positionPasted) console.log('Skipping logging custom game.');

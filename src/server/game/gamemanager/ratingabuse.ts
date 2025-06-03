@@ -91,27 +91,6 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 }
 
 
-
-
-/**
- * New table: rating abuse
- * 
- * user_id PRIMARY KEY ON DELETE CASCADE
- * last_measure INTEGER NOT NULL -- Their game count we last measured them for rating abuse probability
- * ... some way to measure cheat report count? OR, should all cheat reports just automatically notify me by email?
- */
-
-/**
- * Add to table: player games
- * time_at_end NUMBER
- * ISSUE: Previous logged games don't contain this information, maybe we can't have this cell.
- * 
- * Add to table: games
- * time_duration
- * ISSUE: Previous logged games don't contain this information, maybe we can't have this cell.
- */
-
-
 export default {
 	measureRatingAbuseAfterGame,
 };
