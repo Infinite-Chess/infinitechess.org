@@ -16,7 +16,8 @@ import { players, rawTypes } from '../util/typeutil.js';
 
 /** @typedef {import('./gamefile.js').Game} Game */
 /** @typedef {import('./gamefile.js').Board} Board */
-/** @typedef {import('../variants/gamerules.js'.GameRules)} GameRules*/
+/** @typedef {import('../variants/gamerules.js'.GameRules)} GameRules */
+/** @typedef {import('./gamefile.js').FullGame} FullGame */
 
 "use strict";
 
@@ -33,7 +34,7 @@ const kothCenterSquares = [[4,4],[5,4],[4,5],[5,5]];
  * Tests if the game is over by the win condition used, and if so,
  * returns the `gameConclusion` property of the gamefile.
  * For example, "1 checkmate", or "0 stalemate".
- * @param {gamefile} gamefile - The gamefile
+ * @param {FullGame} gamefile - The gamefile
  * @returns {string | undefined} The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *false*.
  */
 function getGameConclusion(gamefile) {
@@ -123,11 +124,11 @@ function detectKoth({boardsim, basegame}) {
 
 /**
  * Detects if the game is over by, for example, the 50-move rule.
- * @param {gamefile} gamefile - The gamefile
+ * @param {FullGame} gamefile - The gamefile
  * @returns {string | undefined} '0 moverule', if the game is over by the move-rule, otherwise *undefined*.
  */
 function detectMoveRule({boardsim, basegame}) {
-	if (!basegame.gameRules.moveRule) return undefined; // No move-rule being used
+	if (basegame.gameRules.moveRule === undefined) return undefined; // No move-rule being used
 	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
 	return undefined;
 }
@@ -157,7 +158,7 @@ function wasLastMoveARoyalCapture(boardsim) {
  * 
  * Checkmate is also not compatible with games with colinear lines present, because the logic surrounding
  * making opening discovered attacks illegal is a nightmare.
- * @param {gamefile} gamefile
+ * @param {FullGame} gamefile
  * @returns {boolean} true if the gamefile is checkmate compatible
  */
 function isCheckmateCompatibleWithGame({boardsim, basegame}) {
