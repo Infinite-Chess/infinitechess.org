@@ -25,12 +25,9 @@ type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: Move) => boolea
  * An object storing the squares in the immediate vicinity
  * a piece has a CHANCE of making a special-move capture from.
  * 
- * TODO: Move this to specialmove.ts when it's converted to typescript.
+ * The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance.
  */
-type SpecialVicinity = RawTypeGroup<
-/** The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance. */
-	Coords[]
->
+type SpecialVicinity = RawTypeGroup<Coords[]>
 
 // This returns the functions for executing special moves,
 // it does NOT calculate if they're legal.

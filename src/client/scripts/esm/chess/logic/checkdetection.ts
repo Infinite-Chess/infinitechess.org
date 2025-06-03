@@ -130,7 +130,7 @@ function doesVicinityAttackSquare(boardsim: Board, square: Coords, friendlyColor
  * @returns true if the square is being attacked by atleast one piece via a special individual move.
  */
 function doesSpecialAttackSquare(gamefile: FullGame, square: CoordsSpecial, friendlyColor: Player, attackers?: Attacker[]): boolean {
-	const {boardsim} = gamefile;
+	const { boardsim } = gamefile;
 	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.specialVicinity)) {
 		const thisSquare = coordutil.getCoordsFromKey(coordsKey as CoordsKey); // [1,2], [2,1], ...
 		// Subtract the offset of our square

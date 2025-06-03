@@ -140,7 +140,7 @@ function removeCheckInvalidMoves_Sliding(gamefile: FullGame, moves: LegalMoves, 
  * @returns true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
 function addressExistingChecks(gamefile: FullGame, legalMoves: LegalMoves, royalCoords: Coords[], selectedPieceCoords: Coords, color: Player): boolean {
-	const {boardsim} = gamefile;
+	const { boardsim } = gamefile;
 	if (royalCoords.length === 0) return false; // Exit if nothing in check
 	if (!checkdetection.isPlayerInCheck(boardsim, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 

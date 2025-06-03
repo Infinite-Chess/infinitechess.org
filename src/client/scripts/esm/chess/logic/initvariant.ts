@@ -40,8 +40,8 @@ interface VariantOptions {
  * 
  * To load a custom position, include the options within the `options` parameter!
  * All options are a snapshot of the starting position, before any moves are forwarded.
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
+ * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position.
+ * @param [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
  */
 function getVariantGamerules(metadata: MetaData, options?: VariantOptions): GameRules {
 	// Ignores the "Variant" metadata, and just uses the specified gameRules
@@ -52,9 +52,9 @@ function getVariantGamerules(metadata: MetaData, options?: VariantOptions): Game
 
 /**
  * Sets the pieceMovesets and specialMoves functions of the gamefile.
- * @param {gamefile} gamefile - The gamefile
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
+ * @param gamefile - The gamefile
+ * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. 
+ * @param [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
 */
 function getPieceMovesets(metadata: MetaData, slideLimit?: number) {
 	// The movesets and methods for detecting and executing special moves
@@ -69,12 +69,10 @@ function getPieceMovesets(metadata: MetaData, slideLimit?: number) {
 }
 
 /**
- * 
- * To load a custom position, include the options within the `options` parameter!
- * All options are a snapshot of the starting position, before any moves are forwarded.
- * @param {Object} metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position. "UTCDate" & "UTCTime" are required if you want to load a different version of the desired variant.
- * @param {VariantOptions} [variantOptions] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
- * @returns {StartSnapshot} The starting snapshot of the game.
+ * Fills in any holes in the provided variant options with the variant defaults.
+ * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `variantOptions` is specified with a position.
+ * @param [variantOptions] - The variant options. If position is not specified, the metadata must contain the "Variant".
+ * @returns The completed variant options.
  */
 function getVariantVariantOptions(gamerules: GameRules, metadata: MetaData, variantOptions?: VariantOptions): {
 	position: Snapshot['position'],

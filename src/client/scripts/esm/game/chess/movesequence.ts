@@ -40,7 +40,7 @@ import stats from "../gui/stats.js";
  * This returns the constructed Move object so that we have the option to animate it if we so choose.
  */
 function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDraft, { doGameOverChecks = true } = {}): Move {
-	const {basegame, boardsim} = gamefile;
+	const { basegame, boardsim } = gamefile;
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	
 	movepiece.makeMove(gamefile, move); // Logical changes
@@ -63,9 +63,9 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	// GUI changes
 	updateGui(false);
 
-	if (!onlinegame.areInOnlineGame()) {
-		const clockStamp_ = clock.push(basegame);
-		guiclock.push(basegame);
+	if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
+		const clockStamp_ = clock.push(basegame, basegame.clocks!);
+		guiclock.push(basegame.clocks!);
 		// Add the clock stamp to the move
 		if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
 	}

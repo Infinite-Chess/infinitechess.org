@@ -1,4 +1,4 @@
-import type { ClockDependant, ClockValues } from "./clock.js";
+import type { ClockData, ClockValues } from "./clock.js";
 import type { CoordsKey } from "../util/coordutil.js";
 import type { BoundingBox } from "../../util/math.js";
 import type { MetaData } from "../util/metadata.js";
@@ -51,6 +51,18 @@ type Game = {
 	gameConclusion?: string
 } & ClockDependant
 
+
+/**
+ * The Game variables that depend on the clock.
+ */
+type ClockDependant = {
+	untimed: true,
+	clocks: undefined,
+} | {
+	untimed: false,
+	clocks: ClockData
+}
+
 /**
  * Game data used for simulating game logic and board state
  * Use by client always, may not be used by the server.
@@ -87,6 +99,11 @@ type EditorDependent = {
 	startSnapshot: undefined
 }
 
+/**
+ * Both game data AND board state used on the client-side,
+ * and in the future *sometimes* used on the server-side,
+ * when the server starts doing legal move validation.
+ */
 type FullGame = {
 	basegame: Game,
 	boardsim: Board
@@ -95,28 +112,24 @@ type FullGame = {
 /** Creates a new {@link Game} object from provided arguments */
 function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string, clockValues?: ClockValues): Game {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
-	const {untimed, clocks} = clock.init(new Set(gameRules.turnOrder), metadata.TimeControl);
+	const clockDependantVars: ClockDependant = clock.init(new Set(gameRules.turnOrder), metadata.TimeControl);
 	const game = {
 		gameRules,
 		metadata,
 		moves: [],
 		whosTurn: gameRules.turnOrder[0],
-		untimed,
-		clocks,
-		gameConclusion
+		gameConclusion,
+		...clockDependantVars,
 	} as Game;
 	
-	if (clockValues) {
-		if (game. untimed) throw Error("Clock values provided for untimed game");
-		clock.edit(game, clockValues);
-	}
+	if (clockValues) clock.edit(game, clockValues);
 
 	return game;
 }
 
 /** Creates a new {@link Board} object from provided arguements */
 function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: VariantOptions, editor: boolean = false): Board {
-	const startSnapshot = initvariant.getVariantVariantOptions(gameRules, metadata, variantOptions) as Snapshot;
+	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(gameRules, metadata, variantOptions);
 
 	const state: GameState = {
 		local: {
@@ -124,13 +137,13 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 			inCheck: false,
 			attackers: [],
 		},
-		global: jsutil.deepCopyObject(startSnapshot.state_global)
+		global: jsutil.deepCopyObject(state_global)
 	};
 	
 	const { pieceMovesets, specialMoves } = initvariant.getPieceMovesets(metadata, gameRules.slideLimit);
 
 	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
-		startSnapshot.position,
+		position,
 		pieceMovesets,
 		gameRules.turnOrder,
 		editor,
@@ -139,7 +152,12 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
-	startSnapshot.box = math.getBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces));
+	const startSnapshot: Snapshot = {
+		position,
+		state_global,
+		fullMove,
+		box: math.getBoxFromCoordsList(boardutil.getCoordsOfAllPieces(pieces)),
+	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
 	const specialVicinity = legalmoves.genSpecialVicinity(metadata, existingRawTypes);
@@ -172,7 +190,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 
 /** Attaches a board to a specific game. Used for loading a game after it was started. */
 function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage = [], gameConclusion?: string): FullGame {
-	const gamefile = {basegame, boardsim};
+	const gamefile = { basegame, boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
@@ -197,6 +215,7 @@ export type {
 	Board,
 	FullGame,
 	Snapshot,
+	ClockDependant,
 };
 
 export default {

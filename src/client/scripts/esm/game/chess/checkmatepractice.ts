@@ -321,7 +321,7 @@ function onEngineGameConclude(): void {
 function registerHumanMove() {
 	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
 
-	const {basegame} = gameslot.getGamefile()!;
+	const { basegame } = gameslot.getGamefile()!;
 	if (!undoingIsLegal && gamefileutility.isGameOver(basegame) && basegame.moves.length > 0) {
 		// allow player to undo move if it ended the game
 		setUndoingIsLegal(true);
@@ -337,7 +337,7 @@ function registerHumanMove() {
 function registerEngineMove() {
 	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
 
-	const {basegame} = gameslot.getGamefile()!;
+	const { basegame } = gameslot.getGamefile()!;
 	if (!undoingIsLegal && basegame.moves.length > 1) {
 		// allow player to undo move after engine has moved
 		setUndoingIsLegal(true);

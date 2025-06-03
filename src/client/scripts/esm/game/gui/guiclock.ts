@@ -148,11 +148,11 @@ function edit(basegame: Game) {
 		removeBorder(clockElements.timer);
 	}
 
-	if (!moveutil.isGameResignable(basegame) || gamefileutility.isGameOver(basegame) || basegame.clocks.timeRemainAtTurnStart === undefined) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
 	rescheduleSoundEffects(basegame.clocks);
 }
 
 function rescheduleSoundEffects(clocks: ClockData) {
+	if (clocks.colorTicking === undefined) return; // Don't reschedule sound effects if no clocks are ticking
 	rescheduleMinuteTick(clocks); // Lowtime notif at 1 minute left
 	rescheduleCountdown(clocks); // Schedule 10s drum countdown
 }
@@ -199,7 +199,6 @@ function updateBorderColor(clocks: ClockData, element: HTMLElement, currentTimeR
 
 /** 
  * Updates the clocks' text content in the document.
- * @param {gamefile} gamefile 
  */
 function updateTextContent(clocks: ClockData) {
 	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
@@ -212,7 +211,6 @@ function updateTextContent(clocks: ClockData) {
 // The lowtime notification...
 /** 
  * Reschedules the timer to play the ticking sound effect at 1 minute remaining.
- * @param {gamefile} gamefile 
  */
 function rescheduleMinuteTick(clocks: ClockData) {
 	if (clocks.startTime.minutes < lowtimeNotif.clockMinsRequiredToUse) return; // 1 minute lowtime notif is not used in bullet games.
@@ -233,7 +231,6 @@ function set(basegame: Game) {
 	else showClocks();
 	updateTextContent(basegame.clocks);
 	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play
-	if (!moveutil.isGameResignable(basegame) || gamefileutility.isGameOver(basegame) || basegame.clocks.timeRemainAtTurnStart === undefined) return; // Don't plenty of sound if the game is over several clock values are reset when the game ends.
 	rescheduleSoundEffects(basegame.clocks);
 }
 
@@ -245,17 +242,8 @@ function rescheduleCountdown(clocks: ClockData) {
 	rescheduleTick(clocks);
 }
 
-/**
- * 
- * @param {gamefile} gamefile 
- */
-function push(basegame: Game) {
-
-	// Dont update if no clocks are ticking
-	if (basegame.untimed || gamefileutility.isGameOver(basegame) || !moveutil.isGameResignable(basegame)) return;
-	const clocks = basegame.clocks;
-	if (clocks.timeAtTurnStart === undefined) return;
-	rescheduleSoundEffects(basegame.clocks);
+function push(clocks: ClockData) {
+	rescheduleSoundEffects(clocks);
 
 	// Remove colored border
 	for (const [color, clockElements] of Object.entries(element_timers)) {

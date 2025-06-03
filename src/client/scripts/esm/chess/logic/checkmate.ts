@@ -24,7 +24,7 @@ const pieceCountToDisableCheckmate = 50_000;
  * @returns The color of the player who won by checkmate. '1 checkmate', '2 checkmate', or '0 stalemate'. Or *false* if the game isn't over.
  */
 function detectCheckmateOrStalemate(gamefile: FullGame): string | false {
-	const {basegame, boardsim} = gamefile;
+	const { basegame, boardsim } = gamefile;
 
 	// The game will be over when the player has zero legal moves remaining, lose or draw.
 	// Iterate through every piece, calculating its legal moves. The first legal move we find, we

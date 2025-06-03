@@ -241,7 +241,7 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
  * Call this after flipping the gamefile's `whosTurn` property.
  */
 function updateWhosTurn() {
-	const {basegame} = gameslot.getGamefile()!;
+	const { basegame } = gameslot.getGamefile()!;
 
 	// In the scenario we forward the game to front after the game has adjudicated,
 	// don't modify the game over text saying who won!
@@ -268,7 +268,7 @@ function gameEnd(conclusion?: string) {
 	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	const resultTranslations = translations['results'];
 
-	const {basegame} = gameslot.getGamefile()!;
+	const { basegame } = gameslot.getGamefile()!;
 
 	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole()) {
 
@@ -373,7 +373,7 @@ function updateAlignmentUsernames() {
  */
 function addRatingChangeToExistingUsernameContainers(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>) {
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
-	const {basegame} = gameslot.getGamefile()!;
+	const { basegame } = gameslot.getGamefile()!;
 	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.WHITE]!.change);
 	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingChanges[players.BLACK]!.change);
 

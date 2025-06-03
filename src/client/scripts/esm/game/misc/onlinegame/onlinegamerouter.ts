@@ -295,7 +295,7 @@ function handleLoggedGameInfo(message: {
  */
 function handleUpdatedClock(basegame: Game, clockValues: ClockValues) {
 	// Adjust the timer whos turn it is depending on ping.
-	if (clockValues) clockValues = onlinegame.adjustClockValuesForPing(clockValues);
+	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(basegame, clockValues); // Edit the clocks
 	guiclock.edit(basegame);
 }

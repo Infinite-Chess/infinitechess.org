@@ -232,7 +232,7 @@ function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIn
  * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
  * from the organized lists.
  */
-function deletePiece({boardsim}: FullGame, change: Change) {
+function deletePiece({ boardsim }: FullGame, change: Change) {
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
@@ -259,7 +259,7 @@ function deletePiece({boardsim}: FullGame, change: Change) {
  * @param gamefile - The gamefile
  * @param change - the move data
  */
-function movePiece({boardsim}: FullGame, change: Change) {
+function movePiece({ boardsim }: FullGame, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
 	const pieces = boardsim.pieces;
@@ -274,7 +274,7 @@ function movePiece({boardsim}: FullGame, change: Change) {
 /**
  * Reverses `movePiece`
  */
-function returnPiece({boardsim}: FullGame, change: Change) {
+function returnPiece({ boardsim }: FullGame, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
 	const pieces = boardsim.pieces;

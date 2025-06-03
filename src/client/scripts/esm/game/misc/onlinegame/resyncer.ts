@@ -58,8 +58,10 @@ function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, mess
 	gamefile.basegame.gameConclusion = claimedGameConclusion;
 
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-	clock.edit(gamefile.basegame, message.clockValues);
+	if (message.clockValues) {
+		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
+		clock.edit(gamefile.basegame, message.clockValues);
+	}
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile.basegame)) gameslot.concludeGame();
@@ -76,7 +78,7 @@ function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, mess
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
 function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves: ServerGameMoveMessage[], claimedGameConclusion: string | undefined): { opponentPlayedIllegalMove: boolean } {
-	const {boardsim} = gamefile;
+	const { boardsim } = gamefile;
 	// console.log("Resyncing...");
 
 	// Early exit case. If we have played exactly 1 more move than the server,

@@ -45,7 +45,7 @@ function fourDimensionalPawnMove(gamefile: FullGame, coords: Coords, color: Play
  * @param movetype - spacelike move or timelike move
  */
 function pawnLegalMoves(gamefile: FullGame, coords: Coords, color: Player, movetype: "spacelike" | "timelike"): Coords[] {
-	const {basegame, boardsim} = gamefile;
+	const { basegame, boardsim } = gamefile;
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 	const distance = (movetype === "spacelike" ? 1 : dim.BOARD_SPACING);
 	const distance_complement = (movetype === "spacelike" ? dim.BOARD_SPACING : 1);
@@ -115,7 +115,7 @@ function pawnLegalMoves(gamefile: FullGame, coords: Coords, color: Player, movet
  * @param xdistance
  * @param ydistance
  */
-function addPossibleEnPassant({basegame, boardsim}: FullGame, individualMoves: Coords[], coords: Coords, color: Player, xdistance: number, ydistance: number): void {
+function addPossibleEnPassant({ basegame, boardsim }: FullGame, individualMoves: Coords[], coords: Coords, color: Player, xdistance: number, ydistance: number): void {
 	if (!boardsim.state.global.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawn = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
@@ -191,7 +191,7 @@ function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: Move): b
  * @param coords - The coordinates of the knight
  * @param color - The color of the knight
  */
-function fourDimensionalKnightMove({boardsim}: FullGame, coords: Coords, color: Player): Coords[] {
+function fourDimensionalKnightMove({ boardsim }: FullGame, coords: Coords, color: Player): Coords[] {
 	const individualMoves: Coords[] = [];
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 

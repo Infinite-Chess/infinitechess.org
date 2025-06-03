@@ -243,7 +243,7 @@ function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: Coo
  * @param {Player} color - The color of the rose selected
  * @returns {CoordsSpecial[]}
  */
-function roses({boardsim}: FullGame, coords: Coords, color: Player): CoordsSpecial[] {
+function roses({ boardsim }: FullGame, coords: Coords, color: Player): CoordsSpecial[] {
 	const movements: Coords[] = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
 	const individualMoves: CoordsSpecial[] = [];

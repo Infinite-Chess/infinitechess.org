@@ -91,12 +91,15 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
 	// Edit the clocks
+	
 	const { basegame } = gamefile;
 
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-	clock.edit(basegame, message.clockValues);
-	guiclock.edit(basegame);
+	if (message.clockValues) {
+		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
+		clock.edit(basegame, message.clockValues);
+		guiclock.edit(basegame);
+	}
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();

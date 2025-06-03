@@ -16,7 +16,7 @@ import clockutil from '../util/clockutil.js';
 
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { MetaData } from '../util/metadata.js';
-import type { Game } from './gamefile.js';
+import type { ClockDependant, Game } from './gamefile.js';
 import type { Player } from '../util/typeutil.js';
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
@@ -76,14 +76,6 @@ type ClockData = {
 	timeAtTurnStart: undefined
 })
 
-type ClockDependant = {
-	untimed: true,
-	clocks: undefined,
-} | {
-	untimed: false,
-	clocks: ClockData
-}
-
 // Functions -----------------------------------------------------------------------
 
 
@@ -93,13 +85,10 @@ type ClockDependant = {
  * @param gamefile 
  * @param [currentTimes] Optional. An object containing the current times of the players. Often used if we re-joining an online game.
  */
-function init(players: Iterable<Player>, clock: MetaData["TimeControl"]): ClockDependant {
-	const untimed = clockutil.isClockValueInfinite(clock);
-	if (untimed) {
-		return {untimed: true, clocks: undefined};
-	}
-	// { minutes, increment }
-	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(clock)!;
+function init(players: Iterable<Player>, time_control: MetaData["TimeControl"]): ClockDependant {
+	const untimed = clockutil.isClockValueInfinite(time_control);
+	if (untimed) return { untimed: true, clocks: undefined };
+	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(time_control)!; // { minutes, increment }
 
 	const clocks: ClockData = {
 		startTime: {
@@ -119,7 +108,7 @@ function init(players: Iterable<Player>, clock: MetaData["TimeControl"]): ClockD
 		clocks.currentTime[color] = clocks.startTime.millis;
 	};
 
-	return {untimed: false, clocks};
+	return { untimed: false, clocks };
 }
 
 /**
@@ -127,8 +116,8 @@ function init(players: Iterable<Player>, clock: MetaData["TimeControl"]): ClockD
  * @param gamefile - The current game state object containing clock information.
  * @param [clockValues] - An object containing the updated clock values.
  */
-function edit(basegame: Game, clockValues?: ClockValues) {
-	if (!clockValues || basegame.untimed) return; // Likely a no-timed game
+function edit(basegame: Game, clockValues: ClockValues) {
+	if (basegame.untimed) throw Error("Don't call edit() on untimed games!");
 	const clocks = basegame.clocks;
 
 	const colorTicking = basegame.whosTurn;
@@ -154,11 +143,7 @@ function edit(basegame: Game, clockValues?: ClockValues) {
  * Call after flipping whosTurn. Flips colorTicking in local games.
  * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
-function push(basegame: Game): number | undefined {
-	if (basegame.untimed) return;
-
-	const clocks = basegame.clocks;
-
+function push(basegame: Game, clocks: ClockData): number | undefined {
 	const prevcolor = moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 2);
 
 	if (!moveutil.isGameResignable(basegame)) return clocks.currentTime[prevcolor]!;
@@ -188,7 +173,7 @@ function endGame(basegame: Game) {
  * Called every frame, updates values.
  * @param gamefile
  * @returns undefined if clocks still have time, otherwise it's the color who won.
-*/
+ */
 function update(basegame: Game): Player | undefined {
 	if (basegame.untimed || gamefileutility.isGameOver(basegame) || !moveutil.isGameResignable(basegame)) return;
 	

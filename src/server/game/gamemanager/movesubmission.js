@@ -75,7 +75,7 @@ function submitMove(ws, game, messageContents) {
 		logEventsAndPrint(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, "general", "printerror", "Invalid move format.");
 	}
-	if (!doesGameConclusionCheckOut(game, messageContents.gameConclusion, color)) {
+	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, "general", "printerror", "Invalid game conclusion.");
@@ -135,12 +135,11 @@ function doesMoveCheckOut(move) {
  * Returns true if the provided game conclusion seems reasonable for their move submission.
  * An example of a not reasonable one would be if they claimed they won by their opponent resigning.
  * This does not run the checkmate algorithm, so it's not foolproof.
- * @param {Game} game - The game
- * @param {string | false} gameConclusion - Their claimed game conclusion.
+ * @param {string | undefined} gameConclusion - Their claimed game conclusion.
  * @param {string} color - The color they are in the game.
  * @returns {boolean} *true* if their claimed conclusion seems reasonable.
  */
-function doesGameConclusionCheckOut(game, gameConclusion, color) {
+function doesGameConclusionCheckOut(gameConclusion, color) {
 	if (gameConclusion === undefined) return true;
 	if (typeof gameConclusion !== 'string') return false;
 

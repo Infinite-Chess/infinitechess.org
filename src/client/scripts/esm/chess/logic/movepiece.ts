@@ -179,7 +179,7 @@ interface NullMove {
  * and queueing its gamefile StateChanges.
  */
 function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
-	const {boardsim} = gamefile;
+	const { boardsim } = gamefile;
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
 	if (!piece) throw Error(`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
 
@@ -301,7 +301,7 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, move: Move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange({basegame, boardsim}: FullGame, move: Move | NullMove) {
+function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: Move | NullMove) {
 	if (!basegame.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement

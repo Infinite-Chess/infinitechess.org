@@ -49,7 +49,7 @@ interface SimplifiedGameState {
  * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile({basegame, boardsim}: FullGame, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
+function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
 
 	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;
