@@ -85,7 +85,7 @@ function toggle() {
 }
 
 function updatePasteButtonTransparency() {
-	const moves = gameslot.getGamefile().moves;
+	const moves = gameslot.getGamefile().boardsim.moves;
 
 	const legalInPrivateMatch = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && moves.length === 0;
 

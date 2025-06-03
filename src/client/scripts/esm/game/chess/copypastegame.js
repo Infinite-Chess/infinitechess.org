@@ -94,7 +94,7 @@ async function callbackPaste(event) {
 	// Make sure we're not in an engine match
 	if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 	// Make sure it's legal in a private match
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().boardsim.moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard;
