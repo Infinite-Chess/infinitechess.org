@@ -106,7 +106,7 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string, ratin
 	const leaderboard_id = VariantLeaderboards[game.variant] ?? null; // Include the leaderboard_id even if the game wasn't rated, so we can still filter
 	const game_private: 0 | 1 = (game.publicity !== 'public' ? 1 : 0);
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(game.clock);
-	const game_time_duration_millis = (game.timeEnded !== undefined ? game.timeEnded - game.timeCreated : null);
+	const game_time_duration_millis = (game.timeCreated !== undefined && game.timeEnded !== undefined ? game.timeEnded - game.timeCreated : null);
 
 	const gameToLog = {
 		game_id: game.id,
@@ -230,7 +230,7 @@ async function updatePlayerGamesTable(game: Game, game_id: number, victor: Playe
 		if (user_id === undefined) continue; // Guest players don't get an entry in the player_games table or an elo for updating
 
 		const score = victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0;
-		
+
 		const ending_clocks = gameutility.getGameClockValues(game)?.clocks;
 		const time_at_end = (ending_clocks !== undefined && ending_clocks[playerStr] !== undefined ? ending_clocks[playerStr] : null);
 

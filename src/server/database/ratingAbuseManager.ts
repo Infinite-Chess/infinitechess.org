@@ -60,7 +60,7 @@ function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): Mo
 		if (error instanceof Error && 'code' in error) {
 			// Example check for better-sqlite3 specific error codes
 			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = '(User ID, Leaderboard ID) does not exist in the leaderboards table.';
+				reason = '(User ID, Leaderboard ID) does not exist in the rating_abuse table.';
 			} else if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
 				reason = '(User ID, Leaderboard ID) already exists in the rating_abuse table.';
 			}
