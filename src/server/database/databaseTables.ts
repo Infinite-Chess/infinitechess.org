@@ -234,7 +234,7 @@ function generateTables(): void {
 		);
 	`);
 
-	// To quickly get all leaderboard rating_abuse entries for a specific user
+	// To quickly get all rating_abuse entries for a specific user
 	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
 
 	// Bans table
