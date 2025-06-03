@@ -146,7 +146,7 @@ function updateTextOfMainMenuButton({ freezeMainMenuButtonUponChange } = {}) {
 	}
 
 	is_main_menu_button_used_as_resign_or_abort_button = true;
-	if (moveutil.isGameResignable(gameslot.getGamefile())) {
+	if (moveutil.isGameResignable(gameslot.getGamefile().basegame)) {
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
 		if (freezeMainMenuButtonUponChange && element_mainmenu.textContent !== translations.resign_game) freezeMainMenuButton();
 		element_mainmenu.textContent = translations.resign_game;
