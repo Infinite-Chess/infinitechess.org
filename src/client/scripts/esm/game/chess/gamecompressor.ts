@@ -51,6 +51,10 @@ interface SimplifiedGameState {
  */
 function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
 
+	// console.log("Compressing gamefile for ICN conversion...");
+	// console.log("Basegame:", jsutil.deepCopyObject(basegame));
+	// console.log("Boardsim:", jsutil.deepCopyObject(boardsim));
+
 	let position: Map<CoordsKey, number>;
 	let state_global: GlobalGameState;
 	let fullMove: number;
