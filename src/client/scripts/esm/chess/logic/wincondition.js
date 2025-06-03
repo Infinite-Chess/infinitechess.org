@@ -52,7 +52,7 @@ function getGameConclusion(gamefile) {
 }
 
 function detectRoyalCapture({boardsim, basegame}) {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture')) return undefined; // Not using this gamerule
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(boardsim)) {
@@ -60,46 +60,46 @@ function detectRoyalCapture({boardsim, basegame}) {
 		return `${colorThatWon} royalcapture`;
 	}
 
-	return false;
+	return undefined;
 }
 
 function detectAllroyalscaptured({boardsim, basegame}) {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allroyalscaptured')) return false; // Not using this gamerule
-	if (!wasLastMoveARoyalCapture(boardsim)) return false; // Last move wasn't a royal capture.
+	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allroyalscaptured')) return undefined; // Not using this gamerule
+	if (!wasLastMoveARoyalCapture(boardsim)) return undefined; // Last move wasn't a royal capture.
 
 	// Are there any royal pieces remaining?
 	// Remember that whosTurn has already been flipped since the last move.
 	const royalCount = boardutil.getRoyalCoordsOfColor(boardsim.pieces, basegame.whosTurn);
 
 	if (royalCount === 0) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
 		return `${colorThatWon} allroyalscaptured`;
 	}
 
-	return false;
+	return undefined;
 }
 
 function detectAllpiecescaptured({boardsim, basegame}) {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allpiecescaptured')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'allpiecescaptured')) return undefined; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
 	const count = boardutil.getPieceCountOfColor(boardsim.pieces, basegame.whosTurn);
 
 	if (count === 0) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
 		return `${colorThatWon} allpiecescaptured`;
 	}
 
-	return false;
+	return undefined;
 }
 
 function detectKoth({boardsim, basegame}) {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth')) return false; // Not using this gamerule
+	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth')) return undefined; // Not using this gamerule
 
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (!lastMove || lastMove.isNull) return false;
-	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return false;
+	if (!lastMove || lastMove.isNull) return undefined;
+	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return undefined;
 
 	let kingInCenter = false;
 	for (let i = 0; i < kothCenterSquares.length; i++) {
@@ -114,28 +114,28 @@ function detectKoth({boardsim, basegame}) {
 	}
 
 	if (kingInCenter) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
 		return `${colorThatWon} koth`;
 	}
 
-	return false;
+	return undefined;
 }
 
 /**
  * Detects if the game is over by, for example, the 50-move rule.
  * @param {gamefile} gamefile - The gamefile
- * @returns {string | false} '0 moverule', if the game is over by the move-rule, otherwise *false*.
+ * @returns {string | undefined} '0 moverule', if the game is over by the move-rule, otherwise *undefined*.
  */
 function detectMoveRule({boardsim, basegame}) {
-	if (!basegame.gameRules.moveRule) return false; // No move-rule being used
+	if (!basegame.gameRules.moveRule) return undefined; // No move-rule being used
 	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
-	return false;
+	return undefined;
 }
 
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(boardsim) {
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (!lastMove || lastMove.isNull) return false;
+	if (!lastMove || lastMove.isNull) return undefined;
 
 	const capturedTypes = new Set();
 
@@ -143,7 +143,7 @@ function wasLastMoveARoyalCapture(boardsim) {
 		capturedTypes.add(typeutil.getRawType(type));
 	});
 
-	if (!capturedTypes.size) return false; // Last move not a capture
+	if (!capturedTypes.size) return undefined; // Last move not a capture
 
 	// Does the piece type captured equal any royal piece?
 	// Idk why vscode does not have set methods

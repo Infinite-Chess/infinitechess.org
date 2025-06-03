@@ -156,7 +156,7 @@ function ordered_tuple_descending(tuple) {
  * Detects if the game is drawn for insufficient material
  * @param {GameRules} gameRules
  * @param {Board} boardsim
- * @returns {string | false} '0 insuffmat', if the game is over by the insufficient material, otherwise *false*.
+ * @returns {string | undefined} '0 insuffmat', if the game is over by the insufficient material, otherwise *undefined*.
  */
 function detectInsufficientMaterial(gameRules, boardsim) {
 	// Only make the draw check if the win condition is checkmate for both players

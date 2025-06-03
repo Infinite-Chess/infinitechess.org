@@ -21,7 +21,7 @@ import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
 import type { Attacker } from './state.js';
-import type { Board, Game, FullGame } from './gamefile.js';
+import type { Board, FullGame } from './gamefile.js';
 
 
 // Types -------------------------------------------------------------------
