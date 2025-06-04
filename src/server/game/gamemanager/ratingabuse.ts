@@ -13,6 +13,7 @@ import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager.j
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
+import { getMultipleGameData } from "../../database/gamesManager.js";
 
 
 // @ts-ignore
@@ -22,6 +23,34 @@ import type { Game } from '../TypeDefinitions.js';
 /** How many games played to measure their rating abuse probability again. */
 const GAME_INTERVAL_TO_MEASURE = 4;
 
+
+
+// Types Definitions ---------------------------------------------------------------------
+
+
+/** Relevant entries of a PlayerGamesRecord object, which are used for the rating abuse calculation */
+type RatingAbuseRelevantPlayerGamesRecord = { 
+	game_id: number,
+	score: number,
+	clock_at_end_millis: number | null,
+	elo_change_from_game: number
+};
+
+/** Relevant entries of a GamesRecord object, which are used for the rating abuse calculation */
+type RatingAbuseRelevantGamesRecord = {
+	game_id: number,
+	private: 0 | 1,
+	termination: string,
+	move_count: number,
+	time_duration_millis: number | null
+};
+
+/** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
+type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord & RatingAbuseRelevantGamesRecord;
+
+
+
+// Functions -----------------------------------------------------------------------------
 
 
 /**
@@ -84,28 +113,47 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
 	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
 		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
-		return;
+		// return;
 	}
 
 	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
 	game_count_since_last_check = 0;
 	updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check });
 
-	// If the player has net lost elo the past GAME_INTERVAL_TO_MEASURE games, no risk.
-	const recentGames = getRecentNRatedGamesForUser(
+	// Retrieve the most recent ranked non-aborted games from the player_games table
+	const recentPlayerGamesEntries = getRecentNRatedGamesForUser(
 		user_id,
 		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
-        ['elo_change_from_game']
-	) as { elo_change_from_game: number }[];
+        ['game_id', 'score', 'clock_at_end_millis', 'elo_change_from_game']
+	) as RatingAbuseRelevantPlayerGamesRecord[];
     
-	const netRatingChange = recentGames.reduce(
+	const netRatingChange = recentPlayerGamesEntries.reduce(
 		(acc, g) => acc + g.elo_change_from_game,
 		0
 	);
 
-	// The player has lost elo. No cause for concern, early exit
+	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
 	if (netRatingChange <= 0) return;
+
+	// Retrieve these same games also from the games table
+	const game_id_list = recentPlayerGamesEntries.map(recent_game => recent_game.game_id);
+	const recentGamesEntries = getMultipleGameData(
+		game_id_list,
+		['game_id', 'private', 'termination', 'move_count', 'time_duration_millis']
+	) as RatingAbuseRelevantGamesRecord[];
+	const games_table_game_id_list = recentGamesEntries.map(recent_game => recent_game.game_id);
+
+	// Combine the information about the games into a single gameInfoList object
+	const gameInfoList: RatingAbuseRelevantGameInfo[] = [];
+	for (let i = 0; i < game_id_list.length; i++) {
+		const j = games_table_game_id_list.indexOf(game_id_list[i]!);
+		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
+		if (j > -1) gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
+	}
+
+	// console.log(gameInfoList);
+	
 
 	// Now do all the actual suspicion level checks and notify Naviary by email if necessary
 	// ...
