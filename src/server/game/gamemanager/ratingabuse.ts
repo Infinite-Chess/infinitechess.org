@@ -14,14 +14,36 @@ import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
 import { getMultipleGameData } from "../../database/gamesManager.js";
+import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 
 
 // @ts-ignore
 import type { Game } from '../TypeDefinitions.js';
 
 
+// Constants -----------------------------------------------------------------------------
+
+
 /** How many games played to measure their rating abuse probability again. */
-const GAME_INTERVAL_TO_MEASURE = 4;
+const GAME_INTERVAL_TO_MEASURE = 5;
+
+/** Number of suspicious measurements to flag user as suspicious. */
+const NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM = 3;
+
+/** Number of rated games started close after each other to count as suspicious. */
+const TOO_CLOSE_GAMES_AMOUNT = 2;
+
+/** Two rated games started this close after each other count as suspicious. */
+const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 10; // 10 minutes
+
+/** Games with fewer moves than this are suspicious. */
+const SUSPICIOUS_MOVE_COUNT = 10;
+
+/** Games lasting less than this time on the serverare suspicious. */
+const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 60; // 1 minute
+
+/** A player ending a game with a larger fraction of his total clock time than this counts as suspicious. */
+const SUSPICIOUS_CLOCK_REMAINING_FRACTION = 0.9;
 
 
 
@@ -50,6 +72,13 @@ type RatingAbuseRelevantGamesRecord = {
 
 /** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
 type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord & RatingAbuseRelevantGamesRecord;
+
+
+type SuspicionLevelRecord = {
+	game_id?: number,
+	suspicion_level: number,
+	reason?: string
+};
 
 
 
@@ -138,7 +167,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
 	if (netRatingChange <= 0) {
-		logEvents(`INNOCENT! Tried to run suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, but user net rating change is not positive: ${netRatingChange}.`, 'ratingAbuseLog.txt');
+		logEvents(`INNOCENT! Tried to run suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, but user net rating change is not positive: ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games.`, 'ratingAbuseLog.txt');
 		return;
 	}
 
@@ -159,45 +188,85 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	}
 	// console.log(gameInfoList);
 
+
+	// Handcrafted game suspicion checking ------------------------------------------
+
+
+	/** An Object containg a suspicion level score for various monitored things */
+	const suspicion_level_record_list: SuspicionLevelRecord[] = [];
+
 	
-	// Handcrafted game suspicion checking
-	const suspicion_level_list: number[] = [];
+	// Check if the game dates are too close in proximity to each other
+	const sorted_timestamp_list = gameInfoList.map(game_info => game_info.date).map(date => timeutil.sqliteToTimestamp(date)).sort();
+	const timestamp_differences: number[] = [];
+	for (let i = 1; i < sorted_timestamp_list.length; i++) {
+		timestamp_differences.push(sorted_timestamp_list[i]! - sorted_timestamp_list[i - 1]!);
+	}
+	const close_game_pairs_amount = timestamp_differences.filter(diff => diff < TOO_CLOSE_GAMES_MILLIS).length;
+	if (close_game_pairs_amount >= TOO_CLOSE_GAMES_AMOUNT) {
+		suspicion_level_record_list.push({
+			suspicion_level: 3,
+			reason: `There are ${close_game_pairs_amount} game pairs, where games started within ${(TOO_CLOSE_GAMES_MILLIS / 60_000)} minutes of each other.`
+		});
+	}
+
+
+	// Iterate over all games in gameInfoList to set their suspicion level score
 	for (const gameInfo of gameInfoList) {
 		
 		// Game is not suspicious is player lost elo from it
 		if (gameInfo.elo_change_from_game < 0) {
-			suspicion_level_list.push(0);
+			suspicion_level_record_list.push({
+				game_id: gameInfo.game_id,
+				suspicion_level: 0
+			});
 			continue;
 		}
 
 		let game_suspicion_level = 0;
+		let reason = "";
 
 		// Game is suspicious if it contains too few moves
-		if (gameInfo.move_count < 10) game_suspicion_level++;
+		if (gameInfo.move_count < SUSPICIOUS_MOVE_COUNT) {
+			game_suspicion_level++;
+			reason += `Game contains ${gameInfo.move_count} moves. `;
+		}
 
 		// Game is suspicious if it lasted too briefly on the server
-		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < 60_000) game_suspicion_level++;
+		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < SUSPICIOUS_TIME_DURATION_MILLIS) {
+			game_suspicion_level++;
+			reason += `Game lasted only ${gameInfo.time_duration_millis} millis on the server. `;
+		}
 
 		// Game is suspicious if the clock at the end is still similar to the start time
 		if (gameInfo.clock_at_end_millis !== null &&
-			gameInfo.base_time_seconds !== null && 
-			gameInfo.increment_seconds !== null && 
-			gameInfo.clock_at_end_millis >= 0.9 * ( gameInfo.base_time_seconds + gameInfo.increment_seconds * gameInfo.move_count)
-		) game_suspicion_level++;
+			gameInfo.base_time_seconds !== null &&
+			gameInfo.increment_seconds !== null &&
+			gameInfo.clock_at_end_millis >= SUSPICIOUS_CLOCK_REMAINING_FRACTION * ( gameInfo.base_time_seconds + gameInfo.increment_seconds * gameInfo.move_count)
+		) {
+			game_suspicion_level++;
+			reason += `Player still has ${gameInfo.clock_at_end_millis} millis on his clock at the end of the game, with time control ${gameInfo.base_time_seconds}+${gameInfo.increment_seconds} and ${gameInfo.move_count} moves played. `;
+		}
 
 
-		suspicion_level_list.push(game_suspicion_level);
+		suspicion_level_record_list.push({
+			game_id: gameInfo.game_id,
+			suspicion_level: game_suspicion_level,
+			reason: (reason !== "" ? reason : undefined)
+		});
 	}
 
-
-	const potential_rating_abuse = (suspicion_level_list.filter(num => num !== 0).length > 1);
+	
+	// Rating abuse if at least 2 entries have a positive suspicion level
+	const potential_rating_abuse = (suspicion_level_record_list.map(entry => entry.suspicion_level).filter(num => num !== 0).length >= NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM);
+	const suspicion_sum = suspicion_level_record_list.map(entry => entry.suspicion_level).reduce((acc, cur) => acc + cur, 0);
 
 	// Player is suspicious and Naviary is notified
 	if (potential_rating_abuse) {
-		logEvents(`GUILTY??? Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, and user might be suspicious! Suspicion list: ${suspicion_level_list}`, 'ratingAbuseLog.txt');
+		logEventsAndPrint(`>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion sum: ${suspicion_sum}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
 	}
 	// Player is not suspicious
-	else logEvents(`INNOCENT! Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, but user is not suspicious. Suspicion list: ${suspicion_level_list}`, 'ratingAbuseLog.txt');
+	else logEvents(`INNOCENT! Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Suspicion sum: ${suspicion_sum}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
 }
 
 
