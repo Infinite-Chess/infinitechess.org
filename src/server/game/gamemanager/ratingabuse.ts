@@ -263,7 +263,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	}
 
 	
-	// Rating abuse if at least 2 entries have a positive suspicion level
+	// Rating abuse if at least NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM entries have a positive suspicion level
 	const potential_rating_abuse = (suspicion_level_record_list.map(entry => entry.suspicion_level).filter(num => num !== 0).length >= NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM);
 	const suspicion_sum = suspicion_level_record_list.map(entry => entry.suspicion_level).reduce((acc, cur) => acc + cur, 0);
 
