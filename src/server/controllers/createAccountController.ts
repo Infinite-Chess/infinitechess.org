@@ -39,8 +39,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
  * admin
  */
 const reservedUsernames: string[] = [
-	'white', 'black',
-	'engine', 'ordenador', 'computer', 'moteur', 'motor', 'silnik',
+	'white', 'black', 'engine',
 	'infinitechess',
 	'support', 'infinitechesssupport',
 	'administrator',
