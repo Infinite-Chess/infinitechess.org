@@ -516,6 +516,7 @@ function getSimplifiedGameString(game) {
 	const simplifiedGame = {
 		id: game.id,
 		timeCreated: timeutil.timestampToSqlite(game.timeCreated),
+		timeEnded: game.timeEnded,
 		variant: game.variant,
 		clock: game.clock,
 		rated: game.rated,
@@ -588,7 +589,7 @@ function sendUpdatedClockToColor(game, color) {
 }
 
 /**
- * Return the clock values of the game that can be sent to a client.
+ * Return the clock values of the game that can be sent to a client or logged.
  * It also includes who's clock is currently counting down, if one is.
  * This also updates the clocks, as the players current time should not be the same as when their turn firs started.
  * @param {Game} game - The game
@@ -598,8 +599,8 @@ function getGameClockValues(game) {
 	updateClockValues(game);
 	const clockValues = {
 		clocks: {
-			[players.WHITE]: game.players[players.WHITE].timer,
-			[players.BLACK]: game.players[players.BLACK].timer,
+			[players.WHITE]: game.players[players.WHITE]?.timer,
+			[players.BLACK]: game.players[players.BLACK]?.timer,
 		}
 	};
 		
@@ -733,6 +734,7 @@ export default {
 	isAFKTimerActive,
 	isDisconnectTimerActiveForColor,
 	isAutoResignDisconnectTimerActiveForColor,
+	getGameClockValues,
 	sendUpdatedClockToColor,
 	sendMoveToColor,
 	cancelDeleteGameTimer,

@@ -12,6 +12,7 @@
 import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
 
 
 // @ts-ignore
@@ -68,11 +69,29 @@ async function measureRatingAbuseAfterGame(game: Game) {
  */
 async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number) {
 
-	/** 1. Early exit if it hasn't been {@link GAME_INTERVAL_TO_MEASURE} games since the last measure. */
+	// If player is not in rating_abuse table, add him to it
+	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) addEntryToRatingAbuseTable(user_id, leaderboard_id);
 
+	// Access the player rating_abuse data
+	const rating_abuse_data = getRatingAbuseData(user_id, leaderboard_id, ['game_count_since_last_check', 'last_alerted_at']);
+	if (rating_abuse_data === undefined) {
+		await logEventsAndPrint(`Unable to read rating_abuse_data of user ${user_id} on leaderboard ${leaderboard_id} while making RatingAbuse check!`, 'errLog.txt');
+		return;
+	}
+	// Increment game_count_since_last_check by 1
+	let game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
 
-	/** 2. If they have net lost elo the past {@link GAME_INTERVAL_TO_MEASURE} games, no risk. */
+	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
+	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
+		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
+		return;
+	}
 
+	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
+	game_count_since_last_check = 0;
+	updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check });
+
+	// If the player has net lost elo the past GAME_INTERVAL_TO_MEASURE games, no risk.
 	const recentGames = getRecentNRatedGamesForUser(
 		user_id,
 		leaderboard_id,
@@ -85,31 +104,13 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		0
 	);
 
-	if (netRatingChange <= 0) return; // They have lost elo. No cause for concern.
+	// The player has lost elo. No cause for concern, early exit
+	if (netRatingChange <= 0) return;
 
-	// FINISH...
+	// Now do all the actual suspicion level checks and notify Naviary by email if necessary
+	// ...
+
 }
-
-
-
-
-/**
- * New table: rating abuse
- * 
- * user_id PRIMARY KEY ON DELETE CASCADE
- * last_measure INTEGER NOT NULL -- Their game count we last measured them for rating abuse probability
- * ... some way to measure cheat report count? OR, should all cheat reports just automatically notify me by email?
- */
-
-/**
- * Add to table: player games
- * time_at_end NUMBER
- * ISSUE: Previous logged games don't contain this information, maybe we can't have this cell.
- * 
- * Add to table: games
- * time_duration
- * ISSUE: Previous logged games don't contain this information, maybe we can't have this cell.
- */
 
 
 export default {

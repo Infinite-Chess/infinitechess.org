@@ -28,6 +28,7 @@ interface GamesRecord {
     result?: string;
     termination?: string;
     move_count?: number;
+	time_duration_millis?: number | null;
     icn?: string;
 }
 
@@ -57,6 +58,7 @@ function addGameToGamesTable(
         result: string,
         termination: string,
         move_count: number,
+		time_duration_millis: number | null,
         icn: string
     }): ModifyGameQueryResult {
 
@@ -73,8 +75,9 @@ function addGameToGamesTable(
         result,
         termination,
         move_count,
+		time_duration_millis,
         icn
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 
 	try {
@@ -92,6 +95,7 @@ function addGameToGamesTable(
                 options.result,
                 options.termination,
                 options.move_count,
+				options.time_duration_millis,
                 options.icn
             ]
 		);

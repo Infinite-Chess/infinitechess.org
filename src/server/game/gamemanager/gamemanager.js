@@ -312,6 +312,9 @@ function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
 	cancelDisconnectTimers(game);
 	closeDrawOffer(game);
 
+	// The ending time of the game is set, if it is undefined
+	if (game.timeEnded === undefined) game.timeEnded = Date.now();
+
 	// Set a 5-second timer to delete it and change elos,
 	// to give the other client time to oppose the conclusion if they want.
 	gameutility.cancelDeleteGameTimer(game); // Cancel first, in case a hacking report just ocurred.
