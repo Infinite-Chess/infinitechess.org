@@ -81,12 +81,12 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	// Increment game_count_since_last_check by 1
 	let game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
 
-	// Early exit condition if the newly incremented game_count_since_last_check is not a multiple of GAME_INTERVAL_TO_MEASURE
-	if (game_count_since_last_check >= GAME_INTERVAL_TO_MEASURE) {
+	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
+	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
 		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
 		return;
 	}
-	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0
+	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
 	game_count_since_last_check = 0;
 
 	// If the player has net lost elo the past GAME_INTERVAL_TO_MEASURE games, no risk.
@@ -104,7 +104,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// The player has lost elo. No cause for concern, early exit
 	if (netRatingChange <= 0) {
-		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
+		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check equal to 0 now
 		return;
 	}
 
