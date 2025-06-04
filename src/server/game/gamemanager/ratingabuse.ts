@@ -86,8 +86,10 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
 		return;
 	}
+
 	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
 	game_count_since_last_check = 0;
+	updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check });
 
 	// If the player has net lost elo the past GAME_INTERVAL_TO_MEASURE games, no risk.
 	const recentGames = getRecentNRatedGamesForUser(
@@ -103,10 +105,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	);
 
 	// The player has lost elo. No cause for concern, early exit
-	if (netRatingChange <= 0) {
-		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check equal to 0 now
-		return;
-	}
+	if (netRatingChange <= 0) return;
 
 	// Now do all the actual suspicion level checks, notify Naviary by email if necessary and call updateRatingAbuseColumns in the end
 	// ...
