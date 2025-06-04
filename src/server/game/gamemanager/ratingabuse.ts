@@ -15,6 +15,8 @@ import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
 import { getMultipleGameData } from "../../database/gamesManager.js";
 import timeutil from "../../../client/scripts/esm/util/timeutil.js";
+// @ts-ignore
+import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
 
 
 // @ts-ignore
@@ -86,17 +88,16 @@ type SuspicionLevelRecord = {
 
 
 /**
- * Red flags:
+ * Potential red flags (implemented checks are marked with an X):
  * 
+ * (X) Low move counts (games ended quickly)
+ * (X) Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
  * Opponents use the same IP address
- * Low move counts (games ended quickly)
  * Win streaks, especially against the same opponents
  * Rapid improvement over days/weeks that should take months, especially if account new
- * Low total rated loss count.
- * Opponents have low total casual matches, and low total rated wins.
- * 
+ * Low total rated loss count
+ * Opponents have low total casual matches, and low total rated wins
  * Opponent accounts brand new
- * Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
  * Excessive resignation terminations
  * Cheat reports against them
  */
@@ -145,7 +146,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
 	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
 		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
-		// return;
+		return;
 	}
 
 	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
@@ -195,7 +196,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	/** An Object containg a suspicion level score for various monitored things */
 	const suspicion_level_record_list: SuspicionLevelRecord[] = [];
 
-	
+
 	// Check if the game dates are too close in proximity to each other
 	const sorted_timestamp_list = gameInfoList.map(game_info => game_info.date).map(date => timeutil.sqliteToTimestamp(date)).sort();
 	const timestamp_differences: number[] = [];
@@ -263,7 +264,9 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// Player is suspicious and Naviary is notified
 	if (potential_rating_abuse) {
-		logEventsAndPrint(`>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion sum: ${suspicion_sum}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
+		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion sum: ${suspicion_sum}. Suspicion list: ${JSON.stringify(suspicion_level_record_list, null, 2)}`;
+		logEventsAndPrint(messageText.replace(/[\n\r\t]/g,""), 'ratingAbuseLog.txt');
+		sendRatingAbuseEmail(messageText);
 	}
 	// Player is not suspicious
 	else logEvents(`INNOCENT! Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Suspicion sum: ${suspicion_sum}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
