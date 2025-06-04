@@ -11,7 +11,7 @@
 
 import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
 import { getMultipleGameData } from "../../database/gamesManager.js";
 
@@ -39,6 +39,9 @@ type RatingAbuseRelevantPlayerGamesRecord = {
 /** Relevant entries of a GamesRecord object, which are used for the rating abuse calculation */
 type RatingAbuseRelevantGamesRecord = {
 	game_id: number,
+	date: string,
+	base_time_seconds: number | null,
+	increment_seconds: number | null,
 	private: 0 | 1,
 	termination: string,
 	move_count: number,
@@ -134,13 +137,16 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	);
 
 	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
-	if (netRatingChange <= 0) return;
+	if (netRatingChange <= 0) {
+		logEvents(`INNOCENT! Tried to run suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, but user net rating change is not positive: ${netRatingChange}.`, 'ratingAbuseLog.txt');
+		return;
+	}
 
 	// Retrieve these same games also from the games table
 	const game_id_list = recentPlayerGamesEntries.map(recent_game => recent_game.game_id);
 	const recentGamesEntries = getMultipleGameData(
 		game_id_list,
-		['game_id', 'private', 'termination', 'move_count', 'time_duration_millis']
+		['game_id', 'date', 'base_time_seconds', 'increment_seconds', 'private', 'termination', 'move_count', 'time_duration_millis']
 	) as RatingAbuseRelevantGamesRecord[];
 	const games_table_game_id_list = recentGamesEntries.map(recent_game => recent_game.game_id);
 
@@ -151,13 +157,47 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
 		if (j > -1) gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
 	}
-
 	// console.log(gameInfoList);
+
 	
+	// Handcrafted game suspicion checking
+	const suspicion_level_list: number[] = [];
+	for (const gameInfo of gameInfoList) {
+		
+		// Game is not suspicious is player lost elo from it
+		if (gameInfo.elo_change_from_game < 0) {
+			suspicion_level_list.push(0);
+			continue;
+		}
 
-	// Now do all the actual suspicion level checks and notify Naviary by email if necessary
-	// ...
+		let game_suspicion_level = 0;
 
+		// Game is suspicious if it contains too few moves
+		if (gameInfo.move_count < 10) game_suspicion_level++;
+
+		// Game is suspicious if it lasted too briefly on the server
+		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < 60_000) game_suspicion_level++;
+
+		// Game is suspicious if the clock at the end is still similar to the start time
+		if (gameInfo.clock_at_end_millis !== null &&
+			gameInfo.base_time_seconds !== null && 
+			gameInfo.increment_seconds !== null && 
+			gameInfo.clock_at_end_millis >= 0.9 * ( gameInfo.base_time_seconds + gameInfo.increment_seconds * gameInfo.move_count)
+		) game_suspicion_level++;
+
+
+		suspicion_level_list.push(game_suspicion_level);
+	}
+
+
+	const potential_rating_abuse = (suspicion_level_list.filter(num => num !== 0).length > 1);
+
+	// Player is suspicious and Naviary is notified
+	if (potential_rating_abuse) {
+		logEvents(`GUILTY??? Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, and user might be suspicious! Suspicion list: ${suspicion_level_list}`, 'ratingAbuseLog.txt');
+	}
+	// Player is not suspicious
+	else logEvents(`INNOCENT! Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, but user is not suspicious. Suspicion list: ${suspicion_level_list}`, 'ratingAbuseLog.txt');
 }
 
 
