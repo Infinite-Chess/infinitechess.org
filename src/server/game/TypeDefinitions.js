@@ -64,9 +64,9 @@ function Game() {
 
 	/** The game's unique ID @type {number} */
 	this.id = undefined;
-	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
+	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
 	this.timeCreated = undefined;
-	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. */
+	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
 	this.timeEnded = undefined;
 	/** Whether this game is "public" or "private". @type {'public' | 'private'} */
 	this.publicity = undefined;
