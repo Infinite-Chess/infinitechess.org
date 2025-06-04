@@ -78,15 +78,16 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		await logEventsAndPrint(`Unable to read rating_abuse_data of user ${user_id} on leaderboard ${leaderboard_id} while making RatingAbuse check!`, 'errLog.txt');
 		return;
 	}
-
 	// Increment game_count_since_last_check by 1
-	const game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
+	let game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
 
 	// Early exit condition if the newly incremented game_count_since_last_check is not a multiple of GAME_INTERVAL_TO_MEASURE
-	if (game_count_since_last_check % GAME_INTERVAL_TO_MEASURE !== 0) {
+	if (game_count_since_last_check >= GAME_INTERVAL_TO_MEASURE) {
 		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
 		return;
 	}
+	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0
+	game_count_since_last_check = 0;
 
 	// If the player has net lost elo the past GAME_INTERVAL_TO_MEASURE games, no risk.
 	const recentGames = getRecentNRatedGamesForUser(
