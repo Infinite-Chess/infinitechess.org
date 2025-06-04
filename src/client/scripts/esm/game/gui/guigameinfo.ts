@@ -83,7 +83,7 @@ function embedUsernameContainers(gameMetadata: MetaData) {
 	// Set white username container
 	const username_item_white: UsernameItem = { value: white, openInNewWindow: true };
 	const change_white = gameMetadata.WhiteRatingDiff ? Number(gameMetadata.WhiteRatingDiff) : undefined;
-	const rating_item_white: RatingItem | undefined = white_type === 'player' && playerRatings?.[players.WHITE] ? {
+	const rating_item_white: RatingItem | undefined = playerRatings?.[players.WHITE] ? {
 		value: playerRatings[players.WHITE]!.value + (change_white ?? 0),
 		confident: playerRatings[players.WHITE]!.confident,
 		change: change_white,
@@ -94,7 +94,7 @@ function embedUsernameContainers(gameMetadata: MetaData) {
 	// Set black username container
 	const username_item_black: UsernameItem = { value: black, openInNewWindow: true };
 	const change_black = gameMetadata.BlackRatingDiff ? Number(gameMetadata.BlackRatingDiff) : undefined;
-	const rating_item_black: RatingItem | undefined = black_type === 'player' && playerRatings?.[players.BLACK] ? {
+	const rating_item_black: RatingItem | undefined = playerRatings?.[players.BLACK] ? {
 		value: playerRatings[players.BLACK]!.value + (change_black ?? 0),
 		confident: playerRatings[players.BLACK]!.confident,
 		change: change_black
@@ -212,8 +212,8 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 		const white = metadata['White'] ?? translations['player_name_white_generic'];
 		const black = metadata['Black'] ?? translations['player_name_black_generic'];
 		return {
-			white: white,
-			black: black,
+			white,
+			black,
 			white_type: metadata['White'] && metadata['WhiteID'] ? 'player' : (white === translations['engine_indicator'] ? 'engine' : 'guest'),
 			black_type: metadata['Black'] && metadata['BlackID'] ? 'player' : (black === translations['engine_indicator'] ? 'engine' : 'guest'),
 		};

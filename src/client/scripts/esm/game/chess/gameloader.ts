@@ -370,7 +370,6 @@ function unloadGame() {
 	
 	guinavigation.close();
 	guigameinfo.close();
-	guigameinfo.clearUsernameContainers();
 	gameslot.unloadGame();
 	perspective.disable();
 	typeOfGameWeAreIn = undefined;
