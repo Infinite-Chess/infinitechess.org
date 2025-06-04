@@ -23,10 +23,28 @@ import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
 import type { Game } from '../TypeDefinitions.js';
 
 
+
+/**
+ * Potential red flags (already implemented checks are marked with an X at the start of the line):
+ * 
+ * (X) Low move counts (games ended quickly)
+ * (X) Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
+ * Opponents use the same IP address
+ * Win streaks, especially against the same opponents
+ * Rapid improvement over days/weeks that should take months, especially if account new
+ * Low total rated loss count
+ * Opponents have low total casual matches, and low total rated wins
+ * Opponent accounts brand new
+ * Excessive resignation terminations
+ * Cheat reports against them
+ */
+
+
+
 // Constants -----------------------------------------------------------------------------
 
 
-/** How many games played to measure their rating abuse probability again. */
+/** How many games played to measure a player's rating abuse probability at once. */
 const GAME_INTERVAL_TO_MEASURE = 5;
 
 /** Number of suspicious measurements to flag user as suspicious. */
@@ -35,8 +53,7 @@ const NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM = 3;
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
 
-
-/** Number of rated games started close after each other to count as suspicious. */
+/** Number of rated game pairs started close after each other to count as suspicious. */
 const TOO_CLOSE_GAMES_AMOUNT = 2;
 
 /** Two rated games started this close after each other count as suspicious. */
@@ -79,7 +96,7 @@ type RatingAbuseRelevantGamesRecord = {
 /** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
 type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord & RatingAbuseRelevantGamesRecord;
 
-
+/** Object containing information about analysis of suspicion level of some characteristic */
 type SuspicionLevelRecord = {
 	game_id?: number,
 	suspicion_level: number,
@@ -89,22 +106,6 @@ type SuspicionLevelRecord = {
 
 
 // Functions -----------------------------------------------------------------------------
-
-
-/**
- * Potential red flags (implemented checks are marked with an X):
- * 
- * (X) Low move counts (games ended quickly)
- * (X) Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
- * Opponents use the same IP address
- * Win streaks, especially against the same opponents
- * Rapid improvement over days/weeks that should take months, especially if account new
- * Low total rated loss count
- * Opponents have low total casual matches, and low total rated wins
- * Opponent accounts brand new
- * Excessive resignation terminations
- * Cheat reports against them
- */
 
 
 /**
