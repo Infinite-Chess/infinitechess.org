@@ -15,9 +15,10 @@ import type { ParticipantState, ServerGameInfo, ServerGameMovesMessage } from ".
 import type { Additional } from "./gameslot.js";
 import type { VariantOptions } from "../../chess/logic/initvariant.js";
 import type { EngineConfig } from "../misc/enginegame.js";
-import type { Player } from "../../chess/util/typeutil.js";
+import type { Player, PlayerGroup } from "../../chess/util/typeutil.js";
 import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
+import type { Rating } from "../../../../../server/database/leaderboardsManager.js";
 
 
 // @ts-ignore
@@ -36,6 +37,7 @@ import guinavigation from "../gui/guinavigation.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 import boardpos from "../rendering/boardpos.js";
+import metadata from "../../chess/util/metadata.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -87,6 +89,19 @@ function getOurColor(): Player | undefined {
 	if (typeOfGameWeAreIn === 'online') return onlinegame.getOurColor();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.getOurColor();
 	throw Error("Can't get our color in this type of game: " + typeOfGameWeAreIn);
+}
+
+function getPlayerRatings(): PlayerGroup<Rating> | undefined {
+	if (typeOfGameWeAreIn === undefined) throw Error("Can't get our ratings when we're not in a game!");
+	if (typeOfGameWeAreIn === 'online') return onlinegame.getPlayerRatings();
+	else if (typeOfGameWeAreIn === 'engine' || typeOfGameWeAreIn === 'local') {
+		const gamemetadata = gameslot.getGamefile()!.basegame.metadata;
+		const playerRatings: PlayerGroup<Rating> = {};
+		if (gamemetadata.WhiteElo) playerRatings[players.WHITE] = metadata.getRatingFromWhiteBlackElo(gamemetadata.WhiteElo);
+		if (gamemetadata.BlackElo) playerRatings[players.BLACK] = metadata.getRatingFromWhiteBlackElo(gamemetadata.BlackElo);
+		return playerRatings;
+	}
+	throw Error("Can't get our rating data in this type of game: " + typeOfGameWeAreIn);
 }
 
 /**
@@ -370,6 +385,7 @@ export default {
 	areInLocalGame,
 	isItOurTurn,
 	getOurColor,
+	getPlayerRatings,
 	areWeLoadingGame,
 	getTypeOfGameWeIn,
 	update,

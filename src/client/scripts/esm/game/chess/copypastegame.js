@@ -38,9 +38,9 @@ import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
  * A list of metadata properties that are retained from the current game when pasting an external game.
  * These will overwrite the pasted game's metadata with the current game's metadata.
  */
-const retainMetadataWhenPasting = ['White','Black','WhiteID','BlackID','WhiteElo','BlackElo','WhiteRatingDiff','BlackRatingDiff','TimeControl','Event','Site','Round'];
+const retainMetadataWhenPasting = ['Site'];
 /** The pasted game will refuse to override these unless specified explicitly. This prevents them from just being deleted. */
-const retainIfNotOverridden = ['UTCDate','UTCTime'];
+const retainIfNotOverridden = ['White','Black','WhiteID','BlackID','TimeControl','UTCDate','UTCTime','Event','Round'];
 
 const variantsTooBigToCopyPositionToICN = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', '5D_Chess'];
 

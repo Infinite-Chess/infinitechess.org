@@ -58,10 +58,8 @@ function open(metadata: MetaData, showGameControlButtons?: boolean) {
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
 
-	if (!usernamecontainer_white || !usernamecontainer_black) {
-		// Generate username containers
-		embedUsernameContainers(metadata);
-	} // Else username containers already exist ("N" key toggled bar)
+	// Generate username containers
+	embedUsernameContainers(metadata);
 
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
@@ -78,13 +76,12 @@ function embedUsernameContainers(gameMetadata: MetaData) {
 	// console.log("Embedding username containers");
 
 	const { white, black, white_type, black_type } = getPlayerNamesForGame(gameMetadata);
-
-	const playerRatings: PlayerGroup<Rating> | undefined = onlinegame.areInOnlineGame() ? onlinegame.getPlayerRatings() : undefined;
+	const playerRatings: PlayerGroup<Rating> | undefined = gameloader.getPlayerRatings();
 
 	// Set white username container
 	const username_item_white: UsernameItem = { value: white, openInNewWindow: true };
 	const change_white = gameMetadata.WhiteRatingDiff ? Number(gameMetadata.WhiteRatingDiff) : undefined;
-	const rating_item_white: RatingItem | undefined = playerRatings?.[players.WHITE] ? {
+	const rating_item_white: RatingItem | undefined = white_type === 'player' && playerRatings?.[players.WHITE] ? {
 		value: playerRatings[players.WHITE]!.value + (change_white ?? 0),
 		confident: playerRatings[players.WHITE]!.confident,
 		change: change_white,
@@ -95,7 +92,7 @@ function embedUsernameContainers(gameMetadata: MetaData) {
 	// Set black username container
 	const username_item_black: UsernameItem = { value: black, openInNewWindow: true };
 	const change_black = gameMetadata.BlackRatingDiff ? Number(gameMetadata.BlackRatingDiff) : undefined;
-	const rating_item_black: RatingItem | undefined = playerRatings?.[players.BLACK] ? {
+	const rating_item_black: RatingItem | undefined = black_type === 'player' && playerRatings?.[players.BLACK] ? {
 		value: playerRatings[players.BLACK]!.value + (change_black ?? 0),
 		confident: playerRatings[players.BLACK]!.confident,
 		change: change_black
@@ -209,11 +206,13 @@ function toggle() {
  */
 function getPlayerNamesForGame(metadata: MetaData): { white: string, black: string, white_type: 'player' | 'guest' | 'engine', black_type: 'player' | 'guest' | 'engine' } {
 	if (gameloader.getTypeOfGameWeIn() === 'local') {
+		const white = metadata['White'] ?? translations['player_name_white_generic'];
+		const black = metadata['Black'] ?? translations['player_name_black_generic'];
 		return {
-			white: translations['player_name_white_generic'],
-			black: translations['player_name_black_generic'],
-			white_type: 'guest',
-			black_type: 'guest',
+			white: white,
+			black: black,
+			white_type: !white || white === translations['guest_indicator'] || white === translations['you_indicator'] || white === translations['engine_indicator'] || white === translations['player_name_white_generic'] ? 'guest' : 'player',
+			black_type: !black || black === translations['guest_indicator'] || black === translations['you_indicator'] || black === translations['engine_indicator'] || black === translations['player_name_black_generic'] ? 'guest' : 'player',
 		};
 	} else if (onlinegame.areInOnlineGame()) {	
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
