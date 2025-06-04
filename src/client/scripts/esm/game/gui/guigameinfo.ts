@@ -78,6 +78,7 @@ function embedUsernameContainers(gameMetadata: MetaData) {
 	// console.log("Embedding username containers");
 
 	const { white, black, white_type, black_type } = getPlayerNamesForGame(gameMetadata);
+
 	const playerRatings: PlayerGroup<Rating> | undefined = gameloader.getPlayerRatings();
 
 	// Set white username container
