@@ -107,7 +107,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	// The player has lost elo. No cause for concern, early exit
 	if (netRatingChange <= 0) return;
 
-	// Now do all the actual suspicion level checks, notify Naviary by email if necessary and call updateRatingAbuseColumns in the end
+	// Now do all the actual suspicion level checks and notify Naviary by email if necessary
 	// ...
 
 }
