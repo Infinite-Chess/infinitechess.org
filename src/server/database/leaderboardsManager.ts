@@ -28,7 +28,7 @@ interface LeaderboardEntry {
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
 
 /** A rating value and whether we are confident about it. */
-type Rating = { value: number, confident: boolean}
+type Rating = { value: number, confident: boolean }
 
 
 // Methods --------------------------------------------------------------------------------------------
