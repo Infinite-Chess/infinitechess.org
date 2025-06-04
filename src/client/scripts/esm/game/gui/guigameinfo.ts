@@ -53,13 +53,15 @@ let usernamecontainer_black: UsernameContainer | undefined;
  * @param {boolean} showGameControlButtons
  */
 function open(metadata: MetaData, showGameControlButtons?: boolean) {
-	// console.log("Opening game info bar");
+	// console.error("Opening game info bar");
 
 	if (showGameControlButtons) showButtons = showGameControlButtons;
 	else showButtons = false;
 
-	// Generate username containers
-	embedUsernameContainers(metadata);
+	if (!usernamecontainer_white || !usernamecontainer_black) {
+		// Generate username containers
+		embedUsernameContainers(metadata);
+	} // Else username containers already exist ("N" key toggled bar)
 
 	updateWhosTurn();
 	element_gameInfoBar.classList.remove('hidden');
@@ -109,7 +111,7 @@ function embedUsernameContainers(gameMetadata: MetaData) {
  * Does NOT clear/erase the username containers.
  */
 function close() {
-	// console.log("Closing game info bar");
+	// console.error("Closing game info bar");
 
 	// Restore the whosturn marker to original content
 	element_whosturn.textContent = '';
@@ -126,7 +128,8 @@ function close() {
 
 /** Erases the username containers, removing them from the document. */
 function clearUsernameContainers() {
-	console.log("Clearing username containers");
+	if (!usernamecontainer_white || !usernamecontainer_black) throw Error("Should not call clearUsernameContainers when username containers were never initiated!");
+	// console.log("Clearing username containers");
 
 	// Stop any running number animations
 	usernamecontainer_white!.animationCancels.forEach(fn => fn());

@@ -263,6 +263,8 @@ function unloadGame() {
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
 	annotations.onGameUnload(); // Clear all user-drawn highlights
+
+	guigameinfo.clearUsernameContainers();
 }
 
 /**
