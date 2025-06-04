@@ -91,6 +91,10 @@ function getOurColor(): Player | undefined {
 	throw Error("Can't get our color in this type of game: " + typeOfGameWeAreIn);
 }
 
+/**
+ * Returns the ratings of each player in the type of game we are in.
+ * (Local games may have specified ratings if it's in the pasted ICN)
+ */
 function getPlayerRatings(): PlayerGroup<Rating> | undefined {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't get our ratings when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.getPlayerRatings();
