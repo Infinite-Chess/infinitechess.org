@@ -516,6 +516,7 @@ function getSimplifiedGameString(game) {
 	const simplifiedGame = {
 		id: game.id,
 		timeCreated: timeutil.timestampToSqlite(game.timeCreated),
+		timeEnded: game.timeEnded,
 		variant: game.variant,
 		clock: game.clock,
 		rated: game.rated,
