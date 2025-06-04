@@ -32,6 +32,10 @@ const GAME_INTERVAL_TO_MEASURE = 5;
 /** Number of suspicious measurements to flag user as suspicious. */
 const NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM = 3;
 
+/** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
+const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
+
+
 /** Number of rated games started close after each other to count as suspicious. */
 const TOO_CLOSE_GAMES_AMOUNT = 2;
 
@@ -262,11 +266,18 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	const potential_rating_abuse = (suspicion_level_record_list.map(entry => entry.suspicion_level).filter(num => num !== 0).length >= NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM);
 	const suspicion_sum = suspicion_level_record_list.map(entry => entry.suspicion_level).reduce((acc, cur) => acc + cur, 0);
 
-	// Player is suspicious and Naviary is notified
+	// Player is suspicious and admin is notified if necessary
 	if (potential_rating_abuse) {
 		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion sum: ${suspicion_sum}. Suspicion list: ${JSON.stringify(suspicion_level_record_list, null, 2)}`;
 		logEventsAndPrint(messageText.replace(/[\n\r\t]/g,""), 'ratingAbuseLog.txt');
-		sendRatingAbuseEmail(messageText);
+
+		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
+		if (rating_abuse_data.last_alerted_at === null || rating_abuse_data.last_alerted_at === undefined || Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >= SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS) {
+			sendRatingAbuseEmail(messageText);
+			// Update RatingAbuse table with last_alerted_at value
+			const last_alerted_at = timeutil.timestampToSqlite(Date.now());
+			updateRatingAbuseColumns(user_id, leaderboard_id, { last_alerted_at });
+		}
 	}
 	// Player is not suspicious
 	else logEvents(`INNOCENT! Ran suspicion check for user ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Suspicion sum: ${suspicion_sum}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
