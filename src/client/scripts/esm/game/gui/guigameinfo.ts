@@ -211,8 +211,8 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 		return {
 			white: white,
 			black: black,
-			white_type: !white || white === translations['guest_indicator'] || white === translations['you_indicator'] || white === translations['engine_indicator'] || white === translations['player_name_white_generic'] ? 'guest' : 'player',
-			black_type: !black || black === translations['guest_indicator'] || black === translations['you_indicator'] || black === translations['engine_indicator'] || black === translations['player_name_black_generic'] ? 'guest' : 'player',
+			white_type: metadata['White'] && metadata['WhiteID'] ? 'player' : (white === translations['engine_indicator'] ? 'engine' : 'guest'),
+			black_type: metadata['Black'] && metadata['BlackID'] ? 'player' : (black === translations['engine_indicator'] ? 'engine' : 'guest'),
 		};
 	} else if (onlinegame.areInOnlineGame()) {	
 		if (metadata.White === undefined || metadata.Black === undefined) throw Error('White or Black metadata not defined when getting player names for online game.');
@@ -222,8 +222,8 @@ function getPlayerNamesForGame(metadata: MetaData): { white: string, black: stri
 		return {
 			white: white,
 			black: black,
-			white_type: white === translations['guest_indicator'] || white === translations['you_indicator'] ? 'guest' : 'player',
-			black_type: black === translations['guest_indicator'] || black === translations['you_indicator'] ? 'guest' : 'player',
+			white_type: metadata['WhiteID'] ? 'player' : 'guest',
+			black_type: metadata['BlackID'] ? 'player' : 'guest',
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
