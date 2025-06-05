@@ -661,6 +661,42 @@ function calculateVectorComponents(vector: Vec2, length: number): Coords {
 	];
 }
 
+/**
+ * Calculates the y-coordinate for a given x-coordinate on a line defined in general form (Ax + By + C = 0).
+ * @param A Coefficient A of the line.
+ * @param B Coefficient B of the line.
+ * @param C Coefficient C of the line.
+ * @param x The x-coordinate for which to find y.
+ * @returns The y-coordinate, or undefined if the line is vertical and the given x doesn't match the line's x,
+ *          or if B is 0 and A is 0 (degenerate case).
+ *          Returns Infinity if the line is vertical and x matches, signifying any y is valid (though this is unconventional for a function expecting a single y).
+ *          A more robust solution for vertical lines might throw an error or return a specific object/status.
+ */
+function getYAtX_GeneralForm(A: number, B: number, C: number, x: number): number | undefined {
+	if (B === 0) {
+		// Line is vertical (Ax + C = 0) or degenerate.
+		if (A === 0) {
+			// Degenerate case (0x + 0y + C = 0).
+			// If C=0, it's the whole plane. If C!=0, it's no points.
+			return undefined; // Or throw new Error("Degenerate line: A and B are both zero.");
+		}
+		// Vertical line: x = -C/A
+		// Check if the given x matches the line's x-coordinate.
+		// Use a small epsilon for floating point comparison if A, C might be imprecise.
+		if (Math.abs(x - (-C / A)) < 1e-9) { // 1e-9 is an example epsilon
+			// For this x, y can be any value. How to represent this?
+			// Returning Infinity is one way, null or undefined is another.
+			// Depending on use case, throwing an error might be best.
+			return Infinity; // Or undefined, or throw new Error("Vertical line, y can be any value for this x.");
+		} else {
+			// The given x is not on this vertical line.
+			return undefined;
+		}
+	}
+	// Standard case: y = (-Ax - C) / B
+	return (-A * x - C) / B;
+}
+
 
 // Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
 
@@ -865,6 +901,7 @@ export default {
 	getVec2FromKey,
 	negateVector,
 	calculateVectorComponents,
+	getYAtX_GeneralForm,
 	GCD,
 	LCM,
 	euclideanDistance,
