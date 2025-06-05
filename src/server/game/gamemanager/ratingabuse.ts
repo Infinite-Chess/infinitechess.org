@@ -29,7 +29,7 @@ import type { Game } from '../TypeDefinitions.js';
  * 
  * (X) Low move counts (games ended quickly)
  * (X) Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
- * Opponents use the same IP address
+ * Opponents use the same IP address, OR the player has no active refresh tokens (logged out mid-game).
  * Win streaks, especially against the same opponents
  * Rapid improvement over days/weeks that should take months, especially if account new
  * Low total rated loss count
@@ -173,7 +173,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
 	if (netRatingChange <= 0) {
-		logEvents(`INNOCENT! Tried to run suspicion check for user ${user_id} on leaderboard ${leaderboard_id}, but user net rating change is not positive: ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games.`, 'ratingAbuseLog.txt');
+		logEvents(`Innocent: Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}), but user net rating change is not positive: ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games.`, 'ratingAbuseLog.txt');
 		return;
 	}
 
