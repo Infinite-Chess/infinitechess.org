@@ -42,6 +42,7 @@ import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from "../api/AdminPanel.js";
 import { getContributors } from '../api/GitHub.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
+import { handleForgotPasswordRequest, handleResetPassword } from '../controllers/passwordResetController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -211,6 +212,9 @@ function configureMiddleware(app) {
 
 	// Leaderboard router
 	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank', getLeaderboardData);
+
+	app.post('/forgot-password', handleForgotPasswordRequest);
+	app.post('/reset-password', handleResetPassword);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 

@@ -12,6 +12,7 @@ import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
 import { startPeriodicDatabaseIntegrityCheck } from './databaseIntegrity.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
+import { startPeriodicPasswordResetTokenCleanup } from './cleanupTasks.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -237,6 +238,23 @@ function generateTables(): void {
 	// To quickly get all rating_abuse entries for a specific user
 	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
 
+	
+	// Password Reset Tokens table
+	db.run(`
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            token_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            hashed_token TEXT NOT NULL UNIQUE,
+            expires_at INTEGER NOT NULL, -- Unix timestamp (seconds)
+            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), -- Unix timestamp (seconds)
+
+            FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+        );
+    `);
+	// Indexes for password_reset_tokens table
+	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
+
 	// Bans table
 	// createTableSQLQuery = `
 	// 	CREATE TABLE IF NOT EXISTS bans (
@@ -275,6 +293,7 @@ function initDatabase(): void {
 	startPeriodicDeleteUnverifiedMembers();
 	startPeriodicRefreshTokenCleanup();
 	startPeriodicLeaderboardRatingDeviationUpdate();
+	startPeriodicPasswordResetTokenCleanup();
 }
 
 

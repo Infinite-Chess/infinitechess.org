@@ -18,19 +18,43 @@
             <div id="content">                  
                 <h1 class="center"><%=t('login.title')%></h1>
                 <form action="./login" method="POST" class="center" id="form">
-                    <div class="formfield">
-                        <div id="usernameinputline">
-                            <label for="username"><%=t('login.username')%></label>
-                            <input id="username" type="text" name="username" required maxLength="40" autocomplete="off" autofocus>
+                    <!-- Container for the Login Fields -->
+                    <div id="login-form-container">
+                        <div class="formfield">
+                            <div id="username-input-line">
+                                <label for="username"><%=t('login.username')%></label>
+                                <input id="username" type="text" name="username" required maxLength="40" autocomplete="off" autofocus>
+                            </div>
+                            <div id="password-input-line">
+                                <label for="password"><%=t('login.password')%></label>
+                                <input id="password" type="password" name="password" required>
+                            </div>
+                            <!-- This is where our script inserts a login error division! -->
                         </div>
-                        <div id="passwordinputline">
-                            <label for="password"><%=t('login.password')%></label>
-                            <input id="password" type="password" name="password" required>
-                        </div>
-                        <!-- This is where our script inserts an error division! -->
+                        <!-- The main login submit button -->
+                        <input type="submit" value="<%=t('login.login_button')%>" class="unavailable" id="submit">
                     </div>
-                    <p id="forgot" class="forgothidden"><%=t('login.forgot_password.0')%><a href='mailto:infinitechess.org@gmail.com'><%=t('login.forgot_password.1')%></a></p>
-                    <input type="submit" value="<%=t('login.login_button')%>" class="unavailable" id="submit">
+
+                    <!-- Container for the Forgot Password Fields (HIDDEN BY DEFAULT) -->
+                    <div id="forgot-form-container" class="hidden">
+                        <div class="formfield">
+                            <div id="email-input-line">
+                                <label for="forgot-email"><%=t('create-account.email')%></label>
+                                <input id="forgot-email" type="email" name="email" required maxLength="100" autocomplete="off">
+                            </div>
+                            <!-- This is where our script will insert a forgot password error/success division! -->
+                        </div>
+                        <!-- The submit button for the forgot password form -->
+                        <input type="submit" value="<%=t('login.send_reset_link')%>" class="unavailable" id="forgot-submit">
+                    </div>
+
+
+                    <!-- The "Forgot Password?" link -->
+                    <p class="forgot-link-container">
+                        <a href="#" id="forgot-link"><%=t('login.forgot_question')%></a>
+                        <!-- This link will appear inside the forgot password form to switch back -->
+                        <a href="#" id="back-to-login-link" class="hidden"><%=t('login.back_to_login')%></a>
+                    </p>
                 </form>
             </div>
         </main>

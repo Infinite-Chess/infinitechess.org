@@ -9,6 +9,8 @@ import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
 
+/** @typedef {import('../controllers/sendMail.js').MemberRecord} MemberRecord */
+
 
 // Variables ----------------------------------------------------------
 
@@ -214,7 +216,7 @@ function getMemberRowByUsername(username) {
  * @param {string | number} searchValue - The value to search for, can be a user ID, username, or email.
  * @param {Object} [options] - Optional settings for the function.
  * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
- * @returns {Object} - An object containing the requested columns, or an empty object if no match is found.
+ * @returns {MemberRecord} - An object containing the requested columns, or an empty object if no match is found.
  */
 function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLogging } = {}) {
 

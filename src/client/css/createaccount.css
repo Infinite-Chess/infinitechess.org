@@ -50,12 +50,12 @@ main {
     margin: auto;
 }
 
-#usernameinputline {
+#username-input-line {
     text-align: center;
     line-height: 2.2em;
 }
 
-#emailinputline, #passwordinputline {
+#emailinputline, #password-input-line {
     vertical-align: middle;
     margin-top: 12px;
 }

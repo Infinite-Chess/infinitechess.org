@@ -171,7 +171,7 @@ function closeAllSocketsOfMember(user_id: string, closureCode: number, closureRe
  * Sets the metadata.verified entry of all sockets of a given user to true.
  * @param user_id - The unique ID of the user.
  */
-function AddVerificationToAllSocketsOfMember(user_id: string) {
+function AddVerificationToAllSocketsOfMember(user_id: number) {
 	const socketIDs = connectedMembers[user_id];
 	if (!socketIDs) return; // This member doesn't have any connected sockets
 
