@@ -32,6 +32,7 @@ const entryPoints = [
 	'dist/client/scripts/esm/views/member.js',
 	'dist/client/scripts/esm/views/leaderboard.js',
 	'dist/client/scripts/esm/views/createaccount.js',
+	'dist/client/scripts/esm/views/resetpassword.js',
 	'dist/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
 

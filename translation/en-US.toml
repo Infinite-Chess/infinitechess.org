@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "58"
+version = "59"
 maintainer = "Naviary"
 
 [header]
@@ -555,6 +555,13 @@ send_reset_link = "Send Reset Link"
 forgot_question = "Forgot Password?"
 back_to_login = "Back to Login"
 forgot_instruction = "Please enter the email address associated with your account."
+
+[reset_password]
+title = "Reset Your Password"
+instruction = "Please enter and confirm your new password."
+new_password = "New Password"
+confirm_password = "Confirm Password"
+submit_button = "Reset Password"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."

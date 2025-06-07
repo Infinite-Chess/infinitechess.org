@@ -140,7 +140,10 @@ const sendForgotPasswordRequest = (email) => {
 
 	const config = {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers: {
+			'Content-Type': 'application/json',
+			"is-fetch-request": "true" // Custom header
+		},
 		body: JSON.stringify({ email })
 	};
 
