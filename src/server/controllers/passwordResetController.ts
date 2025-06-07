@@ -50,7 +50,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			const resetUrl: string = `${appBaseUrl}/reset-password/${plainToken}`;
 
 			// 8. Send email
-			await sendPasswordResetEmail(email, resetUrl);
+			sendPasswordResetEmail(email, resetUrl);
 		}
 
 		// ALWAYS return a generic success message to prevent email enumeration.
@@ -141,6 +141,9 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 7. Send Success Response
 		res.status(200).json({ message: 'Password has been reset successfully.' });
+
+		// 8. Log the successful password reset
+		logEventsAndPrint(`Password reset successful for user_id ${userId}`, 'loginAttempts.txt');
 
 	} catch (error) {
 		const errorMessage: string = 'Reset password error: ' + (error instanceof Error ? error.message : String(error));

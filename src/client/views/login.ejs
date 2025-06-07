@@ -21,11 +21,11 @@
                     <!-- Container for the Login Fields -->
                     <div id="login-form-container">
                         <div class="formfield">
-                            <div id="usernameinputline">
+                            <div id="username-input-line">
                                 <label for="username"><%=t('login.username')%></label>
                                 <input id="username" type="text" name="username" required maxLength="40" autocomplete="off" autofocus>
                             </div>
-                            <div id="passwordinputline">
+                            <div id="password-input-line">
                                 <label for="password"><%=t('login.password')%></label>
                                 <input id="password" type="password" name="password" required>
                             </div>
@@ -45,7 +45,7 @@
                             <!-- This is where our script will insert a forgot password error/success division! -->
                         </div>
                         <!-- The submit button for the forgot password form -->
-                        <input type="submit" value="<%=t('login.send_reset_link')%>" class="ready" id="forgot-submit">
+                        <input type="submit" value="<%=t('login.send_reset_link')%>" class="unavailable" id="forgot-submit">
                     </div>
 
 

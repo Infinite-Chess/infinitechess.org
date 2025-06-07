@@ -24,7 +24,7 @@
                 <h1 class="center"><%=t('create-account.title')%></h1>
                 <form action="./createaccount" method="POST" class="center" id="form">
                     <div class="formfield">
-                        <div id="usernameinputline">
+                        <div id="username-input-line">
                             <label for="username"><%=t('create-account.username')%></label>
                             <input id="username" type="text" name="username" required minLength="3" maxLength="20" autocomplete="off" autofocus>
                         </div>
@@ -35,7 +35,7 @@
                             <input id="email" type="email" name="email" required minLength="3" maxLength="320" autocomplete="off">
                             </div>
                         </div>
-                        <div id="passwordinputline">
+                        <div id="password-input-line">
                             <div class="line">
                             <label for="password"><%=t('create-account.password')%></label>
                             <input id="password" type="password" name="password" required minLength="6">

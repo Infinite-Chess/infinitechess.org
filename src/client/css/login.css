@@ -51,11 +51,11 @@ main {
     line-height: 2.2em;
 }
 
-#usernameinputline {
+#username-input-line {
     text-align: center;
 }
 
-#passwordinputline {
+#password-input-line {
     margin-top: 12px;
     display: inline-block;
     text-align: center;
@@ -93,16 +93,6 @@ div.error {
     line-height: 1em;
 }
 
-.forgothidden {
-    display: none;
-}
-
-.forgotvisible {
-    display: block;
-    font-size: 13px;
-    margin-top: 0.5em;
-}
-
 form input[type='submit'] {
     height: 30px;
     min-width: 0;
@@ -111,15 +101,14 @@ form input[type='submit'] {
     background-color: white;
     font-size: 16px;
     transition: 0.1s;
-    margin: 25px;
+    margin-top: 25px;
     outline: 0;
+    transition: 0.1s;
 }
 
 form input[type='submit'].ready:hover {
-    transition: 0.1s;
-    font-size: 18px;
     box-shadow: 0 0 8px rgb(0, 0, 0);
-    margin: 23px;
+    transform: scale(1.125);
 }
 
 form input[type='submit'].ready:focus {
@@ -172,4 +161,37 @@ a {
         font-size: 50px;
         margin-bottom: 70px;
     }
+}
+
+
+/* Password Reset Form */
+
+/* Container for the "Forgot?" and "Back to Login" links */
+.forgot-link-container {
+	margin-top: 24px;
+	font-size: 14px;
+}
+
+/* Style for the links to make them look clickable */
+.forgot-link-container a {
+	color: #0056b3; /* A standard hyperlink blue */
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.forgot-link-container a:hover {
+	color: #003d7a;
+}
+
+#email-input-line {
+    text-align: center;
+}
+
+/* Style for the success message (e.g., after sending the email) */
+div.success {
+    font-size: 16px;
+    text-align: center;
+    color: green;
+    margin-top: 1.0em;
+    line-height: 1em;
 }
