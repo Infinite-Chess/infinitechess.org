@@ -107,7 +107,7 @@ const profainWords: string[] = [
 async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (!req.body) {
 		console.log(`User sent a bad create account request missing the whole body!`);
-		res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
+		res.status(400).send("Bad request"); // 400 Bad request
 		return;
 	}
 	// First make sure we have all 3 variables.
