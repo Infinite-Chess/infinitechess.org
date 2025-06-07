@@ -142,7 +142,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// Optional but recommended: Send a confirmation email that the password was changed.
 
 		// 7. Send Success Response
-		res.status(200).json({ message: 'Password has been reset successfully.' });
+		res.status(200).json({ message: getTranslationForReq('server.javascript.ws-password-change-success', req) });
 
 		// 8. Log the successful password reset
 		logEventsAndPrint(`Password reset successful for user_id ${userId}`, 'loginAttempts.txt');

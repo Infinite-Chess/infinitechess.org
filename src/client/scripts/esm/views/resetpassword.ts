@@ -112,7 +112,7 @@ if (form && newPasswordInput && confirmPasswordInput && submitButton) {
 
 			// --- Handle Success ---
 			// Replace the form content with a success message and redirect.
-			form.innerHTML = `<p class="success">${result.message} You will be redirected to the login page shortly.</p>`;
+			form.innerHTML = `<p class="success">${result.message}</p>`;
 			setTimeout(() => {
 				window.location.href = '/login'; // Redirect to login page
 			}, 4000);
