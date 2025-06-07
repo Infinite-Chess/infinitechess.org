@@ -1,6 +1,6 @@
 import { Request } from "express";
 
-interface CustomRequest extends Request {
+interface AuthenticatedRequest extends Request {
 	memberInfo: MemberInfo
 }
 
@@ -14,6 +14,6 @@ type MemberInfo = {
 }
 
 export type {
-	CustomRequest,
+	AuthenticatedRequest,
 	MemberInfo
 };
