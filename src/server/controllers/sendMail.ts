@@ -10,30 +10,27 @@ import { AuthenticatedRequest } from '../../types';
 
 // --- Type Definitions ---
 
-
-/** Structure of a member record. This is all allowed columns of the members table. */
+/** Structure of a member record. */
 interface MemberRecord {
-	user_id?: number,             
-	username?: string,
-	email?: string,             
-	hashed_password?: string,           
-	roles?: string | null,     
-	joined?: string,
-	last_seen?: string,                       
-	login_count?: number,                
-	preferences?: string | null,
-	refresh_tokens?: string | null,                         
-	verification?: string | null,
-	username_history?: string | null,
-	checkmates_beaten?: string
+	user_id?: number;
+	username?: string;
+	email?: string;
+	hashed_password?: string;
+	roles?: string | null;
+	joined?: string;
+	last_seen?: string;
+	login_count?: number;
+	preferences?: string | null;
+	refresh_tokens?: string | null;
+	verification?: string | null;
+	username_history?: string | null;
+	checkmates_beaten?: string;
 }
 
 // --- Module Setup ---
 const EMAIL_USERNAME = process.env.EMAIL_USERNAME;
 const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD;
 
-// Create the transporter once and reuse it. This is more efficient.
-// If credentials aren't set, the transporter will be null, and sending will be skipped.
 const transporter = (EMAIL_USERNAME && EMAIL_APP_PASSWORD)
 	? nodemailer.createTransport({
 		service: 'gmail',
@@ -41,19 +38,22 @@ const transporter = (EMAIL_USERNAME && EMAIL_APP_PASSWORD)
 			user: EMAIL_USERNAME,
 			pass: EMAIL_APP_PASSWORD
 		},
-		// tls: { rejectUnauthorized: false } // Uncomment for local dev if needed
 	})
 	: null;
 
+// --- Helper Functions ---
 
-// Email Sending Functions ------------------------------------------------------
+function createEmailHtmlWrapper(title: string, contentHtml: string): string {
+	return `
+		<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #999; border-radius: 5px;">
+			<h2 style="color: #333;">${title}</h2>
+			${contentHtml}
+		</div>
+	`;
+}
 
+// --- Email Sending Functions ---
 
-/**
- * Sends a password reset email to the specified recipient.
- * @param recipientEmail - The email address to send the reset link to.
- * @param resetUrl - The full URL containing the password reset token.
- */
 async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
 	if (!transporter) {
 		console.log("Email environment variables not specified. Not sending password reset email.");
@@ -61,31 +61,26 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 		return;
 	}
 
+	const content = `
+		<p style="font-size: 16px; color: #555;">We received a request to reset the password for your account.</p>
+		<p style="font-size: 16px; color: #555;">Please click the button below to set a new password. This link will expire in 1 hour.</p>
+		<a href="${resetUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Reset Password</a>
+		<p style="font-size: 14px; color: #666;">If you did not request a password reset, you can safely ignore this email.</p>
+	`;
+
 	const mailOptions = {
 		from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
 		to: recipientEmail,
 		subject: 'Your Password Reset Request',
-		html: `
-			<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #999; border-radius: 5px;">
-				<h2 style="color: #333;">Password Reset Request</h2>
-				<p style="font-size: 16px; color: #555;">We received a request to reset the password for your account.</p>
-				<p style="font-size: 16px; color: #555;">Please click the button below to set a new password. This link will expire in 1 hour.</p>
-				
-				<a href="${resetUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Reset Password</a>
-				
-				<p style="font-size: 14px; color: #666;">If you did not request a password reset, you can safely ignore this email.</p>
-			</div>
-		`
+		html: createEmailHtmlWrapper('Password Reset Request', content)
 	};
 
 	try {
 		await transporter.sendMail(mailOptions);
 		console.log(`Password reset email sent to ${recipientEmail}`);
 	} catch (err) {
-		// The 'err' object can be complex, so stringifying or accessing stack is good.
-		const errorMessage = err instanceof Error ? err.stack : String(err)
+		const errorMessage = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog.txt');
-		// Re-throw the error so the calling controller knows the email failed to send.
 		throw err;
 	}
 }
@@ -95,80 +90,60 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
  * @param user_id - The ID of the user to send the verification email to.
  */
 async function sendEmailConfirmation(user_id: number): Promise<void> {
-	// Fetch member data required for the email
-	const memberData = getMemberDataByCriteria(['username', 'email', 'verification'], 'user_id', user_id) as {
-		username: string,
-		email: string,
-		verification: string | null
-	} | {
-		username: undefined,
-		email: undefined,
-		verification: undefined,
-	}
+	const memberData = getMemberDataByCriteria(['username', 'email', 'verification'], 'user_id',user_id) as MemberRecord;
 
-	if (!memberData.username) {
+	if (!memberData.username || !memberData.email) {
 		logEventsAndPrint(`Unable to send email confirmation of non-existent member of id (${user_id})!`, 'errLog.txt');
 		return;
 	}
 	
-	let verificationJS: Verification | null;
+	if (!memberData.verification) {
+		logEventsAndPrint(`No verification data found for user_id (${user_id}). Cannot send confirmation email.`, 'errLog.txt');
+		return;
+	}
+	
 	try {
-		// The verification data is stored as a JSON string
-		verificationJS = memberData.verification === null ? null : JSON.parse(memberData.verification!);
-	} catch (e) {
-		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while sending account confirmation email.`, 'errLog.txt');
-		return;
-	}
+		const verificationJS: Verification = JSON.parse(memberData.verification);
 
-	if (verificationJS === null || verificationJS.verified) {
-		console.log("User already verified. Not sending verification email.");
-		return;
-	}
+		if (verificationJS.verified) {
+			console.log(`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`);
+			return;
+		}
 
-	const host = DEV_BUILD ? `localhost:${process.env.HTTPSPORT_LOCAL}` : HOST_NAME;
-	const url_string = `https://${host}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`;
-	const verificationUrl = new URL(url_string).toString();
+		const host = DEV_BUILD ? `localhost:${process.env.HTTPSPORT_LOCAL}` : HOST_NAME;
+		const verificationUrl = new URL(`https://${host}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
 
-	if (!transporter) {
-		console.log("Email environment variables not specified. Not sending email confirmation.");
-		console.log("Verification Link (for dev):", verificationUrl);
-		return;
-	}
+		if (!transporter) {
+			console.log("Email environment variables not specified. Not sending email confirmation.");
+			console.log("Verification Link (for dev):", verificationUrl);
+			return;
+		}
 
-	const mailOptions = {
-		from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
-		to: memberData.email,
-		subject: 'Verify your account',
-		html: `
-			<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #999; border-radius: 5px;">
-				<h2 style="color: #333;">Welcome to InfiniteChess.org!</h2>
-				<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account:</p>
-				
-				<a href="${verificationUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Verify Account</a>
-				
-				<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email or reply to let us know.</p>
-			</div>
-		`
-	};
+		const content = `
+			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account:</p>
+			<a href="${verificationUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Verify Account</a>
+			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
+		`;
 
-	try {
+		const mailOptions = {
+			from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
+			to: memberData.email,
+			subject: 'Verify Your Account',
+			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content)
+		};
+
 		await transporter.sendMail(mailOptions);
 		console.log(`Verification email sent to member ${memberData.username} of ID ${user_id}!`);
-	} catch (err) {
-		const errorMessage = err instanceof Error ? err.stack : JSON.stringify(err);
-		logEventsAndPrint(`Error sending verification email: ${errorMessage}`, 'errLog.txt');
+
+	} catch (e) {
+		const errorMessage = e instanceof Error ? e.stack : String(e);
+		logEventsAndPrint(`Error during sendEmailConfirmation for user_id (${user_id}): ${errorMessage}`, 'errLog.txt');
 	}
 };
 
-/**
- * API to resend the verification email. 
- * @param req - The Express request object, extended with memberInfo.
- * @param res - The Express response object.
- */
+/** API to resend the verification email. */
 function requestConfirmEmail(req: AuthenticatedRequest, res: Response): void {
-	if (!(req.memberInfo?.signedIn)) {
-		logEventsAndPrint("Unauthorized attempt to resend verification email.", 'errLog.txt');
-		// Use 401 for unauthorized/unauthenticated
+	if (!req.memberInfo?.signedIn) {
 		res.status(401).json({ message: 'You must be signed in to perform this action.' });
 		return;
 	}
@@ -176,50 +151,20 @@ function requestConfirmEmail(req: AuthenticatedRequest, res: Response): void {
 	const usernameParam = req.params.member;
 	const { user_id, username } = req.memberInfo;
 
-	// Ensure the authenticated user is requesting for themselves
 	if (username.toLowerCase() !== usernameParam.toLowerCase()) {
 		const errText = `Member "${username}" (ID: ${user_id}) attempted to send verification email for user (${usernameParam})!`;
 		logEventsAndPrint(errText, 'hackLog.txt');
-		res.status(403).json({ sent: false, message: 'Forbidden' }); // 403 Forbidden is more appropriate
+		res.status(403).json({ sent: false, message: 'Forbidden' });
 		return;
 	}
-
-	const { verification } = getMemberDataByCriteria(['verification'], 'user_id', user_id) as {
-		verification: string | null | undefined,
-	};
-	if (verification === undefined) {
-		logEventsAndPrint(`Could not find member "${username}" (ID: ${user_id}) when requesting confirmation email!`, 'errLog.txt');
-		res.status(404).json({ message: 'Member not found.', sent: false });
-		return;
-	}
-
-	let verificationJS: Verification;
-	try {
-		// The verification data is stored as a JSON string
-		verificationJS = verification === null ? null : JSON.parse(verification);
-	} catch (e) {
-		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while RE-sending account confirmation email.`, 'errLog.txt');
-		return;
-	}
-
-	// ONLY send email if they haven't already verified!
-	if (verificationJS && verificationJS.verified) {
-		const hackText = `Member "${username}" (ID: ${user_id}) tried requesting another verification email after they've already verified.`;
-		logEventsAndPrint(hackText, 'hackLog.txt');
-		res.status(400).json({ sent: false, message: 'Account is already verified.' }); // 400 Bad Request
-		return;
-	}
-
+	
 	// Send the email (fire-and-forget, no need to await here as we respond to the user immediately)
 	sendEmailConfirmation(user_id);
 
 	res.json({ sent: true });
-};
+}
 
-
-// Exports --------------------------------------------------
-
-
+// --- Exports ---
 export {
 	sendPasswordResetEmail,
 	sendEmailConfirmation,
