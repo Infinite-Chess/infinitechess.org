@@ -6,7 +6,6 @@
 
 // @ts-ignore
 import { migrateMembersToPlayerStatsTable } from './migrateMembers.js';
-import { startPeriodicDeleteUnverifiedMembers } from './deleteUnverifiedMembers.js';
 import { startPeriodicRefreshTokenCleanup } from './deleteExpiredRefreshTokens.js';
 import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
@@ -289,7 +288,6 @@ function initDatabase(): void {
 	startPeriodicDatabaseCleanupTasks();
 	migrateMembersToPlayerStatsTable();
 	gamelogger.migrateGameLogsToDatabase();
-	startPeriodicDeleteUnverifiedMembers();
 	startPeriodicRefreshTokenCleanup();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }
