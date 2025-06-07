@@ -550,8 +550,10 @@ thanks = "Thank you!"
 title = "Log In" # The tab name
 username = "Username:"
 password = "Password:"
-forgot_password = ["Forgot? ", "Email us."]
 login_button = "Log In"
+send_reset_link = "Send Reset Link"
+forgot_question = "Forgot Password?"
+back_to_login = "Back to Login"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
