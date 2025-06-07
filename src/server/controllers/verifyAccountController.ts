@@ -16,7 +16,7 @@ import { getMemberDataByCriteria, updateMemberColumns } from "../database/member
 
 // Type Definitions ----------------------------------------------------------------
 
-// import type { AuthenticatedRequest } from '../types.js';
+
 import type { Response } from 'express';
 import type { AuthenticatedRequest } from "../../types.js";
 

@@ -51,15 +51,13 @@ main {
     line-height: 2.2em;
 }
 
-#username-input-line {
+#username-input-line, #password-input-line, #email-input-line {
     text-align: center;
 }
 
 #password-input-line {
     margin-top: 12px;
     display: inline-block;
-    text-align: center;
-    width: fit-content;
 }
 
 label {
@@ -181,10 +179,6 @@ a {
 
 .forgot-link-container a:hover {
 	color: #003d7a;
-}
-
-#email-input-line {
-    text-align: center;
 }
 
 /* Style for the success message (e.g., after sending the email) */
