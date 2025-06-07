@@ -6,6 +6,8 @@ import db from '../database/database.js';
 import { sendPasswordResetEmail } from './sendMail.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+// @ts-ignore
+import { getTranslationForReq } from '../utility/translate.js';
 
 
 const PASSWORD_RESET_TOKEN_EXPIRY_SECS: number = 60 * 60; // 1 Hour
@@ -55,7 +57,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
 		// ALWAYS return a generic success message to prevent email enumeration.
 		res.status(200).json({
-			message: 'If an account with that email exists, a password reset link has been sent.',
+			message: getTranslationForReq('server.javascript.ws-password-reset-link-sent', req),
 		});
 		return;
 
