@@ -1,4 +1,3 @@
-
 /**
  * The function handles verifying accounts,
  * either manually,
@@ -38,63 +37,21 @@ type Verification = {
 	notified: false,
 }
 
+// A specific type for the return value of getMemberDataByCriteria for this module
+type MemberVerificationData = {
+	user_id: number,
+	username: string,
+	verification: string | null,
+} | {
+	user_id: undefined,
+	username: undefined,
+	verification: undefined,
+};
+
 
 // Functions -------------------------------------------------------------------------
 
 
-/**
- * Core logic to verify a user. Finds the user, checks if they can be verified,
- * and updates their status in the database.
- * This is an internal function and should not be exported.
- * @param usernameCaseInsensitive The username to verify.
- * @returns A success object with the user's data, or a failure object with a reason.
- */
-function _performVerification(usernameCaseInsensitive: string): { success: true, username: string, user_id: number } | { success: false, reason: string } {
-	// 1. Get user data by destructuring. If the user isn't found, user_id will be undefined.
-	const { user_id, username, verification } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', usernameCaseInsensitive, { skipErrorLogging: true }) as {
-		user_id: number,
-		username: string,
-		verification: string | null,
-	} | {
-		user_id: undefined,
-		username: undefined,
-		verification: undefined,
-	};
-
-	// 2. Check if user exists.
-	if (user_id === undefined) {
-		return { success: false, reason: `User "${usernameCaseInsensitive}" doesn't exist.` };
-	}
-
-	// 3. Parse verification data
-	let verificationJS: Verification | null;
-	try {
-		verificationJS = verification ? JSON.parse(verification) : null;
-	} catch (e) {
-		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while verifying account. The stringified json: ${verification}`, 'errLog.txt');
-		return { success: false, reason: `Failed to parse verification data for user "${username}".` };
-	}
-
-	// 4. Check if already verified
-	// NULL MEANS they have been verified AND notified!
-	if (verificationJS === null || verificationJS.verified) {
-		return { success: false, reason: `User "${username}" is already verified.` };
-	}
-
-	// 5. VERIFY THEM
-
-	// Informs all sockets of the user that he is now verified
-	AddVerificationToAllSocketsOfMember(user_id);
-
-	const newVerificationState = { verified: true, notified: false };
-	const changesMade = updateMemberColumns(user_id, { verification: newVerificationState });
-	if (!changesMade) {
-		logEventsAndPrint(`No changes made when saving verification for member "${username}" of id "${user_id}"! Value: ${JSON.stringify(newVerificationState)}`, 'errLog.txt');
-		return { success: false, reason: `Database update failed for user "${username}".` };
-	}
-	
-	return { success: true, username, user_id };
-}
 
 /**
  * Route that verifies accounts when they click the link in the email.
@@ -106,21 +63,13 @@ async function verifyAccount(req: AuthenticatedRequest, res: Response) {
 		return res.status(500).redirect('/500');
 	}
 
+	// Get the parameters out of the url
 	const claimedUsername = req.params['member'];
 	const claimedCode = req.params['code'];
 
-	// --- Pre-verification checks specific to this route ---
-
-	const { user_id, username, verification } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', claimedUsername, { skipErrorLogging: true }) as {
-		user_id: number,
-		username: string,
-		verification: string | null
-	} | {
-		user_id: undefined,
-		username: undefined,
-		verification: undefined,
-	};
-	if (username === undefined) { // User not found
+	const { user_id, username, verification } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', claimedUsername, { skipErrorLogging: true }) as MemberVerificationData;
+	
+	if (user_id === undefined) { // User not found
 		logEventsAndPrint(`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`, 'hackLog.txt');
 		return res.status(400).redirect(`/400`); // Bad request
 	}
@@ -158,14 +107,12 @@ async function verifyAccount(req: AuthenticatedRequest, res: Response) {
 		return res.status(400).redirect(`/400`);
 	}
 	
-	// --- End of pre-verification checks ---
-
-	// All checks passed, perform the actual verification
-	const result = _performVerification(claimedUsername);
+	// VERIFY THEM..
+	const result = _executeVerificationUpdate(user_id, username);
 
 	if (result.success) {
-		logEventsAndPrint(`Verified member ${result.username}'s account! ID ${result.user_id}`, 'loginAttempts.txt');
-		res.redirect(`/member/${result.username.toLowerCase()}`);
+		logEventsAndPrint(`Verified member ${username}'s account! ID ${user_id}`, 'loginAttempts.txt');
+		res.redirect(`/member/${username.toLowerCase()}`);
 	} else {
 		logEventsAndPrint(`Verification failed for "${claimedUsername}" due to: ${result.reason}`, 'errLog.txt');
 		res.status(500).redirect(`/member/${username.toLowerCase()}`);
@@ -180,16 +127,61 @@ async function verifyAccount(req: AuthenticatedRequest, res: Response) {
  * @returns A success object: `{ success (boolean}, reason (string, if failed) }`
  */
 function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, username: string } | { success: false, reason: string } {
-	const result = _performVerification(usernameCaseInsensitive);
+	const { user_id, username, verification } = getMemberDataByCriteria(['user_id', 'username', 'verification'], 'username', usernameCaseInsensitive, { skipErrorLogging: true }) as MemberVerificationData;
+	
+	if (user_id === undefined) { // User not found
+		logEventsAndPrint(`Cannot manually verify user "${usernameCaseInsensitive}" when they don't exist.`, 'errLog.txt');
+		return { success: false, reason: `User "${usernameCaseInsensitive}" doesn't exist.` };
+	}
+
+	let verificationJS: Verification | null;
+	try {
+		// The verification data is stored as a JSON string
+		verificationJS = verification ? JSON.parse(verification) : null;
+	} catch (e) {
+		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while verifying account. The stringified json: ${verification}`, 'errLog.txt');
+		return { success: false, reason: `Failed to parse verification data for user "${username}".` };
+	}
+	
+	if (verificationJS === null || verificationJS.verified) { // Already verified
+		logEventsAndPrint(`Cannot manually verify user "${username}" when they are already verified.`, 'errLog.txt');
+		return { success: false, reason: `User "${username}" is already verified.` };
+	}
+
+	// VERIFY THEM..
+	const result = _executeVerificationUpdate(user_id, username);
 
 	if (result.success) {
-		logEventsAndPrint(`Manually verified member ${result.username}'s account! ID ${result.user_id}`, 'loginAttempts.txt');
-		// Return type matches the original function signature
-		return { success: true, username: result.username };
+		logEventsAndPrint(`Manually verified member ${username}'s account! ID ${user_id}`, 'loginAttempts.txt');
+		return { success: true, username };
 	} else {
 		logEventsAndPrint(`Manual verification failed for "${usernameCaseInsensitive}": ${result.reason}`, 'errLog.txt');
 		return { success: false, reason: result.reason };
 	}
+}
+
+/**
+ * Core logic to perform the verification update in the database.
+ * This function now expects the user's ID and performs the update without re-fetching data.
+ * @param user_id The ID of the user to verify.
+ * @param username The username of the user to verify (for logging).
+ * @returns A success or failure object.
+ */
+function _executeVerificationUpdate(user_id: number, username: string): { success: true } | { success: false, reason: string } {
+	// Informs all sockets of the user that he is now verified
+	AddVerificationToAllSocketsOfMember(user_id);
+
+	const newVerificationState = { verified: true, notified: false };
+	const changesMade = updateMemberColumns(user_id, { verification: newVerificationState });
+	
+	if (!changesMade) {
+		const reason = `Database update failed for user "${username}".`;
+		logEventsAndPrint(`No changes made when saving verification for member "${username}" of id "${user_id}"! Value: ${JSON.stringify(newVerificationState)}`, 'errLog.txt');
+		return { success: false, reason };
+	}
+	
+	// The next time they view their profile, a confirmation should be displayed that their account has been verified!
+	return { success: true };
 }
 
 
