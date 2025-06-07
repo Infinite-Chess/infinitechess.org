@@ -1,3 +1,4 @@
+
 /**
  * The function handles verifying accounts,
  * either manually,
