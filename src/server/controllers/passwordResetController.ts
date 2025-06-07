@@ -2,11 +2,10 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import db from '../database/database'; // Adjust path if needed
+import db from '../database/database';
 import { sendPasswordResetEmail } from './sendMail';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController';
 import { logEventsAndPrint } from '../middleware/logEvents';
-
 
 
 const PASSWORD_RESET_TOKEN_EXPIRY_SECS: number = 60 * 60; // 1 Hour
@@ -29,17 +28,14 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
             const userId: number = member.user_id;
 
             // 2. Invalidate old tokens (Using database.run for DELETE)
-            db.run(
-                'DELETE FROM password_reset_tokens WHERE user_id = ?',
-                [userId]
-            );
+            db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
 
             // 3. Generate plain token
             const plainToken: string = crypto.randomBytes(32).toString('hex');
 
             // 4. Hash the plain token
             const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
-
+			
             // 5. Set expiration (e.g., ~1 hour from now in seconds)
             const expiresAt: number = Math.floor(Date.now() / 1000) + PASSWORD_RESET_TOKEN_EXPIRY_SECS;
 
@@ -136,7 +132,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		
 		// 6. CRUCIAL: Invalidate/Delete the used token
 		// This ensures the token cannot be used again.
-		db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
+		db.run(
+            'DELETE FROM password_reset_tokens WHERE hashed_token = ?',
+            [validTokenRecord.hashed_token]
+        );
 
 		// Optional but recommended: Send a confirmation email that the password was changed.
 
@@ -144,7 +143,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		res.status(200).json({ message: 'Password has been reset successfully.' });
 
 	} catch (error) {
-		const errorMessage: string = 'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
+		const errorMessage: string = 'Reset password error: ' + (error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
 		res.status(500).json({ message: 'An internal error occurred. Please try again later.' });
 	}
