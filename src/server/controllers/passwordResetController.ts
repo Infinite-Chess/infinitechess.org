@@ -4,14 +4,15 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import db from '../database/database'; // Adjust path if needed
 import { sendPasswordResetEmail } from './sendMail';
+import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController';
+import { logEventsAndPrint } from '../middleware/logEvents';
 
-// Consider moving SALT_ROUNDS to a config file or environment variable
-const SALT_ROUNDS: number = 10;
 
-interface MemberQueryResult {
-    user_id: number;
-}
 
+const PASSWORD_RESET_TOKEN_EXPIRY_SECS: number = 60 * 60; // 1 Hour
+
+
+/** Route for when a user REQUESTS a password reset email. */
 async function handleForgotPasswordRequest(req: Request, res: Response): Promise<void> {
     const { email } = req.body;
 
@@ -22,7 +23,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
     try {
         // 1. Find user by email (case-insensitive)
-        const member = db.get<MemberQueryResult>('SELECT user_id FROM members WHERE email = ? COLLATE NOCASE', [email]);
+        const member = db.get<{ user_id: number }>('SELECT user_id FROM members WHERE email = ? COLLATE NOCASE', [email]);
 
         if (member) {
             const userId: number = member.user_id;
@@ -37,11 +38,10 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
             const plainToken: string = crypto.randomBytes(32).toString('hex');
 
             // 4. Hash the plain token
-            const hashedTokenForDb: string = await bcrypt.hash(plainToken, SALT_ROUNDS);
+            const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
 
-            // 5. Set expiration (e.g., 1 hour from now in seconds)
-            const expiresInSeconds: number = 3600;
-            const expiresAt: number = Math.floor(Date.now() / 1000) + expiresInSeconds;
+            // 5. Set expiration (e.g., ~1 hour from now in seconds)
+            const expiresAt: number = Math.floor(Date.now() / 1000) + PASSWORD_RESET_TOKEN_EXPIRY_SECS;
 
             // 6. Store new token in the database
             db.run(
@@ -64,12 +64,91 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
         return;
 
     } catch (error) {
-        console.error('Forgot password error:', error);
-        res.status(500).json({
-            message: 'An error occurred while processing your request. Please try again later.',
-        });
+		const errorMessage: string = 'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
+		logEventsAndPrint(errorMessage, 'errLog.txt');
+        res.status(500).json({ message: 'An error occurred while processing your request. Please try again later.' });
         return;
     }
 }
 
-export { handleForgotPasswordRequest };
+
+type TokenRecord = { user_id: number; hashed_token: string };
+
+/**
+ * Route for when a user SENDS the password change API.
+ * Changes their password in the database.
+ */
+async function handleResetPassword(req: Request, res: Response): Promise<void> {
+	const { token, password } = req.body;
+
+	// 1. Basic Input Validation
+	if (!token || !password) {
+		res.status(400).json({ message: 'Token and new password are required.' });
+		return;
+	}
+	if (typeof password !== 'string') {
+		res.status(400).json({ message: 'Password must be a string.' });
+		return;
+	}
+    // Password strength rules (e.g., length)
+    if (!doPasswordFormatChecks(password, req, res)) return;
+
+	try {
+		// 2. Find a matching, unexpired token.
+		// Since we stored a HASH, we cannot query by the plain token directly.
+		// We must fetch potential tokens and compare them one by one.
+		const nowInSeconds = Math.floor(Date.now() / 1000);
+		const potentialTokens = db.all<TokenRecord>(
+			'SELECT user_id, hashed_token FROM password_reset_tokens WHERE expires_at > ?',
+			[nowInSeconds]
+		);
+
+		let validTokenRecord: TokenRecord | null = null;
+		for (const record of potentialTokens) {
+			const isMatch = await bcrypt.compare(token, record.hashed_token);
+			if (isMatch) {
+				validTokenRecord = record;
+				break; // Found our match, exit the loop
+			}
+		}
+
+		// 3. Handle Invalid or Expired Token
+		if (!validTokenRecord) {
+			res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+			return;
+		}
+
+		// 4. Hash the New Password
+		const hashedNewPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
+		const userId = validTokenRecord.user_id;
+
+		// 5. Update the User's Password in the database
+		const updateResult = db.run(
+			'UPDATE members SET hashed_password = ? WHERE user_id = ?',
+			[hashedNewPassword, userId]
+		);
+
+		if (updateResult.changes === 0) {
+			// This is an unlikely edge case where the token was valid but the user was deleted.
+			// The FOREIGN KEY constraint should prevent this, but it's a good safeguard.
+			throw new Error(`Failed to update password for user_id ${userId}, user may not exist.`);
+		}
+		
+		// 6. CRUCIAL: Invalidate/Delete the used token
+		// This ensures the token cannot be used again.
+		db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
+
+		// Optional but recommended: Send a confirmation email that the password was changed.
+
+		// 7. Send Success Response
+		res.status(200).json({ message: 'Password has been reset successfully.' });
+
+	} catch (error) {
+		const errorMessage: string = 'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
+		logEventsAndPrint(errorMessage, 'errLog.txt');
+		res.status(500).json({ message: 'An internal error occurred. Please try again later.' });
+	}
+}
+
+
+export { handleForgotPasswordRequest, handleResetPassword };
