@@ -11,6 +11,29 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
 
+
+/** Checks the integrity of the SQLite database and logs it to the error log if the check fails. */
+function checkDatabaseIntegrity() {
+	try {
+		const result = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
+
+		if (result?.integrity_check !== 'ok') logEventsAndPrint(`Database integrity check failed: ${result?.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt');
+		// else console.log('Database integrity check passed.');
+
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`, 'errLog.txt');
+	}
+}
+
+/** Sets up an interval to check the database integrity once every 24 hours. */
+function startPeriodicDatabaseIntegrityCheck() {
+	checkDatabaseIntegrity();  // Run immediately to check now.
+	setInterval(checkDatabaseIntegrity, CLEANUP_INTERVAL_MS);
+}
+
+
+
 /** Periodically deletes expired password reset tokens from the database. */
 function deleteExpiredPasswordResetTokens() {
 	console.log('Running cleanup of expired password reset tokens.');

@@ -10,7 +10,6 @@ import { startPeriodicDeleteUnverifiedMembers } from './deleteUnverifiedMembers.
 import { startPeriodicRefreshTokenCleanup } from './deleteExpiredRefreshTokens.js';
 import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
-import { startPeriodicDatabaseIntegrityCheck } from './databaseIntegrity.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicPasswordResetTokenCleanup } from './cleanupTasks.js';
 
@@ -287,13 +286,15 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
+
 	startPeriodicDatabaseIntegrityCheck();
+	startPeriodicPasswordResetTokenCleanup();
+
 	migrateMembersToPlayerStatsTable();
 	gamelogger.migrateGameLogsToDatabase();
 	startPeriodicDeleteUnverifiedMembers();
 	startPeriodicRefreshTokenCleanup();
 	startPeriodicLeaderboardRatingDeviationUpdate();
-	startPeriodicPasswordResetTokenCleanup();
 }
 
 
