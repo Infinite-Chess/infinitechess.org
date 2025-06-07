@@ -1,8 +1,9 @@
 
 /**
  * This script contains methods for periodically
- * cleaning up each table in the database.
+ * cleaning up each table in the database of stale data.
  */
+
 
 // @ts-ignore
 import { maxExistenceTimeForUnverifiedAccountMillis } from '../config/config.js';

@@ -1,6 +1,6 @@
 {
 	"58": {
-		"note": "Deleted forgot_password 553. Added send_reset_link, forgot_question, back_to_login lines 554-556, ws-password-reset-link-sent 588. Deleted ws-member_not_found 589, ws-username_and_password_required, ws-username_and_password_string 570-571, ws-unable_to_identify_client_ip, ws-you_are_banned_by_server, ws-too_many_requests_to_server, ws-bad_request 590-593.",
+		"note": "Deleted forgot_password 553. Added send_reset_link, forgot_question, back_to_login lines 554-556, ws-password-reset-link-sent 588. Deleted ws-member_not_found 589, ws-username_and_password_required, ws-username_and_password_string 570-571, ws-unable_to_identify_client_ip, ws-you_are_banned_by_server, ws-too_many_requests_to_server, ws-bad_request 590-593. Added forgot_instruction 557.",
 		"changes": []
 	},
 	"57": {

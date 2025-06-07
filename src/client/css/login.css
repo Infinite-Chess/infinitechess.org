@@ -83,6 +83,17 @@ form input:not([type="submit"]):hover {
     box-shadow: 0 0 8px rgb(0, 0, 0);
 }
 
+/* The instructions for the request password reset form */
+.form-instruction {
+    font-size: 16px;
+    color: #333; /* A dark grey, easy to read */
+    margin-bottom: 20px; /* Add some space between the text and the email input */
+    max-width: 350px; /* Optional: Constrain width on wider screens */
+    margin-left: auto;  /* Optional: Center the text block */
+    margin-right: auto; /* Optional: Center the text block */
+    line-height: 1.4em;
+}
+
 div.error {
     font-size: 16px;
     text-align: center;
