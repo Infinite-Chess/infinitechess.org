@@ -240,7 +240,7 @@ function generateTables(): void {
 
 	
 	// Password Reset Tokens table
-    db.run(`
+	db.run(`
         CREATE TABLE IF NOT EXISTS password_reset_tokens (
             token_id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -251,9 +251,9 @@ function generateTables(): void {
             FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
         );
     `);
-    // Indexes for password_reset_tokens table
-    db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
+	// Indexes for password_reset_tokens table
+	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
 
 	// Bans table
 	// createTableSQLQuery = `

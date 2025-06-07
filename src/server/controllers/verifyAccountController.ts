@@ -74,9 +74,9 @@ async function verifyAccount(req: AuthenticatedRequest, res: Response) {
 	let verificationJS: Verification | null;
 	try {
 		// The verification data is stored as a JSON string
-		verification = verification === null ? null : JSON.parse(verification!);
+		verificationJS = verification === null ? null : JSON.parse(verification!);
 	} catch (e) {
-		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while verifying account.`, 'errLog.txt');
+		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while verifying account. The stringified json: ${verification}`, 'errLog.txt');
 		return;
 	}
 
@@ -158,10 +158,10 @@ function manuallyVerifyUser(usernameCaseInsensitive: string): { success: true, u
 	let verificationJS: Verification | null;
 	try {
 		// The verification data is stored as a JSON string
-		verification = verification === null ? null : JSON.parse(verification!);
+		verificationJS = verification === null ? null : JSON.parse(verification!);
 	} catch (e) {
-		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while verifying account.`, 'errLog.txt');
-		return;
+		logEventsAndPrint(`Failed to parse verification JSON for user_id (${user_id}) while verifying account. The stringified json: ${verification}`, 'errLog.txt');
+		return { success: false, reason: `Failed to parse verification data for user "${username}".` };
 	}
 	
 	if (verificationJS === null || verificationJS.verified) { // Already verified and notified

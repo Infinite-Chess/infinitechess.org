@@ -1,12 +1,14 @@
 
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
-import { DEV_BUILD, HOST_NAME } from '../config/config';
-import { logEventsAndPrint } from '../middleware/logEvents';
-import { getMemberDataByCriteria } from '../database/memberManager';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+// @ts-ignore
+import { getMemberDataByCriteria } from '../database/memberManager.js';
+// @ts-ignore
+import { DEV_BUILD, HOST_NAME } from '../config/config.js';
 
-import type { Verification } from './verifyAccountController';
-import { AuthenticatedRequest } from '../../types';
+import type { Verification } from './verifyAccountController.js';
+import { AuthenticatedRequest } from '../../types.js';
 
 // --- Type Definitions ---
 
@@ -28,8 +30,8 @@ interface MemberRecord {
 }
 
 // --- Module Setup ---
-const EMAIL_USERNAME = process.env.EMAIL_USERNAME;
-const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD;
+const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
+const EMAIL_APP_PASSWORD = process.env['EMAIL_APP_PASSWORD'];
 
 const transporter = (EMAIL_USERNAME && EMAIL_APP_PASSWORD)
 	? nodemailer.createTransport({
@@ -110,7 +112,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			return;
 		}
 
-		const host = DEV_BUILD ? `localhost:${process.env.HTTPSPORT_LOCAL}` : HOST_NAME;
+		const host = DEV_BUILD ? `localhost:${process.env['HTTPSPORT_LOCAL']}` : HOST_NAME;
 		const verificationUrl = new URL(`https://${host}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
 
 		if (!transporter) {
@@ -148,7 +150,8 @@ function requestConfirmEmail(req: AuthenticatedRequest, res: Response): void {
 		return;
 	}
 
-	const usernameParam = req.params.member;
+	// We know the member url param is defined because this route is only used when it is present.
+	const usernameParam = req.params['member']!;
 	const { user_id, username } = req.memberInfo;
 
 	if (username.toLowerCase() !== usernameParam.toLowerCase()) {

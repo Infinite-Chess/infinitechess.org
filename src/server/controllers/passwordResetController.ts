@@ -1,11 +1,11 @@
-// src/controllers/passwordResetController.ts
+
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import db from '../database/database';
-import { sendPasswordResetEmail } from './sendMail';
-import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController';
-import { logEventsAndPrint } from '../middleware/logEvents';
+import db from '../database/database.js';
+import { sendPasswordResetEmail } from './sendMail.js';
+import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
 const PASSWORD_RESET_TOKEN_EXPIRY_SECS: number = 60 * 60; // 1 Hour
@@ -13,58 +13,58 @@ const PASSWORD_RESET_TOKEN_EXPIRY_SECS: number = 60 * 60; // 1 Hour
 
 /** Route for when a user REQUESTS a password reset email. */
 async function handleForgotPasswordRequest(req: Request, res: Response): Promise<void> {
-    const { email } = req.body;
+	const { email } = req.body;
 
-    if (!email || typeof email !== 'string') {
-        res.status(400).json({ message: 'Email is required and must be a string.' });
-        return;
-    }
+	if (!email || typeof email !== 'string') {
+		res.status(400).json({ message: 'Email is required and must be a string.' });
+		return;
+	}
 
-    try {
-        // 1. Find user by email (case-insensitive)
-        const member = db.get<{ user_id: number }>('SELECT user_id FROM members WHERE email = ? COLLATE NOCASE', [email]);
+	try {
+		// 1. Find user by email (case-insensitive)
+		const member = db.get<{ user_id: number }>('SELECT user_id FROM members WHERE email = ? COLLATE NOCASE', [email]);
 
-        if (member) {
-            const userId: number = member.user_id;
+		if (member) {
+			const userId: number = member.user_id;
 
-            // 2. Invalidate old tokens (Using database.run for DELETE)
-            db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
+			// 2. Invalidate old tokens (Using database.run for DELETE)
+			db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
 
-            // 3. Generate plain token
-            const plainToken: string = crypto.randomBytes(32).toString('hex');
+			// 3. Generate plain token
+			const plainToken: string = crypto.randomBytes(32).toString('hex');
 
-            // 4. Hash the plain token
-            const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
+			// 4. Hash the plain token
+			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
 			
-            // 5. Set expiration (e.g., ~1 hour from now in seconds)
-            const expiresAt: number = Math.floor(Date.now() / 1000) + PASSWORD_RESET_TOKEN_EXPIRY_SECS;
+			// 5. Set expiration (e.g., ~1 hour from now in seconds)
+			const expiresAt: number = Math.floor(Date.now() / 1000) + PASSWORD_RESET_TOKEN_EXPIRY_SECS;
 
-            // 6. Store new token in the database
-            db.run(
-                'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
+			// 6. Store new token in the database
+			db.run(
+				'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
                 [userId, hashedTokenForDb, expiresAt]
-            );
+			);
 
-            // 7. Construct reset URL
-            const appBaseUrl: string = process.env.APP_BASE_URL || `${req.protocol}://${req.get('host')}`;
-            const resetUrl: string = `${appBaseUrl}/reset-password/${plainToken}`;
+			// 7. Construct reset URL
+			const appBaseUrl: string = process.env['APP_BASE_URL'] || `${req.protocol}://${req.get('host')}`;
+			const resetUrl: string = `${appBaseUrl}/reset-password/${plainToken}`;
 
-            // 8. Send email
-            await sendPasswordResetEmail(email, resetUrl);
-        }
+			// 8. Send email
+			await sendPasswordResetEmail(email, resetUrl);
+		}
 
-        // ALWAYS return a generic success message to prevent email enumeration.
-        res.status(200).json({
-            message: 'If an account with that email exists, a password reset link has been sent.',
-        });
-        return;
+		// ALWAYS return a generic success message to prevent email enumeration.
+		res.status(200).json({
+			message: 'If an account with that email exists, a password reset link has been sent.',
+		});
+		return;
 
-    } catch (error) {
+	} catch (error) {
 		const errorMessage: string = 'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
-        res.status(500).json({ message: 'An error occurred while processing your request. Please try again later.' });
-        return;
-    }
+		res.status(500).json({ message: 'An error occurred while processing your request. Please try again later.' });
+		return;
+	}
 }
 
 
@@ -86,8 +86,8 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ message: 'Password must be a string.' });
 		return;
 	}
-    // Password strength rules (e.g., length)
-    if (!doPasswordFormatChecks(password, req, res)) return;
+	// Password strength rules (e.g., length)
+	if (!doPasswordFormatChecks(password, req, res)) return;
 
 	try {
 		// 2. Find a matching, unexpired token.
@@ -133,9 +133,9 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// 6. CRUCIAL: Invalidate/Delete the used token
 		// This ensures the token cannot be used again.
 		db.run(
-            'DELETE FROM password_reset_tokens WHERE hashed_token = ?',
+			'DELETE FROM password_reset_tokens WHERE hashed_token = ?',
             [validTokenRecord.hashed_token]
-        );
+		);
 
 		// Optional but recommended: Send a confirmation email that the password was changed.
 

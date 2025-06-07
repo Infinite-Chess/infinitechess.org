@@ -4,8 +4,8 @@
  * cleaning up each table in the database.
  */
 
-import db from './database'; // Adjust path
-import { logEventsAndPrint } from '../middleware/logEvents';
+import db from './database.js'; // Adjust path
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
@@ -13,6 +13,7 @@ const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
 /** Periodically deletes expired password reset tokens from the database. */
 function deleteExpiredPasswordResetTokens() {
+	console.log('Running cleanup of expired password reset tokens.');
 	try {
 		const nowInSeconds = Math.floor(Date.now() / 1000);
 		
@@ -32,7 +33,7 @@ function deleteExpiredPasswordResetTokens() {
 
 /** Starts the periodic cleanup task for expired password reset tokens. */
 function startPeriodicPasswordResetTokenCleanup() {
-	console.log('Starting periodic cleanup of expired password reset tokens...');
+	// console.log('Starting periodic cleanup of expired password reset tokens...');
 	// Run it once on startup
 	deleteExpiredPasswordResetTokens();
 	// Then run it periodically
