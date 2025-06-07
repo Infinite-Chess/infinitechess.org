@@ -12,6 +12,7 @@ import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
 import { startPeriodicDatabaseIntegrityCheck } from './databaseIntegrity.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
+import { startPeriodicPasswordResetTokenCleanup } from './cleanupTasks.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -292,6 +293,7 @@ function initDatabase(): void {
 	startPeriodicDeleteUnverifiedMembers();
 	startPeriodicRefreshTokenCleanup();
 	startPeriodicLeaderboardRatingDeviationUpdate();
+	startPeriodicPasswordResetTokenCleanup();
 }
 
 
