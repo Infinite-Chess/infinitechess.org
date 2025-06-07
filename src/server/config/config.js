@@ -68,9 +68,6 @@ const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 
-const intervalForRefreshTokenCleanupMillis = 1000 * 60 * 60 * 24; // 1 day
-// const intervalForRefreshTokenCleanupMillis = 1000 * 30; // 30s
-
 /**
  * The maximum number of logging sessions a user can have at
  * one time before creating new sessions will terminate old sessions.
@@ -112,7 +109,6 @@ export {
 	refreshTokenExpiryMillis,
 	minTimeToWaitToRenewRefreshTokensMillis,
 	accessTokenExpiryMillis,
-	intervalForRefreshTokenCleanupMillis,
 	sessionCap,
 	maxExistenceTimeForUnverifiedAccountMillis,
 	intervalForRemovalOfOldUnverifiedAccountsMillis,

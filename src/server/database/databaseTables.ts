@@ -11,7 +11,7 @@ import { startPeriodicRefreshTokenCleanup } from './deleteExpiredRefreshTokens.j
 import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
-import { startPeriodicPasswordResetTokenCleanup } from './cleanupTasks.js';
+import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -286,10 +286,7 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
-
-	startPeriodicDatabaseIntegrityCheck();
-	startPeriodicPasswordResetTokenCleanup();
-
+	startPeriodicDatabaseCleanupTasks();
 	migrateMembersToPlayerStatsTable();
 	gamelogger.migrateGameLogsToDatabase();
 	startPeriodicDeleteUnverifiedMembers();
