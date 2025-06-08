@@ -258,8 +258,8 @@ function generateTables(): void {
 		CREATE TABLE IF NOT EXISTS refresh_tokens (
 			token TEXT PRIMARY KEY NOT NULL,
 			user_id INTEGER NOT NULL,
-			issued_at INTEGER NOT NULL,  -- Unix timestamp (milliseconds)
-			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
+			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
 			ip_address TEXT,
 
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
