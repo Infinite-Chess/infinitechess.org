@@ -32,7 +32,6 @@ const allMemberColumns: string[] = [
 	'roles',
 	'joined',
 	'last_seen',
-	'refresh_tokens',
 	'preferences',
 	'verification',
 	'login_count',
@@ -113,8 +112,7 @@ function generateTables(): void {
 			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
 			login_count INTEGER NOT NULL DEFAULT 0,                        
-			preferences TEXT,
-			refresh_tokens TEXT,                          
+			preferences TEXT,                        
 			verification TEXT, 
 			username_history TEXT,
 			checkmates_beaten TEXT NOT NULL DEFAULT ''

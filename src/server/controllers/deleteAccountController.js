@@ -67,7 +67,7 @@ function deleteAccount(user_id, reason_deleted) {
 	return result;
 
 	// Account deleting automatically invalidates all their sessions,
-	// because their refresh_tokens are deleted.
+	// because their refresh tokens are deleted.
 	// However, they will have to refresh the page for their page and navigation links to update.
 }
 
