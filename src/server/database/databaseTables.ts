@@ -238,19 +238,34 @@ function generateTables(): void {
 	
 	// Password Reset Tokens table
 	db.run(`
-        CREATE TABLE IF NOT EXISTS password_reset_tokens (
-            token_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            hashed_token TEXT NOT NULL UNIQUE,
-            expires_at INTEGER NOT NULL, -- Unix timestamp (seconds)
-            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), -- Unix timestamp (seconds)
-
-            FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
-        );
+		CREATE TABLE IF NOT EXISTS password_reset_tokens (
+			hashed_token TEXT PRIMARY KEY NOT NULL,
+			user_id INTEGER NOT NULL,
+			expires_at INTEGER NOT NULL,
+			created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), -- Unix timestamp (seconds)
+			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+		);
     `);
 	// Indexes for password_reset_tokens table
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
+
+
+	// Refresh Tokens table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS refresh_tokens (
+			token TEXT PRIMARY KEY NOT NULL,
+			user_id INTEGER NOT NULL,
+			issued_at TIMESTAMP NOT NULL,
+			expires_at TIMESTAMP NOT NULL,
+			ip_address TEXT,
+
+			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+		);
+	`);
+	// Indexes for refresh_tokens table
+	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens (user_id);`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`);
 
 	// Bans table
 	// createTableSQLQuery = `
