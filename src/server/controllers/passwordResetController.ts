@@ -6,6 +6,7 @@ import db from '../database/database.js';
 import { sendPasswordResetEmail } from './sendMail.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 
@@ -26,7 +27,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 		// 1. Find user by email (case-insensitive)
 		const member = db.get<{ user_id: number }>('SELECT user_id FROM members WHERE email = ? COLLATE NOCASE', [email]);
 
-		if (member) {
+		if (member) { // User exists, proceed with password reset flow
 			const userId: number = member.user_id;
 
 			// 2. Invalidate old tokens (Using database.run for DELETE)
@@ -139,12 +140,16 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
             [validTokenRecord.hashed_token]
 		);
 
+		// 7. Terminate the users all active sessions.
+		// Recommended for security.
+		deleteAllRefreshTokensForUser(userId);
+
 		// Optional but recommended: Send a confirmation email that the password was changed.
 
-		// 7. Send Success Response
+		// 8. Send Success Response
 		res.status(200).json({ message: getTranslationForReq('server.javascript.ws-password-change-success', req) });
 
-		// 8. Log the successful password reset
+		// 9. Log the successful password reset
 		logEventsAndPrint(`Password reset successful for user_id ${userId}`, 'loginAttempts.txt');
 
 	} catch (error) {
