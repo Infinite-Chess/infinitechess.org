@@ -12,7 +12,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
 import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../../game/misc/onlinegame/onlinegamerouter.js';
-
+import type { _Move_Compact } from './icn/icnconverter.js';
 
 
 import typeutil from '../util/typeutil.js';
@@ -26,7 +26,6 @@ import icnconverter from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
 import math from '../../util/math.js';
 import checkdetection from './checkdetection.js';
-// @ts-ignore
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
@@ -82,19 +81,24 @@ type castle = {
  */
 type path = Coords[]
 
+interface BaseMove extends _Move_Compact {
+	/**
+	 * How much time the player had left after they made their move, in millis.
+	 * 
+	 * Server is always boss, we cannot set this until after the
+	 * server responds back with the updated clock information.
+	 */
+	clockStamp?: number,
+	/** The move in most compact notation: `8,7>8,8=Q` */
+	compact?: string,
+}
+
 /** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
-interface MoveDraft {
-	startCoords: Coords,
-	endCoords: Coords,
-
-	// Special move tags...
-
+interface MoveDraft extends _Move_Compact {
 	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
 	enpassantCreate?: enpassantCreate,
 	/** Present if the move was special-move enpassant capture. This will be `true` */
 	enpassant?: enpassant,
-	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
-	promotion?: promotion,
 	/** Present if the move was a special-move casle. This may look like an
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
 	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
@@ -108,7 +112,7 @@ interface MoveDraft {
  * Including the changes it made to the board, the gamefile
  * state before and after the move, etc.
  */
-interface Move extends MoveDraft {
+interface Move extends MoveDraft, BaseMove {
 	/** Whether the move is a null move. */
 	isNull: false,
 	/** The type of piece moved */
@@ -121,8 +125,7 @@ interface Move extends MoveDraft {
 	/** The index this move was generated for. This can act as a safety net
 	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
-	/** The move in most compact notation: `8,7>8,8=Q` */
-	compact: string,
+
 	flags: {
 		/** Whether the move delivered check. */
 		check: boolean,
@@ -136,13 +139,6 @@ interface Move extends MoveDraft {
 	 * These will go back into the ICN when copying the game.
 	 */
 	comment?: string,
-	/**
-	 * How much time the player had left after they made their move, in millis.
-	 * 
-	 * Server is always boss, we cannot set this until after the
-	 * server responds back with the updated clock information.
-	 */
-	clockStamp?: number,
 }
 
 /**
@@ -318,7 +314,14 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
  */
 function makeMove(gamefile: FullGame, move: Move | NullMove) {
 	gamefile.boardsim.moves.push(move);
-	gamefile.basegame.moves.push(move.isNull ? '--' : move.compact);
+	if (!move.isNull) {
+		gamefile.basegame.moves.push({
+			startCoords: move.startCoords,
+			endCoords: move.endCoords,
+			promotion: move.promotion
+		});
+	}
+
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical boardsim changes.
 
@@ -461,7 +464,8 @@ function rewindMove(gamefile: FullGame) {
 
 	// Delete the move off the end of our moves list
 	gamefile.boardsim.moves.pop();
-	gamefile.basegame.moves.pop();
+	if (!move.isNull) gamefile.basegame.moves.pop();
+	
 	updateTurn(gamefile);
 }
 
@@ -546,6 +550,7 @@ function getSimulatedConclusion(gamefile: FullGame, moveDraft: MoveDraft): strin
 export type {
 	Move,
 	NullMove,
+	BaseMove,
 	MoveDraft,
 	CoordsSpecial,
 	enpassantCreate,
