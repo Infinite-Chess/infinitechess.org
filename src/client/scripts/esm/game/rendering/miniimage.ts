@@ -1,4 +1,3 @@
-
 /**
  * This script handles the rendering of the mini images of our pieces when we're zoomed out
  */
@@ -38,7 +37,7 @@ import boardtiles from './boardtiles.js';
 
 /**
  * The maximum numbers of pieces in a game before we disable mini image rendering
- * for all pieces that aren't underneath a square annotation or ray intersection, for performance.
+ * for all pieces that aren't underneath a square annotation, ray intersection, being animated, or selected, for performance.
  */
 const pieceCountToDisableMiniImages = 50_000;
 
@@ -149,10 +148,9 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 
 	if (!disabled) { // Enabled => normal behavior
 		forEachRenderablePiece(processPiece); // Process each renderable piece
-	} else { // Disabled (too many pieces) => Only process pieces on highlights
-		// Only process the pieces on top of highlights, or ray starts or intersections
-		const annotePieces = getAllPiecesBelowAnnotePoints();
-		annotePieces.forEach(ap => processPiece(ap.coords, ap.type)); // Calculate their instance data
+	} else { // Disabled (too many pieces) => Only process pieces on highlights or being animated
+		const piecesToRender = getAllPiecesBelowAnnotePoints();
+		piecesToRender.forEach(p => processPiece(p.coords, p.type)); // Calculate their instance data
 	}
 
 	/** Calculates and appends the instance data of the piece */
@@ -181,10 +179,9 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 	if (!disabled) { // Enabled => normal behavior
 		// Check static and animated pieces for hover
 		forEachRenderablePiece(processPiece);
-	} else { // Disabled (too many pieces) => Only process pieces on highlights
-		// Only process the pieces on top of highlights, or ray starts or intersections
-		const annotePieces = getAllPiecesBelowAnnotePoints();
-		annotePieces.forEach(ap => processPiece(ap.coords)); // Calculate if their underneath the world coords
+	} else { // Disabled (too many pieces) => Only process pieces on highlights or being animated
+		const piecesToConsider = getAllPiecesBelowAnnotePoints();
+		piecesToConsider.forEach(p => processPiece(p.coords)); // Calculate if their underneath the world coords
 	}
 
 	function processPiece(coords: Coords) {
@@ -200,17 +197,18 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 }
 
 /**
- * Returns a list of all pieces that are either below an annotation snap point
- * (square, ray intersection, or ray start), or is the piece selected.
+ * Returns a list of all pieces that should be rendered when mini-images are disabled.
+ * This includes pieces below an annotation snap point (square, ray intersection, or ray start),
+ * the currently selected piece, and all currently animated pieces.
  */
 function getAllPiecesBelowAnnotePoints(): Piece[] {
-	/** Running list of all pieces below annote points. */
-	const annotePieces: Piece[] = [];
+	/** Running list of all pieces to render. */
+	const piecesToRender: Piece[] = [];
 
 	const pieces = gameslot.getGamefile()!.boardsim.pieces;
-	// Only process the pieces on top of highlights, or ray starts or intersections
+
+	// 1. Get pieces on top of highlights (ray starts, intersections, etc.)
 	const annotePoints = snapping.getAnnoteSnapPoints(true);
-	// For each one, push it if there is a piece beneath it
 	annotePoints.forEach(ap => {
 		const piece = boardutil.getPieceFromCoords(pieces, ap);
 		if (!piece) return; // No piece beneath this highlight
@@ -218,15 +216,30 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		pushPieceNoDuplicates(piece);
 	});
 
-	// Add the piece selected, if present
+	// 2. Add the selected piece, if any
 	const pieceSelected = selection.getPieceSelected();
-	if (pieceSelected) pushPieceNoDuplicates(jsutil.deepCopyObject(pieceSelected));
-
-	function pushPieceNoDuplicates(piece: Piece) {
-		if (!annotePieces.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) annotePieces.push(piece);
+	if (pieceSelected) {
+		pushPieceNoDuplicates(jsutil.deepCopyObject(pieceSelected));
 	}
 
-	return annotePieces;
+	// 3. Add all currently animated pieces
+	animation.animations.forEach(a => {
+		// The main piece being animated
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
+		pushPieceNoDuplicates({ coords: currentCoords, type: a.type, index: -1 });
+
+		// The captured piece, if there is one
+		if (a.captured) pushPieceNoDuplicates(a.captured);
+	});
+
+	function pushPieceNoDuplicates(piece: Piece) {
+		if (!piecesToRender.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) {
+			piecesToRender.push(piece);
+		}
+	}
+
+	return piecesToRender;
 }
 
 
