@@ -35,12 +35,12 @@ export type RefreshTokenRecord = {
  * @returns The token record if found, otherwise undefined.
  */
 export function findRefreshToken(token: string): RefreshTokenRecord | undefined {
-    const query = `
+	const query = `
         SELECT token, user_id, created_at, expires_at, ip_address 
         FROM refresh_tokens 
         WHERE token = ?
     `;
-    return db.get<RefreshTokenRecord>(query, [token]);
+	return db.get<RefreshTokenRecord>(query, [token]);
 }
 
 /**
@@ -50,12 +50,12 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
  * @param token - The new JWT refresh token string.
  */
 export function addRefreshToken(req: Request, userId: number, token: string): void {
-    const now = Date.now();
-    const query = `
+	const now = Date.now();
+	const query = `
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, ip_address)
         VALUES (?, ?, ?, ?, ?)
     `;
-    db.run(query, [
+	db.run(query, [
         token,
         userId,
         now, // created_at
@@ -69,17 +69,18 @@ export function addRefreshToken(req: Request, userId: number, token: string): vo
  * @param token - The token to delete.
  */
 export function deleteRefreshToken(token: string): void {
-    const query = `DELETE FROM refresh_tokens WHERE token = ?`;
-    db.run(query, [token]);
+	const query = `DELETE FROM refresh_tokens WHERE token = ?`;
+	db.run(query, [token]);
 }
 
 /**
  * Deletes all refresh tokens for a given user. Used for "log out of all devices".
+ * Effectively terminates all login sessions for the user.
  * @param userId - The user's ID.
  */
 export function deleteAllRefreshTokensForUser(userId: number): void {
-    const query = `DELETE FROM refresh_tokens WHERE user_id = ?`;
-    db.run(query, [userId]);
+	const query = `DELETE FROM refresh_tokens WHERE user_id = ?`;
+	db.run(query, [userId]);
 }
 
 /**
@@ -88,6 +89,6 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
  * @param ip - The new IP address to record.
  */
 export function updateRefreshTokenIP(token: string, ip: string): void {
-    const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
-    db.run(query, [ip, token]);
+	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
+	db.run(query, [ip, token]);
 }
