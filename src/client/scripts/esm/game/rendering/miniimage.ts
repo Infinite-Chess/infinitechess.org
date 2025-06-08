@@ -198,28 +198,35 @@ function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coor
 
 /**
  * Returns a list of all pieces that should be rendered when mini-images are disabled.
- * This includes pieces below an annotation snap point (square, ray intersection, or ray start),
- * the currently selected piece, and all currently animated pieces.
+ * This includes pieces below an annotation snap point, the selected piece, all animated pieces,
+ * and the pieces involved in the last and next moves.
  */
 function getAllPiecesBelowAnnotePoints(): Piece[] {
 	/** Running list of all pieces to render. */
 	const piecesToRender: Piece[] = [];
 
-	const pieces = gameslot.getGamefile()!.boardsim.pieces;
+	function pushPieceNoDuplicatesOrVoids(piece: Piece) {
+		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
+		if (!piecesToRender.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) {
+			piecesToRender.push(piece);
+		}
+	}
+	
+	const boardsim = gameslot.getGamefile()!.boardsim;
+	const pieces = boardsim.pieces;
 
 	// 1. Get pieces on top of highlights (ray starts, intersections, etc.)
 	const annotePoints = snapping.getAnnoteSnapPoints(true);
 	annotePoints.forEach(ap => {
 		const piece = boardutil.getPieceFromCoords(pieces, ap);
 		if (!piece) return; // No piece beneath this highlight
-		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
-		pushPieceNoDuplicates(piece);
+		pushPieceNoDuplicatesOrVoids(piece);
 	});
 
 	// 2. Add the selected piece, if any
 	const pieceSelected = selection.getPieceSelected();
 	if (pieceSelected) {
-		pushPieceNoDuplicates(jsutil.deepCopyObject(pieceSelected));
+		pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
 	}
 
 	// 3. Add all currently animated pieces
@@ -227,18 +234,29 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		// The main piece being animated
 		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
 		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		pushPieceNoDuplicates({ coords: currentCoords, type: a.type, index: -1 });
+		// Animated pieces don't have a real index, but we need to pass a piece object
+		pushPieceNoDuplicatesOrVoids({ coords: currentCoords, type: a.type, index: -1 });
 
 		// The captured piece, if there is one
-		if (a.captured) pushPieceNoDuplicates(a.captured);
+		if (a.captured) pushPieceNoDuplicatesOrVoids(a.captured);
 	});
 
-	function pushPieceNoDuplicates(piece: Piece) {
-		if (!piecesToRender.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) {
-			piecesToRender.push(piece);
-		}
-	}
+	// 4. Add pieces from the last and next moves
 
+	const moveIndex = boardsim.state.local.moveIndex;
+	// Last move's destination piece
+	const lastMove = boardsim.moves[moveIndex];
+	if (lastMove && !lastMove.isNull) {
+		const lastMovedPiece = boardutil.getPieceFromCoords(pieces, lastMove.endCoords)!;
+		pushPieceNoDuplicatesOrVoids(lastMovedPiece);
+	}
+	// Next move's starting piece
+	const nextMove = boardsim.moves[moveIndex + 1];
+	if (nextMove && !nextMove.isNull) {
+		const nextToMovePiece = boardutil.getPieceFromCoords(pieces, nextMove.startCoords)!;
+		pushPieceNoDuplicatesOrVoids(nextToMovePiece);
+	}
+	
 	return piecesToRender;
 }
 
