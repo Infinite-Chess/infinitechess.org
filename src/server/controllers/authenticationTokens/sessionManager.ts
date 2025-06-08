@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import { deletePreferencesCookie } from '../../api/Prefs.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import {  findRefreshToken, addRefreshToken, deleteRefreshToken, updateRefreshTokenIP } from '../../database/refreshTokenManager.js';
+import { findRefreshToken, addRefreshToken, deleteRefreshToken, updateRefreshTokenIP } from '../../database/refreshTokenManager.js';
 import { signRefreshToken } from './tokenSigner.js';
 import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from '../../config/config.js';
 

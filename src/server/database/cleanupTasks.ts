@@ -31,6 +31,7 @@ function performCleanupTasks() {
 	checkDatabaseIntegrity();
 	deleteExpiredPasswordResetTokens();
 	cleanUpExpiredRefreshTokens();
+	removeOldUnverifiedMembers();
 }
 
 

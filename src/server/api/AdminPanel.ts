@@ -176,8 +176,15 @@ function logoutUser(command: string, commandAndArgs: string[], req: Authenticate
 	const usernameArgument = commandAndArgs[1];
 	const { user_id, username } = getMemberDataByCriteria(["user_id","username"], "username", usernameArgument, { skipErrorLogging: true });
 	if (user_id !== undefined) {
-		// Effectively terminates all login sessions of the user
-		deleteAllRefreshTokensForUser(user_id);
+		try {
+			// Effectively terminates all login sessions of the user
+			deleteAllRefreshTokensForUser(user_id);
+		} catch (e) {
+			const errorMessage = e instanceof Error ? e.stack : String(e);
+			logEventsAndPrint(`Error during admin-manual-logout of user "${username}": ${errorMessage}`, "errLog.txt");
+			sendAndLogResponse(res, 500, `Failed to log out user "${username}" due to internal error.`);
+			return;
+		}
 		sendAndLogResponse(res, 200, "User " + username + " successfully logged out."); // Use their case-sensitive username
 	}
 	else {
