@@ -23,7 +23,6 @@ interface MemberRecord {
 	last_seen?: string;
 	login_count?: number;
 	preferences?: string | null;
-	refresh_tokens?: string | null;
 	verification?: string | null;
 	username_history?: string | null;
 	checkmates_beaten?: string;

@@ -7,7 +7,7 @@
 import dbWrapper from './database.js';
 
 // Destructure the functions and the raw db instance we need from your wrapper
-const { all, db } = dbWrapper;
+const { db, all, run } = dbWrapper;
 
 type MemberWithTokens = {
     user_id: number;
@@ -111,4 +111,27 @@ export function migrateRefreshTokensToTable(): void {
 		console.error(`Failed to parse token data for ${failedUserCount} users.`);
 	}
 	console.log('-----------------------------------------');
+
+
+
+	/**
+     * Checks for and drops the legacy `refresh_tokens` column from the `members` table
+     * if it exists. This is the final step of the token storage migration.
+     */
+	try {
+        // pragma table_info returns an array of objects describing each column.
+        type ColumnInfo = { name: string; [key: string]: any; };
+        const columns = db.pragma('table_info(members)') as ColumnInfo[];
+        
+        // Check if a column named 'refresh_tokens' exists in the array.
+        const columnExists = columns.some(col => col.name === 'refresh_tokens');
+
+        if (columnExists) {
+        	console.log('Found legacy `refresh_tokens` column in `members` table. Dropping it...');
+        	run('ALTER TABLE members DROP COLUMN refresh_tokens');
+        	console.log('Successfully dropped `refresh_tokens` column.');
+        }
+	} catch (e) {
+		console.error('Failed to drop `refresh_tokens` column. This may be due to an old version of SQLite. Please manually remove it if necessary.', e);
+	}
 }
