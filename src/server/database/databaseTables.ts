@@ -10,6 +10,7 @@ import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
+import { migrateRefreshTokensToTable } from './migrateRefreshTokens.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -241,11 +242,12 @@ function generateTables(): void {
 		CREATE TABLE IF NOT EXISTS password_reset_tokens (
 			hashed_token TEXT PRIMARY KEY NOT NULL,
 			user_id INTEGER NOT NULL,
-			expires_at INTEGER NOT NULL,
-			created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), -- Unix timestamp (seconds)
+			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000), -- Unix timestamp (milliseconds)
+
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
 		);
-    `);
+	`);
 	// Indexes for password_reset_tokens table
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
@@ -256,8 +258,8 @@ function generateTables(): void {
 		CREATE TABLE IF NOT EXISTS refresh_tokens (
 			token TEXT PRIMARY KEY NOT NULL,
 			user_id INTEGER NOT NULL,
-			issued_at TIMESTAMP NOT NULL,
-			expires_at TIMESTAMP NOT NULL,
+			issued_at INTEGER NOT NULL,  -- Unix timestamp (milliseconds)
+			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
 			ip_address TEXT,
 
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
@@ -303,6 +305,7 @@ function initDatabase(): void {
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	migrateMembersToPlayerStatsTable();
 	gamelogger.migrateGameLogsToDatabase();
+	migrateRefreshTokensToTable();
 }
 
 

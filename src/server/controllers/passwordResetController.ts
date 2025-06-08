@@ -10,7 +10,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 
 
-const PASSWORD_RESET_TOKEN_EXPIRY_SECS: number = 60 * 60; // 1 Hour
+const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
 
 
 /** Route for when a user REQUESTS a password reset email. */
@@ -39,7 +39,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
 			
 			// 5. Set expiration (e.g., ~1 hour from now in seconds)
-			const expiresAt: number = Math.floor(Date.now() / 1000) + PASSWORD_RESET_TOKEN_EXPIRY_SECS;
+			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
 
 			// 6. Store new token in the database
 			db.run(
@@ -95,10 +95,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// 2. Find a matching, unexpired token.
 		// Since we stored a HASH, we cannot query by the plain token directly.
 		// We must fetch potential tokens and compare them one by one.
-		const nowInSeconds = Math.floor(Date.now() / 1000);
+		const now = Date.now();
 		const potentialTokens = db.all<TokenRecord>(
 			'SELECT user_id, hashed_token FROM password_reset_tokens WHERE expires_at > ?',
-			[nowInSeconds]
+			[now]
 		);
 
 		let validTokenRecord: TokenRecord | null = null;
