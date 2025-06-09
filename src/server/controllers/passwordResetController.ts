@@ -8,10 +8,9 @@ import { sendPasswordResetEmail } from './sendMail.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
+import { getAppBaseUrl } from '../utility/urlUtils.js';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
-// @ts-ignore
-import { DEV_BUILD, HOST_NAME } from '../config/config.js';
 
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
@@ -51,9 +50,9 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
                 [userId, hashedTokenForDb, expiresAt]
 			);
 
-			// 7. Construct reset URL with environment-aware logic
-			const host = DEV_BUILD ? `localhost:${process.env['HTTPSPORT_LOCAL']}` : HOST_NAME;
-			const resetUrl = new URL(`https://${host}/reset-password/${plainToken}`).toString();
+			// 7. Construct reset URL using the utility
+			const baseUrl = getAppBaseUrl();
+			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
 			// 8. Send email
 			sendPasswordResetEmail(email, resetUrl);

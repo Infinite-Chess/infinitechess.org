@@ -11,6 +11,7 @@ import { DEV_BUILD, HOST_NAME } from '../config/config.js';
 
 import type { Verification } from './verifyAccountController.js';
 import { AuthenticatedRequest } from '../../types.js';
+import { getAppBaseUrl } from '../utility/urlUtils.js';
 
 // --- Type Definitions ---
 
@@ -113,8 +114,9 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			return;
 		}
 
-		const host = DEV_BUILD ? `localhost:${process.env['HTTPSPORT_LOCAL']}` : HOST_NAME;
-		const verificationUrl = new URL(`https://${host}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
+		// Construct verification URL using the utility
+		const baseUrl = getAppBaseUrl();
+		const verificationUrl = new URL(`${baseUrl}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
 
 		if (!transporter) {
 			console.log("Email environment variables not specified. Not sending email confirmation.");
