@@ -54,13 +54,17 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
 			// 8. Send email
 			sendPasswordResetEmail(email, resetUrl);
+		
+			// 9. Log the email sent
+			logEventsAndPrint(`Sent password reset email to user_id (${userId})`, 'loginAttempts.txt');
+		} else {
+			logEventsAndPrint(`No member exists with the email (${email}). Not sending password reset email.`, 'loginAttempts.txt');
 		}
 
 		// ALWAYS return a generic success message to prevent email enumeration.
 		res.status(200).json({
 			message: getTranslationForReq('server.javascript.ws-password-reset-link-sent', req),
 		});
-		return;
 
 	} catch (error) {
 		const errorMessage: string = 'Forgot password error: ' + (error instanceof Error ? error.message : String(error));

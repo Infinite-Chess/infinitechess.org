@@ -38,8 +38,6 @@ function isTokenValid(token, isRefreshToken, IP, req, res) {
 		// 1. Decode the token first
 		const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
 
-		console.log("IS ROLES TYPEOF OBJECT?", typeof roles);
-
 		if (user_id === undefined || username === undefined || roles === undefined) {
 			return { isValid: false, reason: "Token is expired or tampered." };
 		}

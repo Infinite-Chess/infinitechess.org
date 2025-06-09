@@ -5,15 +5,18 @@
  */
 
 
-import type { Request, Response } from 'express';
+// @ts-ignore
 import { deletePreferencesCookie } from '../../api/Prefs.js';
+// @ts-ignore
+import { signRefreshToken } from './tokenSigner.js';
+// @ts-ignore
+import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from '../../config/config.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { findRefreshToken, addRefreshToken, deleteRefreshToken, updateRefreshTokenIP } from '../../database/refreshTokenManager.js';
-import { signRefreshToken } from './tokenSigner.js';
-import { minTimeToWaitToRenewRefreshTokensMillis, refreshTokenExpiryMillis } from '../../config/config.js';
 
 
+import type { Request, Response } from 'express';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 
