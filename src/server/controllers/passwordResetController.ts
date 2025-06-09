@@ -1,3 +1,4 @@
+// src/controllers/passwordResetController.ts
 
 import { Request, Response } from 'express';
 import crypto from 'crypto';
@@ -9,6 +10,8 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
+// @ts-ignore
+import { DEV_BUILD, HOST_NAME } from '../config/config.js';
 
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
@@ -39,7 +42,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// 4. Hash the plain token
 			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
 			
-			// 5. Set expiration (e.g., ~1 hour from now in seconds)
+			// 5. Set expiration (e.g., ~1 hour from now in milliseconds)
 			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
 
 			// 6. Store new token in the database
@@ -48,9 +51,9 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
                 [userId, hashedTokenForDb, expiresAt]
 			);
 
-			// 7. Construct reset URL
-			const appBaseUrl: string = process.env['APP_BASE_URL'] || `${req.protocol}://${req.get('host')}`;
-			const resetUrl: string = `${appBaseUrl}/reset-password/${plainToken}`;
+			// 7. Construct reset URL with environment-aware logic
+			const host = DEV_BUILD ? `localhost:${process.env['HTTPSPORT_LOCAL']}` : HOST_NAME;
+			const resetUrl = new URL(`https://${host}/reset-password/${plainToken}`).toString();
 
 			// 8. Send email
 			sendPasswordResetEmail(email, resetUrl);
@@ -144,7 +147,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
             [validTokenRecord.hashed_token]
 		);
 
-		// 7. Terminate the users all active sessions.
+		// 7. Terminate all of the user's active sessions.
 		// Recommended for security.
 		deleteAllRefreshTokensForUser(userId);
 

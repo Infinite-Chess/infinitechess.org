@@ -1,4 +1,6 @@
 
+// src/controllers/sendMail.ts
+
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
