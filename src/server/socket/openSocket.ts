@@ -102,8 +102,8 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
 	}
 
 	// Make sure the origin is our website
-	if (!DEV_BUILD && origin !== process.env.APP_BASE_URL) { // In DEV_BUILD, allow all origins.
-		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env.APP_BASE_URL}"`, 'hackLog.txt');
+	if (!DEV_BUILD && origin !== process.env['APP_BASE_URL']) { // In DEV_BUILD, allow all origins.
+		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`, 'hackLog.txt');
 		socket.close(1009, "Origin Error");
 		return;
 	}
