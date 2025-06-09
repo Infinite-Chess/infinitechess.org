@@ -40,9 +40,6 @@ const simulatedWebsocketLatencyMillis = 0;
 // const simulatedWebsocketLatencyMillis = 2000; // 2 Seconds
 if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
 
-/** The domain name of the production website. */
-const HOST_NAME = 'www.infinitechess.org';
-
 /**
  * The latest version of the game.
  * If the client is ever using an old version, we will tell them to hard-refresh.
@@ -102,7 +99,6 @@ export {
 	BUNDLE_FILES,
 	ARE_RATE_LIMITING,
 	simulatedWebsocketLatencyMillis,
-	HOST_NAME,
 	GAME_VERSION,
 	useOriginWhitelist,
 	allowedOrigins,

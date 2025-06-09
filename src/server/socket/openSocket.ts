@@ -11,7 +11,7 @@ import { onclose } from './closeSocket.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
-import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
+import { DEV_BUILD, GAME_VERSION } from '../config/config.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
@@ -102,8 +102,8 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
 	}
 
 	// Make sure the origin is our website
-	if (!DEV_BUILD && origin !== `https://${HOST_NAME}`) { // In DEV_BUILD, allow all origins.
-		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "https://${HOST_NAME}"`, 'hackLog.txt');
+	if (!DEV_BUILD && origin !== process.env.APP_BASE_URL) { // In DEV_BUILD, allow all origins.
+		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env.APP_BASE_URL}"`, 'hackLog.txt');
 		socket.close(1009, "Origin Error");
 		return;
 	}

@@ -38,6 +38,7 @@ HTTPPORT_LOCAL=3000
 HTTPSPORT_LOCAL=3443
 GITHUB_API_KEY=
 GITHUB_REPO=Infinite-Chess/infinitechess.org
+APP_BASE_URL=https://www.infinitechess.org
     `;
 	fs.writeFileSync(envPath, content.trim());
 	console.log('Generated .env file');

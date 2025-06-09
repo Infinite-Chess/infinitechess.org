@@ -1,14 +1,18 @@
-
 // src/utility/urlUtils.ts
 
 // @ts-ignore
-import { DEV_BUILD, HOST_NAME } from '../config/config.js';
+import { DEV_BUILD } from '../config/config.js';
 
 /**
  * Gets the base URL for the application, respecting the environment.
- * @returns The full base URL (e.g., https://localhost:3001 or https://yourdomain.com)
+ * @returns The full base URL for the current environment.
  */
 export function getAppBaseUrl(): string {
-	const host = DEV_BUILD ? `localhost:${process.env['HTTPSPORT_LOCAL']}` : HOST_NAME;
-	return `https://${host}`;
+	if (DEV_BUILD) {
+		// In development, construct the localhost URL
+		return `https://localhost:${process.env['HTTPSPORT_LOCAL']}`;
+	} else {
+		// In production, use the base URL from the environment variables
+		return process.env['APP_BASE_URL']!;
+	}
 }
