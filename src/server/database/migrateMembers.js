@@ -1,9 +1,5 @@
-import { readFileSync } from 'fs';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import db from './database.js';
-import { genUniqueUserID } from './memberManager.js';
-import timeutil from '../../client/scripts/esm/util/timeutil.js';
-import { addTokenToRefreshTokens } from '../controllers/authenticationTokens/refreshTokenObject.js';
 import { addUserToPlayerStatsTable } from './playerStatsManager.js';
 
 'use strict';

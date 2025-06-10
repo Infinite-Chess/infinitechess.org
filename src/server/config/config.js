@@ -40,9 +40,6 @@ const simulatedWebsocketLatencyMillis = 0;
 // const simulatedWebsocketLatencyMillis = 2000; // 2 Seconds
 if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simulatedWebsocketLatencyMillis must be 0 in production!!");
 
-/** The domain name of the production website. */
-const HOST_NAME = 'www.infinitechess.org';
-
 /**
  * The latest version of the game.
  * If the client is ever using an old version, we will tell them to hard-refresh.
@@ -67,9 +64,6 @@ const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 30; // 30s
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
-
-const intervalForRefreshTokenCleanupMillis = 1000 * 60 * 60 * 24; // 1 day
-// const intervalForRefreshTokenCleanupMillis = 1000 * 30; // 30s
 
 /**
  * The maximum number of logging sessions a user can have at
@@ -105,14 +99,12 @@ export {
 	BUNDLE_FILES,
 	ARE_RATE_LIMITING,
 	simulatedWebsocketLatencyMillis,
-	HOST_NAME,
 	GAME_VERSION,
 	useOriginWhitelist,
 	allowedOrigins,
 	refreshTokenExpiryMillis,
 	minTimeToWaitToRenewRefreshTokensMillis,
 	accessTokenExpiryMillis,
-	intervalForRefreshTokenCleanupMillis,
 	sessionCap,
 	maxExistenceTimeForUnverifiedAccountMillis,
 	intervalForRemovalOfOldUnverifiedAccountsMillis,

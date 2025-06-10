@@ -1,3 +1,4 @@
+// src/controllers/passwordResetController.ts
 
 import { Request, Response } from 'express';
 import crypto from 'crypto';
@@ -6,9 +7,13 @@ import db from '../database/database.js';
 import { sendPasswordResetEmail } from './sendMail.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
+import { getAppBaseUrl } from '../utility/urlUtils.js';
+// @ts-ignore
+import { getTranslationForReq } from '../utility/translate.js';
 
 
-const PASSWORD_RESET_TOKEN_EXPIRY_SECS: number = 60 * 60; // 1 Hour
+const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
 
 
 /** Route for when a user REQUESTS a password reset email. */
@@ -24,7 +29,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 		// 1. Find user by email (case-insensitive)
 		const member = db.get<{ user_id: number }>('SELECT user_id FROM members WHERE email = ? COLLATE NOCASE', [email]);
 
-		if (member) {
+		if (member) { // User exists, proceed with password reset flow
 			const userId: number = member.user_id;
 
 			// 2. Invalidate old tokens (Using database.run for DELETE)
@@ -36,8 +41,8 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// 4. Hash the plain token
 			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
 			
-			// 5. Set expiration (e.g., ~1 hour from now in seconds)
-			const expiresAt: number = Math.floor(Date.now() / 1000) + PASSWORD_RESET_TOKEN_EXPIRY_SECS;
+			// 5. Set expiration (e.g., ~1 hour from now in milliseconds)
+			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
 
 			// 6. Store new token in the database
 			db.run(
@@ -45,19 +50,23 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
                 [userId, hashedTokenForDb, expiresAt]
 			);
 
-			// 7. Construct reset URL
-			const appBaseUrl: string = process.env['APP_BASE_URL'] || `${req.protocol}://${req.get('host')}`;
-			const resetUrl: string = `${appBaseUrl}/reset-password/${plainToken}`;
+			// 7. Construct reset URL using the utility
+			const baseUrl = getAppBaseUrl();
+			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
 			// 8. Send email
 			sendPasswordResetEmail(email, resetUrl);
+		
+			// 9. Log the email sent
+			logEventsAndPrint(`Sent password reset email to user_id (${userId})`, 'loginAttempts.txt');
+		} else {
+			logEventsAndPrint(`No member exists with the email (${email}). Not sending password reset email.`, 'loginAttempts.txt');
 		}
 
 		// ALWAYS return a generic success message to prevent email enumeration.
 		res.status(200).json({
-			message: 'If an account with that email exists, a password reset link has been sent.',
+			message: getTranslationForReq('server.javascript.ws-password-reset-link-sent', req),
 		});
-		return;
 
 	} catch (error) {
 		const errorMessage: string = 'Forgot password error: ' + (error instanceof Error ? error.message : String(error));
@@ -82,6 +91,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ message: 'Token and new password are required.' });
 		return;
 	}
+	if (typeof token !== 'string') {
+		res.status(400).json({ message: 'Token must be a string.' });
+		return;
+	}
 	if (typeof password !== 'string') {
 		res.status(400).json({ message: 'Password must be a string.' });
 		return;
@@ -93,10 +106,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// 2. Find a matching, unexpired token.
 		// Since we stored a HASH, we cannot query by the plain token directly.
 		// We must fetch potential tokens and compare them one by one.
-		const nowInSeconds = Math.floor(Date.now() / 1000);
+		const now = Date.now();
 		const potentialTokens = db.all<TokenRecord>(
 			'SELECT user_id, hashed_token FROM password_reset_tokens WHERE expires_at > ?',
-			[nowInSeconds]
+			[now]
 		);
 
 		let validTokenRecord: TokenRecord | null = null;
@@ -110,7 +123,8 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {
-			res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+			logEventsAndPrint(`Invalid or expired password reset token used: ${token}`, 'loginAttempts.txt');
+			res.status(400).json({ message: getTranslationForReq('server.javascript.ws-password-reset-token-invalid', req) });
 			return;
 		}
 
@@ -137,12 +151,16 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
             [validTokenRecord.hashed_token]
 		);
 
+		// 7. Terminate all of the user's active sessions.
+		// Recommended for security.
+		deleteAllRefreshTokensForUser(userId);
+
 		// Optional but recommended: Send a confirmation email that the password was changed.
 
-		// 7. Send Success Response
-		res.status(200).json({ message: 'Password has been reset successfully.' });
+		// 8. Send Success Response
+		res.status(200).json({ message: getTranslationForReq('server.javascript.ws-password-change-success', req) });
 
-		// 8. Log the successful password reset
+		// 9. Log the successful password reset
 		logEventsAndPrint(`Password reset successful for user_id ${userId}`, 'loginAttempts.txt');
 
 	} catch (error) {

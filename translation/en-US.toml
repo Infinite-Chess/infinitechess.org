@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "59"
+version = "61"
 maintainer = "Naviary"
 
 [header]
@@ -151,6 +151,14 @@ js-username_tooshort = "Username must be at least 3 characters long"
 js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
 js-email_invalid = "This is not a valid email"
 js-email_inuse = "This email is already in use"
+
+[reset-password.javascript]
+js-pwd_no_match = "Passwords do not match."
+reset-password = "Reset Password"
+processing = "Processing..."
+network-error = "A network error occurred. Please try again."
+
+[password-validation]
 js-pwd_incorrect_format = "Password is in an incorrect format"
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
@@ -555,6 +563,17 @@ login_button = "Log In"
 send_reset_link = "Send Reset Link"
 forgot_question = "Forgot Password?"
 back_to_login = "Back to Login"
+forgot_instruction = "Please enter the email address associated with your account."
+
+[login.javascript]
+network-error = "A network error occurred. Please try again."
+
+[reset_password]
+title = "Reset Your Password"
+instruction = "Please enter and confirm your new password."
+new_password = "New Password"
+confirm_password = "Confirm Password"
+submit_button = "Reset Password"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
@@ -568,8 +587,6 @@ more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and 
 [server.javascript]
 ws-invalid_username = "Username is invalid"
 ws-incorrect_password = "Password is incorrect"
-ws-username_and_password_required = "Username and password are required."
-ws-username_and_password_string = "Username and password must be a string."
 ws-login_failure_retry_in = "Failed to login, try again in"
 ws-seconds = "seconds" # unit of time
 ws-second = "second" # unit of time
@@ -586,14 +603,12 @@ ws-you_are_banned = "You are banned."
 ws-password_length = "Password must be 6-72 characters long"
 ws-password_format = "Password is in an incorrect format"
 ws-password_password = "Password must not be 'password'"
-ws-member_not_found = "Member not found"
+ws-password-reset-link-sent = "If an account with that email exists, a password reset link has been sent."
+ws-password-change-success = "Password has been reset successfully. You will be redirected to the login page shortly."
+ws-password-reset-token-invalid = "Password reset token is invalid or has expired."
 ws-forbidden_wrong_account = "Forbidden. This is not your account."
 ws-deleting_account_not_found = "Failed to delete account. Account not found."
 ws-server_error = "Sorry, there was a server error! Please go back."
-ws-unable_to_identify_client_ip = "Unable to identify client IP address"
-ws-you_are_banned_by_server = "You are banned"
-ws-too_many_requests_to_server = "Too Many Requests. Try again soon."
-ws-bad_request = "Bad Request"
 ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."
 ws-already_in_game = "You are already in a game."

@@ -11,7 +11,7 @@ import { onclose } from './closeSocket.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 // @ts-ignore
-import { DEV_BUILD, GAME_VERSION, HOST_NAME } from '../config/config.js';
+import { DEV_BUILD, GAME_VERSION } from '../config/config.js';
 // @ts-ignore
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 // @ts-ignore
@@ -82,9 +82,12 @@ function onConnectionRequest(socket: WebSocket, req: Request) {
 
 	// If user is signed in, use the database to correctly set the property ws.metadata.verified
 	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo?.user_id !== undefined) {
-		let { verification } = getMemberDataByCriteria(['verification'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true });
-		verification = JSON.parse(verification) as Verification | null; // string needs to be parsed to a JSON
-		if (verification === null || verification.verified) ws.metadata.verified = true; // user is verified
+		const { verification } = getMemberDataByCriteria(['verification'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true }) as {
+			verification: string | null;
+		};
+		// string needs to be parsed to a JSON
+		const verificationJs = verification === null ? null : JSON.parse(verification) as Verification | null;
+		if (verificationJs === null || verificationJs.verified) ws.metadata.verified = true; // user is verified
 	}
 
 	// Send the current game vesion, so they will know whether to refresh.
@@ -102,8 +105,8 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
 	}
 
 	// Make sure the origin is our website
-	if (!DEV_BUILD && origin !== `https://${HOST_NAME}`) { // In DEV_BUILD, allow all origins.
-		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "https://${HOST_NAME}"`, 'hackLog.txt');
+	if (!DEV_BUILD && origin !== process.env['APP_BASE_URL']) { // In DEV_BUILD, allow all origins.
+		logEvents(`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`, 'hackLog.txt');
 		socket.close(1009, "Origin Error");
 		return;
 	}

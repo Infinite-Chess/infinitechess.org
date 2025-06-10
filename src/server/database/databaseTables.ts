@@ -6,13 +6,11 @@
 
 // @ts-ignore
 import { migrateMembersToPlayerStatsTable } from './migrateMembers.js';
-import { startPeriodicDeleteUnverifiedMembers } from './deleteUnverifiedMembers.js';
-import { startPeriodicRefreshTokenCleanup } from './deleteExpiredRefreshTokens.js';
 import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
-import { startPeriodicDatabaseIntegrityCheck } from './databaseIntegrity.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
-import { startPeriodicPasswordResetTokenCleanup } from './cleanupTasks.js';
+import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
+import { migrateRefreshTokensToTable } from './migrateRefreshTokens.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -34,7 +32,6 @@ const allMemberColumns: string[] = [
 	'roles',
 	'joined',
 	'last_seen',
-	'refresh_tokens',
 	'preferences',
 	'verification',
 	'login_count',
@@ -115,8 +112,7 @@ function generateTables(): void {
 			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
 			login_count INTEGER NOT NULL DEFAULT 0,                        
-			preferences TEXT,
-			refresh_tokens TEXT,                          
+			preferences TEXT,                        
 			verification TEXT, 
 			username_history TEXT,
 			checkmates_beaten TEXT NOT NULL DEFAULT ''
@@ -241,19 +237,35 @@ function generateTables(): void {
 	
 	// Password Reset Tokens table
 	db.run(`
-        CREATE TABLE IF NOT EXISTS password_reset_tokens (
-            token_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            hashed_token TEXT NOT NULL UNIQUE,
-            expires_at INTEGER NOT NULL, -- Unix timestamp (seconds)
-            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), -- Unix timestamp (seconds)
+		CREATE TABLE IF NOT EXISTS password_reset_tokens (
+			hashed_token TEXT PRIMARY KEY NOT NULL,
+			user_id INTEGER NOT NULL,
+			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000), -- Unix timestamp (milliseconds)
 
-            FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
-        );
-    `);
+			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+		);
+	`);
 	// Indexes for password_reset_tokens table
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
 	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
+
+
+	// Refresh Tokens table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS refresh_tokens (
+			token TEXT PRIMARY KEY NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
+			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
+			ip_address TEXT,
+
+			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+		);
+	`);
+	// Indexes for refresh_tokens table
+	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens (user_id);`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`);
 
 	// Bans table
 	// createTableSQLQuery = `
@@ -287,13 +299,11 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
-	startPeriodicDatabaseIntegrityCheck();
+	startPeriodicDatabaseCleanupTasks();
+	startPeriodicLeaderboardRatingDeviationUpdate();
 	migrateMembersToPlayerStatsTable();
 	gamelogger.migrateGameLogsToDatabase();
-	startPeriodicDeleteUnverifiedMembers();
-	startPeriodicRefreshTokenCleanup();
-	startPeriodicLeaderboardRatingDeviationUpdate();
-	startPeriodicPasswordResetTokenCleanup();
+	migrateRefreshTokensToTable();
 }
 
 

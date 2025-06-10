@@ -102,6 +102,7 @@ function close() {
 
 
 export default {
+	db,
 	run,
 	get,
 	all,

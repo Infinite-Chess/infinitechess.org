@@ -12,7 +12,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { join } from 'node:path';
 import { readFileIfExists } from '../utility/fileUtils.js';
 import { writeFile } from 'node:fs/promises';
-import { HOST_NAME } from '../config/config.js';
 import path from 'path';
 
 import { fileURLToPath } from 'node:url';
@@ -80,7 +79,7 @@ function refreshGitHubContributorsList() {
 			"Accept": "application/vnd.github+json",
 			"Authorization": `Bearer ${GITHUB_API_KEY}`,
 			"X-GitHub-Api-Version": "2022-11-28",
-			"User-Agent": HOST_NAME,
+			"User-Agent": process.env.APP_BASE_URL,
 			// "Content-Length": "0"
 		},
 		signal // Pass the signal to the request options

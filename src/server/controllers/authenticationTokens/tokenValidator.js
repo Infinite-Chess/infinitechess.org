@@ -21,51 +21,61 @@ import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessio
  * 1. If the token has expired or has been tampered with (payload won't have required properties).
  * 2. If the token is manually invalidated, such as when a user logs out, or deletes their account, and the token was removed from their information in the members table.
  * @param {string} token - The token to validate.
- * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token. Pass `false` for access tokens.
+ * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token.
  * @param {string} IP - The IP address they are connecting from.
- * @param {string} [req] - Required if it's a refresh token AND an http request (not socket).
- * @param {string} [res] - Required if it's a refresh token AND an http request (not socket). The response object. If provided, we will renew their refresh token cookie if it's been a bit.
- * @returns {Object} - An object containing the properties: { isValid (boolean), user_id, username, roles }
+ * @param {import('express').Request} [req] - The request object, if applicable.
+ * @param {import('express').Response} [res] - The response object, if applicable.
+ * @returns {Object} - An object: { isValid (boolean), user_id, username, roles, reason? }
  */
 function isTokenValid(token, isRefreshToken, IP, req, res) {
-	if (isRefreshToken === undefined) {
-		const reason = "When validating token, you must include the isRefreshToken parameter!";
-		logEventsAndPrint(reason, 'errLog.txt');
-		return { isValid: false, reason };
-	}
+	try {
+		if (isRefreshToken === undefined) {
+			const reason = "isTokenValid requires the isRefreshToken parameter.";
+			logEventsAndPrint(reason, 'errLog.txt');
+			return { isValid: false, reason };
+		}
 
-	// Extract user ID and username from the token
-	// eslint-disable-next-line prefer-const
-	let { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
-	// MAY DELETE THIS LINE AFTER 5 DAYS!! ================================================================================================================
-	if (typeof roles === 'string') roles = JSON.parse(roles); // The roles fetched from the database is a stringified json string array, parse it here!
-	// ====================================================================================================================================================
-	if (user_id === undefined || username === undefined || roles === undefined) return { isValid: false }; // Expired or tampered token
+		// 1. Decode the token first
+		const { user_id, username, roles, allowed_actions } = getPayloadContentFromToken(token, isRefreshToken);
 
-	if (!doesMemberOfIDExist(user_id)) {
-		const reason = `Token is valid, but the users account of id "${user_id}" doesn't exist! This is fine, did you just delete it?`;
-		console.log(reason);
-		if (res) revokeSession(res); // The response may not be defined if we called this method on a websocket upgrade connection request.
-		return { isValid: false, reason };
-	}
+		if (user_id === undefined || username === undefined || roles === undefined) {
+			return { isValid: false, reason: "Token is expired or tampered." };
+		}
+		
 
-	// If it's an access token, we already know it's valid.
-	if (!isRefreshToken) {
+		// 2. If it's an access token, check if the user account still exists.
+		if (!isRefreshToken) {
+			if (!doesMemberOfIDExist(user_id)) {
+				console.log(`Token is for a deleted user account (ID: ${user_id}).`);
+				if (res) revokeSession(res); // The response may not be defined if we called this method on a websocket upgrade connection request.
+				return { isValid: false, reason: "User account does not exist." };
+			}
+
+			// Validation complete for access token.
+
+			updateLastSeen(user_id);
+			return { isValid: true, user_id, username, roles, allowed_actions };
+		}
+
+		// 3. For a refresh token, check against the database.
+		// This is the main database-dependent part.
+		const isStoredInDb = doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, IP, req, res);
+		if (!isStoredInDb) {
+			if (res) revokeSession(res); // Revoke their session in case they were manually logged out, and their client didn't know that. The response may not be defined if we called this method on a websocket upgrade connection request.
+			return { isValid: false, reason: "Refresh token not found in the database." };
+		}
+
+		// 4. If all checks pass, the token is valid.
 		updateLastSeen(user_id);
-		return { isValid: true, user_id, username, roles, allowed_actions }; // Access tokens can't be manually invalidated in the database. They need to remain quick.
+		return { isValid: true, user_id, username, roles, allowed_actions };
+
+	} catch (error) {
+		// This block will catch any unexpected errors from database calls
+		logEventsAndPrint(`A critical error occurred during token validation: ${error.message}`, 'errLog.txt');
+		
+		// Return a predictable "invalid" response. The caller does not need to crash.
+		return { isValid: false, reason: "An internal error occurred during validation." };
 	}
-
-	// It's a refresh token...
-
-	// Check if the token was manually invalidated (e.g., user logged out)
-	if (!doesMemberHaveRefreshToken_RenewSession(user_id, username, roles, token, IP, req, res)) {
-		if (res) revokeSession(res); // Revoke their session in case they were manually logged out, and their client didn't know that. The response may not be defined if we called this method on a websocket upgrade connection request.
-		return { isValid: false, reason: "User doesn't have a matching refresh token in the database." };
-	}
-
-	// If all checks pass, return a success response with the decoded payload information, such as their user_id and username
-	updateLastSeen(user_id);
-	return { isValid: true, user_id, username, roles, allowed_actions };
 }
 
 /**

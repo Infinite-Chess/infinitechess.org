@@ -56,7 +56,6 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// 	last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
 	// 	login_count INTEGER NOT NULL DEFAULT 0,                        
 	// 	preferences TEXT,
-	// 	refresh_tokens TEXT,                          
 	// 	verification TEXT, 
 	// 	username_history TEXT,
 	//  checkmates_beaten TEXT NOT NULL DEFAULT ''
