@@ -1,0 +1,616 @@
+name = "Deutsch" # Name of language
+direction = "ltr" # Change to "rtl" for right to left languages
+version = "54"
+maintainer = "Chaosfanmaster44"
+
+[header]
+home = "Unendliches Schach"
+play = "Spielen"
+news = "Neuigkeiten"
+login = "Anmelden"
+profile = "Profil"
+createaccount = "Konto erstellen"
+logout = "Abmelden"
+leaderboard = "Bestenliste"
+
+[header.settings]
+language = "Sprache"
+board = "Brett" # Board color/theme
+legalmoves = "Legale Züge" # Legal moves shape
+legalmoves-squares = "Quadrate"
+legalmoves-dots = "Punkte" # Dots and 4 corner triangles
+selection = "Auswahl"
+selection-drag = "Figuren ziehen"
+selection-premove = "Vorauszüge"
+selection-animations = "Animationen"
+selection-lingering_annotations = "Verbleibende Anmerkungen"
+perspective = "Perspektive" # Perspective-mode
+perspective-mouse-sensitivity = "Mausempfindlichkeit"
+perspective-fov = "Sichtfeld"
+ping = ["Ping", "ms"] # A number is inserted between these 2 strings.
+reset-to-default = "Auf Standard zurücksetzen"
+
+[footer]
+contact = "Kontaktieren Sie uns"
+terms_of_service = "Nutzungsbedingungen"
+source_code = "Quellcode"
+language = "Sprache"
+
+[member.javascript]
+js-confirm_delete = "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Dies kann NICHT rückgängig gemacht werden! Klicken Sie auf OK, um Ihr Passwort einzugeben."
+js-enter_password = "Geben Sie Ihr Passwort ein, um Ihr Konto ENDGÜLTIG zu löschen:"
+
+[leaderboard.javascript]
+supported_variants = "Diese Bestenliste wird für die folgenden Varianten verwendet:"
+rank = "Rang"
+player = "Spieler"
+rating = "Bewertung"
+
+[index]
+title = "Unendliches Schach | Startseite - Die offizielle Website" # The tab title
+secondary_title = "Die offizielle Website für Live-Spiele!"
+what_is_it_title = "Was ist das?"
+what_is_it_pargaraphs = [
+"Unendliches Schach ist eine Schachvariante, bei der das Brett keinen Rand hat, viel größer als Ihr vertrautes 8x8-Brett. Die Dame, Türme und Läufer haben <em>keine Begrenzung</em>, wie weit sie pro Zug ziehen können. Wählen Sie eine beliebige natürliche Zahl bis unendlich!",
+"Ohne Einschränkung der Zugweite sind Stellungen möglich, bei denen die Doomsday-Uhr oder Schachmatt-in-<em>#</em>-Zahl durch die erste unendliche Ordinalzahl, <strong>ω</strong> (<em>Omega</em>), dargestellt wird. Tatsächlich haben Forscher zeigen können, dass die Schachmatt-Uhr den Wert <strong>jeder</strong> abzählbaren Ordinalzahl annehmen kann!",
+"Wie Sie sich vorstellen können, gibt es eine unendliche Anzahl an Startkonfigurationen, von denen Sie viele kompetitiv spielen können! Ihr Endziel ist immer noch Schachmatt, was neue Taktiken erfordert, da es keine Ränder gibt, an die der feindliche König gedrängt werden kann. Ein Spiel dauert normalerweise nicht viel länger als normale Schachpartien. Bauern wandeln weiterhin auf der ersten bzw. achten Reihe um!",
+]
+how_to_title = "Wie kann ich spielen?"
+how_to_paragraph = ["Die aktuelle Version 1.6 ist auf der Seite ","Spielen"," verfügbar!"]
+about_title = "Über das Projekt"
+about_paragraphs = [
+"Ich bin Naviary. Seit ich das Unendliche Schach (das Konzept existierte lange vor dieser Website) zum ersten Mal entdeckte, hat es mich sehr fasziniert und mit seinen Möglichkeiten begeistert! Bis vor kurzem war das Spielen ziemlich schwierig, da die Spieler Bilder des aktuellen Brettes erstellen und für jeden gespielten Zug hin und her senden mussten. Deswegen wissen wenige davon oder haben es spielen können.",
+["Mein Ziel ist es, eine Möglichkeit zu schaffen, Unendliches Schach für jeden leicht spielbar zu machen und eine Community darum aufzubauen. Ich habe unzählige Stunden meiner eigenen Zeit für diese Website aufgewendet, sie gepflegt und das Spiel entwickelt. Ich habe viele weitere Ideen, die mich noch einige Zeit beschäftigen werden. Obwohl ich dies kostenlos anbieten möchte, hat das Leben seine Anforderungen. Um mich finanziell zu unterstützen, ziehen Sie bitte in Betracht, meinem ", "Patreon", " beizutreten."]
+]
+patreon_title = "Patreon Unterstützer"
+github_title = "Github Mitwirkende"
+
+[index.javascript]
+contribution_count = ["", " Beiträge"] # A number is inserted between these 2 strings.
+
+[credits]
+title = "Credits"
+copyright = "Alles auf der Website, was nicht unten aufgeführt ist, unterliegt dem Copyright von www.InfiniteChess.org"
+variants_heading = "Varianten"
+variants_credits = [
+"Core entworfen von Andreas Tsevas.",
+"Space entworfen von Andreas Tsevas.",
+"Space Classic entworfen von Andreas Tsevas.",
+"Coaip („Chess on an Infinite Plane“) entworfen von V. Reinhart.",
+"Pawn Horde entworfen von Inaccessible Cardinal.",
+"Abundance entworfen von Clicktuck Suskriberz.",
+"Pawndard von SexyLexi.",
+"Classical+ von SexyLexi.",
+"Knightline von Inaccessible Cardinal.",
+"Knighted Chess von cycy98.",
+"entworfen von Cory Evans und Joel Hamkins.",
+"entworfen von Andreas Tsevas.",
+"entworfen von Cory Evans und Joel Hamkins.",
+"entworfen von Cory Evans, Joel Hamkins und Norman Lewis Perlmutter.",
+"Chess on an Infinite Plane - Huygens Options von V. Reinhart.",
+"Confined Classical von Andreas Tsevas.",
+"4x4x4x4 Chess von Andreas Tsevas.",
+"5D Chess von Jace.",
+]
+textures_heading = "Texturen"
+textures_licensed_under = "Texturen lizenziert unter der"
+sounds_heading = "Sounds"
+sounds_credits = [
+["Einige Sounds werden vom", "Projekt unter der"],
+"Andere Sounds erstellt von Naviary.",
+]
+code_heading = "Code"
+code_credits = [
+"von Brandon Jones und Colin MacKenzie IV.",
+"von Andreas Tsevas und Naviary.",
+]
+language_heading = "Sprachübersetzungen"
+language_credits = [ # The strings below that contain ONLY a username will receive a hyperlink. Strings may be left empty, but not excluded.
+"Französisch von ", "Life Enjoyer", " und ", "cycy98", ".",
+"Vereinfachtes Chinesisch von ", "Heinrich Xiao", ".",
+"Traditionelles Chinesisch von ", "Heinrich Xiao", ".",
+"Polnisch von ", "Tymon Becella", ".", # Apsurt
+"Portugiesisch von ", "Emerson P. Machado", ".", # The_Skeleton on discord
+"Spanisch von ", "xa31er", ".",
+"Deutsch von ", "Estetique", "."
+]
+
+[member]
+title = "Mitglied" # The tab name
+verify_message = "Bitte überprüfen Sie Ihre E-Mails, um Ihr Konto zu verifizieren. Unverifizierte Konten werden nach 3 Tagen gelöscht."
+resend_message = ["Keine E-Mail erhalten? Überprüfen Sie Ihren Spam-Ordner. Versuchen Sie auch, die ", "E-Mail erneut zu senden.", " Wenn Sie sie immer noch nicht finden können, ", "kontaktieren Sie uns."]
+verify_confirm = "Vielen Dank! Ihr Konto wurde verifiziert."
+joined = "Beigetreten:"
+seen = ["Zuletzt gesehen:", " her"]
+practice_progress = "Fortschritt im Übungsmodus:"
+ranked_elo = "Elo:"
+infinity_leaderboard_position = "Globale Rangliste:"
+infinity_leaderboard_rating_deviation = "Rating-Abweichung:"
+reveal_info = "Kontoinformationen anzeigen"
+account_info_heading = "Kontoinformationen"
+email = "E-Mail:"
+delete_account = "Konto löschen"
+password_reset_message = ["Um Ihren Benutzernamen, Ihre E-Mail oder Ihr Passwort zu ändern, ", "kontaktieren Sie uns."]
+
+[member.badge-tooltips]
+checkmate_bronze = "Schachmatt-Veteran: 50% aller Übungs-Schachmattes lösen."
+checkmate_silver = "Schachmatt-Profi: 75% aller Übungs-Schachmattes lösen."
+checkmate_gold = "Schachmatt-Meister: 100% aller Übungs-Schachmattes lösen."
+
+[create-account]
+title = "Konto erstellen" # The tab name
+username = "Benutzername:"
+email = "E-Mail:"
+password = "Passwort:"
+create_button = "Konto erstellen"
+agreement = ["Ich stimme den ", "Nutzungsbedingungen", " zu."]  # the middle entry is a hyperlink, the others are not
+
+[create-account.javascript]
+js-username_specs = "Der Benutzername muss mindestens 3 Zeichen lang sein und darf nur Groß- und Kleinbuchstaben von A bis Z und Zahlen von 0 bis 9 enthalten"
+js-username_tooshort = "Der Benutzername muss mindestens 3 Zeichen lang sein"
+js-username_wrongenc = "Der Benutzername darf nur Groß- und Kleinbuchstaben von A bis Z und Zahlen von 0 bis 9 enthalten"
+js-email_invalid = "Dies ist keine gültige E-Mail"
+js-email_inuse = "Diese E-Mail ist bereits in Verwendung"
+js-pwd_incorrect_format = "Passwort hat ein falsches Format"
+js-pwd_too_short = "Passwort muss mindestens 6 Zeichen lang sein"
+js-pwd_too_long = "Passwort darf nicht länger als 72 Zeichen sein"
+js-pwd_not_pwd = "Passwort darf nicht 'password' sein"
+
+[leaderboard]
+title = "Bestenliste"
+inactive_players = "Inaktive Spieler mit hoher Rating-Unsicherheit werden von der Bestenliste ausgeschlossen."
+your_global_ranking = "Ihr globaler Rang:"
+show_more = "Mehr anzeigen..."
+
+[play]
+title = "Unendliches Schach - Spielen" # The tab title
+loading = "LÄDT"
+error = "FEHLER"
+
+[play.main-menu]
+credits = "Credits"
+play = "Spielen"
+practice = "Üben"
+guide = "Anleitung"
+editor = "Brett-Editor"
+
+[play.guide]
+title = "Anleitung"
+rules = "Regeln"
+rules_paragraphs = [
+"Die Regeln des Unendlichen Schachs sind fast identisch mit denen des klassischen Schachs, außer dass das Brett in alle Richtungen unendlich ist! Dies sind die einzigen Hinweise und Änderungen, die Sie beachten müssen:",
+"Figuren mit gleitenden Zügen, wie Türme, Läufer, und Damen, haben keine Einschränkung darin, wie weit sie in einem Zug ziehen können! Solange ihr Weg frei ist, können sie Millionen von Feldern ziehen!",
+["In der Grundvariante „Klassisch“ wandeln weiße Bauern auf Reihe 8 und schwarze Bauern auf Reihe 1 um. Dies wird, wie Sie im Bild sehen können, durch die dünnen schwarzen Linien angedeutet. Bauern müssen nur die gegenüberliegende Linie erreichen, ", "nicht", " sie überqueren, um umzuwandeln."],
+"Felder werden nicht länger durch ihren Buchstaben und ihre Reihennummer (z.B. a1) beschrieben; stattdessen wird jedes Feld durch ein Paar von x- und y-Koordinaten definiert. Das Feld a1 ist zu (1,1) geworden, und das Feld h8 zu (8,8). Auf Desktop-Geräten werden die Koordinaten, über denen sich Ihre Maus befindet, oben auf dem Bildschirm angezeigt.",
+"Alle anderen Regeln sind die gleichen wie im klassischen Schach, wie Schachmatt, Patt, dreifache Stellungswiederholung, die 50-Züge-Regel, Rochade, En Passant usw.!"
+]
+careful_heading = "Seien Sie vorsichtig!"
+careful_paragraphs = [
+"Die Offenheit des unendlichen Bretts macht es sehr einfach, Gabeln, Fesselungen und Spieße auszunutzen. Ihre Rückseite ist oft sehr anfällig. Achten Sie auf solche Taktiken! Seien Sie kreativ beim Bilden von Schutz für Ihren König und Ihre Türme! Die Eröffnungsstrategie unterscheidet sich stark vom klassischen Schach.",
+"Viele andere Varianten wurden geschaffen, um Ihre Rückseite zu stärken."
+]
+controls_heading = "Steuerung"
+controls_paragraph = "Klicken und ziehen Sie das Brett, um sich zu bewegen. Scrollen Sie, um hinein- und herauszuzoomen. Klicken Sie auf eine beliebige Figur, einschließlich der Figuren Ihres Gegners, um jederzeit ihre legalen Züge anzuzeigen! Zusätzliche Steuerelemente sind:"
+keybinds = [
+" um das Sichtfeld zu bewegen.",
+["Leertaste", " und ", "Shift", " zum Hinein- und Herauszoomen."],
+["Escape", " pausiert das Spiel."],
+["Tab", " schaltet die Pfeilindikatoren am Bildschirmrand um, die auf Figuren außerhalb des Bildschirms weisen. Standardmäßig ist diese Einstellung auf „Verteidigung“ eingestellt, sodass Pfeile für die Figuren angezeigt werden, die sich auf Felder ihres Sichtfeldes bewegen könnten. ", "Tab", " kann diesen Modus auf „Alle“ oder „Aus“ umschalten; „Alle“ zeigt Pfeile für alle Figuren an, unabhängig davon, ob sie sich auf Ihren Bildschirm bewegen können. Diese Einstellung kann auch im Pausenmenü umgeschaltet werden. Das Klicken auf einen Pfeil teleportiert Sie zu der Figur, auf die er zeigt."],
+["Strg", " erzwingt das Ziehen des Bretts anstatt einer Figur, wenn das Ziehen in den Einstellungen aktiviert ist."],
+" schaltet auf den „Bearbeitungsmodus“ in lokalen Spielen um. Dies ermöglicht Ihnen, jede Figur überall auf das Brett zu bewegen! Sehr nützlich für die Analyse."
+ ]
+controls_paragraph2 = "Das waren die wichtigsten Steuerungen, die Sie kennen müssen. Aber hier sind einige Extras, falls Sie sie jemals benötigen sollten!"
+keybinds_extra = [
+" setzt die Darstellung der Figuren zurück. Das ist nützlich, wenn sie unsichtbar werden. Dieser Glitch kann auftreten, wenn Sie die Figuren extreme Entfernungen (wie 1e21) bewegen.",
+" schaltet die Darstellung der Navigations- und Spielinformationsleisten um, was für Aufnahmen nützlich sein kann. Streaming und das Erstellen von Videos über das Spiel sind willkommen!",
+" schaltet den FPS-Zähler ein. Dieser zeigt an, wie oft das Spiel pro Sekunde aktualisiert wird, nicht immer die Anzahl der gerenderten Frames, da das Spiel das Rendern überspringt, wenn sich nichts Sichtbares geändert hat, um die Leistung zu steigern.",
+" schaltet die das Rendering der Icons um. Diese sind anklickbare Mini-Bilder der Figuren, wenn weit genug herausgezoomt wird. Bei importierten Spielen mit über 50.000 Figuren wird dies automatisch ausgeschaltet, da es die Leistung drastisch reduziert.",
+[" (Backtick, auf der gleichen Taste wie ", ") schaltet in den Debug-Modus um."],
+]
+fairy_heading = "Märchenschachfiguren"
+fairy_paragraph = "Sie wissen bereits alles Nötige, um die Standardvariante „Klassisch“ zu spielen. Märchenschachfiguren werden im konventionellen Schach nicht verwendet, sind aber in andere Varianten integriert! Wenn Sie sich in einer Variante mit Ihnen unbekannten Figuren wiederfinden, erfahren Sie hier, wie sie funktionieren!"
+editing_heading = "Brettbearbeitung"
+editing_paragraphs = [
+["Es ist derzeit ein externer ", "Brett-Editor", " auf einem öffentlichen Google Sheet verfügbar! Dieses enthält Anweisungen zur Verwendung und erfordert grundlegende Google Sheets-Kenntnisse. Nach der Einrichtung können Sie benutzerdefinierte Positionen über die Schaltfläche „Spiel einfügen“ im Optionsmenü erstellen und in das Spiel importieren!"],
+"Um eine benutzerdefinierte Position mit einem Freund zu spielen, lassen Sie ihn eine private Einladung annehmen, dann können Sie beide den Spielcode einfügen, um zu spielen!",
+"Ein In-Game-Bretteditor ist noch geplant.",
+]
+back = "Zurück"
+
+[play.guide.pieces]
+chancellor = {name="Kanzler", description="Zieht wie ein Turm und ein Springer zusammen."}
+archbishop = {name="Erzbischof", description="Zieht wie ein Läufer und ein Springer zusammen."}
+amazon = {name="Amazone", description="Zieht wie eine Dame und ein Springer zusammen. Dies ist die stärkste Figur im Spiel!"}
+guard = {name="Wache", description="Zieht wie ein König, ist aber nicht anfällig für Schach oder Schachmatt."}
+hawk = {name="Falke", description="Springt genau 2 oder 3 Felder in jede Richtung."}
+centaur = {name="Zentaur", description="Zieht wie ein Springer und eine Wache zusammen."}
+knightrider = {name="Rösselsprinter", description="Springt wie ein Springer unendlich weit in eine Richtung, bis er blockiert wird."}
+huygen = {name="Huygen", description="Springt unendlich weit in eine der vier Kardinalrichtungen, wobei er nur Felder mit primzahligem Abstand vom Startfeld besucht, bis er blockiert wird."}
+obstacle = {name="Hindernis", description="Eine neutrale Figur (von keinem Spieler kontrolliert), die die Bewegung blockiert, aber geschlagen werden kann."}
+void = {name="Leere", description="Eine neutrale Figur (nicht von einem Spieler kontrolliert), die die Abwesenheit eines Feldes darstellt. Figuren dürfen sich nicht durch oder auf sie bewegen."}
+
+[play.practice-menu]
+title = "Übung - Schachmatts"
+play = "Spielen"
+back = "Zurück"
+difficulty = "Schwierigkeitsgrad"
+
+[play.play-menu]
+title = "Spielen - Online"
+colors = "Farben"
+online = "Online"
+local = "Lokal"
+computer = "Computer"
+variant = "Variante"
+Classical = "Klassisch"
+Confined_Classical = "Eingegrenztes Klassisch"
+Classical_Plus = "Klassisch+"
+CoaIP = "Schach auf einer unendlichen Ebene"
+Pawndard = "Pawndard"
+Knighted_Chess = "Springer-Schach"
+Knightline = "Springerschnur"
+Core = "Kern"
+Standarch = "Standard"
+Pawn_Horde = "Bauernhorde"
+Space_Classic = "Raum Klassisch"
+Space = "Raum"
+Obstocean = "Hindernismeer"
+Abundance = "Überfluss"
+Amazon_Chandelier = "Amazonenleuchter"
+Containment = "Eingrenzung"
+Classical_Limit_7 = "Klassisch - Limit 7"
+CoaIP_Limit_7 = "CoaIP - Limit 7"
+Chess = "Schach"
+Classical_KOTH = "Experimentell: Klassisch - KOTH"
+CoaIP_KOTH = "Experimentell: CoaIP - KOTH"
+CoaIP_HO = "Schach auf einer unendlichen Ebene - Huygens Option"
+Omega = "Showcase: Omega"
+Omega_Squared = "Showcase: Omega^2"
+Omega_Cubed = "Showcase: Omega^3"
+Omega_Fourth = "Showcase: Omega^4"
+4x4x4x4_Chess = "4×4×4×4 Schach"
+5D_Chess = "5D Schach"
+no_clock = "Keine Uhr"
+clock = "Uhr"
+minutes = "min"
+seconds = "s"
+infinite_time = "Unendliche Zeit"
+color = "Farbe"
+piece_colors = ["Zufällig", "Weiß", "Schwarz"]
+private = "Privat"
+no = "Nein"
+yes = "Ja"
+rated = "Gewertet"
+casual = "Casual"
+join_games = "Beitreten - Aktive Spiele:"
+private_invite = "Private Einladung:"
+your_invite = "Ihr Einladungscode:"
+create_invite = "Einladung erstellen"
+join = "Beitreten"
+copy = "Kopieren"
+back = "Zurück"
+code = "Code"
+
+[play.gamebuttontooltips]
+undo_transition = "Übergang rückgängig machen"
+expand_fit_all = "Auf alle passen"
+recenter = "Zentrieren"
+annotations = "Anmerkungen zeichnen"
+erase = "Anmerkungen löschen"
+collapse = "Anmerkungen einklappen"
+rewind_move = "Zug zurückspulen"
+forward_move = "Zug vorspulen"
+pause = "Pause"
+undo = "Zug rückgängig machen" # Checkmate practice game
+restart = "Spiel neu starten" # Checkmate practice game
+
+[play.pause]
+title = "Pausiert"
+resume = "Fortsetzen"
+arrows = "Pfeile: Verteidigung"
+perspective = "Perspektive: Aus"
+copy = "Spiel kopieren"
+paste = "Spiel einfügen"
+offer_draw = "Remis anbieten"
+practice_menu = "Übungsmenü"
+main_menu = "Hauptmenü"
+
+[play.drawoffer] # The draw offer UI that appears on the bottom bar
+question = "Remis akzeptieren?"
+
+[play.javascript] # Not text that's included in the html, but text that scripts use!
+guest_indicator = "(Gast)"
+you_indicator = "(Sie)"
+engine_indicator = "Engine"
+player_name_white_generic = "Weiß"
+player_name_black_generic = "Schwarz"
+white_to_move = "Weiß am Zug"
+black_to_move = "Schwarz am Zug"
+your_move = "Ihr Zug"
+their_move = "Zug des Gegners"
+lost_network = "Netzwerk verloren."
+failed_to_load = "Eine oder mehrere Ressourcen konnten nicht geladen werden. Bitte aktualisieren Sie."
+planned_feature = "Diese Funktion ist geplant!"
+main_menu = "Hauptmenü"
+resign_game = "Aufgeben"
+abort_game = "Spiel abbrechen"
+offer_draw = "Remis anbieten" # Offer draw button text in the pause menu
+accept_draw = "Remis akzeptieren" # Offer draw button text in the pause menu
+arrows_off = "Pfeile: Aus"
+arrows_defense = "Pfeile: Verteidigung"
+arrows_all = "Pfeile: Alle"
+arrows_all_hippogonals = "Pfeile: Alle (mit Hippogonalen)"
+toggled = "Eingeschaltet"
+menu_online = "Spielen - Online"
+menu_local = "Spielen - Lokal"
+invite_error_digits = "Einladungscode muss 5 Ziffern lang sein."
+invite_copied = "Einladungscode in Zwischenablage kopiert."
+move_counter = "Zug:"
+constructing_mesh = "Mesh wird konstruiert"
+rotating_mesh = "Mesh wird gedreht"
+lost_connection = "Verbindung verloren."
+please_wait = "Bitte warten Sie einen Moment, um diese Aufgabe auszuführen."
+webgl_unsupported = "Bitte aktualisieren Sie Ihren Browser! Er unterstützt WebGL2 nicht."
+bigints_unsupported = "BigInts werden nicht unterstützt. Bitte aktualisieren Sie Ihren Browser.\nBigInts werden benötigt, um das Brett unendlich zu machen."
+shaders_failed = "Shader-Programm konnte nicht initialisiert werden:"
+failed_compiling_shaders = "Beim Kompilieren der Shader ist ein Fehler aufgetreten:"
+# Checkmate Practice
+
+versus = "gegen"
+easy = "Leicht"
+medium = "Mittel"
+hard = "Schwer"
+insane = "Wahnsinnig"
+checkmate_logged_out = "Sie müssen angemeldet sein, um Abzeichen zu verdienen."
+checkmate_bronze = "Schachmatt-Veteran: 50% aller Übungs-Schachmattes lösen."
+checkmate_silver = "Schachmatt-Profi: 75% aller Übungs-Schachmattes lösen."
+checkmate_gold = "Schachmatt-Meister: 100% aller Übungs-Schachmattes lösen."
+checkmate_bronze_unearned = "Lösen Sie 50% aller Übungs-Schachmattes, um dieses Abzeichen zu verdienen."
+checkmate_silver_unearned = "Lösen Sie 75% aller Übungs-Schachmattes, um dieses Abzeichen zu verdienen."
+checkmate_gold_unearned = "Lösen Sie 100% aller Übungs-Schachmattes, um dieses Abzeichen zu verdienen."
+
+[play.javascript.copypaste]
+copied_game = "Spiel in Zwischenablage kopiert!"
+cannot_paste_in_public = "Spiel kann nicht in einem öffentlichen Match eingefügt werden!"
+cannot_paste_in_engine = "Spiel kann nicht in einem Engine-Match eingefügt werden!"
+cannot_paste_after_moves = "Spiel kann nicht eingefügt werden, nachdem gezogen wurde!"
+clipboard_denied = "Zwischenablage-Berechtigung verweigert. Dies könnte Ihr Browser sein."
+clipboard_invalid = "Zwischenablage nicht in gültiger ICN-Notation."
+game_needs_to_specify = "Spiel muss entweder die Metadaten 'Variante' oder die Eigenschaft 'Position' angeben."
+invalid_wincon_white = "Weiß hat eine ungültige Gewinnbedingung"
+invalid_wincon_black = "Schwarz hat eine ungültige Gewinnbedingung"
+pasting_game = "Spiel wird eingefügt..."
+pasting_in_private = "Das Einfügen eines Spiels in einem privaten Match führt zu einer Desynchronisation, wenn Ihr Gegner nicht dasselbe tut!"
+piece_count = "Figurenanzahl"
+exceeded = "überschritten"
+changed_wincon = "Schachmatt-Gewinnbedingungen wurden auf Königsfang geändert und die Icon-Darstellung deaktiviert. Drücken Sie 'P' zum Reaktivieren (nicht empfohlen)."
+loaded_from_clipboard = "Spiel aus Zwischenablage geladen!"
+slidelimit_not_number = "Die Gamerule 'slideLimit' muss eine Zahl sein. Empfangen wurde"
+
+[play.javascript.rendering]
+on = "An"
+off = "Aus"
+icon_rendering_off = "Icon-Darstellung deaktiviert."
+icon_rendering_on = "Icon-Darstellung aktiviert."
+perspective = "Perspektive"
+perspective_mode_on_desktop = "Perspektivmodus ist auf dem Desktop verfügbar!"
+movement_tutorial = "WASD zum Bewegen. Leertaste und Shift zum Zoomen."
+regenerated_pieces = "Figuren regeneriert."
+
+[play.javascript.invites]
+move_mouse = "Bewegen Sie die Maus, um die Verbindung wiederherzustellen."
+cannot_cancel = "Einladung mit undefinierter ID kann nicht abgebrochen werden."
+you_are_white = "Sie sind: Weiß"
+you_are_black = "Sie sind: Schwarz"
+random = "Zufällig"
+accept = "Annehmen"
+cancel = "Abbrechen"
+create_invite = "Einladung erstellen"
+cancel_invite = "Einladung abbrechen"
+start_game = "Spiel starten"
+join_existing_active_games = "Beitreten - Aktive Spiele:"
+
+[play.javascript.onlinegame]
+afk_warning = "Sie sind AFK."
+opponent_afk = "Gegner ist AFK."
+opponent_disconnected = "Gegner hat die Verbindung getrennt."
+opponent_lost_connection = "Gegner hat die Verbindung verloren."
+auto_resigning_in = "Automatische Aufgabe in"
+auto_aborting_in = "Automatischer Abbruch in"
+not_logged_in = "Sie sind nicht angemeldet. Bitte melden Sie sich an, um die Verbindung zu diesem Spiel wiederherzustellen."
+game_no_longer_exists = "Spiel existiert nicht mehr."
+another_window_connected = "Ein anderes Fenster hat sich verbunden."
+server_restarting = "Server wird in Kürze neu gestartet..."
+server_restarting_in = "Server wird neu gestartet in"
+minute = "Minute"
+minutes = "Minuten"
+
+[play.javascript.websocket]
+no_connection = "Keine Verbindung."
+reconnected = "Wieder verbunden."
+unable_to_identify_ip = "IP-Adresse kann nicht identifiziert werden."
+online_play_disabled = "Online-Spiel deaktiviert. Cookies werden nicht unterstützt. Versuchen Sie einen anderen Browser."
+too_many_requests = "Zu viele Anfragen. Versuchen Sie es später erneut."
+message_too_big = "Nachricht zu groß."
+too_many_sockets = "Zu viele Sockets"
+origin_error = "Ursprungsfehler."
+connection_closed = "Verbindung unerwartet getrennt. Server-Nachricht:"
+please_report_bug = "Dies sollte niemals passieren, bitte melden Sie diesen Fehler!"
+
+[play.javascript.termination] # What caused the termination of the game, in spoken language
+checkmate = "Schachmatt"
+stalemate = "Patt"
+repetition = "Dreifache Stellungswiederholung"
+moverule = ["", "-Züge-Regel"]  # The game inserts a number inbetween these two strings
+insuffmat = "Unzureichendes Material"
+royalcapture = "Königsschlagen"
+allroyalscaptured = "Alle Könige geschlagen"
+allpiecescaptured = "Alle Figuren geschlagen"
+threecheck = "Drei-Schach"
+koth = "König des Hügels"
+resignation = "Aufgabe"
+agreement = "Vereinbarung"
+time = "Zeitüberschreitung"
+aborted = "Abgebrochen" # Game was cancelled (no elo exchanged)
+disconnect = "Verlassen" # A player left
+
+[play.javascript.results]
+you_checkmate = "Sie haben gewonnen durch Schachmatt!"
+you_time = "Sie haben auf Zeit gewonnen!"
+you_resignation = "Sie haben gewonnen durch Aufgabe!"
+you_disconnect = "Sie haben gewonnen durch Verlassen!"
+you_royalcapture = "Sie haben durch Schlagen des Königs gewonnen!"
+you_allroyalscaptured = "Sie haben gewonnen, da alle Könige geschlagen wurden!"
+you_allpiecescaptured = "Sie haben gewonnen, da alle Figuren geschlagen wurden!"
+you_threecheck = "Sie haben durch Drei-Schach gewonnen!"
+you_koth = "Sie haben durch König des Hügels gewonnen!"
+you_generic = "Sie haben gewonnen!"
+draw_stalemate = "Remis durch Patt!"
+draw_repetition = "Remis durch Stellungswiederholung!"
+draw_moverule = ["Remis durch die ", "-Züge-Regel!"] # The game inserts a number inbetween these two strings
+draw_insuffmat = "Remis aufgrund unzureichenden Materials!"
+draw_agreement = "Remis durch Vereinbarung!"
+draw_generic = "Remis!"
+aborted = "Spiel abgebrochen."
+opponent_checkmate = "Sie haben verloren durch Schachmatt!"
+opponent_time = "Sie haben auf Zeit verloren!"
+opponent_resignation = "Sie haben verloren durch Aufgabe!"
+opponent_disconnect = "Sie haben verloren durch Verlassen!"
+opponent_royalcapture = "Sie haben durch Schlagen des Königs verloren!"
+opponent_allroyalscaptured = "Sie haben verloren, da alle Könige gefangen wurden!"
+opponent_allpiecescaptured = "Sie haben verloren, da alle Figuren gefangen wurden!"
+opponent_threecheck = "Sie haben durch Drei-Schach verloren!"
+opponent_koth = "Sie haben durch König des Hügels verloren!"
+opponent_generic = "Sie haben verloren!"
+white_checkmate = "Weiß gewinnt durch Schachmatt!"
+black_checkmate = "Schwarz gewinnt durch Schachmatt!"
+bug_checkmate = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch Schachmatt."
+white_time = "Weiß gewinnt auf Zeit!"
+black_time = "Schwarz gewinnt auf Zeit!"
+bug_time = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete auf Zeit."
+white_royalcapture = "Weiß gewinnt durch Schlagen des Königs!"
+black_royalcapture = "Schwarz gewinnt durch Schlagen des Königs!"
+bug_royalcapture = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch Schlagen des Königs."
+white_allroyalscaptured = "Weiß gewinnt, da alle Könige geschlagen wurden!"
+black_allroyalscaptured = "Schwarz gewinnt, da alle Könige geschlagen wurden!"
+bug_allroyalscaptured = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete, indem alle Könige geschlagen wurden."
+white_allpiecescaptured = "Weiß gewinnt, da alle Figuren geschlagen wurden!"
+black_allpiecescaptured = "Schwarz gewinnt, da alle Figuren geschlagen wurden!"
+bug_allpiecescaptured = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete, indem alle Figuren geschlagen wurden."
+white_threecheck = "Weiß gewinnt durch Drei-Schach!"
+black_threecheck = "Schwarz gewinnt durch Drei-Schach!"
+bug_threecheck = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch Drei-Schach."
+white_koth = "Weiß gewinnt durch König des Hügels!"
+black_koth = "Schwarz gewinnt durch König des Hügels!"
+bug_koth = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch König des Hügels."
+bug_generic = "Ein Fehler ist aufgetreten, bitte melden Sie ihn!"
+
+[terms]
+title = "Nutzungsbedingungen"
+warning = ["DIESES DOKUMENT IST RECHTLICH NICHT BINDEND. Wir sind nur für die englische Version dieses Dokuments verantwortlich. Diese Übersetzung dient ausschließlich zu allgemeinen Informationszwecken. Sie können die offizielle englische Version ", "hier", " einsehen."]
+consent = "Durch die Nutzung dieser Website erklären Sie sich mit den folgenden Bedingungen einverstanden. Wenn Sie nicht zustimmen, müssen Sie die Nutzung der Website sofort einstellen."
+guardian_consent = "Wenn Sie unter 18 Jahre alt sind, müssen Sie die Zustimmung eines Elternteils oder Erziehungsberechtigten einholen, um diese Website zu nutzen und ein Konto zu erstellen."
+parents_header = "Eltern"
+parents_paragraphs = [
+"Es gibt einen Algorithmus, der Benutzern das Festlegen ihres Namens auf gängige Schimpfwörter verbietet. Derzeit gibt es keine Kommunikationsmethode zwischen Mitgliedern auf der Website.",
+"Derzeit können Mitglieder kein eigenes Profilbild einstellen. Es ist geplant, diese Funktion zu erlauben. Zu diesem Zeitpunkt werden wir unser Bestes tun, um unangemessene Profilbilder zu verhindern.",
+]
+fair_play_header = "Fair Play"
+fair_play_paragraph1 = ["Sie dürfen nicht mehr als ein Konto besitzen."]
+fair_play_paragraph2 = "Um das Spielen für alle unterhaltsam und fair zu halten, dürfen Sie NICHT:"
+fair_play_rules = [
+"Den Code in irgendeiner Weise modifizieren oder manipulieren, einschließlich, aber nicht beschränkt auf: Verwendung von Konsolenbefehlen, lokalen Überschreibungen, benutzerdefinierten Skripten, Modifikation von HTTP-Anfragen, WebSocket-Nachrichten usw. Dies kann geschehen, um das Spiel absichtlich zu stören, illegale Züge zu spielen oder sich einen Vorteil zu verschaffen.",
+"Bugs oder Glitches ausnutzen, um das Spiel abzubrechen, sich einen Vorteil zu verschaffen oder das Spiel anderweitig unspielbar zu machen. Dies kann das Bewegen einer Figur über extreme Distanzen, wie 10^15 vom Ursprung entfernt, beinhalten.",
+"In gewerteten Spielen Hilfe/Ratschläge von einer anderen Person oder einem Programm bezüglich Ihrer Züge erhalten. (Das Erstellen einer Engine ist in Ordnung und erwünscht, aber Sie müssen deren Verwendung auf ungewertete Gelegenheitsspiele beschränken)",
+"Elo-Punkte mit anderen Personen tauschen, indem Sie absichtlich verlieren, um die Elo Ihres Gegners zu erhöhen, oder indem Sie Elo-Punkte von einem Gegner erhalten, der beabsichtigt zu verlieren, um Ihre eigene Wertung zu erhöhen. Dies missbraucht das System und führt zu ungenauen Wertungen gemäß Ihrem Fähigkeitsniveau."
+]
+cleanliness_header = "Sauberkeit"
+cleanliness_rules = [
+"In all Ihrer Sprache auf der Website müssen Sie sauber bleiben, keine Obszönitäten oder Flüche verwenden. Sie dürfen niemanden schikanieren, belästigen oder bedrohen oder etwas Illegales tun. Sie dürfen keine anderen Benutzer oder Foren spammen.",
+"Sie dürfen keine unangemessenen, anzüglichen oder blutigen Bilder in Ihr Profil hochladen. Dies kann zu einem Bann oder zur Kündigung Ihres Kontos führen."
+]
+privacy_header = "Datenschutz"
+privacy_rules = [
+"Derzeit sammeln wir nur Ihre E-Mail-Adresse als persönliche Information. Dies dient dazu, die Konten der Nutzer zu verifizieren und eine Möglichkeit zu bieten, ihre Identität bei der Anforderung eines Passwort-Resets nachzuweisen. Wir versenden keine Werbe-E-Mails oder Angebote. Wir teilen keine E-Mail-Adresse von Nutzern mit anderen.",
+"InfiniteChess.org kann Daten über Ihre Nutzung der Website sammeln, einschließlich Ihrer IP-Adresse. Dies soll dazu beitragen, Angriffe von Bots und anderen unerwünschten Entitäten zu verhindern und genaue Statistiken in der Datenbank zu führen. Dies ist NICHT Ihre Wohnadresse.",
+"Alle Spiele, die Sie auf dieser Website spielen, werden zu öffentlichen Informationen. Wenn Sie anonym bleiben möchten, teilen Sie Ihren Benutzernamen nicht mit Freunden oder Familie. Wenn dies Ihr Wunsch ist, liegt es in Ihrer Verantwortung, sicherzustellen, dass niemand herausfindet, dass Ihr Benutzername mit Ihrer menschlichen Identität verbunden ist.",
+"Ihr Online-Status und die ungefähre letzte Aktivitätszeit auf der Website sind ebenfalls öffentliche Informationen.",
+["Während InfiniteChess.org sich nach besten Kräften bemühen wird, die Konten und persönlichen Informationen aller zu schützen, können Sie uns im Falle eines Hacks oder Datenlecks nicht verklagen. Sollte ein Datenleck jemals auftreten, werden die Benutzer auf der ", "News", "-Seite benachrichtigt."],
+"Es sind keine Inhalte auf der Website zum Kauf verfügbar. Andere persönliche Informationen werden nicht gesammelt.",
+"Um Ihre privaten Informationen von unseren Servern löschen zu lassen, können Sie Ihr Konto über Ihre Profilseite löschen. Das Einzige, was wir NICHT löschen werden, ist Ihre Spielhistorie, die mit Ihrem Benutzernamen verknüpft ist, da alle Spiele öffentliche Informationen sind.",
+]
+cookie_header = "Cookie-Richtlinie"
+cookie_paragraphs = [
+"Diese Website verwendet Cookies, kleine Textdateien, die in Ihrem Browser gespeichert und beim Herstellen von Verbindungen an den Server gesendet werden. Der Zweck dieser Cookies besteht in der Validierung Ihrer Anmeldesitzung, dass Ihr Browser dem Schachspiel gehört, in dem er sich befindet, und Benutzerpräferenzen zu speichern, damit diese beim erneuten Besuch der Website erhalten bleiben. Die Website verwendet keine Drittanbieter-Cookies, Cookies werden nicht mit externen Parteien geteilt.",
+"Cookies sind für das korrekte Funktionieren dieser Website und des Spiels erforderlich. Wenn Sie nicht möchten, dass die Website Cookies speichert, müssen Sie die Nutzung der Website einstellen. Sie können in den Einstellungen Ihres Browsers vorhandene Cookies löschen. Durch die fortgesetzte Nutzung dieser Website stimmen Sie der Verwendung von Cookies zu."
+]
+conclusion_header = "Fazit"
+conclusion_paragraphs = [
+"Jede Verletzung dieser Bedingungen kann zu einem Bann oder zur Kündigung Ihres Kontos führen. InfiniteChess.org möchte jedem die Möglichkeit geben, zu spielen und Spaß zu haben! Wir behalten uns jedoch das Recht vor, jederzeit die Konten von Benutzern zu sperren oder zu kündigen, aus Gründen, die nicht offengelegt werden müssen. Es können keine Anklagen gegen uns erhoben werden.",
+["Diese Nutzungsbedingungen können jederzeit geändert werden. Es liegt in IHRER Verantwortung, sich über die neuesten Änderungen auf dem Laufenden zu halten! Wenn diese Nutzungsbedingungen ein Update erhalten, wird diese Information auf der ", "News", "-Seite veröffentlicht. Wenn Sie zum Zeitpunkt eines Updates der Nutzungsbedingungen den neuen Bedingungen nicht zustimmen, müssen Sie die Nutzung der Website sofort einstellen. Sie können Ihr Konto von Ihrer Profilseite löschen. Wenn Sie Ihr Konto löschen, werden alle Ihre privaten Informationen und Kontodaten gelöscht, AUSSER Ihre Spielhistorie, die mit Ihrem Benutzernamen verknüpft ist, da dies öffentliche Informationen sind."],
+["Diese Seite ist Open Source. Sie dürfen alles auf dieser Website kopieren oder verbreiten, solange Sie die in den ", "Lizenzbedingungen", " dargelegten Bedingungen einhalten! Sollte dieser Link defekt sein, liegt es in Ihrer Verantwortung, die Bedingungen zu finden."],
+"Wir können nicht garantieren, dass die Website zu 100% der Zeit läuft. Wir können auch nicht garantieren, dass Daten niemals beschädigt werden.",
+"Sie dürfen keine illegalen Aktivitäten auf der Website durchführen.",
+["Wenn Sie Fragen zu diesen Bedingungen oder andere Fragen zur Website haben, ", "schreiben Sie uns eine E-Mail!"]
+]
+thanks = "Vielen Dank!"
+
+[login]
+title = "Anmelden" # The tab name
+username = "Benutzername:"
+password = "Passwort:"
+forgot_password = ["Passwort vergessen? ", "E-Mail an uns."]
+login_button = "Anmelden"
+
+[error-pages] # Messages shown on some error pages explaining what went wrong
+400_message = "Ungültige Parameter wurden empfangen."
+409_message = ["Möglicherweise gab es einen Konflikt mit Benutzername oder E-Mail. Bitte ", "laden Sie", " die Seite neu."]
+500_message = "Dies sollte nicht passieren. Es gibt noch einiges zu debuggen!"
+
+[news]
+title = "Neuigkeiten" # The tab name
+more_dev_logs = ["Weitere Entwickler-Logs werden auf dem ", "offiziellen Discord", " und in den ", "chess.com Foren veröffentlicht!"]
+
+[server.javascript]
+ws-invalid_username = "Benutzername ist ungültig"
+ws-incorrect_password = "Passwort ist falsch"
+ws-username_and_password_required = "Benutzername und Passwort sind erforderlich."
+ws-username_and_password_string = "Benutzername und Passwort müssen Zeichenketten sein."
+ws-login_failure_retry_in = "Anmeldung fehlgeschlagen, versuchen Sie es erneut in"
+ws-seconds = "Sekunden" # unit of time
+ws-second = "Sekunde" # unit of time
+ws-username_length = "Benutzername muss 3 bis 20 Zeichen lang sein"
+ws-username_letters = "Benutzername darf nur Groß- und Kleinbuchstaben von A bis Z und Zahlen von 0 bis 9 enthalten"
+ws-username_taken = "Dieser Benutzername ist bereits vergeben"
+ws-username_bad_word = "Dieser Benutzername enthält ein nicht erlaubtes Wort"
+ws-username_reserved = "Dieser Benutzername ist reserviert"
+ws-email_too_long = "Ihre E-Mail ist zu laaaaaaaang."
+ws-email_invalid = "Dies ist keine gültige E-Mail"
+ws-email_in_use = "Diese E-Mail ist bereits in Verwendung"
+ws-email_domain_invalid = "Ungültige Domain."
+ws-you_are_banned = "Sie sind gesperrt."
+ws-password_length = "Passwort muss 6 bis 72 Zeichen lang sein"
+ws-password_format = "Passwort hat ein falsches Format"
+ws-password_password = "Passwort darf nicht 'password' sein"
+ws-member_not_found = "Mitglied nicht gefunden"
+ws-forbidden_wrong_account = "Zugang verweigert. Dies ist nicht Ihr Konto."
+ws-deleting_account_not_found = "Konto konnte nicht gelöscht werden. Konto nicht gefunden."
+ws-server_error = "Entschuldigung, es gab einen Serverfehler! Bitte gehen Sie zurück."
+ws-unable_to_identify_client_ip = "Client-IP-Adresse kann nicht identifiziert werden"
+ws-you_are_banned_by_server = "Sie sind gesperrt"
+ws-too_many_requests_to_server = "Zu viele Anfragen. Versuchen Sie es bald erneut."
+ws-bad_request = "Ungültige Anfrage"
+ws-not_found = "404 Nicht gefunden"
+ws-forbidden = "Verboten."
+ws-already_in_game = "Sie sind bereits in einem Spiel."
+ws-server_restarting = "Der Server startet in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
+ws-server_under_maintenance = "Server ist wegen Wartungsarbeiten offline. Schauen Sie bald wieder vorbei!" # Can be changed at will to change the display message.
+ws-minutes = "Minuten" # unit of time
+ws-minute = "Minute" # unit of time
+ws-no_abort_game_over = "Spiel kann nicht abgebrochen werden, es ist bereits beendet."
+ws-no_abort_after_moves = "Spiel kann nicht abgebrochen werden, es wurden bereits mindestens 2 Züge gespielt."
+ws-game_aborted_cheating = "Spiel wegen wahrscheinlichem Betrug abgebrochen."
+ws-cannot_resign_finished_game = "Spiel kann nicht aufgegeben werden, es ist bereits beendet."
+ws-invalid_code = "Ungültiger Code!" # Invite code doesn't match any existing invites
+ws-game_aborted = "Spiel abgebrochen." # Invite was cancelled as you clicked on it
+ws-rated_invite_verification_needed = "Um gewertet zu spielen, müssen Sie mit einem verifizierten Konto angemeldet sein."
