@@ -65,9 +65,6 @@ const SUSPICIOUS_MOVE_COUNT = 10;
 /** Games lasting less than this time on the serverare suspicious. */
 const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 20; // 20 seconds
 
-/** A player ending a game with a larger fraction of his total clock time than this counts as suspicious. */
-const SUSPICIOUS_CLOCK_REMAINING_FRACTION = 0.9;
-
 
 
 // Types Definitions ---------------------------------------------------------------------
@@ -275,6 +272,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 	let weight = 0;
 	for (const gameInfo of gameInfoList) {
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+
 		// Game is suspicious if it lasted too briefly on the server
 		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < SUSPICIOUS_TIME_DURATION_MILLIS) weight++;
 	}
@@ -292,16 +290,22 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 	let weight = 0;
 	for (const gameInfo of gameInfoList) {
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+
 		// Game is suspicious if the clock at the end is still similar to the start time
 		if (gameInfo.clock_at_end_millis !== null &&
 			gameInfo.base_time_seconds !== null &&
-			gameInfo.increment_seconds !== null &&
-			gameInfo.clock_at_end_millis >= SUSPICIOUS_CLOCK_REMAINING_FRACTION * ( gameInfo.base_time_seconds + gameInfo.increment_seconds * gameInfo.move_count)
-		) weight++;
+			gameInfo.increment_seconds !== null
+		) {
+			const approximate_total_time_millis = 1000 * ( gameInfo.base_time_seconds + 0.5 * gameInfo.increment_seconds * (gameInfo.move_count - 1) );
+			if (approximate_total_time_millis > 0 && gameInfo.clock_at_end_millis >= 0.8 * approximate_total_time_millis) {
+				const fraction = Math.min(1, gameInfo.clock_at_end_millis / approximate_total_time_millis); // fraction is in the interval [0.8, 1]
+				weight += 5 * fraction - 4; // rescale to [0,1]
+			}
+		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'duration',
-		weight
+		weight: weight / GAME_INTERVAL_TO_MEASURE // rescale to [0,1]
 	});
 }
 
