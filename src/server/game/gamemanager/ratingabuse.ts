@@ -48,18 +48,18 @@ import type { Game } from '../TypeDefinitions.js';
 const GAME_INTERVAL_TO_MEASURE = 5;
 
 /** Total suspicion score which is enough to mark a user as suspicious. */
-const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 0.7;
+const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
 
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
 
-/** Two rated games started this close after each other count as suspicious. */
+/** Two rated games started this close after each other have a nonzero suspicion score. */
 const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 5; // 5 minutes
 
-/** Games with fewer moves than this are suspicious. */
+/** Games with fewer moves than this have a nonzero suspicion score. */
 const SUSPICIOUS_MOVE_COUNT = 25;
 
-/** Games lasting less than this time on the serverare suspicious. */
+/** Games lasting less than this time on the server have a nonzero suspicion score. */
 const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 60; // 60 seconds
 
 
