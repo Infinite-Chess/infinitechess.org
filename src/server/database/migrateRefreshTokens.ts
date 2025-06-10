@@ -108,7 +108,7 @@ export function migrateRefreshTokensToTable(): void {
 						const issued_ms = new Date(tokenObj.issued).getTime();
 						const expires_ms = new Date(tokenObj.expires).getTime();
 
-						console.log(`Token expires in days: ${(expires_ms - Date.now()) / (1000 * 60 * 60 * 24)} for user ${member.username} (ID: ${member.user_id})`);
+						// console.log(`Token expires in days: ${(expires_ms - Date.now()) / (1000 * 60 * 60 * 24)} for user ${member.username} (ID: ${member.user_id})`);
 						
 						insertStmt.run({
 							token: tokenObj.token,

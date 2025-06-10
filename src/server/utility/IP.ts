@@ -14,7 +14,7 @@ import type { Request } from 'express';
  * @param req - The Express request object.
  * @returns The IP address of the request as a string, or `undefined` if not present.
  */
-export function getClientIP(req: Request): string | undefined {
+export function getClientIP(req: Request): string {
 	const forwardedFor = req.headers['x-forwarded-for'];
 
 	if (typeof forwardedFor === 'string') {
@@ -28,5 +28,5 @@ export function getClientIP(req: Request): string | undefined {
 		return req.ip;
 	}
 
-	return undefined;
+	return 'Unknown ip';
 }
