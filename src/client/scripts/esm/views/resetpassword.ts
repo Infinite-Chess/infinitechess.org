@@ -6,7 +6,7 @@
  */
 
 // Import the shared password validation utility.
-import { validatePassword } from '../util/password-validation';
+import { validatePassword } from '../util/password-validation.js';
 
 // --- Type Definitions for Clarity ---
 type FormElements = {
