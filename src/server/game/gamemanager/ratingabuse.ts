@@ -274,7 +274,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (rating_abuse_data.last_alerted_at === null || rating_abuse_data.last_alerted_at === undefined || Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >= SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS) {
-			sendRatingAbuseEmail(messageText);
+			sendRatingAbuseEmail(user_id, messageText);
 			// Update RatingAbuse table with last_alerted_at value
 			const last_alerted_at = timeutil.timestampToSqlite(Date.now());
 			updateRatingAbuseColumns(user_id, leaderboard_id, { last_alerted_at });
