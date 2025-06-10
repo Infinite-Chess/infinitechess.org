@@ -1,49 +1,28 @@
-// login.ts
+// src/client/scripts/esm/views/login.ts
 
-// --- Interfaces for API Responses ---
-interface ErrorResponse {
-	type: 'error';
-	message: string;
-}
+/**
+ * This script handles the client-side logic for the login and forgot-password forms.
+ */
 
-interface LoginSuccessResponseData {
-	type: 'loginSuccess';
-}
 
-interface ForgotPasswordSuccessData {
-	type: 'forgotPasswordSuccess';
-	message: string;
-}
+// --- Element Selectors ---
+const element_usernameInput = document.getElementById('username') as HTMLInputElement;
+const element_passwordInput = document.getElementById('password') as HTMLInputElement;
+const element_submitButton = document.getElementById('submit') as HTMLInputElement;
 
-type SuccessPayload = LoginSuccessResponseData | ForgotPasswordSuccessData;
-type ApiPayload = SuccessPayload | ErrorResponse;
+const element_forgotLink = document.getElementById('forgot-link') as HTMLAnchorElement;
+const element_backToLoginLink = document.getElementById('back-to-login-link') as HTMLAnchorElement;
 
-interface FetchResponse<T> {
-	ok: boolean;
-	status: number;
-	payload: T;
-}
+const element_forgotEmailInput = document.getElementById('forgot-email') as HTMLInputElement;
+const element_forgotSubmitButton = document.getElementById('forgot-submit') as HTMLInputElement;
+
+const element_loginForm = document.getElementById('login-form') as HTMLFormElement;
+const element_forgotPasswordForm = document.getElementById('forgot-password-form') as HTMLFormElement;
+
+let messageElement: HTMLElement | undefined = undefined;
+
 
 // --- Utility Functions ---
-
-/**
- * Type guard to check if the response payload is an ErrorResponse.
- * It checks the 'ok' status of the response and the 'type' property of the payload.
- * @param resp - The fetch response object, where payload is expected to be ApiPayload.
- * @returns True if the response indicates an error, false otherwise.
- */
-function isErrorResponse(resp: FetchResponse<ApiPayload>): resp is FetchResponse<ErrorResponse> {
-	return !resp.ok || resp.payload.type === 'error';
-}
-
-/**
- * Safely queries an element by its ID and optionally casts it.
- * @param id - The ID of the element to query.
- * @returns The HTMLElement or null if not found.
- */
-function $<T extends HTMLElement = HTMLElement>(id: string): T | null {
-	return document.getElementById(id) as T | null;
-}
 
 /**
  * Reads a query‐param from the current URL.
@@ -60,38 +39,11 @@ function getQueryParam(name: string): string | null {
  * @param btn - The button element to toggle classes on.
  * @param isReady - Boolean indicating if the button should be in a 'ready' state.
  */
-function toggleButtonState(btn: HTMLElement | null, isReady: boolean): void {
-	if (btn) {
-		btn.classList.toggle('ready', isReady);
-		btn.classList.toggle('unavailable', !isReady);
-	}
+function toggleButtonState(btn: HTMLElement, isReady: boolean): void {
+	btn.classList.toggle('ready', isReady);
+	btn.classList.toggle('unavailable', !isReady);
 }
 
-/**
- * Safely focuses an element if it exists.
- * @param el - The HTMLElement to focus.
- */
-function focusIf(el: HTMLElement | null): void {
-	if (el) {
-		el.focus();
-	}
-}
-
-// --- Element Selectors ---
-const element_usernameInput = $<HTMLInputElement>('username');
-const element_passwordInput = $<HTMLInputElement>('password');
-const element_submitButton = $<HTMLInputElement>('submit');
-
-const element_forgotLink = $<HTMLAnchorElement>('forgot-link');
-const element_backToLoginLink = $<HTMLAnchorElement>('back-to-login-link');
-
-const element_forgotEmailInput = $<HTMLInputElement>('forgot-email');
-const element_forgotSubmitButton = $<HTMLInputElement>('forgot-submit');
-
-const element_loginForm = $<HTMLFormElement>('login-form');
-const element_forgotPasswordForm = $<HTMLFormElement>('forgot-password-form');
-
-let messageElement: HTMLElement | undefined = undefined;
 
 // --- Core Logic ---
 
@@ -104,34 +56,27 @@ let messageElement: HTMLElement | undefined = undefined;
  * @param initialClass - The CSS class to apply initially ('error' | 'success').
  * @returns The created HTMLElement or undefined on failure.
  */
-function createMessageElement(id: string, insertAfterId: string, initialClass: 'error' | 'success'): HTMLElement | undefined {
-	const existingMsg = $(id);
-	if (existingMsg) {
-		existingMsg.remove();
-	}
-	if (messageElement && messageElement.id === id) {
-		messageElement = undefined;
-	}
+function createMessageElement(id: string, insertAfterId: string, initialClass: 'error' | 'success', message: string): HTMLElement | undefined {
+	const existingMsg = document.getElementById(id);
+	if (existingMsg) existingMsg.remove();
+	if (messageElement && messageElement.id === id) messageElement = undefined;
 
 	const el = document.createElement('div');
 	el.id = id;
 	el.className = initialClass;
 	el.setAttribute('role', 'alert');
 	el.setAttribute('aria-live', initialClass === 'error' ? 'assertive' : 'polite');
+	el.textContent = message;
 
-	const anchorElement = $(insertAfterId);
+	const anchorElement = document.getElementById(insertAfterId);
 	if (anchorElement && anchorElement.parentNode) {
 		anchorElement.parentNode.insertBefore(el, anchorElement.nextSibling);
-		return el;
 	} else {
 		console.error(`[DOM Error] Anchor element with ID '${insertAfterId}' not found for message insertion.`);
 		const visibleForm = element_loginForm && !element_loginForm.classList.contains('hidden') ? element_loginForm : element_forgotPasswordForm;
-		if (visibleForm) {
-			visibleForm.appendChild(el);
-			return el;
-		}
+		visibleForm.appendChild(el);
 	}
-	return undefined;
+	return el;
 }
 
 /**
@@ -148,22 +93,18 @@ function clearMessage(): void {
  * Updates the login submit button's state (ready/unavailable).
  */
 function updateSubmitButton(): void {
-	if (element_submitButton && element_usernameInput && element_passwordInput) {
-		const isMessageBlocking = messageElement && messageElement.id === 'login-error-message';
-		const isReady = !!(element_usernameInput.value.trim() && element_passwordInput.value.trim() && !isMessageBlocking);
-		toggleButtonState(element_submitButton, isReady);
-	}
+	const isMessageBlocking = messageElement && messageElement.id === 'login-error-message';
+	const isReady = !!(element_usernameInput.value.trim() && element_passwordInput.value.trim() && !isMessageBlocking);
+	toggleButtonState(element_submitButton, isReady);
 }
 
 /**
  * Updates the forgot-password submit button's state (ready/unavailable).
  */
 function updateForgotSubmitButton(): void {
-	if (element_forgotSubmitButton && element_forgotEmailInput) {
-		const isMessageBlocking = messageElement && messageElement.id === 'forgot-message';
-		const isReady = !!(element_forgotEmailInput.value.trim() && !isMessageBlocking);
-		toggleButtonState(element_forgotSubmitButton, isReady);
-	}
+	const isMessageBlocking = messageElement && messageElement.id === 'forgot-message';
+	const isReady = !!(element_forgotEmailInput.value.trim() && !isMessageBlocking);
+	toggleButtonState(element_forgotSubmitButton, isReady);
 }
 
 /**
@@ -182,20 +123,17 @@ function handleInput(): void {
  */
 function showLoginForm(): void {
 	clearMessage();
-	if (element_loginForm) {
-		element_loginForm.classList.remove('hidden');
-		element_loginForm.removeAttribute('aria-hidden');
-	}
-	if (element_forgotPasswordForm) {
-		element_forgotPasswordForm.classList.add('hidden');
-		element_forgotPasswordForm.setAttribute('aria-hidden', 'true');
-	}
 
-	if (element_forgotLink) element_forgotLink.classList.remove('hidden');
-	if (element_backToLoginLink) element_backToLoginLink.classList.add('hidden');
+	element_loginForm.classList.remove('hidden');
+
+	element_forgotPasswordForm.classList.add('hidden');
+
+	element_forgotLink.classList.remove('hidden');
+	element_backToLoginLink.classList.add('hidden');
 	
-	if (element_forgotEmailInput) element_forgotEmailInput.value = '';
-	focusIf(element_usernameInput);
+	element_forgotEmailInput.value = '';
+
+	element_usernameInput.focus();
 	
 	updateSubmitButton();
 	updateForgotSubmitButton();
@@ -207,22 +145,19 @@ function showLoginForm(): void {
  */
 function showForgotPasswordForm(): void {
 	clearMessage();
-	if (element_loginForm) {
-		element_loginForm.classList.add('hidden');
-		element_loginForm.setAttribute('aria-hidden', 'true');
-	}
-	if (element_forgotPasswordForm) {
-		element_forgotPasswordForm.classList.remove('hidden');
-		element_forgotPasswordForm.removeAttribute('aria-hidden');
-	}
+	
+	element_loginForm.classList.add('hidden');
+	
+	element_forgotPasswordForm.classList.remove('hidden');
 
-	if (element_forgotLink) element_forgotLink.classList.add('hidden');
-	if (element_backToLoginLink) element_backToLoginLink.classList.remove('hidden');
+	element_forgotLink.classList.add('hidden');
+	element_backToLoginLink.classList.remove('hidden');
 	
-	if (element_usernameInput) element_usernameInput.value = '';
-	if (element_passwordInput) element_passwordInput.value = '';
+	element_usernameInput.value = '';
+	element_passwordInput.value = '';
 	
-	focusIf(element_forgotEmailInput);
+	element_forgotEmailInput.focus();
+
 	updateSubmitButton();
 	updateForgotSubmitButton();
 }
@@ -232,152 +167,106 @@ function showForgotPasswordForm(): void {
  * @param username - The user's username (case preserved).
  * @param password - The user's plaintext password.
  */
-function sendLogin(username: string, password: string): void {
-	if (element_submitButton) element_submitButton.disabled = true;
+async function sendLogin(username: string, password: string): Promise<void> {
+	element_submitButton.disabled = true;
+	toggleButtonState(element_submitButton, false);
 	clearMessage();
 
-	const config: RequestInit = {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json', 'is-fetch-request': 'true' },
-		credentials: 'same-origin',
-		body: JSON.stringify({ username, password })
-	};
-
-	fetch('/auth', config)
-		.then(async(response: Response): Promise<FetchResponse<ApiPayload>> => {
-			const payload = await response.json().catch(() => ({ type: 'error', message: 'Invalid JSON response from server.' }) as ErrorResponse);
-			return { ok: response.ok, status: response.status, payload };
-		})
-		.then((resp: FetchResponse<ApiPayload>): void => {
-			if (isErrorResponse(resp)) {
-				messageElement = createMessageElement('login-error-message', 'password-input-line', 'error');
-				if (messageElement) {
-					const message = (resp.payload && typeof resp.payload.message === 'string') 
-						? resp.payload.message 
-						: `Login failed (Status: ${resp.status})`;
-					messageElement.textContent = message;
-				}
-			} else {
-				const redirectTo = getQueryParam('redirectTo');
-				if (redirectTo) {
-					window.location.href = redirectTo;
-				} else {
-					window.location.href = `/member/${username.toLowerCase()}`;
-				}
-			}
-		})
-		.catch((error: Error) => {
-			console.error('Login fetch/processing error:', error);
-			messageElement = createMessageElement('login-error-message', 'password-input-line', 'error');
-			if (messageElement) messageElement.textContent = 'A network or processing error occurred. Please try again.';
-		})
-		.finally(() => {
-			if (element_submitButton) element_submitButton.disabled = false;
-			updateSubmitButton();
+	try {
+		const response = await fetch('/auth', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', 'is-fetch-request': 'true' },
+			credentials: 'same-origin',
+			body: JSON.stringify({ username, password })
 		});
+
+		const result = await response.json() as { message: string };
+
+		if (response.ok) { // SUCCESS
+			const redirectTo = getQueryParam('redirectTo');
+			if (redirectTo) window.location.href = redirectTo;
+			else window.location.href = `/member/${username.toLowerCase()}`;
+		} else { // NOT OK
+			messageElement = createMessageElement('login-error-message', 'password-input-line', 'error', result.message);
+		}
+	} catch (e: unknown) {
+		console.error('Login fetch/processing error:', e);
+		messageElement = createMessageElement('login-error-message', 'password-input-line', 'error', translations['network-error']);
+	}
+
+	element_submitButton.disabled = false;
+	updateSubmitButton();
+
 }
 
 /**
  * Sends a forgot-password request to the server.
  * @param email - The email address to send password-reset instructions to.
  */
-function sendForgotPasswordRequest(email: string): void {
-	if (element_forgotSubmitButton) element_forgotSubmitButton.disabled = true;
+async function sendForgotPasswordRequest(email: string): Promise<void> {
+	element_forgotSubmitButton.disabled = true;
+	toggleButtonState(element_forgotSubmitButton, false);
 	clearMessage();
 
-	const config: RequestInit = {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json', 'is-fetch-request': 'true' },
-		body: JSON.stringify({ email })
-	};
-
-	fetch('/forgot-password', config)
-		.then(async(response: Response): Promise<FetchResponse<ApiPayload>> => {
-			const payload = await response.json().catch(() => ({ type: 'error', message: 'Invalid JSON response from server.' }) as ErrorResponse);
-			return { ok: response.ok, status: response.status, payload };
-		})
-		.then((resp: FetchResponse<ApiPayload>): void => {
-			if (isErrorResponse(resp)) {
-				messageElement = createMessageElement('forgot-message', 'email-input-line', 'error');
-				if (messageElement) {
-					const message = (resp.payload && typeof resp.payload.message === 'string') 
-						? resp.payload.message 
-						: `Request failed (Status: ${resp.status})`;
-					messageElement.textContent = message;
-				}
-			} else {
-				const successPayload = resp.payload as ForgotPasswordSuccessData;
-				messageElement = createMessageElement('forgot-message', 'email-input-line', 'success');
-				if (messageElement) messageElement.textContent = successPayload.message;
-			}
-		})
-		.catch((error: Error) => {
-			console.error('Forgot password fetch/processing error:', error);
-			messageElement = createMessageElement('forgot-message', 'email-input-line', 'error');
-			if (messageElement) messageElement.textContent = 'A network or processing error occurred. Please try again.';
-		})
-		.finally(() => {
-			if (element_forgotSubmitButton) element_forgotSubmitButton.disabled = false;
-			updateForgotSubmitButton();
+	try {
+		const response = await fetch('/forgot-password', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', 'is-fetch-request': 'true' },
+			body: JSON.stringify({ email })
 		});
+
+		const result = await response.json() as { message: string };
+
+		if (response.ok) messageElement = createMessageElement('forgot-message', 'email-input-line', 'success', result.message);
+		else			 messageElement = createMessageElement('forgot-message', 'email-input-line', 'error',   result.message);
+	} catch (e: unknown) {
+		const errorMessage = e instanceof Error ? e.message : String(e);
+		console.error('Forgot password fetch/processing error:', errorMessage);
+		messageElement = createMessageElement('forgot-message', 'email-input-line', 'error', translations['network-error']);
+	}
+
+	element_forgotSubmitButton.disabled = false;
+	updateForgotSubmitButton();
+}
+
+// --- Script Entry Point ---
+
+if (!element_usernameInput || !element_passwordInput || !element_forgotEmailInput || !element_loginForm || !element_forgotPasswordForm || !element_submitButton || !element_forgotSubmitButton || !element_forgotLink || !element_backToLoginLink) {
+	throw Error('Required input elements are missing from the DOM.');
 }
 
 // --- Event Listener Setup ---
 
-if (element_usernameInput) element_usernameInput.addEventListener('input', handleInput);
-if (element_passwordInput) element_passwordInput.addEventListener('input', handleInput);
-if (element_forgotEmailInput) element_forgotEmailInput.addEventListener('input', handleInput);
+element_usernameInput.addEventListener('input', handleInput);
+element_passwordInput.addEventListener('input', handleInput);
+element_forgotEmailInput.addEventListener('input', handleInput);
 
-if (element_forgotLink) {
-	element_forgotLink.addEventListener('click', (event: MouseEvent): void => {
-		event.preventDefault();
-		showForgotPasswordForm();
-	});
-}
-if (element_backToLoginLink) {
-	element_backToLoginLink.addEventListener('click', (event: MouseEvent): void => {
-		event.preventDefault();
-		showLoginForm();
-	});
-}
+element_forgotLink.addEventListener('click', (event: MouseEvent): void => {
+	event.preventDefault();
+	showForgotPasswordForm();
+});
 
-if (element_loginForm) {
-	element_loginForm.addEventListener('submit', (event: SubmitEvent): void => {
-		event.preventDefault();
-		if (element_submitButton?.classList.contains('ready') && (!messageElement || messageElement.id !== 'login-error-message')) {
-			if (element_usernameInput && element_passwordInput) {
-				sendLogin(element_usernameInput.value, element_passwordInput.value);
-			}
+element_backToLoginLink.addEventListener('click', (event: MouseEvent): void => {
+	event.preventDefault();
+	showLoginForm();
+});
+element_loginForm.addEventListener('submit', (event: SubmitEvent): void => {
+	event.preventDefault();
+	if (element_submitButton?.classList.contains('ready') && (!messageElement || messageElement.id !== 'login-error-message')) {
+		sendLogin(element_usernameInput.value, element_passwordInput.value);
+	}
+});
+element_forgotPasswordForm.addEventListener('submit', (event: SubmitEvent): void => {
+	event.preventDefault();
+	if (element_forgotSubmitButton?.classList.contains('ready')) {
+		if (element_forgotEmailInput.value.trim() !== '') {
+			sendForgotPasswordRequest(element_forgotEmailInput.value);
 		}
-	});
-}
-if (element_forgotPasswordForm) {
-	element_forgotPasswordForm.addEventListener('submit', (event: SubmitEvent): void => {
-		event.preventDefault();
-		if (element_forgotSubmitButton?.classList.contains('ready')) {
-			if (element_forgotEmailInput && element_forgotEmailInput.value.trim() !== '') {
-				sendForgotPasswordRequest(element_forgotEmailInput.value);
-			}
-		}
-	});
-}
-
-window.addEventListener('load', (): void => {
-	updateSubmitButton();
-	updateForgotSubmitButton();
-	if (element_loginForm && !element_loginForm.classList.contains('hidden')) {
-		focusIf(element_usernameInput);
-		element_loginForm.removeAttribute('aria-hidden');
-		if (element_forgotPasswordForm) element_forgotPasswordForm.setAttribute('aria-hidden', 'true');
-	} else if (element_forgotPasswordForm && !element_forgotPasswordForm.classList.contains('hidden')) {
-		focusIf(element_forgotEmailInput);
-		element_forgotPasswordForm.removeAttribute('aria-hidden');
-		if (element_loginForm) element_loginForm.setAttribute('aria-hidden', 'true');
-	} else {
-		focusIf(element_usernameInput);
-		if (element_loginForm) element_loginForm.removeAttribute('aria-hidden');
-		if (element_forgotPasswordForm) element_forgotPasswordForm.setAttribute('aria-hidden', 'true');
 	}
 });
 
-export {};
+// --- Initial Setup ---
+
+updateSubmitButton();
+updateForgotSubmitButton();
+element_usernameInput.focus();

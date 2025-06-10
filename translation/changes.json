@@ -1,6 +1,6 @@
 {
 	"60": {
-		"note": "Changed lines 153-164, added all of reset-password.javascript, and moved js-pwd_incorrect_format, js-pwd_too_short, js-pwd_too_long, js-pwd_not_pwd to below the new password-validation section. Added ws-password-reset-token-invalid 604.",
+		"note": "Changed lines 153-164, added all of reset-password.javascript, and moved js-pwd_incorrect_format, js-pwd_too_short, js-pwd_too_long, js-pwd_not_pwd to below the new password-validation section. Added ws-password-reset-token-invalid 604. Added all of login.javascript 567-569.",
 		"changes": []
 	},
 	"59": {

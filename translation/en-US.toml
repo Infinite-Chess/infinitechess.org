@@ -564,6 +564,9 @@ forgot_question = "Forgot Password?"
 back_to_login = "Back to Login"
 forgot_instruction = "Please enter the email address associated with your account."
 
+[login.javascript]
+network-error = "A network error occurred. Please try again."
+
 [reset_password]
 title = "Reset Your Password"
 instruction = "Please enter and confirm your new password."
