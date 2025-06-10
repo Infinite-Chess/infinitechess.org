@@ -54,13 +54,13 @@ const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
 
 /** Two rated games started this close after each other have a nonzero suspicion score. */
-const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 5; // 5 minutes
+const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 4; // 4 minutes
 
 /** Games with fewer moves than this have a nonzero suspicion score. */
 const SUSPICIOUS_MOVE_COUNT = 25;
 
 /** Games lasting less than this time on the server have a nonzero suspicion score. */
-const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 60; // 60 seconds
+const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 60 * 3; // 3 minutes
 
 
 
