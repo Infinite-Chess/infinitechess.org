@@ -47,8 +47,8 @@ import type { Game } from '../TypeDefinitions.js';
 /** How many games played to measure a player's rating abuse probability at once. */
 const GAME_INTERVAL_TO_MEASURE = 5;
 
-/** Number of suspicious measurements to flag user as suspicious. */
-const NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM = 3;
+/** Total suspicion score which is enough to mark a user as suspicious. */
+const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 0.7;
 
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
@@ -201,15 +201,14 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	checkDurations(gameInfoList, suspicion_level_record_list);
 	checkClockAtEnd(gameInfoList, suspicion_level_record_list);
 	
-	
-	// Rating abuse if at least NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM entries have a positive suspicion level
-	const potential_rating_abuse = (suspicion_level_record_list.map(entry => entry.weight).filter(num => num !== 0).length >= NUMBER_OF_SUSPICIOUS_ENTRIES_TO_RAISE_ALARM);
-	const suspicion_sum = suspicion_level_record_list.map(entry => entry.weight).reduce((acc, cur) => acc + cur, 0);
+
+	/** Sum of all suspicion weights in suspicion_level_record_list */
+	const suspicion_total_weight = suspicion_level_record_list.map(entry => entry.weight).reduce((acc, cur) => acc + cur, 0);
 
 	// Player is suspicious and admin is notified if necessary
-	if (potential_rating_abuse) {
-		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion sum: ${suspicion_sum}. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list, null, 2)}`;
-		logEventsAndPrint(messageText.replace(/[\n\r\t]/g,""), 'ratingAbuseLog.txt');
+	if (suspicion_total_weight > SUSPICION_TOTAL_WEIGHT_THRESHHOLD) {
+		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion total weight: ${suspicion_total_weight}. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`;
+		logEventsAndPrint(messageText, 'ratingAbuseLog.txt');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (rating_abuse_data.last_alerted_at === null || rating_abuse_data.last_alerted_at === undefined || Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >= SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS) {
@@ -220,7 +219,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		}
 	}
 	// Player is not suspicious
-	else logEvents(`INNOCENT! Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Suspicion sum: ${suspicion_sum}. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
+	else logEvents(`INNOCENT! Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Suspicion total weight: ${suspicion_total_weight}. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
 }
 
 
@@ -253,7 +252,7 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
 		// Game is suspicious if it contains too few moves
-		if (gameInfo.move_count < SUSPICIOUS_MOVE_COUNT) {
+		if (gameInfo.move_count <= SUSPICIOUS_MOVE_COUNT) {
 			const fraction = Math.max(0, (gameInfo.move_count - 2) / (SUSPICIOUS_MOVE_COUNT - 2)); // fraction is in the interval [0, 1]
 			weight += 1 - fraction;
 		}
@@ -274,7 +273,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
 		// Game is suspicious if it lasted too briefly on the server
-		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < SUSPICIOUS_TIME_DURATION_MILLIS) {
+		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis <= SUSPICIOUS_TIME_DURATION_MILLIS) {
 			const fraction = gameInfo.time_duration_millis / SUSPICIOUS_TIME_DURATION_MILLIS; // fraction is in the interval [0, 1]
 			weight += 1 - fraction;
 		}
