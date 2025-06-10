@@ -57,13 +57,13 @@ const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 ho
 const TOO_CLOSE_GAMES_AMOUNT = 2;
 
 /** Two rated games started this close after each other count as suspicious. */
-const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 10; // 10 minutes
+const TOO_CLOSE_GAMES_MILLIS = 1000 * 60; // 1 minute
 
 /** Games with fewer moves than this are suspicious. */
 const SUSPICIOUS_MOVE_COUNT = 10;
 
 /** Games lasting less than this time on the serverare suspicious. */
-const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 60; // 1 minute
+const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 20; // 20 seconds
 
 /** A player ending a game with a larger fraction of his total clock time than this counts as suspicious. */
 const SUSPICIOUS_CLOCK_REMAINING_FRACTION = 0.9;
@@ -191,6 +191,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		const j = games_table_game_id_list.indexOf(game_id_list[i]!);
 		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
 		if (j > -1) gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
+		else await logEventsAndPrint(`Found game_id ${game_id_list[i]!} in player_games table but not it games table, during rating abuse calculation`, 'errLog.txt');
 	}
 	// console.log(gameInfoList);
 
