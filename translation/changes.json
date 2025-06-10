@@ -1,4 +1,12 @@
 {
+	"59": {
+		"note": "Added German traslation credit 115",
+		"changes": []
+	},
+	"58": {
+		"note": "Deleted forgot_password 553. Added send_reset_link, forgot_question, back_to_login lines 554-556.",
+		"changes": []
+	},
 	"57": {
 		"note": "Deleted ws-no_abort_game_over and ws-no_abort_after_moves on lines 601-602.",
 		"changes": []

@@ -32,6 +32,15 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Variables -------------------------------------------------------------------------
 
+
+/**
+ * The number of times to SALT passwords before storing in the database.
+ * 
+ * Consider moving SALT_ROUNDS to a config file or environment variable
+ */
+const PASSWORD_SALT_ROUNDS: number = 10;
+
+
 /**
  * Usernames that are reserved. New members cannot use these are their name.
  * 
@@ -133,7 +142,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
  */
 async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<number | undefined> {
 	// Use bcrypt to hash & salt password
-	const hashedPassword = await bcrypt.hash(password, 10); // Passes 10 salt rounds. (standard)
+	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
 	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID_Base62(8) });
 
 	const membersResult = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
@@ -335,5 +344,7 @@ export {
 	createNewMember,
 	checkEmailValidity,
 	checkUsernameAvailable,
-	generateAccount
+	generateAccount,
+	doPasswordFormatChecks,
+	PASSWORD_SALT_ROUNDS,
 };

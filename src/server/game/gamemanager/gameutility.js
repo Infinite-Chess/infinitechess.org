@@ -591,7 +591,7 @@ function sendUpdatedClockToColor(game, color) {
 /**
  * Return the clock values of the game that can be sent to a client or logged.
  * It also includes who's clock is currently counting down, if one is.
- * This also updates the clocks, as the players current time should not be the same as when their turn firs started.
+ * This also updates the clocks, as the players current time should not be the same as when their turn first started.
  * @param {Game} game - The game
  * @returns {ClockValues}
  */

@@ -35,7 +35,7 @@ element_usernameInput.addEventListener('input', () => { // When username field c
 	if (lengthError || formatError) {
 		if (!usernameError) { // Create empty errorElement
 			usernameHasError = true;
-			createErrorElement('usernameerror', "usernameinputline");
+			createErrorElement('usernameerror', "username-input-line");
 			// Change input box to red outline
 			element_usernameInput.style.outline = 'solid 1px red';
 			// Reset variable because it now exists.
@@ -71,7 +71,7 @@ element_usernameInput.addEventListener('focusout', () => {
 
 			// ERROR! In use!
 			usernameHasError = true;
-			createErrorElement('usernameerror', "usernameinputline");
+			createErrorElement('usernameerror', "username-input-line");
 			// Change input box to red outline
 			element_usernameInput.style.outline = 'solid 1px red';
 			// Reset variable because it now exists.
@@ -165,7 +165,7 @@ element_passwordInput.addEventListener('input', () => { // When password field c
 	if (shortError || longError || formatError || containsPasswordError) {
 		if (!passwordError) { // Create empty errorElement
 			passwordHasError = true;
-			createErrorElement('passworderror', 'passwordinputline');
+			createErrorElement('passworderror', 'password-input-line');
 			// Change input box to red outline
 			element_passwordInput.style.outline = 'solid 1px red';
 			// Reset variable because it now exists.

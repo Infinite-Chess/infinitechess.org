@@ -17,7 +17,7 @@ import { refreshGitHubContributorsList } from "./GitHub.js";
 // @ts-ignore
 import { areRolesHigherInPriority } from "../controllers/roles.js";
 
-import type { CustomRequest } from "../../types.js";
+import type { AuthenticatedRequest } from "../../types.js";
 import type { Response } from "express";
 
 
@@ -36,7 +36,7 @@ const validCommands = [
 	"help",
 ];
 
-function processCommand(req: CustomRequest, res: Response): void {
+function processCommand(req: AuthenticatedRequest, res: Response): void {
 	const command = req.params["command"]!;
 
 	const commandAndArgs = parseArgumentsFromCommand(command);
@@ -113,7 +113,7 @@ function parseArgumentsFromCommand(command: string): string[] {
 	return commandAndArgs;
 }
 
-function deleteCommand(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function deleteCommand(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
 	if (commandAndArgs.length < 3) {
 		res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -134,7 +134,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: CustomReq
 	sendAndLogResponse(res, 200, "Successfully deleted user " + username + ".");
 }
 
-function usernameCommand(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function usernameCommand(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
 	if (commandAndArgs[1] === "get") {
 		if (commandAndArgs.length < 3) {
 			res.status(422).send("Invalid number of arguments, expected 2, got " + (commandAndArgs.length - 1) + ".");
@@ -167,7 +167,7 @@ function usernameCommand(command: string, commandAndArgs: string[], req: CustomR
 	}
 }
 
-function logoutUser(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function logoutUser(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -185,7 +185,7 @@ function logoutUser(command: string, commandAndArgs: string[], req: CustomReques
 	}
 }
 
-function verify(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function verify(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -199,7 +199,7 @@ function verify(command: string, commandAndArgs: string[], req: CustomRequest, r
 	else sendAndLogResponse(res, 500, result.reason); // Failure message
 }
 
-function getUserInfo(command: string, commandAndArgs: string[], req: CustomRequest, res: Response) {
+function getUserInfo(command: string, commandAndArgs: string[], req: AuthenticatedRequest, res: Response) {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send("Invalid number of arguments, expected 1, got " + (commandAndArgs.length - 1) + ".");
 		return;
@@ -216,7 +216,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: CustomReque
 	}
 }
 
-function updateContributorsCommand(command: string, req: CustomRequest, res: Response) {
+function updateContributorsCommand(command: string, req: AuthenticatedRequest, res: Response) {
 	logCommand(command, req);
 	refreshGitHubContributorsList();
 	sendAndLogResponse(res, 200, "Contributors should now be updated!");
@@ -267,7 +267,7 @@ function helpCommand(commandAndArgs: string[], res: Response) {
 	}
 }
 
-function logCommand(command: string, req: CustomRequest) {
+function logCommand(command: string, req: AuthenticatedRequest) {
 	if (req.memberInfo.signedIn) {
 		logEventsAndPrint(`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` + command, "adminCommands.txt");
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');

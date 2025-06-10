@@ -10,7 +10,7 @@ import { logEventsAndPrint } from "../middleware/logEvents.js";
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 
-import type { CustomRequest } from "../../types.js";
+import type { AuthenticatedRequest } from "../../types.js";
 import type { Request, Response } from "express";
 
 
@@ -122,7 +122,7 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
  * @param req - Express request object
  * @param res - Express response object
  */
-function postCheckmateBeaten(req: CustomRequest, res: Response): void {
+function postCheckmateBeaten(req: AuthenticatedRequest, res: Response): void {
 	if (!req.memberInfo) { // { user_id, username, roles }
 		logEventsAndPrint("Can't save user checkmates_beaten when req.memberInfo is not defined yet! Move this route below verifyJWT.", 'errLog.txt');
 		res.status(500).json({ message: "Server Error: No Authorization"});
