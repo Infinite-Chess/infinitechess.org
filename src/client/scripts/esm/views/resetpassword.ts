@@ -5,52 +5,18 @@
  * It validates user input for a new password and sends it to the server.
  */
 
-// Import the shared password validation utility
-import { validatePassword } from '../util/password-validation.js'; // Adjust path as needed
+// Import the shared password validation utility.
+import { validatePassword } from '../util/password-validation';
 
+// --- Type Definitions for Clarity ---
+type FormElements = {
+	form: HTMLFormElement;
+	newPasswordInput: HTMLInputElement;
+	confirmPasswordInput: HTMLInputElement;
+	submitButton: HTMLInputElement;
+};
 
-/**
- * Creates or updates a message element on the page.
- * @param id The ID for the message element.
- * @param insertAfterId The ID of the element after which this message should be inserted.
- * @param initialClass The initial CSS class ('error' or 'success').
- * @returns The created HTML element.
- */
-function createMessageElement(id: string, insertAfterId: string, initialClass: 'error' | 'success'): HTMLElement {
-	// Remove existing message element if it exists
-	const existingEl = document.getElementById(id);
-	if (existingEl) {
-		existingEl.remove();
-	}
-	
-	const el = document.createElement('div');
-	el.id = id;
-	el.className = initialClass;
-	document.getElementById(insertAfterId)?.insertAdjacentElement('afterend', el);
-	return el;
-}
-
-// --- DOM Element Selection ---
-const form = document.getElementById('reset-form') as HTMLFormElement;
-const newPasswordInput = document.getElementById('new-password') as HTMLInputElement;
-const confirmPasswordInput = document.getElementById('confirm-password') as HTMLInputElement;
-const submitButton = document.getElementById('submit-reset') as HTMLInputElement;
-
-// --- Main Logic ---
-let messageElement: HTMLElement | null = null;
-const token = getTokenFromUrl();
-
-if (form && newPasswordInput && confirmPasswordInput && submitButton) {
-	// --- Event Listeners ---
-	newPasswordInput.addEventListener('input', updateSubmitButtonState);
-	confirmPasswordInput.addEventListener('input', updateSubmitButtonState);
-	form.addEventListener('submit', handleResetSubmit);
-
-	// Initial state check
-	updateSubmitButtonState();
-} else {
-	console.error('One or more required elements for the reset password form are missing.');
-}
+// --- Helper Functions (at module scope) ---
 
 /**
  * Extracts the password reset token from the page's URL.
@@ -61,92 +27,138 @@ function getTokenFromUrl(): string {
 }
 
 /**
- * Clears any displayed error or success message.
+ * Creates or updates a message element on the page.
  */
-function clearMessage(): void {
-	if (messageElement) {
-		messageElement.remove();
-		messageElement = null;
-	}
+function createMessageElement(id: string, insertAfterId: string, initialClass: 'error' | 'success'): HTMLElement {
+	const existingEl = document.getElementById(id);
+	if (existingEl) existingEl.remove();
+	
+	const el = document.createElement('div');
+	el.id = id;
+	el.className = initialClass;
+	document.getElementById(insertAfterId)?.insertAdjacentElement('afterend', el);
+	return el;
 }
 
 /**
- * Updates the state of the submit button based on input validity.
+ * The main setup function that attaches all logic and event listeners.
+ * This function only runs if all required DOM elements are found.
+ * @param elements - An object containing the verified DOM elements.
  */
-function updateSubmitButtonState(): void {
-	clearMessage();
-	if (newPasswordInput.value && confirmPasswordInput.value) {
-		submitButton.disabled = false;
-		submitButton.className = 'ready';
-	} else {
-		submitButton.disabled = true;
-		submitButton.className = 'unavailable';
-	}
-}
+function initializeForm(elements: FormElements): void {
+	const { form, newPasswordInput, confirmPasswordInput, submitButton } = elements;
+	
+	let messageElement: HTMLElement | null = null;
+	let isSubmitting: boolean = false;
+	const token = getTokenFromUrl();
 
-/**
- * Handles the form submission to reset the user's password.
- */
-async function handleResetSubmit(event: SubmitEvent): Promise<void> {
-	event.preventDefault();
-	clearMessage();
-
-	const password = newPasswordInput.value;
-	const confirmPassword = confirmPasswordInput.value;
-
-	// --- Client-side Validation ---
-	const validationResult = validatePassword(password);
-	if (!validationResult.isValid && validationResult.errorKey) {
-		const errorMessage = translations[validationResult.errorKey];
-		messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
-		messageElement.textContent = errorMessage;
-		return;
+	function clearMessage(): void {
+		if (messageElement) {
+			messageElement.remove();
+			messageElement = null;
+		}
 	}
 
-	if (password !== confirmPassword) {
-		const errorMessage = translations['js-pwd_no_match'];
-		messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
-		messageElement.textContent = errorMessage;
-		return;
+	function updateSubmitButtonState(): void {
+		if (isSubmitting) return;
+		clearMessage();
+		if (newPasswordInput.value && confirmPasswordInput.value) {
+			submitButton.disabled = false;
+			submitButton.className = 'ready';
+		} else {
+			submitButton.disabled = true;
+			submitButton.className = 'unavailable';
+		}
 	}
 
-	submitButton.disabled = true;
-	submitButton.value = 'Processing...';
+	function validateForm(): boolean {
+		const password = newPasswordInput.value;
+		const confirmPassword = confirmPasswordInput.value;
 
-	// --- API Call ---
-	try {
-		const response = await fetch('/reset-password', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				"is-fetch-request": "true" // Custom header
-			},
-			body: JSON.stringify({
-				token,
-				password: password
-			})
-		});
-
-		const result = await response.json();
-
-		if (!response.ok) {
-			throw new Error(result.message || 'An unknown error occurred.');
+		const validationResult = validatePassword(password);
+		if (!validationResult.isValid && validationResult.errorKey) {
+			// const errorMessage = translations[validationResult.errorKey] || 'Invalid password.';
+			const errorMessage = 'Invalid password format.'; // Placeholder
+			messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
+			messageElement.textContent = errorMessage;
+			newPasswordInput.focus();
+			return false;
 		}
 
-		// --- Handle Success ---
-		form.innerHTML = `<p class="success">${result.message}</p>`;
-		setTimeout(() => {
-			window.location.href = '/login';
-		}, 4000);
-
-	} catch (error: unknown) {
-		// --- Handle Failure ---
-		messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
-		const errorMessage = error instanceof Error ? error.message : 'A network error occurred.';
-		messageElement.textContent = errorMessage;
-		
-		// Re-enable the button on failure
-		submitButton.disabled = false;
-		submitButton.value = 'Reset Password';
+		if (password !== confirmPassword) {
+			// const errorMessage = translations['js-pwd_no_match'] || 'Passwords do not match.';
+			const errorMessage = 'Passwords do not match.'; // Placeholder
+			messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
+			messageElement.textContent = errorMessage;
+			confirmPasswordInput.focus();
+			return false;
+		}
+		return true;
 	}
+
+	async function handleResetSubmit(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		if (isSubmitting || !validateForm()) return;
+
+		isSubmitting = true;
+		submitButton.disabled = true;
+		submitButton.value = 'Processing...';
+
+		try {
+			const response = await fetch('/reset-password', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'is-fetch-request': 'true', // Custom header
+				},
+				body: JSON.stringify({ token, password: newPasswordInput.value }) 
+			});
+
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.message || 'An unknown error occurred.');
+
+			form.innerHTML = `<p class="success">${result.message}</p>`;
+			setTimeout(() => { window.location.href = '/login'; }, 4000);
+
+		} catch (error: unknown) {
+			messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
+			const errorMessage = error instanceof Error ? error.message : 'A network error occurred.';
+			messageElement.textContent = errorMessage;
+			
+			isSubmitting = false; 
+			submitButton.disabled = false;
+			submitButton.value = 'Reset Password';
+		}
+	}
+
+	// --- Event Listeners & Initial Setup ---
+	newPasswordInput.addEventListener('input', updateSubmitButtonState);
+	confirmPasswordInput.addEventListener('input', updateSubmitButtonState);
+	form.addEventListener('submit', handleResetSubmit);
+	updateSubmitButtonState();
+}
+
+
+// --- Script Entry Point ---
+// [FIX] Use instanceof for safe type checking instead of unsafe 'as' casting.
+const formEl = document.getElementById('reset-form');
+const newPasswordEl = document.getElementById('new-password');
+const confirmPasswordEl = document.getElementById('confirm-password');
+const submitButtonEl = document.getElementById('submit-reset');
+
+if (
+	formEl instanceof HTMLFormElement &&
+	newPasswordEl instanceof HTMLInputElement &&
+	confirmPasswordEl instanceof HTMLInputElement &&
+	submitButtonEl instanceof HTMLInputElement
+) {
+	// If all elements are found and are of the correct type, initialize the form logic.
+	initializeForm({
+		form: formEl,
+		newPasswordInput: newPasswordEl,
+		confirmPasswordInput: confirmPasswordEl,
+		submitButton: submitButtonEl,
+	});
+} else {
+	console.error('One or more required elements for the reset password form are missing or of the wrong type.');
 }
