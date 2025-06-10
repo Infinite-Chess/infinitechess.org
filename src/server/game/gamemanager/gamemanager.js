@@ -108,6 +108,20 @@ function addGameToActiveGames(game) {
 }
 
 /**
+ * Checks if member with a given username is currently listed as being in some active game
+ * @param {string} username - username of some member
+ * @returns {boolean} true if member is currently in active game, otherwise false
+ */
+function isMemberInSomeActiveGame(username) {
+	for (const game of Object.values(activeGames)) {
+		for (const player of Object.values(game.players)) {
+			if (player.identifier?.member !== undefined && player.identifier.member === username) return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Unsubscribes a websocket from the game their connected to after a socket closure.
  * Detaches their socket from the game, updates their metadata.subscriptions.
  * @param {CustomWebSocket} ws - Their websocket.
@@ -476,6 +490,7 @@ function broadCastGameRestarting() {
 
 export {
 	createGame,
+	isMemberInSomeActiveGame,
 	unsubClientFromGameBySocket,
 	onPlayerLostByAbandonment,
 	broadCastGameRestarting,

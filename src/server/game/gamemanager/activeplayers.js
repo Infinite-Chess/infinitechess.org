@@ -110,15 +110,6 @@ function getIDOfGamePlayerIsIn(player) {
 	if (player.member)  return membersInActiveGames[player.member];
 }
 
-/**
- * Checks if member with a given username is currently listed as being in some active game
- * @param {string} username - username of some member
- * @returns {boolean} true if member is currently in active game, otherwise false
- */
-function isMemberInSomeActiveGame(username) {
-	return username in membersInActiveGames;
-}
-
 //--------------------------------------------------------------------------------------------------------
 
 export {
@@ -127,5 +118,4 @@ export {
 	isSocketInAnActiveGame,
 	hasColorInGameSeenConclusion,
 	getIDOfGamePlayerIsIn,
-	isMemberInSomeActiveGame,
 };

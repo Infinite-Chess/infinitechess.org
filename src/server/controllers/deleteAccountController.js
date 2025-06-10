@@ -8,7 +8,7 @@ import { deleteUser, getMemberDataByCriteria } from "../database/memberManager.j
 import { testPasswordForRequest } from './authController.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { closeAllSocketsOfMember } from '../socket/socketManager.js';
-import { isMemberInSomeActiveGame } from "../game/gamemanager/activeplayers.js";
+import { isMemberInSomeActiveGame } from "../game/gamemanager/gamemanager.js";
 
 
 
@@ -36,8 +36,8 @@ async function removeAccount(req, res) {
 
 	// Do not allow account deletion if user is currently playing a game
 	if (isMemberInSomeActiveGame(username)) {
-		logEventsAndPrint(`User ${username} requested accont deletion while being listed in some active game.`, 'deletedAccounts.txt');
-		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_in_game", req) });
+		logEventsAndPrint(`User ${username} requested account deletion while being listed in some active game.`, 'deletedAccounts.txt');
+		return res.status(403).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_in_game", req) });
 	}
 
 
