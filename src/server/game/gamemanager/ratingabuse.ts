@@ -228,7 +228,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
  * If yes, append entry to suspicion_level_record_list.
  */
 function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
-	const sorted_timestamp_list = gameInfoList.map(game_info => game_info.date).map(date => timeutil.sqliteToTimestamp(date)).sort();
+	const sorted_timestamp_list = gameInfoList.map(game_info => timeutil.sqliteToTimestamp(game_info.date)).sort();
 	const timestamp_differences: number[] = [];
 	for (let i = 1; i < sorted_timestamp_list.length; i++) {
 		timestamp_differences.push(sorted_timestamp_list[i]! - sorted_timestamp_list[i - 1]!);
@@ -259,7 +259,7 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'move_count',
-		weight: weight / GAME_INTERVAL_TO_MEASURE // rescale to [0,1]
+		weight: weight / gameInfoList.length // rescale to [0,1]
 	});
 }
 
@@ -280,7 +280,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'duration',
-		weight: weight / GAME_INTERVAL_TO_MEASURE // rescale to [0,1]
+		weight: weight / gameInfoList.length // rescale to [0,1]
 	});
 }
 
@@ -307,7 +307,7 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'clock_at_end',
-		weight: weight / GAME_INTERVAL_TO_MEASURE // rescale to [0,1]
+		weight: weight / gameInfoList.length // rescale to [0,1]
 	});
 }
 
