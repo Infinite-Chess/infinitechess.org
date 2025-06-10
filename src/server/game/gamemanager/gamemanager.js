@@ -427,12 +427,12 @@ async function deleteGame(game) {
 		gameutility.unsubClientFromGame(game, data.socket);
 	}
 
+	// Monitor suspicion levels for all players who participated in the game
+	await ratingabuse.measureRatingAbuseAfterGame(game);
+
 	delete activeGames[game.id]; // Delete the game from the activeGames list
 
 	console.log(`Deleted game ${game.id}.`);
-
-	// Monitor suspicion levels for all players who participated in the game
-	await ratingabuse.measureRatingAbuseAfterGame(game);
 }
 
 /**

@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "61"
+version = "62"
 maintainer = "Naviary"
 
 [header]
@@ -608,6 +608,7 @@ ws-password-change-success = "Password has been reset successfully. You will be 
 ws-password-reset-token-invalid = "Password reset token is invalid or has expired."
 ws-forbidden_wrong_account = "Forbidden. This is not your account."
 ws-deleting_account_not_found = "Failed to delete account. Account not found."
+ws-deleting_account_in_game = "You cannot delete your account while you are still connected to an online game."
 ws-server_error = "Sorry, there was a server error! Please go back."
 ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."

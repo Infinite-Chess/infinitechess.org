@@ -8,6 +8,7 @@ import { deleteUser, getMemberDataByCriteria } from "../database/memberManager.j
 import { testPasswordForRequest } from './authController.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { closeAllSocketsOfMember } from '../socket/socketManager.js';
+import { isMemberInSomeActiveGame } from "../game/gamemanager/activeplayers.js";
 
 
 
@@ -18,22 +19,30 @@ import { closeAllSocketsOfMember } from '../socket/socketManager.js';
  * @param {object} res - The response object.
  */
 async function removeAccount(req, res) {
-	const claimedUsername = req.params.member;
+	const claimedUsername = req.params.member; // case-insensitive username
 
-	// The delete account request doesn't come with the username
-	// already in the body, so we set that here.
+	// The delete account request doesn't come with the username already in the body, so we set that here.
 	req.body.username = claimedUsername;
 	if (!(await testPasswordForRequest(req, res))) { // It will have already sent a response
 		return logEventsAndPrint(`Incorrect password for user "${claimedUsername}" attempting to remove account!`, "loginAttempts.txt");
 	}
 
-	// DELETE ACCOUNT..
-
-	const { user_id } = getMemberDataByCriteria(['user_id'], 'username', claimedUsername);
-	if (user_id === undefined) {
+	// Get user_id and case-sensitive username from database
+	const { user_id, username } = getMemberDataByCriteria(['user_id', 'username'], 'username', claimedUsername);
+	if (user_id === undefined || username === undefined) {
 		return logEventsAndPrint(`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`, 'errLog.txt');
 		// if (user_id === undefined) return logEventsAndPrint(`User "${usernameCaseInsensitive}" not found after a successful login! This should never happen.`, 'errLog.txt');
 	}
+
+	// Do not allow account deletion if user is currently playing a game
+	if (isMemberInSomeActiveGame(username)) {
+		logEventsAndPrint(`User ${username} requested accont deletion while being listed in some active game.`, 'deletedAccounts.txt');
+		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_in_game", req) });
+	}
+
+
+	// DELETE ACCOUNT..
+
 	
 	// Close their sockets, delete their invites, delete their session cookies...
 	revokeSession(res);
@@ -41,10 +50,10 @@ async function removeAccount(req, res) {
 	const reason_deleted = "user request";
 	const result = deleteAccount(user_id, reason_deleted); // { success, result (if failed) }
 	if (result.success) { // Success!!
-		logEventsAndPrint(`Deleted account "${claimedUsername}" for reason "${reason_deleted}".`, "deletedAccounts.txt");
+		logEventsAndPrint(`Deleted account "${username}" for reason "${reason_deleted}".`, "deletedAccounts.txt");
 		return res.send('OK'); // 200 is default code
 	} else { // Failure
-		logEventsAndPrint(`Can't delete ${claimedUsername}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt');
+		logEventsAndPrint(`Can't delete ${username}'s account after a correct password entered. Reason: ${result.reason}`, 'errLog.txt');
 		return res.status(404).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_not_found", req) });
 	}
 }
