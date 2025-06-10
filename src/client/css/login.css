@@ -60,6 +60,10 @@ main {
     display: inline-block;
 }
 
+#confirm-password-line {
+    margin-top: 12px;
+}
+
 label {
     font-size: 18px;
     vertical-align: middle;
