@@ -169,7 +169,8 @@ function requestConfirmEmail(req: AuthenticatedRequest, res: Response): void {
 
 /**
  * API to send an email warning about rating abuse to our own infinite chess email address
- * @param {string} messageText - message to send in email body
+ * @param user_id - user_id of suspicious user, needed for email subject
+ * @param messageText - message to send in email body
  */
 async function sendRatingAbuseEmail(user_id: number, messageText: string) {
 	try {

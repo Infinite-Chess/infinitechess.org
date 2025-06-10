@@ -201,7 +201,6 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	checkDurations(gameInfoList, suspicion_level_record_list);
 	checkClockAtEnd(gameInfoList, suspicion_level_record_list);
 	
-
 	/** Sum of all suspicion weights in suspicion_level_record_list */
 	const suspicion_total_weight = suspicion_level_record_list.map(entry => entry.weight).reduce((acc, cur) => acc + cur, 0);
 
