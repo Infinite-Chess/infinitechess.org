@@ -169,10 +169,10 @@ function requestConfirmEmail(req: AuthenticatedRequest, res: Response): void {
 
 /**
  * API to send an email warning about rating abuse to our own infinite chess email address
- * @param user_id - user_id of suspicious user, needed for email subject
- * @param messageText - message to send in email body
+ * @param messageSubject - email subject text
+ * @param messageText - email body text
  */
-async function sendRatingAbuseEmail(user_id: number, messageText: string) {
+async function sendRatingAbuseEmail(messageSubject: string, messageText: string) {
 	try {
 		if (!transporter) {
 			console.log("Email environment variables not specified. Not sending rating abuse email.");
@@ -182,16 +182,16 @@ async function sendRatingAbuseEmail(user_id: number, messageText: string) {
 		const mailOptions = {
 			from: `Infinite Chess <${EMAIL_USERNAME}>`,
 			to: EMAIL_USERNAME,
-			subject: `Rating Abuse Warning: user_id ${user_id}`,
+			subject: messageSubject,
 			text: messageText
 		};
 
 		await transporter.sendMail(mailOptions);
-		console.log(`Rating abuse warning email about user_id ${user_id} sent successfully to ${EMAIL_USERNAME}.`);
+		console.log(`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${EMAIL_USERNAME}.`);
 
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
-		logEventsAndPrint(`Error during the sending of rating abuse email about user_id ${user_id}: ${errorMessage}`, 'errLog.txt');
+		logEventsAndPrint(`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`, 'errLog.txt');
 	}
 }
 
