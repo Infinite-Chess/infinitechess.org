@@ -57,13 +57,13 @@ const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 ho
 const TOO_CLOSE_GAMES_AMOUNT = 2;
 
 /** Two rated games started this close after each other count as suspicious. */
-const TOO_CLOSE_GAMES_MILLIS = 1000 * 60; // 1 minute
+const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 2; // 2 minutes
 
 /** Games with fewer moves than this are suspicious. */
-const SUSPICIOUS_MOVE_COUNT = 10;
+const SUSPICIOUS_MOVE_COUNT = 12;
 
 /** Games lasting less than this time on the serverare suspicious. */
-const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 20; // 20 seconds
+const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 30; // 30 seconds
 
 
 
@@ -147,7 +147,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
 	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
 		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
-		return;
+		// return;
 	}
 
 	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
@@ -257,8 +257,8 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 
 		// Game is suspicious if it contains too few moves
 		if (gameInfo.move_count < SUSPICIOUS_MOVE_COUNT) {
-			const fraction = gameInfo.move_count / SUSPICIOUS_MOVE_COUNT; // fraction is in the interval [0, 1]
-			weight += fraction;
+			const fraction = Math.max(0, (gameInfo.move_count - 2) / SUSPICIOUS_MOVE_COUNT); // fraction is in the interval [0, 1]
+			weight += 1 - fraction;
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
@@ -279,7 +279,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 		// Game is suspicious if it lasted too briefly on the server
 		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < SUSPICIOUS_TIME_DURATION_MILLIS) {
 			const fraction = gameInfo.time_duration_millis / SUSPICIOUS_TIME_DURATION_MILLIS; // fraction is in the interval [0, 1]
-			weight += fraction;
+			weight += 1 - fraction;
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
@@ -310,7 +310,7 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
-		category: 'duration',
+		category: 'clock_at_end',
 		weight: weight / GAME_INTERVAL_TO_MEASURE // rescale to [0,1]
 	});
 }
