@@ -241,7 +241,7 @@ function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspic
 	if (close_game_pairs_amount >= TOO_CLOSE_GAMES_AMOUNT) {
 		suspicion_level_record_list.push({
 			category: 'close_game_pairs',
-			weight: close_game_pairs_amount
+			weight: close_game_pairs_amount / timestamp_differences.length // rescale to [0,1]
 		});
 	}
 }
@@ -256,11 +256,14 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
 		// Game is suspicious if it contains too few moves
-		if (gameInfo.move_count < SUSPICIOUS_MOVE_COUNT) weight++;
+		if (gameInfo.move_count < SUSPICIOUS_MOVE_COUNT) {
+			const fraction = gameInfo.move_count / SUSPICIOUS_MOVE_COUNT; // fraction is in the interval [0, 1]
+			weight += fraction;
+		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'move_count',
-		weight
+		weight: weight / GAME_INTERVAL_TO_MEASURE // rescale to [0,1]
 	});
 }
 
@@ -274,11 +277,14 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
 		// Game is suspicious if it lasted too briefly on the server
-		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < SUSPICIOUS_TIME_DURATION_MILLIS) weight++;
+		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis < SUSPICIOUS_TIME_DURATION_MILLIS) {
+			const fraction = gameInfo.time_duration_millis / SUSPICIOUS_TIME_DURATION_MILLIS; // fraction is in the interval [0, 1]
+			weight += fraction;
+		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'duration',
-		weight
+		weight: weight / GAME_INTERVAL_TO_MEASURE // rescale to [0,1]
 	});
 }
 
