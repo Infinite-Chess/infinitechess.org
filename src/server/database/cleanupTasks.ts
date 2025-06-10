@@ -58,11 +58,11 @@ function checkDatabaseIntegrity() {
 function deleteExpiredPasswordResetTokens() {
 	console.log('Running cleanup of expired password reset tokens.');
 	try {
-		const nowInSeconds = Math.floor(Date.now() / 1000);
-		
+		const now = Date.now();
+
 		const result = db.run(
 			'DELETE FROM password_reset_tokens WHERE expires_at < ?',
-			[nowInSeconds]
+			[now]
 		);
 		
 		if (result.changes > 0) {
