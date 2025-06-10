@@ -1,6 +1,12 @@
 // src/client/scripts/esm/util/password-validation.ts
 
-// This file contains reusable validation logic for client-side scripts.
+/**
+ * This file contains reusable password validation logic for client-side scripts.
+ * 
+ * ANY PAGE THAT IMPORTS THIS should also include the password-validation translations in the ejs!!!
+ * ...t('password-validation', {returnObjects: true})
+ */
+
 
 /**
  * Checks if a string contains only allowed letters, numbers, and symbols for a password.
@@ -14,7 +20,7 @@ export function isValidPasswordFormat(str: string): boolean {
 
 interface PasswordValidationResult {
 	isValid: boolean;
-	errorKey: string | null; // A key for your translation files, or null if valid.
+	errorKey?: 'js-pwd_too_short' | 'js-pwd_too_long' | 'js-pwd_incorrect_format' | 'js-pwd_not_pwd';
 }
 
 /**
@@ -38,5 +44,5 @@ export function validatePassword(password: string): PasswordValidationResult {
 	}
 
 	// If all checks pass:
-	return { isValid: true, errorKey: null };
+	return { isValid: true };
 }

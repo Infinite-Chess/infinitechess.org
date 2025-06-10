@@ -228,6 +228,7 @@ function createErrorElement(id, insertAfter) {
 	// The element now looks like this:
 	// <div class="error" id="usernameerror"></div>
 	document.getElementById(insertAfter).insertAdjacentElement('afterend', errElement);
+	return errElement; // Return the created element
 }
 
 // Greys-out submit button if there's any errors.

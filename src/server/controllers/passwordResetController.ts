@@ -91,6 +91,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		res.status(400).json({ message: 'Token and new password are required.' });
 		return;
 	}
+	if (typeof token !== 'string') {
+		res.status(400).json({ message: 'Token must be a string.' });
+		return;
+	}
 	if (typeof password !== 'string') {
 		res.status(400).json({ message: 'Password must be a string.' });
 		return;
@@ -119,7 +123,8 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {
-			res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+			logEventsAndPrint(`Invalid or expired password reset token used: ${token}`, 'loginAttempts.txt');
+			res.status(400).json({ message: getTranslationForReq('server.javascript.ws-password-reset-token-invalid', req) });
 			return;
 		}
 

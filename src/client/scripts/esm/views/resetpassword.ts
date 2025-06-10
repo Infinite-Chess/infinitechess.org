@@ -29,13 +29,17 @@ function getTokenFromUrl(): string {
 /**
  * Creates or updates a message element on the page.
  */
-function createMessageElement(id: string, insertAfterId: string, initialClass: 'error' | 'success'): HTMLElement {
+function createErrorMessageElement(errorMessage: string): HTMLElement {
+	const id = 'error-message';
+	const insertAfterId = 'confirm-password-line';
+
 	const existingEl = document.getElementById(id);
 	if (existingEl) existingEl.remove();
 	
 	const el = document.createElement('div');
 	el.id = id;
-	el.className = initialClass;
+	el.className = 'error';
+	el.textContent = errorMessage;
 	document.getElementById(insertAfterId)?.insertAdjacentElement('afterend', el);
 	return el;
 }
@@ -52,6 +56,12 @@ function initializeForm(elements: FormElements): void {
 	let isSubmitting: boolean = false;
 	const token = getTokenFromUrl();
 
+	// --- Event Listeners & Initial Setup ---
+	newPasswordInput.addEventListener('input', updateSubmitButtonState);
+	confirmPasswordInput.addEventListener('input', updateSubmitButtonState);
+	form.addEventListener('submit', handleResetSubmit);
+	updateSubmitButtonState();
+
 	function clearMessage(): void {
 		if (messageElement) {
 			messageElement.remove();
@@ -66,7 +76,6 @@ function initializeForm(elements: FormElements): void {
 			submitButton.disabled = false;
 			submitButton.className = 'ready';
 		} else {
-			submitButton.disabled = true;
 			submitButton.className = 'unavailable';
 		}
 	}
@@ -77,19 +86,13 @@ function initializeForm(elements: FormElements): void {
 
 		const validationResult = validatePassword(password);
 		if (!validationResult.isValid && validationResult.errorKey) {
-			// const errorMessage = translations[validationResult.errorKey] || 'Invalid password.';
-			const errorMessage = 'Invalid password format.'; // Placeholder
-			messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
-			messageElement.textContent = errorMessage;
+			messageElement = createErrorMessageElement(translations[validationResult.errorKey]);
 			newPasswordInput.focus();
 			return false;
 		}
 
 		if (password !== confirmPassword) {
-			// const errorMessage = translations['js-pwd_no_match'] || 'Passwords do not match.';
-			const errorMessage = 'Passwords do not match.'; // Placeholder
-			messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
-			messageElement.textContent = errorMessage;
+			messageElement = createErrorMessageElement(translations['js-pwd_no_match']);
 			confirmPasswordInput.focus();
 			return false;
 		}
@@ -99,10 +102,12 @@ function initializeForm(elements: FormElements): void {
 	async function handleResetSubmit(event: SubmitEvent): Promise<void> {
 		event.preventDefault();
 		if (isSubmitting || !validateForm()) return;
+		clearMessage();
 
 		isSubmitting = true;
 		submitButton.disabled = true;
-		submitButton.value = 'Processing...';
+		submitButton.className = 'unavailable';
+		submitButton.value = translations['processing'];
 
 		try {
 			const response = await fetch('/reset-password', {
@@ -115,27 +120,28 @@ function initializeForm(elements: FormElements): void {
 			});
 
 			const result = await response.json();
-			if (!response.ok) throw new Error(result.message || 'An unknown error occurred.');
-
-			form.innerHTML = `<p class="success">${result.message}</p>`;
-			setTimeout(() => { window.location.href = '/login'; }, 4000);
-
-		} catch (error: unknown) {
-			messageElement = createMessageElement('reset-message', 'confirm-password-line', 'error');
-			const errorMessage = error instanceof Error ? error.message : 'A network error occurred.';
-			messageElement.textContent = errorMessage;
-			
-			isSubmitting = false; 
-			submitButton.disabled = false;
-			submitButton.value = 'Reset Password';
+			if (response.ok) { // SUCCESS
+				form.innerHTML = `<div class="success">${result.message}</div>`;
+				// Redirect to login after a delay
+				setTimeout(() => { window.location.href = '/login'; }, 4000);
+			} else { // NOT OKAY => ERROR
+				onFetchError(result.message || 'An unknown error occurred.');
+			}
+		} catch (error: unknown) { // Likely a network error
+			console.log(error instanceof Error ? error.message : String(error));
+			onFetchError(translations['network-error']);
 		}
 	}
 
-	// --- Event Listeners & Initial Setup ---
-	newPasswordInput.addEventListener('input', updateSubmitButtonState);
-	confirmPasswordInput.addEventListener('input', updateSubmitButtonState);
-	form.addEventListener('submit', handleResetSubmit);
-	updateSubmitButtonState();
+	/** Called when the fetch request errors, either NOT okay or network error */
+	function onFetchError(errorMessage: string): void {
+		messageElement = createErrorMessageElement(errorMessage);
+		
+		isSubmitting = false; 
+		submitButton.disabled = false;
+		submitButton.className = 'ready';
+		submitButton.value = translations['reset-password'];
+	}
 }
 
 
