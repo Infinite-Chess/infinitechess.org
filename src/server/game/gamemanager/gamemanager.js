@@ -115,7 +115,7 @@ function addGameToActiveGames(game) {
 function isMemberInSomeActiveGame(username) {
 	for (const game of Object.values(activeGames)) {
 		for (const player of Object.values(game.players)) {
-			if (player.identifier?.member !== undefined && player.identifier.member === username) return true;
+			if (player.identifier?.member === username) return true;
 		}
 	}
 	return false;
