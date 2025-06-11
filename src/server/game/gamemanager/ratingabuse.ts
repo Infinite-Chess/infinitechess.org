@@ -240,7 +240,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// Player is suspicious and admin is notified if necessary
 	if (suspicion_total_weight >= SUSPICION_TOTAL_WEIGHT_THRESHHOLD) {
-		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion total weight: ${suspicion_total_weight}. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`;
+		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Suspicion total weight: ${suspicion_total_weight}. Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`;
 		await logEventsAndPrint(messageText, 'ratingAbuseLog.txt');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
@@ -253,7 +253,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		}
 	}
 	// Player is not suspicious
-	else await logEvents(`INNOCENT! Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Suspicion total weight: ${suspicion_total_weight}. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
+	else await logEvents(`INNOCENT! Suspicion total weight: ${suspicion_total_weight}. Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
 }
 
 
