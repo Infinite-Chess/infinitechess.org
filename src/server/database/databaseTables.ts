@@ -35,9 +35,11 @@ const allMemberColumns: string[] = [
 	'joined',
 	'last_seen',
 	'preferences',
-	'verification',
 	'login_count',
-	'checkmates_beaten'
+	'checkmates_beaten',
+	'is_verified',
+	'verification_code',
+	'is_verification_notified',
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
