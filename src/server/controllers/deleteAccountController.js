@@ -35,6 +35,9 @@ async function removeAccount(req, res) {
 	}
 
 	// Do not allow account deletion if user is currently playing a game
+	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
+	// If that is done while they are in the middle of a rated game,
+	// errors will happen when the game is deleted.
 	if (isMemberInSomeActiveGame(username)) {
 		logEventsAndPrint(`User ${username} requested account deletion while being listed in some active game.`, 'deletedAccounts.txt');
 		return res.status(403).json({ 'message' : getTranslationForReq("server.javascript.ws-deleting_account_in_game", req) });
