@@ -229,8 +229,9 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		checkClockAtEnd(gameInfoList, suspicion_level_record_list);
 		checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
 		checkIPAddresses(user_ip_address_list, opponent_ip_address_list, suspicion_level_record_list);
-	} catch (error) {
-		await logEventsAndPrint(`Error running rating_abuse checks for user ID "${user_id}": ${error.message}`, 'errLog.txt');
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		await logEventsAndPrint(`Error running rating_abuse checks for user ID "${user_id}": ${message}`, 'errLog.txt');
 		return;
 	}
 	
