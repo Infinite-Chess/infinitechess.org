@@ -29,7 +29,9 @@ import type { Game } from '../TypeDefinitions.js';
  * 
  * (X) Low move counts (games ended quickly)
  * (X) Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
- * Opponents use the same IP address, OR the player has no active refresh tokens (logged out mid-game).
+ * (X) Opponents use the same IP address. OR The player has no active refresh tokens (logged out mid-game)
+ * (X) Many games against always the same opponents
+ * 
  * Win streaks, especially against the same opponents
  * Rapid improvement over days/weeks that should take months, especially if account new
  * Low total rated loss count
@@ -48,7 +50,7 @@ import type { Game } from '../TypeDefinitions.js';
 const GAME_INTERVAL_TO_MEASURE = 5;
 
 /** Total suspicion score which is enough to mark a user as suspicious. */
-const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
+const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 2.0;
 
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
@@ -92,7 +94,7 @@ type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord & Rating
 
 /** Object containing information about analysis of suspicion level of some characteristic */
 type SuspicionLevelRecord = {
-	category: 'close_game_pairs' | 'move_count' | 'duration' | 'clock_at_end',
+	category: 'close_game_pairs' | 'move_count' | 'duration' | 'clock_at_end' | 'same_opponents' | 'ip_addresses',
 	weight: number,
 };
 
@@ -224,13 +226,14 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	checkMoveCounts(gameInfoList, suspicion_level_record_list);
 	checkDurations(gameInfoList, suspicion_level_record_list);
 	checkClockAtEnd(gameInfoList, suspicion_level_record_list);
-	// checkIPAddresses(user_ip_address_list, opponent_ip_address_list);
+	checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
+	checkIPAddresses(user_ip_address_list, opponent_ip_address_list, suspicion_level_record_list);
 	
 	/** Sum of all suspicion weights in suspicion_level_record_list */
 	const suspicion_total_weight = suspicion_level_record_list.map(entry => entry.weight).reduce((acc, cur) => acc + cur, 0);
 
 	// Player is suspicious and admin is notified if necessary
-	if (suspicion_total_weight > SUSPICION_TOTAL_WEIGHT_THRESHHOLD) {
+	if (suspicion_total_weight >= SUSPICION_TOTAL_WEIGHT_THRESHHOLD) {
 		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Suspicion total weight: ${suspicion_total_weight}. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`;
 		logEventsAndPrint(messageText, 'ratingAbuseLog.txt');
 
@@ -333,6 +336,46 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'clock_at_end',
 		weight: weight / gameInfoList.length // rescale to [0,1]
+	});
+}
+
+/** 
+ * Check if the user is playing against the same opponents many times.
+ * If yes, append entry to suspicion_level_record_list.
+ */
+function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key: number] : number }, suspicion_level_record_list: SuspicionLevelRecord[]) {
+	let weight = 0;
+	for (const frequency of Object.values(user_id_frequency)) {
+		if (frequency > 1) weight += frequency ** 2;
+	}
+	if (weight > 0) suspicion_level_record_list.push({
+		category: 'same_opponents',
+		weight: weight / (user_id_list.length ** 2) // rescale to [0,1]
+	});
+}
+
+/** 
+ * Check if the user is using the same IP address as his opponents.
+ * If yes, append entry to suspicion_level_record_list.
+ */
+function checkIPAddresses(user_ip_address_list: string[], opponent_ip_address_list: string[], suspicion_level_record_list: SuspicionLevelRecord[]) {
+	// Player logged out mid game
+	if (user_ip_address_list.length === 0) {
+		suspicion_level_record_list.push({
+			category: 'ip_addresses',
+			weight: 2
+		});
+		return;
+	}
+	else if (opponent_ip_address_list.length === 0) return; 
+
+	let weight = 0;
+	for (const opponent_ip_address of opponent_ip_address_list) {
+		if (user_ip_address_list.includes(opponent_ip_address)) weight++;
+	}
+	if (weight > 0) suspicion_level_record_list.push({
+		category: 'ip_addresses',
+		weight: 2 * weight / opponent_ip_address_list.length // rescale to [0,2]
 	});
 }
 
