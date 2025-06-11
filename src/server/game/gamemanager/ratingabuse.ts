@@ -9,7 +9,7 @@
  * Naviary is notified by email of any flagged users.
  */
 
-import { getRecentNRatedGamesForUser } from "../../database/playerGamesManager.js";
+import { getRecentNRatedGamesForUser, getOpponentsOfUserFromGames } from "../../database/playerGamesManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
@@ -186,6 +186,10 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		else await logEventsAndPrint(`Found game_id ${game_id_list[i]!} in player_games table but not it games table, during rating abuse calculation`, 'errLog.txt');
 	}
 	// console.log(gameInfoList);
+
+	const opponentPlayerGamesEntries = getOpponentsOfUserFromGames(user_id, game_id_list, ['user_id']);
+	const user_id_list = opponentPlayerGamesEntries.map(entry => entry.user_id);
+	console.log(user_id_list);
 
 
 	// Handcrafted game suspicion checking ------------------------------------------

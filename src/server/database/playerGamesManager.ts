@@ -158,7 +158,7 @@ function getPlayersInGame(game_id: number): PlayerGamesRecord[] {
 
 	// Construct SQL query
 	const query = `
-		SELECT user_id, player_number, elo_at_game, elo_change_from_game
+		SELECT *
 		FROM player_games
 		WHERE game_id = ?
 		ORDER BY player_number ASC -- Optional: order for consistency
@@ -174,6 +174,53 @@ function getPlayersInGame(game_id: number): PlayerGamesRecord[] {
 	}
 }
 
+/**
+ * Gets player_games entries for all opponenents of a specific user for a list of specific games
+ * @param user_id - The user_id of the player
+ * @param game_id_list - A list of game_ids
+ * @param columns - The columns to retrieve (e.g., ['user_id', 'player_number'])
+ * @returns - an array of PlayerGamesRecord information about the members in a game who are not equal to user_id
+ */
+function getOpponentsOfUserFromGames(user_id: number, game_id_list: number[], columns: string[]): PlayerGamesRecord[] {
+
+	// Guard clauses... Validating the arguments...
+
+	if (!Array.isArray(columns)) {
+		logEventsAndPrint(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+	if (!columns.every(column => typeof column === 'string' && allPlayerGamesColumns.includes(column))) {
+		logEventsAndPrint(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+
+	// Construct SQL query
+	const placeholders = game_id_list.map(() => '?').join(', ');
+	const query = `
+		SELECT ${columns.join(', ')}
+		FROM player_games
+		WHERE user_id != ?
+			AND game_id IN (${placeholders})
+	`;
+
+	try {
+		// Execute the query and fetch result
+		const rows = db.all<PlayerGamesRecord>(query, [user_id].concat(game_id_list));
+
+		// If no rows found, return undefined
+		if (!rows || rows.length === 0) {
+			logEventsAndPrint(`No matches found in player_games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`, 'errLog.txt');
+			return [];
+		}
+
+		// Return the fetched rows (single object)
+		return rows;
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error getting all player_games entries for game_id_list "${game_id_list}": ${message}`, 'errLog.txt');
+		return [];
+	}
+}
 
 /**
  * Updates multiple column values in the player_games table for a given user.
@@ -286,6 +333,7 @@ export {
 	addGameToPlayerGamesTable,
 	getPlayerGamesData,
 	getPlayersInGame,
+	getOpponentsOfUserFromGames,
 	// Commented out to emphasize this should not ever have to be used:
 	// updatePlayerGamesColumns,
 	getRecentNRatedGamesForUser,
