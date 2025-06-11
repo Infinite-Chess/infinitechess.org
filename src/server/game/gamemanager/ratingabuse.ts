@@ -204,14 +204,18 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	// Get the refresh tokens of the user and all his opponents
 	const refreshTokenEntries = findRefreshTokensForUsers([user_id].concat(unique_user_id_list));
 	const user_ip_address_list: string[] = []; // ip_addresses of the user
-	const opponent_ip_address_list: string[] = []; // ip_addresses of his unique opponents
+	const opponent_ip_address_lists: { [ key: number ] : string[] } = {}; // ip_addresses of his unique opponents
 	for (const refreshToken of refreshTokenEntries) {
 		if (refreshToken.ip_address === null) continue;
 
 		// If the refresh token belongs to the user, add his IP address to user_ip_address_list
 		if (refreshToken.user_id === user_id) user_ip_address_list.push(refreshToken.ip_address);
-		// Else, add the IP address to the opponent_ip_address_list, as many times as dictated by the user_id_frequency dictionary
-		else if (refreshToken.user_id in user_id_frequency) opponent_ip_address_list.push(...Array(user_id_frequency[refreshToken.user_id]).fill(refreshToken.ip_address));
+
+		// Else, add the IP address to the opponent_ip_address_list
+		else if (refreshToken.user_id in user_id_frequency) {
+			if (opponent_ip_address_lists[refreshToken.user_id] === undefined) opponent_ip_address_lists[refreshToken.user_id] = [refreshToken.ip_address];
+			else opponent_ip_address_lists[refreshToken.user_id]!.push(refreshToken.ip_address);
+		}
 	}
 
 
@@ -228,7 +232,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		checkDurations(gameInfoList, suspicion_level_record_list);
 		checkClockAtEnd(gameInfoList, suspicion_level_record_list);
 		checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
-		checkIPAddresses(user_ip_address_list, opponent_ip_address_list, suspicion_level_record_list);
+		checkIPAddresses(user_id_list, user_id_frequency, user_ip_address_list, opponent_ip_address_lists, suspicion_level_record_list);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		await logEventsAndPrint(`Error running rating_abuse checks for user ID "${user_id}": ${message}`, 'errLog.txt');
@@ -350,6 +354,8 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
  * If yes, append entry to suspicion_level_record_list.
  */
 function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key: number] : number }, suspicion_level_record_list: SuspicionLevelRecord[]) {
+	if (user_id_list.length === 0) return;
+
 	let weight = 0;
 	for (const frequency of Object.values(user_id_frequency)) {
 		// Player is suspicious if he played against the same opponent several times
@@ -365,7 +371,13 @@ function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key
  * Check if the user is using the same IP address as his opponents.
  * If yes, append entry to suspicion_level_record_list.
  */
-function checkIPAddresses(user_ip_address_list: string[], opponent_ip_address_list: string[], suspicion_level_record_list: SuspicionLevelRecord[]) {
+function checkIPAddresses(
+	user_id_list: number[],
+	user_id_frequency: { [key: number] : number },
+	user_ip_address_list: string[],
+	opponent_ip_address_lists: { [ key: number ] : string[] },
+	suspicion_level_record_list: SuspicionLevelRecord[]
+) {
 	// Player logged out mid game
 	if (user_ip_address_list.length === 0) {
 		suspicion_level_record_list.push({
@@ -374,16 +386,17 @@ function checkIPAddresses(user_ip_address_list: string[], opponent_ip_address_li
 		});
 		return;
 	}
-	else if (opponent_ip_address_list.length === 0) return; 
+	else if (user_id_list.length === 0 || Object.keys(opponent_ip_address_lists).length === 0) return; 
 
 	let weight = 0;
-	for (const opponent_ip_address of opponent_ip_address_list) {
+	for (const user_id in opponent_ip_address_lists) {
 		// Player is suspicious if he uses a same IP adress as an opponent
-		if (user_ip_address_list.includes(opponent_ip_address)) weight++;
+		const common_ip_addresses = user_ip_address_list.filter(ip_address => opponent_ip_address_lists[user_id]!.includes(ip_address));
+		if (common_ip_addresses.length > 0) weight += user_id_frequency[user_id] ?? 0;
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'ip_addresses',
-		weight: 2 * weight / opponent_ip_address_list.length // rescale to [0,2]
+		weight: 2 * weight / user_id_list.length // rescale to [0,2]
 	});
 }
 
