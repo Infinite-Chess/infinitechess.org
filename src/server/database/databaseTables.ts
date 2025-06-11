@@ -13,6 +13,7 @@ import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { migrateRefreshTokensToTable } from './migrateRefreshTokens.js';
+import { expandMembersTableForVerification } from './migrateVerification.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -305,6 +306,7 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
+	expandMembersTableForVerification(); // DELETE AFTER UPDATE 1.7!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	migrateMembersToPlayerStatsTable();
