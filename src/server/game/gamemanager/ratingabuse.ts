@@ -10,9 +10,10 @@
  */
 
 import { getRecentNRatedGamesForUser, getOpponentsOfUserFromGames } from "../../database/playerGamesManager.js";
+import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
+import { findRefreshTokensForUsers } from "../../database/refreshTokenManager.js";
 import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
 import { getMultipleGameData } from "../../database/gamesManager.js";
 import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
@@ -187,9 +188,29 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	}
 	// console.log(gameInfoList);
 
+	// Get a list of the user_ids of the previous opponents of the player
 	const opponentPlayerGamesEntries = getOpponentsOfUserFromGames(user_id, game_id_list, ['user_id']);
-	const user_id_list = opponentPlayerGamesEntries.map(entry => entry.user_id);
-	console.log(user_id_list);
+	const user_id_list = opponentPlayerGamesEntries.map(entry => entry.user_id!);
+	const unique_user_id_list = [...new Set(user_id_list)];
+
+	// Dictionary of frequencies of user_ids in user_id_list
+	const user_id_frequency: { [key: number] : number } = {};
+	for (const user_id of user_id_list) {
+		user_id_frequency[user_id] = (user_id_frequency[user_id] || 0) + 1;
+	}
+
+	// Get the refresh tokens of the user and all his opponents
+	const refreshTokenEntries = findRefreshTokensForUsers([user_id].concat(unique_user_id_list));
+	const user_ip_address_list: string[] = []; // ip_addresses of the user
+	const opponent_ip_address_list: string[] = []; // ip_addresses of his unique opponents
+	for (const refreshToken of refreshTokenEntries) {
+		if (refreshToken.ip_address === null) continue;
+
+		// If the refresh token belongs to the user, add his IP address to user_ip_address_list
+		if (refreshToken.user_id === user_id) user_ip_address_list.push(refreshToken.ip_address);
+		// Else, add the IP address to the opponent_ip_address_list, as many times as dictated by the user_id_frequency dictionary
+		else if (refreshToken.user_id in user_id_frequency) opponent_ip_address_list.push(...Array(user_id_frequency[refreshToken.user_id]).fill(refreshToken.ip_address));
+	}
 
 
 	// Handcrafted game suspicion checking ------------------------------------------
@@ -203,6 +224,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	checkMoveCounts(gameInfoList, suspicion_level_record_list);
 	checkDurations(gameInfoList, suspicion_level_record_list);
 	checkClockAtEnd(gameInfoList, suspicion_level_record_list);
+	// checkIPAddresses(user_ip_address_list, opponent_ip_address_list);
 	
 	/** Sum of all suspicion weights in suspicion_level_record_list */
 	const suspicion_total_weight = suspicion_level_record_list.map(entry => entry.weight).reduce((acc, cur) => acc + cur, 0);

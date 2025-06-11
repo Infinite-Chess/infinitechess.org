@@ -44,6 +44,22 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
 }
 
 /**
+ * Finds refresh token entries in the database associated with a list of user_ids
+ * @param user_id_list - A list of user IDs
+ * @returns A list of RefreshTokenRecords connected to the users in the user_id_list
+ */
+export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenRecord[] {
+
+	const placeholders = user_id_list.map(() => '?').join(', ');
+	const query = `
+        SELECT token, user_id, created_at, expires_at, ip_address
+        FROM refresh_tokens
+        WHERE user_id IN (${placeholders})
+    `;
+	return db.all<RefreshTokenRecord>(query, user_id_list);
+}
+
+/**
  * Adds a new refresh token record to the database.
  * @param req - The Express request object to get the IP address.
  * @param userId - The ID of the user the token belongs to.
