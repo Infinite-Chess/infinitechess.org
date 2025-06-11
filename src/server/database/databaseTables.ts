@@ -115,9 +115,11 @@ function generateTables(): void {
 			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
 			login_count INTEGER NOT NULL DEFAULT 0,                        
 			preferences TEXT,                        
-			verification TEXT, 
 			username_history TEXT,
-			checkmates_beaten TEXT NOT NULL DEFAULT ''
+			checkmates_beaten TEXT NOT NULL DEFAULT '',
+			is_verified INTEGER NOT NULL DEFAULT 0,
+			verification_code TEXT,
+			is_verification_notified INTEGER NOT NULL DEFAULT 0
 		);
 	`);
 
