@@ -346,6 +346,7 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key: number] : number }, suspicion_level_record_list: SuspicionLevelRecord[]) {
 	let weight = 0;
 	for (const frequency of Object.values(user_id_frequency)) {
+		// Player is suspicious if he played against the same opponent several times
 		if (frequency > 1) weight += frequency ** 2;
 	}
 	if (weight > 0) suspicion_level_record_list.push({
@@ -371,6 +372,7 @@ function checkIPAddresses(user_ip_address_list: string[], opponent_ip_address_li
 
 	let weight = 0;
 	for (const opponent_ip_address of opponent_ip_address_list) {
+		// Player is suspicious if he uses a same IP adress as an opponent
 		if (user_ip_address_list.includes(opponent_ip_address)) weight++;
 	}
 	if (weight > 0) suspicion_level_record_list.push({
