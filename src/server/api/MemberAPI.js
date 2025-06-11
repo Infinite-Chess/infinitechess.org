@@ -1,4 +1,6 @@
 
+// src/server/api/MemberAPI.js
+
 // Route
 // Fetched by member script.
 // Sends the client the information about the member they are currently profile viewing.

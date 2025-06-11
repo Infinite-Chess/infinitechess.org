@@ -1,4 +1,6 @@
 
+// src/server/controllers/createAccountController.ts
+
 /*
  * This module handles create account form data,
  * verifying the data, creating the account,

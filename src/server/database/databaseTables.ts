@@ -1,4 +1,6 @@
 
+// src/server/database/databaseTables.ts
+
 /**
  * This script creates our database tables if they aren't already present.
  */
