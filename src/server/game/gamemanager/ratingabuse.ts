@@ -222,12 +222,17 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	const suspicion_level_record_list: SuspicionLevelRecord[] = [];
 	
 	// Run various checks and add entries to suspicion_level_record_list, if necessary
-	checkCloseGamePairs(gameInfoList, suspicion_level_record_list);
-	checkMoveCounts(gameInfoList, suspicion_level_record_list);
-	checkDurations(gameInfoList, suspicion_level_record_list);
-	checkClockAtEnd(gameInfoList, suspicion_level_record_list);
-	checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
-	checkIPAddresses(user_ip_address_list, opponent_ip_address_list, suspicion_level_record_list);
+	try {
+		checkCloseGamePairs(gameInfoList, suspicion_level_record_list);
+		checkMoveCounts(gameInfoList, suspicion_level_record_list);
+		checkDurations(gameInfoList, suspicion_level_record_list);
+		checkClockAtEnd(gameInfoList, suspicion_level_record_list);
+		checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
+		checkIPAddresses(user_ip_address_list, opponent_ip_address_list, suspicion_level_record_list);
+	} catch (error) {
+		logEventsAndPrint(`Error running rating_abuse checks for user ID "${user_id}": ${error.message}`, 'errLog.txt');
+		return;
+	}
 	
 	/** Sum of all suspicion weights in suspicion_level_record_list */
 	const suspicion_total_weight = suspicion_level_record_list.map(entry => entry.weight).reduce((acc, cur) => acc + cur, 0);
