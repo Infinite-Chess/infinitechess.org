@@ -15,7 +15,6 @@ import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { addEntryToRatingAbuseTable, isEntryInRatingAbuseTable, getRatingAbuseData, updateRatingAbuseColumns } from "../../database/ratingAbuseManager.js";
 import { getMultipleGameData } from "../../database/gamesManager.js";
 import timeutil from "../../../client/scripts/esm/util/timeutil.js";
-// @ts-ignore
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
 
 
