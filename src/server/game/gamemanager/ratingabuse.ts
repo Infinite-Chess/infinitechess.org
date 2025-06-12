@@ -392,7 +392,7 @@ function checkIPAddresses(
 	if (user_ip_address_list.length === 0) {
 		suspicion_level_record_list.push({
 			category: 'ip_addresses',
-			weight: 2
+			weight: 1
 		});
 		return;
 	}
@@ -406,7 +406,7 @@ function checkIPAddresses(
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'ip_addresses',
-		weight: 2 * weight / user_id_list.length // rescale to [0,2]
+		weight: weight / user_id_list.length // rescale to [0,1]
 	});
 }
 
