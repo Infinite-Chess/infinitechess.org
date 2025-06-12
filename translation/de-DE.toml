@@ -1,6 +1,6 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "54"
+version = "62"
 maintainer = "Chaosfanmaster44"
 
 [header]
@@ -51,9 +51,9 @@ title = "Unendliches Schach | Startseite - Die offizielle Website" # The tab tit
 secondary_title = "Die offizielle Website für Live-Spiele!"
 what_is_it_title = "Was ist das?"
 what_is_it_pargaraphs = [
-"Unendliches Schach ist eine Schachvariante, bei der das Brett keinen Rand hat, viel größer als Ihr vertrautes 8x8-Brett. Die Dame, Türme und Läufer haben <em>keine Begrenzung</em>, wie weit sie pro Zug ziehen können. Wählen Sie eine beliebige natürliche Zahl bis unendlich!",
-"Ohne Einschränkung der Zugweite sind Stellungen möglich, bei denen die Doomsday-Uhr oder Schachmatt-in-<em>#</em>-Zahl durch die erste unendliche Ordinalzahl, <strong>ω</strong> (<em>Omega</em>), dargestellt wird. Tatsächlich haben Forscher zeigen können, dass die Schachmatt-Uhr den Wert <strong>jeder</strong> abzählbaren Ordinalzahl annehmen kann!",
-"Wie Sie sich vorstellen können, gibt es eine unendliche Anzahl an Startkonfigurationen, von denen Sie viele kompetitiv spielen können! Ihr Endziel ist immer noch Schachmatt, was neue Taktiken erfordert, da es keine Ränder gibt, an die der feindliche König gedrängt werden kann. Ein Spiel dauert normalerweise nicht viel länger als normale Schachpartien. Bauern wandeln weiterhin auf der ersten bzw. achten Reihe um!",
+"Unendliches Schach ist eine Schachvariante, bei der das Brett keinen Rand hat, und somit viel größer als das vertraute 8x8-Brett ist. Die Dame, Türme und Läufer haben <em>keine Begrenzung</em> darin, wie weit sie pro Zug ziehen können. Wählen Sie eine beliebige natürliche Zahl bis zur Unendlichkeit!",
+"Ohne Einschränkung der Zugweite sind Stellungen möglich, bei denen die Schachmatt-Uhr oder Schachmatt-in-<em>#</em>-Zahl durch die erste unendliche Ordinalzahl, <strong>ω</strong> (<em>Omega</em>), dargestellt wird. Tatsächlich haben Forscher zeigen können, dass die Schachmatt-Uhr den Wert <strong>jeder</strong> abzählbaren Ordinalzahl annehmen kann!",
+"Wie Sie sich vorstellen können, gibt es eine unendliche Anzahl an möglichen Startkonfigurationen, von denen Sie viele auf dieser Webseite kompetitiv spielen können! Ihr Endziel ist immer noch Schachmatt, was neue Taktiken erfordert, da es keine Ränder gibt, an die der feindliche König gedrängt werden kann. Ein Spiel dauert normalerweise nicht viel länger als normale Schachpartien. Bauern wandeln weiterhin auf der ersten bzw. achten Reihe um!",
 ]
 how_to_title = "Wie kann ich spielen?"
 how_to_paragraph = ["Die aktuelle Version 1.6 ist auf der Seite ","Spielen"," verfügbar!"]
@@ -151,6 +151,14 @@ js-username_tooshort = "Der Benutzername muss mindestens 3 Zeichen lang sein"
 js-username_wrongenc = "Der Benutzername darf nur Groß- und Kleinbuchstaben von A bis Z und Zahlen von 0 bis 9 enthalten"
 js-email_invalid = "Dies ist keine gültige E-Mail"
 js-email_inuse = "Diese E-Mail ist bereits in Verwendung"
+
+[reset-password.javascript]
+js-pwd_no_match = "Die Passwörter stimmen nicht überein."
+reset-password = "Passwort zurücksetzen"
+processing = "In Bearbeitung..."
+network-error = "Es ist ein Netzwerkfehler aufgetreten. Bitte versuchen Sie es erneut."
+
+[password-validation]
 js-pwd_incorrect_format = "Passwort hat ein falsches Format"
 js-pwd_too_short = "Passwort muss mindestens 6 Zeichen lang sein"
 js-pwd_too_long = "Passwort darf nicht länger als 72 Zeichen sein"
@@ -233,7 +241,7 @@ void = {name="Leere", description="Eine neutrale Figur (nicht von einem Spieler 
 title = "Übung - Schachmatts"
 play = "Spielen"
 back = "Zurück"
-difficulty = "Schwierigkeitsgrad"
+difficulty = "Schwierigkeit"
 
 [play.play-menu]
 title = "Spielen - Online"
@@ -355,7 +363,6 @@ bigints_unsupported = "BigInts werden nicht unterstützt. Bitte aktualisieren Si
 shaders_failed = "Shader-Programm konnte nicht initialisiert werden:"
 failed_compiling_shaders = "Beim Kompilieren der Shader ist ein Fehler aufgetreten:"
 # Checkmate Practice
-
 versus = "gegen"
 easy = "Leicht"
 medium = "Mittel"
@@ -372,6 +379,7 @@ checkmate_gold_unearned = "Lösen Sie 100% aller Übungs-Schachmattes, um dieses
 [play.javascript.copypaste]
 copied_game = "Spiel in Zwischenablage kopiert!"
 cannot_paste_in_public = "Spiel kann nicht in einem öffentlichen Match eingefügt werden!"
+cannot_paste_in_rated = "Spiel kann nicht in einem gewerteten Match eingefügt werden!"
 cannot_paste_in_engine = "Spiel kann nicht in einem Engine-Match eingefügt werden!"
 cannot_paste_after_moves = "Spiel kann nicht eingefügt werden, nachdem gezogen wurde!"
 clipboard_denied = "Zwischenablage-Berechtigung verweigert. Dies könnte Ihr Browser sein."
@@ -446,7 +454,6 @@ insuffmat = "Unzureichendes Material"
 royalcapture = "Königsschlagen"
 allroyalscaptured = "Alle Könige geschlagen"
 allpiecescaptured = "Alle Figuren geschlagen"
-threecheck = "Drei-Schach"
 koth = "König des Hügels"
 resignation = "Aufgabe"
 agreement = "Vereinbarung"
@@ -462,7 +469,6 @@ you_disconnect = "Sie haben gewonnen durch Verlassen!"
 you_royalcapture = "Sie haben durch Schlagen des Königs gewonnen!"
 you_allroyalscaptured = "Sie haben gewonnen, da alle Könige geschlagen wurden!"
 you_allpiecescaptured = "Sie haben gewonnen, da alle Figuren geschlagen wurden!"
-you_threecheck = "Sie haben durch Drei-Schach gewonnen!"
 you_koth = "Sie haben durch König des Hügels gewonnen!"
 you_generic = "Sie haben gewonnen!"
 draw_stalemate = "Remis durch Patt!"
@@ -479,30 +485,24 @@ opponent_disconnect = "Sie haben verloren durch Verlassen!"
 opponent_royalcapture = "Sie haben durch Schlagen des Königs verloren!"
 opponent_allroyalscaptured = "Sie haben verloren, da alle Könige gefangen wurden!"
 opponent_allpiecescaptured = "Sie haben verloren, da alle Figuren gefangen wurden!"
-opponent_threecheck = "Sie haben durch Drei-Schach verloren!"
 opponent_koth = "Sie haben durch König des Hügels verloren!"
 opponent_generic = "Sie haben verloren!"
 white_checkmate = "Weiß gewinnt durch Schachmatt!"
 black_checkmate = "Schwarz gewinnt durch Schachmatt!"
-bug_checkmate = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch Schachmatt."
 white_time = "Weiß gewinnt auf Zeit!"
 black_time = "Schwarz gewinnt auf Zeit!"
-bug_time = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete auf Zeit."
+white_resignation = "Weiß gewinnt durch Aufgabe!"
+black_resignation = "Schwarz gewinnt durch Aufgabe!"
+white_disconnect = "Weiß gewinnt durch Verlassen!"
+black_disconnect = "Schwarz gewinnt durch Verlassen!"
 white_royalcapture = "Weiß gewinnt durch Schlagen des Königs!"
 black_royalcapture = "Schwarz gewinnt durch Schlagen des Königs!"
-bug_royalcapture = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch Schlagen des Königs."
 white_allroyalscaptured = "Weiß gewinnt, da alle Könige geschlagen wurden!"
 black_allroyalscaptured = "Schwarz gewinnt, da alle Könige geschlagen wurden!"
-bug_allroyalscaptured = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete, indem alle Könige geschlagen wurden."
 white_allpiecescaptured = "Weiß gewinnt, da alle Figuren geschlagen wurden!"
 black_allpiecescaptured = "Schwarz gewinnt, da alle Figuren geschlagen wurden!"
-bug_allpiecescaptured = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete, indem alle Figuren geschlagen wurden."
-white_threecheck = "Weiß gewinnt durch Drei-Schach!"
-black_threecheck = "Schwarz gewinnt durch Drei-Schach!"
-bug_threecheck = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch Drei-Schach."
 white_koth = "Weiß gewinnt durch König des Hügels!"
 black_koth = "Schwarz gewinnt durch König des Hügels!"
-bug_koth = "Ein Fehler ist aufgetreten, bitte melden Sie ihn. Spiel endete durch König des Hügels."
 bug_generic = "Ein Fehler ist aufgetreten, bitte melden Sie ihn!"
 
 [terms]
@@ -559,8 +559,21 @@ thanks = "Vielen Dank!"
 title = "Anmelden" # The tab name
 username = "Benutzername:"
 password = "Passwort:"
-forgot_password = ["Passwort vergessen? ", "E-Mail an uns."]
 login_button = "Anmelden"
+send_reset_link = "Zurücksetzungslink senden"
+forgot_question = "Passwort vergessen?"
+back_to_login = "Zurück zur Anmeldung"
+forgot_instruction = "Bitte geben Sie die mit Ihrem Konto verbundene E-Mail-Adresse ein."
+
+[login.javascript]
+network-error = "Es ist ein Netzwerkfehler aufgetreten. Bitte versuchen Sie es erneut."
+
+[reset_password]
+title = "Zurücksetzung Ihres Passworts"
+instruction = "Bitte geben Sie Ihr neues Passwort ein und bestätigen Sie es."
+new_password = "Neues Passwort"
+confirm_password = "Bestätigen Sie Ihr Passwort"
+submit_button = "Passwort zurücksetzen"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Ungültige Parameter wurden empfangen."
@@ -574,8 +587,6 @@ more_dev_logs = ["Weitere Entwickler-Logs werden auf dem ", "offiziellen Discord
 [server.javascript]
 ws-invalid_username = "Benutzername ist ungültig"
 ws-incorrect_password = "Passwort ist falsch"
-ws-username_and_password_required = "Benutzername und Passwort sind erforderlich."
-ws-username_and_password_string = "Benutzername und Passwort müssen Zeichenketten sein."
 ws-login_failure_retry_in = "Anmeldung fehlgeschlagen, versuchen Sie es erneut in"
 ws-seconds = "Sekunden" # unit of time
 ws-second = "Sekunde" # unit of time
@@ -592,14 +603,13 @@ ws-you_are_banned = "Sie sind gesperrt."
 ws-password_length = "Passwort muss 6 bis 72 Zeichen lang sein"
 ws-password_format = "Passwort hat ein falsches Format"
 ws-password_password = "Passwort darf nicht 'password' sein"
-ws-member_not_found = "Mitglied nicht gefunden"
+ws-password-reset-link-sent = "Falls ein Konto mit dieser E-Mail Adresse existiert, wurde ein Link zur Zurücksetzung des Passworts gesendet."
+ws-password-change-success = "Ihr Passwort wurde erfolgreich zurückgesetzt. Sie werden in Kürze auf die Anmeldeseite weitergeleitet."
+ws-password-reset-token-invalid = "Token zum Zurücksetzen des Passworts ist ungültig oder abgelaufen."
 ws-forbidden_wrong_account = "Zugang verweigert. Dies ist nicht Ihr Konto."
 ws-deleting_account_not_found = "Konto konnte nicht gelöscht werden. Konto nicht gefunden."
+ws-deleting_account_in_game = "Sie können Ihr Konto nicht löschen, während Sie noch mit einem Online-Spiel verbunden sind."
 ws-server_error = "Entschuldigung, es gab einen Serverfehler! Bitte gehen Sie zurück."
-ws-unable_to_identify_client_ip = "Client-IP-Adresse kann nicht identifiziert werden"
-ws-you_are_banned_by_server = "Sie sind gesperrt"
-ws-too_many_requests_to_server = "Zu viele Anfragen. Versuchen Sie es bald erneut."
-ws-bad_request = "Ungültige Anfrage"
 ws-not_found = "404 Nicht gefunden"
 ws-forbidden = "Verboten."
 ws-already_in_game = "Sie sind bereits in einem Spiel."
@@ -607,8 +617,6 @@ ws-server_restarting = "Der Server startet in" # The server inserts a number imm
 ws-server_under_maintenance = "Server ist wegen Wartungsarbeiten offline. Schauen Sie bald wieder vorbei!" # Can be changed at will to change the display message.
 ws-minutes = "Minuten" # unit of time
 ws-minute = "Minute" # unit of time
-ws-no_abort_game_over = "Spiel kann nicht abgebrochen werden, es ist bereits beendet."
-ws-no_abort_after_moves = "Spiel kann nicht abgebrochen werden, es wurden bereits mindestens 2 Züge gespielt."
 ws-game_aborted_cheating = "Spiel wegen wahrscheinlichem Betrug abgebrochen."
 ws-cannot_resign_finished_game = "Spiel kann nicht aufgegeben werden, es ist bereits beendet."
 ws-invalid_code = "Ungültiger Code!" # Invite code doesn't match any existing invites
