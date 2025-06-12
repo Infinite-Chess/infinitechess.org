@@ -60,7 +60,7 @@ how_to_paragraph = ["Die aktuelle Version 1.6 ist auf der Seite ","Spielen"," ve
 about_title = "Über das Projekt"
 about_paragraphs = [
 "Ich bin Naviary. Seit ich das Unendliche Schach (das Konzept existierte lange vor dieser Website) zum ersten Mal entdeckte, hat es mich sehr fasziniert und mit seinen Möglichkeiten begeistert! Bis vor kurzem war das Spielen ziemlich schwierig, da die Spieler Bilder des aktuellen Brettes erstellen und für jeden gespielten Zug hin und her senden mussten. Deswegen wissen wenige davon oder haben es spielen können.",
-["Mein Ziel ist es, eine Möglichkeit zu schaffen, Unendliches Schach für jeden leicht spielbar zu machen und eine Community darum aufzubauen. Ich habe unzählige Stunden meiner eigenen Zeit für diese Website aufgewendet, sie gepflegt und das Spiel entwickelt. Ich habe viele weitere Ideen, die mich noch einige Zeit beschäftigen werden. Obwohl ich dies kostenlos anbieten möchte, hat das Leben seine Anforderungen. Um mich finanziell zu unterstützen, ziehen Sie bitte in Betracht, meinem ", "Patreon", " beizutreten."]
+["Mein Ziel ist es, eine Möglichkeit zu schaffen, Unendliches Schach für jeden leicht spielbar zu machen und eine Community darum herum aufzubauen. Ich habe unzählige Stunden meiner eigenen Zeit für diese Website aufgewendet, sie gepflegt und das Spiel entwickelt. Ich habe viele weitere Ideen, die mich noch einige Zeit beschäftigen werden. Obwohl ich dies kostenlos anbieten möchte, hat das Leben seine Anforderungen. Um mich finanziell zu unterstützen, ziehen Sie bitte in Betracht, meinem ", "Patreon", " beizutreten."]
 ]
 patreon_title = "Patreon Unterstützer"
 github_title = "Github Mitwirkende"
@@ -123,7 +123,7 @@ verify_confirm = "Vielen Dank! Ihr Konto wurde verifiziert."
 joined = "Beigetreten:"
 seen = ["Zuletzt gesehen:", " her"]
 practice_progress = "Fortschritt im Übungsmodus:"
-ranked_elo = "Elo:"
+ranked_elo = "Rating:"
 infinity_leaderboard_position = "Globale Rangliste:"
 infinity_leaderboard_rating_deviation = "Rating-Abweichung:"
 reveal_info = "Kontoinformationen anzeigen"
@@ -522,7 +522,7 @@ fair_play_rules = [
 "Den Code in irgendeiner Weise modifizieren oder manipulieren, einschließlich, aber nicht beschränkt auf: Verwendung von Konsolenbefehlen, lokalen Überschreibungen, benutzerdefinierten Skripten, Modifikation von HTTP-Anfragen, WebSocket-Nachrichten usw. Dies kann geschehen, um das Spiel absichtlich zu stören, illegale Züge zu spielen oder sich einen Vorteil zu verschaffen.",
 "Bugs oder Glitches ausnutzen, um das Spiel abzubrechen, sich einen Vorteil zu verschaffen oder das Spiel anderweitig unspielbar zu machen. Dies kann das Bewegen einer Figur über extreme Distanzen, wie 10^15 vom Ursprung entfernt, beinhalten.",
 "In gewerteten Spielen Hilfe/Ratschläge von einer anderen Person oder einem Programm bezüglich Ihrer Züge erhalten. (Das Erstellen einer Engine ist in Ordnung und erwünscht, aber Sie müssen deren Verwendung auf ungewertete Gelegenheitsspiele beschränken)",
-"Elo-Punkte mit anderen Personen tauschen, indem Sie absichtlich verlieren, um die Elo Ihres Gegners zu erhöhen, oder indem Sie Elo-Punkte von einem Gegner erhalten, der beabsichtigt zu verlieren, um Ihre eigene Wertung zu erhöhen. Dies missbraucht das System und führt zu ungenauen Wertungen gemäß Ihrem Fähigkeitsniveau."
+"Rating-Punkte mit anderen Personen tauschen, indem Sie absichtlich verlieren, um das Rating Ihres Gegners zu erhöhen, oder indem Sie Rating-Punkte von einem Gegner erhalten, der beabsichtigt zu verlieren, um Ihre eigene Wertung zu erhöhen. Dies missbraucht das System und führt zu ungenauen Wertungen gemäß Ihrem Fähigkeitsniveau."
 ]
 cleanliness_header = "Sauberkeit"
 cleanliness_rules = [
