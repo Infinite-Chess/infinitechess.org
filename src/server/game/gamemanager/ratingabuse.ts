@@ -213,8 +213,8 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 		// Else, add the IP address to the opponent_ip_address_list
 		else if (refreshToken.user_id in user_id_frequency) {
-			if (opponent_ip_address_lists[refreshToken.user_id] === undefined) opponent_ip_address_lists[refreshToken.user_id] = [refreshToken.ip_address];
-			else opponent_ip_address_lists[refreshToken.user_id]!.push(refreshToken.ip_address);
+			opponent_ip_address_lists[refreshToken.user_id] = opponent_ip_address_lists[refreshToken.user_id] || []; // Initialize if undefined
+			opponent_ip_address_lists[refreshToken.user_id]!.push(refreshToken.ip_address);
 		}
 	}
 

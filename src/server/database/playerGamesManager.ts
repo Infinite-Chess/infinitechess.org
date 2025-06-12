@@ -205,7 +205,7 @@ function getOpponentsOfUserFromGames(user_id: number, game_id_list: number[], co
 
 	try {
 		// Execute the query and fetch result
-		const rows = db.all<PlayerGamesRecord>(query, [user_id].concat(game_id_list));
+		const rows = db.all<PlayerGamesRecord>(query, [user_id, ...game_id_list]);
 
 		// If no rows found, return undefined
 		if (!rows || rows.length === 0) {
@@ -217,7 +217,7 @@ function getOpponentsOfUserFromGames(user_id: number, game_id_list: number[], co
 		return rows;
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error getting all player_games entries for game_id_list "${game_id_list}": ${message}`, 'errLog.txt');
+		logEventsAndPrint(`Error getting all player_games entries for game_id_list "${jsutil.ensureJSONString(game_id_list)}": ${message}`, 'errLog.txt');
 		return [];
 	}
 }
