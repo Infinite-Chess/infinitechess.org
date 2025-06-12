@@ -1,7 +1,7 @@
 name = "Deutsch" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "62"
-maintainer = "Chaosfanmaster44"
+maintainer = "estetique_bs"
 
 [header]
 home = "Unendliches Schach"
