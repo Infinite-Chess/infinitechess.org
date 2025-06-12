@@ -287,7 +287,7 @@ function getMultipleMemberDataByCriteria(columns, searchKey, searchValueList, { 
 	}
 
 	// Check if the searchKey and searchValueList are valid
-	if (typeof searchKey !== 'string' || typeof searchValueList !== 'object') {
+	if (typeof searchKey !== 'string' || !Array.isArray(searchValueList)) {
 		logEventsAndPrint(`When getting multiple member data by criteria, searchKey must be a string and searchValueList must be a list! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValueList)}`, 'errLog.txt');
 		return [];
 	}
