@@ -34,12 +34,12 @@ import type { Game } from '../TypeDefinitions.js';
  * (X) Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
  * (X) Opponents use the same IP address. OR The player has no active refresh tokens (logged out mid-game)
  * (X) Many games against always the same opponents
+ * (X) Opponent accounts brand new
  * 
  * Win streaks, especially against the same opponents
  * Rapid improvement over days/weeks that should take months, especially if account new
  * Low total rated loss count
  * Opponents have low total casual matches, and low total rated wins
- * Opponent accounts brand new
  * Excessive resignation terminations
  * Cheat reports against them
  */
