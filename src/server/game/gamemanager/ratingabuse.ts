@@ -19,6 +19,7 @@ import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
 
 
+import type { RefreshTokenRecord } from "../../database/refreshTokenManager.js";
 // @ts-ignore
 import type { Game } from '../TypeDefinitions.js';
 
@@ -202,7 +203,16 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	}
 
 	// Get the refresh tokens of the user and all his opponents
-	const refreshTokenEntries = findRefreshTokensForUsers([user_id].concat(unique_user_id_list));
+	let refreshTokenEntries: RefreshTokenRecord[];
+	try {
+		refreshTokenEntries = findRefreshTokensForUsers([user_id, ...unique_user_id_list]);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		await logEventsAndPrint(`Error fetching refresh token entries for users "${JSON.stringify([user_id, ...unique_user_id_list])}": ${message}`, 'errLog.txt');
+		refreshTokenEntries = [];
+	}
+
+	// Extract the IP addresses of the user and his opponents from the refresh tokens
 	const user_ip_address_list: string[] = []; // ip_addresses of the user
 	const opponent_ip_address_lists: { [ key: number ] : string[] } = {}; // ip_addresses of his unique opponents
 	for (const refreshToken of refreshTokenEntries) {
