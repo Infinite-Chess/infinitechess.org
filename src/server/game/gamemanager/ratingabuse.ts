@@ -17,6 +17,8 @@ import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMultipleGameData } from "../../database/gamesManager.js";
 import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
+// @ts-ignore
+import { getMultipleMemberDataByCriteria } from "../../database/memberManager.js";
 
 
 import type { RefreshTokenRecord } from "../../database/refreshTokenManager.js";
@@ -65,6 +67,9 @@ const SUSPICIOUS_MOVE_COUNT = 25;
 /** Games lasting less than this time on the server have a nonzero suspicion score. */
 const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 60 * 3; // 3 minutes
 
+/** Opponents with a younger account age than this count as suspicious. */
+const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
+
 
 
 // Types Definitions ---------------------------------------------------------------------
@@ -93,9 +98,15 @@ type RatingAbuseRelevantGamesRecord = {
 /** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
 type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord & RatingAbuseRelevantGamesRecord;
 
+/** Relevant entries of a MemberRecord object, which are used for the rating abuse calculation */
+type RatingAbuseRelevantMemberRecord = { 
+	user_id: number,
+	joined: string
+};
+
 /** Object containing information about analysis of suspicion level of some characteristic */
 type SuspicionLevelRecord = {
-	category: 'close_game_pairs' | 'move_count' | 'duration' | 'clock_at_end' | 'same_opponents' | 'ip_addresses',
+	category: 'close_game_pairs' | 'move_count' | 'duration' | 'clock_at_end' | 'same_opponents' | 'ip_addresses' | 'opponent_account_age',
 	weight: number,
 };
 
@@ -122,7 +133,12 @@ async function measureRatingAbuseAfterGame(game: Game) {
 			continue;
 		}
 
-		await measurePlayerRatingAbuse(user_id, leaderboard_id);
+		try {
+			await measurePlayerRatingAbuse(user_id, leaderboard_id);
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			await logEventsAndPrint(`Error running rating_abuse checks for user ID "${user_id}" on leaderboard ${leaderboard_id}: ${message}`, 'errLog.txt');
+		}
 	}
 }
 
@@ -228,6 +244,13 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		}
 	}
 
+	// Get relevant MemberRecords of the opponents from the members table
+	const opponentInfoList = getMultipleMemberDataByCriteria(
+		['user_id', 'joined'],
+		'user_id',
+		unique_user_id_list
+	) as RatingAbuseRelevantMemberRecord[];
+
 
 	// Handcrafted game suspicion checking ------------------------------------------
 
@@ -236,18 +259,13 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 	const suspicion_level_record_list: SuspicionLevelRecord[] = [];
 	
 	// Run various checks and add entries to suspicion_level_record_list, if necessary
-	try {
-		checkCloseGamePairs(gameInfoList, suspicion_level_record_list);
-		checkMoveCounts(gameInfoList, suspicion_level_record_list);
-		checkDurations(gameInfoList, suspicion_level_record_list);
-		checkClockAtEnd(gameInfoList, suspicion_level_record_list);
-		checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
-		checkIPAddresses(user_id_list, user_id_frequency, user_ip_address_list, opponent_ip_address_lists, suspicion_level_record_list);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		await logEventsAndPrint(`Error running rating_abuse checks for user ID "${user_id}": ${message}`, 'errLog.txt');
-		return;
-	}
+	checkCloseGamePairs(gameInfoList, suspicion_level_record_list);
+	checkMoveCounts(gameInfoList, suspicion_level_record_list);
+	checkDurations(gameInfoList, suspicion_level_record_list);
+	checkClockAtEnd(gameInfoList, suspicion_level_record_list);
+	checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
+	checkIPAddresses(user_id_list, user_id_frequency, user_ip_address_list, opponent_ip_address_lists, suspicion_level_record_list);
+	checkOpponentAccountAge(user_id_list, user_id_frequency, opponentInfoList, suspicion_level_record_list);
 	
 	/** Sum of all suspicion weights in suspicion_level_record_list */
 	const suspicion_total_weight = suspicion_level_record_list.map(entry => entry.weight).reduce((acc, cur) => acc + cur, 0);
@@ -406,6 +424,34 @@ function checkIPAddresses(
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'ip_addresses',
+		weight: weight / user_id_list.length // rescale to [0,1]
+	});
+}
+
+/** 
+ * Check if the user's opponents have newly created accounts
+ * If yes, append entry to suspicion_level_record_list.
+ */
+function checkOpponentAccountAge(
+	user_id_list: number[],
+	user_id_frequency: { [key: number] : number },
+	opponentInfoList: RatingAbuseRelevantMemberRecord[],
+	suspicion_level_record_list: SuspicionLevelRecord[]
+) {
+	if (user_id_list.length === 0) return;
+
+	const current_time_millis = Date.now();
+	let weight = 0;
+	for (const opponentInfo of opponentInfoList) {
+		// Player is suspicious if his opponent's account is less than a week old
+		const account_age_millis = Math.max(0, current_time_millis - timeutil.sqliteToTimestamp(opponentInfo.joined));
+		if (opponentInfo.user_id in user_id_frequency && account_age_millis < SUSPICIOUS_ACCOUNT_AGE_MILLIS) {
+			const fraction = account_age_millis / SUSPICIOUS_ACCOUNT_AGE_MILLIS; // fraction is in the interval [0, 1]
+			weight += (1 - fraction) * user_id_frequency[opponentInfo.user_id]!;
+		}
+	}
+	if (weight > 0) suspicion_level_record_list.push({
+		category: 'opponent_account_age',
 		weight: weight / user_id_list.length // rescale to [0,1]
 	});
 }
