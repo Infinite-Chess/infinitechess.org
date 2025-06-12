@@ -445,9 +445,9 @@ function checkOpponentAccountAge(
 	for (const opponentInfo of opponentInfoList) {
 		// Player is suspicious if his opponent's account is less than a week old
 		const account_age_millis = Math.max(0, current_time_millis - timeutil.sqliteToTimestamp(opponentInfo.joined));
-		if (opponentInfo.user_id in user_id_frequency && account_age_millis < SUSPICIOUS_ACCOUNT_AGE_MILLIS) {
+		if (account_age_millis < SUSPICIOUS_ACCOUNT_AGE_MILLIS) {
 			const fraction = account_age_millis / SUSPICIOUS_ACCOUNT_AGE_MILLIS; // fraction is in the interval [0, 1]
-			weight += (1 - fraction) * user_id_frequency[opponentInfo.user_id]!;
+			weight += (1 - fraction) * (user_id_frequency[opponentInfo.user_id] ?? 0);
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
