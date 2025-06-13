@@ -1,4 +1,6 @@
 
+// src/server/database/refreshTokenManager.ts
+
 /**
  * This module manages refresh tokens in the database, providing functions
  * to add, find, delete, and update them in the `refresh_tokens` table.
@@ -41,6 +43,21 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
         WHERE token = ?
     `;
 	return db.get<RefreshTokenRecord>(query, [token]);
+}
+
+/**
+ * Finds refresh token entries in the database associated with a list of user_ids
+ * @param user_id_list - A list of user IDs
+ * @returns A list of RefreshTokenRecords connected to the users in the user_id_list
+ */
+export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenRecord[] {
+	const placeholders = user_id_list.map(() => '?').join(', ');
+	const query = `
+        SELECT token, user_id, created_at, expires_at, ip_address
+        FROM refresh_tokens
+        WHERE user_id IN (${placeholders})
+    `;
+	return db.all<RefreshTokenRecord>(query, user_id_list);
 }
 
 /**
