@@ -122,11 +122,11 @@ main {
 /* Badge shine properties are in header.css since they are shared with badges on play page */
 
 
-#stats {
+.stats {
     padding: 12px 12px;
 }
 
-#stats p {
+.stats p {
     display: inline-block;
     margin: 0px 16px;
     line-height: 2em;
