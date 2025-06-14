@@ -8,7 +8,7 @@ import type { Move, MoveDraft, NullMove, castle, enpassant, promotion } from '..
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board } from '../logic/gamefile.js';
+import type { Game, Board, FullGame } from '../logic/gamefile.js';
 // @ts-ignore
 import type { GameRules } from '../variants/gamerules.js';
 
@@ -71,7 +71,7 @@ function isDecrementingLegal(boardsim: Board): boolean {
 /**
  * Tests if the provided index is out of range of the moves list length
  */
-function isIndexOutOfRange(moves: (Move | NullMove)[], index: number): boolean {
+function isIndexOutOfRange(moves: any[], index: number): boolean {
 	return index < -1 || index >= moves.length;
 }
 
@@ -119,7 +119,7 @@ function isIndexTheLastMove(moves: (Move | NullMove)[], index: number): boolean 
 
 /**
  * Gets the color of whos turn it is currently, or at the front of the game.
- * Depends on the turn order.
+ * Depends on the turn order. WILL NOT ACCOUNT FOR NULL MOVES.
  */
 function getWhosTurnAtFront(basegame: Game): Player {
 	return getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
@@ -246,6 +246,14 @@ function doesAnyPlayerGet2TurnsInARow(basegame: Game): boolean {
 function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
 }
+
+// /**
+//  * Gets if any null moves have been added to the board simulation.
+//  * We can test this way since null moves do not add anything to basegame.
+//  */
+// function areNullMovesPresent({basegame, boardsim}: FullGame): boolean {
+// 	return basegame.moves.length !== boardsim.moves.length;
+// }
 
 
 // ------------------------------------------------------------------------------
