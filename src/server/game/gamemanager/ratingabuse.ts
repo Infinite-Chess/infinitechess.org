@@ -99,7 +99,8 @@ type RatingAbuseRelevantGamesRecord = {
 type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord & RatingAbuseRelevantGamesRecord;
 
 /** Relevant entries of a MemberRecord object, which are used for the rating abuse calculation */
-type RatingAbuseRelevantMemberRecord = { 
+type RatingAbuseRelevantMemberRecord = {
+	username: string,
 	user_id: number,
 	joined: string
 };
@@ -128,13 +129,14 @@ async function measureRatingAbuseAfterGame(game: Game) {
 
 	for (const playerStr in game.players) {
 		const user_id = game.players[playerStr].identifier.user_id;
-		if (user_id === undefined) {
-			await logEventsAndPrint(`Unexpected: trying to access user_id of player in ranked game suspicion monitoring but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt');
+		const username = game.players[playerStr].identifier.member;
+		if (user_id === undefined || username === undefined) {
+			await logEventsAndPrint(`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${JSON.stringify(game)}`, 'errLog.txt');
 			continue;
 		}
 
 		try {
-			await measurePlayerRatingAbuse(user_id, leaderboard_id);
+			await measurePlayerRatingAbuse(user_id, username, leaderboard_id);
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
 			await logEventsAndPrint(`Error running rating_abuse checks for user ID "${user_id}" on leaderboard ${leaderboard_id}: ${message}`, 'errLog.txt');
@@ -146,7 +148,7 @@ async function measureRatingAbuseAfterGame(game: Game) {
  * Weights a specific user's probability of rating abuse on a specified leaderboard.
  * If it flags a user, it sends Naviary an email with data on them.
  */
-async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number) {
+async function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard_id: number) {
 
 	// If player is not in rating_abuse table, add him to it
 	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) addEntryToRatingAbuseTable(user_id, leaderboard_id);
@@ -186,7 +188,8 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
 	if (netRatingChange <= 0) {
-		await logEvents(`Innocent: Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}), but user net rating change is not positive: ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games. Game IDs: ${JSON.stringify(game_id_list)}.`, 'ratingAbuseLog.txt');
+		const messageText = `Innocent: Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id}, but user net rating change ${netRatingChange} is not positive in the last ${GAME_INTERVAL_TO_MEASURE} games. Game IDs: ${JSON.stringify(game_id_list)}.`;
+		await logEvents(messageText, 'ratingAbuseLog.txt');
 		return;
 	}
 
@@ -246,7 +249,7 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// Get relevant MemberRecords of the opponents from the members table
 	const opponentInfoList = getMultipleMemberDataByCriteria(
-		['user_id', 'joined'],
+		['username', 'user_id', 'joined'],
 		'user_id',
 		unique_user_id_list
 	) as RatingAbuseRelevantMemberRecord[];
@@ -272,12 +275,20 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 
 	// Player is suspicious and admin is notified if necessary
 	if (suspicion_total_weight >= SUSPICION_TOTAL_WEIGHT_THRESHHOLD) {
-		const messageText = `>>>>>>>>>>>>>>> GUILTY??? Suspicion total weight: ${suspicion_total_weight}. Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`;
-		await logEventsAndPrint(messageText, 'ratingAbuseLog.txt');
+		const messageText = `
+			>>>>>>>>>>>>>>> GUILTY??? Suspicion total weight: ${suspicion_total_weight}.
+			Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious!
+			Suspicion level record: ${JSON.stringify(suspicion_level_record_list, undefined, 2)}.
+			Opponent user_id_list: ${JSON.stringify(user_id_list)}.
+			OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
+			Game_id_list: ${JSON.stringify(game_id_list)}.
+			GameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
+		`;
+		await logEventsAndPrint(messageText.replace(/\s+/g, " "), 'ratingAbuseLog.txt'); // remove non-space whitespaces when logging to ratingAbuseLog.txt
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (rating_abuse_data.last_alerted_at === null || rating_abuse_data.last_alerted_at === undefined || Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >= SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS) {
-			const messageSubject = `Rating Abuse Warning: user_id ${user_id}`;
+			const messageSubject = `Rating Abuse Warning: user ${username}, user_id ${user_id}`;
 			sendRatingAbuseEmail(messageSubject, messageText);
 			// Update RatingAbuse table with last_alerted_at value
 			const last_alerted_at = timeutil.timestampToSqlite(Date.now());
@@ -285,9 +296,18 @@ async function measurePlayerRatingAbuse(user_id: number, leaderboard_id: number)
 		}
 	}
 	// Player is not suspicious
-	else await logEvents(`INNOCENT! Suspicion total weight: ${suspicion_total_weight}. Ran suspicion check for user (${user_id}) on leaderboard (${leaderboard_id}) with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, but user is not suspicious. Game IDs: ${JSON.stringify(game_id_list)}. Suspicion list: ${JSON.stringify(suspicion_level_record_list)}`, 'ratingAbuseLog.txt');
+	else {
+		const messageText = 
+			`INNOCENT! Suspicion total weight: ${suspicion_total_weight}. ` +
+			`Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! ` +
+			`Suspicion level record: ${JSON.stringify(suspicion_level_record_list)}. ` +
+			`Opponent user_id_list: ${JSON.stringify(user_id_list)}. ` +
+			`OpponentInfoList: ${JSON.stringify(opponentInfoList)}. ` +
+			`Game_id_list: ${JSON.stringify(game_id_list)}. ` +
+			`GameInfo list: ${JSON.stringify(gameInfoList)}.`;
+		await logEvents(messageText, 'ratingAbuseLog.txt');
+	}
 }
-
 
 /**
  * Check if the game dates are too close in proximity to each other
