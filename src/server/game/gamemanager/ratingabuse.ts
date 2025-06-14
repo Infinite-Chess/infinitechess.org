@@ -53,15 +53,23 @@ import type { Game } from '../TypeDefinitions.js';
 const GAME_INTERVAL_TO_MEASURE = 5;
 
 /** Total suspicion score which is enough to mark a user as suspicious. */
-const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 2.0;
+const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
 
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
 
-/** Two rated games started this close after each other have a nonzero suspicion score. */
-const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 4; // 4 minutes
+/**
+ * Two rated games started this close after each other have a nonzero suspicion score.
+ * 
+ * Slightly higher than {@link SUSPICIOUS_TIME_DURATION_MILLIS} to account for time to accept a new invite.
+ */
+const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 3.5; // 3.5 minutes
 
-/** Games with fewer moves than this have a nonzero suspicion score. */
+/**
+ * Games with fewer moves than this have a nonzero suspicion score.
+ * 
+ * Average move count per game is 38 moves.
+ */
 const SUSPICIOUS_MOVE_COUNT = 25;
 
 /** Games lasting less than this time on the server have a nonzero suspicion score. */
@@ -277,15 +285,15 @@ async function measurePlayerRatingAbuse(user_id: number, username: string, leade
 	// Player is suspicious and admin is notified if necessary
 	if (suspicion_total_weight >= SUSPICION_TOTAL_WEIGHT_THRESHHOLD) {
 		const messageText = `
-			>>>>>>>>>>>>>>> GUILTY??? Suspicion total weight: ${suspicion_total_weight}.
-			Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be cheating!
-			Suspicion level record: ${JSON.stringify(suspicion_level_record_list, undefined, 2)}.
-			Opponent user_id_list: ${JSON.stringify(user_id_list)}.
-			OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
-			Game_id_list: ${JSON.stringify(game_id_list)}.
-			GameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
+>>>>>> GUILTY??? Suspicion total weight: ${suspicion_total_weight}.
+Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be cheating!
+Suspicion level record: ${JSON.stringify(suspicion_level_record_list, undefined, 2)}.
+Opponent user_id_list: ${JSON.stringify(user_id_list)}.
+OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
+Game_id_list: ${JSON.stringify(game_id_list)}.
+\nGameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
 		`;
-		await logEventsAndPrint(messageText.replace(/\s+/g, " "), 'ratingAbuseLog.txt'); // remove non-space whitespaces when logging to ratingAbuseLog.txt
+		await logEventsAndPrint('\n' + messageText + '\n', 'ratingAbuseLog.txt'); // remove non-space whitespaces when logging to ratingAbuseLog.txt
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (rating_abuse_data.last_alerted_at === null || rating_abuse_data.last_alerted_at === undefined || Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >= SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS) {
@@ -299,13 +307,13 @@ async function measurePlayerRatingAbuse(user_id: number, username: string, leade
 	// Player is not suspicious
 	else {
 		const messageText = 
-			`Innocent? Suspicion total weight: ${suspicion_total_weight}. ` +
-			`Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user seems innocent.` +
-			`Suspicion level record: ${JSON.stringify(suspicion_level_record_list)}. ` +
-			`Opponent user_id_list: ${JSON.stringify(user_id_list)}. ` +
-			`OpponentInfoList: ${JSON.stringify(opponentInfoList)}. ` +
-			`Game_id_list: ${JSON.stringify(game_id_list)}. ` +
-			`GameInfo list: ${JSON.stringify(gameInfoList)}.`;
+`Innocent? Suspicion total weight: ${suspicion_total_weight}. ` +
+`Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user seems innocent.` +
+`Suspicion level record: ${JSON.stringify(suspicion_level_record_list)}. ` +
+`Opponent user_id_list: ${JSON.stringify(user_id_list)}. ` +
+`OpponentInfoList: ${JSON.stringify(opponentInfoList)}. ` +
+`Game_id_list: ${JSON.stringify(game_id_list)}. ` +
+`GameInfo list: ${JSON.stringify(gameInfoList)}.`;
 		await logEvents(messageText, 'ratingAbuseLog.txt');
 	}
 }
@@ -324,7 +332,7 @@ function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspic
 	if (close_game_pairs_amount > 0) {
 		suspicion_level_record_list.push({
 			category: 'close_game_pairs',
-			weight: close_game_pairs_amount / timestamp_differences.length, // rescale to [0,1]
+			weight: (close_game_pairs_amount / timestamp_differences.length) * 0.5, // rescale to [0,1]
 			comment: `Amount: ${close_game_pairs_amount}`
 		});
 	}
@@ -368,7 +376,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis <= SUSPICIOUS_TIME_DURATION_MILLIS) {
 			const fraction = gameInfo.time_duration_millis / SUSPICIOUS_TIME_DURATION_MILLIS; // fraction is in the interval [0, 1]
 			weight += 1 - fraction;
-			comment += `Game ${gameInfo.game_id} lasted ${gameInfo.time_duration_millis / 1000}s. `;
+			comment += `Game ${gameInfo.game_id} lasted ${Math.round(gameInfo.time_duration_millis / 1000)}s. `;
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
@@ -396,8 +404,8 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 			const approximate_total_time_millis = 1000 * ( gameInfo.base_time_seconds + 0.5 * gameInfo.increment_seconds * (gameInfo.move_count - 1) );
 			if (approximate_total_time_millis > 0 && gameInfo.clock_at_end_millis >= 0.8 * approximate_total_time_millis) {
 				const fraction = Math.min(1, gameInfo.clock_at_end_millis / approximate_total_time_millis); // fraction is in the interval [0.8, 1]
-				weight += 5 * fraction - 4; // rescale to [0,1]
-				comment += `At end of game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds / 60}m+${gameInfo.increment_seconds}s, player has ${gameInfo.clock_at_end_millis / 60_000}m left. `;
+				weight += (5 * fraction - 4) * 0.5; // rescale to [0.8,1]
+				comment += `At end of game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds / 60}m+${gameInfo.increment_seconds}s, player has ${(gameInfo.clock_at_end_millis / 60_000).toFixed(2)}m left. `;
 			}
 		}
 	}
@@ -422,7 +430,7 @@ function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'same_opponents',
-		weight: weight / (user_id_list.length ** 2) // rescale to [0,1]
+		weight: (weight / (user_id_list.length ** 2)) * 0.5 // rescale to [0,1]
 	});
 }
 
@@ -441,7 +449,7 @@ function checkIPAddresses(
 	if (user_ip_address_list.length === 0) {
 		suspicion_level_record_list.push({
 			category: 'ip_addresses',
-			weight: 1,
+			weight: 0.5,
 			comment: 'Player logged out mid-game.'
 		});
 		return;
@@ -460,7 +468,7 @@ function checkIPAddresses(
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'ip_addresses',
-		weight: weight / user_id_list.length, // rescale to [0,1]
+		weight: (weight / user_id_list.length) * 0.5, // rescale to [0,1]
 		comment
 	});
 }
@@ -491,7 +499,7 @@ function checkOpponentAccountAge(
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'opponent_account_age',
-		weight: weight / user_id_list.length, // rescale to [0,1]
+		weight: (weight / user_id_list.length) * 0.3, // rescale to [0,1]
 		comment
 	});
 }
