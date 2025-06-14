@@ -278,7 +278,7 @@ async function measurePlayerRatingAbuse(user_id: number, username: string, leade
 	if (suspicion_total_weight >= SUSPICION_TOTAL_WEIGHT_THRESHHOLD) {
 		const messageText = `
 			>>>>>>>>>>>>>>> GUILTY??? Suspicion total weight: ${suspicion_total_weight}.
-			Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious!
+			Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be cheating!
 			Suspicion level record: ${JSON.stringify(suspicion_level_record_list, undefined, 2)}.
 			Opponent user_id_list: ${JSON.stringify(user_id_list)}.
 			OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
@@ -299,8 +299,8 @@ async function measurePlayerRatingAbuse(user_id: number, username: string, leade
 	// Player is not suspicious
 	else {
 		const messageText = 
-			`INNOCENT! Suspicion total weight: ${suspicion_total_weight}. ` +
-			`Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user might be suspicious! ` +
+			`Innocent? Suspicion total weight: ${suspicion_total_weight}. ` +
+			`Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id} with net rating change ${netRatingChange} in the last ${GAME_INTERVAL_TO_MEASURE} games, and user seems innocent.` +
 			`Suspicion level record: ${JSON.stringify(suspicion_level_record_list)}. ` +
 			`Opponent user_id_list: ${JSON.stringify(user_id_list)}. ` +
 			`OpponentInfoList: ${JSON.stringify(opponentInfoList)}. ` +
