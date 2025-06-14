@@ -13,7 +13,6 @@ In case you want to help us with translating the website to other languages, ple
 We are still far off from our vision. We refuse to stop until many crucial features of this universe are built:
 - Truly infinite move distance
 - Board Editor
-- Rating system, with leaderboards
 - Premoving
 - Engine play
 - Games with infinitely many pieces
