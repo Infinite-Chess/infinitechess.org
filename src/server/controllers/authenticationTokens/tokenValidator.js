@@ -22,7 +22,7 @@ import { doesMemberHaveRefreshToken_RenewSession, revokeSession } from './sessio
  * 2. If the token is manually invalidated, such as when a user logs out, or deletes their account, and the token was removed from their information in the members table.
  * @param {string} token - The token to validate.
  * @param {boolean} isRefreshToken - Indicates whether the token is a refresh token.
- * @param {string} IP - The IP address they are connecting from.
+ * @param {string | undefined} IP - The IP address they are connecting from.
  * @param {import('express').Request} [req] - The request object, if applicable.
  * @param {import('express').Response} [res] - The response object, if applicable.
  * @returns {Object} - An object: { isValid (boolean), user_id, username, roles, reason? }

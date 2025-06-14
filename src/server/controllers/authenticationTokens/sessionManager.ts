@@ -42,7 +42,7 @@ export function doesMemberHaveRefreshToken_RenewSession(
 	username: string,
 	roles: string[] | null,
 	token: string,
-	IP: string,
+	IP: string | undefined,
 	req: Request,
 	res: Response
 ): boolean {
@@ -70,8 +70,9 @@ export function doesMemberHaveRefreshToken_RenewSession(
 	}
 
 	// 5. Update the IP address if it has changed.
-	if (IP !== tokenRecord.ip_address) {
-		updateRefreshTokenIP(token, IP);
+	const IP_New: string | null = IP || null;
+	if (IP_New !== tokenRecord.ip_address) {
+		updateRefreshTokenIP(token, IP_New);
 	}
 
 	// 6. The token is valid. Decide whether to renew the session.

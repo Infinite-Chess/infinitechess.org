@@ -72,12 +72,13 @@ export function addRefreshToken(req: Request, userId: number, token: string): vo
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, ip_address)
         VALUES (?, ?, ?, ?, ?)
     `;
+    const ip_address = getClientIP(req) || null;
 	db.run(query, [
         token,
         userId,
         now, // created_at
         now + refreshTokenExpiryMillis, // expires_at
-        getClientIP(req)
+        ip_address,
     ]);
 }
 
@@ -105,7 +106,7 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
  * @param token - The token to update.
  * @param ip - The new IP address to record.
  */
-export function updateRefreshTokenIP(token: string, ip: string): void {
+export function updateRefreshTokenIP(token: string, ip: string | null): void {
 	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
 	db.run(query, [ip, token]);
 }
