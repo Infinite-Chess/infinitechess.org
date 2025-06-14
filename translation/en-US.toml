@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "62"
+version = "63"
 maintainer = "Naviary"
 
 [header]
@@ -130,7 +130,6 @@ reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"
 delete_account = "Delete account"
-password_reset_message = ["To change your username, email or password, ", "contact us."]
 
 [member.badge-tooltips]
 checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
