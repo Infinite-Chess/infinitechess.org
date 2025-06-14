@@ -1,4 +1,8 @@
 {
+	"63": {
+		"note": "Deleted password_reset_message 133",
+		"changes": []
+	},
 	"62": {
 		"note": "Added ws-deleting_account_in_game on line 611.",
 		"changes": []

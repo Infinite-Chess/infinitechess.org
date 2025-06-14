@@ -53,7 +53,7 @@ async function logEventsAndPrint(message: string, logName: string) {
 
 /** Middleware that logs the incoming request, then calls `next()`. */
 function reqLogger(req: Request, res: Response, next: () => void) {
-	const clientIP = getClientIP(req);
+	const clientIP = getClientIP(req) || 'Unknown ip';
 
 	const origin = req.headers.origin || 'Unknown origin';
 
