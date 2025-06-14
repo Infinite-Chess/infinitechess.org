@@ -186,13 +186,6 @@ main {
     margin-bottom: 6px;
 }
 
-#change, #change a {
-    font-size: 14px;
-    color: rgb(69, 69, 69);
-    margin-top: 20px;
-}
-
-
 .hidden {
     display: none;
 }
