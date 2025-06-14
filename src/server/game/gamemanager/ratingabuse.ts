@@ -109,6 +109,7 @@ type RatingAbuseRelevantMemberRecord = {
 type SuspicionLevelRecord = {
 	category: 'close_game_pairs' | 'move_count' | 'duration' | 'clock_at_end' | 'same_opponents' | 'ip_addresses' | 'opponent_account_age',
 	weight: number,
+	comment?: string
 };
 
 
@@ -323,7 +324,8 @@ function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspic
 	if (close_game_pairs_amount > 0) {
 		suspicion_level_record_list.push({
 			category: 'close_game_pairs',
-			weight: close_game_pairs_amount / timestamp_differences.length // rescale to [0,1]
+			weight: close_game_pairs_amount / timestamp_differences.length, // rescale to [0,1]
+			comment: `Amount: ${close_game_pairs_amount}`
 		});
 	}
 }
@@ -334,6 +336,7 @@ function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspic
  */
 function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
 	let weight = 0;
+	let comment = "";
 	for (const gameInfo of gameInfoList) {
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
@@ -341,11 +344,13 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 		if (gameInfo.move_count <= SUSPICIOUS_MOVE_COUNT) {
 			const fraction = Math.max(0, (gameInfo.move_count - 2) / (SUSPICIOUS_MOVE_COUNT - 2)); // fraction is in the interval [0, 1]
 			weight += 1 - fraction;
+			comment += `Game ${gameInfo.game_id} lasted ${gameInfo.move_count} moves. `;
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'move_count',
-		weight: weight / gameInfoList.length // rescale to [0,1]
+		weight: weight / gameInfoList.length, // rescale to [0,1]
+		comment
 	});
 }
 
@@ -355,6 +360,7 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
  */
 function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
 	let weight = 0;
+	let comment = "";
 	for (const gameInfo of gameInfoList) {
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
@@ -362,11 +368,13 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 		if (gameInfo.time_duration_millis !== null && gameInfo.time_duration_millis <= SUSPICIOUS_TIME_DURATION_MILLIS) {
 			const fraction = gameInfo.time_duration_millis / SUSPICIOUS_TIME_DURATION_MILLIS; // fraction is in the interval [0, 1]
 			weight += 1 - fraction;
+			comment += `Game ${gameInfo.game_id} lasted ${gameInfo.time_duration_millis / 1000}s. `;
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'duration',
-		weight: weight / gameInfoList.length // rescale to [0,1]
+		weight: weight / gameInfoList.length, // rescale to [0,1]
+		comment
 	});
 }
 
@@ -376,6 +384,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
  */
 function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_level_record_list: SuspicionLevelRecord[]) {
 	let weight = 0;
+	let comment = "";
 	for (const gameInfo of gameInfoList) {
 		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
@@ -388,12 +397,14 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 			if (approximate_total_time_millis > 0 && gameInfo.clock_at_end_millis >= 0.8 * approximate_total_time_millis) {
 				const fraction = Math.min(1, gameInfo.clock_at_end_millis / approximate_total_time_millis); // fraction is in the interval [0.8, 1]
 				weight += 5 * fraction - 4; // rescale to [0,1]
+				comment += `At end of game ${gameInfo.game_id}, player has ${gameInfo.clock_at_end_millis / 1000}s left. `;
 			}
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'clock_at_end',
-		weight: weight / gameInfoList.length // rescale to [0,1]
+		weight: weight / gameInfoList.length, // rescale to [0,1]
+		comment
 	});
 }
 
@@ -430,21 +441,27 @@ function checkIPAddresses(
 	if (user_ip_address_list.length === 0) {
 		suspicion_level_record_list.push({
 			category: 'ip_addresses',
-			weight: 1
+			weight: 1,
+			comment: 'Player logged out mid-game.'
 		});
 		return;
 	}
 	else if (user_id_list.length === 0 || Object.keys(opponent_ip_address_lists).length === 0) return; 
 
 	let weight = 0;
+	let comment = "Opponents using same IP address: ";
 	for (const user_id in opponent_ip_address_lists) {
 		// Player is suspicious if he uses a same IP adress as an opponent
 		const common_ip_addresses = user_ip_address_list.filter(ip_address => opponent_ip_address_lists[user_id]!.includes(ip_address));
-		if (common_ip_addresses.length > 0) weight += user_id_frequency[user_id] ?? 0;
+		if (common_ip_addresses.length > 0) {
+			weight += user_id_frequency[user_id] ?? 0;
+			comment += `${user_id},`;
+		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'ip_addresses',
-		weight: weight / user_id_list.length // rescale to [0,1]
+		weight: weight / user_id_list.length, // rescale to [0,1]
+		comment
 	});
 }
 
@@ -462,17 +479,20 @@ function checkOpponentAccountAge(
 
 	const current_time_millis = Date.now();
 	let weight = 0;
+	let comment = "Newly joined opponents: ";
 	for (const opponentInfo of opponentInfoList) {
 		// Player is suspicious if his opponent's account is less than a week old
 		const account_age_millis = Math.max(0, current_time_millis - timeutil.sqliteToTimestamp(opponentInfo.joined));
 		if (account_age_millis < SUSPICIOUS_ACCOUNT_AGE_MILLIS) {
 			const fraction = account_age_millis / SUSPICIOUS_ACCOUNT_AGE_MILLIS; // fraction is in the interval [0, 1]
 			weight += (1 - fraction) * (user_id_frequency[opponentInfo.user_id] ?? 0);
+			comment += `${opponentInfo.user_id},`;
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'opponent_account_age',
-		weight: weight / user_id_list.length // rescale to [0,1]
+		weight: weight / user_id_list.length, // rescale to [0,1]
+		comment
 	});
 }
 
