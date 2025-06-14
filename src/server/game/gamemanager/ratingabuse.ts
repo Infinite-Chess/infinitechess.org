@@ -397,7 +397,7 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 			if (approximate_total_time_millis > 0 && gameInfo.clock_at_end_millis >= 0.8 * approximate_total_time_millis) {
 				const fraction = Math.min(1, gameInfo.clock_at_end_millis / approximate_total_time_millis); // fraction is in the interval [0.8, 1]
 				weight += 5 * fraction - 4; // rescale to [0,1]
-				comment += `At end of game ${gameInfo.game_id}, player has ${gameInfo.clock_at_end_millis / 1000}s left. `;
+				comment += `At end of game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds / 60}m+${gameInfo.increment_seconds}s, player has ${gameInfo.clock_at_end_millis / 60_000}m left. `;
 			}
 		}
 	}
