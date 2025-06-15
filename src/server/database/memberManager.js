@@ -24,7 +24,7 @@ const validDeleteReasons = [
 	'unverified', // They failed to verify after 3 days
 	'user request', // They deleted their own account, or requested it to be deleted.
 	'security', // A choice by server admins, for security purpose.
-	// 'rating manipulation', // Cheating
+	'rating abuse', // Unfairly boosted their own elo with a throwaway account
 ];
 
 
