@@ -1,4 +1,6 @@
 
+// src/server/controllers/verifyAccountController.ts
+
 /**
  * The function handles verifying accounts,
  * either manually,

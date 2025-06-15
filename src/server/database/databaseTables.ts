@@ -1,4 +1,6 @@
 
+// src/server/database/databaseTables.ts
+
 /**
  * This script creates our database tables if they aren't already present.
  */
@@ -11,6 +13,7 @@ import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { migrateRefreshTokensToTable } from './migrateRefreshTokens.js';
+import { expandMembersTableForVerification } from './migrateVerification.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -33,9 +36,11 @@ const allMemberColumns: string[] = [
 	'joined',
 	'last_seen',
 	'preferences',
-	'verification',
 	'login_count',
-	'checkmates_beaten'
+	'checkmates_beaten',
+	'is_verified',
+	'verification_code',
+	'is_verification_notified',
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
@@ -113,9 +118,11 @@ function generateTables(): void {
 			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
 			login_count INTEGER NOT NULL DEFAULT 0,                        
 			preferences TEXT,                        
-			verification TEXT, 
 			username_history TEXT,
-			checkmates_beaten TEXT NOT NULL DEFAULT ''
+			checkmates_beaten TEXT NOT NULL DEFAULT '',
+			is_verified INTEGER NOT NULL DEFAULT 0,
+			verification_code TEXT,
+			is_verification_notified INTEGER NOT NULL DEFAULT 0
 		);
 	`);
 
@@ -299,6 +306,7 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
+	expandMembersTableForVerification(); // DELETE AFTER UPDATE 1.7!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	migrateMembersToPlayerStatsTable();

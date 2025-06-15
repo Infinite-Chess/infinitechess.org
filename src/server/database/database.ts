@@ -1,4 +1,6 @@
 
+// src/server/database/database.ts
+
 /*
  * This module provides utility functions for managing SQLite database operations 
  * using the `better-sqlite3` library.
