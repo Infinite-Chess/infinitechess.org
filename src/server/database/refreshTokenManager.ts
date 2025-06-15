@@ -71,8 +71,8 @@ export function addRefreshToken(req: Request, userId: number, token: string): vo
 	const query = `
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, ip_address)
         VALUES (?, ?, ?, ?, ?)
-    `;
-    const ip_address = getClientIP(req) || null;
+	`; 
+	const ip_address = getClientIP(req) || null;
 	db.run(query, [
         token,
         userId,

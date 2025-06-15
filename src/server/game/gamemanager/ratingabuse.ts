@@ -293,12 +293,12 @@ OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
 Game_id_list: ${JSON.stringify(game_id_list)}.
 \nGameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
 		`;
-		await logEventsAndPrint('\n' + messageText + '\n', 'ratingAbuseLog.txt'); // remove non-space whitespaces when logging to ratingAbuseLog.txt
+		await logEventsAndPrint('\n' + messageText + '\n', 'ratingAbuseLog.txt');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (rating_abuse_data.last_alerted_at === null || rating_abuse_data.last_alerted_at === undefined || Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >= SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS) {
 			const messageSubject = `Rating Abuse Warning: user ${username}, user_id ${user_id}`;
-			sendRatingAbuseEmail(messageSubject, messageText);
+			await sendRatingAbuseEmail(messageSubject, messageText);
 			// Update RatingAbuse table with last_alerted_at value
 			const last_alerted_at = timeutil.timestampToSqlite(Date.now());
 			updateRatingAbuseColumns(user_id, leaderboard_id, { last_alerted_at });

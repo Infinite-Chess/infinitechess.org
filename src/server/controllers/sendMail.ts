@@ -192,7 +192,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
-		logEventsAndPrint(`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`, 'errLog.txt');
+		await logEventsAndPrint(`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`, 'errLog.txt');
 	}
 }
 
