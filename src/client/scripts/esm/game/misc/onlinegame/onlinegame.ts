@@ -368,6 +368,7 @@ function deleteCustomVariantOptions() {
  */
 function requestRemovalFromPlayersInActiveGames() {
 	if (!areInOnlineGame()) return;
+	if (!websocket.areSubbedToSub('game')) return; // THE SERVER has deleted the game. Already removed from players in active games list!
 	websocket.sendmessage('game', 'removefromplayersinactivegames');
 }
 
