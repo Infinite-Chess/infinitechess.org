@@ -96,8 +96,9 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) {
+		if (basegame.untimed) throw Error('Received clock values for untimed game??');
 		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-		clock.edit(basegame, message.clockValues);
+		clock.edit(basegame.clocks, message.clockValues);
 		guiclock.edit(basegame);
 	}
 

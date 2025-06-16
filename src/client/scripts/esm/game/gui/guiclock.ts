@@ -164,6 +164,10 @@ function rescheduleSoundEffects(clocks: ClockData) {
 	cancelSoundEffectTimers(); // Clear the previous timeouts
 
 	if (clocks.colorTicking === undefined) return; // Don't reschedule sound effects if no clocks are ticking
+	// BUG: WHEN IMMIEDIATELY refreshing the page, the online game isn't initiated yet
+	// when guiclock.set() is called, so it thinks we're not in an online game,
+	// THUS it plays the drum sounds for the opponent....
+	// console.error("Are in online game?", onlinegame.areInOnlineGame());
 	if (onlinegame.areInOnlineGame() && clocks.colorTicking! !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
 
 	scheduleMinuteTick(clocks); // Lowtime notif at 1 minute left

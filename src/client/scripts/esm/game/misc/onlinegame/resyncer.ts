@@ -60,8 +60,9 @@ function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, mess
 
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) {
+		if (gamefile.basegame.untimed) throw Error('Received clock values in a game update for an untimed game??');
 		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-		clock.edit(gamefile.basegame, message.clockValues);
+		clock.edit(gamefile.basegame.clocks, message.clockValues);
 		guiclock.edit(gamefile.basegame);
 	}
 

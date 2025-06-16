@@ -294,9 +294,11 @@ function handleLoggedGameInfo(message: {
  * Called when we received the updated clock values from the server after submitting our move.
  */
 function handleUpdatedClock(basegame: Game, clockValues: ClockValues) {
+	if (basegame.untimed) throw Error('Received clock values for untimed game??');
+	
 	// Adjust the timer whos turn it is depending on ping.
 	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(basegame, clockValues); // Edit the clocks
+	clock.edit(basegame.clocks, clockValues); // Edit the clocks
 	guiclock.edit(basegame);
 }
 
