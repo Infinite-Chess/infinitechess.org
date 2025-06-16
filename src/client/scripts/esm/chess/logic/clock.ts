@@ -114,27 +114,25 @@ function init(players: Iterable<Player>, time_control: MetaData["TimeControl"]):
  * @param basegame - The game to update the clocks of.
  * @param clockValues - The new clock values to set.
  */
-function edit(basegame: Game, clockValues: ClockValues) {
-	if (basegame.untimed) throw Error("Don't call edit() on untimed games!");
-	const clocks = basegame.clocks;
+function edit(currentClocks: ClockData, clockValues: ClockValues) {
+	const colorTicking = clockValues.colorTicking;
+	const now = Date.now();
 
-	const colorTicking = basegame.whosTurn;
-
-	if (clockValues.colorTicking !== undefined) {
+	if (colorTicking !== undefined) {
 		// Adjust the clock value according to the precalculated time they will lost by timeout.
 		if (clockValues.timeColorTickingLosesAt === undefined) throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() beore edit()');
-		const colorTickingTrueTimeRemaining = clockValues.timeColorTickingLosesAt - Date.now();
-		// @ts-ignore
+		const colorTickingTrueTimeRemaining = clockValues.timeColorTickingLosesAt - now;
 		clockValues.clocks[colorTicking] = colorTickingTrueTimeRemaining;
 	}
 
-	clocks.colorTicking = colorTicking;
-	clocks.currentTime = { ...clockValues.clocks };
+	currentClocks.colorTicking = colorTicking;
+	currentClocks.currentTime = { ...clockValues.clocks };
 
-	const now = Date.now();
-	clocks.timeAtTurnStart = now;
+	if (colorTicking !== undefined) {
+		currentClocks.timeAtTurnStart = now;
 
-	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking];
+		currentClocks.timeRemainAtTurnStart = currentClocks.currentTime[colorTicking];
+	}
 }
 
 /**
