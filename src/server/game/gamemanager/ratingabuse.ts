@@ -332,7 +332,7 @@ function checkCloseGamePairs(gameInfoList: RatingAbuseRelevantGameInfo[], suspic
 	if (close_game_pairs_amount > 0) {
 		suspicion_level_record_list.push({
 			category: 'close_game_pairs',
-			weight: (close_game_pairs_amount / timestamp_differences.length) * 0.5, // rescale to [0,1]
+			weight: (close_game_pairs_amount / timestamp_differences.length) * 0.5, // rescale to [0, 0.5]
 			comment: `Amount: ${close_game_pairs_amount}`
 		});
 	}
@@ -404,14 +404,14 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 			const approximate_total_time_millis = 1000 * ( gameInfo.base_time_seconds + 0.5 * gameInfo.increment_seconds * (gameInfo.move_count - 1) );
 			if (approximate_total_time_millis > 0 && gameInfo.clock_at_end_millis >= 0.8 * approximate_total_time_millis) {
 				const fraction = Math.min(1, gameInfo.clock_at_end_millis / approximate_total_time_millis); // fraction is in the interval [0.8, 1]
-				weight += (5 * fraction - 4) * 0.5; // rescale to [0.8,1]
+				weight += 5 * fraction - 4; // rescale to [0,1]
 				comment += `At end of game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds / 60}m+${gameInfo.increment_seconds}s, player has ${(gameInfo.clock_at_end_millis / 60_000).toFixed(2)}m left. `;
 			}
 		}
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'clock_at_end',
-		weight: weight / gameInfoList.length, // rescale to [0,1]
+		weight: (weight / gameInfoList.length) * 0.5, // rescale to [0, 0.5]
 		comment
 	});
 }
@@ -430,7 +430,7 @@ function checkOpponentSameness(user_id_list: number[], user_id_frequency: { [key
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'same_opponents',
-		weight: (weight / (user_id_list.length ** 2)) * 0.5 // rescale to [0,1]
+		weight: (weight / (user_id_list.length ** 2)) * 0.5 // rescale to [0, 0.5]
 	});
 }
 
@@ -468,7 +468,7 @@ function checkIPAddresses(
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'ip_addresses',
-		weight: (weight / user_id_list.length) * 0.5, // rescale to [0,1]
+		weight: (weight / user_id_list.length) * 0.5, // rescale to [0, 0.5]
 		comment
 	});
 }
@@ -499,7 +499,7 @@ function checkOpponentAccountAge(
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'opponent_account_age',
-		weight: (weight / user_id_list.length) * 0.3, // rescale to [0,1]
+		weight: (weight / user_id_list.length) * 0.3, // rescale to [0, 0.3]
 		comment
 	});
 }
