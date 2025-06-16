@@ -220,6 +220,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	annotePoints.forEach(ap => {
 		const piece = boardutil.getPieceFromCoords(pieces, ap);
 		if (!piece) return; // No piece beneath this highlight
+		if (animation.animations.some(a => coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!))) return; // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		pushPieceNoDuplicatesOrVoids(piece);
 	});
 
@@ -246,13 +247,13 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const moveIndex = boardsim.state.local.moveIndex;
 	// Last move's destination piece
 	const lastMove = boardsim.moves[moveIndex];
-	if (lastMove && !lastMove.isNull) {
+	if (lastMove && !lastMove.isNull && !animation.animations.some(a => coordutil.areCoordsEqual(lastMove.endCoords, a.path[a.path.length - 1]!))) { // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		const lastMovedPiece = boardutil.getPieceFromCoords(pieces, lastMove.endCoords)!;
 		pushPieceNoDuplicatesOrVoids(lastMovedPiece);
 	}
 	// Next move's starting piece
 	const nextMove = boardsim.moves[moveIndex + 1];
-	if (nextMove && !nextMove.isNull) {
+	if (nextMove && !nextMove.isNull && !animation.animations.some(a => coordutil.areCoordsEqual(nextMove.startCoords, a.path[a.path.length - 1]!))) { // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		const nextToMovePiece = boardutil.getPieceFromCoords(pieces, nextMove.startCoords)!;
 		pushPieceNoDuplicatesOrVoids(nextToMovePiece);
 	}
