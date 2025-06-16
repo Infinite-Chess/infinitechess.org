@@ -110,7 +110,7 @@ type FullGame = {
 }
 
 /** Creates a new {@link Game} object from provided arguments */
-function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string, clockValues?: ClockValues): Game {
+function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConclusion?: string): Game {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
 	const clockDependantVars: ClockDependant = clock.init(new Set(gameRules.turnOrder), metadata.TimeControl);
 	const game: Game = {
@@ -121,7 +121,7 @@ function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConcl
 		gameConclusion,
 		...clockDependantVars,
 	};
-	
+
 	return game;
 }
 
@@ -226,7 +226,7 @@ function initFullGame(metadata: MetaData, { variantOptions, moves, gameConclusio
 	editor?: boolean,
 	clockValues?: ClockValues
 } = {}): FullGame {
-	const basegame = initGame(metadata, variantOptions, gameConclusion, clockValues);
+	const basegame = initGame(metadata, variantOptions, gameConclusion);
 	const boardsim = initBoard(basegame.gameRules, basegame.metadata, variantOptions, editor);
 	return loadGameWithBoard(basegame, boardsim, moves, gameConclusion, clockValues);
 }
