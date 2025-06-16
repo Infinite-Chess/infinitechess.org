@@ -1,7 +1,7 @@
 
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
- * by Andreas Tsevas and Naviary
+ * by Naviary and Andreas Tsevas
  * https://github.com/tsevasa/infinite-chess-notation
  * 
  * This script converts games from a JSON notation to a
