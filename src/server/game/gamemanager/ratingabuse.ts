@@ -293,7 +293,7 @@ OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
 Game_id_list: ${JSON.stringify(game_id_list)}.
 \nGameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
 		`;
-		await logEventsAndPrint('\n' + messageText + '\n', 'ratingAbuseLog.txt');
+		await logEventsAndPrint('\n' + messageText, 'ratingAbuseLog.txt');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (rating_abuse_data.last_alerted_at === null || rating_abuse_data.last_alerted_at === undefined || Date.now() - timeutil.sqliteToTimestamp(rating_abuse_data.last_alerted_at) >= SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS) {
