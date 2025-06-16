@@ -122,8 +122,6 @@ function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConcl
 		...clockDependantVars,
 	};
 	
-	if (clockValues) clock.edit(game, clockValues);
-
 	return game;
 }
 
@@ -194,7 +192,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 }
 
 /** Attaches a board to a specific game. Used for loading a game after it was started. */
-function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage = [], gameConclusion?: string): FullGame {
+function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMovesMessage = [], gameConclusion?: string, clockValues?: ClockValues): FullGame {
 	const gamefile = { basegame, boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
@@ -208,6 +206,8 @@ function loadGameWithBoard(basegame: Game, boardsim: Board, moves: ServerGameMov
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves);
+	if (clockValues) clock.edit(basegame, clockValues);
+	
 	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
 	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
 	if (gameConclusion) basegame.gameConclusion = gameConclusion;
@@ -228,7 +228,7 @@ function initFullGame(metadata: MetaData, { variantOptions, moves, gameConclusio
 } = {}): FullGame {
 	const basegame = initGame(metadata, variantOptions, gameConclusion, clockValues);
 	const boardsim = initBoard(basegame.gameRules, basegame.metadata, variantOptions, editor);
-	return loadGameWithBoard(basegame, boardsim, moves, gameConclusion);
+	return loadGameWithBoard(basegame, boardsim, moves, gameConclusion, clockValues);
 }
 
 export type {
