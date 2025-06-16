@@ -22,38 +22,13 @@ export class EvaluationState {
 	pawnStructureScore: number = 0;
 	kingSafetyScore: number = 0;
 	
-	// Tracking piece positions for efficient updates
-	whitePieceCoords: Map<number, Coords[]> = new Map();
-	blackPieceCoords: Map<number, Coords[]> = new Map();
-	
-	// Fast O(1) occupancy lookup per color
-	whitePieceSet: Set<string> = new Set(); // "x,y"
-	blackPieceSet: Set<string> = new Set(); // "x,y"
-	
 	// King positions for quick access
-	whiteKingCoords: Coords | undefined = undefined;
-	blackKingCoords: Coords | undefined = undefined;
+	whiteKingCoords: Coords = [0, 0];
+	blackKingCoords: Coords = [0, 0];
 	
 	// Pawn file tracking (index = file, value = count)
 	whitePawnFiles: number[] = Array(16).fill(0);
 	blackPawnFiles: number[] = Array(16).fill(0);
-	
-	constructor() {
-		// Initialize piece coordinate arrays
-		this.whitePieceCoords.set(rawTypes.PAWN, []);
-		this.whitePieceCoords.set(rawTypes.KNIGHT, []);
-		this.whitePieceCoords.set(rawTypes.BISHOP, []);
-		this.whitePieceCoords.set(rawTypes.ROOK, []);
-		this.whitePieceCoords.set(rawTypes.QUEEN, []);
-		this.whitePieceCoords.set(rawTypes.KING, []);
-		
-		this.blackPieceCoords.set(rawTypes.PAWN, []);
-		this.blackPieceCoords.set(rawTypes.KNIGHT, []);
-		this.blackPieceCoords.set(rawTypes.BISHOP, []);
-		this.blackPieceCoords.set(rawTypes.ROOK, []);
-		this.blackPieceCoords.set(rawTypes.QUEEN, []);
-		this.blackPieceCoords.set(rawTypes.KING, []);
-	}
 	
 	/**
 	 * Reset the evaluation state to prepare for a new position
@@ -64,17 +39,8 @@ export class EvaluationState {
 		this.pawnStructureScore = 0;
 		this.kingSafetyScore = 0;
 		
-		this.whiteKingCoords = undefined;
-		this.blackKingCoords = undefined;
-		
-		// Clear piece coordinates + sets without reallocating arrays
-		for (const pieceArrays of [this.whitePieceCoords, this.blackPieceCoords]) {
-			for (const coordsArray of pieceArrays.values()) {
-				coordsArray.length = 0;
-			}
-		}
-		this.whitePieceSet.clear();
-		this.blackPieceSet.clear();
+		this.whiteKingCoords = [0, 0];
+		this.blackKingCoords = [0, 0];
 		
 		// Reset pawn file counts
 		this.whitePawnFiles.fill(0);
@@ -90,131 +56,118 @@ export class EvaluationState {
 		// Start with a clean state
 		this.reset();
 		
-		const pieces: OrganizedPieces = lf.pieces;
-		const allPieceCoords = boardutil.getCoordsOfAllPieces(pieces);
-
-		// First pass: collect piece information and calculate material score
-		for (const coords of allPieceCoords) {
-			const piece = boardutil.getPieceFromCoords(pieces, coords);
-			if (!piece) continue;
-
-			const pieceRawType = typeutil.getRawType(piece.type);
+		const pieces = lf.pieces;
+		// Iterate over every piece in the game and build tracking data
+		for (const [typeValue, typeRange] of pieces.typeRanges) {
+			const pieceRawType = typeutil.getRawType(typeValue);
+			const pieceColor = typeutil.getColorFromType(typeValue);
 			const pieceValue = PIECE_VALUES[pieceRawType] ?? 0;
-			const pieceColor = typeutil.getColorFromType(piece.type);
-			const key = `${coords[0]},${coords[1]}`;
 			
-			// Track the piece position by type and color
-			if (pieceColor === players.WHITE) {
-				const pieceArray = this.whitePieceCoords.get(pieceRawType);
-				if (pieceArray) {
-					pieceArray.push([coords[0], coords[1]]); // Store coords directly without spread operator
+			for (let idx = typeRange.start; idx < typeRange.end; idx++) {
+				if (typeRange.undefineds.includes(idx)) continue;
+				const coords = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				const [x, y] = coords;
+				
+				// Track pawn files
+				if (pieceRawType === rawTypes.PAWN && x >= 0 && x < 16) {
+					if (pieceColor === players.WHITE) this.whitePawnFiles[x]++;
+					else this.blackPawnFiles[x]++;
 				}
 				
-				// Track pawn files for white
-				if (pieceRawType === rawTypes.PAWN && coords[0] >= 0 && coords[0] < 16) {
-					this.whitePawnFiles[coords[0]]++;
-				}
-				
-				// Store king position for white
+				// Store king positions
 				if (pieceRawType === rawTypes.KING) {
-					this.whiteKingCoords = [coords[0], coords[1]];
-				}
-
-				// Material score (positive for white)
-				this.materialScore += pieceValue;
-				this.whitePieceSet.add(key);
-			} else {
-				// Similar processing for black pieces
-				const pieceArray = this.blackPieceCoords.get(pieceRawType);
-				if (pieceArray) {
-					pieceArray.push([coords[0], coords[1]]);
-				}
-
-				// Track pawn files for black
-				if (pieceRawType === rawTypes.PAWN && coords[0] >= 0 && coords[0] < 16) {
-					this.blackPawnFiles[coords[0]]++;
+					if (pieceColor === players.WHITE) this.whiteKingCoords = coords;
+					else this.blackKingCoords = coords;
 				}
 				
-				// Store king position for black
-				if (pieceRawType === rawTypes.KING) {
-					this.blackKingCoords = [coords[0], coords[1]];
-				}
-
-				// Material score (negative for black)
-				this.materialScore -= pieceValue;
-				this.blackPieceSet.add(key);
+				// Material score
+				this.materialScore += (pieceColor === players.WHITE ? pieceValue : -pieceValue);
 			}
 		}
 
 		// Second pass: calculate positional scores
-		this.calculatePositionalScore();
+		this.calculatePositionalScore(pieces);
 		
 		// Third pass: calculate pawn structure score
-		this.calculatePawnStructureScore();
+		this.calculatePawnStructureScore(pieces);
 		
 		// Fourth pass: calculate king safety score
-		this.calculateKingSafetyScore();
+		this.calculateKingSafetyScore(pieces);
 	}
 	
 	/**
 	 * Calculate positional scores for all pieces
 	 * This includes piece development, centrality bonuses, etc.
 	 */
-	calculatePositionalScore(): void {
+	calculatePositionalScore(pieces: OrganizedPieces): void {
 		this.positionalScore = 0;
 		
 		// Process white pieces
-		this.positionalScore += this.calculateSidePositionalScore(this.whitePieceCoords, players.WHITE);
+		this.positionalScore += this.calculateSidePositionalScore(players.WHITE, pieces);
 		
 		// Process black pieces (negate score)
-		this.positionalScore -= this.calculateSidePositionalScore(this.blackPieceCoords, players.BLACK);
+		this.positionalScore -= this.calculateSidePositionalScore(players.BLACK, pieces);
 	}
 	
 	/**
 	 * Calculate positional score for one side
-	 * @param pieceCoords Map of piece types to their coordinates
 	 * @param side The side (WHITE or BLACK)
+	 * @param pieces The organized pieces state
 	 * @returns The raw positional score (positive is good for the given side)
 	 */
-	private calculateSidePositionalScore(pieceCoords: Map<number, Coords[]>, side: Player): number {
+	private calculateSidePositionalScore(side: Player, pieces: OrganizedPieces): number {
 		let score = 0;
 		
 		// Process knights - centrality bonus
-		const knights = pieceCoords.get(rawTypes.KNIGHT) || [];
-		for (const coords of knights) {
-			// Centrality bonus - closer to center is better
-			const distToCenter = Math.sqrt(Math.pow(coords[0] - 4.5, 2) + Math.pow(coords[1] - 4.5, 2));
-			// Max bonus at center, 0 at corners
-			score += Math.max(0, CENTRALITY_BONUS * (1 - distToCenter / Math.sqrt(2 * 4.5 * 4.5)));
+		const knights = pieces.typeRanges.get(typeutil.buildType(rawTypes.KNIGHT, side));
+		if (knights) {
+			for (let idx = knights.start; idx < knights.end; idx++) {
+				if (knights.undefineds.includes(idx)) continue;
+				const coords = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				// Centrality bonus - closer to center is better
+				const distToCenter = Math.sqrt(Math.pow(coords[0] - 4.5, 2) + Math.pow(coords[1] - 4.5, 2));
+				// Max bonus at center, 0 at corners
+				score += Math.max(0, CENTRALITY_BONUS * (1 - distToCenter / Math.sqrt(2 * 4.5 * 4.5)));
+			}
 		}
 		
 		// Process rooks - open and semi-open file bonuses
-		const rooks = pieceCoords.get(rawTypes.ROOK) || [];
-		for (const coords of rooks) {
-			const rookFile = coords[0];
-			const ownPawnFiles = side === players.WHITE ? this.whitePawnFiles : this.blackPawnFiles;
-			const enemyPawnFiles = side === players.WHITE ? this.blackPawnFiles : this.whitePawnFiles;
-			
-			// Check if file is within bounds
-			if (rookFile >= 0 && rookFile < 16) {
-				const ownPawnsOnFile = ownPawnFiles[rookFile];
-				const enemyPawnsOnFile = enemyPawnFiles[rookFile];
+		const rooks = pieces.typeRanges.get(typeutil.buildType(rawTypes.ROOK, side));
+		if (rooks) {
+			for (let idx = rooks.start; idx < rooks.end; idx++) {
+				if (rooks.undefineds.includes(idx)) continue;
+				const coords = boardutil.getCoordsFromIdx(pieces, idx);
 				
-				// Open file bonus (no pawns on file)
-				if (ownPawnsOnFile === 0 && enemyPawnsOnFile === 0) {
-					score += 25;
-				}
-				// Semi-open file bonus (no own pawns but enemy pawns)
-				else if (ownPawnsOnFile === 0) {
-					score += 10;
+				const rookFile = coords[0];
+				const ownPawnFiles = side === players.WHITE ? this.whitePawnFiles : this.blackPawnFiles;
+				const enemyPawnFiles = side === players.WHITE ? this.blackPawnFiles : this.whitePawnFiles;
+				
+				// Check if file is within bounds
+				if (rookFile >= 0 && rookFile < 16) {
+					const ownPawnsOnFile = ownPawnFiles[rookFile];
+					const enemyPawnsOnFile = enemyPawnFiles[rookFile];
+					
+					// Open file bonus (no pawns on file)
+					if (ownPawnsOnFile === 0 && enemyPawnsOnFile === 0) {
+						score += 25;
+					}
+					// Semi-open file bonus (no own pawns but enemy pawns)
+					else if (ownPawnsOnFile === 0) {
+						score += 10;
+					}
 				}
 			}
 		}
 		
 		// Development bonus for non-pawns, non-kings
-		for (const [pieceType, coordsList] of pieceCoords.entries()) {
-			if (pieceType !== rawTypes.PAWN && pieceType !== rawTypes.KING) {
-				for (const coords of coordsList) {
+		for (const [pieceType, typeRange] of pieces.typeRanges.entries()) {
+			if (typeutil.getColorFromType(pieceType) === side && pieceType !== typeutil.buildType(rawTypes.PAWN, side) && pieceType !== typeutil.buildType(rawTypes.KING, side)) {
+				for (let idx = typeRange.start; idx < typeRange.end; idx++) {
+					if (typeRange.undefineds.includes(idx)) continue;
+					const coords = boardutil.getCoordsFromIdx(pieces, idx);
+					
 					const startingRank = (side === players.WHITE) ? 1 : 8;
 					if (coords[1] !== startingRank) {
 						score += DEVELOPMENT_BONUS;
@@ -229,36 +182,46 @@ export class EvaluationState {
 	/**
 	 * Calculate pawn structure score
 	 */
-	calculatePawnStructureScore(): void {
+	calculatePawnStructureScore(pieces: OrganizedPieces): void {
 		this.pawnStructureScore = 0;
 		
 		// Get pawn coordinates
-		const whitePawns = this.whitePieceCoords.get(rawTypes.PAWN) || [];
-		const blackPawns = this.blackPieceCoords.get(rawTypes.PAWN) || [];
+		const whitePawns = pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.WHITE));
+		const blackPawns = pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.BLACK));
 		
 		// Calculate white pawn advancement bonuses and passed pawns
-		for (const pawnCoord of whitePawns) {
-			const [file, rank] = pawnCoord;
-			
-			// Pawn advancement bonus
-			this.pawnStructureScore += (rank - 1) * PAWN_RANK_BONUS;
-			
-			// Check if this is a passed pawn
-			if (!this.isPawnBlocked(file, rank, blackPawns, true)) {
-				this.pawnStructureScore += PASSED_PAWN_RANK_BONUS[rank] ?? 0;
+		if (whitePawns) {
+			for (let idx = whitePawns.start; idx < whitePawns.end; idx++) {
+				if (whitePawns.undefineds.includes(idx)) continue;
+				const pawnCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				const [file, rank] = pawnCoord;
+				
+				// Pawn advancement bonus
+				this.pawnStructureScore += (rank - 1) * PAWN_RANK_BONUS;
+				
+				// Check if this is a passed pawn
+				if (!this.isPawnBlocked(file, rank, blackPawns, true, pieces)) {
+					this.pawnStructureScore += PASSED_PAWN_RANK_BONUS[rank] ?? 0;
+				}
 			}
 		}
 		
 		// Calculate black pawn advancement bonuses and passed pawns
-		for (const pawnCoord of blackPawns) {
-			const [file, rank] = pawnCoord;
-			
-			// Black pawns get higher scores for advancing toward the first rank
-			this.pawnStructureScore -= (8 - rank) * PAWN_RANK_BONUS;
-			
-			// Check if this is a passed pawn
-			if (!this.isPawnBlocked(file, rank, whitePawns, false)) {
-				this.pawnStructureScore -= PASSED_PAWN_RANK_BONUS[9 - rank] ?? 0;
+		if (blackPawns) {
+			for (let idx = blackPawns.start; idx < blackPawns.end; idx++) {
+				if (blackPawns.undefineds.includes(idx)) continue;
+				const pawnCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				const [file, rank] = pawnCoord;
+				
+				// Black pawns get higher scores for advancing toward the first rank
+				this.pawnStructureScore -= (8 - rank) * PAWN_RANK_BONUS;
+				
+				// Check if this is a passed pawn
+				if (!this.isPawnBlocked(file, rank, whitePawns, false, pieces)) {
+					this.pawnStructureScore -= PASSED_PAWN_RANK_BONUS[9 - rank] ?? 0;
+				}
 			}
 		}
 		
@@ -279,21 +242,26 @@ export class EvaluationState {
 	/**
 	 * Check if a pawn is blocked from advancing by enemy pawns
 	 */
-	private isPawnBlocked(file: number, rank: number, opposingPawnCoords: Coords[], isWhitePawn: boolean): boolean {
+	private isPawnBlocked(file: number, rank: number, opposingPawnCoords: { start: number; end: number; undefineds: number[] } | undefined, isWhitePawn: boolean, pieces: OrganizedPieces): boolean {
 		// Check files within bounds to prevent array access issues
 		for (let f = Math.max(0, file - 1); f <= Math.min(15, file + 1); f++) {
 			// Check if there are any opposing pawns on this file that are ahead
-			for (const opposingPawnCoord of opposingPawnCoords) {
-				// Access coordinates directly without destructuring
-				const oFile = opposingPawnCoord[0];
-				const oRank = opposingPawnCoord[1];
-				
-				if (oFile === f) {
-					if (isWhitePawn && oRank > rank) { // Black pawn ahead of white pawn
-						return true; // Blocked
-					}
-					if (!isWhitePawn && oRank < rank) { // White pawn ahead of black pawn
-						return true; // Blocked
+			if (opposingPawnCoords) {
+				for (let idx = opposingPawnCoords.start; idx < opposingPawnCoords.end; idx++) {
+					if (opposingPawnCoords.undefineds.includes(idx)) continue;
+					const opposingPawnCoord = boardutil.getCoordsFromIdx(pieces, idx);
+					
+					// Access coordinates directly without destructuring
+					const oFile = opposingPawnCoord[0];
+					const oRank = opposingPawnCoord[1];
+					
+					if (oFile === f) {
+						if (isWhitePawn && oRank > rank) { // Black pawn ahead of white pawn
+							return true; // Blocked
+						}
+						if (!isWhitePawn && oRank < rank) { // White pawn ahead of black pawn
+							return true; // Blocked
+						}
 					}
 				}
 			}
@@ -304,7 +272,7 @@ export class EvaluationState {
 	/**
 	 * Calculate king safety score based on pawns and pieces near the king
 	 */
-	calculateKingSafetyScore(): void {
+	calculateKingSafetyScore(pieces: OrganizedPieces): void {
 		this.kingSafetyScore = 0;
 		
 		// Skip if either king is missing
@@ -313,58 +281,88 @@ export class EvaluationState {
 		}
 		
 		// White king safety - pawns near king provide protection
-		const whitePawns = this.whitePieceCoords.get(rawTypes.PAWN) || [];
 		let whitePawnsNearKing = 0;
-		for (const pawnCoord of whitePawns) {
-			if (Math.abs(pawnCoord[0] - this.whiteKingCoords[0]) <= 1 && 
-				Math.abs(pawnCoord[1] - this.whiteKingCoords[1]) <= 1) {
-				whitePawnsNearKing++;
+		const whitePawns = pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.WHITE));
+		if (whitePawns) {
+			for (let idx = whitePawns.start; idx < whitePawns.end; idx++) {
+				if (whitePawns.undefineds.includes(idx)) continue;
+				const pawnCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				if (Math.abs(pawnCoord[0] - this.whiteKingCoords[0]) <= 1 && 
+					Math.abs(pawnCoord[1] - this.whiteKingCoords[1]) <= 1) {
+					whitePawnsNearKing++;
+				}
 			}
 		}
 		this.kingSafetyScore += whitePawnsNearKing * PAWN_SHIELD_BONUS;
 		
 		// Black king safety
-		const blackPawns = this.blackPieceCoords.get(rawTypes.PAWN) || [];
 		let blackPawnsNearKing = 0;
-		for (const pawnCoord of blackPawns) {
-			if (Math.abs(pawnCoord[0] - this.blackKingCoords[0]) <= 1 && 
-				Math.abs(pawnCoord[1] - this.blackKingCoords[1]) <= 1) {
-				blackPawnsNearKing++;
+		const blackPawns = pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.BLACK));
+		if (blackPawns) {
+			for (let idx = blackPawns.start; idx < blackPawns.end; idx++) {
+				if (blackPawns.undefineds.includes(idx)) continue;
+				const pawnCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				if (Math.abs(pawnCoord[0] - this.blackKingCoords[0]) <= 1 && 
+					Math.abs(pawnCoord[1] - this.blackKingCoords[1]) <= 1) {
+					blackPawnsNearKing++;
+				}
 			}
 		}
 		this.kingSafetyScore -= blackPawnsNearKing * PAWN_SHIELD_BONUS;
 		
 		// Attacking the opponent's king
 		// White pieces threatening black king
-		const whiteQueens = this.whitePieceCoords.get(rawTypes.QUEEN) || [];
-		const whiteKnights = this.whitePieceCoords.get(rawTypes.KNIGHT) || [];
+		const whiteQueens = pieces.typeRanges.get(typeutil.buildType(rawTypes.QUEEN, players.WHITE));
+		const whiteKnights = pieces.typeRanges.get(typeutil.buildType(rawTypes.KNIGHT, players.WHITE));
 		
-		for (const queenCoord of whiteQueens) {
-			const distance = Math.sqrt(Math.pow(queenCoord[0] - this.blackKingCoords[0], 2) + 
-								  Math.pow(queenCoord[1] - this.blackKingCoords[1], 2));
-			this.kingSafetyScore += Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 10));
+		if (whiteQueens) {
+			for (let idx = whiteQueens.start; idx < whiteQueens.end; idx++) {
+				if (whiteQueens.undefineds.includes(idx)) continue;
+				const queenCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				const distance = Math.sqrt(Math.pow(queenCoord[0] - this.blackKingCoords[0], 2) + 
+									  Math.pow(queenCoord[1] - this.blackKingCoords[1], 2));
+				this.kingSafetyScore += Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 10));
+			}
 		}
 		
-		for (const knightCoord of whiteKnights) {
-			const distance = Math.sqrt(Math.pow(knightCoord[0] - this.blackKingCoords[0], 2) + 
-								  Math.pow(knightCoord[1] - this.blackKingCoords[1], 2));
-			this.kingSafetyScore += Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 8));
+		if (whiteKnights) {
+			for (let idx = whiteKnights.start; idx < whiteKnights.end; idx++) {
+				if (whiteKnights.undefineds.includes(idx)) continue;
+				const knightCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				const distance = Math.sqrt(Math.pow(knightCoord[0] - this.blackKingCoords[0], 2) + 
+									  Math.pow(knightCoord[1] - this.blackKingCoords[1], 2));
+				this.kingSafetyScore += Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 8));
+			}
 		}
 		
 		// Black pieces threatening white king
-		const blackQueens = this.blackPieceCoords.get(rawTypes.QUEEN) || [];
-		const blackKnights = this.blackPieceCoords.get(rawTypes.KNIGHT) || [];
+		const blackQueens = pieces.typeRanges.get(typeutil.buildType(rawTypes.QUEEN, players.BLACK));
+		const blackKnights = pieces.typeRanges.get(typeutil.buildType(rawTypes.KNIGHT, players.BLACK));
 		
-		for (const queenCoord of blackQueens) {
-			const distance = Math.sqrt(Math.pow(queenCoord[0] - this.whiteKingCoords[0], 2) + 
-								  Math.pow(queenCoord[1] - this.whiteKingCoords[1], 2));
-			this.kingSafetyScore -= Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 10));
+		if (blackQueens) {
+			for (let idx = blackQueens.start; idx < blackQueens.end; idx++) {
+				if (blackQueens.undefineds.includes(idx)) continue;
+				const queenCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				const distance = Math.sqrt(Math.pow(queenCoord[0] - this.whiteKingCoords[0], 2) + 
+									  Math.pow(queenCoord[1] - this.whiteKingCoords[1], 2));
+				this.kingSafetyScore -= Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 10));
+			}
 		}
 		
-		for (const knightCoord of blackKnights) {
-			const distance = Math.sqrt(Math.pow(knightCoord[0] - this.whiteKingCoords[0], 2) + 
-								  Math.pow(knightCoord[1] - this.whiteKingCoords[1], 2));
-			this.kingSafetyScore -= Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 8));
+		if (blackKnights) {
+			for (let idx = blackKnights.start; idx < blackKnights.end; idx++) {
+				if (blackKnights.undefineds.includes(idx)) continue;
+				const knightCoord = boardutil.getCoordsFromIdx(pieces, idx);
+				
+				const distance = Math.sqrt(Math.pow(knightCoord[0] - this.whiteKingCoords[0], 2) + 
+									  Math.pow(knightCoord[1] - this.whiteKingCoords[1], 2));
+				this.kingSafetyScore -= Math.max(0, QUEEN_KNIGHT_PROXIMITY_BONUS * (1 - distance / 8));
+			}
 		}
 	}
 }
@@ -530,39 +528,31 @@ function evaluate(lf: gamefile): number {
 	const whiteKingCoords = evalState.whiteKingCoords;
 	const blackKingCoords = evalState.blackKingCoords;
 	
-	// Use the cached piece coordinate maps to avoid recomputing
-	const whitePieceCoords = evalState.whitePieceCoords;
-	const blackPieceCoords = evalState.blackPieceCoords;
-	
-	// If this is our first evaluation or our incremental state isn't initialized,
-	// initialize it from the current position
-	if (!whiteKingCoords || !blackKingCoords || !whitePieceCoords.size || !blackPieceCoords.size) {
+	// If not initialized, build full eval state
+	if (!whiteKingCoords || !blackKingCoords) {
 		evalState.initFromPosition(lf);
 	}
 	
 	// Create a composite score using all evaluation components
 	let score = evalState.materialScore + evalState.positionalScore;
 
-	// --- Additional Evaluation Components --- 
-	// Calculate pawn structure score 
+	// Additional evaluation components
 	const pawnStructureScore = evaluatePawnStructure(
-		whitePieceCoords.get(rawTypes.PAWN) || [],
-		blackPieceCoords.get(rawTypes.PAWN) || []
+		lf.pieces,
+		lf.pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.WHITE)),
+		lf.pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.BLACK))
 	);
 	score += pawnStructureScore;
 	
 	// Calculate king safety
-	if (whiteKingCoords && blackKingCoords) {
-		// Apply king safety evaluation
-		const whiteKingSafety = evaluateKingSafety(true, whiteKingCoords, whitePieceCoords);
-		const blackKingSafety = evaluateKingSafety(false, blackKingCoords, blackPieceCoords);
-		score += whiteKingSafety - blackKingSafety;
-		
-		// Cache these calculated values for potential future use
-		evalState.pawnStructureScore = pawnStructureScore;
-		evalState.kingSafetyScore = whiteKingSafety - blackKingSafety;
-	}
-
+	const whiteKingSafety = evaluateKingSafety(true, whiteKingCoords, lf.pieces);
+	const blackKingSafety = evaluateKingSafety(false, blackKingCoords, lf.pieces);
+	score += whiteKingSafety - blackKingSafety;
+	
+	// Cache these calculated values for potential future use
+	evalState.pawnStructureScore = pawnStructureScore;
+	evalState.kingSafetyScore = whiteKingSafety - blackKingSafety;
+	
 	// If it's black's turn, flip the sign
 	if (lf.whosTurn === players.BLACK) {
 		score = -score;
@@ -574,46 +564,52 @@ function evaluate(lf: gamefile): number {
  * Simplified king safety evaluation - checks only immediate surroundings
  * @param isWhite Whether evaluating white king safety
  * @param kingCoords King coordinates
- * @param pieceCoords Map of piece coordinates by type
+ * @param pieces The organized pieces state.
  * @returns King safety score
  */
-function evaluateKingSafety(isWhite: boolean, kingCoords: Coords, pieceCoords: Map<number, Coords[]>): number {
-	let safety = 0;
+function evaluateKingSafety(isWhite: boolean, kingCoords: Coords, pieces: OrganizedPieces): number {
 	const [kx, ky] = kingCoords;
-	
-	// Check for pawns directly around the king (+20 for each)
-	const pawns = pieceCoords.get(rawTypes.PAWN) || [];
-	for (const [px, py] of pawns) {
-		// Only consider pawns in the immediate vicinity (1 square away)
-		if (Math.abs(px - kx) <= 1 && Math.abs(py - ky) <= 1) {
-			safety += 20;
+	const color = isWhite ? players.WHITE : players.BLACK;
+	let safety = 0;
+
+	// Pawns directly adjacent to the king act as a shield (+20 each)
+	const pawnRange = pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, color));
+	if (pawnRange) {
+		for (let idx = pawnRange.start; idx < pawnRange.end; idx++) {
+			if (pawnRange.undefineds.includes(idx)) continue;
+			const [px, py] = boardutil.getCoordsFromIdx(pieces, idx);
+			if (Math.abs(px - kx) <= 1 && Math.abs(py - ky) <= 1) safety += 20;
 		}
 	}
-	
-	// Bonus for knights and bishops near the king (quick defense)
-	const minorPieces = [
-		...(pieceCoords.get(rawTypes.KNIGHT) || []),
-		...(pieceCoords.get(rawTypes.BISHOP) || [])
-	];
-	
-	for (const [px, py] of minorPieces) {
-		if (Math.abs(px - kx) <= 2 && Math.abs(py - ky) <= 2) {
-			safety += 10;
+
+	// Knights and bishops within a 2-square radius add to king safety (+10 each)
+	const addMinorShield = (rawPiece: number) => {
+		const range = pieces.typeRanges.get(typeutil.buildType(rawPiece, color));
+		if (!range) return;
+		for (let idx = range.start; idx < range.end; idx++) {
+			if (range.undefineds.includes(idx)) continue;
+			const [px, py] = boardutil.getCoordsFromIdx(pieces, idx);
+			if (Math.abs(px - kx) <= 2 && Math.abs(py - ky) <= 2) safety += 10;
 		}
-	}
-	
+	};
+
+	addMinorShield(rawTypes.KNIGHT);
+	addMinorShield(rawTypes.BISHOP);
+
 	return safety;
 }
 
 /**
  * Simplified pawn structure evaluation for both sides
+ * @param pieces The organized pieces state.
  * @param whitePawnCoords Array of white pawn coordinates
  * @param blackPawnCoords Array of black pawn coordinates
  * @returns Score for pawn structure (positive for white advantage)
  */
 function evaluatePawnStructure(
-	whitePawnCoords: Coords[], 
-	blackPawnCoords: Coords[]
+	pieces: OrganizedPieces,
+	whitePawnCoords: { start: number; end: number; undefineds: number[] } | undefined, 
+	blackPawnCoords: { start: number; end: number; undefineds: number[] } | undefined
 ): number {
 	let score = 0;
 
@@ -624,80 +620,100 @@ function evaluatePawnStructure(
 	const blackPawnCount = new Map<number, number>();
 
 	// Initialize file tracking for white pawns
-	for (const [px, py] of whitePawnCoords) {
-		// Count pawns per file for doubled pawn detection
-		whitePawnCount.set(px, (whitePawnCount.get(px) || 0) + 1);
-		
-		// Track ranks of pawns on each file
-		if (!whitePawnsByFile.has(px)) {
-			whitePawnsByFile.set(px, []);
+	if (whitePawnCoords) {
+		for (let idx = whitePawnCoords.start; idx < whitePawnCoords.end; idx++) {
+			if (whitePawnCoords.undefineds.includes(idx)) continue;
+			const [px, py] = boardutil.getCoordsFromIdx(pieces, idx);
+			
+			// Count pawns per file for doubled pawn detection
+			whitePawnCount.set(px, (whitePawnCount.get(px) || 0) + 1);
+			
+			// Track ranks of pawns on each file
+			if (!whitePawnsByFile.has(px)) {
+				whitePawnsByFile.set(px, []);
+			}
+			whitePawnsByFile.get(px)!.push(py);
+			
+			// Simple advancement bonus
+			score += (py - 1) * PAWN_RANK_BONUS;
 		}
-		whitePawnsByFile.get(px)!.push(py);
-		
-		// Simple advancement bonus
-		score += (py - 1) * PAWN_RANK_BONUS;
 	}
 
 	// Initialize file tracking for black pawns
-	for (const [px, py] of blackPawnCoords) {
-		// Count pawns per file for doubled pawn detection
-		blackPawnCount.set(px, (blackPawnCount.get(px) || 0) + 1);
-		
-		// Track ranks of pawns on each file
-		if (!blackPawnsByFile.has(px)) {
-			blackPawnsByFile.set(px, []);
+	if (blackPawnCoords) {
+		for (let idx = blackPawnCoords.start; idx < blackPawnCoords.end; idx++) {
+			if (blackPawnCoords.undefineds.includes(idx)) continue;
+			const [px, py] = boardutil.getCoordsFromIdx(pieces, idx);
+			
+			// Count pawns per file for doubled pawn detection
+			blackPawnCount.set(px, (blackPawnCount.get(px) || 0) + 1);
+			
+			// Track ranks of pawns on each file
+			if (!blackPawnsByFile.has(px)) {
+				blackPawnsByFile.set(px, []);
+			}
+			blackPawnsByFile.get(px)!.push(py);
+			
+			// Simple advancement bonus for black (negative for white's perspective)
+			score -= (8 - py) * PAWN_RANK_BONUS;
 		}
-		blackPawnsByFile.get(px)!.push(py);
-		
-		// Simple advancement bonus for black (negative for white's perspective)
-		score -= (8 - py) * PAWN_RANK_BONUS;
 	}
 
 	// Detect passed pawns for white (simplified heuristic)
-	for (const [px, py] of whitePawnCoords) {
-		// Check if pawn is potentially passed
-		let isPassed = true;
-		
-		// Check three files (current and adjacent) for black pawns ahead
-		outerLoop: for (let f = Math.max(0, px - 1); f <= px + 1 && isPassed; f++) {
-			const blackRanksOnFile = blackPawnsByFile.get(f);
-			if (!blackRanksOnFile) continue;
+	if (whitePawnCoords) {
+		for (let idx = whitePawnCoords.start; idx < whitePawnCoords.end; idx++) {
+			if (whitePawnCoords.undefineds.includes(idx)) continue;
+			const [file, rank] = boardutil.getCoordsFromIdx(pieces, idx);
 			
-			// Check if any black pawn is ahead of this white pawn
-			for (const blackRank of blackRanksOnFile) {
-				if (blackRank > py) {
-					isPassed = false;
-					break outerLoop;
+			// Check if pawn is potentially passed
+			let isPassed = true;
+			
+			// Check three files (current and adjacent) for black pawns ahead
+			outerLoop: for (let f = Math.max(0, file - 1); f <= file + 1 && isPassed; f++) {
+				const blackRanksOnFile = blackPawnsByFile.get(f);
+				if (!blackRanksOnFile) continue;
+				
+				// Check if any black pawn is ahead of this white pawn
+				for (const blackRank of blackRanksOnFile) {
+					if (blackRank > rank) {
+						isPassed = false;
+						break outerLoop;
+					}
 				}
 			}
-		}
-		
-		if (isPassed) {
-			score += PASSED_PAWN_RANK_BONUS[py] || 0;
+			
+			if (isPassed) {
+				score += PASSED_PAWN_RANK_BONUS[rank] || 0;
+			}
 		}
 	}
 
 	// Detect passed pawns for black (simplified)
-	for (const [px, py] of blackPawnCoords) {
-		// Check if pawn is potentially passed
-		let isPassed = true;
-		
-		// Check three files (current and adjacent) for white pawns ahead
-		outerLoop: for (let f = Math.max(0, px - 1); f <= px + 1 && isPassed; f++) {
-			const whiteRanksOnFile = whitePawnsByFile.get(f);
-			if (!whiteRanksOnFile) continue;
+	if (blackPawnCoords) {
+		for (let idx = blackPawnCoords.start; idx < blackPawnCoords.end; idx++) {
+			if (blackPawnCoords.undefineds.includes(idx)) continue;
+			const [file, rank] = boardutil.getCoordsFromIdx(pieces, idx);
 			
-			// Check if any white pawn is ahead of this black pawn
-			for (const whiteRank of whiteRanksOnFile) {
-				if (whiteRank < py) {
-					isPassed = false;
-					break outerLoop;
+			// Check if pawn is potentially passed
+			let isPassed = true;
+			
+			// Check three files (current and adjacent) for white pawns ahead
+			outerLoop: for (let f = Math.max(0, file - 1); f <= file + 1 && isPassed; f++) {
+				const whiteRanksOnFile = whitePawnsByFile.get(f);
+				if (!whiteRanksOnFile) continue;
+				
+				// Check if any white pawn is ahead of this black pawn
+				for (const whiteRank of whiteRanksOnFile) {
+					if (whiteRank < rank) {
+						isPassed = false;
+						break outerLoop;
+					}
 				}
 			}
-		}
-		
-		if (isPassed) {
-			score -= PASSED_PAWN_RANK_BONUS[9 - py] || 0;
+			
+			if (isPassed) {
+				score -= PASSED_PAWN_RANK_BONUS[9 - rank] || 0;
+			}
 		}
 	}
 

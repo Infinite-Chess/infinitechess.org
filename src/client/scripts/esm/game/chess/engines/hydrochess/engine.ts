@@ -9,12 +9,14 @@
 // @ts-ignore
 import type { gamefile } from '../../../chess/logic/gamefile.js';
 import type { Move, MoveDraft } from '../../../../chess/logic/movepiece.js';
-import typeutil, { rawTypes, players, type Player } from '../../../../chess/util/typeutil.js';
+import typeutil, { rawTypes, players } from '../../../../chess/util/typeutil.js';
 import boardutil from '../../../../chess/util/boardutil.js';
 import movepiece from '../../../../chess/logic/movepiece.js';
 import gameformulator from '../../gameformulator.js';
 import evaluation, { PIECE_VALUES, EvaluationState } from './evaluation.js';
 import helpers from './helpers.js';
+// @ts-ignore
+import checkdetection from '../../../../chess/logic/checkdetection.js';
 import { TranspositionTable, TTFlag } from './tt.js';
 import type { Coords } from '../../../../chess/util/coordutil.js';
 
@@ -22,9 +24,27 @@ export const MAX_PLY = 64;
 const SEARCH_TIMEOUT_MS = 10000;
 const INFINITY = 32000;
 const MATE_VALUE = INFINITY - 150;
+const ILLEGAL_MOVE = INFINITY - 100;
 
 // Global evaluation state for incremental evaluation
 // Initialize the EvaluationState object
+
+/**
+ * Gets the coordinates of a king of the specified color from the current board
+ * @param gamefile Current game state
+ * @param color The color of the king to find
+ * @returns Coordinates of the king or undefined if not found
+ */
+function getKingCoordinates(gamefile: gamefile, color: number): Coords | undefined {
+	const kingType = rawTypes.KING | color;
+	// Iterate through pieces to find the king of the specified color
+	for (const piece of gamefile.pieces.pieces) {
+		if (piece && piece.type === kingType) {
+			return piece.coords;
+		}
+	}
+	return undefined;
+}
 export const evalState = new EvaluationState();
 
 export const MATE_SCORE = INFINITY - 300;
@@ -35,7 +55,7 @@ const TIME_UP = INFINITY + 500;
 const NMP_R = 3;
 const LMR_MIN_DEPTH = 3;
 const LMR_REDUCTION = 1;
-const WINDOW_SIZE = 40;
+const WINDOW_SIZE = 10000;
 let startTime = performance.now();
 
 let STOP = false;
@@ -129,10 +149,29 @@ self.onmessage = function(e: MessageEvent) {
 	console.debug(`[Engine] Found best move: (${move?.startCoords}) to (${move?.endCoords})`);
 	postMessage(move);
 
-	// make best move and print debug availalbe moves
+	// make best move
 	const full = movepiece.generateMove(current_gamefile, move!);
 	movepiece.makeMove(current_gamefile, full);
+	console.table(
+		(Array.from(current_gamefile.pieces.coords.entries()) as [string, number][]).map(([sq, idx]) => {
+			const type = current_gamefile.pieces.types[idx];
+			const raw = typeutil.getRawType(type);
+			const colorChar = typeutil.getColorFromType(type) === players.WHITE ? 'W' : 'B';
+			return { square: sq, piece: `${colorChar}${raw}` };
+		})
+	);
+	movepiece.rewindMove(current_gamefile);
+	console.table(
+		(Array.from(current_gamefile.pieces.coords.entries()) as [string, number][]).map(([sq, idx]) => {
+			const type = current_gamefile.pieces.types[idx];
+			const raw = typeutil.getRawType(type);
+			const colorChar = typeutil.getColorFromType(type) === players.WHITE ? 'W' : 'B';
+			return { square: sq, piece: `${colorChar}${raw}` };
+		})
+	);
+	console.debug('[Engine DEBUG] Material Score:', evalState.materialScore);
 
+	movepiece.makeMove(current_gamefile, full);
 	let total = 0;
 	let legalMoves: MoveDraft[] = [];
 	for (let i = 0; i < 1000; i++) {
@@ -149,25 +188,11 @@ self.onmessage = function(e: MessageEvent) {
 		legalMoves.map((move) => `${move.startCoords} -> ${move.endCoords}`).join("\n"),
 		`\nGenerated ${legalMoves.length} moves in ${average} ms (average over 1000 iterations)`
 	);
-
 	movepiece.rewindMove(current_gamefile);
 };
 
 /**
- * The main search function using Negamax with alpha-beta pruning and PVS.
- * Implementation based on high-performance chess engine patterns.
- * @param lf The current logical gamefile state.
- * @param depth The current search depth.
- * @param alpha The alpha value for pruning.
- * @param beta The beta value for pruning.
- * @param data Object to store search data (nodes, best move).
- * @param is_null_move Whether this is a null move search.
- * @param ply The current ply.
- * @returns The evaluation score for the current position.
- */
-/**
  * Negamax search with alpha-beta pruning - the main search function
- * Implements various search optimizations: TT, NMP, futility pruning, etc.
  * @param lf Chess game state
  * @param depth Remaining depth to search
  * @param alpha Lower bound score
@@ -176,6 +201,7 @@ self.onmessage = function(e: MessageEvent) {
  * @param is_null_move Whether this is a null move search
  * @param ply Current ply (half-move) from root
  * @returns Evaluation score from current position
+ * 
  */
 function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data: SearchData, is_null_move: boolean = false): number {
 	// Step 1: Initialization and tracking
@@ -207,7 +233,7 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	
 	// Step 3: Position context information
 	const opponent = typeutil.invertPlayer(lf.whosTurn);
-	const isInCheck = lf.inCheck;
+	const isInCheck = lf.state.local.inCheck;
 	
 	// Check for horizon (depth=0) and switch to quiescence search
 	if (depth <= 0) {
@@ -363,15 +389,6 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 	// --- Generate Moves ---
 	const legalMoves = helpers.generateLegalMoves(lf, lf.whosTurn);
 
-	// Check for terminal nodes (checkmate/stalemate)
-	if (legalMoves.length === 0) {
-		if (isInCheck) {
-			return -MATE_VALUE + data.ply; // Checkmate
-		} else {
-			return 0; // Stalemate
-		}
-	}
-
 	if (data.follow_pv) {
 		helpers.enable_pv_scoring(legalMoves, pv_table, data);
 	}
@@ -399,12 +416,16 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 		// Select the best move at this position (partial selection sort)
 		const bestMoveIndex = helpers.selectNextBestMove(legalMoves, moveScores, i);
 		const currentMoveDraft = legalMoves[bestMoveIndex]!;
+
+		// Generate the full move from the draft
 		const fullMove = movepiece.generateMove(lf, currentMoveDraft); 
 
 		if (!fullMove) {
 			console.error("[Engine] Failed to generate full move for draft:", currentMoveDraft);
 			continue; // Skip invalid move generation
 		}
+		
+		// For legal moves, we'll continue execution and avoid rewinding until later
 
 		const is_quiet = !fullMove.flags.capture;
 		if (is_quiet && skip_quiet) {
@@ -421,16 +442,27 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 			}
 		}
 
-		// Use helper function to update evaluation state before making the move
-		const capturedPieceType = helpers.updateEvalBeforeMove(lf, fullMove);
-		
-		// Execute the move on the board
+		// Check if we captured a king (illegal move in search context)
+		const capturedPiece = boardutil.getPieceFromCoords(lf.pieces, currentMoveDraft.endCoords);
+		const capturedPieceType: number | undefined = capturedPiece?.type;
+
 		movepiece.makeMove(lf, fullMove);
+
+		// Get king coordinates on the fly for our color (the one that just moved)
+		// After making a move, whosTurn is now the opponent's color, so our color is the opposite
+		const ourColor = lf.whosTurn === players.WHITE ? players.BLACK : players.WHITE;
+		const kingCoords = getKingCoordinates(lf, ourColor);
+		// Check if our king would be under attack after the move
+		const kingInCheck = checkdetection.isSquareBeingAttacked(lf, kingCoords, lf.whosTurn);
+
+		// If the move leaves the king in check, it's illegal
+		if (kingInCheck) {
+			movepiece.rewindMove(lf);
+			return ILLEGAL_MOVE;
+		}
 		
-		// Update evaluation state after making the move
-		helpers.updateEvalAfterMove(lf, fullMove, capturedPieceType);
 		data.ply += 1;
-		
+	
 		// Track previous move for counter-moves and continuation history
 		const previousMove = data.previousMove;
 		data.previousMove = fullMove;
@@ -476,35 +508,14 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 		// Restore previous move for upper levels
 		data.previousMove = previousMove;
 		// Rewind the move and restore previous evaluation state
-		// First, save the current piece position for tracking purposes
-		const currentPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.endCoords);
-		let currentRawType: number | undefined;
-		let currentColor: Player | undefined;
-		
-		if (currentPiece) {
-			currentRawType = typeutil.getRawType(currentPiece.type);
-			currentColor = typeutil.getColorFromType(currentPiece.type);
-			
-			// Remove piece from current position in our tracking
-			const pieceMap = currentColor === players.WHITE ? 
-				evalState.whitePieceCoords : evalState.blackPieceCoords;
-			
-			const piecesOfType = pieceMap.get(currentRawType) || [];
-			const pieceIndex = piecesOfType.findIndex(coords => 
-				coords[0] === fullMove.endCoords[0] && coords[1] === fullMove.endCoords[1]);
-			
-			if (pieceIndex >= 0) {
-				piecesOfType.splice(pieceIndex, 1);
-			}
-			
-			// Position evaluation is handled in evaluation.ts
-			// We're just tracking pieces here
-		}
+		// No special tracking needed anymore since we use typeRanges directly
+		// Position evaluation is handled in evaluation.ts
+		// Board state will be restored by movepiece.rewindMove
 		
 		// Execute the rewind on the board
 		movepiece.rewindMove(lf);
 		
-		// Update evaluation state for undoing a move
+		// Update evaluation state for undoing a move - re-use capturedPieceType from above
 		helpers.updateEvalUndoMove(lf, fullMove, capturedPieceType);
 		data.ply--;
 
@@ -559,6 +570,14 @@ function negamax(lf: gamefile, depth: number, alpha: number, beta: number, data:
 		}
 	}
 
+	if (moves_searched === 0) {
+		if (isInCheck) {
+			return -MATE_VALUE + data.ply;
+		} else {
+			return 0;
+		}
+	}
+
 	transpositionTable.store(hash, depth, hash_flag, alpha, best_move, data.ply);
 	return alpha;
 }
@@ -596,7 +615,7 @@ function quiescenceSearch(
 	}
 
 	// Step 1.5: Check if we're in check
-	const isInCheck = lf.inCheck;
+	const isInCheck = lf.state.local.inCheck;
 
 	// Step 2: Transposition Table Probe
 	const hash = TranspositionTable.generateHash(lf);
@@ -638,15 +657,6 @@ function quiescenceSearch(
 
 	// Step 3: Move Generation
 	const allMoves = helpers.generateLegalMoves(lf, lf.whosTurn);
-
-	// Step 3.1: Check for terminal nodes (checkmate/stalemate)
-	if (allMoves.length === 0) {
-		if (isInCheck) {
-			return -MATE_VALUE + data.ply; // Checkmate
-		} else {
-			return 0; // Stalemate
-		}
-	}
 	
 	// Assign move scores to prioritize promising captures and checks
 	const moveScores = helpers.assignMoveScores(
@@ -663,12 +673,26 @@ function quiescenceSearch(
 	const MAX_CHECK_DEPTH = 4;
 
 	// Step a Helper function to avoid duplicating move logic
-	function makeMoveAndGetScore(move: MoveDraft): number {
+	function makeMoveAndGetScore(move: MoveDraft, capturedPieceType: number | undefined): number {
 		const fullMove = movepiece.generateMove(lf, move);
-		const capturedPieceType = helpers.updateEvalBeforeMove(lf, fullMove);
-		
+
 		movepiece.makeMove(lf, fullMove);
 		helpers.updateEvalAfterMove(lf, fullMove, capturedPieceType);
+
+		// Get king coordinates for the current player
+		const kingCoords = lf.whosTurn === players.WHITE ? evalState.blackKingCoords : evalState.whiteKingCoords;
+
+		// Check if our king would be under attack after the move
+		const kingInCheck = checkdetection.isSquareBeingAttacked(lf, kingCoords, lf.whosTurn);
+
+		// If the move leaves the king in check, it's illegal
+		if (kingInCheck) {
+			helpers.updateEvalUndoMove(lf, fullMove, capturedPieceType);
+			movepiece.rewindMove(lf);
+			return ILLEGAL_MOVE;
+		}
+
+		// Only proceed with evaluation and recursive search for legal moves
 		data.ply++;
 		
 		const previousMove = data.previousMove;
@@ -690,6 +714,7 @@ function quiescenceSearch(
 
 	// Step 5: Process moves using more efficient move ordering
 	let captureRaisedAlpha = false;
+	let searched_moves = 0;
 	
 	// Use incremental move selection (like in negamax) instead of sorting the entire array
 	for (let i = 0; i < allMoves.length; i++) {
@@ -708,13 +733,9 @@ function quiescenceSearch(
 			// Only check non-captures for check status to avoid redundant work
 			const fullMove = movepiece.generateMove(lf, move);
 			if (fullMove) {
-				const capturedPieceType = helpers.updateEvalBeforeMove(lf, fullMove);
-				
 				movepiece.makeMove(lf, fullMove);
-				isCheck = lf.inCheck;
-				
+				isCheck = lf.state.local.inCheck;
 				movepiece.rewindMove(lf);
-				helpers.updateEvalUndoMove(lf, fullMove, capturedPieceType);
 			}
 		}
 
@@ -752,10 +773,16 @@ function quiescenceSearch(
 			if (isCapture && data.ply > 2) continue;
 			if (isCheck && data.ply > 1) continue;
 		}
+
+		const capturedPiece = boardutil.getPieceFromCoords(lf.pieces, move.endCoords);
+		const capturedPieceType: number | undefined = capturedPiece?.type;
 		
 		// Make the move and get the score
-		const score = makeMoveAndGetScore(move);
+		const score = makeMoveAndGetScore(move, capturedPieceType);
 		if (score === TIME_UP) return TIME_UP;
+		if (score === ILLEGAL_MOVE) continue;
+
+		searched_moves++;
 
 		if (score > bestScore) {
 			bestScore = score;
@@ -771,6 +798,14 @@ function quiescenceSearch(
 					return beta;
 				}
 			}
+		}
+	}
+
+	if (searched_moves === 0) {
+		if (isInCheck) {
+			return -MATE_VALUE + data.ply; // Checkmate
+		} else {
+			return 0; // Stalemate
 		}
 	}
 
@@ -893,15 +928,6 @@ function decayHistoryScores(history_table: Map<string, number>): void {
 function findBestMove(lf: gamefile, searchData: SearchData) {
 	STOP = false;
 	startTime = performance.now();
-
-	// debug print available moves in the position
-	const legalMoves = helpers.generateLegalMoves(lf, lf.whosTurn);
-	const endTime = performance.now();
-	console.log(
-		"Available moves:",
-		legalMoves.map((move) => `${move.startCoords} -> ${move.endCoords}`).join("\n"),
-		`\nGenerated ${legalMoves.length} moves in ${(endTime - startTime).toFixed(2)} ms`
-	);
 
 	// Reset search-specific data before starting
 	killer_moves = Array(MAX_PLY).fill(null).map(() => [null, null]);
@@ -1029,8 +1055,8 @@ function findBestMove(lf: gamefile, searchData: SearchData) {
 
 		console.debug(printString);
 		
-		// if checkmate, return
-		if (mate) {
+		// if checkmate is found and depth is high enough, return
+		if (mate && depth >= 10) {
 			break;
 		}
 	}

@@ -13,30 +13,19 @@ import { evalState, SearchData } from "./engine.js";
 import evaluation, { PIECE_VALUES } from "./evaluation.js";
 
 const FRIEND_WIGGLE_ROOM = 1; // Friendly wiggle radius
+const KING_WIGGLE_ROOM = 2;  // Enemy king proximity radius
 const MAX_ENGINE_SLIDE_CHECK = 50; // Absolute max distance to check for infinite sliders
 const HISTORY_MAX_VALUE = 1_000_000; // Prevent overflow/extreme values
 
-// Storage for sliding vectors
+// Create efficient lookups for piece occupancy
+const piecePositions = new Set<string>();
+const enemyPositions = new Set<string>();
 
-/**
- * Helper function to efficiently remove a piece from a coordinates array
- * Uses swap-and-pop technique for O(1) removal after finding the element
- */
-function removePieceFromArray(pieceArray: Coords[], x: number, y: number): boolean {
-	for (let i = 0; i < pieceArray.length; i++) {
-		const [px, py] = pieceArray[i]!;
-		if (px === x && py === y) {
-			// Use quick removal technique (swap with last element and pop)
-			const lastIndex = pieceArray.length - 1;
-			if (i !== lastIndex) {
-				pieceArray[i] = pieceArray[lastIndex]!;
-			}
-			pieceArray.pop();
-			return true;
-		}
-	}
-	return false;
-}
+// Build maps for enemy alignment lookups (fast constant-time alignment check)
+const rowCount = new Map<number, number>();
+const colCount = new Map<number, number>();
+const diag1Cnt = new Map<number, number>();
+const diag2Cnt = new Map<number, number>();
 
 /**
  * Optimized sliding move generator respecting limits and interaction rules.
@@ -51,32 +40,67 @@ function removePieceFromArray(pieceArray: Coords[], x: number, y: number): boole
  * @param legalMoves Array to add legal moves to
  */
 function generateSlidingMoves(
+	lf: gamefile,
 	startCoords: Coords,
 	moverColor: Player,
 	directions: Array<[number, number, number, number]>, // [dx, dy, negLimit, posLimit]
 	legalMoves: MoveDraft[]
 ): void {
 	const [startX, startY] = startCoords;
+	const pieces = lf.pieces;
 
-	// Retrieve piece positions from evaluation state
-	const enemyMap = moverColor === players.WHITE ? evalState.blackPieceCoords : evalState.whitePieceCoords;
-	const friendMap = moverColor === players.WHITE ? evalState.whitePieceCoords : evalState.blackPieceCoords;
+	// Get enemy and friendly pieces using typeRanges
+	const enemyColor = moverColor === players.WHITE ? players.BLACK : players.WHITE;
 	const enemyCoords: Coords[] = [];
 	const friendCoords: Coords[] = [];
-	for (const a of enemyMap.values()) enemyCoords.push(...a);
-	for (const a of friendMap.values()) friendCoords.push(...a);
+	
+	// Collect all piece coordinates by color
+	for (const [typeValue, typeRange] of pieces.typeRanges) {
+		const pieceColor = typeutil.getColorFromType(typeValue);
+		if (pieceColor !== moverColor && pieceColor !== enemyColor) continue;
+		
+		for (let idx = typeRange.start; idx < typeRange.end; idx++) {
+			// Skip undefined pieces
+			if (typeRange.undefineds.includes(idx)) continue;
+			
+			const x = pieces.XPositions[idx];
+			const y = pieces.YPositions[idx];
+			const coords: Coords = [x, y];
+			
+			if (pieceColor === moverColor) {
+				friendCoords.push(coords);
+			} else {
+				enemyCoords.push(coords);
+			}
+		}
+	}
 
-	// Use globally maintained piece sets for O(1) occupancy ---------------------
-	const enemySet = moverColor === players.WHITE ? evalState.blackPieceSet : evalState.whitePieceSet;
-	const friendSet = moverColor === players.WHITE ? evalState.whitePieceSet : evalState.blackPieceSet;
-	const hasPieceAt = (x: number, y: number): boolean =>
-		enemySet.has(`${x},${y}`) || friendSet.has(`${x},${y}`);
+	// Enemy king coordinates (for king wiggle consideration)
+	const enemyKing = moverColor === players.WHITE ? evalState.blackKingCoords : evalState.whiteKingCoords;
+	const startInKingVertStripe = enemyKing ? Math.abs(startX - enemyKing[0]) <= KING_WIGGLE_ROOM : false;
+	const startInKingHorizStripe = enemyKing ? Math.abs(startY - enemyKing[1]) <= KING_WIGGLE_ROOM : false;
 
-	// Build maps for enemy alignment lookups (fast constant-time alignment check)
-	const rowCount = new Map<number, number>();
-	const colCount = new Map<number, number>();
-	const diag1Cnt = new Map<number, number>();
-	const diag2Cnt = new Map<number, number>();
+	piecePositions.clear();
+	enemyPositions.clear();
+	
+	for (const [ex, ey] of enemyCoords) {
+		const key = `${ex},${ey}`;
+		enemyPositions.add(key);
+		piecePositions.add(key);
+	}
+	
+	for (const [fx, fy] of friendCoords) {
+		const key = `${fx},${fy}`;
+		piecePositions.add(key);
+	}
+	
+	const hasPieceAt = (x: number, y: number): boolean => piecePositions.has(`${x},${y}`);
+
+	rowCount.clear();
+	colCount.clear();
+	diag1Cnt.clear();
+	diag2Cnt.clear();
+
 	for (const [ex, ey] of enemyCoords) {
 		rowCount.set(ey, (rowCount.get(ey) || 0) + 1);
 		colCount.set(ex, (colCount.get(ex) || 0) + 1);
@@ -92,7 +116,7 @@ function generateSlidingMoves(
 			for (let step = 1; step <= MAX_ENGINE_SLIDE_CHECK; step++) {
 				const x = sqX + dir * step;
 				if (!hasPieceAt(x, sqY)) continue;
-				if (enemySet.has(`${x},${sqY}`)) return true; // first blocker is enemy
+				if (enemyPositions.has(`${x},${sqY}`)) return true; // first blocker is enemy
 				break; // first blocker is friendly
 			}
 		}
@@ -104,7 +128,7 @@ function generateSlidingMoves(
 			for (let step = 1; step <= MAX_ENGINE_SLIDE_CHECK; step++) {
 				const y = sqY + dir * step;
 				if (!hasPieceAt(sqX, y)) continue;
-				if (enemySet.has(`${sqX},${y}`)) return true;
+				if (enemyPositions.has(`${sqX},${y}`)) return true;
 				break;
 			}
 		}
@@ -118,7 +142,7 @@ function generateSlidingMoves(
 					const x = sqX + dirX * step;
 					const y = sqY + dirY * step;
 					if (!hasPieceAt(x, y)) continue;
-					if (enemySet.has(`${x},${y}`)) return true;
+					if (enemyPositions.has(`${x},${y}`)) return true;
 					break;
 				}
 			}
@@ -204,6 +228,11 @@ function generateSlidingMoves(
 			const sqX = startX + dx * d;
 			const sqY = startY + dy * d;
 
+			// Skip the square occupied by the opponent king itself (cannot capture king)
+			if (enemyKing && sqX === enemyKing[0] && sqY === enemyKing[1]) {
+				break; // stop iterating past the king (cannot move onto king square)
+			}
+
 			const captureTarget = d === closestPieceDist; // square with blocker (may be Infinity)
 
 			// Determine alignment while ensuring no intervening piece blocks the view
@@ -231,7 +260,28 @@ function generateSlidingMoves(
 				}
 			}
 
-			if (captureTarget || aligned || wiggled) {
+			// Wiggle: enemy king proximity (applies to ANY ray orientation)
+			let kingWiggled = false;
+			if (!aligned && !wiggled && !captureTarget && enemyKing) {
+				const [kX, kY] = enemyKing;
+				const inVertStripe   = Math.abs(sqX - kX) <= KING_WIGGLE_ROOM;
+				const inHorizStripe  = Math.abs(sqY - kY) <= KING_WIGGLE_ROOM;
+
+				if (inVertStripe || inHorizStripe) {
+					const sameVertStripe  = startInKingVertStripe  && inVertStripe;
+					const sameHorizStripe = startInKingHorizStripe && inHorizStripe;
+
+					// If the moving piece already occupies this stripe, only include
+					// ONE square from it (the furthest reachable along this ray)
+					if (sameVertStripe || sameHorizStripe) {
+						if (d === effectiveMax) kingWiggled = true;
+					} else {
+						kingWiggled = true;
+					}
+				}
+			}
+
+			if (captureTarget || aligned || wiggled || kingWiggled) {
 				legalMoves.push({ startCoords, endCoords: [sqX, sqY] });
 			}
 		}
@@ -239,11 +289,11 @@ function generateSlidingMoves(
 }
 
 /**
- * Ultra-optimized legal move generator that uses fast lookups and minimizes redundant processing
+ * Optimized pseudo-legal move generator that uses fast lookups and minimizes redundant processing
  * 
  * @param lf Current game file state
  * @param player The player to generate moves for
- * @returns Array of legal moves
+ * @returns Array of pseudo-legal moves
  */
 function generateLegalMoves(lf: gamefile, player: Player): MoveDraft[] {
 	// Pre-allocate output array with estimated capacity to avoid resizing
@@ -268,7 +318,7 @@ function generateLegalMoves(lf: gamefile, player: Player): MoveDraft[] {
 		}
 		
 		// Get legal moves for this piece (reuse result object)
-		legalMovesResult = legalmoves.calculate(lf, piece);
+		legalMovesResult = legalmoves.calculate(lf, piece, { ignoreCheck: true });
 
 		// --- Fast-path for Individual Moves ---
 		const individualMoves = legalMovesResult.individual;
@@ -318,7 +368,7 @@ function generateLegalMoves(lf: gamefile, player: Player): MoveDraft[] {
 			}
 			
 			// Generate all sliding moves with optimized implementation
-			generateSlidingMoves(coords, player, slidingDirections, legalMoves);
+			generateSlidingMoves(lf, coords, player, slidingDirections, legalMoves);
 		}
 	}
 
@@ -395,34 +445,23 @@ function enable_pv_scoring(moves: MoveDraft[], pv_table: (MoveDraft | null | und
 }
 
 /**
- * Updates evaluation state before making a move (removes pieces from old positions)
+ * Updates evaluation state after making a move (adding pieces to new positions, updating material scores)
+ * Also handles tracking of pawn files and other evaluation metrics
  * @param lf Current game state
- * @param fullMove The move to be made
- * @returns Object containing information needed to restore state later
+ * @param fullMove The move that was made
+ * @param capturedPieceType The type of piece that was captured (if any)
  */
-function updateEvalBeforeMove(lf: gamefile, fullMove: Move) {
-	// Save captured piece info for later restoration
-	const capturedPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.endCoords);
-	const capturedPieceType: number | undefined = capturedPiece?.type;
+function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: number | undefined) {
+	const [startX] = fullMove.startCoords;
+	const [endX] = fullMove.endCoords;
 	
-	// Get information about the moved piece and remove from old position
+	// 0. Get information about the moved piece and handle pawn file decrement (from startX)
 	const movingPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.startCoords);
 	if (movingPiece) {
-		const [startX, startY] = fullMove.startCoords;
 		const movingRawType = typeutil.getRawType(movingPiece.type);
 		const movingColor = typeutil.getColorFromType(movingPiece.type);
 		
-		// Get piece array directly for faster access
-		const pieceArray = movingColor === players.WHITE ? 
-			evalState.whitePieceCoords.get(movingRawType) : 
-			evalState.blackPieceCoords.get(movingRawType);
-		
-		if (pieceArray) {
-			// Fast removal from array without findIndex
-			removePieceFromArray(pieceArray, startX, startY);
-		}
-		
-		// Update pawn file tracking if this is a pawn
+		// Update pawn file tracking if this is a pawn (decrement from start position)
 		if (movingRawType === rawTypes.PAWN) {
 			if (movingColor === players.WHITE) {
 				evalState.whitePawnFiles[startX]!--;
@@ -430,39 +469,9 @@ function updateEvalBeforeMove(lf: gamefile, fullMove: Move) {
 				evalState.blackPawnFiles[startX]!--;
 			}
 		}
-		
-		// Remove from piece set
-		const key = `${startX},${startY}`;
-		if (movingColor === players.WHITE) {
-			evalState.whitePieceSet.delete(key);
-		} else {
-			evalState.blackPieceSet.delete(key);
-		}
-		
-		// Handle castling: also remove rook from its original square (no material change)
-		if (fullMove.castle) {
-			const [rx, ry] = fullMove.castle.coord;
-			const rookKey = `${rx},${ry}`;
-			const rookArray = movingColor === players.WHITE ? evalState.whitePieceCoords.get(rawTypes.ROOK)! : evalState.blackPieceCoords.get(rawTypes.ROOK)!;
-			removePieceFromArray(rookArray, rx, ry);
-			if (movingColor === players.WHITE) evalState.whitePieceSet.delete(rookKey); else evalState.blackPieceSet.delete(rookKey);
-		}
 	}
 	
-	return capturedPieceType;
-}
-
-/**
- * Updates evaluation state after making a move (adding pieces to new positions, updating material scores)
- * @param lf Current game state
- * @param fullMove The move that was made
- * @param capturedPieceType The type of piece that was captured (if any)
- */
-function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: number | undefined) {
-	const [endX] = fullMove.endCoords;
-	const endKey = `${fullMove.endCoords[0]},${fullMove.endCoords[1]}`;
-	
-	// 1. Handle captured piece (update material score and remove from tracking)
+	// 1. Handle captured piece (update material score)
 	if (fullMove.flags.capture && capturedPieceType !== undefined) {
 		const capRawType = typeutil.getRawType(capturedPieceType);
 		const capColor = typeutil.getColorFromType(capturedPieceType);
@@ -479,29 +488,15 @@ function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: nu
 				evalState.blackPawnFiles[endX]!--;
 			}
 		}
-		
-		// Remove captured piece from its color set
-		if (capColor === players.WHITE) {
-			evalState.whitePieceSet.delete(endKey);
-		} else {
-			evalState.blackPieceSet.delete(endKey);
-		}
 	}
 	
-	// 2. Update position of moved piece
+	// 2. Update tracking for moved piece
 	const movedPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.endCoords);
 	if (movedPiece) {
 		const rawType = typeutil.getRawType(movedPiece.type);
 		const color = typeutil.getColorFromType(movedPiece.type);
-		const pieceArray = color === players.WHITE ? 
-			evalState.whitePieceCoords.get(rawType) : evalState.blackPieceCoords.get(rawType);
 		
-		// Add piece to its new position
-		if (pieceArray) {
-			pieceArray.push(fullMove.endCoords);
-		}
-		
-		// Track pawn files for moved pawns
+		// Update pawn file tracking if a pawn was moved (increment at destination)
 		if (rawType === rawTypes.PAWN) {
 			if (color === players.WHITE) {
 				evalState.whitePawnFiles[endX]!++;
@@ -525,24 +520,6 @@ function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: nu
 				evalState.blackKingCoords = fullMove.endCoords;
 			}
 		}
-		
-		// Add moved piece to its color set
-		if (color === players.WHITE) {
-			evalState.whitePieceSet.add(endKey);
-		} else {
-			evalState.blackPieceSet.add(endKey);
-		}
-		
-		// Handle castling: add rook to its new square
-		if (fullMove.castle) {
-			const dir = fullMove.castle.dir;
-			const rookEndX = fullMove.endCoords[0] - dir; // rook ends adjacent to king
-			const rookEndY = fullMove.endCoords[1];
-			const rookEndKey = `${rookEndX},${rookEndY}`;
-			const rookArray = color === players.WHITE ? evalState.whitePieceCoords.get(rawTypes.ROOK)! : evalState.blackPieceCoords.get(rawTypes.ROOK)!;
-			rookArray.push([rookEndX, rookEndY]);
-			if (color === players.WHITE) evalState.whitePieceSet.add(rookEndKey); else evalState.blackPieceSet.add(rookEndKey);
-		}
 	}
 }
 
@@ -553,31 +530,22 @@ function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: nu
  * @param capturedPieceType The type of piece that was captured (if any)
  */
 function updateEvalUndoMove(lf: gamefile, fullMove: Move, capturedPieceType: number | undefined) {
-	const [endX, endY] = fullMove.endCoords;
+	const [endX] = fullMove.endCoords;
 	const [startX] = fullMove.startCoords;
-	const startKey = `${fullMove.startCoords[0]},${fullMove.startCoords[1]}`;
-	const endKey = `${endX},${endY}`;
 	
 	// 1. Handle the moved piece (which is now at the start position)
 	const restoredPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.startCoords);
 	if (restoredPiece) {
 		const rawType = typeutil.getRawType(restoredPiece.type);
 		const color = typeutil.getColorFromType(restoredPiece.type);
-		const pieceArray = color === players.WHITE ? 
-			evalState.whitePieceCoords.get(rawType) : evalState.blackPieceCoords.get(rawType);
-		
-		// Add piece back to its original position
-		if (pieceArray) {
-			pieceArray.push(fullMove.startCoords);
-		}
 		
 		// Update pawn file tracking if a pawn was moved
 		if (rawType === rawTypes.PAWN) {
 			if (color === players.WHITE) {
-				evalState.whitePawnFiles[startX]!--;
+				evalState.whitePawnFiles[startX]!++;
 				evalState.whitePawnFiles[endX]!--;
 			} else {
-				evalState.blackPawnFiles[startX]!--;
+				evalState.blackPawnFiles[startX]!++;
 				evalState.blackPawnFiles[endX]!--;
 			}
 		}
@@ -590,32 +558,6 @@ function updateEvalUndoMove(lf: gamefile, fullMove: Move, capturedPieceType: num
 				evalState.blackKingCoords = fullMove.startCoords;
 			}
 		}
-		
-		// Add back to piece set
-		if (color === players.WHITE) {
-			evalState.whitePieceSet.add(startKey);
-		} else {
-			evalState.blackPieceSet.add(startKey);
-		}
-		
-		// Handle castling: move rook back to its original square
-		if (fullMove.castle) {
-			const dir = fullMove.castle.dir;
-			const rookStartX = fullMove.castle.coord[0];
-			const rookStartY = fullMove.castle.coord[1];
-			const rookEndX = fullMove.endCoords[0] - dir;
-			const rookEndY = fullMove.endCoords[1];
-			const rookStartKey = `${rookStartX},${rookStartY}`;
-			const rookEndKey = `${rookEndX},${rookEndY}`;
-			const kingColor = typeutil.getColorFromType(restoredPiece.type);
-			const rookArray = kingColor === players.WHITE ? evalState.whitePieceCoords.get(rawTypes.ROOK)! : evalState.blackPieceCoords.get(rawTypes.ROOK)!;
-			// Remove rook from end square
-			removePieceFromArray(rookArray, rookEndX, rookEndY);
-			if (kingColor === players.WHITE) evalState.whitePieceSet.delete(rookEndKey); else evalState.blackPieceSet.delete(rookEndKey);
-			// Add rook back to start square
-			rookArray.push([rookStartX, rookStartY]);
-			if (kingColor === players.WHITE) evalState.whitePieceSet.add(rookStartKey); else evalState.blackPieceSet.add(rookStartKey);
-		}
 	}
 	
 	// 2. Restore captured piece if there was one
@@ -627,28 +569,13 @@ function updateEvalUndoMove(lf: gamefile, fullMove: Move, capturedPieceType: num
 		// Restore material score
 		evalState.materialScore -= (capColor === players.WHITE ? -capPieceValue : capPieceValue);
 		
-		// Add captured piece back to piece array tracking
-		const pieceArray = capColor === players.WHITE ? 
-			evalState.whitePieceCoords.get(capRawType) : evalState.blackPieceCoords.get(capRawType);
-		
-		if (pieceArray) {
-			pieceArray.push(fullMove.endCoords);
-		}
-		
 		// Update pawn file tracking if captured piece was a pawn
 		if (capRawType === rawTypes.PAWN) {
 			if (capColor === players.WHITE) {
-				evalState.whitePawnFiles[endX]!--;
+				evalState.whitePawnFiles[endX]!++;
 			} else {
-				evalState.blackPawnFiles[endX]!--;
+				evalState.blackPawnFiles[endX]!++;
 			}
-		}
-		
-		// Restore captured piece to set
-		if (capColor === players.WHITE) {
-			evalState.whitePieceSet.add(endKey);
-		} else {
-			evalState.blackPieceSet.add(endKey);
 		}
 	}
 	
@@ -743,9 +670,8 @@ export default {
 	updateHistoryScore,
 	decayHistoryScores,
 	enable_pv_scoring,
-	updateEvalBeforeMove,
 	updateEvalAfterMove,
 	updateEvalUndoMove,
 	assignMoveScores,
-	selectNextBestMove
+	selectNextBestMove,
 };

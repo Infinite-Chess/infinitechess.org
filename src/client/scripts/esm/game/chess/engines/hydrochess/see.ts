@@ -5,7 +5,8 @@ import type { Player } from "../../../../chess/util/typeutil.js";
 import boardutil from "../../../../chess/util/boardutil.js";
 import typeutil, { players } from "../../../../chess/util/typeutil.js";
 // @ts-ignore
-import checkdetection, { Attacker } from "../../../../chess/logic/checkdetection.js";
+import checkdetection from "../../../../chess/logic/checkdetection.js";
+import type { Attacker } from "../../../../chess/logic/state.js";
 import { PIECE_VALUES } from "./evaluation.js";
 
 /**
