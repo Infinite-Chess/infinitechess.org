@@ -4,7 +4,7 @@ import type { BoundingBox } from "../../util/math.js";
 import type { MetaData } from "../util/metadata.js";
 import type { GameRules } from "../variants/gamerules.js";
 import type { Player, RawType, RawTypeGroup } from "../util/typeutil.js";
-import type { Move, NullMove } from "./movepiece.js";
+import type { Move, NullMove, BaseMove } from "./movepiece.js";
 import type { OrganizedPieces } from "./organizedpieces.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { GameState, GlobalGameState } from "./state.js";
@@ -45,7 +45,7 @@ interface Snapshot {
 type Game = {
 	/** Information about the game */
 	metadata: MetaData
-	moves: string[]
+	moves: BaseMove[]
 	gameRules: GameRules
 	whosTurn: Player
 	gameConclusion?: string
