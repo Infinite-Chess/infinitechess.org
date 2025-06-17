@@ -4,13 +4,9 @@
  */
 
 
-// @ts-ignore
-import { migrateMembersToPlayerStatsTable } from './migrateMembers.js';
-import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
-import { migrateRefreshTokensToTable } from './migrateRefreshTokens.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -301,9 +297,6 @@ function initDatabase(): void {
 	generateTables();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
-	migrateMembersToPlayerStatsTable();
-	gamelogger.migrateGameLogsToDatabase();
-	migrateRefreshTokensToTable();
 }
 
 
