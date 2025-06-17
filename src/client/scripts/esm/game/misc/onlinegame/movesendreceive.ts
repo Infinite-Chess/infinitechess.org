@@ -18,6 +18,7 @@ import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import premoves from "../../chess/premoves.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
@@ -107,6 +108,8 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
+
+	premoves.processPremoves(gamefile);
 }
 
 

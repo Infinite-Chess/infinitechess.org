@@ -40,6 +40,8 @@ import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
+import premoves from "../chess/premoves.js";
+import * as premovehighlights from '../rendering/highlights/premovehighlights.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -251,7 +253,7 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 	// The pointer has released, drop the piece.
 
-	// If it was dropped an an arrow indicator pointing to a legal piece to capture, capture that!
+	// If it was dropped on an arrow indicator pointing to a legal piece to capture, capture that!
 	const dropArrowsCaptureCoords = droparrows.getCaptureCoords();
 	if (dropArrowsCaptureCoords) return moveGamefilePiece(gamefile, mesh, dropArrowsCaptureCoords);
 
@@ -270,9 +272,17 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!mouse.isMouseClicked(Mouse.LEFT)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
-	else moveGamefilePiece(gamefile, mesh, hoverSquare);
-	
-	mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
+
+	if (isPremove) {
+		const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
+		premoves.addPremove(moveDraft);
+		premovehighlights.showPremoves(premoves.getPremoves());
+		mouse.claimMouseClick(Mouse.LEFT);
+		return;
+	} else {
+		moveGamefilePiece(gamefile, mesh, hoverSquare);
+		mouse.claimMouseClick(Mouse.LEFT); // Claim the mouse click so that annotations does use it to Collapse annotations.
+	}
 }
 
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
@@ -322,8 +332,9 @@ function canMovePieceType(pieceType: number): boolean {
 	if (editMode) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
-	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
-	return (!isPremove); // For now we can't premove, can only move our pieces on our turn.
+	// const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
+	// return (!isPremove); // For now we can't premove, can only move our pieces on our turn.
+	return true;
 }
 
 /**
@@ -494,6 +505,7 @@ function renderGhostPiece() {
 export default {
 	isAPieceSelected,
 	getPieceSelected,
+	initSelectedPieceInfo,
 	reselectPiece,
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,
@@ -505,4 +517,5 @@ export default {
 	renderGhostPiece,
 	isOpponentPieceSelected,
 	arePremoving,
+	moveGamefilePiece,
 };
