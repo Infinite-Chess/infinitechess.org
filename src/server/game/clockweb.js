@@ -1,13 +1,18 @@
 
-const validClockValues = ['-','15+2','60+2','120+2','180+2','300+2','480+3','600+4','600+6','720+5','900+6','1200+8','1500+10','1800+15','2400+20']; 
+/** These are the allowed time controls in production. */
+const validTimeControls = ['-','60+2','120+2','180+2','300+2','480+3','600+4','600+6','720+5','900+6','1200+8','1500+10','1800+15','2400+20']; 
+/** These are only allowed in development. */
+const devTimeControls = ['15+2'];
 
 /**
- * Returns true if the provided clock value is valid.
- * If false, that means somebody is trying to hack when creating an illegal invite.
- * @param {string} clock - The clock value (e.g. "10+5").
+ * Returns true if the provided time control is valid.
+ * If false, that means somebody is time control (e.g. "600+6").
  * @returns {boolean} *true* if it is valid.
  */
-function isClockValueValid(clock) { return validClockValues.includes(clock); }
+function isClockValueValid(time_control) {
+	return validTimeControls.includes(time_control) ||
+	DEV_BUILD && devTimeControls.includes(time_control);
+}
 
 /**
  * Splits the clock from the form `10+5` into the `minutes` and `increment` properties.
