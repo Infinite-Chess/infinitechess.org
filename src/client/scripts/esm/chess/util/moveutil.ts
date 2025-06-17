@@ -4,13 +4,13 @@
  */
 
 
-import type { Move, MoveDraft, NullMove, castle, enpassant, promotion } from '../logic/movepiece.js';
+import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board, FullGame } from '../logic/gamefile.js';
-// @ts-ignore
+import type { Game, Board } from '../logic/gamefile.js';
 import type { GameRules } from '../variants/gamerules.js';
+import type { _Move_Compact } from '../logic/icn/icnconverter.js';
 
 import coordutil from './coordutil.js';
 import { players } from './typeutil.js';
@@ -46,7 +46,7 @@ interface DepricatedMove {
  * Returns the move one forward from the current position we're viewing, if it exists.
  * This is also the move we would execute if we forward the game 1 step.
  */
-function getMoveOneForward(boardsim: Board): Move | NullMove | undefined {
+function getMoveOneForward(boardsim: Board): Move | undefined {
 	const moveIndex = boardsim.state.local.moveIndex;
 	const incrementedIndex = moveIndex + 1;
 	return getMoveFromIndex(boardsim.moves, incrementedIndex);
@@ -78,7 +78,7 @@ function isIndexOutOfRange(moves: any[], index: number): boolean {
 /**
  * Returns the very last move played in the moves list, if there is one. Otherwise, returns undefined.
  */
-function getLastMove(moves: (Move | NullMove)[]): Move | NullMove | undefined {
+function getLastMove(moves: Move[]): Move | undefined {
 	const finalIndex = moves.length - 1;
 	if (finalIndex < 0) return;
 	return moves[finalIndex];
@@ -87,7 +87,7 @@ function getLastMove(moves: (Move | NullMove)[]): Move | NullMove | undefined {
 /**
  * Returns the move we're currently viewing in the provided gamefile.
  */
-function getCurrentMove(boardsim: Board): Move | NullMove | undefined {
+function getCurrentMove(boardsim: Board): Move | undefined {
 	const index = boardsim.state.local.moveIndex;
 	if (index < 0) return;
 	return boardsim.moves[index];
@@ -96,7 +96,7 @@ function getCurrentMove(boardsim: Board): Move | NullMove | undefined {
 /**
  * Gets the move from the moves list at the specified index
  */
-function getMoveFromIndex(moves: (Move | NullMove)[], index: number): Move | NullMove {
+function getMoveFromIndex(moves: Move[], index: number): Move {
 	if (isIndexOutOfRange(moves, index)) throw Error("Cannot get next move when index overflow");
 	return moves[index]!;
 }
@@ -112,7 +112,7 @@ function areWeViewingLatestMove(boardsim: Board): boolean {
 /**
  * Tests if the provided index is the index of the last move in the provided list
  */
-function isIndexTheLastMove(moves: (Move | NullMove)[], index: number): boolean {
+function isIndexTheLastMove(moves: Move[], index: number): boolean {
 	const finalIndex = moves.length - 1;
 	return index === finalIndex;
 }
@@ -149,7 +149,7 @@ function getPlyCount(moves: Move[]): number { return moves.length; }
  * @param coords - The current coordinates of the piece.
  */
 function hasPieceMoved(boardsim: Board, coords: Coords): boolean {
-	return boardsim.moves.some((move: Move | NullMove) => !move.isNull && coordutil.areCoordsEqual(move.endCoords, coords));
+	return boardsim.moves.some((move: Move ) => coordutil.areCoordsEqual(move.endCoords, coords));
 }
 
 // COMMENTED-OUT because it's not used anywhere in the code
@@ -247,13 +247,10 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
 }
 
-// /**
-//  * Gets if any null moves have been added to the board simulation.
-//  * We can test this way since null moves do not add anything to basegame.
-//  */
-// function areNullMovesPresent({basegame, boardsim}: FullGame): boolean {
-// 	return basegame.moves.length !== boardsim.moves.length;
-// }
+
+function isMoveSelf(move: _Move_Compact): boolean {
+	return move.startCoords[0] === move.endCoords[0] && move.startCoords[1] === move.endCoords[1];
+}
 
 
 // ------------------------------------------------------------------------------
@@ -282,4 +279,5 @@ export default {
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
 	stripSpecialMoveTagsFromCoords,
+	isMoveSelf,
 };

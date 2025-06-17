@@ -99,7 +99,7 @@ function detectKoth({boardsim, basegame}) {
 
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (!lastMove || lastMove.isNull) return undefined;
+	if (!lastMove) return undefined;
 	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return undefined;
 
 	let kingInCenter = false;
@@ -136,7 +136,7 @@ function detectMoveRule({boardsim, basegame}) {
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(boardsim) {
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (!lastMove || lastMove.isNull) return undefined;
+	if (!lastMove) return undefined;
 
 	const capturedTypes = new Set();
 

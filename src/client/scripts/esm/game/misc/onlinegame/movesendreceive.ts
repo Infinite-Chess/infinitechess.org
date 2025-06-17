@@ -37,7 +37,7 @@ function sendMove() {
 
 	const gamefile = gameslot.getGamefile()!;
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
-	if (lastMove.isNull) throw Error('Cannot submit null move to online game.');
+	if (moveutil.isMoveSelf(lastMove)) throw Error('Cannot submit null move to online game.');
 	const shortmove = lastMove.compact; // "x,y>x,yN"
 
 	const data = {
