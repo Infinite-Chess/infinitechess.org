@@ -94,7 +94,7 @@ interface BaseMove extends _Move_Compact {
 	 */
 	clockStamp?: number,
 	/** The move in most compact notation: `8,7>8,8=Q` */
-	compact?: string,
+	compact: string,
 }
 
 /** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
@@ -270,7 +270,8 @@ function makeMove(gamefile: FullGame, move: Move) {
 	gamefile.basegame.moves.push({
 		startCoords: move.startCoords,
 		endCoords: move.endCoords,
-		promotion: move.promotion
+		promotion: move.promotion,
+		compact: move.compact,
 	});
 
 
