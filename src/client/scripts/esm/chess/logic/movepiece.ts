@@ -81,6 +81,10 @@ type castle = {
  */
 type path = Coords[]
 
+/**
+ * Move object of the BaseGame.
+ * Does not need a ton of details.
+ */
 interface BaseMove extends _Move_Compact {
 	/**
 	 * How much time the player had left after they made their move, in millis.
