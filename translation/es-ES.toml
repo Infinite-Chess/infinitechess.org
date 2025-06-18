@@ -1,6 +1,6 @@
 name = "Español" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "57"
+version = "63"
 maintainer = "xa31"
 
 [header]
@@ -112,6 +112,7 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Polaco por ", "Tymon Becella", ".", # Apsurt
 	"Portugués por ", "Emerson P. Machado", ".", # The_Skeleton on discord
 	"Español por ", "xa31er", "."
+	"Alemán por ", "Estetique", "."
 ]
 
 [member]
@@ -129,7 +130,6 @@ reveal_info = "Mostrar información de la Cuenta"
 account_info_heading = "Información de la Cuenta"
 email = "E-mail:"
 delete_account = "Eliminar cuenta"
-password_reset_message = ["Para cambiar tu nombre de usuario, e-mail o contraseña, ", "contacta con nosotros."]
 
 [member.badge-tooltips]
 checkmate_bronze = "Veterano del jaque mate: Completa el 50% de los mates de práctica."
@@ -150,6 +150,14 @@ js-username_tooshort = "El nombre de usuario debe tener 3 caracteres como mínim
 js-username_wrongenc = "El nombre de usuario debe contener solo los caracteres A-Z y 0-9"
 js-email_invalid = "No es un e-mail válido"
 js-email_inuse = "Este e-mail ya esta registrado con otra cuenta"
+
+[reset-password.javascript]
+js-pwd_no_match = "Las contraseñas no coinciden"
+reset-password = "Reiniciar contraseña"
+processing = "Procesando..."
+network-error = "Un error de red ha ocurrido. Pro favor prueba otra vez"
+
+[password-validation]
 js-pwd_incorrect_format = "La contraseña está en un formato incorrecto"
 js-pwd_too_short = "La contraseña debe tener 6 o más caracteres"
 js-pwd_too_long = "La contraseña no puede tener mas de 72 caracteres"
@@ -550,8 +558,21 @@ thanks = "¡Gracias!"
 title = "Inicio de Sesión" # The tab name
 username = "Nombre de usuario:"
 password = "Contraseña:"
-forgot_password = ["Olvidaste tu contraseña? ", "Mándanos un correo."]
-login_button = "Iniciar Sesión"
+login_button = "Iniciar sesión"
+send_reset_link = "Enviar link de reinicio"
+forgot_question = "Olvidaste tu contraseña?"
+back_to_login = "Volver a la pagina de inicio de sesión"
+forgot_instruction = "Por favor introduzca el correo electronico asociado a su cuenta."
+
+[login.javascript]
+network-error = "Un error de conexión ha ocurrido. Por favor intentalo otra vez."
+
+[reset_password]
+title = "Reinicio de contraseña"
+instruction = "Por favor introduze y confirma tu contraseña"
+new_password = "Nueva contraseña"
+confirm_password = "Confirma tu contraseña"
+submit_button = "Reiniciar contraseña"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Parámetros inválidos recibidos"
@@ -565,8 +586,6 @@ more_dev_logs = ["¡Mas devlogs se publican en ", "el discord oficial", " y en l
 [server.javascript]
 ws-invalid_username = "El nombre de usuario no es válido"
 ws-incorrect_password = "La contraseña es incorrecta"
-ws-username_and_password_required = "Se necesita un usuario y contraseña."
-ws-username_and_password_string = "El usuario y la contraseña deben ser texto."
 ws-login_failure_retry_in = "Inicio de sesión fallido, inténtalo de nuevo en"
 ws-seconds = "segundos" # unit of time
 ws-second = "segundo" # unit of time
@@ -584,13 +603,12 @@ ws-password_length = "La contraseña debe tener entre 6 y 72 caracteres"
 ws-password_format = "La contraseña está en un formato incorrecto"
 ws-password_password = "La contraseña no debe ser 'password'"
 ws-member_not_found = "No se ha encontrado ese miembro"
+ws-password-change-success = "La contraseña ha sido reiniciada correctamente. Serás redirigido a la página de inicio de sesión en breve."
+ws-password-reset-token-invalid = "El token de reinicio de contraseña no es válido o ha expirado."
 ws-forbidden_wrong_account = "Prohibido. Esta no es tu cuenta"
 ws-deleting_account_not_found = "Error al eliminar la cuenta. No se ha encontrado la cuenta."
+ws-deleting_account_in_game = "No puedes eliminar tu cuenta mientras estás conectado a un a partida."
 ws-server_error = "Lo sentimos, ¡Ha habido un error de servidores! Por favor vuelve atrás."
-ws-unable_to_identify_client_ip = "No ha sido posible identificar la IP del cliente"
-ws-you_are_banned_by_server = "Estás baneado"
-ws-too_many_requests_to_server = "Demasiadas peticiones. Intentalo otra vez luego."
-ws-bad_request = "Petición errónea."
 ws-not_found = "404 Página no encontrada"
 ws-forbidden = "Prohibido."
 ws-already_in_game = "Ya estas en una partida."
