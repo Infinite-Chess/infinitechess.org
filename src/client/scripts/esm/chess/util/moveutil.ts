@@ -119,7 +119,7 @@ function isIndexTheLastMove(moves: Move[], index: number): boolean {
 
 /**
  * Gets the color of whos turn it is currently, or at the front of the game.
- * Depends on the turn order. WILL NOT ACCOUNT FOR NULL MOVES.
+ * Depends on the turn order.
  */
 function getWhosTurnAtFront(basegame: Game): Player {
 	return getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
@@ -247,7 +247,10 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
 }
 
-
+/**
+ * Tests if a move is null.
+ * Players should not be able to submit self moves in any possible way so we can garantee this will be a null move.
+ */
 function isMoveSelf(move: _Move_Compact): boolean {
 	return move.startCoords[0] === move.endCoords[0] && move.startCoords[1] === move.endCoords[1];
 }

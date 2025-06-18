@@ -268,10 +268,7 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
 function makeMove(gamefile: FullGame, move: Move) {
 	gamefile.boardsim.moves.push(move);
 	gamefile.basegame.moves.push({
-		startCoords: move.startCoords,
-		endCoords: move.endCoords,
-		promotion: move.promotion,
-		compact: move.compact,
+		...move
 	});
 
 
@@ -481,19 +478,6 @@ function getSimulatedConclusion(gamefile: FullGame, moveDraft: MoveDraft): strin
 	);
 }
 
-
-// Helpers -----------------------------------------------------------------------------------
-
-
-/** Throws an error if any move is null, casting the gamefile's moves to a Move[] in the process. */
-// function ensureMovesNotNull(moves: (Move)[]): Move[] {
-// 	return moves.map((move: Move ) => {
-// 		if (!move.isNull) return move;
-// 		else throw Error("Should not be null moves in game!");
-// 	});
-// }
-
-
 // ---------------------------------------------------------------------------------------------------------------------
 
 
@@ -520,5 +504,4 @@ export default {
 	rewindMove,
 	simulateMoveWrapper,
 	getSimulatedConclusion,
-	// ensureMovesNotNull,
 };
