@@ -41,7 +41,6 @@ import config from '../config.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import premoves from "../chess/premoves.js";
-import * as premovehighlights from '../rendering/highlights/premovehighlights.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -185,6 +184,8 @@ function update() {
 function updateHoverSquareLegal(gamefile: FullGame): void {
 	if (!pieceSelected) return;
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
+
+	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
@@ -205,8 +206,10 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined) {
 
 	if (boardpos.boardHasMomentum()) return; // Don't select a piece if the boardsim is moving
 
-	// We have clicked, test if we clicked a piece...
+	// If we are premoving, select the piece in the future, not the present
+	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 
+	// We have clicked, test if we clicked a piece...
 	const pieceClicked = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hoverSquare);
 	// if (pieceClicked) console.log(typeutil.debugType(pieceClicked?.type));
 
@@ -250,6 +253,8 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 	}
 
 	if (!draganimation.hasPointerReleased()) return; // The pointer has not released yet, don't drop it.
+	
+	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 
 	// The pointer has released, drop the piece.
 
@@ -276,7 +281,8 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (isPremove) {
 		const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
 		premoves.addPremove(moveDraft);
-		premovehighlights.showPremoves(premoves.getPremoves());
+		unselectPiece();
+		premoves.showPremoves(premoves.getPremoves());
 		mouse.claimMouseClick(Mouse.LEFT);
 		return;
 	} else {
@@ -369,6 +375,7 @@ function isOpponentType(basegame: Game, type: number) {
  */
 function selectPiece(gamefile: FullGame, piece: Piece, drag: boolean) {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
+	//if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 
 	annotations.onPieceSelection();
 
@@ -392,7 +399,8 @@ function selectPiece(gamefile: FullGame, piece: Piece, drag: boolean) {
  */
 function reselectPiece() {
 	if (!pieceSelected) return; // No piece to reselect.
-	const gamefile = gameslot.getGamefile()!;
+	let gamefile = gameslot.getGamefile()!;
+	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
 	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, pieceSelected.coords);
@@ -434,7 +442,7 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
 	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
-	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(gamefile.basegame, piece.type);
+	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn();// && !isOpponentType(gamefile.basegame, piece.type);
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
