@@ -7,7 +7,7 @@ import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import selection from '../chess/selection.js';
-import game, { listener_document, listener_overlay } from '../chess/game.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
