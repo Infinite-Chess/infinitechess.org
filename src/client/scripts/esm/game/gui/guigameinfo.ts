@@ -129,7 +129,7 @@ function close() {
 
 /** Erases the username containers, removing them from the document. */
 function clearUsernameContainers() {
-	console.log("Clearing username containers");
+	// console.log("Clearing username containers");
 
 	// Stop any running number animations
 	usernamecontainer_white!.animationCancels.forEach(fn => fn());
