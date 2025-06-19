@@ -71,7 +71,7 @@ function isDecrementingLegal(boardsim: Board): boolean {
 /**
  * Tests if the provided index is out of range of the moves list length
  */
-function isIndexOutOfRange(moves: any[], index: number): boolean {
+function isIndexOutOfRange(moves: _Move_Compact[], index: number): boolean {
 	return index < -1 || index >= moves.length;
 }
 
@@ -249,7 +249,7 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 
 /**
  * Tests if a move is null.
- * Players should not be able to submit self moves in any possible way so we can garantee this will be a null move.
+ * Players should not be able to submit self moves in any possible way so we can guarantee this will be a null move.
  */
 function isMoveSelf(move: _Move_Compact): boolean {
 	return move.startCoords[0] === move.endCoords[0] && move.startCoords[1] === move.endCoords[1];
