@@ -7,7 +7,7 @@ import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import selection from '../chess/selection.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
+import game, { listener_document, listener_overlay } from '../chess/game.js';
 import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
@@ -24,6 +24,7 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
+import premoves from '../chess/premoves.js';
 
 
 /**
@@ -455,6 +456,7 @@ function rewindMove() {
 	const mesh = gameslot.getMesh();
 	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
+	premoves.cancelPremoves(gamefile);
 	frametracker.onVisualChange();
 
 	movesequence.navigateMove(gamefile, mesh, false);

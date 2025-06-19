@@ -57,6 +57,14 @@ function clearPremoves() {
 	premoves = [];
 }
 
+/** Cancels all premoves */
+function cancelPremoves(gamefile : FullGame) {
+	console.log("Clearing premoves");
+	rewindPremovesVisuals();
+	rewindPremoves(gamefile);
+	clearPremoves();
+}
+
 function rewindPremoves(gamefile: FullGame) {
 	console.log("Rewinding premoves");
 	// Reverse the original array so all changes are made in the reverse order they were added
@@ -160,6 +168,7 @@ export default {
 	getPremoves,
 	addPremove,
 	clearPremoves,
+	cancelPremoves,
 	processPremoves,
 	applyPremoves,
 	applyPremovesVisuals,
