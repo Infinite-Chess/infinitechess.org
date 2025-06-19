@@ -102,7 +102,7 @@ function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?:
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	if (presetAnnotes) long_format_in.presetAnnotes = presetAnnotes;
 
-	console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
+	// console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
 
 	return long_format_in;
 }
