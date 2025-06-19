@@ -2,7 +2,7 @@
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
-import { closeAllSocketsOfMember } from '../socket/socketManager.js';
+import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 
 /**
@@ -38,7 +38,7 @@ async function handleLogout(req, res) {
 		return res.status(500).json({ message: "Server Error" });
 	}
 
-	closeAllSocketsOfMember(req.memberInfo.user_id, 1008, "Logged out");
+	closeAllSocketsOfSession(refreshToken, 1008, "Logged out");
 	
 	res.redirect('/');
 

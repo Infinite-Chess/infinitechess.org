@@ -138,7 +138,7 @@ function terminateAllIPSockets(IP: string) {
 
 /**
  * Closes all sockets a given member has open.
- * @param jwt - The member's session/refresh token, if they are signed in.
+ * @param jwt - The member's session/refresh token.
  * @param closureCode - The code of the socket closure, sent to the client.
  * @param closureReason - The closure reason, sent to the client.
  */
