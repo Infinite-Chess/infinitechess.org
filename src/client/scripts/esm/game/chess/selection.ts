@@ -273,9 +273,9 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!hoverSquareLegal) return; // Don't move it
 
 	if (isPremove) {
-		//const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
+		const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
 		premoves.rewindPremovesVisuals();
-		premoves.addPremove(pieceSelected, hoverSquare);//moveDraft);
+		premoves.addPremove(moveDraft, pieceSelected);
 		unselectPiece();
 		premoves.applyPremovesVisuals();
 		mouse.claimMouseClick(Mouse.LEFT);

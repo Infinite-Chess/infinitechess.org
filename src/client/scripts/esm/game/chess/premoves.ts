@@ -6,8 +6,6 @@
 
 // @ts-ignore
 import { FullGame } from '../../chess/logic/gamefile.js';
-// @ts-ignore
-import { Coords } from '../../chess/logic/movesets.js';
 
 import boardchanges, { Change } from '../../chess/logic/boardchanges.js';
 
@@ -15,24 +13,36 @@ import boardchanges, { Change } from '../../chess/logic/boardchanges.js';
 import gameslot from './gameslot.js';
 import { Mesh } from '../rendering/piecemodels.js';
 import { meshChanges } from './graphicalchanges.js';
-import { Piece } from '../../chess/util/boardutil.js';
-import movesequence from './movesequence.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import { MoveDraft } from '../../chess/logic/movepiece.js';
+import movesequence from './movesequence.js';
+import boardutil, { Piece } from '../../chess/util/boardutil.js';
+import typeutil from '../../chess/util/typeutil.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 
-let premoves: Change[][] = [];
+let premoves: Premove[] = [];
+interface Premove extends MoveDraft {
+	changes: Array<Change>,
+}
 
 /** Gets all pending premoves */
 function getPremoves() { return premoves; }
 
 /** Adds an premove */
-function addPremove(piece: Piece, coords: Coords) {
+function addPremove(moveDraft: MoveDraft, piece: Piece) {
 	console.log("Adding premove");
-	const thisPremoveChanges: Change[] = [];
-	boardchanges.queueMovePiece(thisPremoveChanges, true, piece, coords);//[1,4]);
-	premoves.push(thisPremoveChanges);
-	//premoves.push(premove);
-	console.log(premoves);
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) { return; }
+
+	const changes: Change[] = [];
+
+	const capturedPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(changes, true, piece, moveDraft.endCoords, capturedPiece);
+	else boardchanges.queueMovePiece(changes, true, piece, moveDraft.endCoords);
+	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, true); // Logical changes
+
+	const premove: Premove = { ...moveDraft, changes };
+	premoves.push(premove);
 }
 
 /** Clears all pending premoves */
@@ -42,18 +52,28 @@ function clearPremoves() {
 }
 
 function rewindPremoves(gamefile: FullGame) {
-	console.log("Applying premoves");
+	console.log("Rewinding premoves");
 	// Reverse the original array so all changes are made in the reverse order they were added
-	premoves.slice().reverse().forEach(premoveChanges => {
-		boardchanges.runChanges(gamefile, premoveChanges, boardchanges.changeFuncs, false); // Logical changes.  false for BACKWARDS
+	premoves.slice().reverse().forEach(premove => {
+		boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, false); // Logical changes.  false for BACKWARDS
 	});
 }
 
 function applyPremoves(gamefile: FullGame) {
-	console.log("Rewinding premoves");
-	premoves.forEach((premoveChanges : Change[]) => {
-		boardchanges.runChanges(gamefile, premoveChanges, boardchanges.changeFuncs, true); // Logical changes
+	console.log("Applying premoves");
+	premoves.forEach((premove : Premove) => {
+		boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, true); // Logical changes
 	});
+}
+
+function premoveIsLegal(gamefile: FullGame, premove: Premove): boolean {
+	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, premove.startCoords);
+	if (!piece) { return false; } // Can't premove nothing, also fixes TS may be undefined error
+
+	const color = typeutil.getColorFromType(piece.type);
+	if (color !== onlinegame.getOurColor()) { return false; } // Can't premove opponent's piece, happens when opponent captures your piece
+
+	return true; // All checks pass, legal
 }
 
 /**
@@ -67,7 +87,7 @@ function processPremoves(gamefile: FullGame) {
 	console.log("Processing premoves");
 	if (premoves.length === 0) return;
 
-	const premove : Change[] | undefined = premoves[0];
+	const premove : Premove | undefined = premoves[0];
 	if (!premove) {
 		return;
 	}
@@ -77,27 +97,24 @@ function processPremoves(gamefile: FullGame) {
 		return;
 	}
 
-	rewindPremoves(gamefile);
+	//rewindPremoves(gamefile);
 
-	boardchanges.runChanges(gamefile, premove, boardchanges.changeFuncs, true);
+	//boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, true);
 
-	// Check if the move was legal by comparing board state or using your own legality check
-	// (You may want to add a more robust legality check here if needed)
-	const moveIsLegal = true; // Assume true if runChanges did not throw or error
+	// Check if the move was legal
+	if (premoveIsLegal(gamefile, premove)) {
+		// Legal, apply the premove to the real game state
+		movesequence.makeMove(gamefile, undefined, premove as MoveDraft); // Make move
+    	movesendreceive.sendMove(); // Send move to server
 
-	if (moveIsLegal) {
-		// Apply the premove to the real game state
-		boardchanges.runChanges(gamefile, premove, boardchanges.changeFuncs, true);
-		premoves.shift();
-		
-    	movesendreceive.sendMove();
+		premoves.shift(); // Remove premove
+
+		applyPremoves(gamefile);
 	} else {
-		rewindPremoves(gamefile);
+		// Illegal, cancel all premoves
 		rewindPremovesVisuals();
 		clearPremoves();
 	}
-
-	applyPremoves(gamefile);
 }
 
 function applyPremovesVisuals() {
@@ -110,9 +127,8 @@ function applyPremovesVisuals() {
 		return;
 	}
 
-	premoves.forEach((premoveChanges : Change[]) => {
-		//boardchanges.runChanges(gamefile, premoveChanges, boardchanges.changeFuncs, true); // Logical changes
-		boardchanges.runChanges(mesh, premoveChanges, meshChanges, true); // Graphical changes
+	premoves.forEach((premove : Premove) => {
+		boardchanges.runChanges(mesh, premove.changes, meshChanges, true); // Graphical changes
 	});
 }
 
@@ -123,8 +139,8 @@ function rewindPremovesVisuals() {
 	const mesh : Mesh | undefined = gameslot.getMesh();
 	if (!mesh) { return; }
 
-	premoves.slice().reverse().forEach(premoveChanges => {
-		boardchanges.runChanges(mesh, premoveChanges, meshChanges, false); // Graphical changes
+	premoves.slice().reverse().forEach(premove => {
+		boardchanges.runChanges(mesh, premove.changes, meshChanges, false); // Graphical changes
 	});
 
 	//piecemodels.regenAll(gamefile.boardsim, mesh);

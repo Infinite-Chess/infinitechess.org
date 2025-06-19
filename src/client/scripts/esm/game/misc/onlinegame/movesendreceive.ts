@@ -112,8 +112,7 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
-	// Reapply all premoves and process the next premove
-	premoves.applyPremoves(gamefile);
+	// Process the next premove, will reapply the premoves
 	premoves.processPremoves(gamefile);
 }
 
