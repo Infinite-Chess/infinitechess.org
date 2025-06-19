@@ -75,6 +75,7 @@ function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, mess
  * Adds or deletes moves in the game until it matches the server's provided moves.
  * This can rarely happen when we move after the game is already over,
  * or if we're disconnected when our opponent made their move.
+ * THIS CAN EVEN BE CALLED when our moves match the server's!
  * @param gamefile - The gamefile
  * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
