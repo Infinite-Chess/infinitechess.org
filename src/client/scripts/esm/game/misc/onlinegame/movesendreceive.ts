@@ -76,6 +76,9 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 		return onlinegame.reportOpponentsMove(reason);
 	}
 
+	// Rewind all premoves to check if the move is legal
+	premoves.rewindPremoves(gamefile);
+
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
@@ -109,6 +112,8 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
+	// Reapply all premoves and process the next premove
+	premoves.applyPremoves(gamefile);
 	premoves.processPremoves(gamefile);
 }
 

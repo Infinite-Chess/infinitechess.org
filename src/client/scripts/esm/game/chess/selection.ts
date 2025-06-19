@@ -185,7 +185,6 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	if (!pieceSelected) return;
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
 
-	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
@@ -205,9 +204,6 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined) {
 	else if (!dragEnabled && !mouse.isMouseClicked(Mouse.LEFT)) return; // When dragging is off, we actually need a pointer click.
 
 	if (boardpos.boardHasMomentum()) return; // Don't select a piece if the boardsim is moving
-
-	// If we are premoving, select the piece in the future, not the present
-	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 
 	// We have clicked, test if we clicked a piece...
 	const pieceClicked = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hoverSquare);
@@ -253,8 +249,6 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 	}
 
 	if (!draganimation.hasPointerReleased()) return; // The pointer has not released yet, don't drop it.
-	
-	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 
 	// The pointer has released, drop the piece.
 
@@ -279,10 +273,11 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!hoverSquareLegal) return; // Don't move it
 
 	if (isPremove) {
-		const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
-		premoves.addPremove(moveDraft);
+		//const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
+		premoves.rewindPremovesVisuals();
+		premoves.addPremove(pieceSelected, hoverSquare);//moveDraft);
 		unselectPiece();
-		premoves.showPremoves(premoves.getPremoves());
+		premoves.applyPremovesVisuals();
 		mouse.claimMouseClick(Mouse.LEFT);
 		return;
 	} else {
@@ -375,7 +370,6 @@ function isOpponentType(basegame: Game, type: number) {
  */
 function selectPiece(gamefile: FullGame, piece: Piece, drag: boolean) {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
-	//if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
 
 	annotations.onPieceSelection();
 
@@ -399,8 +393,7 @@ function selectPiece(gamefile: FullGame, piece: Piece, drag: boolean) {
  */
 function reselectPiece() {
 	if (!pieceSelected) return; // No piece to reselect.
-	let gamefile = gameslot.getGamefile()!;
-	if (isPremove) { gamefile = premoves.getSimulatedBoardAfterPremoves(gamefile); }
+	const gamefile = gameslot.getGamefile()!;
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
 	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, pieceSelected.coords);
