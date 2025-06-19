@@ -75,6 +75,7 @@ function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, mess
  * Adds or deletes moves in the game until it matches the server's provided moves.
  * This can rarely happen when we move after the game is already over,
  * or if we're disconnected when our opponent made their move.
+ * THIS CAN EVEN BE CALLED when our moves match the server's!
  * @param gamefile - The gamefile
  * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
@@ -101,11 +102,11 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 	const originalMoveIndex = boardsim.state.local.moveIndex;
 	movesequence.viewFront(gamefile, mesh);
 	let aChangeWasMade = false;
-
-	// Terminate all current animations to avoid a crash when undoing moves
-	animation.clearAnimations();
-
+	
 	while (boardsim.moves.length > moves.length) { // While we have more moves than what the server does..
+		// Terminate all current animations to avoid a crash when undoing moves.
+		// Technically this only needs to be done once if rewinding at all.
+		animation.clearAnimations();
 		movesequence.rewindMove(gamefile, mesh);
 		console.log("Rewound one move while resyncing to online game.");
 		aChangeWasMade = true;
@@ -118,6 +119,9 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 		if (thisGamefileMove && !thisGamefileMove.isNull) { // The move is defined
 			if (thisGamefileMove.compact! === moves[i]!.compact) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
+			// Terminate all current animations to avoid a crash when undoing moves.
+			// Technically this only needs to be done once if rewinding at all.
+			animation.clearAnimations();
 			movesequence.rewindMove(gamefile, mesh);
 			console.log("Rewound one INCORRECT move while resyncing to online basegame.");
 			aChangeWasMade = true;
