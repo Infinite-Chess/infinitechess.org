@@ -41,7 +41,7 @@ import type { Game } from '../TypeDefinitions.js';
 function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: number) {
 	if (typeof gameID !== 'number') {
 		// Tampered message
-		const log = `Socket sent 'resync', but gameID is in the wrong form! Received: (${jsutil.ensureJSONString(gameID)}). The socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const log = `Socket sent 'resync', but gameID is in the wrong form! Received: (${jsutil.ensureJSONString(gameID)}) of type ${typeof gameID}. The socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(log, 'errLog.txt');
 		return;
 	}
