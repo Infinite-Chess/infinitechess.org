@@ -14,7 +14,7 @@ import gameslot from './gameslot.js';
 import { Mesh } from '../rendering/piecemodels.js';
 import { meshChanges } from './graphicalchanges.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
-import { MoveDraft } from '../../chess/logic/movepiece.js';
+import movepiece, { MoveDraft } from '../../chess/logic/movepiece.js';
 import movesequence from './movesequence.js';
 import boardutil, { Piece } from '../../chess/util/boardutil.js';
 import typeutil from '../../chess/util/typeutil.js';
@@ -34,7 +34,7 @@ function addPremove(moveDraft: MoveDraft, piece: Piece) {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) { return; }
 
-	const changes: Change[] = [];
+	/*const changes: Change[] = [];
 
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.endCoords);
 	if (capturedPiece) boardchanges.queueCapture(changes, true, piece, moveDraft.endCoords, capturedPiece);
@@ -42,6 +42,12 @@ function addPremove(moveDraft: MoveDraft, piece: Piece) {
 	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, true); // Logical changes
 
 	const premove: Premove = { ...moveDraft, changes };
+	premoves.push(premove);*/
+
+	// Use movepiece.generateMove to get all special move logic
+	const move = movepiece.generateMove(gamefile, moveDraft);
+	const premove: Premove = { ...moveDraft, ...move, changes: move.changes };
+	boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, true); // Logical changes
 	premoves.push(premove);
 }
 
@@ -140,7 +146,8 @@ function rewindPremovesVisuals() {
 	if (!mesh) { return; }
 
 	premoves.slice().reverse().forEach(premove => {
-		boardchanges.runChanges(mesh, premove.changes, meshChanges, false); // Graphical changes
+		// TODO: Check if piece still exists
+		boardchanges.runChanges(mesh, premove.changes, meshChanges, false); // Graphical changes.  false for BACKWARDS
 	});
 
 	//piecemodels.regenAll(gamefile.boardsim, mesh);

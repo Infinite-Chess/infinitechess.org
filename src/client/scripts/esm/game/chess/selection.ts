@@ -140,7 +140,24 @@ function update() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 	if (pawnIsPromotingOn) { // Do nothing else this frame but wait for a promotion piece to be selected
-		if (promoteTo) makePromotionMove(gamefile, mesh);
+		if (promoteTo) {
+			if (isPremove) {
+				// Add a premove with promotion
+				const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: pawnIsPromotingOn, promotion: promoteTo };
+				
+				premoves.rewindPremovesVisuals();
+				premoves.addPremove(moveDraft, pieceSelected!);
+				unselectPiece();
+				premoves.applyPremovesVisuals();
+				mouse.claimMouseClick(Mouse.LEFT);
+
+				// Reset promotion state
+				pawnIsPromotingOn = undefined;
+				promoteTo = undefined;
+			} else {
+				makePromotionMove(gamefile, mesh);
+			}
+		}
 		return;
 	}
 	if (boardpos.areZoomedOut() || transition.areWeTeleporting() || gamefileutility.isGameOver(gamefile.basegame) || guipause.areWePaused() || perspective.isLookingUp()) {
@@ -274,6 +291,15 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 	if (isPremove) {
 		const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
+		// Check if the move is a pawn promotion
+		if (hoverSquare.promoteTrigger) {
+			const color = typeutil.getColorFromType(pieceSelected!.type);
+			guipromotion.open(color);
+			perspective.unlockMouse();
+			pawnIsPromotingOn = hoverSquare;
+			return;
+		}
+
 		premoves.rewindPremovesVisuals();
 		premoves.addPremove(moveDraft, pieceSelected);
 		unselectPiece();
