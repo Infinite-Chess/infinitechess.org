@@ -267,7 +267,7 @@ function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action
 		
 
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
-	console.log("Setting a 5-second timer to delete a user's invites!");
+	// console.log("Setting a 5-second timer to delete a user's invites!");
 
 	const timersToUse = signedIn ? timersMember : timersBrowser;
 	timersToUse[identifier] = setTimeout(deleteUserInvitesIfNotConnected, cushionToDisconnectMillis, signedIn, identifier);
