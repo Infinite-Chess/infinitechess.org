@@ -301,7 +301,10 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws) {
 function deleteUserInvitesIfNotConnected(signedIn, identifier) {
 	// Don't delete invite if there is an active connection
 	const hasActiveConnection = doesUserHaveActiveConnection(signedIn, identifier);
-	if (hasActiveConnection) return console.log(`${signedIn ? `Member "${identifier}"` : `Browser "${identifier}"`} is still connected, not deleting invite.`);
+	if (hasActiveConnection) {
+		// console.log(`${signedIn ? `Member "${identifier}"` : `Browser "${identifier}"`} is still connected, not deleting invite.`);
+		return;
+	}
 
 	// Proceed with deleting the invite if not connected
 	deleteUsersExistingInvite(signedIn, identifier);
