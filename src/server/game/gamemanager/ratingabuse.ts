@@ -19,6 +19,8 @@ import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
 // @ts-ignore
 import { getMultipleMemberDataByCriteria } from "../../database/memberManager.js";
+// @ts-ignore
+import winconutil from "../../../client/scripts/esm/chess/util/winconutil.js";
 
 
 import type { RefreshTokenRecord } from "../../database/refreshTokenManager.js";
@@ -131,6 +133,9 @@ type SuspicionLevelRecord = {
 async function measureRatingAbuseAfterGame(game: Game) {
 	// Do not monitor suspicion levels, if game was unrated 
 	if (!game.rated) return;
+	// Skip if the game was aborted (this also covers 0 moves),
+	// the game will NOT have added an entry in the leaderboards table for the players!
+	if (winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
 	const leaderboard_id = VariantLeaderboards[game.variant];
@@ -160,7 +165,13 @@ async function measureRatingAbuseAfterGame(game: Game) {
 async function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard_id: number) {
 
 	// If player is not in rating_abuse table, add him to it
-	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) addEntryToRatingAbuseTable(user_id, leaderboard_id);
+	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) {
+		const result = addEntryToRatingAbuseTable(user_id, leaderboard_id);
+		if (!result.success) {
+			await logEventsAndPrint(`Failed to add user ${user_id} to rating_abuse table for leaderboard ${leaderboard_id} for reason: ${result.reason}`, 'errLog.txt');
+			return;
+		}
+	}
 
 	// Access the player rating_abuse data
 	const rating_abuse_data = getRatingAbuseData(user_id, leaderboard_id, ['game_count_since_last_check', 'last_alerted_at']);
