@@ -368,7 +368,7 @@ function checkMoveCounts(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'move_count',
-		weight: weight / gameInfoList.length, // rescale to [0,1]
+		weight: (weight / gameInfoList.length) * 0.5, // rescale to [0,0.5]
 		comment
 	});
 }
@@ -392,7 +392,7 @@ function checkDurations(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_l
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'duration',
-		weight: weight / gameInfoList.length, // rescale to [0,1]
+		weight: (weight / gameInfoList.length) * 0.8, // rescale to [0,0.8]
 		comment
 	});
 }
@@ -422,7 +422,7 @@ function checkClockAtEnd(gameInfoList: RatingAbuseRelevantGameInfo[], suspicion_
 	}
 	if (weight > 0) suspicion_level_record_list.push({
 		category: 'clock_at_end',
-		weight: (weight / gameInfoList.length) * 0.5, // rescale to [0, 0.5]
+		weight: (weight / gameInfoList.length) * 0.4, // rescale to [0, 0.4]
 		comment
 	});
 }
