@@ -146,7 +146,7 @@ function update() {
 				const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: pawnIsPromotingOn, promotion: promoteTo };
 				
 				premoves.rewindPremovesVisuals();
-				premoves.addPremove(moveDraft, pieceSelected!);
+				premoves.addPremove(moveDraft);
 				unselectPiece();
 				premoves.applyPremovesVisuals();
 				mouse.claimMouseClick(Mouse.LEFT);
@@ -277,7 +277,24 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare, pieceSelected!.coords);
 	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
-	else if (hoverSquareLegal) moveGamefilePiece(gamefile, mesh, hoverSquare); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+	else if (hoverSquareLegal) { // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+		if (isPremove) {
+			const moveDraft : MoveDraft = { startCoords: pieceSelected.coords, endCoords: hoverSquare };
+			// Check if the move is a pawn promotion
+			if (hoverSquare.promoteTrigger) {
+				const color = typeutil.getColorFromType(pieceSelected!.type);
+				guipromotion.open(color);
+				perspective.unlockMouse();
+				pawnIsPromotingOn = hoverSquare;
+				return;
+			}
+
+			premoves.addPremove(moveDraft);
+			unselectPiece();
+		} else {
+			moveGamefilePiece(gamefile, mesh, hoverSquare);
+		}
+	}
 	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
@@ -300,10 +317,8 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 			return;
 		}
 
-		premoves.rewindPremovesVisuals();
-		premoves.addPremove(moveDraft, pieceSelected);
+		premoves.addPremove(moveDraft);
 		unselectPiece();
-		premoves.applyPremovesVisuals();
 		mouse.claimMouseClick(Mouse.LEFT);
 		return;
 	} else {
@@ -344,7 +359,7 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
 	if (player === players.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(basegame, type)) return 1; // Can select opponent pieces, but not draggable..
 	const isOurTurn = gameloader.isItOurTurn(player);
-	if (!isOurTurn) return 1; // Can select our piece when it's not our turn, but not draggable.
+	if (!isOurTurn && !preferences.getPremoveMode()) return 1; // Can select our piece when it's not our turn, but not draggable.
 	// The piece is also not considered draggable if this is exactly the second pointer down.
 	// But it still may be selected by a simulated click.
 	// This allows us to tap to select friendly pieces, even if we're already dragging with one finger.

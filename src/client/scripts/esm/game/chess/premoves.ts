@@ -16,7 +16,7 @@ import { meshChanges } from './graphicalchanges.js';
 import movesendreceive from '../misc/onlinegame/movesendreceive.js';
 import movepiece, { MoveDraft } from '../../chess/logic/movepiece.js';
 import movesequence from './movesequence.js';
-import boardutil, { Piece } from '../../chess/util/boardutil.js';
+import boardutil from '../../chess/util/boardutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 
@@ -29,11 +29,12 @@ interface Premove extends MoveDraft {
 function getPremoves() { return premoves; }
 
 /** Adds an premove */
-function addPremove(moveDraft: MoveDraft, piece: Piece) {
+function addPremove(moveDraft: MoveDraft) {
 	console.log("Adding premove");
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) { return; }
 
+	rewindPremovesVisuals();
 	/*const changes: Change[] = [];
 
 	const capturedPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.endCoords);
@@ -49,11 +50,13 @@ function addPremove(moveDraft: MoveDraft, piece: Piece) {
 	const premove: Premove = { ...moveDraft, ...move, changes: move.changes };
 	boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, true); // Logical changes
 	premoves.push(premove);
+	console.log(premoves);
+
+	applyPremovesVisuals();
 }
 
 /** Clears all pending premoves */
 function clearPremoves() {
-	console.log("Clearing premoves");
 	premoves = [];
 }
 
@@ -66,7 +69,6 @@ function cancelPremoves(gamefile : FullGame) {
 }
 
 function rewindPremoves(gamefile: FullGame) {
-	console.log("Rewinding premoves");
 	// Reverse the original array so all changes are made in the reverse order they were added
 	premoves.slice().reverse().forEach(premove => {
 		boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, false); // Logical changes.  false for BACKWARDS
@@ -74,7 +76,6 @@ function rewindPremoves(gamefile: FullGame) {
 }
 
 function applyPremoves(gamefile: FullGame) {
-	console.log("Applying premoves");
 	premoves.forEach((premove : Premove) => {
 		boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, true); // Logical changes
 	});
@@ -132,7 +133,6 @@ function processPremoves(gamefile: FullGame) {
 }
 
 function applyPremovesVisuals() {
-	console.log("Applying premove visuals");
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || !premoves || premoves.length === 0) return;
 	
@@ -147,7 +147,6 @@ function applyPremovesVisuals() {
 }
 
 function rewindPremovesVisuals() {
-	console.log("Rewinding premove visuals");
 	// TODO: Remove premove highlights/arrows/pieces
 	
 	const mesh : Mesh | undefined = gameslot.getMesh();
