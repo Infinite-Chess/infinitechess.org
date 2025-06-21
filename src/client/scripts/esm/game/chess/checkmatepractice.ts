@@ -269,8 +269,8 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
-		} as Record<string, string>,
+			'is-fetch-request': 'true' // Custom header
+		},
 		body: JSON.stringify({ new_checkmate_beaten: checkmatePracticeID }),
 	};
 
@@ -285,6 +285,10 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 	};
 
 	try {
+		// Use retryFetch wrapper to try the same POST multiple times
+		// until it succeeds. This is just in case of a server error,
+		// or a server restart at the exact same time, thus making
+		// them have to solve the same checkmate again.
 		const response: Response = await retryFetch('/api/update-checkmatelist', fetchInit, retryOptions);
 
 		if (response.ok) { // 200 OK from your server
