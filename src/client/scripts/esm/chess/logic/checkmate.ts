@@ -47,7 +47,7 @@ function detectCheckmateOrStalemate(gamefile: FullGame): string | undefined {
 	// Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
 	const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'checkmate');
 	if (gamefileutility.isCurrentViewedPositionInCheck(boardsim) && usingCheckmate) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
 		return `${colorThatWon} checkmate`;
 	} else return `${players.NEUTRAL} stalemate`; // Victor of player NEUTRAL means it was a draw.
 }
