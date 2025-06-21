@@ -7,13 +7,14 @@
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+/** @typedef {import('../../../client/scripts/esm/util/usernamecontainer.js').UsernameContainerProperties} UsernameContainerProperties */
 
 //-------------------------------------------------------------------------------------------
 
 /**
  * @typedef {Object} Invite - The invite object.
  * @property {string} id - A unique identifier, containing lowercase letters a-z and numbers 0-9.
- * @property {Object} name - The display name of the owner, "(Guest)" if not logged in.
+ * @property {UsernameContainerProperties} usernamecontainer - The type of the owner (guest/player), their username, and elo if applicable.
  * @property {Object} owner - An object with either the `member` or `browser` property, which tells us who owns it.
  * @property {string} tag - Used to verify if an invite is your own.
  * @property {string} variant - The name of the variant this invite is for

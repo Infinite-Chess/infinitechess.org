@@ -34,7 +34,7 @@ export default [
 			}],
 			"prefer-const": "error", // "let" variables that are never redeclared must be declared as "const"
 			"no-var": "error", // Disallows declaring variables with "var", as they are function-scoped (not block), so hoisting is very confusing.
-			"max-depth": ["warn", 4], // Maximum number of nested blocks allowed.
+			// "max-depth": ["warn", 4], // Maximum number of nested blocks allowed.
 			"eqeqeq": ["error", "always"], // Disallows "!=" and "==" to remove type coercion bugs. Use "!==" and "===" instead.
 			'dot-notation': 'error', // Forces dot notation `.` instead of bracket notation `[""]` wherever possible
 			'no-empty': 'off',	// Disable the no-empty rule so blocks aren't entirely red just as we create them

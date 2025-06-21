@@ -6,12 +6,14 @@ import boardutil from '../../chess/util/boardutil.js';
 import gameslot from '../chess/gameslot.js';
 import moveutil from '../../chess/util/moveutil.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
+import selection from '../chess/selection.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
+import mouse from '../../util/mouse.js';
+import boardpos from '../rendering/boardpos.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import snapping from '../rendering/highlights/snapping.js';
 // @ts-ignore
-import board from '../rendering/board.js';
-// @ts-ignore
-import movement from '../rendering/movement.js';
-// @ts-ignore
-import input from '../input.js';
+import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import guipause from './guipause.js';
 // @ts-ignore
@@ -22,7 +24,6 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
-import selection from '../chess/selection.js';
 
 
 /**
@@ -37,6 +38,13 @@ const element_Navigation = document.getElementById('navigation-bar')!;
 const element_Recenter = document.getElementById('recenter')!;
 const element_Expand = document.getElementById('expand')!;
 const element_Back = document.getElementById('back')!;
+const element_Annotations = document.getElementById('annotations')!;
+const element_Erase = document.getElementById('erase')!;
+const element_Collapse = document.getElementById('collapse')!;
+
+// const element_AnnotationsContainer = document.querySelector('.buttoncontainer.annotations')!;
+const element_EraseContainer = document.querySelector('.buttoncontainer.erase')!;
+const element_CollapseContainer = document.querySelector('.buttoncontainer.collapse')!;
 
 const element_CoordsX = document.getElementById('x') as HTMLInputElement;
 const element_CoordsY = document.getElementById('y') as HTMLInputElement;
@@ -66,8 +74,14 @@ const durationToLockRewindAfterMoveForwardingMillis = 750;
 /** Whether the navigation UI is visible (not hidden) */
 let navigationOpen = true;
 
+/**
+ * Whether the annotations button is enabled.
+ * If so, all left click actions are treated as right clicks.
+ */
+let annotationsEnabled: boolean = false;
 
-// Functions'
+
+// Functions
 
 function isOpen() {
 	return navigationOpen;
@@ -109,6 +123,11 @@ function close() {
 	closeListeners_Navigation();
 	navigationOpen = false;
 	stats.updateStatsCSS();
+
+	// Disable annotations mode
+	annotationsEnabled = false;
+	listener_overlay.setTreatLeftasRight(false);
+	element_Annotations.classList.remove('enabled');
 }
 
 
@@ -118,17 +137,19 @@ function close() {
 
 // Update the division on the screen displaying your current coordinates
 function updateElement_Coords() {
-	const boardPos = movement.getBoardPos();
-
-	// Tile camera is over
-	// element_CoordsX.textContent = Math.floor(boardPos[0] + board.gsquareCenter())
-	// element_CoordsY.textContent = Math.floor(boardPos[1] + board.gsquareCenter())
-
 	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
 
+	const boardPos = boardpos.getBoardPos();
+	const mouseTile = mouse.getTileMouseOver_Integer();
+	const squareCenter = boardtiles.gsquareCenter();
+
+	// Tile camera is over
+	// element_CoordsX.textContent = Math.floor(boardPos[0] + squareCenter)
+	// element_CoordsY.textContent = Math.floor(boardPos[1] + squareCenter)
+
 	// Tile mouse over
-	element_CoordsX.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[0] : Math.floor(boardPos[0] + board.gsquareCenter());
-	element_CoordsY.value = board.gtile_MouseOver_Int() ? board.gtile_MouseOver_Int()[1] : Math.floor(boardPos[1] + board.gsquareCenter());
+	element_CoordsX.value = String(mouseTile ? mouseTile[0] : Math.floor(boardPos[0] + squareCenter));
+	element_CoordsY.value = String(mouseTile ? mouseTile[1] : Math.floor(boardPos[1] + squareCenter));
 }
 
 /**
@@ -139,12 +160,12 @@ function isCoordinateActive(): boolean {
 }
 
 function initListeners_Navigation() {
-	element_Navigation.addEventListener("mousedown", input.doIgnoreMouseDown);
-	element_Navigation.addEventListener("touchstart", input.doIgnoreMouseDown);
-
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
+	element_Annotations.addEventListener('click', callback_Annotations);
+	element_Erase.addEventListener('click', callback__Collapse);
+	element_Collapse.addEventListener('click', callback__Collapse);
 	element_moveRewind.addEventListener('click', callback_MoveRewind);
 	element_moveRewind.addEventListener('mousedown', callback_MoveRewindMouseDown);
 	element_moveRewind.addEventListener('mouseleave', callback_MoveRewindMouseLeave);
@@ -168,14 +189,12 @@ function initListeners_Navigation() {
 }
 
 function closeListeners_Navigation() {
-	element_Navigation.removeEventListener("mousedown", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("mouseup", input.doIgnoreMouseDown)
-	element_Navigation.removeEventListener("touchstart", input.doIgnoreMouseDown);
-	//element_Navigation.removeEventListener("touchend", input.doIgnoreMouseDown)
-
 	element_Recenter.removeEventListener('click', recenter);
 	element_Expand.removeEventListener('click', callback_Expand);
 	element_Back.removeEventListener('click', callback_Back);
+	element_Annotations.removeEventListener('click', callback_Annotations);
+	element_Erase.removeEventListener('click', callback__Collapse);
+	element_Collapse.removeEventListener('click', callback__Collapse);
 	element_moveRewind.removeEventListener('click', callback_MoveRewind);
 	element_moveRewind.removeEventListener('mousedown', callback_MoveRewindMouseDown);
 	element_moveRewind.removeEventListener('mouseleave', callback_MoveRewindMouseLeave);
@@ -212,7 +231,7 @@ function callback_CoordsChange() {
 		return;
 	}
 
-	movement.setBoardPos([newX, newY]);
+	boardpos.setBoardPos([newX, newY]);
 }
 
 function callback_Back() {
@@ -220,15 +239,42 @@ function callback_Back() {
 }
 
 function callback_Expand() {
-	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.pieces!);
+	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+	// Add the square annotation highlights, too.
+	allCoords.push(...snapping.getAnnoteSnapPoints(false));
 	area.initTelFromCoordsList(allCoords);
 }
 
 function recenter() {
-	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!);
+	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }
+
+// Annotations Buttons ======================================
+
+function callback_Annotations() {
+	annotationsEnabled = !annotationsEnabled;
+	listener_overlay.setTreatLeftasRight(annotationsEnabled);
+	element_Annotations.classList.toggle('enabled');
+}
+
+function callback__Collapse() {
+	annotations.Collapse();
+}
+
+document.addEventListener('ray-count-change', (e: CustomEvent) => {
+	const rayCount = e.detail;
+	if (rayCount > 0) {
+		element_EraseContainer.classList.add('hidden');
+		element_CollapseContainer.classList.remove('hidden');
+	} else { // Zero rays
+		element_EraseContainer.classList.remove('hidden');
+		element_CollapseContainer.classList.add('hidden');
+	}
+});
+
+// ==============================================================
 
 function callback_MoveRewind() {
 	if (rewindIsLocked) return;
@@ -254,8 +300,8 @@ function isItOkayToRewindOrForward() {
  */
 function update_MoveButtons() {
 	const gamefile = gameslot.getGamefile()!;
-	const decrementingLegal = moveutil.isDecrementingLegal(gamefile);
-	const incrementingLegal = moveutil.isIncrementingLegal(gamefile);
+	const decrementingLegal = moveutil.isDecrementingLegal(gamefile.boardsim);
+	const incrementingLegal = moveutil.isIncrementingLegal(gamefile.boardsim);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -392,25 +438,26 @@ function update() {
 
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove() {
-	if (!input.isKeyDown('arrowleft')) return;
+	if (!listener_document.isKeyDown('ArrowLeft')) return;
 	if (rewindIsLocked) return;
 	rewindMove();
 }
 
 /** Tests if the right arrow key has been pressed, signaling to forward the game. */
 function testIfForwardMove() {
-	if (!input.isKeyDown('arrowright')) return;
+	if (!listener_document.isKeyDown('ArrowRight')) return;
 	forwardMove();
 }
 
 /** Rewinds the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function rewindMove() {
 	const gamefile = gameslot.getGamefile()!;
-	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
+	const mesh = gameslot.getMesh();
+	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
-	movesequence.navigateMove(gamefile, false);
+	movesequence.navigateMove(gamefile, mesh, false);
     
 	selection.unselectPiece();
 }
@@ -418,9 +465,10 @@ function rewindMove() {
 /** Forwards the currently-loaded gamefile by 1 move. Unselects any piece, updates the rewind/forward move buttons. */
 function forwardMove() {
 	const gamefile = gameslot.getGamefile()!;
-	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
+	const mesh = gameslot.getMesh();
+	if (!moveutil.isIncrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
-	movesequence.navigateMove(gamefile, true);
+	movesequence.navigateMove(gamefile, mesh, true);
 }
 
 /**

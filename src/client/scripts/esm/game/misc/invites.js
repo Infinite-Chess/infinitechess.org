@@ -6,11 +6,12 @@ import sound from './sound.js';
 import clockutil from '../../chess/util/clockutil.js';
 import guiplay from '../gui/guiplay.js';
 import loadbalancer from './loadbalancer.js';
-import style from '../gui/style.js';
-import input from '../input.js';
 import statustext from '../gui/statustext.js';
 import uuid from '../../util/uuid.js';
 import validatorama from '../../util/validatorama.js';
+import docutil from '../../util/docutil.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
+import { players } from '../../chess/util/typeutil.js';
 // Import End
 
 "use strict";
@@ -18,7 +19,8 @@ import validatorama from '../../util/validatorama.js';
 
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
- * @property {string} name - Who owns the invite. If it's a guest, then "(Guest)". If it's us, we like to change this to "(You)"
+ * @property {ServerUsernameContainer} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
+ * If it's a guest, then "(Guest)".
  * @property {string} id - A unique identifier
  * @property {string} tag - Used to verify if an invite is your own.
  * @property {string} variant - The name of the variant
@@ -26,6 +28,13 @@ import validatorama from '../../util/validatorama.js';
  * @property {string} color - white/black
  * @property {string} publicity - public/private
  * @property {string} rated - rated/casual
+ */
+
+/**
+ * @typedef {Object} ServerUsernameContainer - The username container of an invite sent by the server. DIFFERENT FROM UsernameContainerProperties!!!!
+ * @property {'player' | 'guest'} type - The type of the username container.
+ * @property {string} username - The username of the user. This can be "(Guest)" if the user is a guest.
+ * @property {import('../../../../../server/database/leaderboardsManager.js').Rating} [rating] - The rating of the user. Falls back to to INFINITY leaderboard.
  */
 
 /** @typedef {import('../gui/guiplay.js').InviteOptions} InviteOptions */
@@ -121,7 +130,7 @@ function cancel(id = ourInviteID) {
 	if (!weHaveInvite) return;
 	if (!id) return statustext.showStatus(translations.invites.cannot_cancel, true);
 
-	deleteInviteTagInLocalStorage();
+	localstorage.deleteItem('invite-tag');
 
 	guiplay.lockCreateInviteButton();
 
@@ -142,10 +151,6 @@ function generateTagForInvite(inviteOptions) {
 	inviteOptions.tag = tag;
 }
 
-function deleteInviteTagInLocalStorage() {
-	localstorage.deleteItem('invite-tag');
-}
-
 /**
  * Updates the invite elements on the invite creation screen according to the new list provided.
  * @param {Invite[]} list - The latest invite list
@@ -164,7 +169,7 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 	let foundOurs = false;
 	let privateInviteID = undefined;
 	ourInviteID = undefined;
-	for (let i = 0; i < list.length; i++) { // { name, variant, clock, color, publicity }
+	for (let i = 0; i < list.length; i++) { // { usernamecontainer, variant, clock, color, publicity }
 		const invite = list[i];
 
 		// Is this our own invite?
@@ -193,9 +198,15 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		// <div class="invite-child">Casual</div>
 		// <div class="invite-child accept">Accept</div>
 
-		const n = ours ? translations.invites.you_indicator : invite.name;
-		const name = createDiv(['invite-child'], n);
-		newInvite.appendChild(name);
+		if (invite.usernamecontainer.type === 'guest') {
+			// Standardize the name according to our language.
+			if (ours) invite.usernamecontainer.username = translations.you_indicator;
+			else invite.usernamecontainer.username = translations.guest_indicator;
+		}
+		const username_item = { value: invite.usernamecontainer.username, openInNewWindow: false };
+		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainer(invite.usernamecontainer.type, username_item, invite.usernamecontainer.rating).element;
+		displayelement_usernamecontainer.classList.add("invite-child");
+		newInvite.appendChild(displayelement_usernamecontainer);
 
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
 		newInvite.appendChild(variant);
@@ -204,8 +215,8 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		const cloc = createDiv(['invite-child'], time);
 		newInvite.appendChild(cloc);
 
-		const uColor = ours ? invite.color === 'White' ? translations.invites.you_are_white : invite.color === 'Black' ? translations.invites.you_are_black : translations.invites.random
-                            : invite.color === 'White' ? translations.invites.you_are_black : invite.color === 'Black' ? translations.invites.you_are_white : translations.invites.random;
+		const uColor = ours ? invite.color === players.WHITE ? translations.invites.you_are_white : invite.color === players.BLACK ? translations.invites.you_are_black : translations.invites.random
+                            : invite.color === players.WHITE ? translations.invites.you_are_black : invite.color === players.BLACK ? translations.invites.you_are_white : translations.invites.random;
 		const color = createDiv(['invite-child'], uColor);
 		newInvite.appendChild(color);
 
@@ -245,7 +256,7 @@ const playBaseIfNewInvite = (() => {
 		let playedSound = false;
 		const newIDsInList = {};
 		inviteList.forEach((invite) => {
-			const name = invite.name;
+			const name = invite.usernamecontainer.username;
 			const id = invite.id;
 			newIDsInList[id] = true;
 			if (IDsInLastList[id]) return; // Not a new invite, was there last update.
@@ -262,7 +273,7 @@ const playBaseIfNewInvite = (() => {
 })();
 
 function playSoundNewOpponentInvite() {
-	if (input.isMouseSupported()) sound.playSound_base();
+	if (docutil.isMouseSupported()) sound.playSound_base();
 	else sound.playSound_viola_c3();
     
 }
@@ -293,7 +304,7 @@ function clearIfOnPlayPage() {
  * @returns {boolean} true if it is our
  */
 function isInviteOurs(invite) {
-	if (validatorama.getOurUsername() === invite.name) return true;
+	if (validatorama.areWeLoggedIn() && invite.usernamecontainer.type === 'player' && validatorama.getOurUsername() === invite.usernamecontainer.username) return true;
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 
@@ -311,22 +322,21 @@ function isInviteOurs(invite) {
  * @returns {Invite} The invite object, parsed from an HTML element.
  */
 function getInviteFromElement(inviteElement) {
-	const childrenTextContent = style.getChildrenTextContents(inviteElement);
 	const id = inviteElement.getAttribute('id');
     
 	/**
      * Starting from the first child, the order goes:
-     * Name, Variant, TimeControl, Color, Publicity, Rated
+     * Usernamecontainer, Variant, TimeControl, Color, Publicity, Rated
      * (see the {@link Invite} object)
      */
 
 	return {
-		name: childrenTextContent[0],
-		variant: childrenTextContent[1],
-		clock: childrenTextContent[2],
-		color: childrenTextContent[3],
-		publicity: childrenTextContent[4],
-		rated: childrenTextContent[5],
+		usernamecontainer: usernamecontainer.extractPropertiesFromUsernameContainerElement(inviteElement.children[0]),
+		variant: inviteElement.children[1].textContent,
+		clock: inviteElement.children[2].textContent,
+		color: inviteElement.children[3].textContent,
+		publicity: inviteElement.children[4].textContent,
+		rated: inviteElement.children[5].textContent,
 		id
 	};
 }
@@ -435,7 +445,6 @@ export default {
 	doWeHave,
 	clearIfOnPlayPage,
 	unsubIfWeNotHave,
-	deleteInviteTagInLocalStorage,
 	subscribeToInvites,
 	unsubFromInvites,
 };

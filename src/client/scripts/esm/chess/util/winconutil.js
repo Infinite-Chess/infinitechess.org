@@ -12,7 +12,7 @@
 /** @typedef {import('./typeutil').Player} Player */
 
 /** Valid win conditions that either color can have. */
-const validWinConditions = ['checkmate','royalcapture','allroyalscaptured','allpiecescaptured','threecheck','koth'];
+const validWinConditions = ['checkmate','royalcapture','allroyalscaptured','allpiecescaptured','koth'];
 
 /**
  * List of all win conditions that happen after a move being made.
@@ -38,11 +38,11 @@ function isWinConditionValid(winCondition) {
  * This is any conclusion that can happen after a move is made.
  * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
  * which can happen at any point in time.
- * @param {string | false} gameConclusion - The gameConclusion
+ * @param {string | undefined} gameConclusion - The gameConclusion
  * @returns {boolean} *true* if the gameConclusion is decisive.
  */
 function isGameConclusionDecisive(gameConclusion) {
-	if (gameConclusion === false) throw new Error('Should not be be testing if game conclusion is decisive when game is not over!');
+	if (gameConclusion === undefined) throw new Error('Should not be be testing if game conclusion is decisive when game is not over!');
 	const condition = getVictorAndConditionFromGameConclusion(gameConclusion).condition;
 	return isConclusionDecisive(condition);
 }
@@ -70,7 +70,7 @@ function isConclusionDecisive(condition) {
  * @returns {{ victor?: Player, condition: string }} An object containing 2 properties: `victor` and `condition`
  */
 function getVictorAndConditionFromGameConclusion(gameConclusion) {
-	if (gameConclusion === false) throw new Error('Should not be getting victor and condition from false gameConclusion! Game is not over.');
+	if (gameConclusion === undefined) throw new Error('Should not be getting victor and condition from false gameConclusion! Game is not over.');
 	let [victorStr, condition] = gameConclusion.split(' ');
 	if (victorStr === 'aborted') { // If the conclusion is "aborted", then the victor isn't specified.
 		condition = victorStr;

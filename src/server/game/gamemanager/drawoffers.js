@@ -8,7 +8,7 @@
  * NOR does it send any websocket messages.
  */
 
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 /** @typedef {import('../TypeDefinitions.js').Game} Game */
 
@@ -55,6 +55,7 @@ function doesColorHaveExtendedDrawOffer(game, color) {
 function hasColorOfferedDrawTooFast(game, color) {
 	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(game, color); // number | undefined
 	if (lastPlyDrawOffered !== undefined) { // They have made atleast 1 offer this game
+		// console.log("Last ply offered:", lastPlyDrawOffered);
 		const movesSinceLastOffer = game.moves.length - lastPlyDrawOffered;
 		if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
 	}
@@ -68,7 +69,7 @@ function hasColorOfferedDrawTooFast(game, color) {
  * @param {Player} color - The color of the player extending the offer
  */
 function openDrawOffer(game, color) {
-	if (isDrawOfferOpen(game)) return logEvents("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt", { print: true });
+	if (isDrawOfferOpen(game)) return logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", "errorLog.txt");
 	const data = game.players[color];
 	data.lastOfferPly = game.moves.length;
 	game.drawOfferState = color;

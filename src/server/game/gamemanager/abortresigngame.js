@@ -4,9 +4,8 @@
  */
 
 import gameutility from './gameutility.js';
-import { setGameConclusion, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
+import { setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { sendNotify } from '../../socket/sendSocketMessage.js';
 
 /**
  * Type Definitions
@@ -24,36 +23,26 @@ import { sendNotify } from '../../socket/sendSocketMessage.js';
  */
 function abortGame(ws, game) {
 	if (!game) return console.error("Can't abort a game when player isn't in one.");
-	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-
-	// Any time they click "Abort Game", they leave the game to the Main Menu, unsubbing, whether or not it ends up being legal.
-	gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
 
 	// Is it legal?...
 
-	if (game.gameConclusion === 'aborted') { // Opponent aborted first.
-		onRequestRemovalFromPlayersInActiveGames(ws, game);
+	if (gameutility.isGameOver(game)) {
+		// Return if game is already over
+		console.log(`Player tried to abort game ${game.id} when the game is already over!`);
 		return;
-	} else if (gameutility.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
-		console.error("Player tried to abort game when the game is already over!");
-		sendNotify(ws, "server.javascript.ws-no_abort_game_over");
-		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
-		return;
-	}
-
-	if (gameutility.isGameResignable(game)) {
-		console.error("Player tried to abort game when there's been atleast 2 moves played!");
-		sendNotify(ws, "server.javascript.ws-no_abort_after_moves");
-		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
+	} else if (gameutility.isGameBorderlineResignable(game)) {
+		// A player might try to abort a game after his opponent has just played the second move due to latency issues...
+		// In doubt, be lenient and allow him to abort here. DO NOT RETURN
+		console.log(`Player tried to abort game ${game.id} when there's been exactly 2 moves played! Aborting game anyways...`);
+	} else if (gameutility.isGameResignable(game)) {
+		// Return if player tries to abort when he does not have the right
+		console.error(`Player tried to abort game ${game.id} when there's been at least 3 moves played!`);
 		return;
 	}
 
 	// Abort
-
 	setGameConclusion(game, 'aborted');
-	onRequestRemovalFromPlayersInActiveGames(ws, game);
-	const opponentColor = typeutil.invertPlayer(colorPlayingAs);
-	gameutility.sendGameUpdateToColor(game, opponentColor);
+	gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 /**
@@ -64,20 +53,17 @@ function abortGame(ws, game) {
 function resignGame(ws, game) {
 	if (!game) return console.error("Can't resign a game when player isn't in one.");
 
-	// Any time they click "Resign Game", they leave the game to the Main Menu, unsubbing, whether or not it ends up being legal.
-	gameutility.unsubClientFromGame(game, ws, { sendMessage: false });
-
 	// Is it legal?...
 
-	if (gameutility.isGameOver(game)) { // Resync them to the game because they did not see the game conclusion.
-		console.error("Player tried to resign game when the game is already over!");
-		sendNotify(ws, "server.javascript.ws-cannot_resign_finished_game");
-		const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
-		gameutility.subscribeClientToGame(game, ws, colorPlayingAs);
+	if (gameutility.isGameOver(game)) {
+		// Return if game is already over
+		console.log(`Player resign to resign game ${game.id} when the game is already over!`);
+		return;
+	} else if (!gameutility.isGameResignable(game)) {
+		// Return if player tries to resign when he does not have the right
+		console.error(`Player tried to resign game ${game.id} when there's less than 2 moves played! Ignoring..`);
 		return;
 	}
-
-	if (!gameutility.isGameResignable(game)) console.error("Player tried to resign game when there's less than 2 moves played! Ignoring..");
 
 	// Resign
 
@@ -85,8 +71,7 @@ function resignGame(ws, game) {
 	const opponentColor = typeutil.invertPlayer(ourColor);
 	const gameConclusion = `${opponentColor} resignation`;
 	setGameConclusion(game, gameConclusion);
-	onRequestRemovalFromPlayersInActiveGames(ws, game);
-	gameutility.sendGameUpdateToColor(game, opponentColor);
+	gameutility.sendGameUpdateToBothPlayers(game);
 }
 
 

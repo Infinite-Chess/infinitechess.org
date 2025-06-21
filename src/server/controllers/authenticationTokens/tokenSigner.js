@@ -1,6 +1,6 @@
 
 import jwt from 'jsonwebtoken';
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { accessTokenExpiryMillis, refreshTokenExpiryMillis } from '../../config/config.js';
 
 
@@ -52,7 +52,7 @@ function signRefreshToken(userId, username, roles) {
  * @returns {object} - The payload object containing user information.
  */
 function generatePayload(userId, username, roles, allowedActions) {
-	if (!userId || !username) logEvents(`Both userId and username are required to generate the token payload!!!!!!!!!!!!!!!!`, 'errLog.txt', { print: true });
+	if (!userId || !username) logEventsAndPrint(`Both userId and username are required to generate the token payload!!!!!!!!!!!!!!!!`, 'errLog.txt');
 	const payload = { user_id: userId, username, roles };
 	// allowedActions is optional for now, it does nothing yet. Should only be used for access tokens.
 	if (allowedActions) payload.allowed_actions = allowedActions;

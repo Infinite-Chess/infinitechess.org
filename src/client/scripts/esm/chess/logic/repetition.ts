@@ -8,8 +8,8 @@
  * It also takes into account special rights.
  */
 
-// @ts-ignore
-import type gamefile from "./gamefile.js";
+import type { FullGame } from "./gamefile.js";
+import type { Move } from "./movepiece.js";
 
 import boardchanges from "./boardchanges.js";
 import { StateChange } from "./state.js";
@@ -26,9 +26,9 @@ type Flux = `${string},${string},${number|string}`; // `x,y,43` | `x,y,enpassant
  * @param gamefile - The gamefile
  * @returns Whether there is a three fold repetition present.
  */
-function detectRepetitionDraw(gamefile: gamefile): string | false {
-	const moveList = gamefile.moves;
-	const turnOrderLength = gamefile.gameRules.turnOrder.length;
+function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefined {
+	const moveList = boardsim.moves;
+	const turnOrderLength = basegame.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.
 	 * 0 => First player's turn in the turn order. */
 	const currentPlayerTurn = moveList.length % turnOrderLength;
@@ -43,8 +43,7 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 	const startIndex: number = moveList.length - 1;
 	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
 	outer: for (let index = startIndex; index >= 0; index--) { // WILL BE -1 if we've reached the beginning of the game!
-		const move = moveList[index];
-		if (move.isNull) continue;
+		const move = moveList[index]! as Move;
 
 		// Did this move include a one-way action? Pawn push, special right loss..
 		// If so, no further equal positions, terminate the loop.
@@ -53,8 +52,7 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 		if (move.state.global.some((stateChange: StateChange) => stateChange.type === 'specialrights' && stateChange.future === false)) break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
 
 		// Iterate through all move changes, adding the fluxes.
-		for (let i = 0; i < move.changes.length; i++) {
-			const change = move.changes[i];
+		for (const change of move.changes) {
 			// Did this move change include a one-way action? (capture/deletion) If so, no further equal positions, terminate the loop.
 			if (boardchanges.oneWayActions.includes(change.action)) break outer; // One-way action, can't be undone, no further equal positions.
 			// The remaining actions are two-way, so we need to create fluxes for them..
@@ -123,7 +121,7 @@ function detectRepetitionDraw(gamefile: gamefile): string | false {
 
 	// Loop is finished. How many equal positions did we find?
 	if (equalPositionsFound === 2) return `${players.NEUTRAL} repetition`; // Victor of player NEUTRAL means it was a draw.
-	else return false;
+	else return undefined;
 }
 
 export { detectRepetitionDraw };

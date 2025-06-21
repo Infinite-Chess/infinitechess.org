@@ -9,7 +9,6 @@
  */
 
 
-import { addUserToLeaderboard, Leaderboards } from '../database/leaderboardsManager.js';
 import uuid from '../../client/scripts/esm/util/uuid.js';
 // @ts-ignore
 import bcrypt from 'bcrypt';
@@ -17,8 +16,6 @@ import bcrypt from 'bcrypt';
 import { getTranslationForReq } from '../utility/translate.js';
 // @ts-ignore
 import { isEmailBanned } from '../middleware/banned.js';
-// @ts-ignore
-import { logEvents } from '../middleware/logEvents.js';
 // @ts-ignore
 import { sendEmailConfirmation } from './sendMail.js';
 // @ts-ignore
@@ -31,8 +28,18 @@ import emailValidator from 'node-email-verifier';
 import { Request, Response } from 'express';
 // @ts-ignore
 import { addUserToPlayerStatsTable } from '../database/playerStatsManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Variables -------------------------------------------------------------------------
+
+
+/**
+ * The number of times to SALT passwords before storing in the database.
+ * 
+ * Consider moving SALT_ROUNDS to a config file or environment variable
+ */
+const PASSWORD_SALT_ROUNDS: number = 10;
+
 
 /**
  * Usernames that are reserved. New members cannot use these are their name.
@@ -100,7 +107,7 @@ const profainWords: string[] = [
 async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (!req.body) {
 		console.log(`User sent a bad create account request missing the whole body!`);
-		res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
+		res.status(400).send("Bad request"); // 400 Bad request
 		return;
 	}
 	// First make sure we have all 3 variables.
@@ -118,7 +125,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// First we make checks on the username...
 	// These 'return's are so that we don't send duplicate responses, AND so we don't create the member anyway.
 	if (!doUsernameFormatChecks(username, req, res)) return;
-	if (!doEmailFormatChecks(email, req, res)) return;
+	if (!await doEmailFormatChecks(email, req, res)) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
 	await generateAccount({ username, email, password }); // { success, result: { lastInsertRowid } }
@@ -135,13 +142,13 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
  */
 async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<number | undefined> {
 	// Use bcrypt to hash & salt password
-	const hashedPassword = await bcrypt.hash(password, 10); // Passes 10 salt rounds. (standard)
+	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
 	const verification = autoVerify ? undefined : JSON.stringify({ verified: false, code: uuid.generateID_Base62(8) });
 
 	const membersResult = addUser(username, email, hashedPassword, { verification }); // { success, result: { lastInsertRowid } }
 	if (!membersResult.success) {
 		// Failure to create (username taken). If we do proper checks this point should NEVER happen. BUT THIS MAY STILL happen with async stuff, if they spam the create account button, because bcrypt is async.
-		logEvents(`Failed to create new member "${username}".`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Failed to create new member "${username}".`, 'errLog.txt');
 		return;
 	}
     
@@ -149,11 +156,11 @@ async function generateAccount({ username, email, password, autoVerify = false }
 	const user_id = membersResult.result.lastInsertRowid;
 	const playerStatsResult = addUserToPlayerStatsTable(user_id);
 	if (!playerStatsResult.success) {
-		logEvents(`Failed to add user "${username}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Failed to add user "${username}" to player_stats table: ${playerStatsResult.reason}`, 'errLog.txt');
 		return;
 	}
 
-	logEvents(`Created new member: ${username}`, 'newMemberLog.txt', { print: true });
+	logEventsAndPrint(`Created new member: ${username}`, 'newMemberLog.txt');
 
 	// SEND EMAIL CONFIRMATION
 	if (!autoVerify) {
@@ -261,7 +268,7 @@ function checkProfanity(string: string): boolean {
 };
 
 /** Returns true if the email passes all the checks required for account generation. */
-function doEmailFormatChecks(string: string, req: Request, res: Response): boolean {
+async function doEmailFormatChecks(string: string, req: Request, res: Response): Promise<boolean> {
 	if (string.length > 320) {
 		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_too_long", req) }); // Max email length
 		return false;
@@ -276,11 +283,11 @@ function doEmailFormatChecks(string: string, req: Request, res: Response): boole
 	}
 	if (isEmailBanned(string)) {
 		const errMessage = `Banned user with email ${string} tried to recreate their account!`;
-		logEvents(errMessage, 'bannedIPLog.txt', { print: true });
+		logEventsAndPrint(errMessage, 'bannedIPLog.txt');
 		res.status(409).json({ 'conflict': getTranslationForReq("server.javascript.ws-you_are_banned", req) });
 		return false;
 	}
-	if (!isEmailDNSValid(string)) {
+	if (!await isEmailDNSValid(string)) {
 		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-email_domain_invalid", req) });
 		return false;
 	}
@@ -302,7 +309,7 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 		return await emailValidator(email, { checkMx: true });
 	} catch (error) {
 		const err = error as Error; // Type assertion
-		logEvents(`Error when validating domain for email "${email}": ${err.stack}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error when validating domain for email "${email}": ${err.stack}`, 'errLog.txt');
 		return true; // Default to true to avoid blocking users.
 	}
 }
@@ -337,5 +344,7 @@ export {
 	createNewMember,
 	checkEmailValidity,
 	checkUsernameAvailable,
-	generateAccount
+	generateAccount,
+	doPasswordFormatChecks,
+	PASSWORD_SALT_ROUNDS,
 };

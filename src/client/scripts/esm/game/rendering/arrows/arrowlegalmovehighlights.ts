@@ -8,23 +8,19 @@
 import type { Piece } from "../../../chess/util/boardutil.js";
 import type { Color } from "../../../util/math.js";
 import type { BufferModelInstanced } from "../buffermodel.js";
-// @ts-ignore
 import type { LegalMoves } from "../../../chess/logic/legalmoves.js";
 
 
 import arrows from "./arrows.js";
 import typeutil from "../../../chess/util/typeutil.js";
 import coordutil from "../../../chess/util/coordutil.js";
-import boardutil from "../../../chess/util/boardutil.js";
 import gameslot from "../../chess/gameslot.js";
 import onlinegame from "../../misc/onlinegame/onlinegame.js";
 import selection from "../../chess/selection.js";
 import legalmovehighlights from "../highlights/legalmovehighlights.js";
 import moveutil from "../../../chess/util/moveutil.js";
 import preferences from "../../../components/header/preferences.js";
-// @ts-ignore
-import movement from "../movement.js";
-// @ts-ignore
+import boardpos from "../boardpos.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 
 // Type Definitions -------------------------------------------------------------------------------------------
@@ -70,7 +66,7 @@ function update() {
 
 	// Do not render line highlights upon arrow hover, when game is rewinded,
 	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile)) {
+	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim)) {
 		hoveredArrowsLegalMoves.length = 0;
 		return;
 	}
@@ -103,16 +99,15 @@ function onPieceIndicatorHover(piece: Piece) {
 
 	// Calculate their legal moves and mesh!
 	const gamefile = gameslot.getGamefile()!;
-	const thisRider = boardutil.getPieceFromCoords(gamefile.pieces, piece.coords)!;
-	const thisPieceLegalMoves = legalmoves.calculate(gamefile, thisRider);
+	const thisPieceLegalMoves = legalmoves.calculateAll(gamefile, piece);
 
 	// Calculate the mesh...
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const opponentColor = onlinegame.areInOnlineGame() ? onlinegame.getOpponentColor() : typeutil.invertPlayer(gamefile.whosTurn);
-	const isOpponentPiece = pieceColor === opponentColor;
-	const isOurTurn = gamefile.whosTurn === pieceColor;
+	const ourColor = onlinegame.areInOnlineGame() ? onlinegame.getOurColor() : gamefile.basegame.whosTurn;
+	const isOpponentPiece = pieceColor !== ourColor;
+	const isOurTurn = gamefile.basegame.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
 
 	const { NonCaptureModel, CaptureModel } = legalmovehighlights.generateModelsForPiecesLegalMoveHighlights(piece.coords, thisPieceLegalMoves, pieceColor, color);
@@ -124,21 +119,21 @@ function onPieceIndicatorHover(piece: Piece) {
 function renderEachHoveredPieceLegalMoves() {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const model_Offset = legalmovehighlights.getOffset();
 	const position: [number,number,number] = [
 		-boardPos[0] + model_Offset[0], // Add the highlights offset
 		-boardPos[1] + model_Offset[1],
 		0
 	];
-	const boardScale = movement.getBoardScale();
+	const boardScale = boardpos.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
 	hoveredArrowsLegalMoves.forEach(hoveredArrow => {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)
 		if (selection.isAPieceSelected()) {
 			const pieceSelectedCoords = selection.getPieceSelected()!.coords;
-			if (coordutil.areCoordsEqual_noValidate(hoveredArrow.piece.coords, pieceSelectedCoords)) return; // Skip (already rendering its legal moves, because it's selected)
+			if (coordutil.areCoordsEqual(hoveredArrow.piece.coords, pieceSelectedCoords)) return; // Skip (already rendering its legal moves, because it's selected)
 		}
 		hoveredArrow.model_NonCapture.render(position, scale);
 		hoveredArrow.model_Capture.render(position, scale);

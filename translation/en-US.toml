@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "48"
+version = "63"
 maintainer = "Naviary"
 
 [header]
@@ -11,6 +11,7 @@ login = "Log In"
 profile = "Profile"
 createaccount = "Create Account"
 logout = "Log Out"
+leaderboard = "Leaderboard"
 
 [header.settings]
 language = "Language"
@@ -22,6 +23,7 @@ selection = "Selection"
 selection-drag = "Dragging pieces"
 selection-premove = "Premoves"
 selection-animations = "Animations"
+selection-lingering_annotations = "Lingering Annotations"
 perspective = "Perspective" # Perspective-mode
 perspective-mouse-sensitivity = "Mouse Sensitivity"
 perspective-fov = "Field of View"
@@ -38,6 +40,12 @@ language = "Language"
 js-confirm_delete = "Are you sure you want to delete your account? This CANNOT be undone! Click OK to enter your password."
 js-enter_password = "Enter your password to PERMANENTLY delete your account:"
 
+[leaderboard.javascript]
+supported_variants = "This leaderboard is used for the following variants:"
+rank = "Rank"
+player = "Player"
+rating = "Rating"
+
 [index]
 title = "Infinite Chess | Home - The Official Website" # The tab title
 secondary_title = "The official website for playing live!"
@@ -48,11 +56,11 @@ what_is_it_pargaraphs = [
 "As you can imagine, there are infinite possibilities for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.6 on the ","Play"," page!"]
+how_to_paragraph = ["The current version release is 1.7 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring players to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
-["It is my goal to build a way to make this easily playable for everyone and grow a community surrounding it. I have spent countless hours of my own time on this website, upkeeping it, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free to play, life has requirements. To help support me financially please consider joining my", "Patreon"]
+["It is my goal to build a way to make this easily playable for everyone and grow a community surrounding it. I have spent countless hours of my own time on this website, upkeeping it, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free to play, life has requirements. To help support me financially please consider joining my ", "Patreon", "."] # Patreon receives a hyperlink, here
 ]
 patreon_title = "Patreon Supporters"
 github_title = "Github Contributors"
@@ -86,9 +94,6 @@ variants_credits = [
 ]
 textures_heading = "Textures"
 textures_licensed_under = "textures licensed under the"
-textures_credits = [
-"Gold coin by Quolte.",
-]
 sounds_heading = "Sounds"
 sounds_credits = [
 ["Some sounds are provided by the", "project under the"],
@@ -106,7 +111,8 @@ language_credits = [ # The strings below that contain ONLY a username will recei
 	"Traditional Chinese by ", "Heinrich Xiao", ".",
 	"Polish by ", "Tymon Becella", ".", # Apsurt
 	"Português by ", "Emerson P. Machado", ".", # The_Skeleton on discord
-	"Spanish by ", "xa31er", "."
+	"Spanish by ", "xa31er", ".",
+	"German by ", "Estetique", "."
 ]
 
 [member]
@@ -117,12 +123,13 @@ verify_confirm = "Thank you! Your account has been verified."
 joined = "Joined:"
 seen = ["Seen:", " ago"]
 practice_progress = "Practice Mode Progress:"
-ranked_elo = "Elo:"
+ranked_elo = "Rating:"
+infinity_leaderboard_position = "Global Ranking:"
+infinity_leaderboard_rating_deviation = "Rating Deviation:"
 reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"
 delete_account = "Delete account"
-password_reset_message = ["To change your username, email or password, ", "contact us."]
 
 [member.badge-tooltips]
 checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
@@ -143,10 +150,24 @@ js-username_tooshort = "Username must be at least 3 characters long"
 js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
 js-email_invalid = "This is not a valid email"
 js-email_inuse = "This email is already in use"
+
+[reset-password.javascript]
+js-pwd_no_match = "Passwords do not match."
+reset-password = "Reset Password"
+processing = "Processing..."
+network-error = "A network error occurred. Please try again."
+
+[password-validation]
 js-pwd_incorrect_format = "Password is in an incorrect format"
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
 js-pwd_not_pwd = "Password must not be 'password'"
+
+[leaderboard]
+title = "Leaderboard"
+inactive_players = "Inactive players with a high rating uncertainty are excluded from the leaderboard."
+your_global_ranking = "Your Global Ranking:"
+show_more = "Show more..."
 
 [play]
 title = "Infinite Chess - Play" # The tab title
@@ -281,6 +302,9 @@ code = "Code"
 undo_transition = "Undo transition"
 expand_fit_all = "Expand to fit all"
 recenter = "Recenter"
+annotations = "Draw annotations"
+erase = "Erase annotations"
+collapse = "Collapse annotations"
 rewind_move = "Rewind move"
 forward_move = "Forward move"
 pause = "Pause"
@@ -304,6 +328,7 @@ question = "Accept draw offer?"
 [play.javascript] # Not text that's included in the html, but text that scripts use!
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
+engine_indicator = "Engine"
 player_name_white_generic = "White"
 player_name_black_generic = "Black"
 white_to_move = "White to move"
@@ -353,11 +378,12 @@ checkmate_gold_unearned = "Complete 100% of all practice checkmates to earn this
 [play.javascript.copypaste]
 copied_game = "Copied game to clipboard!"
 cannot_paste_in_public = "Cannot paste game in a public match!"
+cannot_paste_in_rated = "Cannot paste game in a rated match!"
 cannot_paste_in_engine = "Cannot paste game in an engine match!"
 cannot_paste_after_moves = "Cannot paste game after moves are made!"
 clipboard_denied = "Clipboard permission denied. This might be your browser."
 clipboard_invalid = "Clipboard is not in valid ICN notation."
-game_needs_to_specify = "Game needs to specify either the 'Variant' metadata, or 'startingPosition' property."
+game_needs_to_specify = "Game needs to specify either the 'Variant' metadata, or 'position' property."
 invalid_wincon_white = "White has an invalid win condition"
 invalid_wincon_black = "Black has an invalid win condition"
 pasting_game = "Pasting game..."
@@ -381,7 +407,6 @@ regenerated_pieces = "Regenerated pieces."
 [play.javascript.invites]
 move_mouse = "Move the mouse to reconnect."
 cannot_cancel = "Cannot cancel invite of undefined ID."
-you_indicator = "(You)"
 you_are_white = "You're: White"
 you_are_black = "You're: Black"
 random = "Random"
@@ -428,7 +453,6 @@ insuffmat = "Insufficient material"
 royalcapture = "Royal capture"
 allroyalscaptured = "All royals captured"
 allpiecescaptured = "All pieces captured"
-threecheck = "Three-check"
 koth = "King of the hill"
 resignation = "Resignation"
 agreement = "Agreement" 
@@ -444,7 +468,6 @@ you_disconnect = "You win by abandonment!"
 you_royalcapture = "You win by royal capture!"
 you_allroyalscaptured = "You win by all royals captured!"
 you_allpiecescaptured = "You win by all pieces captured!"
-you_threecheck = "You win by three-check!"
 you_koth = "You win by king of the hill!"
 you_generic = "You win!"
 draw_stalemate = "Draw by stalemate!"
@@ -461,30 +484,24 @@ opponent_disconnect = "You lose by abandonment!"
 opponent_royalcapture = "You lose by royal capture!"
 opponent_allroyalscaptured = "You lose by all royals captured!"
 opponent_allpiecescaptured = "You lose by all pieces captured!"
-opponent_threecheck = "You lose by three-check!"
 opponent_koth = "You lose by king of the hill!"
 opponent_generic = "You lose!"
 white_checkmate = "White wins by checkmate!"
 black_checkmate = "Black wins by checkmate!"
-bug_checkmate = "This is a bug, please report. Game ended by checkmate."
 white_time = "White wins on time!"
 black_time = "Black wins on time!"
-bug_time = "This is a bug, please report. Game ended on time."
+white_resignation = "White wins by resignation!"
+black_resignation = "Black wins by resignation!"
+white_disconnect = "White wins by disconnection!"
+black_disconnect = "Black wins by disconnection!"
 white_royalcapture = "White wins by royal capture!"
 black_royalcapture = "Black wins by royal capture!"
-bug_royalcapture = "This is a bug, please report. Game ended by royal capture."
 white_allroyalscaptured = "White wins by all royals captured!"
 black_allroyalscaptured = "Black wins by all royals captured!"
-bug_allroyalscaptured = "This is a bug, please report. Game ended by all royals captured."
 white_allpiecescaptured = "White wins by all pieces captured!"
 black_allpiecescaptured = "Black wins by all pieces captured!"
-bug_allpiecescaptured = "This is a bug, please report. Game ended by all pieces captured."
-white_threecheck = "White wins by three-check!"
-black_threecheck = "Black wins by three-check!"
-bug_threecheck = "This is a bug, please report. Game ended by three-check."
 white_koth = "White wins by king of the hill!"
 black_koth = "Black wins by king of the hill!"
-bug_koth = "This is a bug, please report. Game ended by king of the hill."
 bug_generic = "This is a bug, please report!"
 
 [terms]
@@ -498,10 +515,11 @@ parents_paragraphs = [
 "Currently, members cannot set their own profile picture. There is a plan to allow this feature. At that time we will do our best to prevent innapropriate profile pictures.",
 ]
 fair_play_header = "Fair Play"
-fair_play_paragraph1 = ["You cannot create more than 1 account. If you would like to change the email address associated with your account, ", "contact us."]
+fair_play_paragraph1 = ["You cannot have more than one account."]
 fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
 fair_play_rules = [
-"Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, etc. This can be done to intentionally break the game, or to give you an advantage.",
+"Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, websocket messages, etc. This can be done to intentionally break the game, play otherwise illegal moves, or to give you an advantage.",
+"Abuse bugs or glitches in order to abort the game, give you an advantantage, or make the game otherwise unplayable. This can include moving a piece to extreme distances, such as 10^15 away from the origin.",
 "In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated, casual, games)",
 "Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
 ]
@@ -534,15 +552,27 @@ conclusion_paragraphs = [
 "You may not perform any illegal activity on the site.",
 ["If you have any questions regarding these terms, or any other question about the site,", "email us!"]
 ]
-update = "(Last updated: 7/13/24. Added warning that all games played may become public information, including your account's approximate last time active. Also, these terms may be updated at any time, and it is your responsibility to make sure you stay updated.)"
 thanks = "Thank you!"
 
 [login]
 title = "Log In" # The tab name
 username = "Username:"
 password = "Password:"
-forgot_password = ["Forgot? ", "Email us."]
 login_button = "Log In"
+send_reset_link = "Send Reset Link"
+forgot_question = "Forgot Password?"
+back_to_login = "Back to Login"
+forgot_instruction = "Please enter the email address associated with your account."
+
+[login.javascript]
+network-error = "A network error occurred. Please try again."
+
+[reset_password]
+title = "Reset Your Password"
+instruction = "Please enter and confirm your new password."
+new_password = "New Password"
+confirm_password = "Confirm Password"
+submit_button = "Reset Password"
 
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
@@ -556,8 +586,6 @@ more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and 
 [server.javascript]
 ws-invalid_username = "Username is invalid"
 ws-incorrect_password = "Password is incorrect"
-ws-username_and_password_required = "Username and password are required."
-ws-username_and_password_string = "Username and password must be a string."
 ws-login_failure_retry_in = "Failed to login, try again in"
 ws-seconds = "seconds" # unit of time
 ws-second = "second" # unit of time
@@ -574,14 +602,13 @@ ws-you_are_banned = "You are banned."
 ws-password_length = "Password must be 6-72 characters long"
 ws-password_format = "Password is in an incorrect format"
 ws-password_password = "Password must not be 'password'"
-ws-member_not_found = "Member not found"
+ws-password-reset-link-sent = "If an account with that email exists, a password reset link has been sent."
+ws-password-change-success = "Password has been reset successfully. You will be redirected to the login page shortly."
+ws-password-reset-token-invalid = "Password reset token is invalid or has expired."
 ws-forbidden_wrong_account = "Forbidden. This is not your account."
 ws-deleting_account_not_found = "Failed to delete account. Account not found."
+ws-deleting_account_in_game = "You cannot delete your account while you are still connected to an online game."
 ws-server_error = "Sorry, there was a server error! Please go back."
-ws-unable_to_identify_client_ip = "Unable to identify client IP address"
-ws-you_are_banned_by_server = "You are banned"
-ws-too_many_requests_to_server = "Too Many Requests. Try again soon."
-ws-bad_request = "Bad Request"
 ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."
 ws-already_in_game = "You are already in a game."
@@ -589,9 +616,8 @@ ws-server_restarting = "The server is restarting in" # The server inserts a numb
 ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
 ws-minutes = "minutes" # unit of time
 ws-minute = "minute" # unit of time
-ws-no_abort_game_over = "Can't abort game, it's already over."
-ws-no_abort_after_moves = "Can't abort game, at least 2 moves have been played."
 ws-game_aborted_cheating = "Game aborted for probable cheating."
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
+ws-rated_invite_verification_needed = "To play ranked, you need to be signed in with a verified account."

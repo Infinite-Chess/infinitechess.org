@@ -14,6 +14,8 @@
 import docutil from "../util/docutil.js";
 import validatorama from "../util/validatorama.js";
 import validcheckmates from "../chess/util/validcheckmates.js";
+// @ts-ignore
+import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
 
 // --- Type Definitions ---
 
@@ -23,6 +25,8 @@ interface MemberData {
 	username: string;
 	checkmates_beaten: string;
 	ranked_elo: string;
+	infinity_leaderboard_position: number | undefined;
+	infinity_leaderboard_rating_deviation: number | undefined;
 	// Only present/relevant if viewing our own profile
 	email?: string;
 	verified?: boolean;
@@ -47,7 +51,6 @@ const element_showAccountInfo = document.getElementById('show-account-info') as 
 const element_deleteAccount = document.getElementById('delete-account') as HTMLButtonElement;
 const element_accountInfo = document.getElementById('accountinfo')!;
 const element_email = document.getElementById('email')!;
-const element_change = document.getElementById('change')!;
 
 // --- Event Listeners Setup ---
 
@@ -81,11 +84,11 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		const response = await fetch(`/member/${member}/data`, config);
 
 		if (response.status === 404) {
-			window.location.href = '/404'; // Use href for navigation
+			window.location.href = languagedropdown.addLngQueryParamToLink('/404'); // Use href for navigation
 			return;
 		}
 		if (response.status === 500) {
-			window.location.href = '/500';
+			window.location.href = languagedropdown.addLngQueryParamToLink('/500');
 			return;
 		}
 		if (!response.ok) {
@@ -111,6 +114,14 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		const eloElement = document.getElementById('ranked_elo')!;
 		eloElement.textContent = result.ranked_elo;
 
+		const infinityLeaderboardPositionElement = document.getElementById('infinity_leaderboard_position')!;
+		infinityLeaderboardPositionElement.textContent = result.infinity_leaderboard_position === undefined ? "?" : 
+						(result.ranked_elo.slice(-1) !== "?" ? '#' + String(result.infinity_leaderboard_position) : `#${result.infinity_leaderboard_position}?`);
+		
+		const infinityLeaderboardRatingDeviationElement = document.getElementById('infinity_leaderboard_rating_deviation')!;
+		infinityLeaderboardRatingDeviationElement.textContent = result.infinity_leaderboard_rating_deviation === undefined ? "?" : 
+						String(result.infinity_leaderboard_rating_deviation);
+
 		const loggedInAs = validatorama.getOurUsername(); // Assuming returns string | null
 
 		// Is it our own profile?
@@ -127,7 +138,6 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 			element_showAccountInfo.classList.remove('hidden');
 			element_deleteAccount.classList.remove('hidden');
 			element_deleteAccount.addEventListener("click", () => removeAccount(true)); // Add listener only if it's our profile
-			element_change.classList.remove('hidden');
 			element_email.textContent = result.email!; // Use email if available, handle undefined case
 		}
 
@@ -137,7 +147,7 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 	} catch (error) {
 		console.error("Error loading member data:", error);
 		// Redirect to a generic error page or display an error message
-		// window.location.href = '/500'; // Example
+		// window.location.href = languagedropdown.addLngQueryParamToLink('/500'); // Example
 	}
 })();
 
@@ -207,7 +217,7 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 			removeAccount(false); // Re-prompt without initial confirmation
 		} else {
 			// Deletion successful, redirect to homepage
-			window.location.href = '/';
+			window.location.href = languagedropdown.addLngQueryParamToLink('/');
 		}
 	} catch (error) {
 		console.error("Network or other error during account deletion:", error);
@@ -231,7 +241,7 @@ function resendConfirmEmail(): void {
 	fetch(`/member/${member}/send-email`, config)
 		.then((response) => {
 			if (response.status === 401) {
-				window.location.href = '/401'; // Unauthorized
+				window.location.href = languagedropdown.addLngQueryParamToLink('/401'); // Unauthorized
 				return Promise.reject(new Error('Unauthorized')); // Stop processing
 			}
 			if (!response.ok) {

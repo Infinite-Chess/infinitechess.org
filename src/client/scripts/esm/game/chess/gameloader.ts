@@ -11,12 +11,19 @@
  */
 
 import type { MetaData } from "../../chess/util/metadata.js";
-import type { JoinGameMessage } from "../misc/onlinegame/onlinegamerouter.js";
-import type { Additional, VariantOptions } from "./gameslot.js";
+import type { ParticipantState, ServerGameInfo, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { Additional } from "./gameslot.js";
+import type { VariantOptions } from "../../chess/logic/initvariant.js";
 import type { EngineConfig } from "../misc/enginegame.js";
 import type { Player } from "../../chess/util/typeutil.js";
+import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
+import type { ClockValues } from "../../chess/logic/clock.js";
 
 
+// @ts-ignore
+import perspective from "../rendering/perspective.js";
+// @ts-ignore
+import transition from "../rendering/transition.js";
 import gui from "../gui/gui.js";
 import gameslot from "./gameslot.js";
 import timeutil from "../../util/timeutil.js";
@@ -24,20 +31,12 @@ import gamefileutility from "../../chess/util/gamefileutility.js";
 import enginegame from "../misc/enginegame.js";
 import loadingscreen from "../gui/loadingscreen.js";
 import { players } from "../../chess/util/typeutil.js";
-// @ts-ignore
 import guigameinfo from "../gui/guigameinfo.js";
-// @ts-ignore
 import guinavigation from "../gui/guinavigation.js";
-// @ts-ignore
 import onlinegame from "../misc/onlinegame/onlinegame.js";
-// @ts-ignore
 import localstorage from "../../util/localstorage.js";
-// @ts-ignore
-import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import movement from "../rendering/movement.js";
-// @ts-ignore
-import transition from "../rendering/transition.js";
+import boardpos from "../rendering/boardpos.js";
+import guiclock from "../gui/guiclock.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -80,11 +79,11 @@ function isItOurTurn(color?: Player): boolean {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't tell if it's our turn when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
-	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.whosTurn === color;
+	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.basegame.whosTurn === color;
 	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
 }
 
-function getOurColor(): Player {
+function getOurColor(): Player | undefined {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't get our color when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.getOurColor();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.getOurColor();
@@ -153,7 +152,19 @@ async function startLocalGame(options: {
 }
 
 /** Starts an online game according to the options provided by the server. */
-async function startOnlineGame(options: JoinGameMessage) {
+async function startOnlineGame(options: {
+	gameInfo: ServerGameInfo,
+	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
+	metadata: MetaData,
+	gameConclusion?: string,
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
+	moves: ServerGameMovesMessage,
+	clockValues?: ClockValues,
+	youAreColor?: Player,
+	participantState?: ParticipantState,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
+}) {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
 
@@ -163,9 +174,10 @@ async function startOnlineGame(options: JoinGameMessage) {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: localstorage.loadItem(options.id) as VariantOptions,
+		variantOptions: localstorage.loadItem(storageKey) as VariantOptions,
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,
@@ -177,10 +189,22 @@ async function startOnlineGame(options: JoinGameMessage) {
 		allowEditCoords: false,
 		additional
 	})
+		// eslint-disable-next-line no-unused-vars
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	onlinegame.initOnlineGame(options);
+	onlinegame.initOnlineGame({
+		gameInfo: options.gameInfo,
+		youAreColor: options.youAreColor,
+		participantState: options.participantState,
+		serverRestartingAt: options.serverRestartingAt,
+	});
+
+	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
+	// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
+	// THUS playing the drum sound effect for our opponent.
+	const basegame = gameslot.getGamefile()!.basegame;
+	if (!basegame.untimed) guiclock.rescheduleSoundEffects(basegame.clocks);
 	
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -217,8 +241,8 @@ async function startEngineGame(options: {
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		TimeControl: '-',
-		White: options.youAreColor === players.WHITE ? '(You)' : 'Engine',
-		Black: options.youAreColor === players.BLACK ? '(You)' : 'Engine',
+		White: options.youAreColor === players.WHITE ? translations['you_indicator'] : translations['engine_indicator'],
+		Black: options.youAreColor === players.BLACK ? translations['you_indicator'] : translations['engine_indicator'],
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime()
 	};
@@ -254,9 +278,10 @@ async function pasteGame(options: {
 	metadata: MetaData,
 	additional: {
 		/** If we're in the board editor, this must be empty. */
-		moves?: string[],
+		moves?: ServerGameMovesMessage,
 		variantOptions: VariantOptions,
-	}
+	},
+	presetAnnotes?: PresetAnnotes
 }) {
 	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online' && typeOfGameWeAreIn !== 'editor') throw Error("Can't paste a game when we're not in a local, online, or editor game.");
 	if (typeOfGameWeAreIn === 'editor' && options.additional.moves && options.additional.moves.length > 0) throw Error("Can't paste a game with moves played while in the editor.");
@@ -269,7 +294,7 @@ async function pasteGame(options: {
 	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
 	const additionalToUse: Additional = {
 		...options.additional,
-		editor: gameslot.getGamefile()!.editor, // Retain the same option as the current loaded game.
+		editor: gameslot.getGamefile()!.boardsim.editor, // Retain the same option as the current loaded game.
 	};
 
 	gameslot.unloadGame();
@@ -278,6 +303,7 @@ async function pasteGame(options: {
 		metadata: options.metadata,
 		viewWhitePerspective,
 		allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
+		presetAnnotes: options.presetAnnotes,
 		additional: additionalToUse,
 	})
 		.then((result: any) => onFinishedLoading())
@@ -321,19 +347,22 @@ function onCatchLoadingError(err: Error) {
  */
 function openGameinfoBarAndConcludeGameIfOver(metadata: MetaData, showGameControlButtons: boolean = false) {
 	guigameinfo.open(metadata, showGameControlButtons);
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
 }
 
 function unloadGame() {
+	// console.log("Game loader unloading game...");
+	
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
 	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
 	
 	guinavigation.close();
 	guigameinfo.close();
+	guigameinfo.clearUsernameContainers();
 	gameslot.unloadGame();
 	perspective.disable();
 	typeOfGameWeAreIn = undefined;
-	movement.eraseMomentum();
+	boardpos.eraseMomentum();
 	transition.terminate();
 
 	gui.prepareForOpen();

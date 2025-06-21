@@ -3,15 +3,14 @@
  */
 
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
-// @ts-ignore
-import { logEvents } from '../middleware/logEvents.js'; // Adjust path if needed
-// @ts-ignore
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
-// @ts-ignore
 import { allPlayerGamesColumns } from './databaseTables.js';
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
+// @ts-ignore
+import { isUserIdTaken } from './memberManager.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -23,6 +22,7 @@ interface PlayerGamesRecord {
 	game_id?: number;
 	player_number?: Player;
 	score?: number | null;
+	clock_at_end_millis?: number | null;
 	elo_at_game?: number | null;
 	elo_change_from_game?: number | null;
 }
@@ -43,10 +43,19 @@ function addGameToPlayerGamesTable(
 		user_id: number,
 		game_id: number,
 		player_number: Player,
-		score?: number | null,
+		score: number | null,
+		clock_at_end_millis: number | null,
 		elo_at_game: number | null,
 		elo_change_from_game: number | null,
 	}): ModifyQueryResult {
+
+	// Guard: make sure this user ID is used (live or deleted)
+	// SQLite doesn't check for us because we can't have a foreign key to the members
+	// table when the same user_id may be moved to the deleted_members table later.
+	if (!isUserIdTaken(options.user_id)) {
+		logEventsAndPrint(`User ID (${options.user_id}) does not exist when adding game to player_games table!`, 'errLog.txt');
+	    return { success: false, reason: `User ID does not exist.` };
+	}
 
 	const query = `
 	INSERT INTO player_games (
@@ -54,9 +63,10 @@ function addGameToPlayerGamesTable(
 		game_id,
 		player_number,
 		score,
+		clock_at_end_millis,
 		elo_at_game,
 		elo_change_from_game
-	) VALUES (?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`;
 
 	try {
@@ -67,6 +77,7 @@ function addGameToPlayerGamesTable(
 				options.game_id,
 				options.player_number,
 				options.score,
+				options.clock_at_end_millis,
 				options.elo_at_game,
 				options.elo_change_from_game
 			]
@@ -78,16 +89,14 @@ function addGameToPlayerGamesTable(
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error adding user game to player_games table for user "${options.user_id}" and game "${options.game_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error adding user game to player_games table for user "${options.user_id}" and game "${options.game_id}": ${message}`, 'errLog.txt');
 
 		// Return an error message
 		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
 		let reason = 'Failed to add game to player_games table.';
 		if (error instanceof Error && 'code' in error) {
 			// Example check for better-sqlite3 specific error codes
-			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = 'User ID does not exist in the members table or Game ID does not exist in the games table.';
-			} else if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
+			if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
 				reason = '(User ID, Game ID) already exists in the player_games table.';
 			}
 		}
@@ -107,11 +116,11 @@ function getPlayerGamesData(user_id: number, game_id: number, columns: string[])
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
-		logEvents(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
 		return undefined;
 	}
 	if (!columns.every(column => typeof column === 'string' && allPlayerGamesColumns.includes(column))) {
-		logEvents(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
 		return undefined;
 	}
 
@@ -122,11 +131,11 @@ function getPlayerGamesData(user_id: number, game_id: number, columns: string[])
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get(query, [user_id, game_id]) as PlayerGamesRecord | undefined;
+		const row = db.get<PlayerGamesRecord>(query, [user_id, game_id]);
 
 		// If no row is found, return undefined
 		if (!row) {
-			logEvents(`No matches found in player_games table for user_id = ${user_id} and game_id = ${game_id}.`, 'errLog.txt', { print: true });
+			logEventsAndPrint(`No matches found in player_games table for user_id = ${user_id} and game_id = ${game_id}.`, 'errLog.txt');
 			return undefined;
 		}
 
@@ -135,7 +144,7 @@ function getPlayerGamesData(user_id: number, game_id: number, columns: string[])
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error and return undefined
-		logEvents(`Error executing query when gettings player game of user_id ${user_id} and game_id = ${game_id}: ${message}. The query: "${query}"`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error executing query when gettings player game of user_id ${user_id} and game_id = ${game_id}: ${message}. The query: "${query}"`, 'errLog.txt');
 		return undefined;
 	}
 }
@@ -149,7 +158,7 @@ function getPlayersInGame(game_id: number): PlayerGamesRecord[] {
 
 	// Construct SQL query
 	const query = `
-		SELECT user_id, player_number, elo_at_game, elo_change_from_game
+		SELECT *
 		FROM player_games
 		WHERE game_id = ?
 		ORDER BY player_number ASC -- Optional: order for consistency
@@ -160,11 +169,58 @@ function getPlayersInGame(game_id: number): PlayerGamesRecord[] {
 		return entries;
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEvents(`Error getting all player_games entries for game "${game_id}": ${message}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error getting all player_games entries for game "${game_id}": ${message}`, 'errLog.txt');
 		return []; // Return an empty array on error
 	}
 }
 
+/**
+ * Gets player_games entries for all opponenents of a specific user for a list of specific games
+ * @param user_id - The user_id of the player
+ * @param game_id_list - A list of game_ids
+ * @param columns - The columns to retrieve (e.g., ['user_id', 'player_number'])
+ * @returns - an array of PlayerGamesRecord information about the members in a game who are not equal to user_id
+ */
+function getOpponentsOfUserFromGames(user_id: number, game_id_list: number[], columns: string[]): PlayerGamesRecord[] {
+
+	// Guard clauses... Validating the arguments...
+
+	if (!Array.isArray(columns)) {
+		logEventsAndPrint(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+	if (!columns.every(column => typeof column === 'string' && allPlayerGamesColumns.includes(column))) {
+		logEventsAndPrint(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+
+	// Construct SQL query
+	const placeholders = game_id_list.map(() => '?').join(', ');
+	const query = `
+		SELECT ${columns.join(', ')}
+		FROM player_games
+		WHERE user_id != ?
+			AND game_id IN (${placeholders})
+	`;
+
+	try {
+		// Execute the query and fetch result
+		const rows = db.all<PlayerGamesRecord>(query, [user_id, ...game_id_list]);
+
+		// If no rows found, return undefined
+		if (!rows || rows.length === 0) {
+			logEventsAndPrint(`No matches found in player_games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`, 'errLog.txt');
+			return [];
+		}
+
+		// Return the fetched rows (single object)
+		return rows;
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error getting all player_games entries for game_id_list "${jsutil.ensureJSONString(game_id_list)}": ${message}`, 'errLog.txt');
+		return [];
+	}
+}
 
 /**
  * Updates multiple column values in the player_games table for a given user.
@@ -181,14 +237,14 @@ function getPlayersInGame(game_id: number): PlayerGamesRecord[] {
 function updatePlayerGamesColumns(user_id: number, game_id: number, columnsAndValues: PlayerGamesRecord): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEvents(`Invalid or empty columns and values provided for user ID "${user_id}" and game ID "${game_id}" when updating player_games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+		logEventsAndPrint(`Invalid or empty columns and values provided for user ID "${user_id}" and game ID "${game_id}" when updating player_games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
 		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
 	}
 
 	for (const column in columnsAndValues) {
 		// Validate all provided columns
 		if (!allPlayerGamesColumns.includes(column)) {
-			logEvents(`Invalid column "${column}" provided for user ID "${user_id}" and game ID "${game_id}" when updating player_games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true }); // Detailed logging for debugging
+			logEventsAndPrint(`Invalid column "${column}" provided for user ID "${user_id}" and game ID "${game_id}" when updating player_games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
 			return { success: false, reason: 'Invalid column.' }; // Generic error message
 		}
 	}
@@ -211,15 +267,61 @@ function updatePlayerGamesColumns(user_id: number, game_id: number, columnsAndVa
 		// Check if the update was successful
 		if (result.changes > 0) return { success: true, result };
 		else {
-			logEvents(`No changes made when updating player_games table columns ${JSON.stringify(columnsAndValues)} for game in player_games table with user ID "${user_id}" and game ID "${game_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
+			logEventsAndPrint(`No changes made when updating player_games table columns ${JSON.stringify(columnsAndValues)} for game in player_games table with user ID "${user_id}" and game ID "${game_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
 			return { success: false, reason: 'No changes made.' }; // Generic error message
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
-		logEvents(`Error updating player_games table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}" and game ID "${game_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt', { print: true });
+		logEventsAndPrint(`Error updating player_games table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}" and game ID "${game_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
 		// Return an error message
 		return { success: false, reason: 'Database error.' }; // Generic error message
+	}
+}
+
+/**
+ * Retrieves the most recent N rated entries for a user on a specific leaderboard, returning only the specified columns from player_games.
+ * Aborted games (where score is null) are skipped.
+ * @param user_id - The ID of the user
+ * @param leaderboard_id - The ID of the leaderboard to filter rated games
+ * @param limit - Maximum number of recent games to fetch
+ * @param columns - Array of column names from player_games to return (e.g., ['game_id', 'score']).
+ * @returns Array of objects containing only the requested columns.
+ */
+function getRecentNRatedGamesForUser(user_id: number, leaderboard_id: number, limit: number, columns: string[]): PlayerGamesRecord[] {
+	// Validate columns argument
+	if (!Array.isArray(columns)) {
+		logEventsAndPrint(`When fetching recent games, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+	if (!columns.every(col => typeof col === 'string' && allPlayerGamesColumns.includes(col))) {
+		logEventsAndPrint(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+
+	// Dynamically build SELECT clause from requested columns
+	const selectClause = columns.map(col => `pg.${col}`).join(', ');
+
+	// Only include rated, non-aborted games on the specified leaderboard, sorted by game date
+	const query = `
+		SELECT ${selectClause}
+		FROM player_games pg
+		JOIN games g ON g.game_id = pg.game_id
+		WHERE pg.user_id = ?
+		  AND g.rated = 1
+		  AND g.leaderboard_id = ?
+		  AND pg.score IS NOT NULL
+		ORDER BY g.date DESC
+		LIMIT ?
+	`;
+
+	try {
+		// Bind parameters: user, leaderboard, and limit
+		return db.all(query, [user_id, leaderboard_id, limit]) as PlayerGamesRecord[];
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(`Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}: ${message}`, 'errLog.txt');
+		return [];
 	}
 }
 
@@ -231,6 +333,8 @@ export {
 	addGameToPlayerGamesTable,
 	getPlayerGamesData,
 	getPlayersInGame,
+	getOpponentsOfUserFromGames,
 	// Commented out to emphasize this should not ever have to be used:
 	// updatePlayerGamesColumns,
+	getRecentNRatedGamesForUser,
 };	

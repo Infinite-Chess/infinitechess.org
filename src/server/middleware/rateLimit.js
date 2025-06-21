@@ -1,4 +1,4 @@
-import { logEvents } from './logEvents.js';
+import { logEvents, logEventsAndPrint } from './logEvents.js';
 import { getClientIP } from '../utility/IP.js';
 
 import { isIPBanned } from './banned.js';
@@ -97,13 +97,13 @@ function rateLimit(req, res, next) {
 	const clientIP = getClientIP(req);
 	if (!clientIP) {
 		logEvents('Unable to identify client IP address when rate limiting!', 'reqLogRateLimited.txt');
-		return res.status(500).json({ message: getTranslationForReq("server.javascript.ws-unable_to_identify_client_ip", req) });
+		return res.status(500).json({ message: "Unable to identify client IP address" });
 	}
 
 	if (isIPBanned(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 		logEvents(logThis, 'bannedIPLog.txt');
-		return res.status(403).json({ message: getTranslationForReq("server.javascript.ws-you_are_banned_by_server", req) });
+		return res.status(403).json({ message: "You are banned" });
 	}
 
 	const userKey = getIpBrowserAgentKey(req); // By this point their IP is defined so this will be defined.
@@ -113,7 +113,7 @@ function rateLimit(req, res, next) {
 
 	if (rateLimitHash[userKey].length > maxRequestsPerMinute) { // Rate limit them (too many requests sent)
 		logEvents(`Agent ${userKey} has too many requests! Count: ${rateLimitHash[userKey].length}`, 'reqLogRateLimited.txt');
-		return res.status(429).json({ message: getTranslationForReq("server.javascript.ws-too_many_requests_to_server", req) });
+		return res.status(429).json({ message: "Too Many Requests. Try again soon." });
 	}
 
 	next(); // Continue the middleware waterfall
@@ -183,7 +183,7 @@ setInterval(() => {
 		// Check if there are no timestamps
 		if (timestamps.length === 0) {
 			const logMessage = "Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.";
-			logEvents(logMessage, 'errLog.txt', { print: true });
+			logEventsAndPrint(logMessage, 'errLog.txt');
 			delete rateLimitHash[key];
 			continue;
 		}
@@ -247,14 +247,14 @@ setInterval(() => {
 
 function logAttackBegin() {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
-	logEvents(logText, 'reqLogRateLimited.txt', { print: true });
-	logEvents(logText, 'hackLog.txt', { print: true });
+	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
+	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
 function logAttackEnd() {
 	const logText = `DDOS attack has ended.`;
-	logEvents(logText, 'reqLogRateLimited.txt', { print: true });
-	logEvents(logText, 'hackLog.txt', { print: true });
+	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
+	logEventsAndPrint(logText, 'hackLog.txt');
 }
 
 export {

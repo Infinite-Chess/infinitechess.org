@@ -9,15 +9,14 @@
 
 import type { MetaData } from "../../chess/util/metadata.js";
 import type { ClockValues } from "../../chess/logic/clock.js";
-import type { CoordsKey } from "../../chess/util/coordutil.js";
-import type { EnPassant } from "../../chess/logic/state.js";
 import type { Player } from "../../chess/util/typeutil.js";
-// @ts-ignore
-import type { GameRules } from "../../chess/variants/gamerules.js";
+import type { Mesh } from "../rendering/piecemodels.js";
+import type { ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { PresetAnnotes } from "../../chess/logic/icn/icnconverter.js";
+import type { FullGame } from "../../chess/logic/gamefile.js";
+import type { VariantOptions } from "../../chess/logic/initvariant.js";
 
-// @ts-ignore
 import enginegame from '../misc/enginegame.js';
-
 import guinavigation from "../gui/guinavigation.js";
 import guipromotion from "../gui/guipromotion.js";
 import spritesheet from "../rendering/spritesheet.js";
@@ -29,7 +28,6 @@ import piecemodels from "../rendering/piecemodels.js";
 import movepiece from "../../chess/logic/movepiece.js";
 import miniimage from "../rendering/miniimage.js";
 import animation from "../rendering/animation.js";
-import organizedpieces from "../../chess/logic/organizedpieces.js";
 import arrows from "../rendering/arrows/arrows.js";
 import clock from "../../chess/logic/clock.js";
 import guigameinfo from "../gui/guigameinfo.js";
@@ -38,24 +36,24 @@ import selection from "./selection.js";
 import imagecache from "../../chess/rendering/imagecache.js";
 import boardutil from "../../chess/util/boardutil.js";
 import { players } from "../../chess/util/typeutil.js";
-// @ts-ignore
+import boardpos from "../rendering/boardpos.js";
+import annotations from "../rendering/highlights/annotations/annotations.js";
+import texturecache from "../../chess/rendering/texturecache.js";
+import sound from "../misc/sound.js";
+import guiclock from "../gui/guiclock.js";
+import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
+import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
-// @ts-ignore
-import sound from "../misc/sound.js";
 // @ts-ignore
 import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore
-import board from "../rendering/board.js";
-// @ts-ignore
-import guiclock from "../gui/guiclock.js";
+import board from "../rendering/boardtiles.js";
 // @ts-ignore
 import area from "../rendering/area.js";
-// @ts-ignore
-import movement from "../rendering/movement.js";
 // @ts-ignore
 import guipause from "../gui/guipause.js";
 // @ts-ignore
@@ -74,58 +72,34 @@ interface LoadOptions {
 	viewWhitePerspective: boolean,
 	/** Whether the coordinate field box should be editable. */
 	allowEditCoords: boolean,
-	additional?: Additional
+	/** Preset ray overrides for the variant's rays. */
+	presetAnnotes?: PresetAnnotes,
+	additional?: Additional,
 }
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
 interface Additional {
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: string[],
+	moves?: ServerGameMovesMessage,
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions,
 	/** The conclusion of the game, if loading an online game that has already ended. */
-	gameConclusion?: string | false,
+	gameConclusion?: string,
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues,
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor?: true
+	editor?: boolean,
 }
-
-/**
- * Variant options that can be used to load a custom game,
- * whether local or online, instead of one of the default variants.
- */
-interface VariantOptions {
-	/**
-	 * The full move number of the turn at the provided position. Default: 1.
-	 * Can be higher if you copy just the positional information in a game with some moves played already.
-	 */
-	fullMove: number,
-	gameRules: GameRules,
-	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	positionString: string,
-	/**
-	 * The starting position object, containing the pieces organized by key.
-	 * The key of the object is the coordinates of the piece as a string,
-	 * and the value is the type of piece on that coordinate (e.g. `"pawnsW"`)
-	 */
-	startingPosition: Map<CoordsKey, number>
-	// The 3 global game states
-	/** The special rights object of the gamefile at the starting position provided, NOT after the moves provided have been played. */
-	specialRights: Set<CoordsKey>,
-	/** The square enpassant capture is allowed, in the starting position specified (not after all moves are played). */
-	enpassant?: EnPassant,
-	/** If the move moveRuleState gamerule is present, this is a string of its current state and the move rule number (e.g. `"0/100"`) */
-	moveRuleState?: number,
-}
-
 
 // Variables ---------------------------------------------------------------
 
 
 /** The currently loaded game. */
-let loadedGamefile: gamefile | undefined;
+let loadedGamefile: FullGame | undefined;
+
+/** The mesh of the gamefile, if it is loaded. */
+let mesh: Mesh | undefined;
 
 /** The player color we are viewing the perspective of in the current loaded game. */
 let youAreColor: Player;
@@ -145,12 +119,14 @@ const delayOfLatestMoveAnimationOnRejoinMillis = 150;
 // Functions ---------------------------------------------------------------
 
 
-/**
- * Returns the gamefile currently loaded
- * @returns {gamefile} The current gamefile
- */
-function getGamefile(): gamefile | undefined {
+/**  Returns the gamefile currently loaded */
+function getGamefile(): FullGame | undefined {
 	return loadedGamefile;
+}
+
+/** Returns the mesh of the gamefile currently loaded */
+function getMesh(): Mesh | undefined {
+	return mesh;
 }
 
 function areInGame(): boolean {
@@ -170,6 +146,7 @@ function isLoadedGameViewingWhitePerspective() {
  */
 function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	if (loadedGamefile) throw new Error("Must unloadGame() before loading a new one.");
+	// console.log("Loading gamefile...");
 
 	// console.log('Started loading game...');
 	
@@ -198,53 +175,57 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 /** Loads all of the logical components of a game */
 function loadLogical(loadOptions: LoadOptions) {
 
-	const newGamefile = new gamefile(loadOptions.metadata, loadOptions.additional);
+	loadedGamefile = gamefile.initFullGame(loadOptions.metadata, loadOptions.additional);
 
 	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
 
-	// If the game has more lines than this, then we turn off arrows at the start to prevent a lag spike.
-	const lineCountToDisableArrows = 8;
-
-	// Disable miniimages and arrows if there's over 50K pieces. They render too slow.
-	if (boardutil.getPieceCountOfGame(newGamefile.pieces) >= organizedpieces.pieceCountToDisableCheckmate) {
-		miniimage.disable();
-		arrows.setMode(0); // Disable arrows too
-	} else if (newGamefile.pieces.slides.length > lineCountToDisableArrows) { // Also disable arrows if there's too many lines in the game (they will really lag!)
-		arrows.setMode(0);
-	}
+	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.boardsim.pieces);
+	// Disable miniimages if there's too many pieces
+	if (pieceCount > miniimage.pieceCountToDisableMiniImages) miniimage.disable();
+	// Disable arrows if there's too many pieces or lines in the game
+	if (pieceCount > arrows.pieceCountToDisableArrows || loadedGamefile.boardsim.pieces.slides.length > arrows.lineCountToDisableArrows) arrows.setMode(0);
 
 	initCopyPastGameListeners();
 
-	// Immediately conclude the game if we loaded a game that's over already
-	loadedGamefile = newGamefile;
-
 	specialrighthighlights.regenModel();
+
+	// If custom preset rays are specified, initiate them in drawrays.ts
+	if (loadOptions.presetAnnotes?.squares) drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
+	if (loadOptions.presetAnnotes?.rays) drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
 }
 
 /** Loads all of the graphical components of a game */
 async function loadGraphical(loadOptions: LoadOptions) {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(loadedGamefile!);
+	guiclock.set(loadedGamefile!.basegame);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
-	await imagecache.initImagesForGame(loadedGamefile!);
-	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!);
+	await imagecache.initImagesForGame(loadedGamefile!.boardsim);
+	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!.boardsim);
+	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
 
 	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
-	guipromotion.initUI(loadedGamefile!.gameRules.promotionsAllowed);
+	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotionsAllowed);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
-	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
-	if (lastmove !== undefined && !lastmove.isNull) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
+	const lastmove = moveutil.getLastMove(loadedGamefile!.boardsim.moves);
+	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
+
+	// Initialize the mesh empty
+	mesh = {
+		offset: [0, 0],
+		inverted: false,
+		types: {}
+	};
 
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(loadedGamefile!);
+	piecemodels.regenAll(loadedGamefile!.boardsim, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
-	if (lastmove !== undefined && !lastmove.isNull) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
-		if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
-		movesequence.viewFront(loadedGamefile!); // Updates to front even when they view different moves
+	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
+		if (moveutil.areWeViewingLatestMove(loadedGamefile!.boardsim)) return; // Already viewing the lastest move
+		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
 		movesequence.animateMove(lastmove, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 }
@@ -252,10 +233,13 @@ async function loadGraphical(loadOptions: LoadOptions) {
 /** The canvas will no longer render the current game */
 function unloadGame() {
 	if (!loadedGamefile) throw Error('Should not be calling to unload game when there is no game loaded.');
+	// console.error("Unloading gamefile...");
 	
 	loadedGamefile = undefined;
+	mesh = undefined;
 
 	imagecache.deleteImageCache();
+	// texturecache.deleteTextureCache(gl);
 	selection.unselectPiece();
 	transition.eraseTelHist();
 	board.updateTheme(); // Resets the board color (the color changes when checkmate happens)
@@ -278,6 +262,7 @@ function unloadGame() {
 	
 	selection.disableEditMode();
 	specialrighthighlights.onGameClose();
+	annotations.onGameUnload(); // Clear all user-drawn highlights
 }
 
 /**
@@ -285,10 +270,11 @@ function unloadGame() {
  * THEN transitions to normal zoom.
  */
 function startStartingTransition() {
-	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!));
-	movement.setPositionToArea(centerArea);
-	movement.setBoardScale(movement.getBoardScale() * 1.75);
+	const centerArea = area.calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(loadedGamefile!.boardsim));
+	boardpos.setBoardPos(centerArea.coords);
+	boardpos.setBoardScale(centerArea.scale * 1.75);
 	guinavigation.recenter();
+	transition.eraseTelHist();
 }
 
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
@@ -314,28 +300,30 @@ function callbackCopy(event: Event) {
  */
 function concludeGame() {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
-	if (loadedGamefile.gameConclusion === false) throw Error("Cannot conclude game when the game hasn't ended.");
+	const basegame = loadedGamefile.basegame;
+	if (basegame.gameConclusion === undefined) throw Error("Cannot conclude game when the game hasn't ended.");
 
-	clock.endGame(loadedGamefile);
-	guiclock.stopClocks(loadedGamefile);
+	clock.endGame(basegame);
+	guiclock.stopClocks(basegame);
 	board.darkenColor();
-	guigameinfo.gameEnd(loadedGamefile.gameConclusion);
+	guigameinfo.gameEnd(basegame.gameConclusion);
 	onlinegame.onGameConclude();
 	enginegame.onGameConclude();
+	guipause.onReceiveGameConclusion();
 
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(loadedGamefile.gameConclusion).victor; // undefined if aborted
+	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion).victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (!onlinegame.areInOnlineGame()) {
 		if (victor !== players.NEUTRAL) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else sound.playSound_draw(delayToPlayConcludeSoundSecs);
 	} else { // In online game
-		if (victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
+		if (!onlinegame.doWeHaveRole() || victor === onlinegame.getOurColor()) sound.playSound_win(delayToPlayConcludeSoundSecs);
 		else if (victor === players.NEUTRAL || !victor) sound.playSound_draw(delayToPlayConcludeSoundSecs);
 		else sound.playSound_loss(delayToPlayConcludeSoundSecs);
 	}
 	
 	// Set the Result and Condition metadata
-	gamefileutility.setTerminationMetadata(loadedGamefile);
+	gamefileutility.setTerminationMetadata(basegame);
 
 	selection.unselectPiece();
 	guipause.updateTextOfMainMenuButton();
@@ -343,15 +331,16 @@ function concludeGame() {
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame() {
-	loadedGamefile!.gameConclusion = false;
+	delete loadedGamefile!.basegame.gameConclusion;
 	// Delete the Result and Condition metadata
-	gamefileutility.eraseTerminationMetadata(loadedGamefile!);
+	gamefileutility.eraseTerminationMetadata(loadedGamefile!.basegame);
 	board.resetColor();
 }
 
 
 export default {
 	getGamefile,
+	getMesh,
 	areInGame,
 	isLoadedGameViewingWhitePerspective,
 	loadGamefile,
@@ -363,5 +352,4 @@ export default {
 
 export type {
 	Additional,
-	VariantOptions
 };

@@ -1,46 +1,21 @@
 
 /**
  * This script handles the compression of a gamefile into a more simple json format,
- * suitable for the formatconverter to turn it into ICN (Infinite Chess Notation).
+ * suitable for the icnconverter to turn it into ICN (Infinite Chess Notation).
  */
 
 
 import jsutil from '../../util/jsutil.js';
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import { _Move_In, LongFormatIn, PresetAnnotes } from '../../chess/logic/icn/icnconverter.js';
 import state from '../../chess/logic/state.js';
 import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
-import movepiece from '../../chess/logic/movepiece.js';
 
-
-import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
-import type { MetaData } from '../../chess/util/metadata.js';
+import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { Move } from '../../chess/logic/movepiece.js';
-import type { EnPassant } from '../../chess/logic/state.js';
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
-// @ts-ignore
+import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
 import type { GameRules } from '../../chess/variants/gamerules.js';
-
-
-/**
- * A compressed version of a gamefile, suitable for the formatconverter to turn it into ICN.
- * All unimportant data is excluded.
- */
-interface AbridgedGamefile {
-	/** The Variant metadata should be the CODE of the variant, not a translation. */
-	metadata: MetaData,
-	fullMove: number,
-	/** A position in ICN notation (e.g. `"P1,2+|P2,2+|..."`) */
-	positionString: string,
-	startingPosition: Map<CoordsKey, number>,
-	gameRules: GameRules,
-	moves: Move[],
-	// The 3 global game states
-	specialRights: Set<CoordsKey>,
-	enpassant?: Coords,
-	moveRuleState?: number,
-}
+import type { FullGame } from '../../chess/logic/gamefile.js';
 
 
 /**
@@ -55,7 +30,7 @@ interface SimplifiedGameState {
 	// The pieces
 	position: Map<CoordsKey, number>,
 	// The turnOrder rotating essentially keeps track of whos turn it is in the position.
-	turnOrder: gamefile['gameRules']['turnOrder'],
+	turnOrder: GameRules['turnOrder'],
 	// The fullMove number increments with every turn cycle
 	fullMove: number,
 	// For state.ts, the 3 global game states
@@ -67,100 +42,88 @@ interface SimplifiedGameState {
 }
 
 
-
 /**
- * Primes the provided gamefile to for the formatconverter to turn it into an ICN
+ * Primes the provided gamefile to for the icnconverter to turn it into an ICN
  * @param gamefile - The gamefile
  * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
+ * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
  * @returns The primed gamefile for converting into ICN format
  */
-function compressGamefile(gamefile: gamefile, copySinglePosition?: true): AbridgedGamefile {
+function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?: boolean, presetAnnotes?: PresetAnnotes): LongFormatIn {
 
-	// ===== NEEDED FOR GAME STATE ========
+	// console.log("Compressing gamefile for ICN conversion...");
+	// console.log("Basegame:", jsutil.deepCopyObject(basegame));
+	// console.log("Boardsim:", jsutil.deepCopyObject(boardsim));
 
-	let startingPosition: Map<CoordsKey, number>;
-	const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
-	// The 3 global game states:
-	let specialRights: Set<CoordsKey>;
-	let enpassant: EnPassant | undefined;
-	let moveRuleState: number | undefined;
-
-	// ======== NEEDED FOR ABRIDGEMENT ==========
-
-	const metadataCopy = jsutil.deepCopyObject(gamefile.metadata);
-	const movesCopy: Move[] = jsutil.deepCopyObject(movepiece.ensureMovesNotNull(gamefile.moves));
-	let positionString: string;
+	let position: Map<CoordsKey, number>;
+	let state_global: GlobalGameState;
 	let fullMove: number;
 
-	if (gamefile.startSnapshot) {
-		startingPosition = jsutil.deepCopyObject(gamefile.startSnapshot.position);
-		// For game state
-		specialRights = jsutil.deepCopyObject(gamefile.startSnapshot.specialRights);
-		enpassant = jsutil.deepCopyObject(gamefile.startSnapshot.enpassant);
-		moveRuleState = gamefile.startSnapshot.moveRuleState;
-		// For abridgement
-		({ positionString, fullMove } = gamefile.startSnapshot);
+	if (boardsim.startSnapshot) {
+		position = jsutil.deepCopyObject(boardsim.startSnapshot.position);
+		state_global = jsutil.deepCopyObject(boardsim.startSnapshot.state_global);
+		fullMove = boardsim.startSnapshot.fullMove!;
 	} else { // editor game,   also copySinglePosition is false
-		if (!gamefile.editor) throw Error("startSnapshot missing in non-editor mode");
-		if (gamefile.moves.length > 0) throw Error("Should not be moves present in editor mode");
+		if (!boardsim.editor) throw Error("startSnapshot missing in non-editor mode");
+		if (boardsim.moves.length > 0) throw Error("Should not be moves present in editor mode");
 		if (copySinglePosition) throw Error('copySinglePosition has no effect in editor mode');
 
-		startingPosition = organizedpieces.generatePositionFromPieces(gamefile.pieces);
-		// For game state.   Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
-		specialRights = jsutil.deepCopyObject(gamefile.state.global.specialRights);
-		enpassant = jsutil.deepCopyObject(gamefile.state.global.enpassant);
-		moveRuleState = jsutil.deepCopyObject(gamefile.state.global.moveRuleState);
-		// For abridgement
-		positionString = icnconverter.getShortFormPosition(startingPosition, specialRights);
+		position = organizedpieces.generatePositionFromPieces(boardsim.pieces);
+		// Since we know there's zero moves, then the gamefile itself acts as the startSnapshot
+		state_global = jsutil.deepCopyObject(boardsim.state.global);
 		fullMove = 1;
 	}
 
-	/**
+	/*
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
+	const gameRulesCopy = jsutil.deepCopyObject(basegame.gameRules);
 	let gamestate: SimplifiedGameState = {
-		position: startingPosition,
+		position,
 		turnOrder: gameRulesCopy.turnOrder,
 		fullMove,
-		state_global: {
-			specialRights,
-			enpassant,
-			moveRuleState,
-		}
+		state_global,
 	};
 
 	// Modify the state if we're applying moves to match a single position
-	if (copySinglePosition) {
-		gamestate = GameToPosition(gamestate, movesCopy, gamefile.state.local.moveIndex + 1); // Convert -1 based to 0 based
-		// Recalc positionString, because it will be different
-		positionString = icnconverter.getShortFormPosition(gamestate.position, gamestate.state_global.specialRights);
-	}
+	if (copySinglePosition) gamestate = GameToPosition(gamestate, boardsim.moves, boardsim.state.local.moveIndex + 1); // Convert -1 based to 0 based
 
 	// Start constructing the abridged gamefile
-	const abridgedGamefile: AbridgedGamefile = {
-		metadata: metadataCopy,
-		fullMove: gamestate.fullMove,
-		positionString,
-		startingPosition: gamestate.position,
+	const long_format_in: LongFormatIn = {
+		metadata: jsutil.deepCopyObject(basegame.metadata),
+		position: gamestate.position,
 		gameRules: gameRulesCopy,
-		moves: copySinglePosition ? [] : movesCopy, // Copy the moves list if not copying a single position
-		// The 3 global game states
-		specialRights: gamestate.state_global.specialRights,
-		// enpassant added below
-		moveRuleState: gamestate.state_global.moveRuleState !== undefined ? gamestate.state_global.moveRuleState : undefined,
+		fullMove: gamestate.fullMove,
+		state_global: gamestate.state_global,
+		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(boardsim.moves),
 	};
-	// enpassant
-	if (gamestate.state_global.enpassant) { // In the form: { square: Coords, pawn: Coords },
-		// We need to convert it to just the Coords, SO LONG AS THE distance to the pawn is 1 square!! Which may not be true if it's a 4D game.
-		const yDistance = Math.abs(gamestate.state_global.enpassant.square[1] - gamestate.state_global.enpassant.pawn[1]);
-		if (yDistance === 1) abridgedGamefile.enpassant = gamestate.state_global.enpassant.square; // Don't assign it if the distance is more than 1 square (not compatible with ICN)
-		else console.warn("Enpassant distance is more than 1 square, not assigning it to the ICN. Enpassant:", gamestate.state_global.enpassant);
-	}
+	
+	// Add the preset annotation overrides from the previously pasted game, if present.
+	if (presetAnnotes) long_format_in.presetAnnotes = presetAnnotes;
 
-	console.log("Returning abridged game:", jsutil.deepCopyObject(abridgedGamefile));
+	// console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
 
-	return abridgedGamefile;
+	return long_format_in;
+}
+
+function convertMovesToICNConverterInMove(moves: Move[]): _Move_In[] {
+	const mappedMoves = moves.map((move: Move ) => {
+		const move_in: _Move_In = {
+			type: move.type,
+			startCoords: move.startCoords,
+			endCoords: move.endCoords,
+			compact: move.compact,
+			flags: move.flags,
+		};
+		// Optionals
+		if (move.promotion !== undefined) move_in.promotion = move.promotion;
+		if (move.comment) move_in.comment = move.comment;
+		if (move.clockStamp !== undefined) move_in.clockStamp = move.clockStamp;
+
+		return move_in;
+	});
+	return jsutil.deepCopyObject(mappedMoves);
 }
 
 
@@ -210,8 +173,4 @@ function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves:
 
 export default {
 	compressGamefile,
-};
-
-export type {
-	AbridgedGamefile,
 };

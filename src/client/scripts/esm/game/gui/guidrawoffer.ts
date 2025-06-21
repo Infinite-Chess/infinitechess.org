@@ -9,10 +9,8 @@
 
 
 import guigameinfo from './guigameinfo.js';
-import clock from '../../chess/logic/clock.js';
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
-// @ts-ignore
 import guiclock from './guiclock.js';
 
 
@@ -92,7 +90,7 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer() {
  * draw offer UI to not fit with everything on the header bar.
  */
 function isDrawOfferUICramped(): boolean {
-	if (gameslot.getGamefile()!.untimed) return false; // Clocks not visible, we definitely have room
+	if (gameslot.getGamefile()!.basegame.untimed) return false; // Clocks not visible, we definitely have room
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
 }

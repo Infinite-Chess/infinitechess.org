@@ -44,11 +44,11 @@ what_is_it_pargaraphs = [
 "可以想象，起始配置有无数种可能，其中许多可以进行竞技比赛！你的最终目标仍然是将军，这需要新的策略，因为没有墙可以用来困住敌方的国王。游戏通常不会比正常的国际象棋比赛持续更久。兵仍然在第1和第8排晋升！",
 ]
 how_to_title = "我要怎么玩?"
-how_to_paragraph = ["当前版本是1.6，你可以在","游戏页面","上进行游戏！"]
+how_to_paragraph = ["当前版本是1.7，你可以在","游戏页面","上进行游戏！"]
 about_title = "关于项目"
 about_paragraphs = [
 "我是Naviary。自从我第一次发现无限国际象棋（这个概念在这个网站出现之前就已经存在），我就对它及其可能性非常感兴趣！直到最近，玩这款游戏一直很困难，需要chess.com会员每次走棋时创建当前棋盘的图像并来回发送。因此，知道并能玩这款游戏的人并不多。",
-["我的目标是建立一种方式，让每个人都可以轻松地玩这个游戏，并建立一个围绕它的社区。我已经花费了无数个小时在这个网站上，维护和开发游戏。我还有很多想法，这些想法会让我忙上一段时间。虽然我希望保持免费游戏，但生活有其需求，如果你能在经济上支持我，请考虑加入我的", "Patreon"],
+["我的目标是建立一种方式，让每个人都可以轻松地玩这个游戏，并建立一个围绕它的社区。我已经花费了无数个小时在这个网站上，维护和开发游戏。我还有很多想法，这些想法会让我忙上一段时间。虽然我希望保持免费游戏，但生活有其需求，如果你能在经济上支持我，请考虑加入我的 ", "Patreon", "."], # Patreon receives a hyperlink, here
 ]
 patreon_title = "Patreon支持者"
 
@@ -311,7 +311,7 @@ cannot_paste_in_public = "不能在公共比赛中粘贴游戏！"
 cannot_paste_after_moves = "移动后不能粘贴游戏！"
 clipboard_denied = "剪贴板权限被拒绝。这可能是您的浏览器问题。"
 clipboard_invalid = "剪贴板内容不符合有效的ICN格式。"
-game_needs_to_specify = "游戏需要指定 'Variant' 元数据或 'startingPosition' 属性。"
+game_needs_to_specify = "游戏需要指定 'Variant' 元数据或 'position' 属性。"
 invalid_wincon_white = "白方有无效的胜利条件"
 invalid_wincon_black = "黑方有无效的胜利条件"
 pasting_game = "正在粘贴游戏..."

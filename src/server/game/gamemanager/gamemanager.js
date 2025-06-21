@@ -3,6 +3,9 @@
  * The script keeps track of all our active online games.
  */
 
+// System imports
+import WebSocket from 'ws';
+
 // Custom imports
 
 import gameutility from './gameutility.js';
@@ -16,9 +19,11 @@ import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers,
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
-import uuid from '../../../client/scripts/esm/util/uuid.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
-import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { genUniqueGameID } from '../../database/gamesManager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import ratingabuse from './ratingabuse.js';
+
 
 /**
  * Type Definitions
@@ -31,8 +36,11 @@ import { players as p } from '../../../client/scripts/esm/chess/util/typeutil.js
 
 /**
  * The object containing all currently active games. Each game's id is the key: `{ id: Game }` 
- * This may temporarily include games that are over, but not yet deleted/logged. 
- * @type {Record<string, Game>}
+ * This may temporarily include games that are over, but not yet deleted/logged.
+ * 
+ * The game's ids are the same id they will receive in the database! For this reason they must
+ * be unique across the games table, and all other live games.
+ * @type {Record<number, Game>}
  */
 const activeGames = {};
 
@@ -41,7 +49,7 @@ const activeGames = {};
  * has disconnected and has not yet seen the game conclusion.
  * This gives them a little bit of time to reconnect and see the results.
  */
-const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
+const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -54,7 +62,7 @@ const timeBeforeGameDeletionMillis = 1000 * 15; // 15 seconds
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
 function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1 is the invite owner.
-	const gameID = uuid.genUniqueID(5, activeGames);
+	const gameID = issueUniqueGameId();
 	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
 	if (!player1Socket) {
 		// Player 1 (invite owner)'s socket closed before their invite was deleted.
@@ -75,6 +83,21 @@ function createGame(invite, player1Socket, player2Socket, replyto) { // Player 1
 }
 
 /**
+ * Returns an id that is unique across BOTH the games table
+ * AND the live games inside {@link activeGames}.
+ * 
+ * The game will receive this same id in the database when it is logged.
+ */
+function issueUniqueGameId() {
+	let id;
+	do {
+		id = genUniqueGameID(); // This is already unique against all game_ids in the table.
+	} while (activeGames[id] !== undefined); // Repeat until we have an id unique against all active games.
+	// console.log(`Issued game_id (${id})!`);
+	return id;
+}
+
+/**
  * Adds a game to the active games list and increments the active game count.
  * @param {Game} game - The game
  */
@@ -82,6 +105,20 @@ function addGameToActiveGames(game) {
 	if (!game) return console.error("Can't add an undefined game to the active games list.");
 	activeGames[game.id] = game;
 	incrementActiveGameCount();
+}
+
+/**
+ * Checks if member with a given username is currently listed as being in some active game
+ * @param {string} username - username of some member
+ * @returns {boolean} true if member is currently in active game, otherwise false
+ */
+function isMemberInSomeActiveGame(username) {
+	for (const game of Object.values(activeGames)) {
+		for (const player of Object.values(game.players)) {
+			if (player.identifier.member === username) return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -98,7 +135,7 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 	const game = getGameByID(gameID);
 	if (!game) return console.log(`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
 
-	gameutility.unsubClientFromGame(game, ws, { sendMessage: false }); // Don't tell the client to unsub because their socket is CLOSING
+	gameutility.unsubClientFromGame(game, ws); // Don't tell the client to unsub because their socket is CLOSING
 
 	// Let their OPPONENT know they've disconnected though...
 
@@ -116,8 +153,8 @@ function unsubClientFromGameBySocket(ws, { unsubNotByChoice = true } = {}) {
 
 /**
  * Returns the game with the specified id.
- * @param {string} id - The id of the game to pull.
- * @returns {Game} The game
+ * @param {number} id - The id of the game to pull.
+ * @returns {Game | undefined} The game
  */
 function getGameByID(id) { return activeGames[id]; }
 
@@ -128,7 +165,7 @@ function getGameByID(id) { return activeGames[id]; }
  */
 function getGameByPlayer(player) {
 	const gameID = getIDOfGamePlayerIsIn(player);
-	if (!gameID) return; // Not in a game;
+	if (gameID === undefined) return; // Not in a game;
 	return getGameByID(gameID);
 }
 
@@ -187,34 +224,41 @@ function onRequestRemovalFromPlayersInActiveGames(ws, game) {
  * Pushes the game clock, adding increment. Resets the timer
  * to auto terminate the game when a player loses on time.
  * @param {Game} game - The game
+ * @returns {number} The new time (in ms) of the player that just moved after increment is added.
  */
 function pushGameClock(game) {
-	// if (!game.whosTurn) return; // Game is over
 	const colorWhoJustMoved = game.whosTurn; // white/black
 	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
-	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
-
-	if (!gameutility.isGameResignable(game)) return;
-
-	// Atleast 2 moves played
-
-	const now = Date.now();
-	const timeSpent = now - game.timeAtTurnStart;
-	let newTime = game.timeRemainAtTurnStart - timeSpent;
-	game.timeAtTurnStart = now;
 
 	const curPlayerdata = game.players[game.whosTurn];
 	const prevPlayerdata = game.players[colorWhoJustMoved];
 
+	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
+
+	const now = Date.now();
+
+	if (!gameutility.isGameResignable(game)) return prevPlayerdata.timer; // 0-1 moves played. Just return their time
+
+	if (game.moves.length > 2) {
+		// Subtract the time spent from their clock, and add increment
+		const timeSpent = now - game.timeAtTurnStart;
+		prevPlayerdata.timer = game.timeRemainAtTurnStart - timeSpent + game.incrementMillis;
+	}
+
+	// Start the timer for the next person
+	game.timeAtTurnStart = now;
 	game.timeRemainAtTurnStart = curPlayerdata.timer;
 
-	// Start the timer that will auto-terminate the player when they lose on time
-	setAutoTimeLossTimer(game);
+	// Reset the timer that will auto terminate the game when one player loses on time.
+	if (!gameutility.isGameOver(game)) {
+		// Cancel previous auto loss timer if it exists
+		clearTimeout(game.autoTimeLossTimeoutID);
+		// Set the next one
+		const timeUntilLoseOnTime = Math.max(game.timeRemainAtTurnStart, 0);
+		game.autoTimeLossTimeoutID = setTimeout(onPlayerLostOnTime, timeUntilLoseOnTime, game);
+	}
 
-	if (game.moves.length < 3) return; //////////////////////////////////////// Atleast 3 moves played
-
-	newTime += game.incrementMillis; // Increment
-	prevPlayerdata.timer = newTime;
+	return prevPlayerdata.timer;
 }
 
 /**
@@ -224,17 +268,18 @@ function pushGameClock(game) {
  */
 function stopGameClock(game) {
 	if (game.untimed) return;
+	if (game.whosTurn === undefined) return; // Clocks already stopped (can reach this point after a cheat report and the game conclusion changes.)
 
 	if (!gameutility.isGameResignable(game)) {
 		game.whosTurn = undefined;
-		return; 
+		return;
 	}
 
 	const timeSpent = Date.now() - game.timeAtTurnStart;
 	let newTime = game.timeRemainAtTurnStart - timeSpent;
 	if (newTime < 0) newTime = 0;
 
-	game.players[game.whosTurn].clock = newTime;
+	game.players[game.whosTurn].timer = newTime;
 
 	game.whosTurn = undefined;
 
@@ -246,12 +291,12 @@ function stopGameClock(game) {
  * Sets the new conclusion for the game. May be *false*.
  * If truthy, it will fire {@link onGameConclusion()}.
  * @param {Game} game - The game
- * @param {string} conclusion - The new game conclusion
+ * @param {string | undefined} conclusion - The new game conclusion
  */
 function setGameConclusion(game, conclusion) {
-	const dontDecrementActiveGames = game.gameConclusion !== false; // Game already over, active game count already decremented.
+	const dontDecrementActiveGames = game.gameConclusion !== undefined; // Game already over, active game count already decremented.
 	game.gameConclusion = conclusion;
-	if (conclusion) onGameConclusion(game, { dontDecrementActiveGames });
+	if (conclusion !== undefined) onGameConclusion(game, { dontDecrementActiveGames });
 }
 
 /**
@@ -281,23 +326,13 @@ function onGameConclusion(game, { dontDecrementActiveGames } = {}) {
 	cancelDisconnectTimers(game);
 	closeDrawOffer(game);
 
+	// The ending time of the game is set, if it is undefined
+	if (game.timeEnded === undefined) game.timeEnded = Date.now();
+
 	// Set a 5-second timer to delete it and change elos,
 	// to give the other client time to oppose the conclusion if they want.
 	gameutility.cancelDeleteGameTimer(game); // Cancel first, in case a hacking report just ocurred.
 	game.deleteTimeoutID = setTimeout(deleteGame, timeBeforeGameDeletionMillis, game);
-}
-
-/**
- * Reset the timer that will auto terminate the game when one player loses on time.
- * @param {Game} game - The game
- */
-function setAutoTimeLossTimer(game) {
-	if (gameutility.isGameOver(game)) return; // Don't set the timer if the game is over
-	// Cancel previous auto loss timer if it exists
-	clearTimeout(game.autoTimeLossTimeoutID);
-	// Set the next one
-	const timeUntilLoseOnTime = game.timeRemainAtTurnStart;
-	game.autoTimeLossTimeoutID = setTimeout(onPlayerLostOnTime, timeUntilLoseOnTime, game);
 }
 
 /**
@@ -378,29 +413,40 @@ function onPlayerLostByAbandonment(game, colorWon) {
 async function deleteGame(game) {
 	if (!game) return console.error(`Unable to delete an undefined game!`);
 
+	// If the pastedGame flag is present, skip logging to the database.
+	// We don't know the starting position.
+	if (game.positionPasted) console.log('Skipping logging custom game.');
+	else {
+		// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+		// The ratings are calculated during the logging of the game into the database
+		const ratingdata = await gamelogger.logGame(game);
+
+		// Mostly deprecated:
+		// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
+		await executeSafely_async(statlogger.logGame, `statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
+
+		// Send rating changes to all players of game, if relevant
+		if (ratingdata !== undefined) gameutility.sendRatingChangeToAllPlayers(game, ratingdata);
+	}
+
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
 	// And remove them from the list of users in active games to allow them to join a new game.
 	for (const data of Object.values(game.players)) {
-		gameutility.unsubClientFromGame(game, data.socket);
 		removeUserFromActiveGame(data.identifier, game.id);
+		if (!data.socket) continue; // They don't have a socket connected.
+		// We inform their opponent they have disconnected inside js when we call this method.
+		// Tell the client to unsub on their end, IF the socket isn't closing.
+		if (data.socket.readyState === WebSocket.OPEN) sendSocketMessage(data.socket, 'game', 'unsub');
+		gameutility.unsubClientFromGame(game, data.socket);
 	}
 
-	delete activeGames[game.id]; // Delete the game
+	// Monitor suspicion levels for all players who participated in the game
+	await ratingabuse.measureRatingAbuseAfterGame(game);
+
+	delete activeGames[game.id]; // Delete the game from the activeGames list
 
 	console.log(`Deleted game ${game.id}.`);
-
-	// If the pastedGame flag is present, skip logging.
-	// We don't know the starting position.
-	if (game.positionPasted) return console.log('Skipping logging custom game.');
-
-	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
-	// The ratings are calculated during the logging of the game into the database
-	await gamelogger.logGame(game);
-
-	// Mostly deprecated:
-	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-	await executeSafely_async(statlogger.logGame, `statlogger unable to log game! ${gameutility.getSimplifiedGameString(game)}`, game);
 }
 
 /**
@@ -444,6 +490,7 @@ function broadCastGameRestarting() {
 
 export {
 	createGame,
+	isMemberInSomeActiveGame,
 	unsubClientFromGameBySocket,
 	onPlayerLostByAbandonment,
 	broadCastGameRestarting,

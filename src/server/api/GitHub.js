@@ -8,11 +8,10 @@
 import { request } from 'node:https';
 import AbortController from 'abort-controller';
 import process from 'node:process';
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { join } from 'node:path';
 import { readFileIfExists } from '../utility/fileUtils.js';
 import { writeFile } from 'node:fs/promises';
-import { HOST_NAME } from '../config/config.js';
 import path from 'path';
 
 import { fileURLToPath } from 'node:url';
@@ -62,7 +61,7 @@ function refreshGitHubContributorsList() {
 	const { GITHUB_API_KEY, GITHUB_REPO } = process.env;
 
 	if (GITHUB_API_KEY.length === 0 || GITHUB_REPO.length === 0) {
-		logEvents("Either Github API key not detected, or repository not specified. Stopping updating contributor list.", 'errLog.txt', { print: true });
+		logEventsAndPrint("Either Github API key not detected, or repository not specified. Stopping updating contributor list.", 'errLog.txt');
 		clearInterval(intervalId);
 		return;
 	}
@@ -80,7 +79,7 @@ function refreshGitHubContributorsList() {
 			"Accept": "application/vnd.github+json",
 			"Authorization": `Bearer ${GITHUB_API_KEY}`,
 			"X-GitHub-Api-Version": "2022-11-28",
-			"User-Agent": HOST_NAME,
+			"User-Agent": process.env.APP_BASE_URL,
 			// "Content-Length": "0"
 		},
 		signal // Pass the signal to the request options
@@ -92,7 +91,7 @@ function refreshGitHubContributorsList() {
 		res.on("data", (chunk) => chunks.push(chunk));
 		res.on("end", async() => {
 			const body = Buffer.concat(chunks);
-			if (res.statusCode !== 200) return logEvents(`Response from GitHub when using API to get contributor list: ${body.toString()}`, 'errLog.txt', { print: true });
+			if (res.statusCode !== 200) return logEventsAndPrint(`Response from GitHub when using API to get contributor list: ${body.toString()}`, 'errLog.txt');
 
 			const response = body.toString();
 			try {
@@ -111,7 +110,7 @@ function refreshGitHubContributorsList() {
 					console.log("Contributors updated!");
 				}
 			} catch {
-				logEvents("Error parsing contributors JSON: " + response, 'errLog.txt', { print: true });
+				logEventsAndPrint("Error parsing contributors JSON: " + response, 'errLog.txt');
 			}
 		});
 	});
@@ -119,16 +118,16 @@ function refreshGitHubContributorsList() {
 	// Handle request errors
 	req.on("error", (err) => {
 		if (err.name === "AbortError") {
-			logEvents("GitHub contributor request was aborted due to timeout.", 'errLog.txt', { print: true });
+			logEventsAndPrint("GitHub contributor request was aborted due to timeout.", 'errLog.txt');
 		} else {
-			logEvents(`Request error while fetching GitHub contributors: ${err.message}`, 'errLog.txt', { print: true });
+			logEventsAndPrint(`Request error while fetching GitHub contributors: ${err.message}`, 'errLog.txt');
 		}
 	});
 
 	// Add a timeout using AbortController if request takes too long
 	const abortTimeout = setTimeout(() => {
 		controller.abort();
-		logEvents("GitHub API request timed out.", 'errLog.txt', { print: true });
+		logEventsAndPrint("GitHub API request timed out.", 'errLog.txt');
 	}, 10000);
 
 	req.on('response', () => {

@@ -243,7 +243,7 @@ function createModel_Instanced_GivenAttribInfo(
 	const vertexDataStride = getStrideFromAttributeInfo(attribInfoInstanced.vertexDataAttribInfo);
 	const instanceDataStride = getStrideFromAttributeInfo(attribInfoInstanced.instanceDataAttribInfo);
 	if (vertexData.length % vertexDataStride !== 0) throw new Error("Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
-	if (instanceData.length % instanceDataStride !== 0) throw new Error("Instance data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.");
+	if (instanceData.length % instanceDataStride !== 0) throw new Error(`Instance data length (${instanceData.length}) is not divisible by stride (${instanceDataStride}) when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.`);
 
 	vertexData = ensureTypedArray(vertexData);
 	instanceData = ensureTypedArray(instanceData);
@@ -500,6 +500,7 @@ function setUniforms(shader: ShaderProgram, position: Vec3, scale: Vec3, uniform
 	if (Object.keys(uniforms).length === 0) return; // No custom uniforms
 	for (const [name, value] of Object.entries(uniforms)) { // Send each custom uniform to the gpu
 		if (name === 'tintColor') gl.uniform4fv(shader.uniformLocations[name], value);
+		else if (name === 'size') gl.uniform1f(shader.uniformLocations[name], value);
 		else throw Error(`Uniform "${name}" is not a supported uniform we can set!`);
 	}
 }

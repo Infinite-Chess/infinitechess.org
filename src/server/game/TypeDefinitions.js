@@ -3,14 +3,13 @@
 // type definitions for web sockets and our game.
 // And has no other script module dependancies.
 
-import { players } from "../../client/scripts/esm/chess/util/typeutil";
-
 
 /** @typedef {import("../socket/socketUtility").CustomWebSocket} CustomWebSocket */
 /** @typedef {import("../../client/scripts/esm/chess/util/typeutil").Player} Player */
 /** @typedef {import("../../client/scripts/esm/chess/util/typeutil").PlayerGroup} PlayerGroup */
 /** @typedef {import("../../client/scripts/esm/chess/util/typeutil").RawType} RawType */
 /** @typedef {import("../../client/scripts/esm/chess/variants/gamerules").GameRules} GameRules */
+/** @typedef {import("../../client/scripts/esm/chess/util/coordutil").Coords} Coords */
 
 function PlayerData() {
 	/**
@@ -23,7 +22,7 @@ function PlayerData() {
 	 * @type {{ member: string, user_id: number } | { browser: string }}
 	 */
 	this.identifier = undefined; // CHANGE TO { signedIn: boolean, identifier: string }
-	/** Player's socket, if they are connected. @type {CustomWebSocket} */
+	/** Player's socket, if they are connected. @type {CustomWebSocket | undefined} */
 	this.socket = undefined;
 	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. @type {number | null} */
 	this.lastOfferPly = undefined;
@@ -63,10 +62,12 @@ function PlayerData() {
 function Game() {
 	console.error("THIS GAME CONSTRUCTOR should never be called! It is purely for the 'Game' type definition, for useful JSDoc dropdown info.");
 
-	/** The game's unique ID */
+	/** The game's unique ID @type {number} */
 	this.id = undefined;
-	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
+	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. @type {number} */
 	this.timeCreated = undefined;
+	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
+	this.timeEnded = undefined;
 	/** Whether this game is "public" or "private". @type {'public' | 'private'} */
 	this.publicity = undefined;
 	/** The variant of this game. */
@@ -81,7 +82,10 @@ function Game() {
 	this.incrementMillis = undefined;
 	/** Whether the game is rated. @type {boolean}*/
 	this.rated = undefined;
-	/** The moves list of the game. Each move is a string that looks like `8,1>16,1`. @type {string[]} */
+	/**
+	 * The moves list of the game. @type {{ startCoords: Coords, endCoords: Coords, promotion?: number, compact: string, clockStamp?: number }[]}
+	 * THE startCoords, endCoords, and promotion ARE ALL NEEDED for the formatconverter!!
+	 */
 	this.moves = undefined;
 	/** The players in the game @type {PlayerGroup<PlayerData>}} */
 	this.players = undefined;
@@ -119,7 +123,7 @@ function Game() {
 	 * to paste it since we don't know the starting position.
 	 * @type {boolean}
 	 */
-	this.positionPasted = undefined
+	this.positionPasted = undefined;
 }
 
 export {

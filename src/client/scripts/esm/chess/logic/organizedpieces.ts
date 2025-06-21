@@ -20,7 +20,7 @@ import type { LineKey } from "../util/boardutil.js";
 import type { Vec2, Vec2Key } from "../../util/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
-import type { Player, PlayerGroup, RawType, TypeGroup } from "../util/typeutil.js";
+import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../util/typeutil.js";
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -96,12 +96,6 @@ const listExtras = 10;
 /** EDITOR-MODE-SPECIFIC {@link listExtras} */
 const listExtras_Editor = 100;
 
-/**
- * TODO: Move to a more suitable location!!!!!!!
- * The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture".
- */
-const pieceCountToDisableCheckmate = 50_000;
-
 
 // Main Functions ---------------------------------------------------------------------
 
@@ -109,8 +103,10 @@ const pieceCountToDisableCheckmate = 50_000;
 /**
  * Takes the source Position for the variant, and constructs the entire
  * organized pieces object, and returns other information inherited from it.
+ * 
+ * Mutates pieceMovesets to remove useless movesets
  */
-function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: TypeGroup<() => PieceMoveset>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets: RawTypeGroup<() => PieceMoveset>, turnOrder: Player[], editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): {
 	pieces: OrganizedPieces,
 	/**
 	 * All existing types in the game, with their color information.
@@ -125,7 +121,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 
 	const piecesByType: Map<number, Coords[]> = new Map();
 	const existingTypesSet = new Set<number>();
-	if (!(position instanceof Map)) throw Error("Position is not a map!");
+	if (!(position instanceof Map)) throw Error(`Position is not a map! (${typeof position})`);
 	for (const [coordsKey, type] of position) {
 		if (typeof type !== "number") throw Error(`Type inside Position is not a number! ${type} ${coordsKey}`); // Bug catcher
 		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
@@ -136,14 +132,14 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 
 	// Calculate the possible types
 
-	const { existingTypes, existingRawTypes } = calcRemainingExistingTypes(existingTypesSet, turnOrder, promotionsAllowed, editor);
+	const { existingTypes, existingRawTypes } = calcRemainingExistingTypes(existingTypesSet, turnOrder, editor, promotionsAllowed);
 
 	// Determine how many undefineds each type needs
 
 	const listExtrasByType: TypeGroup<number> = {};
 	for (const type of existingTypes) {
 		const numOfPieceInStartingPos = piecesByType.get(type)?.length ?? 0;
-		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, promotionsAllowed, editor);
+		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, editor, promotionsAllowed);
 	}
 
 	// console.log("List extras by type:");
@@ -153,11 +149,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
 	 * Trim the pieceMovesets to only include movesets for types in the game
 	 * This is REQUIRED for possible slides to be calculated correctly!!
 	 */
-
-	for (const typeString in pieceMovesets) {
-		const rawType = Number(typeString) as RawType;
-		if (!existingRawTypes.includes(rawType)) delete pieceMovesets[typeString];
-	}
+	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, pieceMovesets);
 
 	// We can get the possible slides now that the movesets are trimmed to only include the types in the game.
 	const slides = movesets.getPossibleSlides(pieceMovesets);
@@ -250,7 +242,7 @@ function processInitialPosition(position: Map<CoordsKey, number>, pieceMovesets:
  * Afterward, flags the pieces as newly regenerated. movesequence may
  * watch for that to know when to regenerate the piece models.
  */
-function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): void {
+function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): void {
 
 	const additionalUndefinedsNeeded: Map<number, number> = new Map();
 	const typeOffsets: Map<number, number> = new Map();
@@ -262,7 +254,7 @@ function regenerateLists(o: OrganizedPieces, promotionsAllowed?: PlayerGroup<Raw
 	// for (const [type, range] of typesAndRanges) {
 	for (const [type, range] of o.typeRanges) {
 		const pieceTypeCount = (range.end - range.start) - range.undefineds.length; // The type of this piece, excluding undefineds
-		const targetUndefineds = getListExtrasOfType(type, pieceTypeCount, promotionsAllowed, editor);
+		const targetUndefineds = getListExtrasOfType(type, pieceTypeCount, editor, promotionsAllowed);
 		const needed = Math.max(0, targetUndefineds - range.undefineds.length);
 
 		additionalUndefinedsNeeded.set(type, needed);
@@ -454,7 +446,7 @@ function removePieceFromSpace(idx: number, o: {
  * Takes a Set of all types in the STARTING POSITION and adds to it other
  * potential pieces that may join the game via promotion or board editor.
  */
-function calcRemainingExistingTypes(startingPositionExistingTypes: Set<number>, turnOrder: Player[], promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): {
+function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrder: Player[], editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): {
 	existingTypes: number[],
 	existingRawTypes: RawType[],
 } {
@@ -471,19 +463,19 @@ function calcRemainingExistingTypes(startingPositionExistingTypes: Set<number>, 
 				const player = Number(playerString) as Player;
 				const rawPromotions = promotionsAllowed[player]!;
 				for (const rawType of rawPromotions) {
-					startingPositionExistingTypes.add(typeutil.buildType(rawType, player));
+					positionExistingTypes.add(typeutil.buildType(rawType, player));
 				}
 			}
 		}
 		/** If Player 3 or greater is present (multiplayer game), then gargoyles may appear when a player dies.
 		 * Which means we also must add corresponding neutral for every type in the game! */
 		if (turnOrder.some(p => p >= 3)) {
-			for (const type of [...startingPositionExistingTypes]) { // Spread to avoid problems with infinite iteration when adding to it at the same time.
+			for (const type of [...positionExistingTypes]) { // Spread to avoid problems with infinite iteration when adding to it at the same time.
 				// Convert it to neutral, and add it to existingTypes
-				startingPositionExistingTypes.add(typeutil.getRawType(type) + ext.N);
+				positionExistingTypes.add(typeutil.getRawType(type) + ext.N);
 			}
 		}
-		existingTypes = [...startingPositionExistingTypes];
+		existingTypes = [...positionExistingTypes];
 		existingRawTypes = [...new Set(existingTypes.map(typeutil.getRawType))];
 	}
 
@@ -497,8 +489,8 @@ function calcRemainingExistingTypes(startingPositionExistingTypes: Set<number>, 
  * Returns the target number of undefineds that should be alloted for a given type.
  * @param numOfPieces - The number of pieces of this type in the position, EXCLUDING undefineds
  */
-function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): number {
-	const undefinedsBehavior = getTypeUndefinedsBehavior(type, promotionsAllowed, editor);
+function getListExtrasOfType(type: number, numOfPieces: number, editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): number {
+	const undefinedsBehavior = getTypeUndefinedsBehavior(type, editor, promotionsAllowed);
 
 	return undefinedsBehavior === 2 ? Math.max(listExtras_Editor, numOfPieces) // Count of piece can increase RAPIDLY (editor)
 		 : undefinedsBehavior === 1 ? listExtras // Count of piece can increase slowly (promotion)
@@ -513,7 +505,7 @@ function getListExtrasOfType(type: number, numOfPieces: number, promotionsAllowe
  * 1 => Can increase in count, but slowly (promotion)
  * 2 => Can increase in count rapidly (board editor)
  */
-function getTypeUndefinedsBehavior(type: number, promotionsAllowed?: PlayerGroup<RawType[]>, editor?: true): 0 | 1 | 2 {
+function getTypeUndefinedsBehavior(type: number, editor: boolean, promotionsAllowed?: PlayerGroup<RawType[]>): 0 | 1 | 2 {
 	if (editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
 	if (!promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const [rawType, player] = typeutil.splitType(type);
@@ -593,7 +585,6 @@ function getXFromLine(step: Coords, coords: Coords): number {
 
 
 export default {
-	pieceCountToDisableCheckmate,
 	processInitialPosition,
 	regenerateLists,
 	generatePositionFromPieces,

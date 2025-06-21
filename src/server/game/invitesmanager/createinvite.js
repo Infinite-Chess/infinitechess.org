@@ -8,7 +8,7 @@
 
 
 // Middleware imports
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
@@ -21,6 +21,9 @@ import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { getTranslation } from '../../utility/translate.js'; 
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
 /**
  * Type Definitions
@@ -44,7 +47,7 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Make sure they don't already have an existing invite
 	if (userHasInvite(ws)) {
 		sendSocketMessage(ws, 'general', 'printerror', "Can't create an invite when you have one already.", replyto);
-		logEvents("Player already has existing invite, can't create another!", 'errLog.txt', { print: true });
+		console.error("Player already has existing invite, can't create another!");
 		return;
 	}
 
@@ -57,7 +60,15 @@ async function createInvite(ws, messageContents, replyto) { // invite: { id, own
 	// Validate invite parameters, detect cheating
 	if (isCreatedInviteExploited(invite)) return reportForExploitingInvite(ws, invite, replyto); // Our response will have already been sent
 
-	// Invite has all legal parameters! Create the invite...
+	// Invite has all legal parameters!
+
+	// Check if user tries creating a rated game despite not being allowed to
+	if (invite.rated === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified)) {
+		const message = getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next);
+		return sendSocketMessage(ws, "general", "notify", message, replyto);
+	}
+
+	// Create the invite now ...
 
 	addInvite(ws, invite, replyto);
 }
@@ -90,7 +101,7 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
      * We further need to manually add the properties:
      * id
      * owner
-     * name
+     * usernamecontainer
      */
 
 	const invite = {};
@@ -101,7 +112,14 @@ function getInviteFromWebsocketMessageContents(ws, messageContents, replyto) {
 
 	const owner = ws.metadata.memberInfo.signedIn ? { member: ws.metadata.memberInfo.username, user_id: ws.metadata.memberInfo.user_id } : { browser: ws.metadata.cookies["browser-id"] };
 	invite.owner = owner;
-	invite.name = owner.member || "(Guest)"; // Protect browser's browser-id cookie
+	invite.usernamecontainer = {};
+	invite.usernamecontainer.type = owner.member ? 'player' : 'guest';
+	invite.usernamecontainer.username = owner.member || "(Guest)"; // Protect browser's browser-id cookie
+	if (ws.metadata.memberInfo.signedIn) {
+		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
+		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
+		invite.usernamecontainer.rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
+	}
 
 	invite.variant = messageContents.variant;
 	invite.clock = messageContents.clock;
@@ -133,9 +151,16 @@ function isCreatedInviteExploited(invite) {  // { variant, clock, color, rated, 
 	if (!clockweb.isClockValueValid(invite.clock)) return true;
 
 	if (invite.color !== players.WHITE && invite.color !== players.BLACK && invite.color !== players.NEUTRAL) return true;
-	if (invite.rated !== 'casual') return true;
+	if (invite.rated !== 'casual' && invite.rated !== 'rated') return true;
 	if (invite.publicity !== 'public' && invite.publicity !== 'private') return true;
 	if (invite.tag.length !== 8) return true; // Invite tags must be 8 characters long.
+
+	// Check if invite is allowed to be rated
+	if (invite.rated === 'rated') {
+		if (!(invite.variant in VariantLeaderboards)) return true;
+		if (invite.clock === "-") return true;
+		if (!(invite.color === players.NEUTRAL || invite.publicity === "private")) return true;
+	}
 
 	return false;
 }
@@ -152,7 +177,7 @@ function reportForExploitingInvite(ws, invite, replyto) {
 	const logText = ws.metadata.memberInfo.signedIn ? `User ${ws.metadata.memberInfo.username} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`
                                      : `Browser ${ws.metadata.cookies["browser-id"]} detected modifying invite parameters! Invite: ${JSON.stringify(invite)}`;
 
-	logEvents(logText, 'hackLog.txt', { print: true }); // Log the exploit to the hackLog!
+	logEventsAndPrint(logText, 'hackLog.txt'); // Log the exploit to the hackLog!
 }
 
 /**
@@ -178,7 +203,6 @@ async function isAllowedToCreateInvite(ws, replyto) {
 
 	return false; // NOT allowed to make an invite!
 }
-
 
 export {
 	createInvite

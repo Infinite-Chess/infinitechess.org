@@ -1,13 +1,22 @@
 
 
+import type { PlayerGroup } from "../../../chess/util/typeutil.js";
+import type { Rating } from "../../../../../../server/database/leaderboardsManager.js";
 import type { ClockValues } from "../../../chess/logic/clock.js";
 import type { MetaData } from "../../../chess/util/metadata.js";
-import type { Player } from "../../../chess/util/typeutil.js";
+import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
-// @ts-ignore
-import type gamefile from "../../chess/logic/gamefile.js";
+import type { Game } from "../../../chess/logic/gamefile.js";
 
+// @ts-ignore
+import guiplay from "../../gui/guiplay.js";
+// @ts-ignore
+import websocket from "../../websocket.js";
+// @ts-ignore
+import statustext from "../../gui/statustext.js";
+// @ts-ignore
+import board from "../../rendering/boardtiles.js";
 import disconnect from "./disconnect.js";
 import afk from "./afk.js";
 import serverrestart from "./serverrestart.js";
@@ -20,20 +29,33 @@ import guititle from "../../gui/guititle.js";
 import clock from "../../../chess/logic/clock.js";
 import selection from "../../chess/selection.js";
 import onlinegame from "./onlinegame.js";
-// @ts-ignore
-import guiplay from "../../gui/guiplay.js";
-// @ts-ignore
-import websocket from "../../websocket.js";
-// @ts-ignore
-import statustext from "../../gui/statustext.js";
-// @ts-ignore
 import guiclock from "../../gui/guiclock.js";
-// @ts-ignore
-import board from "../../rendering/board.js";
+import icnconverter from "../../../chess/logic/icn/icnconverter.js";
+import validatorama from "../../../util/validatorama.js";
+import uuid from "../../../util/uuid.js";
+import metadata from "../../../chess/util/metadata.js";
+import { players, Player } from "../../../chess/util/typeutil.js";
+import guigameinfo from "../../gui/guigameinfo.js";
 
 
 // Type Definitions --------------------------------------------------------------------------------------
 
+
+type ServerGameMovesMessage = ServerGameMoveMessage[];
+type ServerGameMoveMessage = { compact: string, clockStamp?: number };
+
+/**
+ * Static information about an online game that is unchanging.
+ * Only need this once, when we originally load the game,
+ * not on subsequent updates/resyncs.
+ */
+type ServerGameInfo = {
+	/** The id of the online game */
+	id: number,
+	rated: boolean,
+	publicity: 'public' | 'private',
+	playerRatings: PlayerGroup<Rating>,
+}
 
 /**
  * The message contents expected when we receive a server websocket 'joingame' message. 
@@ -43,21 +65,42 @@ import board from "../../rendering/board.js";
  * a game, or receiving a game update, as we already know this stuff.
  */
 interface JoinGameMessage extends GameUpdateMessage {
-	/** The id of the online game */
-	id: string,
+	gameInfo: ServerGameInfo,
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData,
-	publicity: 'public' | 'private',
 	youAreColor: Player,
 };
 
 /** The message contents expected when we receive a server websocket 'gameupdate' message.  */
 interface GameUpdateMessage {
-	gameConclusion: string | false,
+	gameConclusion?: string,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: string[],
-	drawOffer: DrawOfferInfo,
+	moves: ServerGameMovesMessage,
+	participantState: ParticipantState
 	clockValues?: ClockValues,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
+}
+
+type PlayerRatingChangeInfo = {
+	newRating: Rating,
+	change: number,
+}
+
+/** The message contents expected when we receive a server websocket 'move' message.  */
+interface OpponentsMoveMessage {
+	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
+	move: ServerGameMoveMessage,
+	gameConclusion?: string,
+	/** Our opponent's move number, 1-based. */
+	moveNumber: number,
+	/** If the game is timed, this will be the current clock values. */
+	clockValues?: ClockValues,
+}
+
+/** The state of the game unique to participants, while the game is ongoing, NOT for spectators, and not when the game is over. */
+type ParticipantState = {
+	drawOffer: DrawOfferInfo,
 	/** If our opponent has disconnected, this will be present. */
 	disconnect?: DisconnectInfo,
 	/**
@@ -65,24 +108,7 @@ interface GameUpdateMessage {
 	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
 	 */
 	millisUntilAutoAFKResign?: number,
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number,
 }
-
-/** The message contents expected when we receive a server websocket 'move' message.  */
-interface OpponentsMoveMessage {
-	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
-	move: string,
-	gameConclusion: string | false,
-	/** Our opponent's move number, 1-based. */
-	moveNumber: number,
-	/** If the game is timed, this will be the current clock values. */
-	clockValues?: ClockValues,
-}
-
-
-
-
 
 interface DisconnectInfo {
 	/**
@@ -94,6 +120,7 @@ interface DisconnectInfo {
 	wasByChoice: boolean
 }
 
+/** Info storing draw offers of the game. */
 interface DrawOfferInfo {
 	/** True if our opponent has extended a draw offer we haven't yet confirmed/denied */
 	unconfirmed: boolean,
@@ -114,9 +141,10 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	// console.log(`Received ${data.action} from server! Message contents:`)
 	// console.log(data.value)
 	
-	// This action is listened to, even when we're not in a game.
+	// These actions are listened to, even when we're not in a game.
 
 	if (data.action === 'joingame') return handleJoinGame(data.value);
+	else if (data.action === 'logged-game-info') return handleLoggedGameInfo(data.value);
 
 	// All other actions should be ignored if we're not in a game...
 
@@ -126,25 +154,29 @@ function routeMessage(data: WebsocketMessage): void { // { sub, action, value, i
 	}
 
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
 
 	switch (data.action) {
 		case "move":
-			movesendreceive.handleOpponentsMove(gamefile, data.value);
+			movesendreceive.handleOpponentsMove(gamefile, mesh, data.value);
 			break;
 		case "clock": 
-			handleUpdatedClock(gamefile, data.value);
+			handleUpdatedClock(gamefile.basegame, data.value);
 			break;
 		case "gameupdate":
-			resyncer.handleServerGameUpdate(gamefile, data.value);
+			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
+			break;
+		case "gameratingchange":
+			guigameinfo.addRatingChangeToExistingUsernameContainers(data.value);
 			break;
 		case "unsub":
 			handleUnsubbing();
 			break;
 		case "login":
-			handleLogin(gamefile);
+			handleLogin(gamefile.basegame);
 			break;
-		case "nogame": // Game is deleted / no longer exists
-			handleNoGame(gamefile);
+		case "nogame": // Game doesn't exist - SHOULD NEVER HAPPEN
+			handleNoGame(gamefile.basegame);
 			break;
 		case "leavegame":
 			handleLeaveGame();
@@ -197,14 +229,77 @@ function handleJoinGame(message: JoinGameMessage) {
 	gameloader.startOnlineGame(message);
 }
 
+/**
+ * Called when the server sends us the game info of an ENDED game inside the database.
+ * This loads it, even if we didn't participate in the game, and immediately concludes it.
+ * @param message - The message from the server containing the game info.
+ */
+function handleLoggedGameInfo(message: {
+	game_id: number,
+	rated: 0 | 1,
+	private: 0 | 1,
+	termination: string,
+	icn: string,
+}) {
+	let parsedGame: LongFormatOut;
+	try {
+		parsedGame = icnconverter.ShortToLong_Format(message.icn);
+	} catch (e) {
+		// Hmm, this isn't good. Why is a server-sent ICN crashing?
+		console.error(e);
+		statustext.showStatus("There was an error processing the game ICN sent from the server. This is a bug, please report!", true);
+		return;
+	}
+
+	// Unload the currently loaded game, if we are in one
+	if (gameloader.areInAGame()) {
+		gameloader.unloadGame();
+		websocket.deleteSub('game'); // The server will have already unsubscribed us from the previous game.
+	} // Else perhaps we need to close the title screen?? Or the loading screen??
+	
+	// Are we one of the players (automatically no, if there's only guests)
+	const ourUserId: number | undefined = validatorama.getOurUserId();
+	const whiteId: number | undefined = parsedGame.metadata.WhiteID ? uuid.base62ToBase10(parsedGame.metadata.WhiteID) : undefined;
+	const blackId: number | undefined = parsedGame.metadata.BlackID ? uuid.base62ToBase10(parsedGame.metadata.BlackID) : undefined;
+	const ourRole: Player | undefined = ourUserId !== undefined ? (ourUserId === whiteId ? players.WHITE : ourUserId === blackId ? players.BLACK : undefined) : undefined;
+
+	// The clock values are already ingrained into the moves!
+	const moves: ServerGameMovesMessage = parsedGame.moves ? parsedGame.moves.map(m => {
+		const move: { compact: string, clockStamp?: number } = { compact: m.compact };
+		if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
+		return move;
+	}) : [];
+
+	// Display elo ratings, if any.
+	const playerRatings: PlayerGroup<Rating> = {};
+	if (parsedGame.metadata.WhiteElo) playerRatings[players.WHITE] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.WhiteElo);
+	if (parsedGame.metadata.BlackElo) playerRatings[players.BLACK] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.BlackElo);
+
+	// Load the game.
+	gameloader.startOnlineGame({
+		gameInfo: {
+			id: message.game_id,
+			rated: Boolean(message.rated),
+			publicity: message.private ? 'private' as const : 'public' as const,
+			playerRatings,
+		},
+		metadata: parsedGame.metadata,
+		gameConclusion: metadata.getGameConclusionFromResultAndTermination(parsedGame.metadata.Result!, message.termination),
+		moves,
+		youAreColor: ourRole,
+	});
+}
+
 /** 
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(gamefile: gamefile, clockValues: ClockValues) {
+function handleUpdatedClock(basegame: Game, clockValues: ClockValues) {
+	if (basegame.untimed) throw Error('Received clock values for untimed game??');
+	
 	// Adjust the timer whos turn it is depending on ping.
-	if (clockValues) clockValues = onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(gamefile, clockValues); // Edit the clocks
-	guiclock.edit(gamefile);
+	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
+	clock.edit(basegame.clocks, clockValues); // Edit the clocks
+	guiclock.edit(basegame);
 }
 
 /**
@@ -224,11 +319,11 @@ function handleUnsubbing() {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(gamefile: gamefile) {
+function handleLogin(basegame: Game) {
 	statustext.showStatus(translations['onlinegame'].not_logged_in, true, 100);
 	websocket.deleteSub('game');
-	clock.endGame(gamefile);
-	guiclock.stopClocks(gamefile);
+	clock.endGame(basegame);
+	guiclock.stopClocks(basegame);
 	selection.unselectPiece();
 	board.darkenColor();
 }
@@ -243,10 +338,10 @@ function handleLogin(gamefile: gamefile) {
  * * Your page tries to resync to the game after it's long over.
  * * The server restarts mid-game.
  */
-function handleNoGame(gamefile: gamefile) {
+function handleNoGame(basegame: Game) {
 	statustext.showStatus(translations['onlinegame'].game_no_longer_exists, false, 1.5);
 	websocket.deleteSub('game');
-	gamefile.gameConclusion = 'aborted';
+	basegame.gameConclusion = 'aborted';
 	gameslot.concludeGame();
 }
 
@@ -272,9 +367,13 @@ export default {
 };
 
 export type {
-	JoinGameMessage,
 	DisconnectInfo,
 	DrawOfferInfo,
 	GameUpdateMessage,
 	OpponentsMoveMessage,
+	ServerGameMovesMessage,
+	ServerGameMoveMessage,
+	ServerGameInfo,
+	ParticipantState,
+	PlayerRatingChangeInfo,
 };

@@ -4,15 +4,13 @@
  * including voids, and mini images.
  */
 
+import type { Board } from '../../chess/logic/gamefile.js';
 import type { Coords } from '../../chess/util/coordutil.js';
-// @ts-ignore
-import type { gamefile } from '../../chess/logic/gamefile.js';
-
+import type { Mesh } from './piecemodels.js';
 
 import spritesheet from './spritesheet.js';
 import { createModel } from './buffermodel.js';
 import piecemodels from './piecemodels.js';
-// @ts-ignore
 import miniimage from './miniimage.js';
 // @ts-ignore
 import shapes from './shapes.js';
@@ -31,8 +29,8 @@ const ghostOpacity: number = 0.4;
  * Renders all of our pieces on the board,
  * including voids, and mini images, if visible.
  */
-function renderPiecesInGame(gamefile: gamefile) {
-	piecemodels.renderAll(gamefile);
+function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined) {
+	if (mesh) piecemodels.renderAll(boardsim, mesh);
 	miniimage.render();
 }
 

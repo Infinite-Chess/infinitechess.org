@@ -13,7 +13,7 @@ import jsutil from "../../client/scripts/esm/util/jsutil.js";
 // @ts-ignore
 import { GAME_VERSION, printIncomingAndOutgoingMessages, simulatedWebsocketLatencyMillis } from "../config/config.js";
 // @ts-ignore
-import { logEvents, logReqWebsocketOut } from "../middleware/logEvents.js";
+import { logEventsAndPrint, logReqWebsocketOut } from "../middleware/logEvents.js";
 // @ts-ignore
 import { getTranslation } from "../utility/translate.js";
 
@@ -72,7 +72,7 @@ function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, val
 
 	if (ws.readyState === WebSocket.CLOSED) {
 		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errText, 'errLog.txt', { print: true });
+		logEventsAndPrint(errText, 'errLog.txt');
 		return;
 	}
     

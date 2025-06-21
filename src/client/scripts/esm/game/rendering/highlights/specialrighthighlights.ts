@@ -5,7 +5,7 @@
  * Enable by pressing `7`.
  */
 
-import type { Coords, CoordsKey } from "../../../chess/util/coordutil.js";
+import type { Coords } from "../../../chess/util/coordutil.js";
 import type { Vec3, Color } from "../../../util/math.js";
 
 
@@ -14,10 +14,9 @@ import gameslot from "../../chess/gameslot.js";
 import coordutil from "../../../chess/util/coordutil.js";
 import frametracker from "../frametracker.js";
 import legalmovehighlights from "./legalmovehighlights.js";
+import boardpos from "../boardpos.js";
 // @ts-ignore
 import statustext from "../../gui/statustext.js";
-// @ts-ignore
-import movement from "../movement.js";
 // @ts-ignore
 import legalmoveshapes from "../instancedshapes.js";
 
@@ -26,23 +25,10 @@ import legalmoveshapes from "../instancedshapes.js";
 // Variables -------------------------------------------------------------------------------------
 
 
-/** Customizations for the special rights highlights */
-const SPECIAL_RIGHTS = {
-	COLOR: [0, 1, 0.5, 0.3] as Color,
-	/** Method that returns the single-instance vertex data for the shape */
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
-	SHAPE_FUNC: legalmoveshapes.getDataPlusSign,
-};
-
-/** Customizations for the enpassant highlight */
-const ENPASSANT = {
-	COLOR: [0.5, 0, 1, 0.3] as Color,
-	/** Method that returns the single-instance vertex data for the shape */
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveCornerTris,
-	// SHAPE_FUNC: legalmoveshapes.getDataLegalMoveDot,
-	SHAPE_FUNC: legalmoveshapes.getDataLegalMoveSquare,
-};
+/** The color of the special rights indicator. */
+const SPECIAL_RIGHTS_COLOR: Color = [0, 1, 0.5, 0.3];
+/* The color of the enpassant indicator. */
+const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
@@ -50,6 +36,21 @@ let model: BufferModelInstanced | undefined;
 
 
 // Functions -------------------------------------------------------------------------------------
+
+/** Met
+ * hod that returns the single-instance vertex data for the special rights indicator shape. */
+function getSpecialRightsVertexData(): number[] {
+	// return legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
+	// return legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);
+	return legalmoveshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
+}
+
+/** Method that returns the single-instance vertex data for the enpassant indicator shape. */
+function getEnPassantVertexData(): number[] {
+	// return legalmoveshapes.getDataLegalMoveCornerTris(ENPASSANT_COLOR);
+	// return legalmoveshapes.getDataLegalMoveDot(ENPASSANT_COLOR);
+	return legalmoveshapes.getDataLegalMoveSquare(ENPASSANT_COLOR);
+}
 
 
 function toggle() {
@@ -74,26 +75,26 @@ function regenModel() {
 	const model_Offset: Coords = legalmovehighlights.getOffset();
 	// Instance data
 	const squaresToHighlight: Array<number> = [];
-	for (const key of gamefile.state.global.specialRights) {
+	for (const key of gamefile.boardsim.state.global.specialRights) {
 		const coords = coordutil.getCoordsFromKey(key);
 		const offsetCoord = coordutil.subtractCoordinates(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
 	}
-	const vertexData: number[] = SPECIAL_RIGHTS.SHAPE_FUNC(SPECIAL_RIGHTS.COLOR);
+	const vertexData: number[] = getSpecialRightsVertexData();
 	model = createModel_Instanced(vertexData, squaresToHighlight, "TRIANGLES", true);
 }
 
 function renderSpecialRights() {
 	if (!model) throw Error("Specialrights model not initialized");
 
-	const boardPos: Coords = movement.getBoardPos();
+	const boardPos: Coords = boardpos.getBoardPos();
 	const model_Offset: Coords = legalmovehighlights.getOffset();
 	const position: [number,number,number] = [
 		-boardPos[0] + model_Offset[0], // Add the model's offset
 		-boardPos[1] + model_Offset[1],
 		0
 	];
-	const boardScale: number = movement.getBoardScale();
+	const boardScale: number = boardpos.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 
 	model.render(position, scale);
@@ -101,23 +102,23 @@ function renderSpecialRights() {
 
 function renderEnPassant() {
 	const gamefile = gameslot.getGamefile()!;
-	if (!gamefile.state.global.enpassant) return; // No enpassant gamefile property
+	if (!gamefile.boardsim.state.global.enpassant) return; // No enpassant gamefile property
 
 
-	const boardPos: Coords = movement.getBoardPos();
+	const boardPos: Coords = boardpos.getBoardPos();
 	const position: Vec3 = [
 		-boardPos[0],
 		-boardPos[1],
 		0
 	];
-	const boardScale: number = movement.getBoardScale();
+	const boardScale: number = boardpos.getBoardScale();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
-	const data = ENPASSANT.SHAPE_FUNC(ENPASSANT.COLOR);
+	const data = getEnPassantVertexData();
 	const model = createModel(data, 2, "TRIANGLES", true);
 	const transformedPosition: Vec3 = [
-		position[0] + gamefile.state.global.enpassant.square[0],
-		position[1] + gamefile.state.global.enpassant.square[1],
+		position[0] + gamefile.boardsim.state.global.enpassant.square[0],
+		position[1] + gamefile.boardsim.state.global.enpassant.square[1],
 		position[2]
 	];
 	model.render(transformedPosition, scale);

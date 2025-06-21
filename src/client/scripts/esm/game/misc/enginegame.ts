@@ -46,14 +46,14 @@ function areInEngineGame(): boolean {
 	return inEngineGame;
 }
 
-function getOurColor(): Player {
+function getOurColor(): Player | undefined {
 	if (!inEngineGame) throw Error("Cannot get our color if we are not in an engine game!");
 	return ourColor!;
 }
 
 function isItOurTurn(): boolean {
 	if (!inEngineGame) throw Error("Cannot get isItOurTurn of engine game when we're not in an engine game.");
-	return gameslot.getGamefile()!.whosTurn === ourColor;
+	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
 }
 
 function getCurrentEngine() {
@@ -137,14 +137,14 @@ async function onMovePlayed() {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
-	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
+	if (gamefile.basegame.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
-	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
-	const abridgedGame = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
+	if (gamefile.basegame.gameConclusion) return; // Don't do anything if the game is over
+	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
 	// Send the gamefile to the engine web worker
 	/** This has all nested functions removed. */
 	const stringGamefile  = JSON.stringify(gamefile, jsutil.stringifyReplacer);
-	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: abridgedGame, engineConfig: engineConfig, youAreColor: engineColor });
+	if (engineWorker) engineWorker.postMessage({ stringGamefile, lf: longformIn, engineConfig: engineConfig, youAreColor: engineColor });
 	else console.error("User made a move in an engine game but no engine webworker is loaded!");
 }
 
@@ -157,20 +157,21 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	if (!currentEngine) return console.error("Attempting to make engine move, but no engine loaded!");
         
 	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
 
 	// Go to latest move before making a new move
-	movesequence.viewFront(gamefile);
+	movesequence.viewFront(gamefile, mesh);
 	/**
 	 * PERHAPS we don't need this stuff? It's just to find and apply any special move flag
 	 * that should go with the move. But shouldn't the engine provide that info with its move?
 	 */
 	// const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)!;
-	// const legalMoves = legalmoves.calculate(gamefile, piecemoved);
+	// const legalMoves = legalmoves.calculateAll(gamefile, piecemoved)
 	// const endCoordsToAppendSpecial: CoordsSpecial = jsutil.deepCopyObject(move.endCoords);
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
-	const move = movesequence.makeMove(gamefile, moveDraft);
-	if (gamefile.mesh.offset) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+	if (mesh) movesequence.animateMove(move, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

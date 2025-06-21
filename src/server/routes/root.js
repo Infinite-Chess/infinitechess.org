@@ -35,8 +35,12 @@ router.get("^/$|/index(.html)?", serveFile("index.html"));
 router.get("/credits(.html)?", serveFile("credits.html"));
 router.get("/play(.html)?", serveFile("play.html"));
 router.get("/news(.html)?", serveFile("news.html"));
+router.get("/leaderboard(.html)?", serveFile("leaderboard.html"));
 router.get("/login(.html)?", serveFile("login.html"));
 router.get("/createaccount(.html)?", serveFile("createaccount.html"));
+
+router.get("/reset-password/:token", serveFile("resetpassword.html"));
+
 router.get("/termsofservice(.html)?", serveFile("termsofservice.html"));
 router.get("/member(.html)?/:member", serveFile("member.html"));
 router.get("/admin(.html)?", serveFile("admin.html", false));

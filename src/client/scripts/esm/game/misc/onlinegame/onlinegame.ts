@@ -4,13 +4,17 @@
  * */
 
 
-import type { DisconnectInfo, DrawOfferInfo } from './onlinegamerouter.js';
-import type { Player } from '../../../chess/util/typeutil.js';
+import type { ParticipantState, ServerGameInfo } from './onlinegamerouter.js';
+import type { Player, PlayerGroup } from '../../../chess/util/typeutil.js';
 import type { ClockValues } from '../../../chess/logic/clock.js';
+import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
+// @ts-ignore
+import websocket from '../../websocket.js';
+// @ts-ignore
+import guipause from '../../gui/guipause.js';
 import localstorage from '../../../util/localstorage.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
-import typeutil from '../../../chess/util/typeutil.js';
 import gameslot from '../../chess/gameslot.js';
 import afk from './afk.js';
 import tabnameflash from './tabnameflash.js';
@@ -19,8 +23,6 @@ import serverrestart from './serverrestart.js';
 import drawoffers from './drawoffers.js';
 import moveutil from '../../../chess/util/moveutil.js';
 import pingManager from '../../../util/pingManager.js';
-// @ts-ignore
-import websocket from '../../websocket.js';
 
 
 // Variables ------------------------------------------------------------------------------------------------------
@@ -29,10 +31,8 @@ import websocket from '../../websocket.js';
 /** Whether or not we are currently in an online game. */
 let inOnlineGame: boolean = false;
 
-/**
- * The id of the online game we are in, if we are in one. @type {string}
- */
-let id: string | undefined;
+/** The id of the online game we are in, if we are in one. */
+let id: number | undefined;
 
 /**
  * Whether the game is a private one (joined from an invite code).
@@ -40,15 +40,32 @@ let id: string | undefined;
 let isPrivate: boolean | undefined;
 
 /**
- * The color we are in the online game.
+ * Whether the game is rated.
+ */
+let rated: boolean | undefined;
+
+/**
+ * The color we are in the online game, if we are in it.
  */
 let ourColor: Player | undefined;
 
 /**
- * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
+ * The ratings of the non-guest players in the game.
+ * If the variant doesn't have a leaderboard, we fall back to the INFINITY leaderboard.
+ */
+let playerRatings: PlayerGroup<Rating> | undefined;
+
+/**
+ * Different from gamefile.basegame.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
  * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
  */
 let serverHasConcludedGame: boolean | undefined;
+
+/**
+ * Different from gamefile.basegame.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
+ * and NOT if the SERVER tells us that the game is concluded.
+ */
+let playerHasPressedAbortOrResignButton: boolean | undefined;
 
 /**
  * Whether we are in sync with the game on the server.
@@ -69,7 +86,7 @@ function areInOnlineGame(): boolean {
 }
 
 /** Returns the game id of the online game we're in.  */
-function getGameID(): string {
+function getGameID(): number {
 	if (!inOnlineGame) throw Error("Cannot get id of online game when we're not in an online game.");
 	return id!;
 }
@@ -79,13 +96,25 @@ function getIsPrivate(): boolean {
 	return isPrivate!;
 }
 
-function getOurColor(): Player {
-	if (!inOnlineGame) throw Error("Cannot get color we are in online game when we're not in an online game.");
-	return ourColor!; 
+function isRated(): boolean {
+	if (!inOnlineGame) throw Error("Cannot ask if online game is rated when we're not in one.");
+	return rated!;
 }
 
-function getOpponentColor(): Player {
-	return typeutil.invertPlayer(ourColor!)!;
+/** Returns whether we are one of the players in the online game. */
+function doWeHaveRole(): boolean {
+	if (!inOnlineGame) throw Error("Cannot ask if we have a role in online game when we're not in an online game.");
+	return ourColor !== undefined;
+}
+
+function getOurColor(): Player | undefined {
+	if (!inOnlineGame) throw Error("Cannot get color we are in online game when we're not in an online game.");
+	return ourColor; 
+}
+
+function getPlayerRatings(): PlayerGroup<Rating> | undefined {
+	if (!inOnlineGame) throw Error("Cannot get player ratings when we're not in an online game.");
+	return playerRatings;
 }
 
 function areWeColorInOnlineGame(color: Player): boolean {
@@ -95,7 +124,13 @@ function areWeColorInOnlineGame(color: Player): boolean {
 
 function isItOurTurn(): boolean {
 	if (!inOnlineGame) throw Error("Cannot get isItOurTurn of online game when we're not in an online game.");
-	return gameslot.getGamefile()!.whosTurn === ourColor;
+	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
+}
+
+/** Whether we have pressed the Abort/Resign game button this game. NOT when it says main menu. */
+function hasPlayerPressedAbortOrResignButton(): boolean {
+	if (!inOnlineGame) throw Error("Cannot get playerHasPressedAbortOrResignButton of online game when we're not in an online game.");
+	return playerHasPressedAbortOrResignButton!;
 }
 
 function areInSync(): boolean {
@@ -126,61 +161,52 @@ function setInSyncFalse() {
 
 
 function initOnlineGame(options: {
-	/** The id of the online game */
-	id: string,
-	youAreColor: Player,
-	publicity: 'public' | 'private',
-	drawOffer: DrawOfferInfo,
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo,
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number,
+	gameInfo: ServerGameInfo
+	/** Specify if we are a participant in the game, not a spectator. */
+	youAreColor?: Player,
+	/** Only provide if we're a participant of an ongoing game, not a spectator, or when the game is over! */
+	participantState?: ParticipantState,
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number,
 }) {
 	inOnlineGame = true;
-	id = options.id;
-	ourColor = options.youAreColor;
-	isPrivate = options.publicity === 'private';
 	inSync = true;
 
-	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options);
+	// Set static game properties that never change
+	id = options.gameInfo.id;
+	rated = options.gameInfo.rated;
+	isPrivate = options.gameInfo.publicity === 'private';
+	playerRatings = options.gameInfo.playerRatings;
+
+	ourColor = options.youAreColor;
+
+	// If we are a participator, set the draw offers, disconnect timer, afk auto resign timer, and server restarting timer.
+	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options.participantState, options.serverRestartingAt);
 
 	afk.onGameStart();
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
 
 	serverHasConcludedGame = false;
+	playerHasPressedAbortOrResignButton = false;
 
 	initEventListeners();
 }
 
-function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(options: {
-	drawOffer: DrawOfferInfo,
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo,
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number,
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number,
-}) {
-	drawoffers.set(options.drawOffer);
+function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(participantState?: ParticipantState, serverRestartingAt?: number) {
+	if (participantState) {
+		drawoffers.set(participantState.drawOffer);
 
-	// If opponent is currently disconnected, display that countdown
-	if (options.disconnect) disconnect.startOpponentDisconnectCountdown(options.disconnect);
-	else disconnect.stopOpponentDisconnectCountdown();
+		// If opponent is currently disconnected, display that countdown
+		if (participantState.disconnect) disconnect.startOpponentDisconnectCountdown(participantState.disconnect);
+		else disconnect.stopOpponentDisconnectCountdown();
 
-	// If Opponent is currently afk, display that countdown
-	if (options.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(options.millisUntilAutoAFKResign);
-	else afk.stopOpponentAFKCountdown();
+		// If Opponent is currently afk, display that countdown
+		if (participantState.millisUntilAutoAFKResign !== undefined) afk.startOpponentAFKCountdown(participantState.millisUntilAutoAFKResign);
+		else afk.stopOpponentAFKCountdown();
+	}
 
 	// If the server is restarting, start displaying that info.
-	if (options.serverRestartingAt !== undefined) serverrestart.initServerRestart(options.serverRestartingAt);
+	if (serverRestartingAt !== undefined) serverrestart.initServerRestart(serverRestartingAt);
 	else serverrestart.resetServerRestarting();
 }
 
@@ -189,10 +215,13 @@ function closeOnlineGame() {
 	inOnlineGame = false;
 	id = undefined;
 	isPrivate = undefined;
+	rated = undefined;
 	ourColor = undefined;
 	inSync = undefined;
 	serverHasConcludedGame = undefined;
+	playerHasPressedAbortOrResignButton = undefined;
 	afk.onGameClose();
+	disconnect.stopOpponentDisconnectCountdown();
 	tabnameflash.onGameClose();
 	serverrestart.onGameClose();
 	drawoffers.onGameClose();
@@ -234,7 +263,7 @@ function closeEventListeners() {
 function confirmNavigationAwayFromGame(event: MouseEvent) {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) return;
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?'); 
 	if (userConfirmed) return; // Follow link like normal. Server then starts a 20-second auto-resign timer for disconnecting on purpose.
@@ -260,8 +289,9 @@ function update() {
  * Requests a game update from the server, since we are out of sync.
  */
 function resyncToGame() {
+	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
-	websocket.sendmessage('game', 'resync', id);
+	websocket.sendmessage('game', 'resync', id!);
 }
 
 function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
@@ -274,7 +304,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean}) {
 
 function reportOpponentsMove(reason: string) {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
-	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
+	const opponentsMoveNumber = gameslot.getGamefile()!.basegame.moves.length + 1;
 
 	const message = {
 		reason,
@@ -284,24 +314,30 @@ function reportOpponentsMove(reason: string) {
 	websocket.sendmessage('game', 'report', message);
 }
 
-
-
-// Aborts / Resigns
-function onMainMenuPress() {
+/**  Called when the player presses the "Abort / Resign" button for the first time in an onlinegame. */
+function onAbortOrResignButtonPress() {
 	if (!inOnlineGame) return;
-	
-	// Tell the server we no longer want game updates.
-	// Just resigning isn't enough for the server
-	// to deduce we don't want future game updates.
-	websocket.unsubFromSub('game');
-	
 	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
+	if (playerHasPressedAbortOrResignButton) return; // Don't need to abort/resign, we have already done this during this game
+
+	playerHasPressedAbortOrResignButton = true;
 
 	const gamefile = gameslot.getGamefile()!;
-	if (moveutil.isGameResignable(gamefile)) websocket.sendmessage('game','resign');
+	if (moveutil.isGameResignable(gamefile.basegame)) websocket.sendmessage('game','resign');
 	else 									 websocket.sendmessage('game','abort');
 }
 
+/** 
+ * Called when the player presses the "Main Menu" button in an onlinegame
+ * This can happen if the game is already over or if the player has already pressed the "Abort / Resign" button.
+ * This requests the server to stop serving us game updates, and allow us to join a new game.
+ */
+function onMainMenuButtonPress() {
+	// Tell the server we no longer want game updates, if we are still receiving them.
+	websocket.unsubFromSub('game');
+	
+	requestRemovalFromPlayersInActiveGames();
+}
 
 
 /** Called when an online game is concluded (termination shown on-screen) */
@@ -319,7 +355,7 @@ function onGameConclude() {
 
 function deleteCustomVariantOptions() {
 	// Delete any custom pasted position in a private game.
-	if (isPrivate) localstorage.deleteItem(id!);
+	if (isPrivate) localstorage.deleteItem(String(id!));
 }
 
 /**
@@ -332,6 +368,7 @@ function deleteCustomVariantOptions() {
  */
 function requestRemovalFromPlayersInActiveGames() {
 	if (!areInOnlineGame()) return;
+	if (!websocket.areSubbedToSub('game')) return; // THE SERVER has deleted the game. Already removed from players in active games list!
 	websocket.sendmessage('game', 'removefromplayersinactivegames');
 }
 
@@ -340,6 +377,8 @@ function requestRemovalFromPlayersInActiveGames() {
  */
 function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	if (!clockValues.colorTicking) return clockValues; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
+
+	// console.log(`Adjusting clock values for ping. Ping is ${pingManager.getPing()}.`);
 
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values
@@ -357,21 +396,37 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	return clockValues;
 }
 
+/**
+ * Returns the key that's put in local storage to store the variant options
+ * of the current online game, if we have pasted a position in a private match.
+ */
+function getKeyForOnlineGameVariantOptions(gameID: number) {
+	return `online-game-variant-options${gameID}`;
+}
+
+
+// Exports -------------------------------------------------------------------------
+
+
 export default {
 	onmessage,
 	getGameID,
 	getIsPrivate,
+	isRated,
+	doWeHaveRole,
 	getOurColor,
-	getOpponentColor,
+	getPlayerRatings,
 	setInSyncTrue,
 	initOnlineGame,
 	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting,
 	closeOnlineGame,
 	isItOurTurn,
+	hasPlayerPressedAbortOrResignButton,
 	areInSync,
-	onMainMenuPress,
 	resyncToGame,
 	update,
+	onAbortOrResignButtonPress,
+	onMainMenuButtonPress,
 	onGameConclude,
 	hasServerConcludedGame,
 	reportOpponentsMove,
@@ -379,4 +434,5 @@ export default {
 	areInOnlineGame,
 	areWeColorInOnlineGame,
 	adjustClockValuesForPing,
+	getKeyForOnlineGameVariantOptions,
 };

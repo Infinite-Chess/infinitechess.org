@@ -1,4 +1,3 @@
-
 /**
  * This script handles the rendering of the mini images of our pieces when we're zoomed out
  */
@@ -9,73 +8,64 @@ import type { Coords } from '../../chess/util/coordutil.js';
 
 import space from '../misc/space.js';
 import frametracker from './frametracker.js';
-import spritesheet from './spritesheet.js';
 import gameslot from '../chess/gameslot.js';
-import { createModel, BufferModel } from './buffermodel.js';
+import { BufferModelInstanced, AttributeInfoInstanced, createModel_Instanced_GivenAttribInfo } from './buffermodel.js';
 import animation from './animation.js';
 import coordutil from '../../chess/util/coordutil.js';
-import { players, rawTypes } from '../../chess/util/typeutil.js';
-import boardutil from '../../chess/util/boardutil.js';
+import { players, TypeGroup } from '../../chess/util/typeutil.js';
+import boardutil, { Piece } from '../../chess/util/boardutil.js';
+import mouse from '../../util/mouse.js';
+import boardpos from './boardpos.js';
+import snapping from './highlights/snapping.js';
+import instancedshapes from './instancedshapes.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import math, { Color } from '../../util/math.js';
+import typeutil from '../../chess/util/typeutil.js';
+import selection from '../chess/selection.js';
+import jsutil from '../../util/jsutil.js';
 // @ts-ignore
 import webgl from './webgl.js';
 // @ts-ignore
-import input from '../input.js';
-// @ts-ignore
 import perspective from './perspective.js';
-// @ts-ignore
-import bufferdata from './bufferdata.js';
-// @ts-ignore
-import transition from './transition.js';
-// @ts-ignore
-import movement from './movement.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 // @ts-ignore
-import area from './area.js';
-// @ts-ignore
-import board from './board.js';
-// @ts-ignore
-import typeutil from '../../chess/util/typeutil.js';
-// @ts-ignore
-import guipause from '../gui/guipause.js';
+import boardtiles from './boardtiles.js';
 
 
 // Variables --------------------------------------------------------------
 
+/**
+ * The maximum numbers of pieces in a game before we disable mini image rendering
+ * for all pieces that aren't underneath a square annotation, ray intersection, being animated, or selected, for performance.
+ */
+const pieceCountToDisableMiniImages = 50_000;
 
-/** Width of ghost-pieces when zoomed out, in virtual pixels. */
-const MINI_IMAGE_WIDTH_VPIXELS: number = 36; // Default: 36
 const MINI_IMAGE_OPACITY: number = 0.6;
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
 const MAX_ANIM_DIST_VPIXELS = 2300;
 
+/** The attribute info for all mini image vertex & attribute data. */
+const attribInfo: AttributeInfoInstanced = {
+	vertexDataAttribInfo: [
+		{ name: 'position', numComponents: 2 },
+		{ name: 'texcoord', numComponents: 2 },
+		{ name: 'color', numComponents: 4 }
+	],
+	instanceDataAttribInfo: [
+		{ name: 'instanceposition', numComponents: 2 }
+	]
+};
 
-/** {@link MINI_IMAGE_WIDTH_VPIXELS}, but converted to world-space units. This is recalculated on every screen resize. */
-let widthWorld: number;
-/** True if currently hovering over a mini image */
-let hovering: boolean = false;
+
 /** True if we're disabled and not rendering mini images, such as when there's too many pieces. */
 let disabled: boolean = false; // Disabled when there's too many pieces
 
-let model: BufferModel;
 
 
-// Getters & Setters --------------------------------------------------------------
 
+// Toggling --------------------------------------------------------------
 
-function getWidthWorld(): number {
-	return widthWorld;
-}
-
-// Call after screen resize
-function recalcWidthWorld(): void {
-	// Convert width to world-space
-	widthWorld = space.convertPixelsToWorldSpace_Virtual(MINI_IMAGE_WIDTH_VPIXELS);
-}
-
-function isHovering(): boolean {
-	return hovering;
-}
 
 function isDisabled(): boolean {
 	return disabled;
@@ -89,14 +79,7 @@ function disable(): void {
 	disabled = true;
 }
 
-
-// Updating --------------------------------------------------------------------------
-
-
-function testIfToggled(): void {
-	if (!input.isKeyDown('p')) return;
-
-	// Toggled
+function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
@@ -104,118 +87,178 @@ function testIfToggled(): void {
 	else statustext.showStatus(translations['rendering'].icon_rendering_on);
 }
 
-/**
- * Generates the buffer model of the miniimages of the pieces when we're zoomed out.
- * This also detects if we click on a mini-image and if so, teleports us there.
- * 
- * This must be done in the game's update() loop, because it listens for mouse events,
- * and can start teleports.
- */
-function genModel() {
-	if (guipause.areWePaused()) return; // Exit if paused
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
-	if (disabled) return; // Too many pieces to render icons!
 
+// Updating --------------------------------------------------------------------------
+
+
+/** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
+// eslint-disable-next-line no-unused-vars
+function forEachRenderablePiece(callback: (coords: Coords, type: number) => void) {
 	const gamefile = gameslot.getGamefile()!;
+	const pieces = gamefile.boardsim.pieces;
 
-	// Every frame we'll need to regenerate the buffer model
-	const data: number[] = [];
-	const piecesClicked: Coords[] = [];
+	// Helper to test if a static piece is being animated
+	const isAnimatedStatic = (coords: Coords) => animation.animations.some(a => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!));
 
-	// Iterate through all pieces
-	// ...
+	// Static pieces
+	gamefile.boardsim.existingTypes.forEach((type: number) => {
+		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
 
-	const halfWidth: number = widthWorld / 2;
-	const boardPos: Coords = movement.getBoardPos();
-	const boardScale: number = movement.getBoardScale();
-
-	// While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
-	// We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
-
-	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
-	const atleastOneAnimation: boolean = animation.animations.length > 0;
-
-	const rotation: number = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-
-	const pieces = gamefile.pieces;
-	
-	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
-	const sortedColors = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
-	const sortedNeutrals = gamefile.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
-
-	// Process the neutrals first so they are rendered on bottom.
-	sortedNeutrals.forEach(processType);
-	sortedColors.forEach(processType);
-
-	function processType(type: number) {
 		const range = pieces.typeRanges.get(type)!;
-		if (typeutil.getRawType(type) === rawTypes.VOID) return; // Skip voids
+		// Skip types with no pieces
+		if (boardutil.getPieceCountOfTypeRange(range) === 0) return;
 
-		const { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(type, rotation);
-
-		for (let i = range.start; i < range.end; i++) {
-			if (boardutil.isIdxUndefinedPiece(pieces, i)) continue;
-			const coords = boardutil.getCoordsFromIdx(pieces, i);
-			if (atleastOneAnimation && animation.animations.some(a => coordutil.areCoordsEqual_noValidate(coords, a.path[a.path.length - 1]!))) return; // Skip, this piece is being animated.
-			processPiece(coords, texleft, texbottom, texright, textop, 1, 1, 1);
-		}
-	}
-
-	function processPiece(coords: Coords, texleft: number, texbottom: number, texright: number, textop: number, r: number,  g: number, b: number) {
-		const startX: number = (coords[0] - boardPos[0]) * boardScale - halfWidth;
-		const startY: number = (coords[1] - boardPos[1]) * boardScale - halfWidth;
-		const endX: number = startX + widthWorld;
-		const endY: number = startY + widthWorld;
-
-		let thisOpacity: number = MINI_IMAGE_OPACITY;
-
-		// Are we hovering over? If so, opacity needs to be 100%
-		if (areWatchingMousePosition) {
-			const pointerWorldLocation: Coords = input.getPointerWorldLocation() as Coords;
-			const mouseWorldX: number = pointerWorldLocation[0];
-			const mouseWorldY: number = pointerWorldLocation[1];
-
-			if (mouseWorldX > startX && mouseWorldX < endX && mouseWorldY > startY && mouseWorldY < endY) {
-				thisOpacity = 1;
-				hovering = true;
-				/**
-				 * If we also clicked, then teleport!
-				 * Add them to a list of pieces we're hovering over.
-				 * If we click, we teleport to a location containing them all.
-				 */
-				if (input.getPointerClicked()) piecesClicked.push(coords);
-				else if (input.getPointerDown()) input.removePointerDown(); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-			}
-		}
-
-		data.push(...bufferdata.getDataQuad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, r, g, b, thisOpacity));
-	}
-
-	// Add the animated pieces
-	animation.animations.forEach(a => {
-		// Animate the main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / board.gtileWidth_Pixels(); 
-		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		let { texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.type, rotation);
-		processPiece(currentCoords, texleft, texbottom, texright, textop, 1, 1, 1);
-
-		// Animate the captured piece too, if there is one
-		if (!a.captured) return;
-		({ texleft, texbottom, texright, textop } = bufferdata.getTexDataOfType(a.captured.type, rotation));
-		processPiece(a.captured.coords, texleft, texbottom, texright, textop, 1, 1, 1);
+		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
+			const coords = boardutil.getCoordsFromIdx(pieces, idx);
+			if (!isAnimatedStatic(coords)) callback(coords, type);
+		});
 	});
 
-	// Finally, teleport to clicked pieces
-	if (piecesClicked.length > 0) {
-		const theArea = area.calculateFromCoordsList(piecesClicked);
+	// Animated pieces
+	animation.animations.forEach(a => {
+		// Animate the main piece being animated
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+		const current = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
+		callback(current, a.type);
 
-		const endCoords: Coords = theArea.coords as Coords;
-		const endScale: number = theArea.scale;
-		const tel = { endCoords, endScale };
-		transition.teleport(tel);
+		// Animate the captured piece too, if there is one
+		if (a.captured) callback(a.captured.coords, a.captured.type);
+	});
+}
+
+/** Generates the instance data for the miniimages of the pieces this frame. */
+function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceData_hovered: TypeGroup<number[]> } {
+	const instanceData: TypeGroup<number[]> = {};
+	const instanceData_hovered: TypeGroup<number[]> = {};
+
+	const pointerWorlds = mouse.getAllPointerWorlds();
+
+	const boardsim = gameslot.getGamefile()!.boardsim;
+
+	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+	const areWatchingMousePosition: boolean = !perspective.getEnabled() || perspective.isMouseLocked();
+
+	// Prepare empty arrays by type
+	boardsim.existingTypes.forEach((type: number) => {
+		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
+
+		instanceData[type] = [];
+		instanceData_hovered[type] = [];
+	});
+
+	if (!disabled) { // Enabled => normal behavior
+		forEachRenderablePiece(processPiece); // Process each renderable piece
+	} else { // Disabled (too many pieces) => Only process pieces on highlights or being animated
+		const piecesToRender = getAllPiecesBelowAnnotePoints();
+		piecesToRender.forEach(p => processPiece(p.coords, p.type)); // Calculate their instance data
 	}
 
-	model = createModel(data, 2, "TRIANGLES", true, spritesheet.getSpritesheet());
+	/** Calculates and appends the instance data of the piece */
+	function processPiece(coords: Coords, type: number) {
+		const coordsWorld = space.convertCoordToWorldSpace(coords);
+		instanceData[type]!.push(...coordsWorld);
+
+		// Are we hovering over? If so, add the same data to instanceData_hovered
+		if (areWatchingMousePosition) {
+			for (const pointerWorld of pointerWorlds) {
+				if (math.chebyshevDistance(coordsWorld, pointerWorld) < halfWorldWidth) instanceData_hovered[type]!.push(...coordsWorld);
+			}
+		}
+	}
+
+	return { instanceData, instanceData_hovered };
+}
+
+/** Returns a list of mini image coordinates that are all being hovered over by the provided world coords. */
+function getImagesBelowWorld(world: Coords, trackDists: boolean): { images: Coords[], dists?: number[] } {
+	const imagesHovered: Coords[] = [];
+	const dists: number[] = [];
+
+	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+
+	if (!disabled) { // Enabled => normal behavior
+		// Check static and animated pieces for hover
+		forEachRenderablePiece(processPiece);
+	} else { // Disabled (too many pieces) => Only process pieces on highlights or being animated
+		const piecesToConsider = getAllPiecesBelowAnnotePoints();
+		piecesToConsider.forEach(p => processPiece(p.coords)); // Calculate if their underneath the world coords
+	}
+
+	function processPiece(coords: Coords) {
+		const coordsWorld = space.convertCoordToWorldSpace(coords);
+		if (math.chebyshevDistance(coordsWorld, world) < halfWorldWidth) {
+			imagesHovered.push(coords);
+			// Upgrade the distance to euclidean
+			if (trackDists) dists.push(math.euclideanDistance(coordsWorld, world));
+		}
+	}
+
+	return trackDists ? { images: imagesHovered, dists } : { images: imagesHovered };
+}
+
+/**
+ * Returns a list of all pieces that should be rendered when mini-images are disabled.
+ * This includes pieces below an annotation snap point, the selected piece, all animated pieces,
+ * and the pieces involved in the last and next moves.
+ */
+function getAllPiecesBelowAnnotePoints(): Piece[] {
+	/** Running list of all pieces to render. */
+	const piecesToRender: Piece[] = [];
+
+	function pushPieceNoDuplicatesOrVoids(piece: Piece) {
+		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
+		if (!piecesToRender.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) {
+			piecesToRender.push(piece);
+		}
+	}
+	
+	const boardsim = gameslot.getGamefile()!.boardsim;
+	const pieces = boardsim.pieces;
+
+	// 1. Get pieces on top of highlights (ray starts, intersections, etc.)
+	const annotePoints = snapping.getAnnoteSnapPoints(true);
+	annotePoints.forEach(ap => {
+		const piece = boardutil.getPieceFromCoords(pieces, ap);
+		if (!piece) return; // No piece beneath this highlight
+		if (animation.animations.some(a => coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!))) return; // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
+		pushPieceNoDuplicatesOrVoids(piece);
+	});
+
+	// 2. Add the selected piece, if any
+	const pieceSelected = selection.getPieceSelected();
+	if (pieceSelected) {
+		pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
+	}
+
+	// 3. Add all currently animated pieces
+	animation.animations.forEach(a => {
+		// The main piece being animated
+		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
+		// Animated pieces don't have a real index, but we need to pass a piece object
+		pushPieceNoDuplicatesOrVoids({ coords: currentCoords, type: a.type, index: -1 });
+
+		// The captured piece, if there is one
+		if (a.captured) pushPieceNoDuplicatesOrVoids(a.captured);
+	});
+
+	// 4. Add pieces from the last and next moves
+
+	const moveIndex = boardsim.state.local.moveIndex;
+	// Last move's destination piece
+	const lastMove = boardsim.moves[moveIndex];
+	if (lastMove && !animation.animations.some(a => coordutil.areCoordsEqual(lastMove.endCoords, a.path[a.path.length - 1]!))) { // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
+		const lastMovedPiece = boardutil.getPieceFromCoords(pieces, lastMove.endCoords)!;
+		pushPieceNoDuplicatesOrVoids(lastMovedPiece);
+	}
+	// Next move's starting piece
+	const nextMove = boardsim.moves[moveIndex + 1];
+	if (nextMove && !animation.animations.some(a => coordutil.areCoordsEqual(nextMove.startCoords, a.path[a.path.length - 1]!))) { // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
+		const nextToMovePiece = boardutil.getPieceFromCoords(pieces, nextMove.startCoords)!;
+		pushPieceNoDuplicatesOrVoids(nextToMovePiece);
+	}
+	
+	return piecesToRender;
 }
 
 
@@ -223,10 +266,48 @@ function genModel() {
 
 
 function render(): void {
-	hovering = false;
-	if (!movement.isScaleLess1Pixel_Virtual()) return; // Quit if we're not even zoomed out.
-	if (disabled) return; // Too many pieces to render icons!
-	webgl.executeWithDepthFunc_ALWAYS(model.render);
+	if (!boardpos.areZoomedOut()) return;
+
+	const boardsim = gameslot.getGamefile()!.boardsim;
+	const inverted = perspective.getIsViewingBlackPerspective();
+
+	const { instanceData, instanceData_hovered } = getImageInstanceData();
+
+	const models: TypeGroup<BufferModelInstanced> = {};
+	const models_hovered: TypeGroup<BufferModelInstanced> = {};
+
+	// Create the models
+	for (const [typeStr, thisInstanceData] of Object.entries(instanceData)) {
+		if (thisInstanceData.length === 0) continue; // No pieces of this type visible
+
+		const color = [1,1,1, MINI_IMAGE_OPACITY] as Color;
+		const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
+
+		const type = Number(typeStr);
+		const tex: WebGLTexture = texturecache.getTexture(type);
+		models[type] = createModel_Instanced_GivenAttribInfo(vertexData, new Float32Array(thisInstanceData), attribInfo, 'TRIANGLES', tex);
+		// Create the hovered model if it's non empty
+		if (instanceData_hovered[type]!.length > 0) {
+			const color_hovered = [1,1,1, 1] as Color; // Hovered mini images are fully opaque
+			const vertexData_hovered: number[] = instancedshapes.getDataColoredTexture(color_hovered, inverted);
+			models_hovered[type] = createModel_Instanced_GivenAttribInfo(vertexData_hovered, new Float32Array(instanceData_hovered[type]!), attribInfo, 'TRIANGLES', tex);
+		}
+	}
+
+	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
+	const sortedNeutrals = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL).sort((a:number, b:number) => b - a);
+	const sortedColors = boardsim.existingTypes.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL).sort((a:number, b:number) => b - a);
+
+	webgl.executeWithDepthFunc_ALWAYS(() => {
+		for (const neut of sortedNeutrals) {
+			models[neut]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+			models_hovered[neut]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+		}
+		for (const col of sortedColors) {
+			models[col]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+			models_hovered[col]?.render(undefined, undefined, { size: snapping.getEntityWidthWorld() });
+		}
+	});
 }
 
 
@@ -234,13 +315,13 @@ function render(): void {
 
 
 export default {
-	getWidthWorld,
-	recalcWidthWorld,
-	isHovering,
+	pieceCountToDisableMiniImages,
+	
 	isDisabled,
 	enable,
 	disable,
-	testIfToggled,
-	genModel,
+	toggle,
+
+	getImagesBelowWorld,
 	render,
 };

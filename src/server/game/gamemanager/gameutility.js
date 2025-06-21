@@ -6,31 +6,29 @@
  * At most this ever handles a single game, not multiple.
  */
 
-// System imports
-import WebSocket from 'ws';
 
 // Middleware & other imports
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
 
 // Custom imports
 import clockweb from '../clockweb.js';
-import formatconverter from '../../../client/scripts/esm/chess/logic/formatconverter.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
-import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-import { getMemberDataByCriteria, getUserIdByUsername } from '../../database/memberManager.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
-
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
+import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
+
 // Type Definitions...
 
 /**
@@ -39,6 +37,9 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
  * @typedef {import('../../../client/scripts/esm/chess/logic/clock.js').ClockValues} ClockValues
  * @typedef {import('../../../client/scripts/esm/chess/util/typeutil.js').Player} Player
  * @typedef {import('../../../client/scripts/esm/chess/util/metadata.js').MetaData} MetaData
+ * @typedef {import('./ratingcalculation.js').RatingData} RatingData
+ * @typedef {import('../../database/leaderboardsManager.js').Rating} Rating
+ * @typedef {import('../../../client/scripts/esm/chess/util/typeutil.js').PlayerGroup} PlayerGroup
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -78,10 +79,9 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 		untimed: clockweb.isClockValueInfinite(inviteOptions.clock),
 		startTimeMillis: null,
 		incrementMillis: null,
-		rated: inviteOptions.rated === "Rated",
+		rated: inviteOptions.rated === "rated",
 		moves: [],
-		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
-		gameConclusion: false,
+		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant, UTCDate: timeutil.getCurrentUTCDate(), UTCTime: timeutil.getCurrentUTCTime() }),
 		positionPasted: false,
 	};
 
@@ -173,8 +173,8 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
 	const playerData = game.players[playerColor];
 	if (playerData === undefined) return console.error(`Cannot subscribe client to game when game does not expect color ${playerColor} to be present`);
 	if (playerData.socket) {
-		sendSocketMessage(playerData.socket, 'game','leavegame');
-		unsubClientFromGame(game, playerData.socket, { sendMessage: false });
+		sendSocketMessage(playerData.socket, 'game', 'leavegame');
+		unsubClientFromGame(game, playerData.socket);
 	}
 	playerData.socket = playerSocket;
 
@@ -191,15 +191,12 @@ function subscribeClientToGame(game, playerSocket, playerColor, { sendGameInfo =
 }
 
 /**
- * Unsubscribes a websocket from the game their connected to.
- * Detaches their socket from the game, updates their metadata.subscriptions.
+ * Detaches the websocket from the game.
+ * Updates the socket's subscriptions.
  * @param {Game} game
  * @param {CustomWebSocket} ws - Their websocket.
- * @param {Object} options - Additional options.
- * @param {Object} options.sendMessage - Whether to inform the client to unsub from the game. Default: true. This should be false if we're unsubbing because the socket is closing.
  */
-function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
-	if (!ws) return; // Socket undefined, can't unsub.
+function unsubClientFromGame(game, ws) {
 	if (ws.metadata.subscriptions.game === undefined) return; // Already unsubbed (they aborted)
 
 	// 1. Detach their socket from the game so we no longer send updates
@@ -207,11 +204,6 @@ function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
 
 	// 2. Remove the game key-value pair from the sockets metadata subscription list.
 	delete ws.metadata.subscriptions.game;
-
-	// We inform their opponent they have disconnected inside js when we call this method.
-
-	// Tell the client to unsub on their end, IF the socket isn't closing.
-	if (sendMessage && ws.readyState === WebSocket.OPEN) sendSocketMessage(ws, 'game', 'unsub');
 }
 
 /**
@@ -224,77 +216,89 @@ function unsubClientFromGame(game, ws, { sendMessage = true } = {}) {
  * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
-	const metadata = getMetadataOfGame(game);
-	const opponentColor = typeutil.invertPlayer(playerColor);
-	const gameOptions = {
+
+	const ratings = getRatingDataForGamePlayers(game);
+	const metadata = getMetadataOfGame(game, ratings);
+
+	const gameUpdateContents = getGameUpdateMessageContents(game, playerColor);
+
+	const messageContents = {
+		gameInfo: {
+			id: game.id,
+			rated: game.rated,
+			publicity: game.publicity,
+			playerRatings: ratings,
+		},
 		metadata,
-		id: game.id,
-		publicity: game.publicity,
 		youAreColor: playerColor,
-		moves: game.moves,
-		gameConclusion: game.gameConclusion,
-		drawOffer: {
-			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
-			lastOfferPly: getLastDrawOfferPlyOfColor(game, playerColor) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
-		}
+		...gameUpdateContents,
 	};
-	// Include additional stuff if relevant
-	if (!game.untimed) gameOptions.clockValues = getGameClockValues(game);
 
-	const now = Date.now();
+	sendSocketMessage(playerSocket, 'game', 'joingame', messageContents, replyto);
+}
 
-	// If true, we know it's their opponent that's afk, because this client
-	// just refreshed the page and would have cancelled the timer if they were the ones afk.
-	if (isAFKTimerActive(game)) {
-		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
-		gameOptions.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
+/**
+ * Returns the current elo of all players in the game on the leaderboard
+ * of the variant being played, or the INFINITY leaderboard if the variant does not have a leaderboard.
+ * @param {Game} game 
+ * @returns {PlayerGroup<Rating>} - An object containing the rating for non-guest in the game, and whether we are confident in that rating, IF the variant has a leaderboard.
+ */
+function getRatingDataForGamePlayers(game) {
+	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
+	const leaderboardId = VariantLeaderboards[game.variant] ?? Leaderboards.INFINITY;
+
+	/** @type {PlayerGroup<Rating>} */
+	const ratingData = {};
+	for (const [color, playerData] of Object.entries(game.players)) {
+		if (playerData.identifier.member === undefined) continue; // Not a member, no rating to send
+		const user_id = playerData.identifier.user_id;
+		ratingData[color] = getEloOfPlayerInLeaderboard(user_id, leaderboardId);
 	}
 
-	const opponentData = game.players[opponentColor];
-
-	// If their opponent has disconnected, send them that info too.
-	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
-		gameOptions.disconnect = {
-			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
-			wasByChoice: opponentData.disconnect.wasByChoice
-		};
-	}
-
-	// If the server is restarting, include the time too.
-	const timeServerRestarting = getTimeServerRestarting();
-	if (timeServerRestarting !== false) gameOptions.serverRestartingAt = timeServerRestarting;
-
-	sendSocketMessage(playerSocket, 'game', 'joingame', gameOptions, replyto);
+	return ratingData;
 }
 
 /**
  * Generates metadata for a game including event details, player information, and timestamps.
  * @param {Game} game - The game object containing details about the game.
+ * @param {PlayerGroup<Rating>} ratings - Each players rating. Used to enter WhiteElo & BlackElo in the metadata.
+ * @param {RatingData} [ratingdata] The rating data after their elos are changed after the game. Required IF you want WhiteRatingDiff & BlackRatingDiff in the metadata!
  * @returns {MetaData} - An object containing metadata for the game including event name, players, time control, and UTC timestamps.
  */
-function getMetadataOfGame(game) {
+function getMetadataOfGame(game, ratings, ratingdata) {
 	const RatedOrCasual = game.rated ? "Rated" : "Casual";
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 	const white = game.players[players.WHITE].identifier;
 	const black = game.players[players.BLACK].identifier;
+	const guest_indicator = getTranslation('play.javascript.guest_indicator');
 	const gameMetadata = {
 		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
 		Site: "https://www.infinitechess.org/",
 		Round: "-",
 		Variant: game.variant,
-		White: white.member || "(Guest)", // Protect browser's browser-id cookie
-		Black: black.member || "(Guest)", // Protect browser's browser-id cookie
+		White: white.member || guest_indicator, // Protect browser's browser-id cookie
+		Black: black.member || guest_indicator, // Protect browser's browser-id cookie
 		TimeControl: game.clock,
 		UTCDate,
 		UTCTime,
 	};
-	if (white.member !== undefined) {
+	if (white.member !== undefined) { // White is a member
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
+		if (ratings[players.WHITE]) gameMetadata.WhiteElo = metadata.getWhiteBlackElo(ratings[players.WHITE]);
 	}
-	if (black.member !== undefined) {
+	if (black.member !== undefined) { // Black is a member
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
+		if (ratings[players.BLACK]) gameMetadata.BlackElo = metadata.getWhiteBlackElo(ratings[players.BLACK]);
+	}
+
+	if (ratingdata) {
+		// console.log("Rating data: ", ratingdata);
+		// Include WhiteRatingDiff & BlackRatingDiff
+		// Players may not be defined in the rating data if the game was aborted (no ratings changed)
+		if (ratingdata[players.WHITE]) gameMetadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(ratingdata[players.WHITE].elo_change_from_game);
+		if (ratingdata[players.BLACK]) gameMetadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(ratingdata[players.BLACK].elo_change_from_game);
 	}
 
 	if (isGameOver(game)) { // Add on the Result and Termination metadata
@@ -346,41 +350,101 @@ function sendGameUpdateToColor(game, color, { replyTo } = {}) {
 	const playerdata = game.players[color];
 	if (playerdata.socket === undefined) return; // Not connected, can't send message
 
-	const opponentColor = typeutil.invertPlayer(color);
+	const messageContents = getGameUpdateMessageContents(game, color);
+	sendSocketMessage(playerdata.socket, "game", "gameupdate", messageContents, replyTo);
+}
+
+/**
+ * 
+ * @param {Game} game 
+ * @param {Player} color 
+ * @returns 
+ */
+function getGameUpdateMessageContents(game, color) {
 	const messageContents = {
 		gameConclusion: game.gameConclusion,
-		moves: game.moves, // Send the final move list so they can make sure they're in sync.
-		drawOffer: {
-			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
-			lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
-		}
+		moves: game.moves.map(m => simplyMove(m)),
+		participantState: getParticipantState(game, color),
 	};
+
 	// Include timer info if it's timed
 	if (!game.untimed) messageContents.clockValues = getGameClockValues(game);
-
-	const now = Date.now();
-
-	// Include other relevant stuff if defined
-	if (isAFKTimerActive(game)) {
-		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
-		messageContents.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
-	}
-
-	const opponentData = game.players[opponentColor];
-
-	// If their opponent has disconnected, send them that info too.
-	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
-		messageContents.disconnect = {
-			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
-			wasByChoice: opponentData.disconnect.wasByChoice
-		};
-	}
 
 	// Also send the time the server is restarting, if it is
 	const timeServerRestarting = getTimeServerRestarting();
 	if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
-	sendSocketMessage(playerdata.socket, "game", "gameupdate", messageContents, replyTo);
+	return messageContents;
+}
+
+/**
+ * Alerts all players in the game of the rating changes of the game
+ * @param {Game} game - The game
+ * @param {RatingData} ratingdata - The rating data
+ */
+function sendRatingChangeToAllPlayers(game, ratingdata) {
+	const messageContents = getRatingChangeMessageContents(ratingdata);
+	for (const playerdata of Object.values(game.players)) {
+		if (playerdata.socket === undefined) continue; // Not connected, can't send message
+		sendSocketMessage(playerdata.socket, "game", "gameratingchange", messageContents);
+	}
+}
+
+/**
+ * Calculates the json object we send to the client's containing the
+ * rating changes from the results of the rated game.
+ * @param {RatingData} ratingdata 
+ * @returns {PlayerGroup<{ newRating: { value: number, confident: boolean }, change: number }>
+ */
+function getRatingChangeMessageContents(ratingdata) {
+	const messageContents = {};
+	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
+		messageContents[playerStr] = {
+			newRating: {
+				value: playerRating.elo_after_game,
+				confident: playerRating.rating_deviation_after_game <= UNCERTAIN_LEADERBOARD_RD
+			},
+			change: playerRating.elo_change_from_game,
+		};
+	}
+
+	return messageContents;
+}
+
+/**
+ * 
+ * @param {Game} game 
+ * @param {Player} color
+ * @returns {import('../../../client/scripts/esm/game/misc/onlinegame/onlinegamerouter.js').ParticipantState}
+ */
+function getParticipantState(game, color) {
+	const opponentColor = typeutil.invertPlayer(color);
+	const now = Date.now();
+	const opponentData = game.players[opponentColor];
+
+	const participantState = {
+		drawOffer: {
+			unconfirmed: doesColorHaveExtendedDrawOffer(game, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
+			lastOfferPly: getLastDrawOfferPlyOfColor(game, color) // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
+		}
+	};
+
+	// Include other relevant stuff if defined...
+
+	if (isAFKTimerActive(game)) {
+		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
+		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
+	}
+
+	// If their opponent has disconnected, send them that info too.
+	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
+		participantState.disconnect = {
+			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
+			wasByChoice: opponentData.disconnect.wasByChoice
+		};
+	}
+
+	return participantState;
 }
 
 /**
@@ -421,7 +485,7 @@ function doesPlayerBelongToGame_ReturnColor(game, player) {
  */
 function sendMessageToSocketOfColor(game, color, sub, action, value) {
 	const data = game.players[color];
-	if (data === undefined) return logEvents(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt', { print: true });
+	if (data === undefined) return logEventsAndPrint(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt');
 	const ws = data.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
@@ -452,11 +516,12 @@ function getSimplifiedGameString(game) {
 	const simplifiedGame = {
 		id: game.id,
 		timeCreated: timeutil.timestampToSqlite(game.timeCreated),
+		timeEnded: game.timeEnded,
 		variant: game.variant,
 		clock: game.clock,
 		rated: game.rated,
 	};
-	if (game.moves.length > 0) simplifiedGame.moves = game.moves;
+	if (game.moves.length > 0) simplifiedGame.moves = game.moves.map(m => m.compact);
 	simplifiedGame.players = {};
 	for (const [c, data] of Object.entries(game.players)) {
 		simplifiedGame.players[c] = data.identifier;
@@ -472,7 +537,7 @@ function getSimplifiedGameString(game) {
  * @param {Game} game - The game
  * @returns {boolean} - true if the game is over (gameConclusion truthy)
  */
-function isGameOver(game) { return game.gameConclusion !== false; }
+function isGameOver(game) { return game.gameConclusion !== undefined; }
 
 /**
  * Returns true if the color whos turn it is has an AFK
@@ -514,7 +579,7 @@ function isAutoResignDisconnectTimerActiveForColor(game, color) {
  * @param {Game} game - The game
  */
 function sendUpdatedClockToColor(game, color) {
-	if (color !== players.BLACK && color !== players.WHITE) return logEvents(`Color must be white or black when sending clock to color! Got: ${color}`, 'errLog.txt', { print: true });
+	if (color !== players.BLACK && color !== players.WHITE) return logEventsAndPrint(`Color must be white or black when sending clock to color! Got: ${color}`, 'errLog.txt');
 	if (game.untimed) return; // Don't send clock values in an untimed game
 
 	const message = getGameClockValues(game);
@@ -524,9 +589,9 @@ function sendUpdatedClockToColor(game, color) {
 }
 
 /**
- * Return the clock values of the game that can be sent to a client.
+ * Return the clock values of the game that can be sent to a client or logged.
  * It also includes who's clock is currently counting down, if one is.
- * This also updates the clocks, as the players current time should not be the same as when their turn firs started.
+ * This also updates the clocks, as the players current time should not be the same as when their turn first started.
  * @param {Game} game - The game
  * @returns {ClockValues}
  */
@@ -534,8 +599,8 @@ function getGameClockValues(game) {
 	updateClockValues(game);
 	const clockValues = {
 		clocks: {
-			[players.WHITE]: game.players[players.WHITE].timer,
-			[players.BLACK]: game.players[players.BLACK].timer,
+			[players.WHITE]: game.players[players.WHITE]?.timer,
+			[players.BLACK]: game.players[players.BLACK]?.timer,
 		}
 	};
 		
@@ -561,7 +626,7 @@ function updateClockValues(game) {
 	const timeElapsedSinceTurnStart = now - game.timeAtTurnStart;
 	const newTime = game.timeRemainAtTurnStart - timeElapsedSinceTurnStart;
 	const playerdata = game.players[game.whosTurn];
-	if (playerdata === undefined) return logEvents(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`, 'errLog.txt', { print: true });
+	if (playerdata === undefined) return logEventsAndPrint(`Cannot update games clock values when whose turn is neither white nor black! "${game.whosTurn}"`, 'errLog.txt');
 	playerdata.timer = newTime;
 }
 
@@ -571,10 +636,10 @@ function updateClockValues(game) {
  * @param {string} color - The color of the player to send the latest move to
  */
 function sendMoveToColor(game, color) {
-	if (!(color in game.players)) return logEvents(`Color to send move to must be white or black! ${color}`, 'errLog.txt', { print: true });
+	if (!(color in game.players)) return logEventsAndPrint(`Color to send move to must be white or black! ${color}`, 'errLog.txt');
     
 	const message = {
-		move: getLastMove(game),
+		move: getSimplifiedLastMove(game),
 		gameConclusion: game.gameConclusion,
 		moveNumber: game.moves.length,
 	};
@@ -582,6 +647,25 @@ function sendMoveToColor(game, color) {
 	const sendToSocket = game.players[color].socket;
 	if (!sendToSocket) return; // They are not connected, can't send message
 	sendSocketMessage(sendToSocket, "game", "move", message);
+}
+
+/**
+ * Returns the last, or most recent, move in the provided game's move list, or undefined if there isn't one.
+ * @param {Game} game - The moves list, with the moves in most compact notation: `1,2>3,4N`
+ * @returns {string | undefined} The move, in most compact notation, or undefined if there isn't one.
+ */
+function getSimplifiedLastMove(game) {
+	const moves = game.moves;
+	if (moves.length === 0) return;
+	const move = moves[moves.length - 1];
+	return simplyMove(move);
+}
+
+/**
+ * Simplifies a game's move into the minimal info needed for the client to reconstruct the move.
+ */
+function simplyMove(move) {
+	return { compact: move.compact, };
 }
 
 /**
@@ -601,15 +685,11 @@ function cancelDeleteGameTimer(game) {
 function isGameResignable(game) { return game.moves.length > 1; }
 
 /**
- * Returns the last, or most recent, move in the provided game's move list, or undefined if there isn't one.
- * @param {Game} game - The moves list, with the moves in most compact notation: `1,2>3,4N`
- * @returns {string | undefined} The move, in most compact notation, or undefined if there isn't one.
+ * Tests if the game has just become resignable with the latest move (exactly 2 moves have been played).
+ * @param {Game} game - The game
+ * @returns {boolean} *true* if the game has just become resignable after the last move.
  */
-function getLastMove(game) {
-	const moves = game.moves;
-	if (moves.length === 0) return;
-	return moves[moves.length - 1];
-}
+function isGameBorderlineResignable(game) { return game.moves.length === 2; }
 
 /**
  * Returns the color of the player that played that moveIndex within the moves list.
@@ -645,6 +725,7 @@ export default {
 	getMetadataOfGame,
 	sendGameUpdateToBothPlayers,
 	sendGameUpdateToColor,
+	sendRatingChangeToAllPlayers,
 	doesSocketBelongToGame_ReturnColor,
 	sendMessageToSocketOfColor,
 	printGame,
@@ -653,9 +734,12 @@ export default {
 	isAFKTimerActive,
 	isDisconnectTimerActiveForColor,
 	isAutoResignDisconnectTimerActiveForColor,
+	getGameClockValues,
 	sendUpdatedClockToColor,
 	sendMoveToColor,
 	cancelDeleteGameTimer,
 	isGameResignable,
+	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,
+	getRatingDataForGamePlayers,
 };

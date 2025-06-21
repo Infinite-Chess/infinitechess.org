@@ -16,16 +16,13 @@ import math from '../../util/math.js';
 import splines from '../../util/splines.js';
 import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
-// @ts-ignore
+import boardpos from './boardpos.js';
+import sound from '../misc/sound.js';
 import typeutil from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
-import sound from '../misc/sound.js';
-// @ts-ignore
-import movement from './movement.js';
-// @ts-ignore
-import board from './board.js';
+import boardtiles from './boardtiles.js';
 // @ts-ignore
 import perspective from './perspective.js';
 // @ts-ignore
@@ -108,9 +105,9 @@ const MOVE_ANIMATION_DURATION = {
 	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
 	baseMillis_Debug: 2000,
 	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis} when {@link DEBUG} is true. */
-	multiplierMillis_Debug: 30,
+	multiplierMillis_Debug: 15,
 	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link DEBUG} is true. */
-	multiplierMillis_Curved_Debug: 60,
+	multiplierMillis_Curved_Debug: 30,
 };
 
 
@@ -334,9 +331,9 @@ function generatePieceData(type: number, coords: Coords): number[] {
 
 /** Calculates the position of a piece on the board from its coordinates. */
 function calculateBoardPosition(coords: Coords) {
-	const boardPos = movement.getBoardPos();
-	const boardScale = movement.getBoardScale();
-	const squareCenter = board.gsquareCenter();
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
+	const squareCenter = boardtiles.gsquareCenter();
 	const startX = (coords[0] - boardPos[0] - squareCenter) * boardScale;
 	const startY = (coords[1] - boardPos[1] - squareCenter) * boardScale;
 	return {

@@ -6,13 +6,9 @@
  */
 
 
-// @ts-ignore
-import type gamefile from '../../chess/logic/gamefile.js';
-
 
 import gameloader from './gameloader.js';
 import gui from '../gui/gui.js';
-import jsutil from '../../util/jsutil.js';
 import highlights from '../rendering/highlights/highlights.js';
 import gameslot from './gameslot.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -22,166 +18,137 @@ import droparrows from '../rendering/dragging/droparrows.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import arrows from '../rendering/arrows/arrows.js';
 import clock from '../../chess/logic/clock.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import animation from '../rendering/animation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import selection from './selection.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import piecemodels from '../rendering/piecemodels.js';
+import { CreateInputListener, InputListener } from '../input.js';
+import boarddrag from '../rendering/boarddrag.js';
+import boardpos from '../rendering/boardpos.js';
+import controls from '../misc/controls.js';
+import frametracker from '../rendering/frametracker.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import snapping from '../rendering/highlights/snapping.js';
+import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
+import guiclock from '../gui/guiclock.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
-import guipause from '../gui/guipause.js';
-// @ts-ignore
-import input from '../input.js';
-// @ts-ignore
-import miniimage from '../rendering/miniimage.js';
-// @ts-ignore
-import guiclock from '../gui/guiclock.js';
-// @ts-ignore
-import movement from '../rendering/movement.js';
-// @ts-ignore
-import board from '../rendering/board.js';
+import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
 import webgl from '../rendering/webgl.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
 // @ts-ignore
-import highlightline from '../rendering/highlights/highlightline.js';
-// @ts-ignore
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
-// @ts-ignore
-import websocket from '../websocket.js';
-// @ts-ignore
-import camera from '../rendering/camera.js';
-// @ts-ignore
-import copypastegame from './copypastegame.js';
-// @ts-ignore
-import stats from '../gui/stats.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+
+
+// Variables -------------------------------------------------------------------------------
+
+
+const element_overlay: HTMLElement = document.getElementById('overlay')!;
+/** The input listener for the overlay element */
+let listener_overlay: InputListener;
+/** The input listener for the document element */
+let listener_document: InputListener;
+
 
 // Functions -------------------------------------------------------------------------------
 
 
 function init() {
-	board.updateTheme();
-	board.recalcVariables(); // Variables dependant on the board position & scale
+	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
+	listener_document = CreateInputListener(document);
+
+	boardtiles.updateTheme();
+	boardtiles.recalcVariables(); // Variables dependant on the board position & scale
 
 	gui.prepareForOpen();
 
 	guititle.open();
-
-	board.recalcTileWidth_Pixels(); // Without this, the first touch tile is NaN
 }
 
 // Update the game every single frame
 function update() {
-	testOutGameDebugToggles();
+	controls.testOutGameToggles();
 	invites.update();
+	// Any input should trigger the next frame to render.
+	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput()) frametracker.onVisualChange();
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return updateSelectionScreen(); // On title screen
+	const mesh = gameslot.getMesh();
+	if (!gamefile) return boardpos.update(); // On title screen. Updates the board's position and scale according to its velocity; // 
 
 	// There is a gamefile, update everything board-related...
 
-	testInGameDebugToggles(gamefile);
+	controls.testInGameToggles(gamefile, mesh);
 
-	updateBoard(gamefile); // Other screen, board is visible, update everything board related
+	perspective.update(); // Update perspective camera according to mouse movement
 
-	gameloader.update(); // Updates whatever game is currently loaded.
-
-	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
-}
-
-/** Debug toggles that are not only for in a game, but outside. */
-function testOutGameDebugToggles() {
-	if (input.isKeyDown('`')) camera.toggleDebug();
-	if (input.isKeyDown('4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
-	if (input.isKeyDown('m')) stats.toggleFPS();
-}
-
-function testInGameDebugToggles(gamefile: gamefile) {
-	if (input.isKeyDown('2')) {
-		console.log(jsutil.deepCopyObject(gamefile));
-		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
-	}
-	if (input.isKeyDown('3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (input.isKeyDown('5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
-	if (input.isKeyDown('6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
-}
-
-function updateSelectionScreen() {
-	// When we're not inside a game, the board should have a constant slow pan.
-	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
-}
-
-// Called within update() when we are in a game (not title screen)
-function updateBoard(gamefile: gamefile) {
-	if (input.isKeyDown('1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
-	if (input.isKeyDown('escape')) guipause.toggle();
-	if (input.isKeyDown('tab')) guipause.callback_ToggleArrows();
-	if (input.isKeyDown('r')) {
-		piecemodels.regenAll(gamefile);
-		statustext.showStatus('Regenerated piece models.', false, 0.5);
-	}
-	if (input.isKeyDown('n')) {
-		guinavigation.toggle();
-		guigameinfo.toggle();
-	}
-
-	const timeWinner = clock.update(gamefile);
+	const timeWinner = clock.update(gamefile.basegame);
 	if (timeWinner && !onlinegame.areInOnlineGame()) { // undefined if no clock has ran out
-		gamefile.gameConclusion = `${timeWinner} time`;
+		gamefile.basegame.gameConclusion = `${timeWinner} time`;
 		gameslot.concludeGame();
 	}
-	guiclock.update(gamefile);
-	miniimage.testIfToggled();
+	guiclock.update(gamefile.basegame);
 
-	guinavigation.update();
-	selection.update(); // NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
+	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	boardpos.update(); // Updates the board's position and scale according to its velocity
+
+	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
+	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
+	transition.update();
+	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
+	// AFTER:transition.update() since that updates the board position
+	boardtiles.recalcVariables();
+
+	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
+	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
+	selection.update();
 	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
 	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
-	// NEEDS TO BE BEFORE movement.checkIfBoardDragged() because that shift arrows needs to overwrite this.
+	// NEEDS TO BE BEFORE boarddrag.checkIfBoardGrabbed() because that shift arrows needs to overwrite this.
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
-
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
+	
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
-	movement.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
-	movement.recalcPosition(); // Updates the board's position and scale according to its velocity
-	transition.update();
-
-	movement.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts()
-
-	board.recalcVariables(); // Variables dependant on the board position & scale   AFTER movement.dragBoard() or picking up the board has a spring back effect to it
-
+	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
-	// AFTER: movement.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
-	miniimage.genModel();
-	highlightline.genModel(); // Before movement.checkIfBoardDragged() since clicks should prioritize this.
+	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	snapping.teleportToEntitiesIfClicked(); // AFTER snapping.updateEntitiesHovered()
+	snapping.teleportToSnapIfClicked();
+	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
+	annotations.update();
+
+	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
+	annotations.testIfCollapsed();
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
-	// After miniimage.genModel() and highlightline.genModel() because clicks prioritize those.
-	movement.checkIfBoardDragged();
-} 
+	// After entities.updateEntitiesHovered() because clicks prioritize those.
+	boarddrag.checkIfBoardGrabbed();
+
+	gameloader.update(); // Updates whatever game is currently loaded.
+
+	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
+
+	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
+}
 
 function render() {
 	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
-	board.render(); // Renders the infinite checkerboard
+	boardtiles.render(); // Renders the infinite checkerboard
 
 	const gamefile = gameslot.getGamefile();
+	const mesh = gameslot.getMesh();
 	if (!gamefile) return; // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
-
-	input.renderMouse();
 
 	/**
 	 * What is the order of rendering?
@@ -195,14 +162,16 @@ function render() {
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		highlights.render(gamefile);
+		selectedpiecehighlightline.render();
+		highlights.render(gamefile.boardsim);
+		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	});
     
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile);
+	pieces.renderPiecesInGame(gamefile.boardsim, mesh);
 	
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
@@ -211,6 +180,7 @@ function render() {
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
 		arrows.render();
+		annotations.render_abovePieces();
 		perspective.renderCrosshair();
 	});
 }
@@ -221,4 +191,9 @@ export default {
 	init,
 	update,
 	render,
+};
+
+export {
+	listener_overlay,
+	listener_document,
 };

@@ -6,6 +6,7 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
+import { Rating } from "../../../../../server/database/leaderboardsManager.js";
 import { players } from "./typeutil.js";
 
 import type { Player } from "./typeutil.js";
@@ -39,13 +40,19 @@ interface MetaData {
 	WhiteID?: string,
 	/** The ID of the black player, if they are signed in, converted to base 62. */
 	BlackID?: string,
+	/** The display elo of the white player, whihc may includ a "?" if we're uncertain about their rating. */
+	WhiteElo?: string,
+	/** The display elo of the black player, whihc may includ a "?" if we're uncertain about their rating. */
+	BlackElo?: string,
+	/** How much elo white gained/lost from the match. */
+	WhiteRatingDiff?: string,
+	/** How much elo black gained/lost from the match. */
+	BlackRatingDiff?: string,
 	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw) */
 	Result?: string,
 	/** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
 	Termination?: string,
 }
-
-// getMetadataOfGame()
 
 
 
@@ -62,10 +69,56 @@ function getResultFromVictor(victor?: Player): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
+/** Calculates the game conclusion from the Result metadata and termination CODE. */
+function getGameConclusionFromResultAndTermination(result: string, termination: string) {
+	if (!result || !termination) throw Error("Must provide both result and termination.");
+
+	if (termination === 'aborted') return 'aborted';
+	const victor: Player =
+		result === '1-0' ? players.WHITE :
+		result === '0-1' ? players.BLACK :
+		result === '1/2-1/2' ? players.NEUTRAL :
+		(() => { throw Error(`Unsupported result (${result})!`); })();
+	return `${victor} ${termination}`;
+}
+
+/** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */
+function getWhiteBlackElo(rating: Rating): string {
+	const roundedElo = Math.round(rating.value);
+	return rating.confident ? `${roundedElo}` : `${roundedElo}?`;
+}
+
+/**
+ * Parses the elo and confidence from WhiteElo/BlackElo metadata.
+ * ONLY HAS AS MUCH PRECISION as what's in the metadata.
+ * DOES NOT KNOW whether their current rating is now confident, if thir WhiteElo/BlackElo was not confident.
+ */
+function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
+	const [elo, emptyStr] = whiteBlackElo.split('?'); // emptyStr will be '' if the '?' is present, otherwise it will be undefined.
+	return {
+		value: Number(elo),
+		confident: emptyStr === undefined,
+	};
+}
+
+/**
+ * Takes elo change, calculates the string that should go into
+ * the WhiteRatingDiff or BlackRatingDiff fields of the metadata.
+ */
+function getWhiteBlackRatingDiff(eloChange: number): string {
+	const isPositive = eloChange >= 0;
+	eloChange = Math.round(eloChange);
+	return isPositive ? `+${eloChange}` : `${eloChange}`; // negative numbers are already negative
+}
+
 
 
 export default {
 	getResultFromVictor,
+	getGameConclusionFromResultAndTermination,
+	getWhiteBlackElo,
+	getRatingFromWhiteBlackElo,
+	getWhiteBlackRatingDiff,
 };
 
 export type {

@@ -22,7 +22,7 @@ interface CustomWebSocket extends WebSocket {
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
 				/** The id of the game they're in. @type {string} */
-				id: string;
+				id: number;
 				/** The color they are playing as. @type {Player} */
 				color: string;
 			};
@@ -45,6 +45,8 @@ interface CustomWebSocket extends WebSocket {
 			username?: string;
 			roles?: string[];
 		};
+		/** The account verification status of the user */
+		verified: boolean;
 		/** The id of their websocket. */
 		id: string;
 		/** The socket's IP address. */
@@ -94,6 +96,7 @@ function getSimplifiedMetadata(ws: CustomWebSocket) {
 	const metadataCopy: Partial<typeof metadata> = {
 		memberInfo: jsutil.deepCopyObject(metadata.memberInfo),
 		cookies: { "browser-id": ws.metadata.cookies['browser-id'], "i18next": ws.metadata.cookies["i18next"]}, // Only copy these 2 cookies, NOT their refresh token!!!
+		verified: metadata.verified,
 		id: metadata.id,
 		IP: metadata.IP,
 		subscriptions: jsutil.deepCopyObject(metadata.subscriptions),

@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { getTranslationForReq } from "../utility/translate.js";
 import { getMemberDataByCriteria } from "../database/memberManager.js";
 import { getBrowserAgent, onCorrectPassword, onIncorrectPassword, rateLimitLogin } from "./authRatelimiter.js";
-import { logEvents } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 
 /**
@@ -45,7 +45,7 @@ async function testPasswordForRequest(req, res) {
 	// Test the password
 	const match = await bcrypt.compare(claimedPassword, hashed_password);
 	if (!match) {
-		logEvents(`Incorrect password for user ${username}!`, "loginAttempts.txt", { print: true });
+		logEventsAndPrint(`Incorrect password for user ${username}!`, "loginAttempts.txt");
 		res.status(401).json({ 'message': getTranslationForReq("server.javascript.ws-incorrect_password", req )}); // Unauthorized, password not found
 		onIncorrectPassword(browserAgent, username);
 		return false;
@@ -66,7 +66,7 @@ async function testPasswordForRequest(req, res) {
 function verifyBodyHasLoginFormData(req, res) {
 	if (!req.body) { // Missing body
 		console.log(`User sent a bad login request missing the body!`);
-		res.status(400).send(getTranslationForReq("server.javascript.ws-bad_request", req)); // 400 Bad request
+		res.status(400).send("Bad Request"); // 400 Bad request
 		return false;
 	}
 
@@ -74,13 +74,13 @@ function verifyBodyHasLoginFormData(req, res) {
     
 	if (!username || !password) {
 		console.log(`User ${username} sent a bad login request missing either username or password!`);
-		res.status(400).json({ 'message': getTranslationForReq('server.javascript.ws-username_and_password_required', req) }); // 400 Bad request
+		res.status(400).json({ 'message': "Username and password are required." }); // 400 Bad request
 		return false;
 	}
 
 	if (typeof username !== "string" || typeof password !== "string") {
 		console.log(`User ${username} sent a bad login request with either username or password not a string!`);
-		res.status(400).json({ 'message': getTranslationForReq("server.javascript.ws-username_and_password_string", req) }); // 400 Bad request
+		res.status(400).json({ 'message': "Username and password must be a string." }); // 400 Bad request
 		return false;
 	}
 

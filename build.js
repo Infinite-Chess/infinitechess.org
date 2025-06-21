@@ -30,6 +30,10 @@ const entryPoints = [
 	'dist/client/scripts/esm/components/header/header.js',
 	'dist/client/scripts/esm/views/index.js',
 	'dist/client/scripts/esm/views/member.js',
+	'dist/client/scripts/esm/views/leaderboard.js',
+	'dist/client/scripts/esm/views/login.js',
+	'dist/client/scripts/esm/views/createaccount.js',
+	'dist/client/scripts/esm/views/resetpassword.js',
 	'dist/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
 ];
 
@@ -145,6 +149,7 @@ if ((await getAllFilesInDirectoryWithExtension("./dist", ".ts")).length !== 0) {
 		console.error('TypeScript compilation failed with the following error:');
 		console.log(e.stdout.toString()); // Print TypeScript error output
 		console.log(e.stderr.toString()); // Print additional error details if available
+		process.exit(1);
 	}
 }
 

@@ -52,8 +52,8 @@ main {
     text-transform: none;
 }
 
-.content h2 {
-    margin-bottom: 1em;
+.content h2, .content h3 {
+    margin: 1em 0;
 }
 
 .content p {

@@ -12,7 +12,6 @@
 
 // Import Start
 import perspective from './perspective.js';
-import miniimage from './miniimage.js';
 import stats from '../gui/stats.js';
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
@@ -20,8 +19,8 @@ import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../util/jsutil.js';
 import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
-import movement from './movement.js';
 import statustext from '../gui/statustext.js';
+import guigameinfo from '../gui/guigameinfo.js';
 // Import End
 
 /**
@@ -196,13 +195,6 @@ function updateCanvasDimensions() {
 function recalcCanvasVariables() {
 	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	initScreenBoundingBox();
-
-	// Recalculate scale at which 1 tile = 1 pixel       world-space                physical pixels
-	movement.setScale_When1TileIs1Pixel_Physical((screenBoundingBox.right * 2) / canvas.width);
-	movement.setScale_When1TileIs1Pixel_Virtual(movement.getScale_When1TileIs1Pixel_Physical() * window.devicePixelRatio);
-	// console.log(`Screen width: ${camera.getScreenBoundingBox(false).right * 2}. Canvas width: ${camera.canvas.width}`)
-
-	miniimage.recalcWidthWorld();
 }
 
 // Set view matrix
@@ -279,6 +271,7 @@ function onScreenResize() {
 	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 	guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
+	guigameinfo.updateAlignmentUsernames();
 	// console.log('Resized window.')
 }
 
@@ -300,6 +293,19 @@ function onPositionChange() {
 	initViewMatrix();
 }
 
+/**  Returns the scale at which 1 physical pixel on the screen equals 1 tile. */
+function getScaleWhenTilesInvisible() {
+	return (screenBoundingBox.right * 2) / canvas.width;
+}
+
+/** 
+ * Returns the scale at which the game is considered *zoomed out*.
+ * Each tile equals 1 virtual pixel on the screen.
+ */
+function getScaleWhenZoomedOut() {
+	return getScaleWhenTilesInvisible() * window.devicePixelRatio;
+}
+
 
 
 export default {
@@ -319,4 +325,6 @@ export default {
 	onPositionChange,
 	initViewMatrix,
 	getZFar,
+	getScaleWhenTilesInvisible,
+	getScaleWhenZoomedOut,
 };

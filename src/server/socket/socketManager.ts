@@ -138,7 +138,7 @@ function terminateAllIPSockets(IP: string) {
 
 /**
  * Closes all sockets a given member has open.
- * @param jwt - The member's session/refresh token, if they are signed in.
+ * @param jwt - The member's session/refresh token.
  * @param closureCode - The code of the socket closure, sent to the client.
  * @param closureReason - The closure reason, sent to the client.
  */
@@ -164,6 +164,21 @@ function closeAllSocketsOfMember(user_id: string, closureCode: number, closureRe
 		const ws = websocketConnections[socketID];
 		if (!ws) return;
 		ws.close(closureCode, closureReason);
+	});
+}
+
+/**
+ * Sets the metadata.verified entry of all sockets of a given user to true.
+ * @param user_id - The unique ID of the user.
+ */
+function AddVerificationToAllSocketsOfMember(user_id: number) {
+	const socketIDs = connectedMembers[user_id];
+	if (!socketIDs) return; // This member doesn't have any connected sockets
+
+	socketIDs.slice().forEach(socketID => { // slice() makes a copy of it
+		const ws = websocketConnections[socketID];
+		if (!ws) return;
+		ws.metadata.verified = true;
 	});
 }
 
@@ -244,4 +259,5 @@ export {
 	handleUnsubbing,
 	closeAllSocketsOfSession,
 	closeAllSocketsOfMember,
+	AddVerificationToAllSocketsOfMember,
 };

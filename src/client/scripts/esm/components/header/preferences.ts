@@ -1,5 +1,4 @@
 
-
 import themes from "./themes.js";
 import pieceThemes, { PieceColorGroup } from "./pieceThemes.js";
 import localstorage from "../../util/localstorage.js";
@@ -23,7 +22,7 @@ interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
 	drag_enabled: boolean;
-	premove_mode: boolean;
+	premove_enabled: boolean;
 	[key: string]: any;
 }
 
@@ -31,6 +30,7 @@ interface ServerSidePreferences {
 	theme: string;
 	legal_moves: 'dots' | 'squares';
 	animations: boolean,
+	lingering_annotations: boolean,
 }
 
 /** Both client and server side preferences */
@@ -39,16 +39,18 @@ type Preferences = ServerSidePreferences & ClientSidePreferences;
 // Variables ------------------------------------------------------------
 
 
+/** All our preferences. */
 let preferences: Preferences;
 
 // The legal moves shape preference
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
 const default_drag_enabled: boolean = true;
-const default_premove_mode: boolean = false; // Change this to true when premoves are implemented.
+const default_premove_enabled: boolean = false; // Change this to true when premoves are implemented.
 /** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
+const default_lingering_annotations: boolean = false;
 
 
 /**
@@ -72,8 +74,9 @@ function loadPreferences(): void {
 		perspective_sensitivity: default_perspective_sensitivity,
 		perspective_fov: default_perspective_fov,
 		drag_enabled: default_drag_enabled,
-		premove_mode: default_premove_mode,
+		premove_enabled: default_premove_enabled,
 		animations: default_animations,
+		lingering_annotations: default_lingering_annotations,
 	};
 
 	preferences = browserStoragePrefs;
@@ -183,13 +186,13 @@ function setDragEnabled(drag_enabled: boolean): void {
 	savePreferences();
 }
 
-function getPremoveMode(): boolean {
-	return preferences.premove_mode ?? default_premove_mode;
+function getPremoveEnabled(): boolean {
+	return preferences.premove_enabled ?? default_premove_enabled;
 }
 
 function setPremoveMode(premove_mode: boolean): void {
 	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
-	preferences.premove_mode = premove_mode;
+	preferences.premove_enabled = premove_mode;
 	savePreferences();
 }
 
@@ -228,6 +231,19 @@ function setPerspectiveFOV(perspective_fov: number): void {
 	document.dispatchEvent(new CustomEvent('fov-change'));
 }
 
+function getLingeringAnnotationsMode() {
+	return preferences.lingering_annotations ?? default_lingering_annotations;
+}
+
+function setLingeringAnnotationsMode(value: boolean) {
+	if (typeof value !== 'boolean') throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
+	preferences.lingering_annotations = value;
+	onChangeMade();
+	savePreferences();
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('lingering-annotations-toggle', { detail: value }));
+}
+
 
 // Getters for our current theme properties --------------------------------------------------------
 
@@ -264,6 +280,16 @@ function getBoxOutlineColor(): Color {
 	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
 }
 
+function getAnnoteSquareColor(): Color {
+	const themeName: string = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'annoteSquareColor');
+}
+
+function getAnnoteArrowColor(): Color {
+	const themeName: string = getTheme();
+	return themes.getPropertyOfTheme(themeName, 'annoteArrowColor');
+}
+
 /** Returns the tint color for a piece of the given type, according to our current theme. */
 function getTintColorOfType(type: number): Color {
 	const [r, p] = typeutil.splitType(type);
@@ -296,93 +322,121 @@ function getTintColorOfType(type: number): Color {
 
 
 /*
- * The commented stuff below was ONLY used for fast
- * modifying of theme players using the keyboard keys!!!
+ * The commented stuff below is ONLY used for fast
+ * modifying of theme players using the keyboard keys!
  */
 
-// const allProperties = Object.keys(themes.themes[themes.defaultTheme]);
+// import { listener_document } from "../../game/chess/game.js";
+
+// const allProperties = Object.keys(themes.themes[themes.defaultTheme]!);
 // let currPropertyIndex = 0;
-// let currProperty = allProperties[currPropertyIndex];
+// let currProperty = allProperties[currPropertyIndex]!;
 // function update() {
 
-// 	const themeProperties = themes.themes[theme];
+// 	const themeProperties = themes.themes[preferences.theme]!;
 	
-// 	if (input.isKeyDown('u')) {
+// 	if (listener_document.isKeyDown('KeyU')) {
 // 		currPropertyIndex--;
 // 		if (currPropertyIndex < 0) currPropertyIndex = allProperties.length - 1;
-// 		currProperty = allProperties[currPropertyIndex];
+// 		currProperty = allProperties[currPropertyIndex]!;
 // 		console.log(`Selected property: ${currProperty}`);
 // 	}
-// 	if (input.isKeyDown('i')) {
+// 	if (listener_document.isKeyDown('KeyI')) {
 // 		currPropertyIndex++;
 // 		if (currPropertyIndex > allProperties.length - 1) currPropertyIndex = 0;
-// 		currProperty = allProperties[currPropertyIndex];
+// 		currProperty = allProperties[currPropertyIndex]!;
 // 		console.log(`Selected property: ${currProperty}`);
 // 	}
 
 // 	const amount = 0.02;
 
-// 	if (input.isKeyDown('j')) {
+// 	if (listener_document.isKeyDown('KeyJ')) {
 // 		const dig = 0;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown('m')) {
+// 	if (listener_document.isKeyDown('KeyM')) {
 // 		const dig = 0;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (input.isKeyDown('k')) {
+// 	if (listener_document.isKeyDown('KeyK')) {
 // 		const dig = 1;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown(',')) {
+// 	if (listener_document.isKeyDown('Comma')) {
 // 		const dig = 1;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (input.isKeyDown('l')) {
+// 	if (listener_document.isKeyDown('KeyL')) {
 // 		const dig = 2;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown('.')) {
+// 	if (listener_document.isKeyDown('Period')) {
 // 		const dig = 2;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
-// 	if (input.isKeyDown(';')) {
+// 	if (listener_document.isKeyDown('Semicolon')) {
 // 		const dig = 3;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] += amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
-// 	if (input.isKeyDown('/')) {
+// 	if (listener_document.isKeyDown('Slash')) {
 // 		const dig = 3;
+// 		// @ts-ignore
 // 		themeProperties[currProperty][dig] -= amount;
+// 		// @ts-ignore
 // 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
+// 		// @ts-ignore
 // 		console.log(themeProperties[currProperty]);
 // 	}
 
 
-// 	if (input.isKeyDown('\\')) {
-// 		console.log(JSON.stringify(themes.themes[theme]));
+// 	if (listener_document.isKeyDown('Backslash')) {
+// 		console.log(JSON.stringify(themes.themes[preferences.theme]));
 // 	}
 
-// 	board.updateTheme();
-// 	piecesmodel.regenModel(gameslot.getGamefile());
-// 	highlights.regenModel();
 // }
+
+// function dispatchThemeChangeEvent() {
+// 	document.dispatchEvent(new Event('theme-change'));
+// }
+// setInterval(dispatchThemeChangeEvent, 1000);
 
 
 // Exports -----------------------------------------------------------------------------------------
@@ -395,7 +449,7 @@ export default {
 	setLegalMovesShape,
 	getDragEnabled,
 	setDragEnabled,
-	getPremoveMode,
+	getPremoveMode: getPremoveEnabled,
 	setPremoveMode,
 	getAnimationsMode,
 	setAnimationsMode,
@@ -404,6 +458,8 @@ export default {
 	getPerspectiveFOV,
 	getDefaultPerspectiveFOV,
 	setPerspectiveFOV,
+	getLingeringAnnotationsMode,
+	setLingeringAnnotationsMode,
 	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,
@@ -411,5 +467,10 @@ export default {
 	getLastMoveHighlightColor,
 	getCheckHighlightColor,
 	getBoxOutlineColor,
+	getAnnoteSquareColor,
+	getAnnoteArrowColor,
 	getTintColorOfType,
+
+	// Only used for temporarily micro adjusting theme properties & colors
+	// update,
 };

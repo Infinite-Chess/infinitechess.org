@@ -4,7 +4,7 @@
  */
 
 // Middleware imports
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
 import gameutility from './gameutility.js';
@@ -35,7 +35,7 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
 
 	if (game.publicity === 'private') {
 		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
-		logEvents(errString, 'hackLog.txt', { print: true });
+		logEventsAndPrint(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', 'Cannot report your friend for cheating in a private match!');
 		return;
 	}
@@ -44,7 +44,7 @@ function onReport(ws, game, messageContents) { // { reason, opponentsMoveNumber 
 	const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(game, perpetratingMoveIndex);
 	if (colorThatPlayedPerpetratingMove === ourColor) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
-		logEvents(errString, 'hackLog.txt', { print: true });
+		logEventsAndPrint(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(game, ourColor, 'general', 'printerror', "Silly goose. You can't report yourself for cheating! You played that move!");
 		return;
 	}

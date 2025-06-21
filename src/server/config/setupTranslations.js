@@ -8,6 +8,7 @@ import { FilterXSS } from 'xss';
 import { getDefaultLanguage, setSupportedLanguages } from '../utility/translate.js';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
+import deDE from 'date-fns/locale/de/index.js';
 import enUS from 'date-fns/locale/en-US/index.js';
 import frFR from 'date-fns/locale/fr/index.js';
 import ptBR from 'date-fns/locale/pt-BR/index.js';
@@ -24,6 +25,7 @@ import { BUNDLE_FILES } from "./config.js";
  * Update when we support a new language.
  */
 const localeMap = {
+	'de-DE': deDE,
 	'en-US': enUS,
 	'fr-FR': frFR,
 	'pt-BR': ptBR,
@@ -70,8 +72,10 @@ const staticTranslatedTemplates = [
 	"login",
 	"member",
 	"news",
+	"leaderboard",
 	"play",
 	"termsofservice",
+	"resetpassword",
 	"errors/400",
 	"errors/401",
 	"errors/404",
@@ -85,6 +89,7 @@ const link_white_list = [
   "/",
   "/login",
   "/news",
+  "/leaderboard",
   "/play",
   "/credits",
   "/termsofservice",

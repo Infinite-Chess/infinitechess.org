@@ -9,12 +9,11 @@ import { sendSocketMessage } from './sendSocketMessage.js';
 import { handleUnsubbing } from './socketManager.js';
 import socketUtility from './socketUtility.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 // @ts-ignore
 import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
 // @ts-ignore
 import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
-// @ts-ignore
-import { logEvents } from '../middleware/logEvents.js';
 // @ts-ignore
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
 
@@ -59,7 +58,7 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 			break;
 		default: { // Surround this case in a block so it's variables are not hoisted
 			const errText = `UNKNOWN web socket received route "${message.route}"! Message: ${rawMessage}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-			logEvents(errText, 'hackLog.txt', { print: true });
+			logEventsAndPrint(errText, 'hackLog.txt');
 			sendSocketMessage(ws, 'general', 'printerror', `Unknown route "${message.route}"!`);
 			return;
 		}
@@ -81,7 +80,7 @@ function handleGeneralMessage(ws: CustomWebSocket, message: WebsocketInMessage) 
 			break;
 		default: { // Surround this case in a block so that it's variables are not hoisted
 			const errText = `UNKNOWN web socket received action in general route! "${message.action}". Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-			logEvents(errText, 'hackLog.txt', { print: true });
+			logEventsAndPrint(errText, 'hackLog.txt');
 			sendSocketMessage(ws, 'general', 'printerror', `Unknown action "${message.action}" in route general.`);
 		}
 	}
@@ -90,7 +89,7 @@ function handleGeneralMessage(ws: CustomWebSocket, message: WebsocketInMessage) 
 function handleSubbing(ws: CustomWebSocket, value: any) {
 	if (typeof value !== 'string') {
 		const errText = `Websocket received sub is invalid! "${value}". Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errText, 'hackLog.txt', { print: true });
+		logEventsAndPrint(errText, 'hackLog.txt');
 		sendSocketMessage(ws, 'general', 'printerror', `Websocket received sub is invalid.`);
 	}
 
@@ -102,7 +101,7 @@ function handleSubbing(ws: CustomWebSocket, value: any) {
 			break;
 		default: { // Surround this case in a block so that it's variables are not hoisted
 			const errText = `Cannot subscribe user to strange new subscription list ${value}! Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-			logEvents(errText, 'hackLog.txt', { print: true });
+			logEventsAndPrint(errText, 'hackLog.txt');
 			sendSocketMessage(ws, 'general', 'printerror', `Cannot subscribe to "${value}" list!`);
 			return;
 		}
@@ -111,7 +110,7 @@ function handleSubbing(ws: CustomWebSocket, value: any) {
 
 function handleFeatureNotSupported(ws: CustomWebSocket, description: any) {
 	const errText = `Client unsupported feature: ${jsutil.ensureJSONString(description)}   Socket: ${socketUtility.stringifySocketMetadata(ws)}\nBrowser info: ${ws.metadata.userAgent}`;
-	logEvents(errText, 'featuresUnsupported.txt', { print: true });
+	logEventsAndPrint(errText, 'featuresUnsupported.txt');
 }
 
 

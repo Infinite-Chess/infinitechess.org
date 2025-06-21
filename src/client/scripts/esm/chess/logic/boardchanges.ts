@@ -29,8 +29,7 @@ const oneWayActions: string[] = ['capture', 'delete'];
 import type { Move } from "./movepiece.js";
 import type { Coords } from "./movesets.js";
 import type { Piece } from "../util/boardutil.js";
-// @ts-ignore
-import type { gamefile } from "./gamefile.js";
+import type { FullGame } from "./gamefile.js";
 
 
 /**
@@ -63,7 +62,7 @@ type Change = {
  * depending on the function, BUT NOT BOTH.
  */
 // eslint-disable-next-line no-unused-vars
-type genericChangeFunc = (gamefile: gamefile, change: Change) => void;
+type genericChangeFunc<T> = (actiondata: T, change: Change) => void;
 
 /**
  * An actionlist is a dictionary links actions to functions.
@@ -86,7 +85,7 @@ interface ChangeApplication<F extends CallableFunction> {
 /**
  * An object mapping move changes to a function that performs the piece list changes for that action.
  */
-const changeFuncs: ChangeApplication<genericChangeFunc> = {
+const changeFuncs: ChangeApplication<genericChangeFunc<FullGame>> = {
 	forward: {
 		"add": addPiece,
 		"delete": deletePiece,
@@ -166,31 +165,31 @@ function queueMovePiece(changes: Array<Change>, main: boolean, piece: Piece, end
  * either modifying the piece lists, or modifying the mesh,
  * depending on what changeFuncs are passed in.
  */
-function runChanges(gamefile: gamefile, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc>, forward: boolean = true) {
+function runChanges<T>(actiondata: T, changes: Change[], changeFuncs: ChangeApplication<genericChangeFunc<T>>, forward: boolean = true) {
 	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
-	applyChanges(gamefile, changes, funcs, forward);
+	applyChanges(actiondata, changes, funcs, forward);
 }
 
 /**
  * Applies the logical board changes of a change list in the provided order, modifying the piece lists.
- * @param gamefile the gamefile
+ * @param actiondata the data to apply the changes to
  * @param changes the changes to apply
  * @param funcs the object contain change funcs
  * @param forward whether to apply changes in forward order (true) or reverse order (false)
  */
-function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionList<genericChangeFunc>, forward: boolean) {
+function applyChanges<T>(actiondata: T, changes: Array<Change>, funcs: ActionList<genericChangeFunc<T>>, forward: boolean) {
 	if (forward) {
 		// Iterate forwards through the changes array
 		for (const change of changes) {
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-			funcs[change.action]!(gamefile, change);
+			funcs[change.action]!(actiondata, change);
 		}
 	} else {
 		// Iterate backwards through the changes array so the move's changes are reverted in the correct order
 		for (let i = changes.length - 1; i >= 0; i--) {
 			const change = changes[i]!;
 			if (!(change.action in funcs)) throw Error(`Missing change function for likely-invalid change action "${change.action}"!`);
-			funcs[change.action]!(gamefile, change);
+			funcs[change.action]!(actiondata, change);
 		}
 	}
 }
@@ -203,15 +202,15 @@ function applyChanges(gamefile: gamefile, changes: Array<Change>, funcs: ActionL
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists
  */
-function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
-	const pieces = gamefile.pieces;
+function addPiece({boardsim, basegame}: FullGame, change: Change) { // desiredIndex optional
+	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
 	let idx;
 	if (change.piece.index === -1) { // Does not have an index yet, assign it one from undefined list
 		if (typedata.undefineds.length === 0) {
-			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, gamefile.gameRules.promotionsAllowed, gamefile.editor) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
-			organizedpieces.regenerateLists(gamefile.pieces, gamefile.gameRules.promotionsAllowed, gamefile.editor);
+			if (organizedpieces.getTypeUndefinedsBehavior(change.piece.type, boardsim.editor, basegame.gameRules.promotionsAllowed) === 0) throw Error(`Type: ${change.piece.type} is not expected to be added after initial position!`);
+			organizedpieces.regenerateLists(boardsim.pieces, boardsim.editor, basegame.gameRules.promotionsAllowed);
 		}
 
 		idx = typedata.undefineds.shift()!;
@@ -233,8 +232,8 @@ function addPiece(gamefile: gamefile, change: Change) { // desiredIndex optional
  * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
  * from the organized lists.
  */
-function deletePiece(gamefile: gamefile, change: Change) {
-	const pieces = gamefile.pieces;
+function deletePiece({ boardsim }: FullGame, change: Change) {
+	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
 	if (typedata === undefined) throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`);
@@ -260,10 +259,10 @@ function deletePiece(gamefile: gamefile, change: Change) {
  * @param gamefile - The gamefile
  * @param change - the move data
  */
-function movePiece(gamefile: gamefile, change: Change) {
+function movePiece({ boardsim }: FullGame, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
-	const pieces = gamefile.pieces;
+	const pieces = boardsim.pieces;
 	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 
 	organizedpieces.removePieceFromSpace(idx, pieces);
@@ -275,10 +274,10 @@ function movePiece(gamefile: gamefile, change: Change) {
 /**
  * Reverses `movePiece`
  */
-function returnPiece(gamefile: gamefile, change: Change) {
+function returnPiece({ boardsim }: FullGame, change: Change) {
 	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
-	const pieces = gamefile.pieces;
+	const pieces = boardsim.pieces;
 	const range = pieces.typeRanges.get(change.piece.type)!;
 	const idx = change.piece.index + range.start;
 
@@ -295,7 +294,7 @@ function returnPiece(gamefile: gamefile, change: Change) {
  * 
  * This is differentiated from move changes so it can be animated.
  */
-function capturePiece(gamefile: gamefile, change: Change) {
+function capturePiece(gamefile: FullGame, change: Change) {
 	if (change.action !== 'capture') throw new Error(`capturePiece called with a non-capture change: ${change.action}`);
 
 	deletePiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
@@ -305,7 +304,7 @@ function capturePiece(gamefile: gamefile, change: Change) {
 /**
  * Undos a capture
  */
-function uncapturePiece(gamefile: gamefile, change: Change) {
+function uncapturePiece(gamefile: FullGame, change: Change) {
 	if (change.action !== 'capture') throw new Error(`uncapturePiece called with a non-capture change: ${change.action}`);
 
 	returnPiece(gamefile, change);

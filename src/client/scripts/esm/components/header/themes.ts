@@ -1,8 +1,8 @@
 
 // This module stores our themes. Straight forward :P
 
-import jsutil from "../../util/jsutil.js";
 import { players } from "../../chess/util/typeutil.js";
+import jsutil from "../../util/jsutil.js";
 
 import type { Color } from "../../util/math.js";
 import type { PieceColorGroup } from "./pieceThemes.js";
@@ -21,6 +21,8 @@ const legalMovesHighlightColor_Premove = "legalMovesHighlightColor_Premove";
 const lastMoveHighlightColor = "lastMoveHighlightColor";
 const checkHighlightColor = "checkHighlightColor";
 const boxOutlineColor = "boxOutlineColor";
+const annoteSquareColor = "annoteSquareColor";
+const annoteArrowColor = "annoteArrowColor";
 const pieceTheme = "pieceTheme";
 
 
@@ -33,7 +35,9 @@ interface ThemeProperties {
 	[lastMoveHighlightColor]?: Color;
 	[checkHighlightColor]?: Color;
 	[boxOutlineColor]?: Color;
-	[pieceTheme]?: Partial<PieceColorGroup>,
+	[annoteSquareColor]?: Color;
+	[annoteArrowColor]?: Color;
+	[pieceTheme]?: Partial<PieceColorGroup>, 
 }
 
 /**
@@ -44,6 +48,8 @@ const defaults: ThemeProperties = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
+	[annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares.   This matches the Ray color exactly, though
+	[annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	[pieceTheme]: {},
 };
 
@@ -63,6 +69,8 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0, 0.37],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.32],
 		[lastMoveHighlightColor]: [0.90, 1, 0, 0.30],
+		// [annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares
+		// [annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	},
 	sandstone: { // Sometimes thanksgiving uses this
 		[lightTiles]: [0.94, 0.88, 0.78, 1],
@@ -106,6 +114,8 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 		[legalMovesHighlightColor_Friendly]: [0, 0.46, 0.1, 0.42],
 		[legalMovesHighlightColor_Opponent]: [1, 0.18, 0.24, 0.46],
 		[legalMovesHighlightColor_Premove]: [0, 0, 0.38, 0.30],
+		[annoteSquareColor]: [0, 0, 1, 0.29],
+		[annoteArrowColor]: [0.66, 0, 1,0.62],
 	},
 	ocean: {
 		[lightTiles]: [0.42, 0.75, 0.96, 1],

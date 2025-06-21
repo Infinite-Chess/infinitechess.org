@@ -59,11 +59,17 @@
                         </div>
                     </div>
                 </div>
-                <section id="stats" class="center">
+                <section class="stats" class="center">
                     <p><strong><%=t('member.joined')%> </strong><span id="joined"></span></p>
                     <p><strong><%=t('member.seen.0')%> </strong><span id="seen"></span><%=t('member.seen.1')%></p>
-                    <p><strong><%=t('member.practice_progress')%> </strong><span id="practice_progress"></span></p>
+                </section>
+                <section class="stats" class="center">
+                    <p><strong><%=t('member.infinity_leaderboard_position')%> </strong><span id="infinity_leaderboard_position"></span></p>
                     <p><strong><%=t('member.ranked_elo')%> </strong><span id="ranked_elo"></span></p>
+                    <p><strong><%=t('member.infinity_leaderboard_rating_deviation')%> </strong><span id="infinity_leaderboard_rating_deviation"></span></p>
+                </section>
+                <section class="stats" class="center">
+                    <p><strong><%=t('member.practice_progress')%> </strong><span id="practice_progress"></span></p>
                 </section>
                 <div id="content-container">
                     <div style="flex-grow: 1;">
@@ -77,7 +83,6 @@
                         <button id="delete-account" class="hidden action-button"><%=t('member.delete_account')%></button>
                     </div>
                 </div>
-                <p id="change" class="hidden center"><%=t('member.password_reset_message.0')%><a href="mailto:infinitechess.org@gmail.com"><%=t('member.password_reset_message.1')%></a></p>
             </div>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>

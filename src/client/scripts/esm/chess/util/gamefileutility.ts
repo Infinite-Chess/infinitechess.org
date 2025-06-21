@@ -4,11 +4,9 @@
  */
 
 import type { Coords } from './coordutil.js';
-import type { Player, TypeGroup } from './typeutil.js';
-import type { RawType } from './typeutil.js';
+import type { Player, RawTypeGroup } from './typeutil.js';
 import type { PieceMoveset } from '../logic/movesets.js';
-// @ts-ignore
-import type gamefile from '../logic/gamefile.js';
+import type { Game, Board, FullGame } from '../logic/gamefile.js';
 
 import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
@@ -30,72 +28,59 @@ import wincondition from '../logic/wincondition.js';
 /**
  * Returns true if the game is over (gameConclusion is truthy).
  * If the game is over, it will be a string. If not, it will be false.
- * @param gamefile - The gamefile.
- * @returns true if over
  */
-function isGameOver(gamefile: gamefile): boolean {
-	if (gamefile.gameConclusion) return true;
+function isGameOver(basegame: Game): boolean {
+	if (basegame.gameConclusion) return true;
 	return false;
 }
 
 /**
  * Returns true if the currently-viewed position of the game file is in check
  */
-function isCurrentViewedPositionInCheck(gamefile: gamefile): boolean {
-	return gamefile.state.local.inCheck !== false;
+function isCurrentViewedPositionInCheck(boardsim: Board): boolean {
+	return boardsim.state.local.inCheck !== false;
 }
 
 /**
  * Returns a list of coordinates of all royals
  * in check in the currently-viewed position.
  */
-function getCheckCoordsOfCurrentViewedPosition(gamefile: gamefile): Coords[] {
-	return gamefile.state.local.inCheck || []; // Return an empty array if we're not in check.
+function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
+	return boardsim.state.local.inCheck || []; // Return an empty array if we're not in check.
 }
 
 /**
  * Sets the `Termination` and `Result` metadata of the gamefile, according to the game conclusion.
  */
-function setTerminationMetadata(gamefile: gamefile) {
-	if (!gamefile.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
+function setTerminationMetadata(basegame: Game) {
+	if (!basegame.gameConclusion) return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
-	const victorAndCondition: { victor?: Player, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(gamefile.gameConclusion);
-	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(gamefile, victorAndCondition.condition);
-	gamefile.metadata.Termination = conditionInPlainEnglish;
+	const victorAndCondition: { victor?: Player, condition: string } = winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion);
+	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(basegame.gameRules, victorAndCondition.condition);
+	basegame.metadata.Termination = conditionInPlainEnglish;
 
-	gamefile.metadata.Result = metadata.getResultFromVictor(victorAndCondition.victor); // white/black/draw/undefined
+	basegame.metadata.Result = metadata.getResultFromVictor(victorAndCondition.victor); // white/black/draw/undefined
 }
 
 /**
  * Deletes the `Termination` and `Result` metadata from the gamefile.
  */
-function eraseTerminationMetadata(gamefile: gamefile) {
-	delete gamefile.metadata.Termination;
-	delete gamefile.metadata.Result;
+function eraseTerminationMetadata(basegame: Game) {
+	delete basegame.metadata.Termination;
+	delete basegame.metadata.Result;
 }
 
 /**
  * Tests if the color's opponent can win from the specified win condition.
- * @param gamefile - The gamefile.
+ * @param basegame
  * @param friendlyColor - The color of friendlies.
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.
  */
-function isOpponentUsingWinCondition(gamefile: gamefile, friendlyColor: Player, winCondition: string): boolean {
+function isOpponentUsingWinCondition(basegame: Game, friendlyColor: Player, winCondition: string): boolean {
 	if (!winconutil.isWinConditionValid(winCondition)) throw new Error(`Cannot test if opponent of color "${friendlyColor}" is using invalid win condition "${winCondition}"!`);
 	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
-	return gamerules.doesColorHaveWinCondition(gamefile.gameRules, oppositeColor, winCondition);
-}
-
-/**
- * Deletes all specialMove functions for pieces that aren't included in this game.
- */
-function deleteUnusedSpecialMoves(gamefile: gamefile) {
-	const existingRawTypes = gamefile.existingRawTypes;
-	for (const key in gamefile.specialMoves) {
-		const rawType = Number(key) as RawType;
-		if (!existingRawTypes.includes(rawType)) delete gamefile.specialMoves[key];
-	}
+	return gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, winCondition);
 }
 
 // FUNCTIONS THAT SHOULD BE MOVED ELSEWHERE!!!!! They introduce too many dependancies ----------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -103,18 +88,17 @@ function deleteUnusedSpecialMoves(gamefile: gamefile) {
 /**
  * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
  */
-function doGameOverChecks(gamefile: gamefile) {
-	gamefile.gameConclusion = wincondition.getGameConclusion(gamefile);
-	if (isGameOver(gamefile) && winconutil.isGameConclusionDecisive(gamefile.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile);
+function doGameOverChecks(gamefile: FullGame) {
+	gamefile.basegame.gameConclusion = wincondition.getGameConclusion(gamefile);
+	if (isGameOver(gamefile.basegame) && winconutil.isGameConclusionDecisive(gamefile.basegame.gameConclusion)) moveutil.flagLastMoveAsMate(gamefile.boardsim);
 }
 
-// TODO: This is a GUI only feature that will use Mesh type. MOVE TO ../../GAME WHEN POSSIBLE
 /**
  * Gets the bounding box of the game's starting position
  */
-function getStartingAreaBox(gamefile: gamefile) {
-	if (gamefile.startSnapshot?.box) return gamefile.startSnapshot.box;
-	const coordsList = boardutil.getCoordsOfAllPieces(gamefile.pieces);
+function getStartingAreaBox(boardsim: Board) {
+	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
+	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
 	return math.getBoxFromCoordsList(coordsList);
 }
 
@@ -127,7 +111,7 @@ function getStartingAreaBox(gamefile: gamefile) {
  * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
  * @param slides - All possible slide directions in the gamefile.
  */
-function areColinearSlidesPresentInGame(pieceMovesets: TypeGroup<() => PieceMoveset>, slides: Vec2[]): boolean { // [[1,1], [1,0], ...]
+function areColinearSlidesPresentInGame(pieceMovesets: RawTypeGroup<() => PieceMoveset>, slides: Vec2[]): boolean { // [[1,1], [1,0], ...]
 
 	/**
 	 * 1. Colinears are present if any vector is NOT a primitive vector.
@@ -160,9 +144,8 @@ function areColinearSlidesPresentInGame(pieceMovesets: TypeGroup<() => PieceMove
 }
 
 /** Returns the number of players in the game (unique players in the turnOrder). */
-function getPlayerCount(gamefile: gamefile) {
-	if (gamefile.startSnapshot) return gamefile.startSnapshot.playerCount;
-	return new Set(gamefile.gameRules.turnOrder).size;
+function getPlayerCount(basegame: Game) {
+	return new Set(basegame.gameRules.turnOrder).size;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -175,7 +158,6 @@ export default {
 	setTerminationMetadata,
 	eraseTerminationMetadata,
 	isOpponentUsingWinCondition,
-	deleteUnusedSpecialMoves,
 	doGameOverChecks,
 	getStartingAreaBox,
 	getPlayerCount,

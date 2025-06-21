@@ -16,16 +16,14 @@ import frametracker from '../frametracker.js';
 import preferences from '../../../components/header/preferences.js';
 import typeutil from '../../../chess/util/typeutil.js';
 import checkresolver from '../../../chess/logic/checkresolver.js';
+import boardpos from '../boardpos.js';
+import math from '../../../util/math.js';
 // @ts-ignore
 import perspective from '../perspective.js';
 // @ts-ignore
-import movement from '../movement.js';
-// @ts-ignore
 import camera from '../camera.js';
 // @ts-ignore
-import board from '../board.js';
-// @ts-ignore
-import math from '../../../util/math.js';
+import boardtiles from '../boardtiles.js';
 // @ts-ignore
 import legalmoveshapes from '../instancedshapes.js';
 // @ts-ignore
@@ -38,12 +36,11 @@ import type { Player } from '../../../chess/util/typeutil.js';
 import type { BoundingBox, Vec2, Color } from '../../../util/math.js';
 import type { Coords, CoordsKey } from '../../../chess/util/coordutil.js';
 import type { IgnoreFunction } from '../../../chess/logic/movesets.js';
-// @ts-ignore
-import type gamefile from '../../../chess/logic/gamefile.js';
-// @ts-ignore
-import type { MoveDraft, Piece } from '../../../chess/logic/movepiece.js';
-// @ts-ignore
+import type { Ray } from './annotations/annotations.js';
+import type { Piece } from '../../../chess/util/boardutil.js';
+import type { MoveDraft } from '../../../chess/logic/movepiece.js';
 import type { LegalMoves } from '../../../chess/logic/legalmoves.js';
+import type { Board, FullGame } from '../../../chess/logic/gamefile.js';
 
 
 
@@ -131,10 +128,6 @@ function getOffset() {
 	return model_Offset;
 }
 
-function isPieceSelected() {
-	return pieceSelected !== undefined;
-}
-
 /** Call this from selection.js when a piece is selected */
 function onPieceSelected(piece: Piece, legalMoves: LegalMoves) {
 	pieceSelected = piece;
@@ -180,7 +173,7 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 
 	// const oldOffset = jsutil.deepCopyObject(model_Offset);
 	// // This is the range at which we will always regen this model. Prevents gittering.
-	// model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
+	// model_Offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
 	// if (!coordutil.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
 
 	// Used to limit the data/highlights of infinitely sliding moves to the area on your screen.
@@ -192,7 +185,7 @@ function updateOffsetAndBoundingBoxOfRenderRange() {
 	if (changeMade) {
 		// console.log("Shifted offset of highlights.");
 		/** Update our offset to the nearest grid-point multiple of {@link highlightedMovesRegenRange} */
-		model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
+		model_Offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), highlightedMovesRegenRange);
 		regenerateAll();
 	}
 }
@@ -207,7 +200,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 
 	// The bounding box of what the camera currently sees on-screen.
 	const boundingBoxOfView = perspective.getEnabled() ? getBoundingBoxOfPerspectiveView()
-       												   : board.gboundingBox(false);
+       												   : boardtiles.gboundingBox(false);
 
 	// If our screen bounding box is less than 4x smaller than our render range bounding box,
 	// we're wasting cpu, let's regenerate it.
@@ -223,7 +216,7 @@ function isRenderRangeBoundingBoxOutOfRange() {
 
 function getBoundingBoxOfPerspectiveView() {
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const x = boardPos[0];
 	const y = boardPos[1];
 
@@ -252,7 +245,7 @@ function initBoundingBoxOfRenderRange() {
 	const halfNewWidth = newWidth / 2;
 	const halfNewHeight = newHeight / 2;
 
-	const boardPos = movement.getBoardPos();
+	const boardPos = boardpos.getBoardPos();
 	const newLeft = Math.ceil(boardPos[0] - halfNewWidth);
 	const newRight = Math.floor(boardPos[0] + halfNewWidth);
 	const newBottom = Math.ceil(boardPos[1] - halfNewHeight);
@@ -272,7 +265,7 @@ function initBoundingBoxOfRenderRange() {
 function getDimensionsOfOrthographicViewRange(): Coords {
 	// New improved method of calculating render bounding box
 
-	const boardBoundingBox = board.gboundingBox();
+	const boardBoundingBox = boardtiles.gboundingBox();
 	const width = boardBoundingBox.right - boardBoundingBox.left + 1;
 	const height = boardBoundingBox.top - boardBoundingBox.bottom + 1;
 
@@ -318,11 +311,11 @@ function regenerateAll() {
 
 // Regenerates the model for all highlighted legal moves.
 function regenSelectedPieceLegalMovesHighlightsModel() {
-	if (!isPieceSelected()) return;
+	if (!pieceSelected) return;
 	// console.log("Regenerating legal moves model..");
 
 	// The model of the selected piece's legal moves
-	const selectedPieceColor = typeutil.getColorFromType(pieceSelected.type);
+	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
 	const color_options = { isOpponentPiece: selection.isOpponentPieceSelected(), isPremove: selection.arePremoving() };
 	const color = preferences.getLegalMoveHighlightColor(color_options); // [r,g,b,a]
 	const { NonCaptureModel, CaptureModel } = generateModelsForPiecesLegalMoveHighlights(pieceSelected!.coords, selectedPieceLegalMoves!, selectedPieceColor, color);
@@ -341,7 +334,6 @@ function regenSelectedPieceLegalMovesHighlightsModel() {
 /**
  * Generates the renderable instanced rendering buffer models for the
  * legal move highlights of the given piece's legal moves.
- * @param gamefile
  * @param coords - The coordinates of the piece with the provided legal moves
  * @param legalMoves - The legal moves of which to generate the highlights models for.
  * @param friendlyColor - The color of friendly pieces
@@ -362,7 +354,7 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
 	const gamefile = gameslot.getGamefile()!;
 
 	// Data of short range moves within 3 tiles
-	concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, legalMoves!, gamefile);
+	concatData_HighlightedMoves_Individual(instanceData_NonCapture, instanceData_Capture, legalMoves!, gamefile.boardsim);
 	// Potentially infinite data on sliding moves...
 	concatData_HighlightedMoves_Sliding(instanceData_NonCapture, instanceData_Capture, coords, legalMoves!, gamefile, friendlyColor);
 
@@ -381,15 +373,15 @@ function generateModelsForPiecesLegalMoveHighlights(coords: Coords, legalMoves: 
  * The mesh should have been pre-calculated.
  */
 function renderSelectedPiecesLegalMoves() {
-	if (!isPieceSelected()) return; // No model to render
+	if (!pieceSelected) return; // No model to render
 
-	const boardPos: Coords = movement.getBoardPos();
+	const boardPos: Coords = boardpos.getBoardPos();
 	const position: [number,number,number] = [
         -boardPos[0] + model_Offset[0], // Add the model's offset
         -boardPos[1] + model_Offset[1],
         0
     ];
-	const boardScale: number = movement.getBoardScale();
+	const boardScale: number = boardpos.getBoardScale();
 	const scale: [number,number,number] = [boardScale, boardScale, 1];
 	
 	// Render each of the models using instanced rendering.
@@ -403,16 +395,16 @@ function renderSelectedPiecesLegalMoves() {
  * @param instanceData_NonCapture - The running array of instance data for the NON-CAPTURING legal moves highlights mesh.
  * @param instanceData_Capture - The running array of instance data for the CAPTURING legal moves highlights mesh.
  * @param legalMoves - The piece legal moves to highlight
- * @param gamefile - A reference to the current loaded gamefile
+ * @param boardsim - A reference to the current loaded gamefile's board
  */
-function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[], instanceData_Capture: number[], legalMoves: LegalMoves, gamefile: gamefile) {
+function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[], instanceData_Capture: number[], legalMoves: LegalMoves, boardsim: Board) {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const legalIndividuals: Coords[] = legalMoves.individual;
 	if (!legalIndividuals) return; // This piece doesn't have any legal jumping/individual moves.
 
 	// For each of these squares, calculate it's buffer data
 	for (const coord of legalIndividuals) {
-		const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, coord);
+		const isPieceOnCoords = boardutil.isPieceOnCoords(boardsim.pieces, coord);
 		const offsetCoord = coordutil.subtractCoordinates(coord, model_Offset);
 		if (isPieceOnCoords) instanceData_Capture.push(...offsetCoord);
 		else instanceData_NonCapture.push(...offsetCoord);
@@ -428,19 +420,17 @@ function concatData_HighlightedMoves_Individual(instanceData_NonCapture: number[
  * @param gamefile - A reference to the current loaded gamefile
  * @param friendlyColor - The color of friendly pieces
  */
-function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, legalMoves: LegalMoves, gamefile: gamefile, friendlyColor: Player) { // { left, right, bottom, top} The size of the box we should render within
+function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, legalMoves: LegalMoves, gamefile: FullGame, friendlyColor: Player) { // { left, right, bottom, top} The size of the box we should render within
 	if (!legalMoves.sliding) return; // No sliding moves
 
-	const slideLines = Object.keys(legalMoves.sliding); // ['1,0','1,1', ...]
-
-	for (const lineKey of slideLines) { // '1,0'
+	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) { // '1,0'
 		const line: Coords = coordutil.getCoordsFromKey(lineKey as CoordsKey); // [dx,dy]
 		const intersections = math.findLineBoxIntersections(coords, line, boundingBoxOfRenderRange);
 		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
 
 		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
         
-		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, legalMoves.sliding[lineKey], legalMoves.ignoreFunc, gamefile, friendlyColor, legalMoves.brute);
+		concatData_HighlightedMoves_Diagonal(instanceData_NonCapture, instanceData_Capture, coords, line, intsect1Tile, intsect2Tile, limits, legalMoves.ignoreFunc, gamefile, friendlyColor, legalMoves.brute);
 	}
 }
 
@@ -458,7 +448,7 @@ function concatData_HighlightedMoves_Sliding(instanceData_NonCapture: number[], 
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: true) {
+function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limits: Coords, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	// Right moveset
 	concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1Tile, intsect2Tile, limits[1], 		    ignoreFunc, gamefile, friendlyColor, brute);
     
@@ -481,9 +471,27 @@ function concatData_HighlightedMoves_Diagonal(instanceData_NonCapture: number[],
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: true) {
+function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: number[], instanceData_Capture: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	if (limit === 0) return; // Quick exit
 
+	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, limit, false);
+	if (iterationInfo === undefined) return;
+	const { firstInstancePositionOffset, startCoords, iterationCount } = iterationInfo;
+
+	addDataDiagonalVariant(instanceData_NonCapture, instanceData_Capture, firstInstancePositionOffset, step, iterationCount, startCoords, coords, ignoreFunc, gamefile, friendlyColor, brute);
+}
+
+/**
+ * Calculates how many times a highlight should be repeated to cover all squares a ray can reach in the render range.
+ * @param coords 
+ * @param step 
+ * @param intsect1Tile 
+ * @param intsect2Tile 
+ * @param limit 
+ * @param includeStartCoords - Set to true for rays, it will also highlight the starting coordinate.
+ * @returns 
+ */
+function getRayIterationInfo(coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords, limit: number, includeStartCoords: boolean) {
 	const lineIsVertical = step[0] === 0;
 	const index: 0 | 1 = lineIsVertical ? 1 : 0;
 	const inverseIndex: 0 | 1 = 1 - index as 0 | 1;
@@ -493,7 +501,11 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
 	const exitIntsectTile = stepIsPositive ? intsect2Tile : intsect1Tile;
     
 	// Where the piece would land after 1 step
-	let startCoords: Coords = [coords[0] + step[0], coords[1] + step[1]];
+	let startCoords: Coords = [...coords];
+	if (!includeStartCoords) {
+		startCoords[0] += step[0];
+		startCoords[1] += step[1];
+	}
 	// Is the piece 
 	// Is the piece left, off-screen, of our intsect1Tile?
 	if (stepIsPositive && startCoords[index] < entryIntsectTile[index] || !stepIsPositive && startCoords[index] > entryIntsectTile[index]) { // Modify the start square
@@ -522,7 +534,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
 	if (xyDist < 0) return; // Early exit. The piece is up-right of our screen
 	const iterationCount = Math.floor((xyDist + Math.abs(step[index])) / Math.abs(step[index])); // How many legal move square/dots to render on this line
 
-	addDataDiagonalVariant(instanceData_NonCapture, instanceData_Capture, firstInstancePositionOffset, step, iterationCount, startCoords, coords, ignoreFunc, gamefile, friendlyColor, brute);
+	return { firstInstancePositionOffset, startCoords, iterationCount };
 }
 
 /**
@@ -540,7 +552,7 @@ function concatData_HighlightedMoves_Diagonal_Split(instanceData_NonCapture: num
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
  */
-function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: gamefile, friendlyColor: Player, brute?: true) {
+function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_Capture: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number, startCoords: Coords, pieceCoords: Coords, ignoreFunc: IgnoreFunction, gamefile: FullGame, friendlyColor: Player, brute?: boolean) {
 	for (let i = 0; i < iterateCount; i++) { 
 		const thisCoord = [startCoords[0] + step[0] * i, startCoords[1] + step[1] * i] as Coords;
 		legal: if (ignoreFunc(pieceCoords, thisCoord)) { // Ignore function PASSED. This move is LEGAL
@@ -552,7 +564,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 			}
 
 			// Should we add instance data to the capturing or non-capturing model?
-			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, thisCoord);
+			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.boardsim.pieces, thisCoord);
 			if (isPieceOnCoords) instanceData_Capture.push(...firstInstancePositionOffset);
 			else                 instanceData_NonCapture.push(...firstInstancePositionOffset);
 		}
@@ -561,9 +573,7 @@ function addDataDiagonalVariant(instanceData_NonCapture: number[], instanceData_
 	}
 }
 
-/**
- * Renders an outline of the box containing all legal move highlights.
- */
+/** Renders an outline of the box containing all legal move highlights. */
 function renderOutlineofRenderBox() {
 	if (!camera.getDebug()) return; // Skip if camera debug mode off
 
@@ -574,10 +584,63 @@ function renderOutlineofRenderBox() {
 	model.render();
 }
 
+
+// Rays --------------------------------------------------------------------------------------
+
+
+/**
+ * Calculates the instanceData of all Rays in a list.
+ * Rays are square highlights starting from a single coord
+ * and going in one direction to infinity, unobstructed.
+ */
+function genData_Rays(rays: Ray[]) { // { left, right, bottom, top} The size of the box we should render within
+	const instanceData: number[] = [];
+
+	for (const ray of rays) {
+		const vector = coordutil.copyCoords(ray.vector);
+		// Make the vector positive
+		if (vector[0] === 0 && vector[1] < 0) vector[1] *= -1;
+		else if (vector[0] < 0) { vector[0] *= -1; vector[1] *= -1; }
+
+		const intersections = math.findLineBoxIntersections(ray.start, vector, boundingBoxOfRenderRange);
+		const [ intsect1Tile, intsect2Tile ] = intersections.map(intersection => intersection.coords);
+
+		if (!intsect1Tile || !intsect2Tile) continue; // If there's no intersection point, it's off the screen, or directly intersect the corner, don't bother rendering.
+        
+		concatData_Ray(instanceData, ray.start, ray.vector, intsect1Tile, intsect2Tile);
+	}
+
+	return instanceData;
+}
+
+/** Simplified {@link concatData_HighlightedMoves_Diagonal_Split} for Ray drawing */
+function concatData_Ray(instanceData: number[], coords: Coords, step: Vec2, intsect1Tile: Coords, intsect2Tile: Coords) {
+	const iterationInfo = getRayIterationInfo(coords, step, intsect1Tile, intsect2Tile, Infinity, true);
+	if (iterationInfo === undefined) return;
+	const { firstInstancePositionOffset, iterationCount } = iterationInfo;
+
+	addDataDiagonalVariant_Ray(instanceData, firstInstancePositionOffset, step, iterationCount);
+}
+
+/** Simplified {@link addDataDiagonalVariant} for Ray drawing */
+function addDataDiagonalVariant_Ray(instanceData: number[], firstInstancePositionOffset: Coords, step: Vec2, iterateCount: number) {
+	for (let i = 0; i < iterateCount; i++) { 
+		instanceData.push(...firstInstancePositionOffset);
+		firstInstancePositionOffset[0] += step[0];
+		firstInstancePositionOffset[1] += step[1];
+	}
+}
+
+
+// Exports -----------------------------------------------------------------------------------
+
+
 export default {
 	render,
 	getOffset,
 	onPieceSelected,
 	onPieceUnselected,
 	generateModelsForPiecesLegalMoveHighlights,
+
+	genData_Rays,
 };

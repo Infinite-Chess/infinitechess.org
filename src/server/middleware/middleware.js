@@ -12,7 +12,7 @@ import cookieParser from 'cookie-parser';
 import credentials from './credentials.js';
 import secureRedirect from './secureRedirect.js';
 import errorHandler from './errorHandler.js';
-import { logger } from './logEvents.js';
+import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
 
@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { requestConfirmEmail } from '../controllers/sendMail.js';
-import { getMemberData } from '../api/Member.js';
+import { getMemberData } from '../api/MemberAPI.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
@@ -40,6 +40,8 @@ import { removeAccount } from '../controllers/deleteAccountController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { processCommand } from "../api/AdminPanel.js";
 import { getContributors } from '../api/GitHub.js';
+import { getLeaderboardData } from '../api/LeaderboardAPI.js';
+import { handleForgotPasswordRequest, handleResetPassword } from '../controllers/passwordResetController.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -60,7 +62,7 @@ function configureMiddleware(app) {
 	// The logger can't log the request body without this
 	app.use(express.json({ limit: '10kb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
 
-	app.use(logger); // Log the request
+	app.use(reqLogger); // Log the request
 
 	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https
@@ -172,7 +174,6 @@ function configureMiddleware(app) {
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
 
-
 	// API --------------------------------------------------------------------
 
 	app.post("/auth", handleLogin); // Login fetch POST request
@@ -215,6 +216,12 @@ function configureMiddleware(app) {
 	app.get('/member/:member/data', getMemberData);
 	app.get('/member/:member/send-email', requestConfirmEmail);
 	app.get("/verify/:member/:code", verifyAccount);
+
+	// Leaderboard router
+	app.get('/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank', getLeaderboardData);
+
+	app.post('/forgot-password', handleForgotPasswordRequest);
+	app.post('/reset-password', handleResetPassword);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 
