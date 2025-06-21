@@ -268,7 +268,10 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
 function makeMove(gamefile: FullGame, move: Move) {
 	gamefile.boardsim.moves.push(move);
 	gamefile.basegame.moves.push({
-		...move
+		startCoords: move.startCoords,
+		endCoords: move.endCoords,
+		promotion: move.promotion,
+		compact: move.compact,
 	});
 
 
