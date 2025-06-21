@@ -253,7 +253,7 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
  * Players should not be able to submit self moves in any possible way.
  */
 function isMoveSelf(move: _Move_Compact): boolean {
-	return move.startCoords[0] === move.endCoords[0] && move.startCoords[1] === move.endCoords[1];
+	return coordutil.areCoordsEqual(move.startCoords, move.endCoords);
 }
 
 
