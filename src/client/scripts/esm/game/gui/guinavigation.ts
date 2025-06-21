@@ -24,6 +24,7 @@ import transition from '../rendering/transition.js';
 import statustext from './statustext.js';
 // @ts-ignore
 import stats from './stats.js';
+import premoves from '../chess/premoves.js';
 
 
 /**
@@ -455,6 +456,7 @@ function rewindMove() {
 	const mesh = gameslot.getMesh();
 	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
 
+	premoves.cancelPremoves(gamefile);
 	frametracker.onVisualChange();
 
 	movesequence.navigateMove(gamefile, mesh, false);
