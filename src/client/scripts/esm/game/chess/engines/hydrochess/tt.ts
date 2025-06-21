@@ -1,6 +1,5 @@
-// @ts-ignore
-import type { gamefile } from "../../../../chess/logic/gamefile.js";
-// @ts-ignore
+
+import type { FullGame } from "../../../../chess/logic/gamefile.js";
 import type { MoveDraft } from "../../../../chess/logic/movepiece.js";
 import boardutil from "../../../../chess/util/boardutil.js";
 import { MATE_SCORE, NO_ENTRY } from "./engine.js";
@@ -96,13 +95,13 @@ export class TranspositionTable {
 	 * Generates an enhanced hash based on piece positions and turn.
 	 * Uses normalized coordinates, bitwise operations, and bit mixing for improved distribution.
 	 */
-	public static generateHash(board: gamefile): number {
+	public static generateHash(lf: FullGame): number {
 		let hashValue = 0;
 
 		// Iterate using the boardutil helper
-		const allCoords = boardutil.getCoordsOfAllPieces(board.pieces);
+		const allCoords = boardutil.getCoordsOfAllPieces(lf.boardsim.pieces);
 		for (const coords of allCoords) {
-			const piece = boardutil.getPieceFromCoords(board.pieces, coords)!;
+			const piece = boardutil.getPieceFromCoords(lf.boardsim.pieces, coords)!;
 
 			// Normalize coordinates before hashing
 			const normX = normalizeCoordForHash(coords[0]);
@@ -120,7 +119,7 @@ export class TranspositionTable {
 		}
 
 		// 4. XOR in the Player Turn and apply final mixing:
-		hashValue ^= board.whosTurn;
+		hashValue ^= lf.basegame.whosTurn;
 		return mixBits(hashValue);
 	}
 

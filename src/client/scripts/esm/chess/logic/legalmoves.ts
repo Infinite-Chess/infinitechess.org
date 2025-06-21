@@ -46,7 +46,7 @@ type SlideLimits = [number, number]
 /** An object containing all the legal moves of a piece. */
 interface LegalMoves {
 	/** A list of the legal jumping move coordinates: `[[1,2], [2,1]]` */
-	individual: Coords[],
+	individual: CoordsSpecial[],
 	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}` */
 	sliding: Record<Vec2Key, SlideLimits>,
 	/** If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen. */

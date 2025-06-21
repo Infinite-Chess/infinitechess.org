@@ -1,11 +1,10 @@
-// @ts-nocheck
-// @ts-ignore
-import type { gamefile } from "../../../../chess/logic/gamefile.js";
+
+import type { FullGame } from "../../../../chess/logic/gamefile.js";
 import boardutil from "../../../../chess/util/boardutil.js";
-import typeutil, { rawTypes, Player, players } from "../../../../chess/util/typeutil.js"; 
+import typeutil, { rawTypes, Player, players, RawType } from "../../../../chess/util/typeutil.js"; 
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import { MoveDraft, Move } from "../../../../chess/logic/movepiece.js"; 
-import { OrganizedPieces } from "../../../../chess/logic/organizedpieces.js";
+import { OrganizedPieces } from "../../../../chess/logic/organizedpieces.js"; 
 import helpers from "./helpers.js";
 import { SearchData, evalState } from "./engine.js";
 // import checkdetection, { Attacker } from "../../../../chess/logic/checkdetection.js";
@@ -52,11 +51,11 @@ export class EvaluationState {
 	 * This performs a full evaluation and stores all the intermediate values
 	 * @param lf The logical gamefile state
 	 */
-	initFromPosition(lf: gamefile): void {
+	initFromPosition(lf: FullGame): void {
 		// Start with a clean state
 		this.reset();
 		
-		const pieces = lf.pieces;
+		const pieces = lf.boardsim.pieces;
 		// Iterate over every piece in the game and build tracking data
 		for (const [typeValue, typeRange] of pieces.typeRanges) {
 			const pieceRawType = typeutil.getRawType(typeValue);
@@ -71,8 +70,8 @@ export class EvaluationState {
 				
 				// Track pawn files
 				if (pieceRawType === rawTypes.PAWN && x >= 0 && x < 16) {
-					if (pieceColor === players.WHITE) this.whitePawnFiles[x]++;
-					else this.blackPawnFiles[x]++;
+					if (pieceColor === players.WHITE) this.whitePawnFiles[x]!++;
+					else this.blackPawnFiles[x]!++;
 				}
 				
 				// Store king positions
@@ -227,12 +226,12 @@ export class EvaluationState {
 		
 		// Penalize doubled pawns
 		for (let file = 0; file < 16; file++) {
-			const whitePawnsOnFile = this.whitePawnFiles[file];
+			const whitePawnsOnFile = this.whitePawnFiles[file]!;
 			if (whitePawnsOnFile > 1) {
 				this.pawnStructureScore -= (whitePawnsOnFile - 1) * 15;
 			}
 			
-			const blackPawnsOnFile = this.blackPawnFiles[file];
+			const blackPawnsOnFile = this.blackPawnFiles[file]!;
 			if (blackPawnsOnFile > 1) {
 				this.pawnStructureScore += (blackPawnsOnFile - 1) * 15;
 			}
@@ -434,7 +433,7 @@ export function getHistoryKey(pieceType: number, endCoords: Coords): string {
  */
 function scoreMove(
 	move: MoveDraft, 
-	lf: gamefile, 
+	lf: FullGame, 
 	data: SearchData, 
 	pv_table: (MoveDraft | null | undefined)[][], 
 	killer_moves: Array<Array<MoveDraft | null>>, 
@@ -454,9 +453,9 @@ function scoreMove(
 	}
 	let score = 0;
 	const promoted = move.promotion;
-	const movedPiece = boardutil.getTypeFromCoords(lf.pieces, move.startCoords)!;
+	const movedPiece = boardutil.getTypeFromCoords(lf.boardsim.pieces, move.startCoords)!;
 	const pieceType = typeutil.getRawType(movedPiece);
-	const captured = boardutil.getTypeFromCoords(lf.pieces, move.endCoords);
+	const captured = boardutil.getTypeFromCoords(lf.boardsim.pieces, move.endCoords);
 	
 	// Check if this move is a countermove to the previous move
 	if (counter_moves && data.previousMove) {
@@ -471,9 +470,9 @@ function scoreMove(
 	}
 	
 	// Check continuation history
-	if (continuation_history && data.previousMove && boardutil.getTypeFromCoords(lf.pieces, data.previousMove.startCoords)) {
+	if (continuation_history && data.previousMove && boardutil.getTypeFromCoords(lf.boardsim.pieces, data.previousMove.startCoords)) {
 		const pieceSquareKey = `${pieceType}_${move.endCoords[0]},${move.endCoords[1]}`;
-		const prevPieceType = boardutil.getTypeFromCoords(lf.pieces, data.previousMove.startCoords)!;
+		const prevPieceType = boardutil.getTypeFromCoords(lf.boardsim.pieces, data.previousMove.startCoords)!;
 		const prevSquareKey = `${prevPieceType}_${data.previousMove.endCoords[0]},${data.previousMove.endCoords[1]}`;
 		
 		if (continuation_history.has(pieceSquareKey)) {
@@ -523,7 +522,7 @@ function scoreMove(
  * @param lf The logical gamefile state.
  * @returns The evaluation score from white's perspective (positive is good for white, negative is good for black).
  */
-function evaluate(lf: gamefile): number {
+function evaluate(lf: FullGame): number {
 	// Get king coordinates from the cached state
 	const whiteKingCoords = evalState.whiteKingCoords;
 	const blackKingCoords = evalState.blackKingCoords;
@@ -538,15 +537,15 @@ function evaluate(lf: gamefile): number {
 
 	// Additional evaluation components
 	const pawnStructureScore = evaluatePawnStructure(
-		lf.pieces,
-		lf.pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.WHITE)),
-		lf.pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.BLACK))
+		lf.boardsim.pieces,
+		lf.boardsim.pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.WHITE)),
+		lf.boardsim.pieces.typeRanges.get(typeutil.buildType(rawTypes.PAWN, players.BLACK))
 	);
 	score += pawnStructureScore;
 	
 	// Calculate king safety
-	const whiteKingSafety = evaluateKingSafety(true, whiteKingCoords, lf.pieces);
-	const blackKingSafety = evaluateKingSafety(false, blackKingCoords, lf.pieces);
+	const whiteKingSafety = evaluateKingSafety(true, whiteKingCoords, lf.boardsim.pieces);
+	const blackKingSafety = evaluateKingSafety(false, blackKingCoords, lf.boardsim.pieces);
 	score += whiteKingSafety - blackKingSafety;
 	
 	// Cache these calculated values for potential future use
@@ -554,7 +553,7 @@ function evaluate(lf: gamefile): number {
 	evalState.kingSafetyScore = whiteKingSafety - blackKingSafety;
 	
 	// If it's black's turn, flip the sign
-	if (lf.whosTurn === players.BLACK) {
+	if (lf.basegame.whosTurn === players.BLACK) {
 		score = -score;
 	}
 	return score;
@@ -583,7 +582,7 @@ function evaluateKingSafety(isWhite: boolean, kingCoords: Coords, pieces: Organi
 	}
 
 	// Knights and bishops within a 2-square radius add to king safety (+10 each)
-	const addMinorShield = (rawPiece: number) => {
+	const addMinorShield = (rawPiece: RawType) => {
 		const range = pieces.typeRanges.get(typeutil.buildType(rawPiece, color));
 		if (!range) return;
 		for (let idx = range.start; idx < range.end; idx++) {

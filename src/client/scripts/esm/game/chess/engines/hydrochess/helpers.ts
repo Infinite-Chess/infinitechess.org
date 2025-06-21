@@ -1,16 +1,17 @@
-// @ts-ignore
-import type { gamefile } from "../../../../chess/logic/gamefile.js";
-import type { Coords } from "../../../../chess/util/coordutil.js";
-import boardutil from "../../../../chess/util/boardutil.js";
+
+import type { FullGame } from "../../../../chess/logic/gamefile.js";
+import type { Coords, CoordsKey } from "../../../../chess/util/coordutil.js";
+import boardutil, { Piece } from "../../../../chess/util/boardutil.js";
 import typeutil, { players, rawTypes } from "../../../../chess/util/typeutil.js";
 import type { Move, MoveDraft } from "../../../../chess/logic/movepiece.js";
 import type { Player } from '../../../../chess/util/typeutil.js';
 // @ts-ignore
-import legalmoves from "../../../../chess/logic/legalmoves.js";
+import legalmoves, { LegalMoves } from "../../../../chess/logic/legalmoves.js";
 // @ts-ignore
 import specialdetect from "../../../../chess/logic/specialdetect.js";
 import { evalState, SearchData } from "./engine.js";
 import evaluation, { PIECE_VALUES } from "./evaluation.js";
+import math from "../../../../util/math.js";
 
 const FRIEND_WIGGLE_ROOM = 1; // Friendly wiggle radius
 const KING_WIGGLE_ROOM = 2;  // Enemy king proximity radius
@@ -40,14 +41,14 @@ const diag2Cnt = new Map<number, number>();
  * @param legalMoves Array to add legal moves to
  */
 function generateSlidingMoves(
-	lf: gamefile,
+	lf: FullGame,
 	startCoords: Coords,
 	moverColor: Player,
 	directions: Array<[number, number, number, number]>, // [dx, dy, negLimit, posLimit]
 	legalMoves: MoveDraft[]
 ): void {
 	const [startX, startY] = startCoords;
-	const pieces = lf.pieces;
+	const pieces = lf.boardsim.pieces;
 
 	// Get enemy and friendly pieces using typeRanges
 	const enemyColor = moverColor === players.WHITE ? players.BLACK : players.WHITE;
@@ -63,8 +64,8 @@ function generateSlidingMoves(
 			// Skip undefined pieces
 			if (typeRange.undefineds.includes(idx)) continue;
 			
-			const x = pieces.XPositions[idx];
-			const y = pieces.YPositions[idx];
+			const x = pieces.XPositions[idx]!;
+			const y = pieces.YPositions[idx]!;
 			const coords: Coords = [x, y];
 			
 			if (pieceColor === moverColor) {
@@ -295,22 +296,23 @@ function generateSlidingMoves(
  * @param player The player to generate moves for
  * @returns Array of pseudo-legal moves
  */
-function generateLegalMoves(lf: gamefile, player: Player): MoveDraft[] {
+function generateLegalMoves(lf: FullGame, player: Player): MoveDraft[] {
 	// Pre-allocate output array with estimated capacity to avoid resizing
 	const legalMoves: MoveDraft[] = [];
-	const pieceMap = lf.pieces;
+	const pieceMap = lf.boardsim.pieces;
 	
 	// Get all piece coordinates in one pass and filter by player
 	const allPieces = boardutil.getCoordsOfAllPieces(pieceMap);
 	
 	// Local reusable objects to avoid GC pressure
-	let piece, legalMovesResult;
+	let piece: Piece;
+	let legalMovesResult: LegalMoves;
 	let slidingDirections: Array<[number, number, number, number]>;
 	
 	// Faster for-loop with direct indexing
 	for (let i = 0; i < allPieces.length; i++) {
 		const coords = allPieces[i]!;
-		piece = boardutil.getPieceFromCoords(pieceMap, coords);
+		piece = boardutil.getPieceFromCoords(pieceMap, coords)!;
 
 		// Skip pieces that don't exist or belong to the opponent
 		if (!piece || typeutil.getColorFromType(piece.type) !== player) {
@@ -318,7 +320,13 @@ function generateLegalMoves(lf: gamefile, player: Player): MoveDraft[] {
 		}
 		
 		// Get legal moves for this piece (reuse result object)
-		legalMovesResult = legalmoves.calculate(lf, piece, { ignoreCheck: true });
+		// Skip check pruning
+		// These 5 lines do almost everything legalmoves.calculateAll() does, but without the check pruning
+		const moveset = legalmoves.getPieceMoveset(lf.boardsim, piece.type);
+		const moves = legalmoves.getEmptyLegalMoves(moveset);
+		legalmoves.appendCalculatedMoves(lf.boardsim, piece, moveset, moves);
+		legalmoves.appendSpecialMoves(lf, piece, moveset, moves);
+		legalMovesResult = legalmoves.calculateAll(lf, piece);
 
 		// --- Fast-path for Individual Moves ---
 		const individualMoves = legalMovesResult.individual;
@@ -360,8 +368,10 @@ function generateLegalMoves(lf: gamefile, player: Player): MoveDraft[] {
 			
 			// Convert sliding directions to the format expected by generateSlidingMoves
 			for (const key in slidingMoves) {
-				const direction = key.split(',').map(Number) as [number, number];
-				const [limitNeg, limitPos] = slidingMoves[key];
+				const coordsKey = key as CoordsKey;
+				// const direction = key.split(',').map(Number) as [number, number];
+				const direction = math.getVec2FromKey(coordsKey);
+				const [limitNeg, limitPos] = slidingMoves[coordsKey]!;
 				
 				// Add direction with its limits as a properly typed tuple
 				slidingDirections.push([direction[0], direction[1], limitNeg, limitPos]);
@@ -402,12 +412,12 @@ function getHistoryKey(pieceType: number, endCoords: Coords): string {
 
 /** Helper function to update the history score for a move */
 function updateHistoryScore(
-	lf: gamefile,
+	lf: FullGame,
 	move: MoveDraft,
 	depth: number,
 	history_heuristic_table: Map<string, number> 
 ) {
-	const movingPiece = boardutil.getPieceFromCoords(lf.pieces, move.startCoords);
+	const movingPiece = boardutil.getPieceFromCoords(lf.boardsim.pieces, move.startCoords);
 	if (!movingPiece) return; // Piece not found (shouldn't happen in normal flow)
 	const movingPieceType = movingPiece.type;
 	const key = getHistoryKey(movingPieceType, move.endCoords);
@@ -451,12 +461,12 @@ function enable_pv_scoring(moves: MoveDraft[], pv_table: (MoveDraft | null | und
  * @param fullMove The move that was made
  * @param capturedPieceType The type of piece that was captured (if any)
  */
-function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: number | undefined) {
+function updateEvalAfterMove(lf: FullGame, fullMove: Move, capturedPieceType: number | undefined) {
 	const [startX] = fullMove.startCoords;
 	const [endX] = fullMove.endCoords;
 	
 	// 0. Get information about the moved piece and handle pawn file decrement (from startX)
-	const movingPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.startCoords);
+	const movingPiece = boardutil.getPieceFromCoords(lf.boardsim.pieces, fullMove.startCoords);
 	if (movingPiece) {
 		const movingRawType = typeutil.getRawType(movingPiece.type);
 		const movingColor = typeutil.getColorFromType(movingPiece.type);
@@ -491,7 +501,7 @@ function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: nu
 	}
 	
 	// 2. Update tracking for moved piece
-	const movedPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.endCoords);
+	const movedPiece = boardutil.getPieceFromCoords(lf.boardsim.pieces, fullMove.endCoords);
 	if (movedPiece) {
 		const rawType = typeutil.getRawType(movedPiece.type);
 		const color = typeutil.getColorFromType(movedPiece.type);
@@ -529,12 +539,12 @@ function updateEvalAfterMove(lf: gamefile, fullMove: Move, capturedPieceType: nu
  * @param fullMove The move that was undone
  * @param capturedPieceType The type of piece that was captured (if any)
  */
-function updateEvalUndoMove(lf: gamefile, fullMove: Move, capturedPieceType: number | undefined) {
+function updateEvalUndoMove(lf: FullGame, fullMove: Move, capturedPieceType: number | undefined) {
 	const [endX] = fullMove.endCoords;
 	const [startX] = fullMove.startCoords;
 	
 	// 1. Handle the moved piece (which is now at the start position)
-	const restoredPiece = boardutil.getPieceFromCoords(lf.pieces, fullMove.startCoords);
+	const restoredPiece = boardutil.getPieceFromCoords(lf.boardsim.pieces, fullMove.startCoords);
 	if (restoredPiece) {
 		const rawType = typeutil.getRawType(restoredPiece.type);
 		const color = typeutil.getColorFromType(restoredPiece.type);
@@ -599,7 +609,7 @@ function updateEvalUndoMove(lf: gamefile, fullMove: Move, capturedPieceType: num
  * @returns Array of scores corresponding to each move
  */
 function assignMoveScores(
-	lf: gamefile,
+	lf: FullGame,
 	moves: MoveDraft[],
 	data: SearchData,
 	pvTable: (MoveDraft | null | undefined)[][],

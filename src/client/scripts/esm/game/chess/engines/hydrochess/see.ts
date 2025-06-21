@@ -1,5 +1,5 @@
-// @ts-ignore
-import type { gamefile } from "../../../../chess/logic/gamefile.js";
+
+import type { FullGame } from "../../../../chess/logic/gamefile.js";
 import type { Coords } from "../../../../chess/util/coordutil.js";
 import type { Player } from "../../../../chess/util/typeutil.js";
 import boardutil from "../../../../chess/util/boardutil.js";
@@ -17,8 +17,8 @@ import { PIECE_VALUES } from "./evaluation.js";
  * @param moveMakerColor The color of the player making the initial move.
  * @returns The estimated material gain (positive) or loss (negative) for the side initiating the capture.
  */
-export function staticExchangeEvaluation(lf: gamefile, targetSquare: Coords, moveMakerColor: Player): number {
-	const initialVictim = boardutil.getPieceFromCoords(lf.pieces, targetSquare);
+export function staticExchangeEvaluation(lf: FullGame, targetSquare: Coords, moveMakerColor: Player): number {
+	const initialVictim = boardutil.getPieceFromCoords(lf.boardsim.pieces, targetSquare);
 	if (!initialVictim) {
 		return 0; // Cannot perform SEE on an empty square
 	}
@@ -36,7 +36,7 @@ export function staticExchangeEvaluation(lf: gamefile, targetSquare: Coords, mov
 	const mapAndSortAttackers = (attackers: Attacker[]): { coords: Coords, value: number }[] => {
 		return attackers
 			.map(attacker => {
-				const piece = boardutil.getPieceFromCoords(lf.pieces, attacker.coords);
+				const piece = boardutil.getPieceFromCoords(lf.boardsim.pieces, attacker.coords);
 				// Assume piece is always found if isSquareBeingAttacked returned these coords
 				const value = piece ? (PIECE_VALUES[typeutil.getRawType(piece.type)] ?? 0) : 0; 
 				return { coords: attacker.coords, value };
