@@ -1,14 +1,15 @@
 
+// src/controllers/sendMail.ts
+
 import nodemailer from 'nodemailer';
 import { Response } from 'express';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-// @ts-ignore
-import { DEV_BUILD, HOST_NAME } from '../config/config.js';
 
 import type { Verification } from './verifyAccountController.js';
 import { AuthenticatedRequest } from '../../types.js';
+import { getAppBaseUrl } from '../utility/urlUtils.js';
 
 // --- Type Definitions ---
 
@@ -23,7 +24,6 @@ interface MemberRecord {
 	last_seen?: string;
 	login_count?: number;
 	preferences?: string | null;
-	refresh_tokens?: string | null;
 	verification?: string | null;
 	username_history?: string | null;
 	checkmates_beaten?: string;
@@ -112,8 +112,9 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			return;
 		}
 
-		const host = DEV_BUILD ? `localhost:${process.env['HTTPSPORT_LOCAL']}` : HOST_NAME;
-		const verificationUrl = new URL(`https://${host}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
+		// Construct verification URL using the utility
+		const baseUrl = getAppBaseUrl();
+		const verificationUrl = new URL(`${baseUrl}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
 
 		if (!transporter) {
 			console.log("Email environment variables not specified. Not sending email confirmation.");
@@ -167,11 +168,41 @@ function requestConfirmEmail(req: AuthenticatedRequest, res: Response): void {
 	res.json({ sent: true });
 }
 
+/**
+ * API to send an email warning about rating abuse to our own infinite chess email address
+ * @param messageSubject - email subject text
+ * @param messageText - email body text
+ */
+async function sendRatingAbuseEmail(messageSubject: string, messageText: string) {
+	try {
+		if (!transporter) {
+			console.log("Email environment variables not specified. Not sending rating abuse email.");
+			return;
+		}
+
+		const mailOptions = {
+			from: `Infinite Chess <${EMAIL_USERNAME}>`,
+			to: EMAIL_USERNAME,
+			subject: messageSubject,
+			text: messageText
+		};
+
+		await transporter.sendMail(mailOptions);
+		console.log(`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${EMAIL_USERNAME}.`);
+
+	} catch (e) {
+		const errorMessage = e instanceof Error ? e.stack : String(e);
+		await logEventsAndPrint(`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`, 'errLog.txt');
+	}
+}
+
+
 // --- Exports ---
 export {
 	sendPasswordResetEmail,
 	sendEmailConfirmation,
 	requestConfirmEmail,
+	sendRatingAbuseEmail
 };
 
 export type {

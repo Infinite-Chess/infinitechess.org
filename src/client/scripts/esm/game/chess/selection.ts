@@ -283,7 +283,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: FullGame, mesh: Mesh | undefi
 	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
-	if (!lastMove.isNull) movesequence.animateMove(lastMove);
+	movesequence.animateMove(lastMove);
 	return true;
 }
 

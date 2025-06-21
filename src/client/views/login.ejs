@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="<%=language%>" dir="<%=t('direction')%>" >
     <head>
+        <script>
+            const translations = <%-JSON.stringify({
+                ...t('login.javascript', {returnObjects: true})
+            })%>;
+        </script>
         <meta charset="utf-8" />
         <meta http-equiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,15 +15,17 @@
         <link rel='stylesheet' href='/css/footer.css'>
         <link rel="icon" href="/img/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" href="/img/favicon-dark.png" media="(prefers-color-scheme: dark)" id="favicon" />
-        <script defer src="/scripts/cjs/views/login.js"></script>
+        <script defer src="/scripts/esm/views/login.js" type="module"></script>
     </head>
     <body>
         <%- include(`${viewsfolder}/components/header`, {t:t, languages:languages, language:language}) %>
         <main>
             <div id="content">                  
                 <h1 class="center"><%=t('login.title')%></h1>
-                <form action="./login" method="POST" class="center" id="form">
-                    <!-- Container for the Login Fields -->
+
+                <!-- LOGIN FORM -->
+                <form method="POST" class="center" id="login-form">
+                    <!-- Container for the Login Fields (Initially visible) -->
                     <div id="login-form-container">
                         <div class="formfield">
                             <div id="username-input-line">
@@ -29,33 +36,36 @@
                                 <label for="password"><%=t('login.password')%></label>
                                 <input id="password" type="password" name="password" required>
                             </div>
-                            <!-- This is where our script inserts a login error division! -->
+                            <!-- This is where our script inserts a login error division! (relative to password-input-line) -->
                         </div>
                         <!-- The main login submit button -->
                         <input type="submit" value="<%=t('login.login_button')%>" class="unavailable" id="submit">
                     </div>
+                </form>
 
-                    <!-- Container for the Forgot Password Fields (HIDDEN BY DEFAULT) -->
-                    <div id="forgot-form-container" class="hidden">
+                <!-- FORGOT PASSWORD FORM (Initially hidden) -->
+                <form method="POST" class="center hidden" id="forgot-password-form">
+                    <!-- Container for the Forgot Password Fields -->
+                    <div id="forgot-form-container"> <!-- This outer div might become redundant if the form itself is hidden/shown -->
+                                                    <!-- For now, keep it for minimal JS change, but you could simplify -->
+                        <p class="form-instruction"><%=t('login.forgot_instruction')%></p>
                         <div class="formfield">
                             <div id="email-input-line">
                                 <label for="forgot-email"><%=t('create-account.email')%></label>
                                 <input id="forgot-email" type="email" name="email" required maxLength="100" autocomplete="off">
                             </div>
-                            <!-- This is where our script will insert a forgot password error/success division! -->
+                            <!-- This is where our script will insert a forgot password error/success division! (relative to email-input-line) -->
                         </div>
                         <!-- The submit button for the forgot password form -->
                         <input type="submit" value="<%=t('login.send_reset_link')%>" class="unavailable" id="forgot-submit">
                     </div>
-
-
-                    <!-- The "Forgot Password?" link -->
-                    <p class="forgot-link-container">
-                        <a href="#" id="forgot-link"><%=t('login.forgot_question')%></a>
-                        <!-- This link will appear inside the forgot password form to switch back -->
-                        <a href="#" id="back-to-login-link" class="hidden"><%=t('login.back_to_login')%></a>
-                    </p>
                 </form>
+
+                <!-- The "Forgot Password?" and "Back to Login" links - These control visibility of the FORMS -->
+                <p class="forgot-link-container center">
+                    <a href="#" id="forgot-link"><%=t('login.forgot_question')%></a>
+                    <a href="#" id="back-to-login-link" class="hidden"><%=t('login.back_to_login')%></a>
+                </p>
             </div>
         </main>
         <%- include(`${viewsfolder}/components/footer`, {t:t, languages:languages, language:language}) %>

@@ -24,7 +24,7 @@ const validDeleteReasons = [
 	'unverified', // They failed to verify after 3 days
 	'user request', // They deleted their own account, or requested it to be deleted.
 	'security', // A choice by server admins, for security purpose.
-	// 'rating manipulation', // Cheating
+	'rating abuse', // Unfairly boosted their own elo with a throwaway account
 ];
 
 
@@ -56,7 +56,6 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 	// 	last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
 	// 	login_count INTEGER NOT NULL DEFAULT 0,                        
 	// 	preferences TEXT,
-	// 	refresh_tokens TEXT,                          
 	// 	verification TEXT, 
 	// 	username_history TEXT,
 	//  checkmates_beaten TEXT NOT NULL DEFAULT ''
@@ -265,7 +264,66 @@ function getMemberDataByCriteria(columns, searchKey, searchValue, { skipErrorLog
 	}
 }
 
+/**
+ * Fetches specified columns of multiple members from the database based on a list of user_ids, usernames, or emails.
+ * @param {string[]} columns - The columns to retrieve (e.g., ['user_id', 'username', 'roles']).
+ * @param {string} searchKey - The search key to use. Must be either 'user_id', 'username', or 'email'.
+ * @param {string[] | number[]} searchValueList - The value to search for, can be a list of user IDs, usernames, or emails.
+ * @param {Object} [options] - Optional settings for the function.
+ * @param {boolean} [options.skipErrorLogging] - If true, errors will not be logged when no match is found.
+ * @returns {MemberRecord[]} - An object containing a list of MemberRecords, or an empty list if no matches are found.
+ */
+function getMultipleMemberDataByCriteria(columns, searchKey, searchValueList, { skipErrorLogging } = {}) {
 
+	// Guard clauses... Validating the arguments...
+
+	if (!Array.isArray(columns)) {
+		logEventsAndPrint(`When getting multiple member data by criteria, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+	if (!columns.every(column => typeof column === 'string' && allMemberColumns.includes(column))) {
+		logEventsAndPrint(`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return [];
+	}
+
+	// Check if the searchKey and searchValueList are valid
+	if (typeof searchKey !== 'string' || !Array.isArray(searchValueList)) {
+		logEventsAndPrint(`When getting multiple member data by criteria, searchKey must be a string and searchValueList must be a list! Received: ${jsutil.ensureJSONString(searchKey)}, ${jsutil.ensureJSONString(searchValueList)}`, 'errLog.txt');
+		return [];
+	}
+	if (!uniqueMemberKeys.includes(searchKey)) {
+		logEventsAndPrint(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`, 'errLog.txt');
+		return [];
+	}
+
+	// Arguments are valid, move onto the SQL query...
+
+	// Construct SQL query
+	const placeholders = searchValueList.map(() => '?').join(', ');
+	const query = `
+		SELECT ${columns.join(', ')}
+		FROM members
+		WHERE ${searchKey} IN (${placeholders})
+	`;
+
+	try {
+		// Execute the query and fetch result
+		const rows = db.all(query, searchValueList);
+
+		// If no row is found, return an empty object
+		if (!rows || rows.length === 0) {
+			if (!skipErrorLogging) logEventsAndPrint(`No matches found for ${searchKey} in ${jsutil.ensureJSONString(searchValueList)}`, 'errLog.txt');
+			return [];
+		}
+
+		// Return the fetched rows
+		return rows;
+	} catch (error) {
+		// Log the error and return an empty list
+		logEventsAndPrint(`Error executing query: ${error.message}`, 'errLog.txt');
+		return [];
+	}
+}
 
 /**
  * Updates multiple column values in the members table for a given user.
@@ -501,6 +559,7 @@ export {
 	addUser,
 	deleteUser,
 	getMemberDataByCriteria,
+	getMultipleMemberDataByCriteria,
 	updateMemberColumns,
 	updateLoginCountAndLastSeen,
 	updateLastSeen,

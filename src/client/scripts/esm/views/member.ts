@@ -51,7 +51,6 @@ const element_showAccountInfo = document.getElementById('show-account-info') as 
 const element_deleteAccount = document.getElementById('delete-account') as HTMLButtonElement;
 const element_accountInfo = document.getElementById('accountinfo')!;
 const element_email = document.getElementById('email')!;
-const element_change = document.getElementById('change')!;
 
 // --- Event Listeners Setup ---
 
@@ -139,7 +138,6 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 			element_showAccountInfo.classList.remove('hidden');
 			element_deleteAccount.classList.remove('hidden');
 			element_deleteAccount.addEventListener("click", () => removeAccount(true)); // Add listener only if it's our profile
-			element_change.classList.remove('hidden');
 			element_email.textContent = result.email!; // Use email if available, handle undefined case
 		}
 

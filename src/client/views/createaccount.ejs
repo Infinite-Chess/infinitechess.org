@@ -3,7 +3,8 @@
     <head>
         <script>
             const translations = <%-JSON.stringify({
-                ...t('create-account.javascript', {returnObjects: true})
+                ...t('create-account.javascript', {returnObjects: true}),
+                ...t('password-validation', {returnObjects: true})
             })%>;
         </script>
         <meta charset="utf-8" />

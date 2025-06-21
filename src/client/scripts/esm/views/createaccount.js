@@ -1,8 +1,10 @@
+// src/client/scripts/esm/views/createaccount.js
 
 // The script on the createaccount page
 
 
 import languagedropdown from "../components/header/dropdowns/languagedropdown.js";
+import { validatePassword } from '../util/password-validation.js';
 
 const element_usernameInput = document.getElementById('username');
 const element_emailInput = document.getElementById('email');
@@ -151,40 +153,27 @@ element_emailInput.addEventListener('focusout', () => { // Check email availabil
 	}
 });
 
+
 let passwordHasError = false;
 element_passwordInput.addEventListener('input', () => { // When password field changes...
-    
-	let passwordError = document.getElementById("passworderror"); // Does an error already exist?
+	let passwordError = document.getElementById("passworderror");
+	
+	const validationResult = validatePassword(element_passwordInput.value);
 
-	const shortError = element_passwordInput.value.length < 6;
-	const longError = element_passwordInput.value.length > 72;
-	const formatError = !validPassword(element_passwordInput.value);
-	const containsPasswordError = element_passwordInput.value.toLowerCase() === 'password';
-
-	// If ANY error, make sure errorElement is created
-	if (shortError || longError || formatError || containsPasswordError) {
-		if (!passwordError) { // Create empty errorElement
-			passwordHasError = true;
-			createErrorElement('passworderror', 'password-input-line');
-			// Change input box to red outline
+	if (!validationResult.isValid) {
+		passwordHasError = true;
+		if (!passwordError) {
+			passwordError = createErrorElement('passworderror', 'password-input-line');
 			element_passwordInput.style.outline = 'solid 1px red';
-			// Reset variable because it now exists.
-			passwordError = document.getElementById("passworderror");
 		}
-	} else if (passwordError) { // No errors, delete that error element if it exists
+		// Use the error key from the result to get the correct translation
+		passwordError.textContent = translations[validationResult.errorKey];
+	} else {
 		passwordHasError = false;
-		passwordError.remove();
+		if (passwordError) {
+			passwordError.remove();
+		}
 		element_passwordInput.removeAttribute('style');
-	}
-
-	if (formatError) {
-		passwordError.textContent = translations["js-pwd_incorrect_format"];
-	} else if (shortError) {
-		passwordError.textContent = translations["js-pwd_too_short"];
-	} else if (longError) {
-		passwordError.textContent = translations["js-pwd_too_long"];
-	} else if (containsPasswordError) {
-		passwordError.textContent = translations["js-pwd_not_pwd"];
 	}
 
 	updateSubmitButton();
@@ -239,6 +228,7 @@ function createErrorElement(id, insertAfter) {
 	// The element now looks like this:
 	// <div class="error" id="usernameerror"></div>
 	document.getElementById(insertAfter).insertAdjacentElement('afterend', errElement);
+	return errElement; // Return the created element
 }
 
 // Greys-out submit button if there's any errors.
@@ -263,14 +253,6 @@ function validEmail(string) {
 	// Credit for the regex: https://stackoverflow.com/a/201378
 	// eslint-disable-next-line no-control-regex
 	const regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-	if (regex.test(string) === true) return true;
-	return false;
-}
-
-function validPassword(string) {
-	 
-	const regex = /^[a-zA-Z0-9!@#$%^&*?]+$/;
-
 	if (regex.test(string) === true) return true;
 	return false;
 }

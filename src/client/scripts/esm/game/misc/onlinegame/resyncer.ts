@@ -60,8 +60,9 @@ function handleServerGameUpdate(gamefile: FullGame, mesh: Mesh | undefined, mess
 
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) {
+		if (gamefile.basegame.untimed) throw Error('Received clock values in a game update for an untimed game??');
 		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-		clock.edit(gamefile.basegame, message.clockValues);
+		clock.edit(gamefile.basegame.clocks, message.clockValues);
 		guiclock.edit(gamefile.basegame);
 	}
 
@@ -90,7 +91,7 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 	const finalMoveIsOurMove = boardsim.moves.length > 0 && moveutil.getColorThatPlayedMoveIndex(gamefile.basegame, boardsim.moves.length - 1) === onlinegame.getOurColor();
 	const previousMove = boardsim.moves.length > 1 ? boardsim.moves[boardsim.moves.length - 2] : undefined;
 	const previousMoveMatches = (moves.length === 0 && boardsim.moves.length === 1)
-		|| (boardsim.moves.length > 1 && moves.length > 0 && !previousMove!.isNull && previousMove!.compact === moves[moves.length - 1]!.compact);
+		|| (boardsim.moves.length > 1 && moves.length > 0 && previousMove!.compact === moves[moves.length - 1]!.compact);
 	if (!claimedGameConclusion && hasOneMoreMoveThanServer && finalMoveIsOurMove && previousMoveMatches) {
 		console.log("Sending our move again after resyncing..");
 		movesendreceive.sendMove();
@@ -114,7 +115,7 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 	while (true) { // Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
 		if (i === -1) break; // Beginning of game
 		const thisGamefileMove = boardsim.moves[i];
-		if (thisGamefileMove && !thisGamefileMove.isNull) { // The move is defined
+		if (thisGamefileMove) { // The move is defined
 			if (thisGamefileMove.compact! === moves[i]!.compact) break; // The moves MATCH
 			// The moves don't match... remove this one off our list.
 			movesequence.rewindMove(gamefile, mesh);

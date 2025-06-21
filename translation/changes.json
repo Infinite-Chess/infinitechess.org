@@ -1,6 +1,26 @@
 {
+	"63": {
+		"note": "Deleted password_reset_message 133",
+		"changes": []
+	},
+	"62": {
+		"note": "Added ws-deleting_account_in_game on line 611.",
+		"changes": []
+	},
+	"61": {
+		"note": "Added German traslation credit 115",
+		"changes": []
+	},
+	"60": {
+		"note": "Changed lines 153-164, added all of reset-password.javascript, and moved js-pwd_incorrect_format, js-pwd_too_short, js-pwd_too_long, js-pwd_not_pwd to below the new password-validation section. Added ws-password-reset-token-invalid 604. Added all of login.javascript 567-569.",
+		"changes": []
+	},
+	"59": {
+		"note": "Added ALL of reset_password lines 559-565",
+		"changes": []
+	},
 	"58": {
-		"note": "Deleted forgot_password 553. Added send_reset_link, forgot_question, back_to_login lines 554-556.",
+		"note": "Deleted forgot_password 553. Added send_reset_link, forgot_question, back_to_login lines 554-556, ws-password-reset-link-sent, ws-password-change-success 588-589. Deleted ws-member_not_found 590, ws-username_and_password_required, ws-username_and_password_string 570-571, ws-unable_to_identify_client_ip, ws-you_are_banned_by_server, ws-too_many_requests_to_server, ws-bad_request 591-594. Added forgot_instruction 557.",
 		"changes": []
 	},
 	"57": {

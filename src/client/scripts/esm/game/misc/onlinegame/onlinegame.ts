@@ -368,6 +368,7 @@ function deleteCustomVariantOptions() {
  */
 function requestRemovalFromPlayersInActiveGames() {
 	if (!areInOnlineGame()) return;
+	if (!websocket.areSubbedToSub('game')) return; // THE SERVER has deleted the game. Already removed from players in active games list!
 	websocket.sendmessage('game', 'removefromplayersinactivegames');
 }
 
@@ -376,6 +377,8 @@ function requestRemovalFromPlayersInActiveGames() {
  */
 function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	if (!clockValues.colorTicking) return clockValues; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
+
+	// console.log(`Adjusting clock values for ping. Ping is ${pingManager.getPing()}.`);
 
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values

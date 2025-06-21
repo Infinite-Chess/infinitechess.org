@@ -52,7 +52,6 @@ function initListeners() {
 		// "1000 Closed by client" instead of "1001 Endpoint left"
 		websocket.closeSocket();
         
-		invites.deleteInviteTagInLocalStorage();
 		localstorage.eraseExpiredItems();
 	});
 }

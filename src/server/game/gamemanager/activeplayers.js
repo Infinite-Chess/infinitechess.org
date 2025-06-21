@@ -107,7 +107,7 @@ function hasColorInGameSeenConclusion(game, color) {
  */
 function getIDOfGamePlayerIsIn(player) {
 	if (player.browser) return browsersInActiveGames[player.browser];
-	if (player.member)  return membersInActiveGames [player.member];
+	if (player.member)  return membersInActiveGames[player.member];
 }
 
 //--------------------------------------------------------------------------------------------------------
