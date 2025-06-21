@@ -278,9 +278,9 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 	if (token) (fetchInit.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
 
 	const retryOptions: RetryFetchOptions = {
-		// With these settings, the fifth attempt occurs 1m 33s after the first.
+		// With these settings, the fifth attempt occurs 1m 15s after the first.
 		maxAttempts: 5,
-		initialDelayMs: 3000,
+		initialDelayMs: 5000,
 		backoffFactor: 2,
 	};
 
