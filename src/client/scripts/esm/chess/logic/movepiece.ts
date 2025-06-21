@@ -180,8 +180,8 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 	 */
 	state.createEnPassantState(move, boardsim.state.global.enpassant, undefined);
 
-	const isSelf = moveutil.isMoveSelf(moveDraft);
-	if (!isSelf) {
+	const isNullMove = moveutil.isMoveNullMove(moveDraft);
+	if (!isNullMove) {
 		const rawType = typeutil.getRawType(move.type);
 		let specialMoveMade: boolean = false;
 		// If a special move function exists for this piece type, run it.

@@ -252,7 +252,7 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
  * Only engines should be able to create and make null moves, for null move pruning.
  * Players should not be able to submit self moves in any possible way.
  */
-function isMoveSelf(move: _Move_Compact): boolean {
+function isMoveNullMove(move: _Move_Compact): boolean {
 	return coordutil.areCoordsEqual(move.startCoords, move.endCoords);
 }
 
@@ -283,5 +283,5 @@ export default {
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
 	stripSpecialMoveTagsFromCoords,
-	isMoveSelf,
+	isMoveNullMove,
 };
