@@ -248,8 +248,9 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
 }
 
 /**
- * Tests if a move is null.
- * Players should not be able to submit self moves in any possible way so we can guarantee this will be a null move.
+ * Tests if the move is a null move.
+ * Only engines should be able to create and make null moves, for null move pruning.
+ * Players should not be able to submit self moves in any possible way.
  */
 function isMoveSelf(move: _Move_Compact): boolean {
 	return move.startCoords[0] === move.endCoords[0] && move.startCoords[1] === move.endCoords[1];
