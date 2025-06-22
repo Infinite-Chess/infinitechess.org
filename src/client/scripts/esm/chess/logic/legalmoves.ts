@@ -184,13 +184,14 @@ function appendPotentialMoves(piece: Piece, moveset: PieceMoveset, legalmoves: L
 	if (moveset.sliding) {
 		legalmoves.sliding = {
 			...moveset.sliding,
-		}
+		};
 	}
 }
 
 /**
  * Removes moves that either land on a friendly or void,
- * and adjusts slide limits based on the provided moveset's blocking function.
+ * and adjusts slide limits based on the provided moveset's blocking function
+ * and what pieces are in the way.
  */
 function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves) {
 	const color = typeutil.getColorFromType(piece.type);
@@ -226,6 +227,22 @@ function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
 	removeObstructedMoves(gamefile.boardsim, piece, moveset, moves);
 	appendSpecialMoves(gamefile, piece, moveset, moves, false);
 	checkresolver.removeCheckInvalidMoves(gamefile, piece, moves);
+	return moves;
+}
+
+/**
+ * Calculates all possible premoves of a piece in the provided gamefile.
+ * * Jumps can't be obstructed.
+ * * Slides can't be blocked.
+ * * No check pruning is made.
+ */
+function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
+	const moves = getEmptyLegalMoves(moveset);
+	appendPotentialMoves(piece, moveset, moves);
+	// SKIP removing obstructed moves.
+	appendSpecialMoves(gamefile, piece, moveset, moves, true); // All possible moves
+	// SKIP removing check invalids!
 	return moves;
 }
 
@@ -451,7 +468,7 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 	}
 
 	// Test if that piece's legal moves contain the destinationCoords.
-	const legalMoves = calculateAll(gamefile, piecemoved, false);
+	const legalMoves = calculateAll(gamefile, piecemoved);
 
 	// This should pass on any special moves tags at the same time.
 	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveDraftCopy.endCoords);
@@ -557,6 +574,7 @@ export default {
 	removeObstructedMoves,
 	appendSpecialMoves,
 	calculateAll,
+	calculateAllPremoves,
 
 	checkIfMoveLegal,
 	isOpponentsMoveLegal,

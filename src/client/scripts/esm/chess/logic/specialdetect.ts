@@ -10,7 +10,6 @@ import gamerules from '../variants/gamerules.js';
 import math from '../../util/math.js';
 import checkresolver from './checkresolver.js';
 import { players, rawTypes } from '../util/typeutil.js';
-import specialmove from './specialmove.js';
 // Import End
 
 import type { FullGame, Game, Board } from './gamefile.js';
@@ -35,11 +34,10 @@ const allSpecials = ['enpassantCreate','enpassant','promoteTrigger','promotion',
 
 /**
  * Appends legal king special moves to the provided legal individual moves list. (castling)
- * @param {gamefile} gamefile - The gamefile
- * @param {number[]} coords - Coordinates of the king selected
- * @param {Player} color - The color of the king selected
- * @param {boolean} all_possible - Whether we should return all possible moves (premoving)
- * @returns {CoordsSpecial[]}
+ * @param gamefile - The gamefile
+ * @param coords - Coordinates of the king selected
+ * @param color - The color of the king selected
+ * @param all_possible - Whether we should return all possible moves (premoving)
  */
 function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: boolean): CoordsSpecial[] {
 	const individualMoves: CoordsSpecial[] = [];
@@ -98,17 +96,15 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 	 * * It has its special rights
 	 * * It is a friendly piece
 	 * * It is not a pawn or jumping royal
-	 * @param pieceCoords 
-	 * @returns 
 	 */
 	function isPieceCastleable(pieceCoords: Coords): boolean {
-
-		// Piece should have its special rights
-		if (!doesPieceHaveSpecialRight(boardsim, pieceCoords)) return false; // Piece doesn't have special rights, can't castle with it
 
 		// Distance should be atleast 3 squares away.
 		const dist = Math.abs(kingX - pieceCoords[0]); // Distance from the king to the piece
 		if (dist < 3) return false; // Piece is too close, can't castle with it
+
+		// Piece should have its special rights
+		if (!doesPieceHaveSpecialRight(boardsim, pieceCoords)) return false; // Piece doesn't have special rights, can't castle with it
 
 		// Color should be a friendly piece
 		const pieceType: number = boardutil.getTypeFromCoords(boardsim.pieces, pieceCoords)!;
@@ -163,13 +159,12 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
  * Appends legal pawn moves to the provided legal individual moves list.
  * This also is in charge of adding single-push, double-push, and capturing
  * pawn moves, even though those don't need a special move flag.
- * @param {gamefile} gamefile - The gamefile
- * @param {number[]} coords - Coordinates of the pawn selected
- * @param {Player} color - The color of the pawn selected
- * @param {boolean} all_possible - Whether we should return all possible moves (premoving)
- * @returns {CoordsSpecial[]}
+ * @param gamefile - The gamefile
+ * @param coords - Coordinates of the pawn selected
+ * @param color - The color of the pawn selected
+ * @param all_possible - Whether we should return all possible moves (premoving)
  */
-function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: boolean) {
+function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: boolean): CoordsSpecial[] {
 	const { boardsim, basegame } = gamefile;
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === players.WHITE ? 1 : -1;
@@ -201,7 +196,7 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 	for (let i = 0; i < 2; i++) {
 		const thisCoordsToCapture: Coords = coordsToCapture[i]!;
 
-		if (!all_possible) { // Only perform skip checks if we're not premoving
+		if (!all_possible) { // Only perform obstruction checks if we're not premoving
 			// Is there an enemy piece at this coords?
 			const pieceAtCoords = boardutil.getTypeFromCoords(boardsim.pieces, thisCoordsToCapture);
 			if (pieceAtCoords === undefined) continue; // No piece, skip.
@@ -226,9 +221,9 @@ function pawns(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 
 /**
  * Returns what the gamefile's enpassant property should be after this double pawn push move
- * @param {number[]} moveStartCoords - The start coordinates of the move
- * @param {number[]} moveEndCoords - The end coordinates of the move
- * @returns {enpassantCreate} The coordinates en passant is allowed
+ * @param moveStartCoords - The start coordinates of the move
+ * @param moveEndCoords - The end coordinates of the move
+ * @returns The coordinates en passant is allowed
  */
 function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Coords): enpassantCreate {
 	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2;
@@ -238,10 +233,10 @@ function getEnPassantGamefileProperty(moveStartCoords: Coords, moveEndCoords: Co
 
 /**
  * Appends legal enpassant capture to the selected pawn's provided individual moves.
- * @param {gamefile} gamefile - The gamefile
- * @param {array[]} individualMoves - The running list of legal individual moves
- * @param {number[]} coords - The coordinates of the pawn selected, [x,y]
- * @param {string} color - The color of the pawn selected
+ * @param gamefile - The gamefile
+ * @param individualMoves - The running list of legal individual moves
+ * @param coords - The coordinates of the pawn selected, [x,y]
+ * @param color - The color of the pawn selected
  */
 // If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves: Coords[], coords: Coords, color: Player) {
@@ -281,11 +276,11 @@ function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: Coo
 
 /**
  * Appends legal moves for the rose piece to the provided legal individual moves list.
- * @param {gamefile} gamefile - The gamefile
- * @param {number[]} coords - Coordinates of the rose selected
- * @param {Player} color - The color of the rose selected
- * @param {boolean} all_possible - Whether we should return all possible moves (premoving)
- * @returns {CoordsSpecial[]}
+ * @param gamefile - The gamefile
+ * @param coords - Coordinates of the rose selected
+ * @param color - The color of the rose selected
+ * @param all_possible - Whether we should return all possible moves (premoving)
+ * @returns
  */
 function roses({ boardsim }: FullGame, coords: Coords, color: Player, all_possible: boolean): CoordsSpecial[] {
 	const movements: Coords[] = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
@@ -305,7 +300,6 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, all_possib
 				const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, currentCoord); // { type, index, coords }
 				if (pieceOnSquare && !all_possible) { // If there is a piece on the square and we're not premoving
 					const colorOfPiece = typeutil.getColorFromType(pieceOnSquare.type);
-					// eslint-disable-next-line max-depth
 					if (color !== colorOfPiece) appendCoordToIndividuals(currentCoord, path); // Capture is legal
 					break; // Break the spiral
 				}
