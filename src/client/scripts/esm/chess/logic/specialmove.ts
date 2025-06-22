@@ -61,12 +61,18 @@ function kings(boardsim: Board, piece: Piece, move: Move) {
 
 	// Move the king to new square
 	const moveChanges = move.changes;
-	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
+	const kingCapturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
+	if (!kingCapturedPiece) boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
+	// CASTLING CAN CAPTURE A PIECE IF IT'S A PREMOVE!!!
+	else boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, kingCapturedPiece); // Capture piece
 
 	// Move the rook to new square
 	const pieceToCastleWith = boardutil.getPieceFromCoords(boardsim.pieces, specialTag.coord)!;
 	const landSquare: Coords = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
-	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
+	const rookCapturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, landSquare);
+	if (!rookCapturedPiece) boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
+	// CASTLING CAN CAPTURE A PIECE IF IT'S A PREMOVE!!!
+	else boardchanges.queueCapture(moveChanges, false, pieceToCastleWith, landSquare, rookCapturedPiece); // Capture piece
 
 	// Special move was executed!
 	// (There is no captured piece with castling)
