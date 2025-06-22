@@ -219,7 +219,7 @@ function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMove
  * @param piece 
  * @returns The legal moves of that piece
  */
-function calculateAll(gamefile: FullGame, piece: Piece, all_possible: boolean): LegalMoves {
+function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
 	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);

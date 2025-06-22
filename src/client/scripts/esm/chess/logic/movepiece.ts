@@ -387,7 +387,7 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
 
 	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
-	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves);
+	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves, false);
 	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags

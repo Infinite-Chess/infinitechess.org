@@ -48,94 +48,111 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 
 	if (!doesPieceHaveSpecialRight(boardsim, coords)) return individualMoves; // King doesn't have castling rights
 
-	const x = coords[0];
-	const y = coords[1];
+	const king = boardutil.getPieceFromCoords(boardsim.pieces, coords)!;
+	const kingX = coords[0];
+	const kingY = coords[1];
+	const oppositeColor = typeutil.invertPlayer(color);
 	const key = organizedpieces.getKeyFromLine([1,0],coords);
 	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
 
-
-	// Castling. What makes a castle legal?
-
-	let leftLegal = true;
-	let rightLegal = true;
-
-	// 1. There is a piece directly left or right of us that has
-	// it's special move rights, that is atleast 3 squares away.
+	// Add legal Castling...
 
 	let left = -Infinity; // Piece directly left of king. (Infinity if none)
 	let right = Infinity; // Piece directly right of king. (Infinity if none)
 
 	// If premoving, skip obstruction and check checks.
-	// if (all_possible) {
-	// 	// The coordinates of the closest piece with its special
-	// 	// rights to the king (EXCLUDING PAWNS + JUMPING ROYALS),
-	// 	// AND is atleast 3 squares away.
-	// 	for (const idx of row) {
-	// 		const thisCoord = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
-	// 		if (!doesPieceHaveSpecialRight(boardsim, thisCoord)) continue; // Doesn't have special right, can't castle with this piece
+	if (all_possible) {
 
-	// 		const dist = Math.abs(x - thisCoord[0]);
-	// 		if (thisCoord[0] < x && thisCoord[0] > left) {
-	// 			if (dist >= 3) left = thisCoord[0];
-	// 		}
-	// 		else if (thisCoord[0] > x && thisCoord[0] < right) {
-	// 			if (dist >= 3) right = thisCoord[0];
-	// 		}
-	// 	}
-	// }
+		// Find the closest CASTLEABLE piece on each side of the king.
+		for (const idx of row) {
+			const pieceCoords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
 
-	for (const idx of row) {
-		const thisCoord = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
+			if (!isPieceCastleable(pieceCoords)) continue; // Piece is not castleable, skip it
 
-		if (thisCoord[0] < x && thisCoord[0] > left) left = thisCoord[0];
-		else if (thisCoord[0] > x && thisCoord[0] < right) right = thisCoord[0];
-	}
-
-	const leftDist = x - left;
-	const rightDist = right - x;
-	// GAME IS NOT COMPATIBLE WITH INFINITE COORDS
-	const leftCoord: Coords | undefined = left === -Infinity ? undefined : [left, y];
-	const rightCoord: Coords | undefined = right === Infinity ? undefined : [right, y];
-	const leftPieceType = leftCoord ? boardutil.getTypeFromCoords(boardsim.pieces, leftCoord) : undefined;
-	const rightPieceType = rightCoord ? boardutil.getTypeFromCoords(boardsim.pieces, rightCoord) : undefined;
-	const leftColor = leftPieceType !== undefined ? typeutil.getColorFromType(leftPieceType) : undefined;
-	const rightColor = rightPieceType !== undefined ? typeutil.getColorFromType(rightPieceType) : undefined;
-
-	if (left === -Infinity || leftDist < 3 || !doesPieceHaveSpecialRight(boardsim, leftCoord!) || leftColor !== color || typeutil.getRawType(leftPieceType!) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(leftPieceType!) === type)) leftLegal = false;
-	if (right === Infinity || rightDist < 3 || !doesPieceHaveSpecialRight(boardsim, rightCoord!) || rightColor !== color || typeutil.getRawType(rightPieceType!) === rawTypes.PAWN || typeutil.jumpingRoyals.some(type => typeutil.getRawType(rightPieceType!) === type)) rightLegal = false;
-	if (!leftLegal && !rightLegal) return individualMoves;
-
-	// 2. IF USING CHECKMATE: The king must not currently be in check,
-	// AND The square the king passes through must not be a check.
-	// The square the king lands on will be tested later, within checkresolver.
-
-	const oppositeColor = typeutil.invertPlayer(color);
-	if (gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, 'checkmate')) {
-		if (gamefileutility.isCurrentViewedPositionInCheck(boardsim)) return individualMoves; // Not legal if in check
-
-		// Simulate the space in-between
-
-		const king = boardutil.getPieceFromCoords(boardsim.pieces, coords)!; // { type, index, coords }
-		if (leftLegal) {
-			const middleSquare: Coords = [x - 1, y];
-			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) leftLegal = false;
-		} if (rightLegal) {
-			const middleSquare: Coords = [x + 1, y];
-			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) rightLegal = false;
+			if (pieceCoords[0] < kingX && pieceCoords[0] > left) left = pieceCoords[0];
+			else if (pieceCoords[0] > kingX && pieceCoords[0] < right) right = pieceCoords[0];
 		}
+
+		// THEN append the castling moves to the individual moves.
+		processSide(left, -1, all_possible); // Castling left
+		processSide(right, 1, all_possible); // Castling right
+
+	} else { // Not premoving. Perform obsctruction and check checks as normal.
+
+		// Find the CLOSEST piece on each side of the king.
+		for (const idx of row) {
+			const pieceCoords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
+
+			if (pieceCoords[0] < kingX && pieceCoords[0] > left) left = pieceCoords[0];
+			else if (pieceCoords[0] > kingX && pieceCoords[0] < right) right = pieceCoords[0];
+		}
+
+		// THEN check if the piece is castleable.
+		processSide(left, -1, all_possible); // Castling left
+		processSide(right, 1, all_possible); // Castling right
 	}
 
-	// Add move
+	/**
+	 * Returns whether the piece at the given coordinates is castleable:
+	 * * Its distance from the king is atleast 3 squares
+	 * * It has its special rights
+	 * * It is a friendly piece
+	 * * It is not a pawn or jumping royal
+	 * @param pieceCoords 
+	 * @returns 
+	 */
+	function isPieceCastleable(pieceCoords: Coords): boolean {
 
-	if (leftLegal) {
-		const specialMove: CoordsSpecial = [coords[0] - 2, coords[1]];
-		specialMove.castle = { dir: -1, coord: leftCoord!};
-		individualMoves.push(specialMove);
+		// Piece should have its special rights
+		if (!doesPieceHaveSpecialRight(boardsim, pieceCoords)) return false; // Piece doesn't have special rights, can't castle with it
+
+		// Distance should be atleast 3 squares away.
+		const dist = Math.abs(kingX - pieceCoords[0]); // Distance from the king to the piece
+		if (dist < 3) return false; // Piece is too close, can't castle with it
+
+		// Color should be a friendly piece
+		const pieceType: number = boardutil.getTypeFromCoords(boardsim.pieces, pieceCoords)!;
+		const [rawType, pieceColor] = typeutil.splitType(pieceType);
+		if (pieceColor !== color) return false;
+
+		// Piece should not be a pawn or jumping royal
+		if (rawType === rawTypes.PAWN || typeutil.jumpingRoyals.includes(rawType)) return false;
+
+		return true;
 	}
 
-	if (rightLegal) {
-		const specialMove: CoordsSpecial = [coords[0] + 2, coords[1]];
-		specialMove.castle = { dir: 1, coord: rightCoord!};
+	/**
+	 * If the given side is legal to castle with, it will append the castling move to the individual moves.
+	 * @param pieceX - The X coordinate of the piece that the king is castling with, or -Infinity/Infinity if there is no piece on that side.
+	 * @param dir - The direction the king is moving in. 1 for right, -1 for left.
+	 * @param all_possible - PREMOVING: Whether we should ignore checks.
+	 */
+	function processSide(pieceX: number, dir: 1 | -1, all_possible: boolean): void {
+
+		if (!isFinite(pieceX)) return; // No piece on this side, can't castle with it
+
+		const pieceCoord: Coords = [pieceX, kingY]; // The coordinates of the piece that the king is castling with.
+
+		if (!isPieceCastleable(pieceCoord)) return; // Piece is not castleable, skip it
+		
+		// Check checks: Only need if opponent is using checkmate as a win condition.
+		// Can skip if we're premoving, as we can't predict if we will be in check.
+		if (gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, 'checkmate') && !all_possible) { 
+
+			// Can't currently be in check
+			if (gamefileutility.isCurrentViewedPositionInCheck(boardsim)) return; // Not legal if in check
+
+			// The square the king passes through must not be a check. Let's simulate that.
+			const middleSquare: Coords = [kingX + dir, kingY]; // The square the king passes through
+			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) return; // The square the king passes through is a check
+
+			// The square the king LANDS ON will be tested later, within checkresolver.
+		}
+
+		// All checks passed, this side is legal to castle with. Add the move!
+		
+		const specialMove: CoordsSpecial = [coords[0] + (2 * dir), coords[1]];
+		specialMove.castle = { dir, coord: pieceCoord }; // The special move flag, containing: The direction the king is moving in, and the coordinates of the piece that the king is castling with.
 		individualMoves.push(specialMove);
 	}
 
@@ -271,13 +288,6 @@ function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: Coo
  * @returns {CoordsSpecial[]}
  */
 function roses({ boardsim }: FullGame, coords: Coords, color: Player, all_possible: boolean): CoordsSpecial[] {
-	// DOESN'T WORK BECAUSE THEY AREN'T SHIFTED BY THE PIECE COORDS!!!!!
-	// if (all_possible) {
-	// 	// Premoves => Return all possible moves
-	// 	individualMoves.push(...specialmove.getDefaultSpecialVicinitiesByPiece()[rawTypes.ROSE]!);
-	// 	return individualMoves;
-	// }
-
 	const movements: Coords[] = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
 	const individualMoves: CoordsSpecial[] = [];
@@ -293,7 +303,7 @@ function roses({ boardsim }: FullGame, coords: Coords, color: Player, all_possib
 				currentCoord = coordutil.addCoordinates(currentCoord, movement);
 				path.push(coordutil.copyCoords(currentCoord));
 				const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, currentCoord); // { type, index, coords }
-				if (pieceOnSquare) {
+				if (pieceOnSquare && !all_possible) { // If there is a piece on the square and we're not premoving
 					const colorOfPiece = typeutil.getColorFromType(pieceOnSquare.type);
 					// eslint-disable-next-line max-depth
 					if (color !== colorOfPiece) appendCoordToIndividuals(currentCoord, path); // Capture is legal
