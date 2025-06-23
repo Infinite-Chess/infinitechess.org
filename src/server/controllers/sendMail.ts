@@ -132,7 +132,8 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		}
 
 		const content = `
-			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account:</p>
+			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account.</p>
+			<p style="font-size: 16px; color: #555;">If this takes you to the login page, then as soon as you log in, your account will be verified.</p>
 			<a href="${verificationUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Verify Account</a>
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
