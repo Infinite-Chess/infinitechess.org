@@ -32,6 +32,15 @@ interface MemberRecord {
 // --- Module Setup ---
 const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
 const EMAIL_APP_PASSWORD = process.env['EMAIL_APP_PASSWORD'];
+const EMAIL_SEND_AS = process.env['EMAIL_SEND_AS'];
+
+/**
+ * Who our sent emails will appear as if they're from.
+ * 
+ * For this to work, it must be added as a "Send mail as"
+ * alias in our Gmail account.
+ */
+const FROM = EMAIL_SEND_AS || EMAIL_USERNAME;
 
 const transporter = (EMAIL_USERNAME && EMAIL_APP_PASSWORD)
 	? nodemailer.createTransport({
@@ -71,7 +80,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	`;
 
 	const mailOptions = {
-		from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
+		from: `"Infinite Chess" <${FROM}>`,
 		to: recipientEmail,
 		subject: 'Your Password Reset Request',
 		html: createEmailHtmlWrapper('Password Reset Request', content)
@@ -129,7 +138,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		`;
 
 		const mailOptions = {
-			from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
+			from: `"Infinite Chess" <${FROM}>`,
 			to: memberData.email,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content)
@@ -181,7 +190,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		}
 
 		const mailOptions = {
-			from: `Infinite Chess <${EMAIL_USERNAME}>`,
+			from: `Infinite Chess <${FROM}>`,
 			to: EMAIL_USERNAME,
 			subject: messageSubject,
 			text: messageText
