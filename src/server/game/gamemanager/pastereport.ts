@@ -27,9 +27,16 @@ function onPaste(ws: CustomWebSocket, game?: Game) { // { reason, opponentsMoveN
 
 	if (!game) return console.error("Unable to find game after a paste report.");
 
+	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+
 	if (game.publicity !== 'private') {
-		const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
 		const errString = `Player reported pasting in a non-private game. Reporter color: ${ourColor}. Number of moves played: ${game.moves.length}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
+		logEventsAndPrint(errString, 'errLog.txt');
+		return;
+	}
+
+	if (game.rated) {
+		const errString = `Player reported pasting in a rated game. Reporter color: ${ourColor}. Number of moves played: ${game.moves.length}.\nThe game: ${gameutility.getSimplifiedGameString(game)}`;
 		logEventsAndPrint(errString, 'errLog.txt');
 		return;
 	}
