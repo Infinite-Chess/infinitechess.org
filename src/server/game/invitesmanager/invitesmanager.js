@@ -267,7 +267,7 @@ function unsubFromInvitesList(ws, closureNotByChoice) { // data: { route, action
 		
 
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their invite!
-	console.log("Setting a 5-second timer to delete a user's invites!");
+	// console.log("Setting a 5-second timer to delete a user's invites!");
 
 	const timersToUse = signedIn ? timersMember : timersBrowser;
 	timersToUse[identifier] = setTimeout(deleteUserInvitesIfNotConnected, cushionToDisconnectMillis, signedIn, identifier);
@@ -301,7 +301,10 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws) {
 function deleteUserInvitesIfNotConnected(signedIn, identifier) {
 	// Don't delete invite if there is an active connection
 	const hasActiveConnection = doesUserHaveActiveConnection(signedIn, identifier);
-	if (hasActiveConnection) return console.log(`${signedIn ? `Member "${identifier}"` : `Browser "${identifier}"`} is still connected, not deleting invite.`);
+	if (hasActiveConnection) {
+		// console.log(`${signedIn ? `Member "${identifier}"` : `Browser "${identifier}"`} is still connected, not deleting invite.`);
+		return;
+	}
 
 	// Proceed with deleting the invite if not connected
 	deleteUsersExistingInvite(signedIn, identifier);

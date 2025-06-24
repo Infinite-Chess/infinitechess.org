@@ -81,7 +81,7 @@ function newGame(inviteOptions, id, player1Socket, player2Socket, replyto) {
 		incrementMillis: null,
 		rated: inviteOptions.rated === "rated",
 		moves: [],
-		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
+		gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant, UTCDate: timeutil.getCurrentUTCDate(), UTCTime: timeutil.getCurrentUTCTime() }),
 		positionPasted: false,
 	};
 

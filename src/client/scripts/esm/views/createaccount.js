@@ -195,6 +195,10 @@ element_submitButton.addEventListener('click', (event) => {
  * @param {string} password 
  */
 function sendForm(username, email, password) {
+	// Disable the button and set its class to unavailable immediately.
+	element_submitButton.disabled = true;
+	element_submitButton.className = 'unavailable';
+
 	let OK = false;
 	const config = {
 		method: 'POST',
@@ -218,6 +222,14 @@ function sendForm(username, email, password) {
 			} else { // Conflict, unable to make account. 409 CONFLICT
 				window.location.href = languagedropdown.addLngQueryParamToLink('/409');
 			}
+		})
+		// Re-enable the button after the fetch is done.
+		// CURRENTLY ONLY RUNS WHEN a network error occurs, as for all server responses we redirect the page.
+		.finally(() => {
+			element_submitButton.disabled = false;
+			// Call updateSubmitButton() to correctly set the class to 'ready' or 'unavailable'
+			// based on the current state of the form fields.
+			updateSubmitButton();
 		});
 }
 

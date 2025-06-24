@@ -379,6 +379,8 @@ function getStartingPositionOfVariant(metadata: MetaData) {
 
 /**
  * Returns the variant's gamerules at the provided date in time.
+ * THE METADATA MUST CONTAIN THE PROPERTIES `Variant`, `UTCDate`, and `UTCTime` OR THERE
+ * WILL BE A SERVER CRASH WHEN STARTING GAMES OF VARIANTS WITH TIME VARIANT PROPERTIES!!!
  * @param options - An object containing the metadata `Variant`, and if desired, `Date`.
  * @param options.Variant - The name of the variant for which to get the gamerules.
  * @returns The gamerules object for the variant.

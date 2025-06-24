@@ -12,7 +12,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
 import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../../game/misc/onlinegame/onlinegamerouter.js';
-
+import type { _Move_Compact } from './icn/icnconverter.js';
 
 
 import typeutil from '../util/typeutil.js';
@@ -26,7 +26,6 @@ import icnconverter from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
 import math from '../../util/math.js';
 import checkdetection from './checkdetection.js';
-// @ts-ignore
 import specialdetect from './specialdetect.js';
 // @ts-ignore
 import wincondition from './wincondition.js';
@@ -82,19 +81,28 @@ type castle = {
  */
 type path = Coords[]
 
+/**
+ * Move object of the BaseGame.
+ * Does not need a ton of details.
+ */
+interface BaseMove extends _Move_Compact {
+	/**
+	 * How much time the player had left after they made their move, in millis.
+	 * 
+	 * Server is always boss, we cannot set this until after the
+	 * server responds back with the updated clock information.
+	 */
+	clockStamp?: number,
+	/** The move in most compact notation: `8,7>8,8=Q` */
+	compact: string,
+}
+
 /** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
-interface MoveDraft {
-	startCoords: Coords,
-	endCoords: Coords,
-
-	// Special move tags...
-
+interface MoveDraft extends _Move_Compact {
 	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
 	enpassantCreate?: enpassantCreate,
 	/** Present if the move was special-move enpassant capture. This will be `true` */
 	enpassant?: enpassant,
-	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
-	promotion?: promotion,
 	/** Present if the move was a special-move casle. This may look like an
 	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
 	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
@@ -108,9 +116,7 @@ interface MoveDraft {
  * Including the changes it made to the board, the gamefile
  * state before and after the move, etc.
  */
-interface Move extends MoveDraft {
-	/** Whether the move is a null move. */
-	isNull: false,
+interface Move extends MoveDraft, BaseMove {
 	/** The type of piece moved */
 	type: number,
 	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
@@ -121,8 +127,7 @@ interface Move extends MoveDraft {
 	/** The index this move was generated for. This can act as a safety net
 	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
-	/** The move in most compact notation: `8,7>8,8=Q` */
-	compact: string,
+
 	flags: {
 		/** Whether the move delivered check. */
 		check: boolean,
@@ -136,39 +141,7 @@ interface Move extends MoveDraft {
 	 * These will go back into the ICN when copying the game.
 	 */
 	comment?: string,
-	/**
-	 * How much time the player had left after they made their move, in millis.
-	 * 
-	 * Server is always boss, we cannot set this until after the
-	 * server responds back with the updated clock information.
-	 */
-	clockStamp?: number,
 }
-
-/**
- * A null/passing move made by engines during their search calculation.
- * 
- * The only info this needs is how the gamefile state changes.
-*/
-interface NullMove {
-	/** Whether the move is a null move. */
-	isNull: true,
-	/** The index this move was generated for. This can act as a safety net
-	 * so we don't accidentally make the move on the wrong index of the game. */
-	generateIndex: number,
-	/** The state of the move is used to know how to modify specific gamefile
-	 * properties when forwarding/rewinding this move. */
-	state: MoveState,
-	flags: {
-		/** Whether the move delivered check. */
-		check: boolean,
-		/** Whether the move delivered mate (or the killing move). */
-		mate: boolean,
-		/** Whether the move caused a capture */
-		capture: boolean,
-	}
-}
-
 
 // Move Generating --------------------------------------------------------------------------------------------------
 
@@ -187,7 +160,6 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 	// Initialize the state, and change list, as empty for now.
 	const move: Move = {
 		...moveDraft,
-		isNull: false,
 		type: piece.type,
 		changes: [],
 		generateIndex: boardsim.state.local.moveIndex + 1,
@@ -208,47 +180,25 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 	 */
 	state.createEnPassantState(move, boardsim.state.global.enpassant, undefined);
 
-	const rawType = typeutil.getRawType(move.type);
-	let specialMoveMade: boolean = false;
-	// If a special move function exists for this piece type, run it.
-	// The actual function will return whether a special move was actually made or not.
-	// If a special move IS made, we skip the normal move piece method.
-	if (rawType in boardsim.specialMoves) specialMoveMade = boardsim.specialMoves[rawType]!(boardsim, piece, move);
-	if (!specialMoveMade) calcMovesChanges(boardsim, piece, move); // Move piece regularly (no special tag)
+	const isNullMove = moveutil.isMoveNullMove(moveDraft);
+	if (!isNullMove) {
+		const rawType = typeutil.getRawType(move.type);
+		let specialMoveMade: boolean = false;
+		// If a special move function exists for this piece type, run it.
+		// The actual function will return whether a special move was actually made or not.
+		// If a special move IS made, we skip the normal move piece method.
+		if (rawType in boardsim.specialMoves) specialMoveMade = boardsim.specialMoves[rawType]!(boardsim, piece, move);
+		if (!specialMoveMade) calcMovesChanges(boardsim, piece, move); // Move piece regularly (no special tag)
 
-	// Must be set before calling queueIncrementMoveRuleStateChange()
-	move.flags.capture = boardchanges.wasACapture(move);
-	
-	// Delete all special rights that should be revoked from the move.
-	queueSpecialRightDeletionStateChanges(boardsim, move);
+		// Must be set before calling queueIncrementMoveRuleStateChange()
+		move.flags.capture = boardchanges.wasACapture(move);
+		
+		// Delete all special rights that should be revoked from the move.
+		queueSpecialRightDeletionStateChanges(boardsim, move);
+	}
 	queueIncrementMoveRuleStateChange(gamefile, move);
 
 	return move;
-}
-
-/** Generates a Null Move used by engines. */
-function generateNullMove(gamefile: FullGame) {
-	const nullMove: NullMove = {
-		isNull: true,
-		generateIndex: gamefile.boardsim.state.local.moveIndex + 1,
-		state: { local: [], global: [] },
-		flags: {
-			// These will be set later, but we need a default value
-			check: false,
-			mate: false,
-			capture: false,
-		}
-	};
-
-	/**
-	 * Delete the current enpassant state.
-	 * If any specialMove function adds a new EnPassant state,
-	 * this one's future value will be overwritten
-	 */
-	state.createEnPassantState(nullMove, gamefile.boardsim.state.global.enpassant, undefined);
-	queueIncrementMoveRuleStateChange(gamefile, nullMove);
-
-	return nullMove;
 }
 
 /**
@@ -261,7 +211,6 @@ function generateNullMove(gamefile: FullGame) {
  * @param move - The move that's being made
  */
 function calcMovesChanges(boardsim: Board, piece: Piece, move: Move) {
-
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
@@ -301,11 +250,11 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, move: Move) {
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: Move | NullMove) {
+function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: Move) {
 	if (!basegame.gameRules.moveRule) return; // Not using the move-rule
     
 	// Reset if it was a capture or pawn movement
-	const newMoveRule = move.isNull || !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? boardsim.state.global.moveRuleState! + 1 : 0;
+	const newMoveRule = !move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN ? boardsim.state.global.moveRuleState! + 1 : 0;
 	state.createMoveRuleState(move, boardsim.state.global.moveRuleState!, newMoveRule);
 }
 
@@ -316,9 +265,15 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
-function makeMove(gamefile: FullGame, move: Move | NullMove) {
+function makeMove(gamefile: FullGame, move: Move) {
 	gamefile.boardsim.moves.push(move);
-	gamefile.basegame.moves.push(move.isNull ? '--' : move.compact);
+	gamefile.basegame.moves.push({
+		startCoords: move.startCoords,
+		endCoords: move.endCoords,
+		promotion: move.promotion,
+		compact: move.compact,
+	});
+
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical boardsim changes.
 
@@ -339,7 +294,7 @@ function makeMove(gamefile: FullGame, move: Move | NullMove) {
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: FullGame, move: Move | NullMove, forward = true, { global = false } = {}) {
+function applyMove(gamefile: FullGame, move: Move , forward = true, { global = false } = {}) {
 	gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
@@ -347,8 +302,6 @@ function applyMove(gamefile: FullGame, move: Move | NullMove, forward = true, { 
 	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
 	state.applyMove(gamefile.boardsim.state, move.state, forward, { globalChange: global }); // Apply the State of the move
-
-	if (move.isNull) return; // Null moves don't have changes to make
 
 	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
@@ -364,7 +317,7 @@ function updateTurn(gamefile: FullGame) {
  * Tests if the gamefile is currently in check,
  * then creates and set's the game state to reflect that.
  */
-function createCheckState(gamefile: FullGame, move: Move | NullMove) {
+function createCheckState(gamefile: FullGame, move: Move ) {
 	const {boardsim, basegame} = gamefile;
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(basegame, boardsim.state.local.moveIndex);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
@@ -434,7 +387,7 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
 
 	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
-	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves);
+	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves, false);
 	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
@@ -462,6 +415,7 @@ function rewindMove(gamefile: FullGame) {
 	// Delete the move off the end of our moves list
 	gamefile.boardsim.moves.pop();
 	gamefile.basegame.moves.pop();
+	
 	updateTurn(gamefile);
 }
 
@@ -478,7 +432,7 @@ function rewindMove(gamefile: FullGame) {
  * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
 // eslint-disable-next-line no-unused-vars
-function goToMove(boardsim: Board, index: number, callback: (move: Move | NullMove) => void) {
+function goToMove(boardsim: Board, index: number, callback: (move: Move ) => void) {
 	if (index === boardsim.state.local.moveIndex) return;
 
 	const forwards = index >= boardsim.state.local.moveIndex;
@@ -527,25 +481,12 @@ function getSimulatedConclusion(gamefile: FullGame, moveDraft: MoveDraft): strin
 	);
 }
 
-
-// Helpers -----------------------------------------------------------------------------------
-
-
-/** Throws an error if any move is null, casting the gamefile's moves to a Move[] in the process. */
-// function ensureMovesNotNull(moves: (Move | NullMove)[]): Move[] {
-// 	return moves.map((move: Move | NullMove) => {
-// 		if (!move.isNull) return move;
-// 		else throw Error("Should not be null moves in game!");
-// 	});
-// }
-
-
 // ---------------------------------------------------------------------------------------------------------------------
 
 
 export type {
 	Move,
-	NullMove,
+	BaseMove,
 	MoveDraft,
 	CoordsSpecial,
 	enpassantCreate,
@@ -558,7 +499,6 @@ export type {
 
 export default {
 	generateMove,
-	generateNullMove,
 	makeMove,
 	updateTurn,
 	goToMove,
@@ -567,5 +507,4 @@ export default {
 	rewindMove,
 	simulateMoveWrapper,
 	getSimulatedConclusion,
-	// ensureMovesNotNull,
 };

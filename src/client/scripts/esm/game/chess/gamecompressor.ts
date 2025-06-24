@@ -12,7 +12,7 @@ import boardchanges from '../../chess/logic/boardchanges.js';
 import organizedpieces from '../../chess/logic/organizedpieces.js';
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
-import type { Move, NullMove } from '../../chess/logic/movepiece.js';
+import type { Move } from '../../chess/logic/movepiece.js';
 import type { EnPassant, GlobalGameState } from '../../chess/logic/state.js';
 import type { GameRules } from '../../chess/variants/gamerules.js';
 import type { FullGame } from '../../chess/logic/gamefile.js';
@@ -102,14 +102,13 @@ function compressGamefile({ basegame, boardsim }: FullGame, copySinglePosition?:
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	if (presetAnnotes) long_format_in.presetAnnotes = presetAnnotes;
 
-	console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
+	// console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
 
 	return long_format_in;
 }
 
-function convertMovesToICNConverterInMove(moves: (Move | NullMove)[]): _Move_In[] {
-	const mappedMoves = moves.map((move: Move | NullMove) => {
-		if (move.isNull) throw Error("Should not be null moves in game!");
+function convertMovesToICNConverterInMove(moves: Move[]): _Move_In[] {
+	const mappedMoves = moves.map((move: Move ) => {
 		const move_in: _Move_In = {
 			type: move.type,
 			startCoords: move.startCoords,
@@ -138,7 +137,7 @@ function convertMovesToICNConverterInMove(moves: (Move | NullMove)[]): _Move_In[
  * @param moves - The moves of the original gamefile to apply to the state
  * @param [halfmoves] - Number of halfmoves from starting position to apply to the state (Infinity: final position of game)
  */
-function GameToPosition(longform: SimplifiedGameState, moves: (Move | NullMove)[], halfmoves: number = 0): SimplifiedGameState {
+function GameToPosition(longform: SimplifiedGameState, moves: Move[], halfmoves: number = 0): SimplifiedGameState {
 	if (halfmoves === Infinity) halfmoves = moves.length; // If we want the final position, set halfmoves to the length of the moves array
 	if (moves.length < halfmoves) throw Error(`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`);
 	if (halfmoves === 0) return longform; // No changes needed
@@ -152,7 +151,6 @@ function GameToPosition(longform: SimplifiedGameState, moves: (Move | NullMove)[
 	// until we reach the desired halfmove.
 	for (let i = 0; i < halfmoves; i++) {
 		const move = moves[i]!;
-		if (move.isNull) throw Error("Should not be a null move.");
 
 		// Apply the move's state changes.
 		// state.applyMove(longform, move.state, true, { globalChange: true }); // Apply the State of the move

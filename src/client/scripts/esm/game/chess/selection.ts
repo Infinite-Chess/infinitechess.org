@@ -283,7 +283,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: FullGame, mesh: Mesh | undefi
 	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
-	if (!lastMove.isNull) movesequence.animateMove(lastMove);
+	movesequence.animateMove(lastMove);
 	return true;
 }
 
@@ -297,7 +297,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: FullGame, mesh: Mesh | undefi
  * 2 => Can select and drag this piece type.
  * 
  * A piece will not be considered draggable (level 2) if the user disabled dragging.
- * This means more information is needed to tell if the piece is moveable.
+ * This means more information is needed to tell if the piece is moveable by us.
  */
 function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing

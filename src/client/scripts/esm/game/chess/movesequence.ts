@@ -8,7 +8,7 @@
 
 
 import type { FullGame } from "../../chess/logic/gamefile.js";
-import type { Move, MoveDraft, NullMove } from "../../chess/logic/movepiece.js";
+import type { Move, MoveDraft} from "../../chess/logic/movepiece.js";
 
 
 import gameslot from "./gameslot.js";
@@ -92,7 +92,6 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined) {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
-	if (lastMove.isNull) return;
 	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
@@ -113,9 +112,8 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined) {
  * 
  * But it does change the check state.
  */
-function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move | NullMove, forward = true) {
+function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move , forward = true) {
 	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
-	if (move.isNull) return;
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
@@ -127,7 +125,7 @@ function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move | NullM
  * @param index the move index to goto
  */
 function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number) {
-	movepiece.goToMove(gamefile.boardsim, index, (move: (Move | NullMove)) => viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex));
+	movepiece.goToMove(gamefile.boardsim, index, (move: Move) => viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex));
 	updateGui(false);
 }
 
@@ -160,7 +158,6 @@ function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boole
 	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 	
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
-	if (move.isNull) return;
 	animateMove(move, forward); // Animate
 	updateGui(true);
 }

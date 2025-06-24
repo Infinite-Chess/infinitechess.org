@@ -95,7 +95,7 @@ const link_white_list = [
   "/termsofservice",
   "/createaccount",
   "https://github.com/pychess/pychess/blob/master/LICENSE",
-  "mailto:infinitechess.org@gmail.com",
+  "mailto:support@infinitechess.org",
   "https://www.patreon.com/Naviary",
   "https://math.colgate.edu/~integers/og2/og2.pdf",
   "https://chess.stackexchange.com/questions/42480/checkmate-in-%cf%89%c2%b2-moves-with-finitely-many-pieces",

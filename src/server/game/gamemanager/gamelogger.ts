@@ -1,4 +1,6 @@
 
+// src/server/game/gamemanager/gamelogger.ts
+
 /**
  * This script logs all completed games into the "games" database table
  * It also computes the players' ratings in rated games and logs them into the "ratings" table
@@ -44,8 +46,7 @@ import type { Game } from '../TypeDefinitions.js';
  * @param {Game} game - The game to log
  */
 async function logGame(game: Game) : Promise<RatingData | undefined> {
-	const move_count = game.moves.length; // Moves is a required property of game
-	if (move_count === 0) return undefined; // Don't log games with zero moves
+	if (game.moves.length === 0) return undefined; // Don't log games with zero moves
 
 	// Convert the Date of the game to Sqlite string
 	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated);

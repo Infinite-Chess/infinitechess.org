@@ -26,6 +26,7 @@ import docutil from '../../util/docutil.js';
 import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import enginegame from '../misc/enginegame.js';
+import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
 // @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 
@@ -264,34 +265,46 @@ async function markCheckmateBeaten(checkmatePracticeID: string) {
 	// We ARE logged in. Send a POST request to tell the server we have beaten a new checkmate!
 
 	// Configure the POST request
-	const config = {
+	const fetchInit: RequestInit = {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			"is-fetch-request": "true" // Custom header
-		} as Record<string, string>,
-		body: JSON.stringify({ new_checkmate_beaten: checkmatePracticeID }),  // Send the preferences as JSON
+			'is-fetch-request': 'true' // Custom header
+		},
+		body: JSON.stringify({ new_checkmate_beaten: checkmatePracticeID }),
 	};
-	
-	// Get the access token and add it to the Authorization header
+
 	const token: string | undefined = await validatorama.getAccessToken();
-	if (token) config.headers['Authorization'] = `Bearer ${token}`;  // If you use tokens for authentication
-	
+	if (token) (fetchInit.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+
+	const retryOptions: RetryFetchOptions = {
+		// With these settings, the fifth attempt occurs 1m 15s after the first.
+		maxAttempts: 5,
+		initialDelayMs: 5000,
+		backoffFactor: 2,
+	};
+
 	try {
-		const response: Response = await fetch('/api/update-checkmatelist', config);
-			
-		// Check if the response status code indicates success (e.g., 200-299 range)
-		if (response.ok) {
+		// Use retryFetch wrapper to try the same POST multiple times
+		// until it succeeds. This is just in case of a server error,
+		// or a server restart at the exact same time, thus making
+		// them have to solve the same checkmate again.
+		const response: Response = await retryFetch('/api/update-checkmatelist', fetchInit, retryOptions);
+
+		if (response.ok) { // 200 OK from your server
 			console.log('Server recorded checkmate completion successfully.');
 			// Do this now, since the server will have updated the cookie containing the completed checkmates
 			guipractice.updateCheckmatesBeaten(completedCheckmates);
 		} else {
 			// Handle unsuccessful response
+			// This means retries were exhausted on a 500, or it was a non-retryable response (e.g., 400, 401)
+			// that the retryFetch logic didn't retry.
 			const errorData = await response.json();
-			console.error('Failed to update checkmate list on the server:', errorData.message || errorData);
+			console.error(`Failed to update checkmate list on the server (final status ${response.status}) after all attempts:`, errorData.message || errorData);
 		}
 	} catch (error) {
-		console.error('Error sending checkmate list to the server:', error);
+		// This catch block handles cases where retries were exhausted on network errors.
+		console.error('Error sending checkmate list to the server after all attempts (network/unhandled error):', error);
 	}
 }
 
