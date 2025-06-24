@@ -259,7 +259,7 @@ function updatePlayerStatsInTransaction(
 }
 
 /** Converts a server-side {@link Game} into an ICN */
-async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | undefined> {
+function getICNOfGame(game: Game, metadata: MetaData): string {
 	// We need to prime the gamefile for the format converter to get the ICN of the game.
 	const gameRules = jsutil.deepCopyObject(game.gameRules);
 	const longformIn: LongFormatIn = {
@@ -273,13 +273,14 @@ async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | un
 	};
 
 	// Get ICN of game
-	let ICN: string | undefined;
+	let ICN: string;
 	try {
 		ICN = icnconverter.LongToShort_Format(longformIn, { skipPosition: true, compact: true, spaces: false, comments: true, make_new_lines: false, move_numbers: false });
 	} catch (error: unknown) {
-		const stack = error instanceof Error ? error.stack : String(error);
-		const errText = `Error when logging game and converting to ICN! The game: ${gameutility.getSimplifiedGameString(game)}. The primed gamefile:\n${JSON.stringify(longformIn)}\n${stack}`;
-		await logEventsAndPrint(errText, 'errLog.txt');
+		const errMessage = error instanceof Error ? error.message : String(error);
+		const errStack = error instanceof Error ? error.stack : 'No stack trace available';
+		// Re-throw error with additional context, the orchestrator will catch it and roll back the transaction.
+		throw Error(`Error converting game to ICN: ${errMessage}\nThe game: ${gameutility.getSimplifiedGameString(game)}\nThe primed gamefile:\n${JSON.stringify(longformIn)}\n${errStack}`);
 	}
 
 	return ICN;
