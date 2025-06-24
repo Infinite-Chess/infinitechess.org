@@ -10,7 +10,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path i
 import db from './database.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
-import type { RunResult, SqliteError } from 'better-sqlite3';
+import type { RunResult } from 'better-sqlite3';
 
 
 // Type Definitions -----------------------------------------------------------------------------------

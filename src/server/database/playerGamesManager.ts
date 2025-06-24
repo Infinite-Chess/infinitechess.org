@@ -10,7 +10,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path i
 import db from './database.js';
 import { allPlayerGamesColumns } from './databaseTables.js';
 
-import type { RunResult, SqliteError } from 'better-sqlite3'; // Import necessary types
+import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 
 
@@ -33,44 +33,6 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 
 
 // Methods --------------------------------------------------------------------------------------------
-
-/**
- * [INTERNAL] Adds a player's game entry to the player_games table.
- * This function is "unsafe" as it throws errors on failure. It is intended
- * only for use within the atomic `logGame` transaction and is NOT exported.
- *
- * It no longer checks if the user_id is taken; this check is now the
- * responsibility of the transaction orchestrator, if needed at all, as the
- * FOREIGN KEY constraint on the `games` table provides the primary integrity.
- * @throws {SqliteError} If the database query fails (e.g., PRIMARY KEY or FOREIGN KEY constraint).
- */
-function addGameToPlayerGamesTable_internal(
-	options: {
-		user_id: number,
-		game_id: number,
-		player_number: Player,
-		score: number | null,
-		clock_at_end_millis: number | null,
-		elo_at_game: number | null,
-		elo_change_from_game: number | null,
-	}): RunResult {
-
-	const query = `
-	INSERT INTO player_games (
-		user_id, game_id, player_number, score,
-		clock_at_end_millis, elo_at_game, elo_change_from_game
-	) VALUES (?, ?, ?, ?, ?, ?, ?)
-	`;
-
-	// This will throw an error on failure, which is what the transaction needs.
-	return db.run(query,
-		[
-			options.user_id, options.game_id, options.player_number,
-			options.score, options.clock_at_end_millis,
-			options.elo_at_game, options.elo_change_from_game
-		]
-	);
-}
 
 /**
  * Fetches specified columns of a single (user_id, game_id) from the player_games table based on (user_id, game_id)

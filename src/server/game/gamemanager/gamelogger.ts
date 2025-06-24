@@ -179,6 +179,43 @@ function addGameRecordInTransaction(
 	);
 }
 
+/**
+ * [INTERNAL] Adds a player's entry to the `player_games` table within a transaction. Throws on error.
+ * This logic is co-located here because it is only ever used by the logGame transaction.
+ * @throws {SqliteError}
+ */
+function addPlayerGameRecordInTransaction(
+	options: {
+        user_id: number,
+        game_id: number,
+        player_number: Player,
+        score: number | null,
+        clock_at_end_millis: number | null,
+        elo_at_game: number | null,
+        elo_change_from_game: number | null,
+    }): RunResult {
+
+	const query = `
+    INSERT INTO player_games (
+        user_id, game_id, player_number, score,
+        clock_at_end_millis, elo_at_game, elo_change_from_game
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    
+	// This will throw an error on failure, which is what the transaction needs.
+	return db.run(query,
+        [
+            options.user_id,
+            options.game_id,
+            options.player_number,
+            options.score,
+            options.clock_at_end_millis,
+            options.elo_at_game,
+            options.elo_change_from_game
+        ]
+	);
+}
+
 /** Converts a server-side {@link Game} into an ICN */
 async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | undefined> {
 	// We need to prime the gamefile for the format converter to get the ICN of the game.
