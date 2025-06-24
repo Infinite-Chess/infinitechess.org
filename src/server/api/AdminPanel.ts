@@ -198,7 +198,7 @@ function verify(command: string, commandAndArgs: string[], req: AuthenticatedReq
 		return;
 	}
 	// Valid Syntax
-	logCommand(command, req);
+	logCommand(command, req);	
 	const usernameArgument = commandAndArgs[1];
 	// This method works without us having to confirm they exist first
 	const result = manuallyVerifyUser(usernameArgument!);  // { success, username, reason }
@@ -214,7 +214,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Authenticat
 	// Valid Syntax
 	logCommand(command, req);
 	const username = commandAndArgs[1];
-	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history", "checkmates_beaten"], "username", username, { skipErrorLogging: true });
+	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "is_verified", "is_verification_notified", "username_history", "checkmates_beaten"], "username", username, { skipErrorLogging: true });
 	if (Object.keys(memberData).length === 0) { // Empty (member not found)
 		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}
