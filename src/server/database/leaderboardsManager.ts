@@ -86,16 +86,13 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo:
 }
 
 /**
- * Updates the rating values for a player on a specific leaderboard.
- * Also updates the rd_last_update_date to the current time.
- * @param user_id - The id for the user
- * @param leaderboard_id - The id for the specific leaderboard.
- * @param elo - The new elo value for the player
- * @param rd - The new rating deviation for the player
- * @returns A result object indicating success or failure.
+ * [INTERNAL] The core logic for updating a player's rating.
+ * This function is "unsafe" as it throws errors on failure, making it
+ * suitable for use inside a database transaction which can catch the
+ * error and roll back. It is NOT exported.
+ * @throws {Error} If the user is not found or if the database query fails.
  */
-function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): ModifyQueryResult {
-	// Changed table name, column names, added leaderboard_id to WHERE, added rd_last_update_date update
+function updatePlayerLeaderboardRating_core(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): RunResult {
 	const query = `
 	UPDATE leaderboards
 	SET elo = ?,
@@ -103,27 +100,30 @@ function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderbo
 		rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
 	WHERE user_id = ? AND leaderboard_id = ?
 	`;
+	const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
+
+	// If the UPDATE affected no rows, it's a critical failure for a transaction.
+	// We must throw an error to trigger a rollback.
+	if (result.changes === 0) {
+		throw new Error(`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`);
+	}
+	return result;
+}
+
+/**
+ * [PUBLIC] Safely updates the rating values for a player on a specific leaderboard.
+ * This function wraps the core logic in a try/catch block, making it safe for
+ * standalone use, such as in background jobs or admin tools.
+ * @returns A result object indicating success or failure.
+ */
+function updatePlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): ModifyQueryResult {
 	try {
-		// Execute the query, added leaderboard_id to parameters
-		const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
-
-		// Check if any row was actually updated
-		if (result.changes === 0) {
-			// Updated reason message
-			const reason = `User with ID "${user_id}" not found on leaderboard "${leaderboard_id} for update.`;
-			logEvents(reason, 'errLog.txt'); // Log quietly
-			return { success: false, reason };
-		}
-
-		// Return success result
+		const result = updatePlayerLeaderboardRating_core(user_id, leaderboard_id, elo, rd);
 		return { success: true, result };
-
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error modifying leaderboard ratings data for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
-
-		// Return an error message
-		return { success: false, reason: `Database error updating ratings for user ${user_id} on leaderboard ${leaderboard_id}.` };
+		return { success: false, reason: message };
 	}
 }
 
