@@ -1,3 +1,6 @@
+
+// src/server/database/leaderboardsManager.ts
+
 /**
  * This script handles queries to the leaderboards table.
  */

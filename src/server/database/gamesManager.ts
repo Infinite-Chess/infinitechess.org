@@ -1,3 +1,6 @@
+
+// src/server/database/gamesManager.ts
+
 /**
  * This script handles queries to the games table. 
  */

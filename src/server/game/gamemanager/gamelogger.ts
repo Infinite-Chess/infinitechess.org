@@ -1,4 +1,6 @@
 
+// src/server/game/gamemanager/gamelogger.ts
+
 /**
  * This script logs all completed games into the "games" database table
  * It also computes the players' ratings in rated games and logs them into the "ratings" table
