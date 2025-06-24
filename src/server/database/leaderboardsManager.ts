@@ -5,12 +5,12 @@
  * This script handles queries to the leaderboards table.
  */
 
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import db from './database.js';
 import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { RunResult, SqliteError } from 'better-sqlite3'; // Import necessary types
 import type { Leaderboard } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
 
 
@@ -38,15 +38,13 @@ type Rating = { value: number, confident: boolean}
 
 
 /**
- * Adds a user entry to a specific leaderboard
- * @param user_id - The id for the user (fails if it doesn't exist in members or due to constraints)
- * @param leaderboard_id - The id for the specific leaderboard.
- * @param elo - The new elo value for the player
- * @param rd - The new rating deviation for the player
- * @returns A result object indicating success or failure.
+ * [INTERNAL] The core logic for adding a user to a leaderboard.
+ * This function is "unsafe" as it throws errors on failure, making it
+ * suitable for use inside a database transaction. It is NOT exported.
+ * @throws {SqliteError} If the database query fails. The error's `code` property
+ *                       can be checked for specific constraints like 'SQLITE_CONSTRAINT_PRIMARYKEY'.
  */
-function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo: number = DEFAULT_LEADERBOARD_ELO, rd: number = DEFAULT_LEADERBOARD_RD): ModifyQueryResult {
-	// Changed table name, added leaderboard_id column
+function addUserToLeaderboard_core(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): RunResult {
 	const query = `
 	INSERT INTO leaderboards (
 		user_id,
@@ -56,29 +54,30 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo:
 		-- rd_last_update_date will be NULL by default
 	) VALUES (?, ?, ?, ?)
 	`;
+	// This will throw on failure, which is what we want for a transaction.
+	return db.run(query, [user_id, leaderboard_id, elo, rd]);
+}
 
+/**
+ * [PUBLIC] Safely adds a user entry to a specific leaderboard.
+ * This function wraps the core logic in a try/catch block, making it safe for
+ * standalone use.
+ * @returns A result object indicating success or failure.
+ */
+function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo: number = DEFAULT_LEADERBOARD_ELO, rd: number = DEFAULT_LEADERBOARD_RD): ModifyQueryResult {
 	try {
-		// Execute the query with the provided values
-		// Added leaderboard_id to parameters
-		const result = db.run(query, [user_id, leaderboard_id, elo, rd]);
-
-		// Return success result
+		const result = addUserToLeaderboard_core(user_id, leaderboard_id, elo, rd);
 		return { success: true, result };
-
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Updated log message
 		logEventsAndPrint(`Error adding user "${user_id}" to leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
 
-		// Return an error message
-		let reason = 'Failed to add user to ratings table.';
+		let reason = 'Failed to add user to leaderboard.';
 		if (error instanceof Error && 'code' in error) {
-			// Example check for better-sqlite3 specific error codes
 			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
 				reason = 'User ID does not exist in the members table.';
 			} else if (error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
-				// Now checks the composite primary key
-				reason = `User ID already exists on leaderboard.`;
+				reason = `User ID already exists on this leaderboard.`;
 			}
 		}
 		return { success: false, reason };
