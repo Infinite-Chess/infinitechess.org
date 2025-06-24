@@ -1,3 +1,4 @@
+
 // src/controllers/passwordResetController.ts
 
 import { Request, Response } from 'express';
@@ -36,7 +37,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
 
 			// 3. Generate plain token
-			const plainToken: string = crypto.randomBytes(32).toString('hex');
+			const plainToken: string = crypto.randomBytes(32).toString('base64url');
 
 			// 4. Hash the plain token
 			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);

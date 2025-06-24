@@ -32,70 +32,47 @@ const validDeleteReasons = [
 
 
 /**
- * Adds a new user to the members table.
- * @param {string} username - The user's username.
- * @param {string} email - The user's email.
- * @param {string} hashed_password - The hashed password for the user.
- * @param {object} [options] - Optional parameters for the user.
- * @param {string} [options.roles] - The user's roles (e.g., 'owner', 'admin').
- * @param {string} [options.verification] - The verification string (optional).
- * @param {string} [options.preferences] - The user's preferences (optional).
- * @returns {object} - The result of the database operation or an error message: { success (boolean), result: { lastInsertRowid } }
+ * Creates a new account. This is the single, authoritative function for user creation.
+ * It atomically inserts records into both the `members` and `player_stats` tables
+ * within a single database transaction, ensuring data integrity.
+ * @param {string} username The user's username.
+ * @param {string} email The user's email.
+ * @param {string} hashedPassword The user's hashed password.
+ * @param {string | null} verification The verification string (optional).
+ * @returns {{success: true, user_id: number} | {success: false, reason: string}}
  */
-function addUser(username, email, hashed_password, { roles, verification, preferences } = {}) {
-	// The table looks like:
+function addUser(username, email, hashedPassword, verification) {
+	const createAccountTransaction = db.db.transaction((userData) => {
+		// Step 1: Generate a unique user ID.
+		const userId = genUniqueUserID();
 
-	// CREATE TABLE IF NOT EXISTS members (
-	// 	user_id INTEGER PRIMARY KEY,               
-	// 	username TEXT UNIQUE NOT NULL COLLATE NOCASE,
-	// 	email TEXT UNIQUE NOT NULL,                
-	// 	hashed_password TEXT NOT NULL,             
-	// 	roles TEXT,        
-	// 	joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	// 	last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
-	// 	login_count INTEGER NOT NULL DEFAULT 0,                        
-	// 	preferences TEXT,
-	// 	verification TEXT, 
-	// 	username_history TEXT,
-	//  checkmates_beaten TEXT NOT NULL DEFAULT ''
-	// );
+		// Step 2: Insert into the members table.
+		const membersQuery = `
+			INSERT INTO members (user_id, username, email, hashed_password, verification)
+			VALUES (?, ?, ?, ?, ?)
+		`;
+		db.run(membersQuery, [userId, userData.username, userData.email, userData.hashedPassword, userData.verification]);
 
-	if (roles !== undefined && typeof roles !== 'string') throw new Error('Roles must be a string.');
-	if (verification !== undefined && typeof verification !== 'string') throw new Error('Verification must be a string.');
-	if (preferences !== undefined && typeof preferences !== 'string') throw new Error('Preferences must be a string.');
+		// Step 3: Insert into the 'player_stats' table.
+		const statsQuery = `INSERT INTO player_stats (user_id) VALUES (?)`;
+		db.run(statsQuery, [userId]);
+		
+		// If both inserts succeed, the transaction will commit and return the new user_id.
+		return userId;
+	});
 
-	// Generate a unique user ID
-	const user_id = genUniqueUserID();
-
-	// SQL query to insert a new user into the 'members' table
-	const query = `
-    INSERT INTO members (
-    user_id,
-    username,
-    email,
-    hashed_password,
-    roles,
-    verification,
-    preferences
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-	`;
-	
 	try {
-		// Execute the query with the provided values
-		const result = db.run(query, [user_id, username, email, hashed_password, roles, verification, preferences]); // { changes: 1, lastInsertRowid: 7656846 }
-		
-		// Return success result
-		return { success: true, result };
-
+		const newUserId = createAccountTransaction({ username, email, hashedPassword, verification });
+		return { success: true, user_id: newUserId };
 	} catch (error) {
-		// Log the error for debugging purposes
-		logEventsAndPrint(`Error adding user "${username}": ${error.message}`, 'errLog.txt');
-		
-		// Return an error message
-		return { success: false };
+		const errMessage = error.message || String(error);
+		logEventsAndPrint(`Account creation transaction for "${username}" failed and was rolled back: ${errMessage}`, 'errLog.txt');
+		let reason = 'An unexpected error occurred during account creation.';
+		if (error.code?.includes('SQLITE_CONSTRAINT')) reason = 'This username or email has just been taken.';
+		return { success: false, reason };
 	}
 }
-// addUser('na3v534', 'tes3t5em3a4il3', 'password');
+// setTimeout(() => { console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password', null)); }, 1000); // Set timeout needed so user_id_upper_cap is initialized before this function is called.
 
 /**
  * Deletes a user from the members table and adds them to the deleted_members table.

@@ -1,3 +1,6 @@
+
+// src/server/database/playerStatsManager.ts
+
 /**
  * This script handles queries to the player stats table. 
  */
@@ -40,44 +43,6 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 
 // Methods --------------------------------------------------------------------------------------------
 
-
-/**
- * Adds an entry to the player_stats table
- * @param user_id - The id for the user (fails if it doesn't exist in player_stats or due to constraints)
- * @returns - A result object indicating success or failure.
- */
-function addUserToPlayerStatsTable(user_id: number): ModifyQueryResult {
-	const query = `
-	INSERT INTO player_stats (
-		user_id
-	) VALUES (?)
-	`; // Only inserting user_id is needed if others have DB defaults or may be NULL
-
-	try {
-		// Execute the query with the provided values
-		const result = db.run(query, [user_id]);
-
-		// Return success result
-		return { success: true, result };
-
-	} catch (error: unknown) {
-		// Return an error message
-		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
-		let reason = 'Failed to add user to player_stats table.';
-		if (error instanceof Error && 'code' in error) {
-			// Example check for better-sqlite3 specific error codes
-			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = 'User ID does not exist in the members table.';
-			} else if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
-				reason = 'User ID already exists in the player_stats table.';
-			}
-		}
-		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error adding user to player_stats table "${user_id}": ${message}. The reason: "${reason}". The query: "${query}"`, 'errLog.txt'); // Detailed error logging
-		return { success: false, reason }; // Generic error message
-	}
-}
 
 /**
  * Fetches specified columns of a single player from the player_stats table based on user_id
@@ -179,7 +144,6 @@ function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStats
 
 
 export {
-	addUserToPlayerStatsTable,
 	getPlayerStatsData,
 	updatePlayerStatsColumns
 };	
