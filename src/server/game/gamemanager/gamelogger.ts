@@ -40,29 +40,34 @@ import type { Game } from '../TypeDefinitions.js';
 
 
 /**
- * Logs a completed game to the database
- * Updates the tables "games", "player_stats" and "ratings" (computing the rating changes if necessary).
- * Only call after the game ends, and when it's being deleted.
- * 
- * Async so that the server can wait for logs to finish when
- * the server is restarting/closing.
- * @param {Game} game - The game to log
+ * Logs a completed game to the database by executing an atomic transaction.
+ * Adds to and updates tables: games, player_games, player_stats, and leaderboards.
+ * Either all database queries succeed, or none do (rollback on error).
+ * @param game - The game to log
+ * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  */
-async function logGame(game: Game) : Promise<RatingData | undefined> {
+async function logGame(game: Game): Promise<RatingData | undefined> {
 	if (game.moves.length === 0) return undefined; // Don't log games with zero moves
 
-	// Convert the Date of the game to Sqlite string
-	const dateSqliteString = timeutil.timestampToSqlite(game.timeCreated);
+	try {
+		// Create the transaction by wrapping our orchestrator function.
+		// We no longer need to pass any parameters here.
+		const transaction = db.db.transaction((g: Game) => {
+			return logGame_orchestrator(g);
+		});
 
-	// 1. Update the leaderboards table
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion).victor;
-	const ratingdata = await updateLeaderboardsTable(game, victor);
+		// Execute the transaction.
+		const ratingData = transaction(game);
+		
+		// If we reach here, the transaction was successful.
+		return ratingData;
 
-	// 2. Enter the game into the games table
-	const results = await enterGameInGamesTable(game, dateSqliteString, ratingdata);
-	if (results.success === false) { // Failure to log game into database and update player stats
-		await logEventsAndPrint('Failed to log game. Check unloggedGames log. Not incrementing player stats either.', 'errLog.txt');
-		await logEvents(results.reason, 'unloggedGames.txt'); // Log into a separate log
+	} catch (error) {
+		// This block will only execute if the orchestrator throws an error, causing a rollback.
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+		await logEventsAndPrint(`FATAL: Game log transaction failed and was rolled back for Game ID ${game.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`, 'errLog.txt');
+		await logEvents(`Game: ${gameutility.getSimplifiedGameString(game)}`, 'unloggedGames.txt');
 		return undefined;
 	}
 
