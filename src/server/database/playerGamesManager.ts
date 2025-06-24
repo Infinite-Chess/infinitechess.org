@@ -10,10 +10,8 @@ import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path i
 import db from './database.js';
 import { allPlayerGamesColumns } from './databaseTables.js';
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { RunResult, SqliteError } from 'better-sqlite3'; // Import necessary types
 import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
-// @ts-ignore
-import { isUserIdTaken } from './memberManager.js';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -37,11 +35,16 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 // Methods --------------------------------------------------------------------------------------------
 
 /**
- * Adds an entry to the player_games table
- * @param [options] - Parameters for all the entries of the game
- * @returns A result object indicating success or failure.
+ * [INTERNAL] Adds a player's game entry to the player_games table.
+ * This function is "unsafe" as it throws errors on failure. It is intended
+ * only for use within the atomic `logGame` transaction and is NOT exported.
+ *
+ * It no longer checks if the user_id is taken; this check is now the
+ * responsibility of the transaction orchestrator, if needed at all, as the
+ * FOREIGN KEY constraint on the `games` table provides the primary integrity.
+ * @throws {SqliteError} If the database query fails (e.g., PRIMARY KEY or FOREIGN KEY constraint).
  */
-function addGameToPlayerGamesTable(
+function addGameToPlayerGamesTable_internal(
 	options: {
 		user_id: number,
 		game_id: number,
@@ -50,61 +53,23 @@ function addGameToPlayerGamesTable(
 		clock_at_end_millis: number | null,
 		elo_at_game: number | null,
 		elo_change_from_game: number | null,
-	}): ModifyQueryResult {
-
-	// Guard: make sure this user ID is used (live or deleted)
-	// SQLite doesn't check for us because we can't have a foreign key to the members
-	// table when the same user_id may be moved to the deleted_members table later.
-	if (!isUserIdTaken(options.user_id)) {
-		logEventsAndPrint(`User ID (${options.user_id}) does not exist when adding game to player_games table!`, 'errLog.txt');
-	    return { success: false, reason: `User ID does not exist.` };
-	}
+	}): RunResult {
 
 	const query = `
 	INSERT INTO player_games (
-		user_id,
-		game_id,
-		player_number,
-		score,
-		clock_at_end_millis,
-		elo_at_game,
-		elo_change_from_game
+		user_id, game_id, player_number, score,
+		clock_at_end_millis, elo_at_game, elo_change_from_game
 	) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`;
 
-	try {
-		// Execute the query with the provided values
-		const result = db.run(query,
-			[
-				options.user_id,
-				options.game_id,
-				options.player_number,
-				options.score,
-				options.clock_at_end_millis,
-				options.elo_at_game,
-				options.elo_change_from_game
-			]
-		);
-
-		// Return success result
-		return { success: true, result };
-
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEventsAndPrint(`Error adding user game to player_games table for user "${options.user_id}" and game "${options.game_id}": ${message}`, 'errLog.txt');
-
-		// Return an error message
-		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
-		let reason = 'Failed to add game to player_games table.';
-		if (error instanceof Error && 'code' in error) {
-			// Example check for better-sqlite3 specific error codes
-			if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
-				reason = '(User ID, Game ID) already exists in the player_games table.';
-			}
-		}
-		return { success: false, reason };
-	}
+	// This will throw an error on failure, which is what the transaction needs.
+	return db.run(query,
+		[
+			options.user_id, options.game_id, options.player_number,
+			options.score, options.clock_at_end_millis,
+			options.elo_at_game, options.elo_change_from_game
+		]
+	);
 }
 
 /**
@@ -333,7 +298,6 @@ function getRecentNRatedGamesForUser(user_id: number, leaderboard_id: number, li
 
 
 export {
-	addGameToPlayerGamesTable,
 	getPlayerGamesData,
 	getPlayersInGame,
 	getOpponentsOfUserFromGames,
