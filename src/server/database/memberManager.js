@@ -7,7 +7,6 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import db from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
-import { addDeletedMemberToDeletedMembersTable } from './deletedMemberManager.js';
 
 /** @typedef {import('../controllers/sendMail.js').MemberRecord} MemberRecord */
 
@@ -99,7 +98,7 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
 // addUser('na3v534', 'tes3t5em3a4il3', 'password');
 
 /**
- * Deletes a user from the members table.
+ * Deletes a user from the members table and adds them to the deleted_members table.
  * @param {number} user_id - The ID of the user to delete.
  * @param {string} reason_deleted - The reason the user is being deleted.
  * @param {Object} [options] - Optional settings for the function.
@@ -108,37 +107,57 @@ function addUser(username, email, hashed_password, { roles, verification, prefer
  */
 function deleteUser(user_id, reason_deleted, { skipErrorLogging } = {}) {
 	if (!validDeleteReasons.includes(reason_deleted)) {
-		const reason = `Cannot delete user of ID "${user_id}". Reason "${reason_deleted}" is invalid.`;
+		const reason = `Cannot delete user of ID "${user_id}". Delete reason "${reason_deleted}" is invalid.`;
 		if (!skipErrorLogging) logEventsAndPrint(reason, 'errLog.txt');
 		return { success: false, reason };
 	}
 
-	// SQL query to delete a user by their user_id
-	const query = 'DELETE FROM members WHERE user_id = ?';
+	// Create a transaction function. better-sqlite3 will wrap the execution
+	// of this function in BEGIN/COMMIT/ROLLBACK statements.
+	const deleteTransaction = db.db.transaction((id, reason) => {
+		// Step 1: Delete the user from the main 'members' table
+		const deleteQuery = 'DELETE FROM members WHERE user_id = ?';
+		const deleteResult = db.run(deleteQuery, [id]);
+
+		// If no user was deleted, they didn't exist. Throw an error to
+		// abort the transaction and prevent any further action.
+		if (deleteResult.changes === 0) {
+			throw new Error('USER_NOT_FOUND');
+		}
+
+		// Step 2: Add their user_id to the 'deleted_members' table
+		// If this fails (e.g., UNIQUE constraint), it will also throw an error
+		// and cause the entire transaction (including the DELETE) to roll back.
+		const insertQuery = 'INSERT INTO deleted_members (user_id, reason_deleted) VALUES (?, ?)';
+		db.run(insertQuery, [id, reason]);
+	});
 
 	try {
-		// Execute the delete query
-		const result = db.run(query, [user_id]); // { changes: 1 }
+		// Execute the transaction
+		deleteTransaction(user_id, reason_deleted);
+		return { success: true }; // Transaction was successful (committed)
 
-		// Check if any rows were deleted
-		if (result.changes === 0) {
+	} catch (error) {
+		// The transaction was rolled back due to an error inside it.
+		
+		// Handle our custom "user not found" error
+		if (error.message === 'USER_NOT_FOUND') {
 			const reason = `Cannot delete user of ID "${user_id}", they were not found.`;
 			if (!skipErrorLogging) logEventsAndPrint(reason, 'errLog.txt');
 			return { success: false, reason };
 		}
+		
+		// Handle any other unexpected database errors (like UNIQUE constraint)
+		let reason = `Failed to delete user of ID "${user_id}", an internal error occurred.`;
+		if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+			reason = `Failed to delete user of ID "${user_id}" because they already exist in the deleted_members tables. But the user was not deleted from the members table.`;
+		}
 
-		// Add their user_id to the deleted members table
-		addDeletedMemberToDeletedMembersTable(user_id, reason_deleted);
-
-		return { success: true }; // Change made successfully
-
-	} catch (error) {
-		// Log the error for debugging purposes
-		logEventsAndPrint(`Error deleting user with ID "${user_id}": ${error.stack}`, 'errLog.txt');
-		return { success: false, reason: `Failed to delete user of ID "${user_id}", an internal error ocurred.`};
+		logEventsAndPrint(`User deletion transaction for ID "${user_id}" failed and was rolled back: ${error.stack}`, 'errLog.txt');
+		return { success: false, reason };
 	}
 }
-// console.log(deleteUser(3408674));
+// console.log(deleteUser(3887110, 'security'));
 
 /**
  * Generates a **UNIQUE** user_id by testing if it's taken already.
