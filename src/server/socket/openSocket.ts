@@ -1,4 +1,6 @@
 
+// src/server/socket/openSocket.ts
+
 /**
  * This script handles socket upgrade connection requests, and creating new sockets.
  */
@@ -27,7 +29,6 @@ import { executeSafely } from '../utility/errorGuard.js';
 
 import type WebSocket from 'ws';
 import type { CustomWebSocket } from './socketUtility.js';
-import type { Verification } from '../controllers/verifyAccountController.js';
 import type { Request } from "express";
 
 
@@ -81,13 +82,10 @@ function onConnectionRequest(socket: WebSocket, req: Request) {
 	addListenersToSocket(req, ws);
 
 	// If user is signed in, use the database to correctly set the property ws.metadata.verified
-	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo?.user_id !== undefined) {
-		const { verification } = getMemberDataByCriteria(['verification'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true }) as {
-			verification: string | null;
-		};
-		// string needs to be parsed to a JSON
-		const verificationJs = verification === null ? null : JSON.parse(verification) as Verification | null;
-		if (verificationJs === null || verificationJs.verified) ws.metadata.verified = true; // user is verified
+	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.user_id !== undefined) {
+		const member = getMemberDataByCriteria(['is_verified'], 'user_id', ws.metadata.memberInfo.user_id, { skipErrorLogging: true }) as { is_verified: 0 | 1 };
+		// Set the verified status. 1 means true.
+		if (member.is_verified === 1) ws.metadata.verified = true;
 	}
 
 	// Send the current game vesion, so they will know whether to refresh.
