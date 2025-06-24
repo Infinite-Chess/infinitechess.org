@@ -132,36 +132,44 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// 4. Hash the New Password
 		const hashedNewPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
 		const userId = validTokenRecord.user_id;
+		const usedHashedToken = validTokenRecord.hashed_token; // Store for use in transaction
 
-		// 5. Update the User's Password in the database
-		const updateResult = db.run(
-			'UPDATE members SET hashed_password = ? WHERE user_id = ?',
-			[hashedNewPassword, userId]
-		);
+		// 5. Update the User's Password in the database.
+		// At the same time, invalidate the used token.
+		const resetTransaction = db.db.transaction(() => {
+			// Step 1: Update the User's Password
+			const updateResult = db.run(
+				'UPDATE members SET hashed_password = ? WHERE user_id = ?',
+				[hashedNewPassword, userId]
+			);
 
-		if (updateResult.changes === 0) {
-			// This is an unlikely edge case where the token was valid but the user was deleted.
-			// The FOREIGN KEY constraint should prevent this, but it's a good safeguard.
-			throw new Error(`Failed to update password for user_id ${userId}, user may not exist.`);
-		}
-		
-		// 6. CRUCIAL: Invalidate/Delete the used token
-		// This ensures the token cannot be used again.
-		db.run(
-			'DELETE FROM password_reset_tokens WHERE hashed_token = ?',
-            [validTokenRecord.hashed_token]
-		);
+			if (updateResult.changes === 0) {
+				// If the user doesn't exist, we must throw an error
+				// to force the transaction to roll back.
+				throw new Error(`Failed to update password for user_id ${userId}, user may not exist.`);
+			}
 
-		// 7. Terminate all of the user's active sessions.
+			// Step 2: Invalidate/Delete the used token
+			db.run(
+				'DELETE FROM password_reset_tokens WHERE hashed_token = ?',
+				[usedHashedToken]
+			);
+		});
+
+		// Execute the transaction. If any part of it throws an error,
+		// the entire transaction is rolled back automatically.
+		resetTransaction();
+
+		// 6. Terminate all of the user's active sessions.
 		// Recommended for security.
 		deleteAllRefreshTokensForUser(userId);
 
 		// Optional but recommended: Send a confirmation email that the password was changed.
 
-		// 8. Send Success Response
+		// 7. Send Success Response
 		res.status(200).json({ message: getTranslationForReq('server.javascript.ws-password-change-success', req) });
 
-		// 9. Log the successful password reset
+		// 8. Log the successful password reset
 		logEventsAndPrint(`Password reset successful for user_id ${userId}`, 'loginAttempts.txt');
 
 	} catch (error) {
