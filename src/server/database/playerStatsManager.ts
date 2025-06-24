@@ -10,7 +10,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path i
 import db from './database.js';
 import { allPlayerStatsColumns } from './databaseTables.js';
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { RunResult, SqliteError } from 'better-sqlite3'; // Import necessary types
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -90,53 +90,32 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 }
 
 /**
- * Updates multiple column values in the player_stats table for a given user.
- * @param user_id - The user ID of the player_stats.
- * @param columnsAndValues - An object containing column-value pairs to update.
- * @returns - A result object indicating success or failure.
+ * [INTERNAL] Updates multiple column values in the player_stats table for a given user.
+ * This function is "unsafe" as it throws errors on failure. It is intended
+ * only for use within the atomic `logGame` transaction and is NOT exported.
+ *
+ * It assumes the orchestrator provides a valid, non-empty columnsAndValues object
+ * and that all column names are correct.
+ * @throws {SqliteError} If the database query fails.
+ * @throws {Error} If the UPDATE operation affects 0 rows, indicating the user was not found.
  */
-function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStatsRecord): ModifyQueryResult {
-	// Ensure columnsAndValues is an object and not empty
-	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEventsAndPrint(`Invalid or empty columns and values provided for user ID "${user_id}" when updating player_stats columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
-		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
-	}
-
-	for (const column in columnsAndValues) {
-		// Validate all provided columns
-		if (!allPlayerStatsColumns.includes(column)) {
-			logEventsAndPrint(`Invalid column "${column}" provided for user ID "${user_id}" when updating player_stats columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
-			return { success: false, reason: 'Invalid column.' }; // Generic error message
-		}
-	}
-
-	// Dynamically build the SET part of the query
+function updatePlayerStatsColumns_internal(user_id: number, columnsAndValues: PlayerStatsRecord): void {
+	// Dynamically build the SET part of the query.
 	const setStatements = Object.keys(columnsAndValues).map(column => `${column} = ?`).join(', ');
 	const values = Object.values(columnsAndValues);
 
-	// Add the user_id as the last parameter for the WHERE clause
+	// Add the user_id as the last parameter for the WHERE clause.
 	values.push(user_id);
 
-	// Update query to modify multiple columns
 	const updateQuery = `UPDATE player_stats SET ${setStatements} WHERE user_id = ?`;
 
-	try {
-		// Execute the update query
-		const result = db.run(updateQuery, values);
+	const result = db.run(updateQuery, values);
 
-		// Check if the update was successful
-		if (result.changes > 0) return { success: true, result };
-		else {
-			logEventsAndPrint(`No changes made when updating player stats table columns ${JSON.stringify(columnsAndValues)} for member in player_stats table with id "${user_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
-			return { success: false, reason: 'No changes made.' }; // Generic error message
-		}
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEventsAndPrint(`Error updating player stats table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
-		// Return an error message
-		return { success: false, reason: 'Database error.' }; // Generic error message
+	// If the UPDATE affected no rows, it's a critical failure for a transaction.
+	if (result.changes === 0) {
+		throw new Error(`User with ID "${user_id}" not found in player_stats for update.`);
 	}
+	// No return value needed on success.
 }
 
 
@@ -145,5 +124,4 @@ function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStats
 
 export {
 	getPlayerStatsData,
-	updatePlayerStatsColumns
 };	
