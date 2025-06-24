@@ -41,48 +41,6 @@ type ModifyGameQueryResult = { success: true; result: RunResult } | { success: f
 
 // Methods --------------------------------------------------------------------------------------------
 
-/**
- * [INTERNAL] Adds an entry to the games table.
- * This function is "unsafe" as it throws errors on failure. It is intended
- * only for use within the atomic `logGame` transaction and is NOT exported.
- * @throws {SqliteError} If the database query fails (e.g., PRIMARY KEY constraint on game_id).
- */
-function addGameToGamesTable_internal(
-	options: {
-		game_id: number,
-        date: string,
-		base_time_seconds: number | null,
-		increment_seconds: number | null,
-        variant: string,
-        rated: 0 | 1,
-		leaderboard_id: number | null,
-        private: 0 | 1,
-        result: string,
-        termination: string,
-        move_count: number,
-		time_duration_millis: number | null,
-        icn: string
-    }): RunResult {
-
-	const query = `
-	INSERT INTO games (
-		game_id, date, base_time_seconds, increment_seconds, variant, rated,
-		leaderboard_id, private, result, termination, move_count,
-		time_duration_millis, icn
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`;
-
-	// This db.run() will throw an error on failure, which is what the transaction needs.
-	return db.run(query, 
-		[
-			options.game_id, options.date, options.base_time_seconds,
-			options.increment_seconds, options.variant, options.rated,
-			options.leaderboard_id, options.private, options.result,
-			options.termination, options.move_count, options.time_duration_millis,
-			options.icn
-		]
-	);
-}
 
 /**
  * Generates a game_id **UNIQUE** to all other game ids in the games table.

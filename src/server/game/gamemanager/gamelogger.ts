@@ -26,7 +26,10 @@ import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 // @ts-ignore
 import clockutil from '../../../client/scripts/esm/chess/util/clockutil.js';
 
+import db from '../../database/database.js'; 
 
+
+import type { RunResult, SqliteError } from 'better-sqlite3'; // You may need to add this import
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
 import type { RatingData } from './ratingcalculation.js';
 // @ts-ignore
@@ -131,6 +134,49 @@ async function enterGameInGamesTable(game: Game, dateSqliteString: string, ratin
 		return { success: false, reason: extendedReason };
 	}
 	return { success: true, game_id: results.result.lastInsertRowid as number }; // The lastInsertRowid is the id of the game we just inserted
+}
+
+/**
+ * [INTERNAL] Adds a record to the `games` table within a transaction. Throws on error.
+ * This logic is co-located here instead of gamesManager.ts
+ * because it is only ever used by the logGame transaction.
+ * @throws {SqliteError}
+ */
+function addGameRecordInTransaction(
+	options: {
+        game_id: number,
+        date: string,
+        base_time_seconds: number | null,
+        increment_seconds: number | null,
+        variant: string,
+        rated: 0 | 1,
+        leaderboard_id: number | null,
+        private: 0 | 1,
+        result: string,
+        termination: string,
+        move_count: number,
+        time_duration_millis: number | null,
+        icn: string
+    }): RunResult {
+
+	const query = `
+    INSERT INTO games (
+        game_id, date, base_time_seconds, increment_seconds, variant, rated,
+        leaderboard_id, private, result, termination, move_count,
+        time_duration_millis, icn
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+	// This db.run() will throw an error on failure, which is what the transaction needs.
+	return db.run(query, 
+        [
+            options.game_id, options.date, options.base_time_seconds,
+            options.increment_seconds, options.variant, options.rated,
+            options.leaderboard_id, options.private, options.result,
+            options.termination, options.move_count, options.time_duration_millis,
+            options.icn
+        ]
+	);
 }
 
 /** Converts a server-side {@link Game} into an ICN */
