@@ -149,12 +149,18 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 async function generateAccount({ username, email, password, autoVerify = false }: { username: string, email: string, password: string, autoVerify?: boolean }): Promise<{ success: true, user_id: number } | { success: false, reason: string }> {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
-	const verification = autoVerify ? null : JSON.stringify({
-		verified: false,
-		code: crypto.randomBytes(24).toString('base64url')
-	});
+	
+	const { is_verified, verification_code, is_verification_notified } = autoVerify ? {
+		is_verified: 1 as 0 | 1,
+		verification_code: null,
+		is_verification_notified: 1 as 0 | 1,
+	} : { // Don't auto verify them
+		is_verified: 0 as 0 | 1,
+		verification_code: crypto.randomBytes(24).toString('base64url'),
+		is_verification_notified: 0 as 0 | 1,
+	}
 
-	const creationResult = addUser(username, email, hashedPassword, verification);
+	const creationResult = addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified);
 	if (!creationResult.success) {
 		// Failure to create (username or email taken)
 		logEventsAndPrint(`Failed to create new member "${username}": ${creationResult.reason}`, 'errLog.txt');
