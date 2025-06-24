@@ -10,8 +10,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path i
 import db from './database.js';
 import { allPlayerStatsColumns } from './databaseTables.js';
 
-import type { RunResult, SqliteError } from 'better-sqlite3'; // Import necessary types
-
 
 // Type Definitions -----------------------------------------------------------------------------------
 
@@ -36,9 +34,6 @@ interface PlayerStatsRecord {
     game_count_losses_casual?: number;
     game_count_draws_casual?: number;
 }
-
-/** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -87,35 +82,6 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 		logEventsAndPrint(`Error executing query when gettings player stats of user_id ${user_id}: ${message}. The query: "${query}"`, 'errLog.txt');
 		return undefined;
 	}
-}
-
-/**
- * [INTERNAL] Updates multiple column values in the player_stats table for a given user.
- * This function is "unsafe" as it throws errors on failure. It is intended
- * only for use within the atomic `logGame` transaction and is NOT exported.
- *
- * It assumes the orchestrator provides a valid, non-empty columnsAndValues object
- * and that all column names are correct.
- * @throws {SqliteError} If the database query fails.
- * @throws {Error} If the UPDATE operation affects 0 rows, indicating the user was not found.
- */
-function updatePlayerStatsColumns_internal(user_id: number, columnsAndValues: PlayerStatsRecord): void {
-	// Dynamically build the SET part of the query.
-	const setStatements = Object.keys(columnsAndValues).map(column => `${column} = ?`).join(', ');
-	const values = Object.values(columnsAndValues);
-
-	// Add the user_id as the last parameter for the WHERE clause.
-	values.push(user_id);
-
-	const updateQuery = `UPDATE player_stats SET ${setStatements} WHERE user_id = ?`;
-
-	const result = db.run(updateQuery, values);
-
-	// If the UPDATE affected no rows, it's a critical failure for a transaction.
-	if (result.changes === 0) {
-		throw new Error(`User with ID "${user_id}" not found in player_stats for update.`);
-	}
-	// No return value needed on success.
 }
 
 

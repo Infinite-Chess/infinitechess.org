@@ -216,6 +216,48 @@ function addPlayerGameRecordInTransaction(
 	);
 }
 
+/**
+ * [INTERNAL] Updates a player's aggregate stats in the `player_stats` table.
+ * This logic is co-located here because it is only ever used by the logGame transaction.
+ * This version uses direct SQL increments for efficiency (`col = col + 1`).
+ * It does not throw an error if the user is not found, as a user might be
+ * deleted mid-game. It logs this event instead.
+ */
+function updatePlayerStatsInTransaction(
+	user_id: number,
+	statsToUpdate: {
+        moves_played_increment: number;
+        outcome: 'wins' | 'losses' | 'draws' | 'aborted';
+        is_rated: boolean;
+        publicity: 'public' | 'private';
+    }): void {
+
+	// Build the dynamic part of the SET clause
+	const setClauses = ['moves_played = moves_played + ?', 'game_count = game_count + 1'];
+	const values: (number | string)[] = [statsToUpdate.moves_played_increment];
+
+	if (statsToUpdate.outcome === 'aborted') {
+		setClauses.push('game_count_aborted = game_count_aborted + 1');
+	} else {
+		const ratedString = statsToUpdate.is_rated ? "rated" : "casual";
+		setClauses.push(`game_count_${ratedString} = game_count_${ratedString} + 1`);
+		setClauses.push(`game_count_${statsToUpdate.publicity} = game_count_${statsToUpdate.publicity} + 1`);
+		setClauses.push(`game_count_${statsToUpdate.outcome} = game_count_${statsToUpdate.outcome} + 1`);
+		setClauses.push(`game_count_${statsToUpdate.outcome}_${ratedString} = game_count_${statsToUpdate.outcome}_${ratedString} + 1`);
+	}
+
+	const query = `UPDATE player_stats SET ${setClauses.join(', ')} WHERE user_id = ?`;
+	values.push(user_id);
+
+	const result = db.run(query, values);
+
+	if (result.changes === 0) {
+		// This is not a fatal error for the transaction, but it's worth logging.
+		// A user might have been deleted mid-game. The other players' stats should still update.
+		logEvents(`User ${user_id} not found in player_stats during game log.`, 'errLog.txt');
+	}
+}
+
 /** Converts a server-side {@link Game} into an ICN */
 async function getICNOfGame(game: Game, metadata: MetaData): Promise<string | undefined> {
 	// We need to prime the gamefile for the format converter to get the ICN of the game.
