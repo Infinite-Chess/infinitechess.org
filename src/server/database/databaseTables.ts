@@ -9,7 +9,6 @@
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
-import { migrateRefreshTokensToTable } from './migrateRefreshTokens.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -105,20 +104,20 @@ function generateTables(): void {
 	// Members table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS members (
-			user_id INTEGER PRIMARY KEY,               
+			user_id INTEGER PRIMARY KEY,
 			username TEXT UNIQUE NOT NULL COLLATE NOCASE,
-			email TEXT UNIQUE NOT NULL,                
-			hashed_password TEXT NOT NULL,             
-			roles TEXT,        
+			email TEXT UNIQUE NOT NULL,
+			hashed_password TEXT NOT NULL,
+			roles TEXT,
 			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
-			login_count INTEGER NOT NULL DEFAULT 0,                        
-			preferences TEXT,                        
-			username_history TEXT,
-			checkmates_beaten TEXT NOT NULL DEFAULT '',
+			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			login_count INTEGER NOT NULL DEFAULT 0,
 			is_verified INTEGER NOT NULL DEFAULT 0,
 			verification_code TEXT,
-			is_verification_notified INTEGER NOT NULL DEFAULT 0
+			is_verification_notified INTEGER NOT NULL DEFAULT 0,
+			preferences TEXT,
+			username_history TEXT,
+			checkmates_beaten TEXT NOT NULL DEFAULT '',
 		);
 	`);
 
@@ -302,7 +301,7 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
-	expandMembersTableForVerification(); // DELETE AFTER UPDATE 1.7!!
+	expandMembersTableForVerification(); // DELETE AFTER NEXT UPDATE!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }
