@@ -9,6 +9,7 @@
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
+import { performFullVerificationMigration } from './migrateVerification.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -301,7 +302,7 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
-	expandMembersTableForVerification(); // DELETE AFTER NEXT UPDATE!!
+	performFullVerificationMigration(); // DELETE AFTER NEXT UPDATE!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }

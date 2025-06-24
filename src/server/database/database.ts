@@ -84,6 +84,19 @@ function close() {
 	console.log('Closed database.');
 }
 
+/** Checks if a column exists in a table. */
+function columnExists(tableName: string, columnName: string): boolean {
+	try {
+		// PRAGMA queries are special and should not use the statement cache.
+		// We access the raw db instance's prepare method directly.
+		const result = db.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name = ?`).get(tableName, columnName);
+		return !!result;
+	} catch (error) {
+		console.error(`Error checking if column ${columnName} exists in ${tableName}:`, error);
+		return false;
+	}
+}
+
 
 
 export default {
@@ -92,4 +105,5 @@ export default {
 	get,
 	all,
 	close,
+	columnExists,
 };
