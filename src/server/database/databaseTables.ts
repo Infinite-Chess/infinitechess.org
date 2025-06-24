@@ -6,14 +6,10 @@
  */
 
 
-// @ts-ignore
-import { migrateMembersToPlayerStatsTable } from './migrateMembers.js';
-import gamelogger from '../game/gamemanager/gamelogger.js';
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { migrateRefreshTokensToTable } from './migrateRefreshTokens.js';
-import { expandMembersTableForVerification } from './migrateVerification.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -130,7 +126,7 @@ function generateTables(): void {
 	db.run(`
 		CREATE TABLE IF NOT EXISTS deleted_members (
 			user_id INTEGER PRIMARY KEY,             
-			reason_deleted TEXT NOT NULL -- "unverified" / "user request" / "security"
+			reason_deleted TEXT NOT NULL -- "unverified" / "user request" / "security" / "rating abuse"
 		);
 	`);
 
@@ -309,9 +305,6 @@ function initDatabase(): void {
 	expandMembersTableForVerification(); // DELETE AFTER UPDATE 1.7!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
-	migrateMembersToPlayerStatsTable();
-	gamelogger.migrateGameLogsToDatabase();
-	migrateRefreshTokensToTable();
 }
 
 

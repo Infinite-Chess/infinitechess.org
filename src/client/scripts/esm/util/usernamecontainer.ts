@@ -93,7 +93,7 @@ function createUsernameContainer(type: UsernameContainerType, username: Username
 	
 	if (type === 'player') { // Hyperlink
 		const usernameHyper = document.createElement('a');
-		usernameHyper.href = languagedropdown.addLngQueryParamToLink(`/member/${username.value}`);
+		usernameHyper.href = languagedropdown.addLngQueryParamToLink(`/member/${username.value.toLowerCase()}`);
 		usernameHyper.textContent = username.value;
 		if (username.openInNewWindow) usernameHyper.target = '_blank';
 		usernameHyper.classList.add("username");

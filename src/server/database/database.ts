@@ -78,23 +78,6 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 	return stmt.all(...params) as T[];
 }
 
-type QueryObject = { query: string; params: any[]; };
-
-/**
- * Executes multiple queries in a single transaction for better performance.
- * @param queries - An array of query objects containing SQL and parameters.
- * @returns - An array of results for each query in the transaction.
- */
-function transaction(queries: QueryObject[]): Database.RunResult[] {
-	const transaction = db.transaction((queries) => {
-		return queries.map(({ query, params }: QueryObject) => {
-			const stmt = prepareStatement(query);
-			return stmt.run(...params);
-		});
-	});
-	return transaction(queries);
-}
-
 /** Closes the database connection. */
 function close() {
 	db.close();
@@ -108,6 +91,5 @@ export default {
 	run,
 	get,
 	all,
-	transaction,
 	close,
 };

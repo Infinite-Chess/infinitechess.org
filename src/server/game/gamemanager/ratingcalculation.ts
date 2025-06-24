@@ -25,7 +25,7 @@ const DEFAULT_LEADERBOARD_RD = 350.0;
  * 
  * See: https://discord.com/channels/1114425729569017918/1260310049889189908/1373014556254670970
 */
-const MIMIMUM_LEADERBOARD_RD = 50.0;
+const MINIMUM_LEADERBOARD_RD = 50.0;
 
 /** Rating deviations above this are considered to be too uncertain and the user is excluded from leaderboards */
 const UNCERTAIN_LEADERBOARD_RD = 220.0; // Requires 3 games to be placed on the leaderboard.
@@ -75,7 +75,7 @@ function getTrueRD(rating_deviation: number, rd_last_update_date: string | null)
 		// fraction of elapsed time over length of a standard rating period -> noninteger in general
 		const rating_periods_elapsed = Math.max(0, (current_timestamp - last_rated_game_timestamp) / RATING_PERIOD_DURATION);
 
-		return Math.max(MIMIMUM_LEADERBOARD_RD, Math.min(DEFAULT_LEADERBOARD_RD, Math.sqrt(rating_deviation ** 2 + rating_periods_elapsed * c ** 2)));
+		return Math.max(MINIMUM_LEADERBOARD_RD, Math.min(DEFAULT_LEADERBOARD_RD, Math.sqrt(rating_deviation ** 2 + rating_periods_elapsed * c ** 2)));
 	}
 }
 
@@ -102,7 +102,7 @@ function new_rating(outcome: 0 | 0.5 | 1, r: number, RD: number, r_opp: number, 
 
 /** Given a player's rating r, his RD, and the opponent'S rating r_opp and RD_opp, compute his new rating with glicko-1 */
 function new_RD(r: number, RD: number, r_opp: number, RD_opp: number) {
-	return Math.max(MIMIMUM_LEADERBOARD_RD, Math.sqrt( 1 / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) );
+	return Math.max(MINIMUM_LEADERBOARD_RD, Math.sqrt( 1 / ( 1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp) ) ) );
 }
 
 /**

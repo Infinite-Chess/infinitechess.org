@@ -58,6 +58,9 @@ function submitMove(ws, game, messageContents) {
 	// The ACTUAL game conclusion SHOULD already be on the way to them so....
 	if (gameutility.isGameOver(game)) return; 
 
+	// Ignore if messageContents is not an object
+	if (typeof messageContents !== 'object' || messageContents === null) return;
+
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = game.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {

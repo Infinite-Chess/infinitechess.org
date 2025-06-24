@@ -46,7 +46,7 @@ if (!DEV_BUILD && simulatedWebsocketLatencyMillis !== 0) throw new Error("simula
  * 
  * THIS SHOULD ALWAYS MATCH src/client/scripts/game/config.GAME_VERSION
  */
-const GAME_VERSION = "1.6";
+const GAME_VERSION = "1.7";
 
 /** Whether we are currently using a whitelist for connections from other origins.
  * If we are getting unwanted origins, this can be enabled. */

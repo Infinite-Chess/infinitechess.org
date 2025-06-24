@@ -1,3 +1,6 @@
+
+// src/server/database/gamesManager.ts
+
 /**
  * This script handles queries to the games table. 
  */
@@ -209,6 +212,52 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 }
 
 /**
+ * Fetches specified columns of multiple games from the games table based on list of game_ids
+ * @param game_id_list - A list of game_ids
+ * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
+ * @returns - An array of GamesRecord objects, or undefined if no matches found.
+ */
+function getMultipleGameData(game_id_list: number[], columns: string[]): GamesRecord[] | undefined {
+
+	// Guard clauses... Validating the arguments...#
+
+	if (!Array.isArray(columns)) {
+		logEventsAndPrint(`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return undefined;
+	}
+	if (!columns.every(column => typeof column === 'string' && allGamesColumns.includes(column))) {
+		logEventsAndPrint(`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`, 'errLog.txt');
+		return undefined;
+	}
+
+	// Arguments are valid, move onto the SQL query...
+
+	// Construct SQL query
+	const placeholders = game_id_list.map(() => '?').join(', ');
+	const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id IN (${placeholders})`;
+
+	try {
+		// Execute the query and fetch result
+		const rows = db.all<GamesRecord>(query, game_id_list);
+
+		// If no rows found, return undefined
+		if (!rows || rows.length === 0) {
+			logEventsAndPrint(`No matches found in games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`, 'errLog.txt');
+			return undefined;
+		}
+
+		// Return the fetched rows (single object)
+		return rows;
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		// Log the error and return undefined
+		logEventsAndPrint(`Error executing query for game_ids ${jsutil.ensureJSONString(game_id_list)}: ${message}. Query: "${query}"`, 'errLog.txt');
+		return undefined;
+	}
+}
+
+
+/**
  * Updates multiple column values in the games table for a given game.
  * 
  * GOOD TO HAVE. BUT SHOULD NEVER BE USED EXCEPT FOR EXTREME CIRCUMSTANCES.
@@ -305,6 +354,7 @@ export {
 	addGameToGamesTable,
 	genUniqueGameID,
 	getGameData,
+	getMultipleGameData,
 	// Commented out to emphasize they should not ever have to be used.
 	// updateGameColumns,
 	// deleteGame

@@ -36,6 +36,7 @@ import guinavigation from "../gui/guinavigation.js";
 import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 import boardpos from "../rendering/boardpos.js";
+import guiclock from "../gui/guiclock.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -198,6 +199,12 @@ async function startOnlineGame(options: {
 		participantState: options.participantState,
 		serverRestartingAt: options.serverRestartingAt,
 	});
+
+	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
+	// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
+	// THUS playing the drum sound effect for our opponent.
+	const basegame = gameslot.getGamefile()!.basegame;
+	if (!basegame.untimed) guiclock.rescheduleSoundEffects(basegame.clocks);
 	
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.

@@ -19,7 +19,7 @@ function initDevEnvironment() {
 
 async function createDevelopmentAccounts() {
 	if (!doesMemberOfUsernameExist("owner")) {
-		const user_id = await generateAccount({ username: "Owner", email: "email1", password: "1", autoVerify: true });
+		const user_id = (await generateAccount({ username: "Owner", email: "email1", password: "1", autoVerify: true })).user_id;
 		giveRole(user_id, "owner");
 		giveRole(user_id, "admin");
 
@@ -36,20 +36,20 @@ async function createDevelopmentAccounts() {
 		updateMemberColumns(user_id, { checkmates_beaten });
 	}
 	if (!doesMemberOfUsernameExist("admin")) {
-		const user_id = await generateAccount({ username: "Admin", email: "email5", password: "1", autoVerify: true });
+		const user_id = (await generateAccount({ username: "Admin", email: "email5", password: "1", autoVerify: true })).user_id;
 		giveRole(user_id, "admin");
 	}
 	if (!doesMemberOfUsernameExist("patron")) {
-		const user_id = await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true });
+		const user_id = (await generateAccount({ username: "Patron", email: "email2", password: "1", autoVerify: true })).user_id;
 		giveRole(user_id, "patron");
 	}
 	if (!doesMemberOfUsernameExist("member")) {
-		const user_id = await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true });
+		const user_id = (await generateAccount({ username: "Member", email: "email3", password: "1", autoVerify: true })).user_id;
 	}
 
 	// for (let i = 0; i < 230; i++) {
 	// 	if (!doesMemberOfUsernameExist(`Player${i}`)) {
-	// 		const user_id = await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true });
+	// 		const user_id = (await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true })).user_id;
 	// 		addUserToLeaderboard(user_id, Leaderboards.INFINITY);
 	// 		updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1800 - 10 * i, 100 + i);
 	// 	}

@@ -1455,6 +1455,9 @@ svg.collapse {
     top: 0;
     width: 100%;
     font-size: 22px;
+    /* Allows clicks to pass through to the elements underneath.
+     FIXES A BUG that doesn't let you click arrows along the top of the screen while the move count is visible!! */
+    pointer-events: none;
 }
 
 .status {

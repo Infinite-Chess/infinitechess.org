@@ -4,7 +4,7 @@ import type { BoundingBox } from "../../util/math.js";
 import type { MetaData } from "../util/metadata.js";
 import type { GameRules } from "../variants/gamerules.js";
 import type { Player, RawType, RawTypeGroup } from "../util/typeutil.js";
-import type { Move, NullMove } from "./movepiece.js";
+import type { Move, BaseMove } from "./movepiece.js";
 import type { OrganizedPieces } from "./organizedpieces.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { GameState, GlobalGameState } from "./state.js";
@@ -45,7 +45,7 @@ interface Snapshot {
 type Game = {
 	/** Information about the game */
 	metadata: MetaData
-	moves: string[]
+	moves: BaseMove[]
 	gameRules: GameRules
 	whosTurn: Player
 	gameConclusion?: string
@@ -73,7 +73,7 @@ type Board = {
 	/** An array of all RAW piece types that are in this game. */
 	existingRawTypes: RawType[]
 
-	moves: (Move|NullMove)[]
+	moves: Move[]
 	pieces: OrganizedPieces
 	state: GameState
 
@@ -122,7 +122,10 @@ function initGame(metadata: MetaData, variantOptions?: VariantOptions, gameConcl
 		...clockDependantVars,
 	};
 	
-	if (clockValues) clock.edit(game, clockValues);
+	if (clockValues) {
+		if (game.untimed) throw Error('Cannot set clock values for untimed game. Should not have specified clockValues.');
+		clock.edit(game.clocks, clockValues);
+	}
 
 	return game;
 }
@@ -162,7 +165,7 @@ function initBoard(gameRules: GameRules, metadata: MetaData, variantOptions?: Va
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
 	const specialVicinity = legalmoves.genSpecialVicinity(metadata, existingRawTypes);
 
-	const moves: (Move|NullMove)[] = [];
+	const moves: Move[] = [];
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	const colinearsPresent = gamefileutility.areColinearSlidesPresentInGame(pieceMovesets, pieces.slides);
 

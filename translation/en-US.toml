@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "61"
+version = "63"
 maintainer = "Naviary"
 
 [header]
@@ -56,7 +56,7 @@ what_is_it_pargaraphs = [
 "As you can imagine, there are infinite possibilities for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
 how_to_title = "How can I play?"
-how_to_paragraph = ["The current version release is 1.6 on the ","Play"," page!"]
+how_to_paragraph = ["The current version release is 1.7 on the ","Play"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring players to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
@@ -130,7 +130,6 @@ reveal_info = "Show Account Info"
 account_info_heading = "Account Info"
 email = "Email:"
 delete_account = "Delete account"
-password_reset_message = ["To change your username, email or password, ", "contact us."]
 
 [member.badge-tooltips]
 checkmate_bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
@@ -608,6 +607,7 @@ ws-password-change-success = "Password has been reset successfully. You will be 
 ws-password-reset-token-invalid = "Password reset token is invalid or has expired."
 ws-forbidden_wrong_account = "Forbidden. This is not your account."
 ws-deleting_account_not_found = "Failed to delete account. Account not found."
+ws-deleting_account_in_game = "You cannot delete your account while you are still connected to an online game."
 ws-server_error = "Sorry, there was a server error! Please go back."
 ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."

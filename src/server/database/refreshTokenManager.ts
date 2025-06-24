@@ -1,4 +1,6 @@
 
+// src/server/database/refreshTokenManager.ts
+
 /**
  * This module manages refresh tokens in the database, providing functions
  * to add, find, delete, and update them in the `refresh_tokens` table.
@@ -44,6 +46,21 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
 }
 
 /**
+ * Finds refresh token entries in the database associated with a list of user_ids
+ * @param user_id_list - A list of user IDs
+ * @returns A list of RefreshTokenRecords connected to the users in the user_id_list
+ */
+export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenRecord[] {
+	const placeholders = user_id_list.map(() => '?').join(', ');
+	const query = `
+        SELECT token, user_id, created_at, expires_at, ip_address
+        FROM refresh_tokens
+        WHERE user_id IN (${placeholders})
+    `;
+	return db.all<RefreshTokenRecord>(query, user_id_list);
+}
+
+/**
  * Adds a new refresh token record to the database.
  * @param req - The Express request object to get the IP address.
  * @param userId - The ID of the user the token belongs to.
@@ -54,13 +71,14 @@ export function addRefreshToken(req: Request, userId: number, token: string): vo
 	const query = `
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, ip_address)
         VALUES (?, ?, ?, ?, ?)
-    `;
+	`; 
+	const ip_address = getClientIP(req) || null;
 	db.run(query, [
         token,
         userId,
         now, // created_at
         now + refreshTokenExpiryMillis, // expires_at
-        getClientIP(req)
+        ip_address,
     ]);
 }
 
@@ -88,7 +106,7 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
  * @param token - The token to update.
  * @param ip - The new IP address to record.
  */
-export function updateRefreshTokenIP(token: string, ip: string): void {
+export function updateRefreshTokenIP(token: string, ip: string | null): void {
 	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
 	db.run(query, [ip, token]);
 }

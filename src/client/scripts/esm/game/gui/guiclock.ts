@@ -239,8 +239,6 @@ function set(basegame: Game) {
 	if (basegame.untimed) return hideClocks();
 	else showClocks();
 	updateTextContent(basegame.clocks);
-	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play
-	rescheduleSoundEffects(basegame.clocks);
 }
 
 // The 10s drum countdown...
@@ -338,4 +336,5 @@ export default {
 	edit,
 	push,
 	update,
+	rescheduleSoundEffects,
 };

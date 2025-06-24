@@ -11,7 +11,7 @@ import uuid from '../../util/uuid.js';
 import validatorama from '../../util/validatorama.js';
 import docutil from '../../util/docutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-import jsutil from '../../util/jsutil.js';
+import { players } from '../../chess/util/typeutil.js';
 // Import End
 
 "use strict";
@@ -19,7 +19,7 @@ import jsutil from '../../util/jsutil.js';
 
 /**
  * @typedef {Object} Invite - The invite object. NOT an HTML object.
- * @property {UsernameContainerProperties} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
+ * @property {ServerUsernameContainer} usernamecontainer - Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts.
  * If it's a guest, then "(Guest)".
  * @property {string} id - A unique identifier
  * @property {string} tag - Used to verify if an invite is your own.
@@ -30,8 +30,14 @@ import jsutil from '../../util/jsutil.js';
  * @property {string} rated - rated/casual
  */
 
+/**
+ * @typedef {Object} ServerUsernameContainer - The username container of an invite sent by the server. DIFFERENT FROM UsernameContainerProperties!!!!
+ * @property {'player' | 'guest'} type - The type of the username container.
+ * @property {string} username - The username of the user. This can be "(Guest)" if the user is a guest.
+ * @property {import('../../../../../server/database/leaderboardsManager.js').Rating} [rating] - The rating of the user. Falls back to to INFINITY leaderboard.
+ */
+
 /** @typedef {import('../gui/guiplay.js').InviteOptions} InviteOptions */
-/** @typedef {import('../../util/usernamecontainer.js').UsernameContainerProperties} UsernameContainerProperties */
 
 
 /** This script manages the invites on the Play page. */
@@ -124,7 +130,7 @@ function cancel(id = ourInviteID) {
 	if (!weHaveInvite) return;
 	if (!id) return statustext.showStatus(translations.invites.cannot_cancel, true);
 
-	deleteInviteTagInLocalStorage();
+	localstorage.deleteItem('invite-tag');
 
 	guiplay.lockCreateInviteButton();
 
@@ -143,10 +149,6 @@ function generateTagForInvite(inviteOptions) {
 	localstorage.saveItem('invite-tag', tag);
 
 	inviteOptions.tag = tag;
-}
-
-function deleteInviteTagInLocalStorage() {
-	localstorage.deleteItem('invite-tag');
 }
 
 /**
@@ -213,8 +215,8 @@ function updateInviteList(list) { // { invitesList, currentGameCount }
 		const cloc = createDiv(['invite-child'], time);
 		newInvite.appendChild(cloc);
 
-		const uColor = ours ? invite.color === 'White' ? translations.invites.you_are_white : invite.color === 'Black' ? translations.invites.you_are_black : translations.invites.random
-                            : invite.color === 'White' ? translations.invites.you_are_black : invite.color === 'Black' ? translations.invites.you_are_white : translations.invites.random;
+		const uColor = ours ? invite.color === players.WHITE ? translations.invites.you_are_white : invite.color === players.BLACK ? translations.invites.you_are_black : translations.invites.random
+                            : invite.color === players.WHITE ? translations.invites.you_are_black : invite.color === players.BLACK ? translations.invites.you_are_white : translations.invites.random;
 		const color = createDiv(['invite-child'], uColor);
 		newInvite.appendChild(color);
 
@@ -302,7 +304,7 @@ function clearIfOnPlayPage() {
  * @returns {boolean} true if it is our
  */
 function isInviteOurs(invite) {
-	if (validatorama.areWeLoggedIn() && invite.usernamecontainer.type === 'player' && validatorama.getOurUsername() === invite.usernamecontainer.username.value) return true;
+	if (validatorama.areWeLoggedIn() && invite.usernamecontainer.type === 'player' && validatorama.getOurUsername() === invite.usernamecontainer.username) return true;
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 
@@ -443,7 +445,6 @@ export default {
 	doWeHave,
 	clearIfOnPlayPage,
 	unsubIfWeNotHave,
-	deleteInviteTagInLocalStorage,
 	subscribeToInvites,
 	unsubFromInvites,
 };
