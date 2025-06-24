@@ -1,14 +1,11 @@
 // src/server/database/migrateVerification.js
 
-import db from './database.js'; // <-- USES YOUR WRAPPER
 
-/**
- * Checks if a column exists in a table.
- * @param {string} tableName
- * @param {string} columnName
- * @returns {boolean}
- */
-function columnExists(tableName, columnName) {
+import db from './database.js';
+
+
+/** Checks if a column exists in a table. */
+function columnExists(tableName: string, columnName: string) {
 	try {
         // We cannot use the wrapper's prepareStatement cache for PRAGMA queries,
         // so we access the raw db object for this specific, rare operation.
