@@ -7,7 +7,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
-import type { Verification } from './verifyAccountController.js';
 import { AuthenticatedRequest } from '../../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 
