@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/views/member.ts
+
 /*
  * This script:
  *
@@ -30,6 +32,7 @@ interface MemberData {
 	// Only present/relevant if viewing our own profile
 	email?: string;
 	verified?: boolean;
+	verified_notified?: boolean; // True if they've seen the "thank you" message.
 }
 
 // --- DOM Element Selection ---
@@ -128,17 +131,22 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		if (loggedInAs && loggedInAs === result.username) {
 			isOurProfile = true;
 
-			// If this account has not yet confirmed their email, make that error visible.
-			// Our json will not contain this parameter if we aren't logged in.
-			if (result.verified === true) element_verifyConfirmElement.classList.remove('hidden'); // They just confirmed, tell them it was a success!
-			else if (result.verified === false) element_verifyErrorElement.classList.remove('hidden');
-			// else: result.verified is undefined, we already verified and have seen the confirmation message.
+			// --- Verification Banner Logic (Runs ONLY for our own profile) ---
+			// The API only sends these properties if we are viewing our own profile.
+			if (result.verified === false) {
+				// If they are not verified, show the "Please Verify" error banner.
+				element_verifyErrorElement.classList.remove('hidden');
+			} else if (result.verified === true && result.verified_notified === false) {
+				// If they ARE verified, but have NOT been notified yet, show the "Thank you" confirmation banner.
+				// The server will have now marked them as notified for all future page loads.
+				element_verifyConfirmElement.classList.remove('hidden');
+			}
 
-			// Display elements specific to own profile
+			// --- Display elements specific to own profile ---
 			element_showAccountInfo.classList.remove('hidden');
 			element_deleteAccount.classList.remove('hidden');
-			element_deleteAccount.addEventListener("click", () => removeAccount(true)); // Add listener only if it's our profile
-			element_email.textContent = result.email!; // Use email if available, handle undefined case
+			element_deleteAccount.addEventListener("click", () => removeAccount(true));
+			element_email.textContent = result.email!;
 		}
 
 		// Change username text size depending on character count
