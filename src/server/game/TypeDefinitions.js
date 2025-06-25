@@ -70,7 +70,7 @@ function Game() {
 	this.timeEnded = undefined;
 	/** Whether this game is "public" or "private". @type {'public' | 'private'} */
 	this.publicity = undefined;
-	/** The variant of this game. */
+	/** The variant of this game. @type {string} */
 	this.variant = undefined;
 	/** The clock value in s+s format (e.g. "600+4"). Untimed games are represented with a "-" */
 	this.clock = undefined;
