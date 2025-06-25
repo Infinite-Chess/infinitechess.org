@@ -125,7 +125,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: Authentic
 	if (user_id === undefined) return sendAndLogResponse(res, 404, "User " + usernameArgument + " does not exist.");
 	// They were found...
 	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
-	const rolesOfAffectedUser = JSON.parse(roles);
+	const rolesOfAffectedUser = JSON.parse(roles!);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) return sendAndLogResponse(res, 403, "Forbidden to delete " + username + ".");
 	const result = deleteAccount(user_id, reason); // { success, reason (if failed) }
