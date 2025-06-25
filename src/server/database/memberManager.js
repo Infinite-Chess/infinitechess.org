@@ -1,4 +1,6 @@
 
+// src/server/database/memberManager.js
+
 /**
  * This script handles almost all of the queries we use to interact with the members table!
  */
@@ -38,20 +40,33 @@ const validDeleteReasons = [
  * @param {string} username The user's username.
  * @param {string} email The user's email.
  * @param {string} hashedPassword The user's hashed password.
- * @param {string | null} verification The verification string (optional).
+ * @param {0 | 1} is_verified The verification status.
+ * @param {string | null} verification_code The unique code for verification, if they are not yet verified.
+ * @param {0 | 1} is_verification_notified The verified notification status.
  * @returns {{success: true, user_id: number} | {success: false, reason: string}}
  */
-function addUser(username, email, hashedPassword, verification) {
+function addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified) {
 	const createAccountTransaction = db.db.transaction((userData) => {
 		// Step 1: Generate a unique user ID.
 		const userId = genUniqueUserID();
 
 		// Step 2: Insert into the members table.
 		const membersQuery = `
-			INSERT INTO members (user_id, username, email, hashed_password, verification)
-			VALUES (?, ?, ?, ?, ?)
+			INSERT INTO members (
+				user_id, username, email, hashed_password, 
+				is_verified, verification_code, is_verification_notified
+			) VALUES (?, ?, ?, ?, ?, ?, ?)
 		`;
-		db.run(membersQuery, [userId, userData.username, userData.email, userData.hashedPassword, userData.verification]);
+		const params = [
+			userId,
+			userData.username,
+			userData.email,
+			userData.hashedPassword,
+			userData.is_verified,
+			userData.verification_code,
+			userData.is_verification_notified
+		];
+		db.run(membersQuery, params);
 
 		// Step 3: Insert into the 'player_stats' table.
 		const statsQuery = `INSERT INTO player_stats (user_id) VALUES (?)`;
@@ -62,7 +77,7 @@ function addUser(username, email, hashedPassword, verification) {
 	});
 
 	try {
-		const newUserId = createAccountTransaction({ username, email, hashedPassword, verification });
+		const newUserId = createAccountTransaction({ username, email, hashedPassword, is_verified, verification_code, is_verification_notified });
 		return { success: true, user_id: newUserId };
 	} catch (error) {
 		const errMessage = error.message || String(error);

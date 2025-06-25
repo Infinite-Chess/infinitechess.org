@@ -68,7 +68,7 @@ const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
 /**
  * The maximum number of logging sessions a user can have at
  * one time before creating new sessions will terminate old sessions.
- * */
+ */
 const sessionCap = 10;
 
 

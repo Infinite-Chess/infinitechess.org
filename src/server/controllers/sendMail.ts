@@ -7,7 +7,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // @ts-ignore
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
-import type { Verification } from './verifyAccountController.js';
 import { AuthenticatedRequest } from '../../types.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 
@@ -23,8 +22,10 @@ interface MemberRecord {
 	joined?: string;
 	last_seen?: string;
 	login_count?: number;
+	is_verified?: 0 | 1;
+	verification_code?: string | null;
+	is_verification_notified?: 0 | 1;
 	preferences?: string | null;
-	verification?: string | null;
 	username_history?: string | null;
 	checkmates_beaten?: string;
 }
@@ -101,29 +102,33 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
  * @param user_id - The ID of the user to send the verification email to.
  */
 async function sendEmailConfirmation(user_id: number): Promise<void> {
-	const memberData = getMemberDataByCriteria(['username', 'email', 'verification'], 'user_id',user_id) as MemberRecord;
+	const memberData = getMemberDataByCriteria(
+		['username', 'email', 'is_verified', 'verification_code'],
+		'user_id',
+		user_id
+	) as MemberRecord;
 
 	if (!memberData.username || !memberData.email) {
-		logEventsAndPrint(`Unable to send email confirmation of non-existent member of id (${user_id})!`, 'errLog.txt');
+		logEventsAndPrint(`Unable to send email confirmation for non-existent member of id (${user_id})!`, 'errLog.txt');
 		return;
 	}
-	
-	if (!memberData.verification) {
-		logEventsAndPrint(`No verification data found for user_id (${user_id}). Cannot send confirmation email.`, 'errLog.txt');
+
+	// Check the new 'is_verified' column directly.
+	if (memberData.is_verified === 1) {
+		console.log(`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`);
 		return;
 	}
-	
+
+	// An unverified user MUST have a verification code.
+	if (!memberData.verification_code) {
+		logEventsAndPrint(`User ${memberData.username} (ID: ${user_id}) is unverified but has no verification code. Cannot send email.`, 'errLog.txt');
+		return;
+	}
+
 	try {
-		const verificationJS: Verification = JSON.parse(memberData.verification);
-
-		if (verificationJS.verified) {
-			console.log(`User ${memberData.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`);
-			return;
-		}
-
-		// Construct verification URL using the utility
+		// Construct verification URL using the new 'verification_code' column
 		const baseUrl = getAppBaseUrl();
-		const verificationUrl = new URL(`${baseUrl}/verify/${memberData.username.toLowerCase()}/${verificationJS.code}`).toString();
+		const verificationUrl = new URL(`${baseUrl}/verify/${memberData.username.toLowerCase()}/${memberData.verification_code}`).toString();
 
 		if (!transporter) {
 			console.log("Email environment variables not specified. Not sending email confirmation.");
