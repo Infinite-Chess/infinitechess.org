@@ -110,9 +110,8 @@ function removeCheckInvalidMoves_Sliding(gamefile: FullGame, moves: LegalMoves, 
 	// There are 3 ways a sliding move can put you in check...
 
 	// 1. The piece making the sliding move IS A ROYAL itself (royalqueen) and it moves into check.
-	const trimmedType = typeutil.getRawType(piece.type);
-	// @ts-ignore
-	if (typeutil.slidingRoyals.includes(trimmedType)) {
+	const rawType = typeutil.getRawType(piece.type);
+	if (typeutil.slidingRoyals.includes(rawType)) {
 		moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
 		return; // That's all we need. EVERY move is simulated, even if other pieces are in check.
 	}

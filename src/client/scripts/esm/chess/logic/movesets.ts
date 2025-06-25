@@ -103,7 +103,7 @@ type BlockingFunction = (friendlyColor: Player, blockingPiece: Piece, coords: Co
  * each of the coords will have a special property attached to it. castle/promote/enpassant
  */
 // eslint-disable-next-line no-unused-vars
-type SpecialFunction = (gamefile: FullGame, coords: Coords, color: Player) => CoordsSpecial[]
+type SpecialFunction = (gamefile: FullGame, coords: Coords, color: Player, all_possible: boolean) => CoordsSpecial[]
 
 
 

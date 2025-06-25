@@ -22,7 +22,7 @@ interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
 	drag_enabled: boolean;
-	premove_mode: boolean;
+	premove_enabled: boolean;
 	[key: string]: any;
 }
 
@@ -45,7 +45,7 @@ let preferences: Preferences;
 // The legal moves shape preference
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
 const default_drag_enabled: boolean = true;
-const default_premove_mode: boolean = false; // Change this to true when premoves are implemented.
+const default_premove_enabled: boolean = false; // Change this to true when premoves are implemented.
 /** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
@@ -74,7 +74,7 @@ function loadPreferences(): void {
 		perspective_sensitivity: default_perspective_sensitivity,
 		perspective_fov: default_perspective_fov,
 		drag_enabled: default_drag_enabled,
-		premove_mode: default_premove_mode,
+		premove_enabled: default_premove_enabled,
 		animations: default_animations,
 		lingering_annotations: default_lingering_annotations,
 	};
@@ -186,13 +186,13 @@ function setDragEnabled(drag_enabled: boolean): void {
 	savePreferences();
 }
 
-function getPremoveMode(): boolean {
+function getPremoveEnabled(): boolean {
 	return true; // FOR TESTING  preferences.premove_mode ?? default_premove_mode;
 }
 
 function setPremoveMode(premove_mode: boolean): void {
 	if (typeof premove_mode !== 'boolean') throw new Error('Cannot set preference premove_mode when it is not a boolean.');
-	preferences.premove_mode = premove_mode;
+	preferences.premove_enabled = premove_mode;
 	savePreferences();
 }
 
@@ -449,7 +449,7 @@ export default {
 	setLegalMovesShape,
 	getDragEnabled,
 	setDragEnabled,
-	getPremoveMode,
+	getPremoveMode: getPremoveEnabled,
 	setPremoveMode,
 	getAnimationsMode,
 	setAnimationsMode,

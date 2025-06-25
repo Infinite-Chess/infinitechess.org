@@ -57,7 +57,7 @@ function detectRoyalCapture({boardsim, basegame}) {
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(boardsim)) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
 		return `${colorThatWon} royalcapture`;
 	}
 
@@ -73,7 +73,7 @@ function detectAllroyalscaptured({boardsim, basegame}) {
 	const royalCount = boardutil.getRoyalCoordsOfColor(boardsim.pieces, basegame.whosTurn);
 
 	if (royalCount === 0) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
 		return `${colorThatWon} allroyalscaptured`;
 	}
 
@@ -87,7 +87,7 @@ function detectAllpiecescaptured({boardsim, basegame}) {
 	const count = boardutil.getPieceCountOfColor(boardsim.pieces, basegame.whosTurn);
 
 	if (count === 0) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
 		return `${colorThatWon} allpiecescaptured`;
 	}
 
@@ -99,7 +99,7 @@ function detectKoth({boardsim, basegame}) {
 
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (!lastMove || lastMove.isNull) return undefined;
+	if (!lastMove) return undefined;
 	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return undefined;
 
 	let kingInCenter = false;
@@ -115,7 +115,7 @@ function detectKoth({boardsim, basegame}) {
 	}
 
 	if (kingInCenter) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, basegame.moves.length - 1);
+		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
 		return `${colorThatWon} koth`;
 	}
 
@@ -136,7 +136,7 @@ function detectMoveRule({boardsim, basegame}) {
 // Returns true if the very last move captured a royal piece.
 function wasLastMoveARoyalCapture(boardsim) {
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (!lastMove || lastMove.isNull) return undefined;
+	if (!lastMove) return undefined;
 
 	const capturedTypes = new Set();
 

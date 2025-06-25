@@ -1,3 +1,6 @@
+
+// src/server/database/leaderboardsManager.ts
+
 /**
  * This script handles queries to the leaderboards table.
  */
@@ -50,7 +53,6 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo:
 		leaderboard_id,
 		elo,
 		rating_deviation
-		-- elo and rating_deviation will use DB defaults
 		-- rd_last_update_date will be NULL by default
 	) VALUES (?, ?, ?, ?)
 	`;

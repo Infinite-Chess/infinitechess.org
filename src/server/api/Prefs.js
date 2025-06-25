@@ -15,7 +15,7 @@ import { logEventsAndPrint } from "../middleware/logEvents.js";
 
 const lifetimeOfPrefsCookieMillis = 1000 * 10; // 10 seconds
 
-const validPrefs = ['theme', 'legal_moves', 'animations', 'lingering_annotations'];
+const validPrefs = ['theme', 'legal_moves', 'animations', 'lingering_annotations', 'premove_enabled'];
 const legal_move_shapes = ['squares', 'dots'];
 
 
@@ -182,6 +182,9 @@ function arePrefsValid(preferences) {
 
 		// 6. Check the lingering_annotations property is a boolean
 		if (key === 'lingering_annotations' && typeof value !== 'boolean') return false;
+
+		// 7. Check the premove_enabled property is a boolean
+		if (key === 'premove_enabled' && typeof value !== 'boolean') return false;
 	}
 
 	// If all checks pass, preferences are valid

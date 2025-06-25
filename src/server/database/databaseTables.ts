@@ -119,7 +119,7 @@ function generateTables(): void {
 	db.run(`
 		CREATE TABLE IF NOT EXISTS deleted_members (
 			user_id INTEGER PRIMARY KEY,             
-			reason_deleted TEXT NOT NULL -- "unverified" / "user request" / "security"
+			reason_deleted TEXT NOT NULL -- "unverified" / "user request" / "security" / "rating abuse"
 		);
 	`);
 

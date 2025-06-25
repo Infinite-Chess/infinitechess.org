@@ -29,7 +29,7 @@ import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
 import type { CoordsSpecial, MoveDraft } from './movepiece.js';
 import type { OrganizedPieces } from './organizedpieces.js';
-import type { Board, Game, FullGame } from './gamefile.js';
+import type { Board, FullGame } from './gamefile.js';
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -46,7 +46,7 @@ type SlideLimits = [number, number]
 /** An object containing all the legal moves of a piece. */
 interface LegalMoves {
 	/** A list of the legal jumping move coordinates: `[[1,2], [2,1]]` */
-	individual: Coords[],
+	individual: CoordsSpecial[],
 	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}` */
 	sliding: Record<Vec2Key, SlideLimits>,
 	/** If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen. */
@@ -163,23 +163,42 @@ function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
  * @param piece 
  * @param moveset 
  * @param legalmoves 
+ * @param all_possible - Default: false. SET TO TRUE when you need to calculate premoves, which allow all possible moves!
  */
-function appendSpecialMoves(gamefile: FullGame, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
+function appendSpecialMoves(gamefile: FullGame, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves, all_possible: boolean): void {
 	const color = typeutil.getColorFromType(piece.type);
-	if (moveset.special) legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color));
+	if (moveset.special) legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color, all_possible));
 }
 
 /**
- * Calculates and adds any individual or sliding moves of the piece from the moveset provided.
+ * Adds all POSSIBLE individual/sliding moves from the moveset provided.
+ * Best used for calculating premoves.
  */
-function appendCalculatedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
-	const color = typeutil.getColorFromType(piece.type);
-
-	// Legal jumping/individual moves
+function appendPotentialMoves(piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves): void {
+	// Possible jumping/individual moves
 	if (moveset.individual) {
 		const movesetIndividual = shiftIndividualMovesetByCoords(moveset.individual, piece.coords);
-		moves_RemoveOccupiedByFriendlyPieceOrVoid(boardsim, movesetIndividual, color);
 		legalmoves.individual = legalmoves.individual.concat(movesetIndividual);
+	}
+	// Possible sliding moves
+	if (moveset.sliding) {
+		legalmoves.sliding = {
+			...moveset.sliding,
+		};
+	}
+}
+
+/**
+ * Removes moves that either land on a friendly or void,
+ * and adjusts slide limits based on the provided moveset's blocking function
+ * and what pieces are in the way.
+ */
+function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMoveset, legalmoves: LegalMoves) {
+	const color = typeutil.getColorFromType(piece.type);
+
+	// Remove illegal jumping/individual moves
+	if (legalmoves.individual) {
+		moves_RemoveOccupiedByFriendlyPieceOrVoid(boardsim, legalmoves.individual, color);
 	}
 
 	// Legal sliding moves
@@ -204,9 +223,26 @@ function appendCalculatedMoves(boardsim: Board, piece: Piece, moveset: PieceMove
 function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
 	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
-	appendCalculatedMoves(gamefile.boardsim, piece, moveset, moves);
-	appendSpecialMoves(gamefile, piece, moveset, moves);
+	appendPotentialMoves(piece, moveset, moves);
+	removeObstructedMoves(gamefile.boardsim, piece, moveset, moves);
+	appendSpecialMoves(gamefile, piece, moveset, moves, false);
 	checkresolver.removeCheckInvalidMoves(gamefile, piece, moves);
+	return moves;
+}
+
+/**
+ * Calculates all possible premoves of a piece in the provided gamefile.
+ * * Jumps can't be obstructed.
+ * * Slides can't be blocked.
+ * * No check pruning is made.
+ */
+function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
+	const moves = getEmptyLegalMoves(moveset);
+	appendPotentialMoves(piece, moveset, moves);
+	// SKIP removing obstructed moves.
+	appendSpecialMoves(gamefile, piece, moveset, moves, true); // All possible moves
+	// SKIP removing check invalids!
 	return moves;
 }
 
@@ -534,9 +570,11 @@ export default {
 	getIgnoreFuncFromPieceMoveset,
 
 	getEmptyLegalMoves,
-	appendCalculatedMoves,
+	appendPotentialMoves,
+	removeObstructedMoves,
 	appendSpecialMoves,
 	calculateAll,
+	calculateAllPremoves,
 
 	checkIfMoveLegal,
 	isOpponentsMoveLegal,

@@ -32,6 +32,15 @@ interface MemberRecord {
 // --- Module Setup ---
 const EMAIL_USERNAME = process.env['EMAIL_USERNAME'];
 const EMAIL_APP_PASSWORD = process.env['EMAIL_APP_PASSWORD'];
+const EMAIL_SEND_AS = process.env['EMAIL_SEND_AS'];
+
+/**
+ * Who our sent emails will appear as if they're from.
+ * 
+ * For this to work, it must be added as a "Send mail as"
+ * alias in our Gmail account.
+ */
+const FROM = EMAIL_SEND_AS || EMAIL_USERNAME;
 
 const transporter = (EMAIL_USERNAME && EMAIL_APP_PASSWORD)
 	? nodemailer.createTransport({
@@ -71,7 +80,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	`;
 
 	const mailOptions = {
-		from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
+		from: `"Infinite Chess" <${FROM}>`,
 		to: recipientEmail,
 		subject: 'Your Password Reset Request',
 		html: createEmailHtmlWrapper('Password Reset Request', content)
@@ -123,13 +132,14 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		}
 
 		const content = `
-			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account:</p>
+			<p style="font-size: 16px; color: #555;">Thank you, <strong>${memberData.username}</strong>, for creating an account. Please click the button below to verify your account.</p>
+			<p style="font-size: 16px; color: #555;">If this takes you to the login page, then as soon as you log in, your account will be verified.</p>
 			<a href="${verificationUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Verify Account</a>
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
 		const mailOptions = {
-			from: `"Infinite Chess" <${EMAIL_USERNAME}>`,
+			from: `"Infinite Chess" <${FROM}>`,
 			to: memberData.email,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content)
@@ -181,7 +191,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		}
 
 		const mailOptions = {
-			from: `Infinite Chess <${EMAIL_USERNAME}>`,
+			from: `Infinite Chess <${FROM}>`,
 			to: EMAIL_USERNAME,
 			subject: messageSubject,
 			text: messageText
