@@ -118,7 +118,7 @@ function generateTables(): void {
 			is_verification_notified INTEGER NOT NULL DEFAULT 0,
 			preferences TEXT,
 			username_history TEXT,
-			checkmates_beaten TEXT NOT NULL DEFAULT '',
+			checkmates_beaten TEXT NOT NULL DEFAULT ''
 		);
 	`);
 

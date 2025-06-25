@@ -64,8 +64,8 @@ const maxWebSocketAgeMillis = 1000 * 60 * 15; // 15 minutes.
 function addConnectionToConnectionLists(ws: CustomWebSocket) {
 	websocketConnections[ws.metadata.id] = ws;
 	addConnectionToList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Add IP connection
-	addConnectionToList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Add session connection
-	addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
+	if (ws.metadata.cookies.jwt) addConnectionToList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Add session connection
+	if (ws.metadata.memberInfo.signedIn) addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
 
 	startTimerToExpireSocket(ws);
 	if (printIncomingAndClosingSockets) console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`);
@@ -77,8 +77,7 @@ function addConnectionToConnectionLists(ws: CustomWebSocket) {
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to add to the collection.
  */
-function addConnectionToList(collection: { [key: string]: string[] }, key: number | string | undefined, id: string) {
-	if (key === undefined) return; // No key, no operation
+function addConnectionToList(collection: { [key: string]: string[] }, key: number | string, id: string) {
 	if (!collection[key]) collection[key] = []; // Initialize the array if it doesn't exist
 	collection[key].push(id); // Add the socket ID to the list
 }
@@ -96,8 +95,8 @@ function startTimerToExpireSocket(ws: CustomWebSocket) {
 function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, reason: string) {
 	delete websocketConnections[ws.metadata.id];
 	removeConnectionFromList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Remove IP connection
-	removeConnectionFromList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Remove session connection
-	removeConnectionFromList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Remove member connection
+	if (ws.metadata.cookies.jwt) removeConnectionFromList(connectedSessions, ws.metadata.cookies.jwt, ws.metadata.id); // Remove session connection
+	if (ws.metadata.memberInfo.signedIn) removeConnectionFromList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Remove member connection
 
 	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
 	if (printIncomingAndClosingSockets) console.log(`WebSocket connection has been closed. Code: ${code}. Reason: ${reason}. Socket count: ${Object.keys(websocketConnections).length}`);
@@ -109,7 +108,7 @@ function removeConnectionFromConnectionLists(ws: CustomWebSocket, code: number, 
  * @param key - The key in the collection (e.g., IP, session ID, user ID)
  * @param id - The socket ID to remove from the collection.
  */
-function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | number | undefined, id: string) {
+function removeConnectionFromList(collection: { [key: string]: string[] }, key: string | number, id: string) {
 	if (key === undefined || !collection[key]) return; // No key or collection doesn't exist
 	const index = collection[key].indexOf(id);
 	if (index !== -1) {
