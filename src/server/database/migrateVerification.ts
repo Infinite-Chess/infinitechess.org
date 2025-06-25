@@ -68,11 +68,11 @@ export function performFullVerificationMigration(): void {
 					const verificationObj: OldVerification = JSON.parse(user.verification);
 					if (verificationObj.verified === true) {
 						// Case: { verified: true, notified: false }
-						if (verificationObj.notified) throw Error(`User ${user.user_id} is verification notified but cell is still stringified json instead of NULL?`)
+						if (verificationObj.notified) throw Error(`User ${user.user_id} is verification notified but cell is still stringified json instead of NULL?`);
 						stmtVerifiedUnnotified.run(user.user_id);
 					} else {
 						// Case: { verified: false, code: '...' }
-						if (verificationObj.code === undefined) throw Error(`User ${user.user_id} is not verified, but code isn't present?`)
+						if (verificationObj.code === undefined) throw Error(`User ${user.user_id} is not verified, but code isn't present?`);
 						stmtUnverified.run(verificationObj.code, user.user_id);
 					}
 				} catch (e) {

@@ -24,7 +24,7 @@ interface MemberRecord {
 	login_count?: number;
 	is_verified?: 0 | 1;
 	verification_code?: string | null;
-	is_verification_nodified?: 0 | 1;
+	is_verification_notified?: 0 | 1;
 	preferences?: string | null;
 	username_history?: string | null;
 	checkmates_beaten?: string;

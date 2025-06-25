@@ -18,6 +18,7 @@ import timeutil from '../../client/scripts/esm/util/timeutil.js';
 
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
+// const CLEANUP_INTERVAL_MS = 1000 * 20; // 20 seconds for dev testing
 
 
 

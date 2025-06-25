@@ -158,7 +158,7 @@ async function generateAccount({ username, email, password, autoVerify = false }
 		is_verified: 0 as 0 | 1,
 		verification_code: crypto.randomBytes(24).toString('base64url'),
 		is_verification_notified: 0 as 0 | 1,
-	}
+	};
 
 	const creationResult = addUser(username, email, hashedPassword, is_verified, verification_code, is_verification_notified);
 	if (!creationResult.success) {

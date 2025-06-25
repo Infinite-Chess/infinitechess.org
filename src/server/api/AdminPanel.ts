@@ -198,7 +198,7 @@ function verify(command: string, commandAndArgs: string[], req: AuthenticatedReq
 		return;
 	}
 	// Valid Syntax
-	logCommand(command, req);	
+	logCommand(command, req);
 	const usernameArgument = commandAndArgs[1];
 	// This method works without us having to confirm they exist first
 	const result = manuallyVerifyUser(usernameArgument!);  // { success, username, reason }
