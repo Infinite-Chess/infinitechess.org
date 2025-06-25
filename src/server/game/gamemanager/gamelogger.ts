@@ -292,9 +292,8 @@ function updateSinglePlayerStatsInTransaction(
 	const result = db.run(query, values);
 
 	if (result.changes === 0) {
-		// This is not a fatal error for the transaction, but it's worth logging.
-		// A user might have been deleted mid-game. The other players' stats should still update.
-		logEvents(`User ${user_id} not found in player_stats during game log.`, 'errLog.txt');
+		// This should now be impossible. If it happens, it's a critical error.
+		throw new Error(`CRITICAL: User ${user_id} not found in player_stats during game log. This should not be possible. Did we allow them to delete their account mid-game?`);
 	}
 }
 
