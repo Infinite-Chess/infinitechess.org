@@ -53,7 +53,7 @@ async function logGame(game: Game): Promise<RatingData | undefined> {
 			return logGame_orchestrator(g);
 		});
 
-		// Execute the transaction.
+		// Execute the transaction. Typically takes 2-8 milliseconds when using NVME storage.
 		const ratingData = transaction(game);
 		
 		// If we reach here, the transaction was successful.
