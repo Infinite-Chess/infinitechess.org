@@ -39,6 +39,7 @@ import type { Game } from '../TypeDefinitions.js';
  * Logs a completed game to the database by executing an atomic transaction.
  * Adds to and updates tables: games, player_games, player_stats, and leaderboards.
  * Either all database queries succeed, or none do (rollback on error).
+ * This ensures data integrity and consistency.
  * @param game - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  */
@@ -71,7 +72,8 @@ async function logGame(game: Game): Promise<RatingData | undefined> {
 /**
  * This is the core orchestrator that runs INSIDE the transaction of logging the game.
  * It performs all reads, calculations, and writes in a single, atomic operation.
- * It is designed to throw an error on any failure to trigger a rollback.
+ * It is designed to throw an error on any failure to trigger a rollback of the database.
+ * Either ALL operations succeed, or NONE do.
  */
 function logGame_orchestrator(game: Game): RatingData | undefined {
 	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);

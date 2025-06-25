@@ -10,7 +10,7 @@ import db from './database.js';
 import { DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD, RD_UPDATE_FREQUENCY } from '../game/gamemanager/ratingcalculation.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 
-import type { RunResult, SqliteError } from 'better-sqlite3'; // Import necessary types
+import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Leaderboard } from '../../client/scripts/esm/chess/variants/validleaderboard.js';
 
 
@@ -38,9 +38,9 @@ type Rating = { value: number, confident: boolean}
 
 
 /**
- * [INTERNAL] The core logic for adding a user to a leaderboard.
+ * The core logic for adding a user to a leaderboard.
  * This function is "unsafe" as it throws errors on failure, making it
- * suitable for use inside a database transaction. It is NOT exported.
+ * suitable for use inside a database transaction.
  * @throws {SqliteError} If the database query fails. The error's `code` property
  *                       can be checked for specific constraints like 'SQLITE_CONSTRAINT_PRIMARYKEY'.
  */
@@ -59,9 +59,8 @@ function addUserToLeaderboard_core(user_id: number, leaderboard_id: Leaderboard,
 }
 
 /**
- * [PUBLIC] Safely adds a user entry to a specific leaderboard.
- * This function wraps the core logic in a try/catch block, making it safe for
- * standalone use.
+ * Safely adds a user entry to a specific leaderboard.
+ * This wraps the core logic in a try/catch block, making it safe for standalone use.
  * @returns A result object indicating success or failure.
  */
 function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo: number = DEFAULT_LEADERBOARD_ELO, rd: number = DEFAULT_LEADERBOARD_RD): ModifyQueryResult {
@@ -85,10 +84,10 @@ function addUserToLeaderboard(user_id: number, leaderboard_id: Leaderboard, elo:
 }
 
 /**
- * [INTERNAL] The core logic for updating a player's rating.
+ * The core logic for updating a player's rating.
  * This function is "unsafe" as it throws errors on failure, making it
  * suitable for use inside a database transaction which can catch the
- * error and roll back. It is NOT exported.
+ * error and roll back.
  * @throws {Error} If the user is not found or if the database query fails.
  */
 function updatePlayerLeaderboardRating_core(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): RunResult {
@@ -110,8 +109,8 @@ function updatePlayerLeaderboardRating_core(user_id: number, leaderboard_id: Lea
 }
 
 /**
- * [PUBLIC] Safely updates the rating values for a player on a specific leaderboard.
- * This function wraps the core logic in a try/catch block, making it safe for
+ * Safely updates the rating values for a player on a specific leaderboard.
+ * This wraps the core logic in a try/catch block, making it safe for
  * standalone use, such as in background jobs or admin tools.
  * @returns A result object indicating success or failure.
  */
@@ -171,7 +170,7 @@ type PlayerLeaderboardRating = {
 };
 
 /**
- * The core logic for getting a player's rating. Throws on failure. NOT exported.
+ * The core logic for getting a player's rating. Throws on failure.
  * @throws {SqliteError} If the database query fails.
  */
 function getPlayerLeaderboardRating_core(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
@@ -180,14 +179,13 @@ function getPlayerLeaderboardRating_core(user_id: number, leaderboard_id: Leader
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
-	// This db.get() will throw an error if the query fails.
-	// It will return the row or undefined if the query succeeds.
+	// This will throw an error if the query fails.
 	return db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
 }
 
 /**
  * Safely gets the rating values for a player on a specific leaderboard.
- * This function wraps the core logic in a try/catch block to prevent crashes.
+ * This wraps the core logic in a try/catch block to prevent crashes.
  * @returns The player's leaderboard entry object or undefined if not found or on error.
  */
 function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
