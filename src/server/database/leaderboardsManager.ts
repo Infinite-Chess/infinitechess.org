@@ -171,29 +171,33 @@ type PlayerLeaderboardRating = {
 };
 
 /**
- * Gets the rating values for a player on a specific leaderboard.
- * @param user_id - The id for the user
- * @param leaderboard_id - The id for the specific leaderboard.
- * @returns The player's leaderboard entry object or undefined if not found or on error.
+ * The core logic for getting a player's rating. Throws on failure. NOT exported.
+ * @throws {SqliteError} If the database query fails.
  */
-function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
-	// Changed table name, column names, added leaderboard_id to WHERE, selected new columns
+function getPlayerLeaderboardRating_core(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
 	const query = `
 		SELECT elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
+	// This db.get() will throw an error if the query fails.
+	// It will return the row or undefined if the query succeeds.
+	return db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
+}
 
+/**
+ * Safely gets the rating values for a player on a specific leaderboard.
+ * This function wraps the core logic in a try/catch block to prevent crashes.
+ * @returns The player's leaderboard entry object or undefined if not found or on error.
+ */
+function getPlayerLeaderboardRating(user_id: number, leaderboard_id: Leaderboard): PlayerLeaderboardRating | undefined {
 	try {
-		// Execute the query with user_id and leaderboard_id parameters
-		// Added leaderboard_id to parameters
-		const row = db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
-		return row; // Returns the record or undefined if not found
+		return getPlayerLeaderboardRating_core(user_id, leaderboard_id);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error for debugging purposes
 		logEventsAndPrint(`Error getting leaderboard rating data for member "${user_id}" on leaderboard "${leaderboard_id}": ${message}`, 'errLog.txt');
-		return undefined; // Return undefined on error
+		return undefined;
 	}
 }
 
