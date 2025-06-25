@@ -108,7 +108,8 @@ function updateLeaderboardsInTransaction(game: Game, victor: Player | undefined)
 	let ratingdata: RatingData = {};
 	for (const playerStr in game.players) {
 		const player: Player = Number(playerStr) as Player;
-		const user_id = game.players[playerStr].identifier.user_id!; // Guaranteed to exist in a rated game.
+		const user_id = game.players[playerStr].identifier.user_id;
+		if (user_id === undefined) throw new Error(`Attempted to process rating for player ${playerStr} in rated game ${game.id} without a user_id.`);
 
 		// If a player isn't on the leaderboard, add them first.
 		// We use the _core (error-throwing) version because we are inside a transaction.
