@@ -108,6 +108,7 @@ function new_RD(r: number, RD: number, r_opp: number, RD_opp: number) {
 /**
  * Takes ratingdata object as an input, with entries: elo_at_game, rating_deviation_at_game and rd_last_update_date.
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
+ * MUTATING. Modifies original ratingdata object.
  */
 function computeRatingDataChanges(ratingdata: RatingData, victor: Player) : RatingData {
 	// Currently, only rating calculations for 2-player games with White vs Black are supported
