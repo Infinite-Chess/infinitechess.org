@@ -179,7 +179,8 @@ function recalcScale() {
 
 	// Dampen the scale change to create a soft zoom limit
 	// to prevent players from breaking a game too fast.
-	const damp = scaleVel > 0 || boardScale > limitToDampScale ? 1 : boardScale / limitToDampScale;
+	// const damp = scaleVel > 0 || boardScale > limitToDampScale ? 1 : boardScale / limitToDampScale;
+	const damp = 1;
 
 	const newScale = boardScale * (1 + loadbalancer.getDeltaTime() * scaleVel * damp);
 	setBoardScale(newScale);
