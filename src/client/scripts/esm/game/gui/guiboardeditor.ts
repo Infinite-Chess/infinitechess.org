@@ -225,5 +225,6 @@ export default {
 	close,
 	initUI,
 	markTool,
-	markPiece
+	markPiece,
+	updatePieceColors
 };
