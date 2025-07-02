@@ -192,19 +192,28 @@ function markPiece(type: number | null) {
 	});
 }
 
-function updatePieceColors(newColor: Player) {
+function updatePieceColors(newColor: Player, iterate_over_all_old_colors = false) {
 	if (!initialized) return;
-	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
-		element.removeEventListener("click", callback_ChangePieceType);
-	});
+
+	// Hide all unused piece colors that may be shown
+	const playersSet: Set<Player> = new Set(gameslot.getGamefile()!.basegame.gameRules.turnOrder);
+	const playersArray: Array<Player> = [...playersSet];
+	const old_colors = iterate_over_all_old_colors ? playersArray.filter((color) => color !== newColor) : [boardeditor.getColor()];
+	for (const old_color of old_colors) {
+		element_playerTypes.get(old_color)!.forEach((element) => {
+			element.removeEventListener("click", callback_ChangePieceType);
+		});
+		element_playerContainers.get(old_color)!.classList.add("hidden");
+	}
+
+	// Show pieces in correct colors
 	element_playerTypes.get(newColor)!.forEach((element) => {
 		element.addEventListener("click", callback_ChangePieceType);
 	});
-	element_playerContainers.get(boardeditor.getColor())!.classList.add("hidden");
 	element_playerContainers.get(newColor)!.classList.remove("hidden");
 	element_dot.style.backgroundColor = typeutil.strcolors[newColor];
-
 	boardeditor.setColor(newColor);
+	
 	// Update currentPieceType, if necessary
 	if (typeutil.getColorFromType(boardeditor.getPiece()) !== players.NEUTRAL) {
 		const currentPieceType = typeutil.buildType(typeutil.getRawType(boardeditor.getPiece()), newColor);

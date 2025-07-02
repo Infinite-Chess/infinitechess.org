@@ -78,11 +78,13 @@ function initBoardEditor() {
 	selection.enableEditMode();
 	edits = [];
 	indexOfThisEdit = 0;
+
 	setTool("normal");
 	setColor(players.WHITE);
 	setPiece(rawTypes.VOID);
-
+	
 	guiboardeditor.markTool(currentTool);
+	guiboardeditor.updatePieceColors(currentColor, true);
 	guiboardeditor.markPiece(currentPieceType);
 }
 
