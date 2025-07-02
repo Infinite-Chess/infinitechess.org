@@ -1340,12 +1340,14 @@ svg.collapse {
 
 .editor-tools {
     display: grid;
-    grid-template-columns: repeat(2, 4.5em);
+    grid-template-columns: repeat(3, 4em);
+    text-align: center;
+    text-justify: center;
 }
 
 .editor-types {
     display: grid;
-    grid-template-columns: repeat(3, 3em);
+    grid-template-columns: repeat(4, 3em);
 }
 
 .editor-types svg, .editor-tools div {
@@ -1354,7 +1356,9 @@ svg.collapse {
 }
 
 .editor-types svg:hover, .editor-tools div:hover {
-    background-color: #e5e5e5;
+    outline-style: solid;
+    outline-width: 0.25em;
+    outline-offset: -0.15em;
 }
 
 .void {

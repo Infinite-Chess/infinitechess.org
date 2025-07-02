@@ -40,12 +40,12 @@ type Edit = {
 	state: MoveState
 }
 
-type Tool = "undo" | "redo" | "save" | "normal" | "placer" | "eraser" | "selector" | "gamerules" | "specialrights";
+type Tool = "undo" | "redo" | "save" | "load" | "normal" | "placer" | "eraser" | "selector" | "gamerules" | "specialrights";
 
 
 // Variables --------------------------------------------------------------------
 
-const validTools: Tool[] = ["undo", "redo", "save", "normal", "placer", "eraser", "selector", "gamerules", "specialrights"];
+const validTools: Tool[] = ["undo", "redo", "save", "load", "normal", "placer", "eraser", "selector", "gamerules", "specialrights"];
 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
@@ -271,7 +271,11 @@ function save() {
 		const type = pieces.types[idx];
 		if (type !== undefined) output += icnconverter.getAbbrFromType(type) + coordsKey + '|';
 	});
-	docutil.copyToClipboard(output);
+	docutil.copyToClipboard(output.slice(0,-1));
+}
+
+function load() {
+	console.log("Not yet implemented");
 }
 
 function onMovePlayed(move: Move) {
@@ -306,5 +310,6 @@ export default {
 	undo,
 	redo,
 	save,
+	load,
 	clearAll,
 };

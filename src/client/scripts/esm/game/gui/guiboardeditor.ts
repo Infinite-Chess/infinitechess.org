@@ -15,8 +15,9 @@ import type { Player, RawType } from "../../chess/util/typeutil.js";
 
 const element_menu = document.getElementById("editor-menu")!;
 const element_tools = document.getElementById("editor-tools")!;
-
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
+const element_dot = document.getElementById("editor-dot")!;
+
 const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
 
@@ -116,6 +117,9 @@ function callback_ChangeTool(e: Event) {
 		case "save":
 			boardeditor.save();
 			return;
+		case "load":
+			boardeditor.load();
+			return;
 		case "normal":
 			boardeditor.setTool(tool);
 			return;
@@ -129,7 +133,7 @@ function callback_ChangeTool(e: Event) {
 			boardeditor.setTool(tool);
 			return;
 		case "gamerules":
-			boardeditor.setTool("normal");
+			boardeditor.setTool(tool);
 			return;
 		case "specialrights":
 			boardeditor.setTool(tool);
@@ -186,9 +190,9 @@ function setColor(newColor: Player) {
 	});
 	element_playerContainers.get(currentColor)!.classList.add("hidden");
 	element_playerContainers.get(newColor)!.classList.remove("hidden");
-	//element_dot.style.backgroundColor = 
-	currentColor = newColor;
+	element_dot.style.backgroundColor = typeutil.strcolors[newColor];
 
+	currentColor = newColor;
 	// Update currentPieceType
 	currentPieceType = typeutil.buildType(typeutil.getRawType(currentPieceType), currentColor);
 	boardeditor.setPiece(currentPieceType);
