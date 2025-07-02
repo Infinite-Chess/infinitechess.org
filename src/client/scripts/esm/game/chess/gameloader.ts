@@ -300,7 +300,7 @@ async function startBoardEditor() {
 		 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
 		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
 		 */
-		additional: { editor: false } // For some reason, editor: true leads to INCREDIBLY long loading times
+		additional: { editor: true } // For some reason, editor: true leads to INCREDIBLY long loading times
 	})
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
