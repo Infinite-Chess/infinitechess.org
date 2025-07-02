@@ -73,27 +73,6 @@ let previousSquare: Coords | undefined;
 
 // Functions ------------------------------------------------------------------------
 
-function areInBoardEditor() {
-	return inBoardEditor;
-}
-
-// Set the piece type to be added to the board
-function setPiece(pieceType: number) {
-	currentPieceType = pieceType;
-}
-
-function getPiece() {
-	return currentPieceType;
-}
-
-function setColor(color: Player) {
-	currentColor = color;
-}
-
-function getColor() {
-	return currentColor;
-}
-
 function initBoardEditor() {
 	inBoardEditor = true;
 	setPiece(rawTypes.VOID);
@@ -111,6 +90,44 @@ function closeBoardEditor() {
 	edits = undefined;
 	indexOfThisEdit = undefined;
 	previousSquare = undefined;
+}
+
+function areInBoardEditor() {
+	return inBoardEditor;
+}
+
+/** Set the piece type to be added to the board */
+function setPiece(pieceType: number) {
+	currentPieceType = pieceType;
+}
+
+function getPiece() {
+	return currentPieceType;
+}
+
+function setColor(color: Player) {
+	currentColor = color;
+}
+
+function getColor() {
+	return currentColor;
+}
+
+/** Change the tool being used. */
+function setTool(tool: string) {
+	if (!validTools.includes(tool as Tool)) return;
+	currentTool = tool as Tool;
+
+	if (tool === "specialrights") specialrighthighlights.enable();
+	else specialrighthighlights.disable();
+
+	guiboardeditor.markTool(tool);
+	if (tool !== "placer") guiboardeditor.markPiece(null);
+	else guiboardeditor.markPiece(currentPieceType);
+}
+
+function getTool() {
+	return currentTool;
 }
 
 function canUndo() {
@@ -183,8 +200,6 @@ function update() {
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
-		case "normal":
-			break;
 		case "placer":
 			queueAddPiece(gamefile, edit, pieceHovered, coords, currentPieceType);
 			break;
@@ -192,8 +207,6 @@ function update() {
 			queueRemovePiece(gamefile, edit, pieceHovered);
 			break;
 		case "selector":
-			break;
-		case "gamerules":
 			break;
 		case "specialrights":
 			queueToggleSpecialRight(gamefile, edit, pieceHovered);
@@ -217,8 +230,8 @@ function queueToggleSpecialRight(gamefile: gamefile, edit: Edit, pieceHovered: P
 }
 
 function queueAddPiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number) {
+	if (pieceHovered?.type === type) return; // do not do anything if new piece would be equal to old piece
 	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
-	if (pieceHovered?.type === type) return; // do not add piece again, if it would be the same piece type
 	const piece: Piece = { type, coords, index:-1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
@@ -235,21 +248,6 @@ function queueRemovePiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | 
 	if (gamefile.boardsim.state.global.enpassant?.square !== undefined && coordutil.areCoordsEqual(pieceHovered.coords, gamefile.boardsim.state.global.enpassant.square)) {
 		state.createEnPassantState(edit, gamefile.boardsim.state.global.enpassant, undefined);
 	}
-}
-
-/**
- * Change the tool being used.
- */
-function setTool(tool: string) {
-	if (!validTools.includes(tool as Tool)) return;
-	currentTool = tool as Tool;
-
-	if (tool === "specialrights") specialrighthighlights.enable();
-	else specialrighthighlights.disable();
-
-	guiboardeditor.markTool(tool);
-	if (tool !== "placer") guiboardeditor.markPiece(null);
-	else guiboardeditor.markPiece(currentPieceType);
 }
 
 function clearAll() {
@@ -306,6 +304,7 @@ function save() {
 }
 
 function load() {
+	// Need to implement position loading and also fix pasting logic
 	statustext.showStatus("Loading not yet implemented", true);
 }
 
@@ -332,13 +331,13 @@ export default {
 	areInBoardEditor,
 	initBoardEditor,
 	closeBoardEditor,
-	onMovePlayed,
-	update,
-	setTool,
 	setPiece,
 	getPiece,
 	setColor,
 	getColor,
+	setTool,
+	getTool,
+	update,
 	canUndo,
 	canRedo,
 	undo,
@@ -346,4 +345,5 @@ export default {
 	save,
 	load,
 	clearAll,
+	onMovePlayed,
 };

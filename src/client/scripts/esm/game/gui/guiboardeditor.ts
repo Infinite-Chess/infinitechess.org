@@ -23,7 +23,7 @@ const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
 const element_neutralTypes: Array<Element> = [];
 
-// Pieces in the order they will appear
+/** Player pieces in the order they will appear */
 const coloredTypes = [
 	rawTypes.KING,
 	rawTypes.QUEEN,
@@ -43,6 +43,7 @@ const coloredTypes = [
 	rawTypes.ROYALQUEEN,
 ];
 
+/** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
 const neutralTypes = [ rawTypes.OBSTACLE ];
 
 let initalized = false;
@@ -146,24 +147,6 @@ function callback_ChangeTool(e: Event) {
 		case "load":
 			boardeditor.load();
 			return;
-		case "normal":
-			boardeditor.setTool(tool);
-			return;
-		case "placer":
-			boardeditor.setTool(tool);
-			return;
-		case "eraser":
-			boardeditor.setTool(tool);
-			return;
-		case "selector":
-			boardeditor.setTool(tool);
-			return;
-		case "gamerules":
-			boardeditor.setTool(tool);
-			return;
-		case "specialrights":
-			boardeditor.setTool(tool);
-			return;
 		case "clearall":
 			boardeditor.setTool("normal");
 			boardeditor.clearAll();
@@ -177,14 +160,6 @@ function callback_ChangeTool(e: Event) {
 	}
 }
 
-function markTool(tool: string) {
-	Array.from(element_tools.children).forEach((element) => {
-		const element_tool = element.getAttribute("data-tool");
-		if (element_tool === tool) element.classList.add("active");
-		else element.classList.remove("active");
-	});
-}
-
 function callback_ChangePieceType(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
 	const currentPieceType = Number.parseInt(target.id);
@@ -194,20 +169,30 @@ function callback_ChangePieceType(e: Event) {
 	markPiece(currentPieceType);
 }
 
-function markPiece(type: number | null) {
-	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
-		const element_type = Number.parseInt(element.id);
-		if (element_type === type) element.classList.add("active");
-		else element.classList.remove("active");
-	});
-	element_neutralTypes.forEach((element) => {
-		const element_type = Number.parseInt(element.id);
-		if (element_type === type) element.classList.add("active");
+function markTool(tool: string) {
+	Array.from(element_tools.children).forEach((element) => {
+		const element_tool = element.getAttribute("data-tool");
+		if (element_tool === tool) element.classList.add("active");
 		else element.classList.remove("active");
 	});
 }
 
-function setColor(newColor: Player) {
+function markPiece(type: number | null) {
+	const placerToolActive = boardeditor.getTool() === "placer";
+
+	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
+		const element_type = Number.parseInt(element.id);
+		if (element_type === type && placerToolActive) element.classList.add("active");
+		else element.classList.remove("active");
+	});
+	element_neutralTypes.forEach((element) => {
+		const element_type = Number.parseInt(element.id);
+		if (element_type === type && placerToolActive) element.classList.add("active");
+		else element.classList.remove("active");
+	});
+}
+
+function updatePieceColors(newColor: Player) {
 	if (!initalized) return;
 	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
 		element.removeEventListener("click", callback_ChangePieceType);
@@ -232,7 +217,7 @@ function nextColor() {
 	// Is there a better way to do this?
 	const playersSet: Set<Player> = new Set(gameslot.getGamefile()!.basegame.gameRules.turnOrder);
 	const playersArray: Array<Player> = [...playersSet];
-	setColor(playersArray[(playersArray.indexOf(boardeditor.getColor()) + 1) % playersArray.length]!);
+	updatePieceColors(playersArray[(playersArray.indexOf(boardeditor.getColor()) + 1) % playersArray.length]!);
 }
 
 export default {
