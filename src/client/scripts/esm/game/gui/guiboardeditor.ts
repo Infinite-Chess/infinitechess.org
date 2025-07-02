@@ -8,7 +8,7 @@ import svgcache from "../../chess/rendering/svgcache.js";
 import typeutil, { rawTypes, players } from "../../chess/util/typeutil.js";
 import gameslot from "../chess/gameslot.js";
 
-import type { Player } from "../../chess/util/typeutil.js";
+import type { Player, RawType } from "../../chess/util/typeutil.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -47,6 +47,7 @@ let isOpen = false;
 let initalized = false;
 
 let currentColor: Player = players.WHITE;
+let currentPieceType: number;
 
 // Functions ---------------------------------------------------------------
 
@@ -67,7 +68,6 @@ async function initUI() {
 	if (initalized) return;
 	const gamefile = gameslot.getGamefile()!;
 	const setOfPlayers: Set<Player> = new Set(gamefile.basegame.gameRules.turnOrder);
-	setOfPlayers.add(players.NEUTRAL);
 
 	for (const player of setOfPlayers) {
 		const svgs = await svgcache.getSVGElements(coloredTypes.map((rawType) => { return typeutil.buildType(rawType, player); }));
@@ -161,10 +161,19 @@ function markTool(tool: string) {
 
 function callback_ChangePieceType(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
-	const type = Number.parseInt(target.id);
-	if (isNaN(type)) return console.error(`Invalid piece type: ${type}`);
-	boardeditor.setPiece(type);
+	currentPieceType = Number.parseInt(target.id);
+	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
+	boardeditor.setPiece(currentPieceType);
 	boardeditor.setTool("placer");
+	markPiece(currentPieceType);
+}
+
+function markPiece(type: number) {
+	element_playerTypes.get(currentColor)!.forEach((element) => {
+		const element_type = Number.parseInt(element.id);
+		if (element_type === type) element.classList.add("active");
+		else element.classList.remove("active");
+	});
 }
 
 function setColor(newColor: Player) {
@@ -179,12 +188,16 @@ function setColor(newColor: Player) {
 	element_playerContainers.get(newColor)!.classList.remove("hidden");
 	//element_dot.style.backgroundColor = 
 	currentColor = newColor;
+
+	// Update currentPieceType
+	currentPieceType = typeutil.buildType(typeutil.getRawType(currentPieceType), currentColor);
+	boardeditor.setPiece(currentPieceType);
+	markPiece(currentPieceType);
 }
 
 function nextColor() {
 	// Is there a better way to do this?
 	const playersSet: Set<Player> = new Set(gameslot.getGamefile()!.basegame.gameRules.turnOrder);
-	playersSet.add(players.NEUTRAL);
 	const playersArray: Array<Player> = [...playersSet];
 	setColor(playersArray[(playersArray.indexOf(currentColor) + 1) % playersArray.length]!);
 }
@@ -193,5 +206,6 @@ export default {
 	open,
 	close,
 	initUI,
-	markTool
+	markTool,
+	markPiece
 };

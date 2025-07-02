@@ -21,6 +21,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import { listener_overlay } from '../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
+import typeutil, { rawTypes, players } from "../../chess/util/typeutil.js";
 
 // Type Definitions -------------------------------------------------------------
 
@@ -49,7 +50,7 @@ const validTools: Tool[] = ["undo", "redo", "save", "normal", "placer", "eraser"
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
 
-let currentPiece: number = 0;
+let currentPieceType: number = 0;
 let currentTool: Tool;
 
 
@@ -122,7 +123,7 @@ function runEdit(gamefile: gamefile, mesh: Mesh, edit: Edit, forward: boolean = 
 	// Run graphical and logical changes
 	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
 	boardchanges.runChanges(mesh, edit.changes, meshChanges, forward);
-	state.applyMove(gamefile, edit.state, forward, { globalChange: true });
+	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: true });
 	specialrighthighlights.onMove();
 }
 
@@ -157,7 +158,7 @@ function update() {
 		case "normal":
 			break;
 		case "placer":
-			queueAddPiece(gamefile, edit, pieceHovered, coords, currentPiece);
+			queueAddPiece(gamefile, edit, pieceHovered, coords, currentPieceType);
 			break;
 		case "eraser":
 			queueRemovePiece(gamefile, edit, pieceHovered);
@@ -218,7 +219,7 @@ function setTool(tool: string) {
 
 // Set the piece type to be added to the board
 function setPiece(pieceType: number) {
-	currentPiece = pieceType;
+	currentPieceType = pieceType;
 }
 
 function clearAll() {
