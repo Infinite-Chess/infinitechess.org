@@ -190,7 +190,7 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
-	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
+	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords) || boardeditor.areInBoardEditor(); // Allow ALL moves in board editor.
 }
 
 
