@@ -1,3 +1,6 @@
+
+// src/client/scripts/esm/game/gui/guiboardeditor.ts
+
 /*
  * This script handles the Board Editor GUI
  */

@@ -1,3 +1,6 @@
+
+// src/client/scripts/esm/game/misc/boardeditor.ts
+
 /*
  * This script handles the Board Editor logic
  */
@@ -69,7 +72,6 @@ let previousSquare: Coords | undefined;
 
 function initBoardEditor() {
 	inBoardEditor = true;
-	selection.enableEditMode();
 	edits = [];
 	indexOfThisEdit = 0;
 
