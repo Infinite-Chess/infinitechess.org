@@ -170,7 +170,7 @@ function runEdit(gamefile: gamefile, mesh: Mesh, edit: Edit, forward: boolean = 
 
 	// Run graphical changes
 	if (gamefile.boardsim.pieces.newlyRegenerated) piecemodels.regenAll(gamefile.boardsim, mesh);
-	else boardchanges.runChanges(mesh, edit.changes, meshChanges, true);
+	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward);
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 
 	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: true });
