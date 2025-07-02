@@ -11,7 +11,7 @@
  */
 
 
-import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../util/typeutil.js";
+import typeutil, { ext, players, rawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
 import movesets from "./movesets.js";
@@ -459,7 +459,6 @@ function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrde
 		const playersArray: Array<Player> = [...playersSet];
 
 		existingTypes = typeutil.buildAllTypesForPlayers(playersArray, Object.values(rawTypes));
-		existingTypes = [...new Set([...neutralRawTypes, ...existingTypes])];
 		existingRawTypes = Object.values(rawTypes);
 	} else {
 		if (promotionsAllowed) {
