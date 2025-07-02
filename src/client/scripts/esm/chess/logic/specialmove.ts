@@ -62,17 +62,17 @@ function kings(boardsim: Board, piece: Piece, move: Move) {
 	// Move the king to new square
 	const moveChanges = move.changes;
 	const kingCapturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
-	if (!kingCapturedPiece) boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Make normal move
 	// CASTLING CAN CAPTURE A PIECE IF IT'S A PREMOVE!!!
-	else boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, kingCapturedPiece); // Capture piece
+	if (kingCapturedPiece) boardchanges.queueCapture(moveChanges, true, kingCapturedPiece); // Capture piece
+	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
 
 	// Move the rook to new square
 	const pieceToCastleWith = boardutil.getPieceFromCoords(boardsim.pieces, specialTag.coord)!;
 	const landSquare: Coords = [move.endCoords[0] - specialTag.dir, move.endCoords[1]];
 	const rookCapturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, landSquare);
-	if (!rookCapturedPiece) boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare); // Make normal move
 	// CASTLING CAN CAPTURE A PIECE IF IT'S A PREMOVE!!!
-	else boardchanges.queueCapture(moveChanges, false, pieceToCastleWith, landSquare, rookCapturedPiece); // Capture piece
+	if (rookCapturedPiece) boardchanges.queueCapture(moveChanges, false, rookCapturedPiece); // Capture piece
+	boardchanges.queueMovePiece(moveChanges, false, pieceToCastleWith, landSquare);
 
 	// Special move was executed!
 	// (There is no captured piece with castling)
@@ -96,11 +96,9 @@ function pawns(boardsim: Board, piece: Piece, move: Move) {
 	// Delete the piece captured
 
 	if (capturedPiece) {
-		boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece);
-	} else {
-		// Move the pawn
-		boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
+		boardchanges.queueCapture(moveChanges, true, capturedPiece);
 	}
+	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
 
 	if (promotionTag) {
 		// Delete original pawn
@@ -118,8 +116,8 @@ function roses(boardsim: Board, piece: Piece, move: Move) {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
 	// Delete the piece captured
-	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece, move.path);
-	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords, move.path);
+	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, capturedPiece);
+	boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords, move.path);
 
 	// Special move was executed!
 	return true;
