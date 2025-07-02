@@ -28,19 +28,13 @@ import statustext from '../gui/statustext.js';
 // Type Definitions -------------------------------------------------------------
 
 import type { Coords } from '../../chess/util/coordutil.js';
-// @ts-ignore
-import type { gamefile } from '../../chess/logic/gamefile.js';
-import type { Change } from '../../chess/logic/boardchanges.js';
+import type { Edit } from '../../chess/logic/movepiece.js'; 
 import type { Piece } from '../../chess/util/boardutil.js';
-import type { MoveState } from '../../chess/logic/state.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Move } from '../../chess/logic/movepiece.js';
 import type { Player } from '../../chess/util/typeutil.js';
-
-type Edit = {
-	changes: Array<Change>,
-	state: MoveState
-}
+// @ts-ignore
+import type { gamefile } from '../../chess/logic/gamefile.js';
 
 type Tool = "normal" | "placer" | "eraser" | "selector" | "gamerules" | "specialrights";
 
