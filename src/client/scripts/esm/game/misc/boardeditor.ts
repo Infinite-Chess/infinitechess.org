@@ -42,12 +42,12 @@ type Edit = {
 	state: MoveState
 }
 
-type Tool = "undo" | "redo" | "save" | "load" | "normal" | "placer" | "eraser" | "selector" | "gamerules" | "specialrights";
+type Tool = "normal" | "placer" | "eraser" | "selector" | "gamerules" | "specialrights";
 
 
 // Variables --------------------------------------------------------------------
 
-const validTools: Tool[] = ["undo", "redo", "save", "load", "normal", "placer", "eraser", "selector", "gamerules", "specialrights"];
+const validTools: Tool[] = ["normal", "placer", "eraser", "selector", "gamerules", "specialrights"];
 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
