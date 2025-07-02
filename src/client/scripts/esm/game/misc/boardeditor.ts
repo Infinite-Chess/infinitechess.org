@@ -17,7 +17,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
-import { rawTypes } from '../../chess/util/typeutil.js';
+import { players, rawTypes } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import mouse from '../../util/mouse.js';
 // @ts-ignore
@@ -33,6 +33,7 @@ import type { Piece } from '../../chess/util/boardutil.js';
 import type { MoveState } from '../../chess/logic/state.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Move } from '../../chess/logic/movepiece.js';
+import type { Player } from '../../chess/util/typeutil.js';
 
 type Edit = {
 	changes: Array<Change>,
@@ -49,6 +50,7 @@ const validTools: Tool[] = ["undo", "redo", "save", "load", "normal", "placer", 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
 
+let currentColor: Player = players.WHITE;
 let currentPieceType: number = rawTypes.VOID;
 let currentTool: Tool;
 
@@ -75,6 +77,8 @@ function areInBoardEditor() {
 
 function initBoardEditor() {
 	inBoardEditor = true;
+	setPiece(rawTypes.VOID);
+	setColor(players.WHITE);
 	setTool("normal");
 	selection.enableEditMode();
 	edits = [];
@@ -228,6 +232,18 @@ function setPiece(pieceType: number) {
 	currentPieceType = pieceType;
 }
 
+function getPiece() {
+	return currentPieceType;
+}
+
+function setColor(color: Player) {
+	currentColor = color;
+}
+
+function getColor() {
+	return currentColor;
+}
+
 function clearAll() {
 	if (!inBoardEditor) throw Error("Cannot clear board when we're not using the board editor.");
 	const gamefile = gameslot.getGamefile()!;
@@ -312,6 +328,9 @@ export default {
 	update,
 	setTool,
 	setPiece,
+	getPiece,
+	setColor,
+	getColor,
 	canUndo,
 	canRedo,
 	undo,

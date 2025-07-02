@@ -48,9 +48,6 @@ const neutralTypes = [ rawTypes.OBSTACLE ];
 let initalized = false;
 let isOpen = false;
 
-let currentColor: Player = players.WHITE;
-let currentPieceType: number;
-
 // Functions ---------------------------------------------------------------
 
 async function open() {
@@ -79,7 +76,7 @@ async function initUI() {
 		element_playerContainers.set(player, playerPieces);
 		element_playerTypes.set(player, svgs);
 		playerPieces.classList.add("editor-types");
-		if (player !== currentColor) playerPieces.classList.add("hidden");
+		if (player !== boardeditor.getColor()) playerPieces.classList.add("hidden");
 		for (const svg of svgs) {
 			svg.classList.add("piece");
 			playerPieces.appendChild(svg);
@@ -113,7 +110,7 @@ function initListeners() {
 	Array.from(element_tools.children).forEach((element) => {
 		element.addEventListener("click", callback_ChangeTool);
 	});
-	element_playerTypes.get(currentColor)!.forEach((element) => {
+	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
 		element.addEventListener("click", callback_ChangePieceType);
 	});
 	element_neutralTypes.forEach((element) => {
@@ -125,7 +122,7 @@ function closeListeners() {
 	Array.from(element_tools.children).forEach((element) => {
 		element.removeEventListener("click", callback_ChangeTool);
 	});
-	element_playerTypes.get(currentColor)!.forEach((element) => {
+	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
 		element.removeEventListener("click", callback_ChangePieceType);
 	});
 	element_neutralTypes.forEach((element) => {
@@ -194,7 +191,7 @@ function markTool(tool: string) {
 
 function callback_ChangePieceType(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
-	currentPieceType = Number.parseInt(target.id);
+	const currentPieceType = Number.parseInt(target.id);
 	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
 	boardeditor.setPiece(currentPieceType);
 	boardeditor.setTool("placer");
@@ -202,7 +199,7 @@ function callback_ChangePieceType(e: Event) {
 }
 
 function markPiece(type: number | null) {
-	element_playerTypes.get(currentColor)!.forEach((element) => {
+	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
 		const element_type = Number.parseInt(element.id);
 		if (element_type === type) element.classList.add("active");
 		else element.classList.remove("active");
@@ -216,20 +213,20 @@ function markPiece(type: number | null) {
 
 function setColor(newColor: Player) {
 	if (!initalized) return;
-	element_playerTypes.get(currentColor)!.forEach((element) => {
+	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
 		element.removeEventListener("click", callback_ChangePieceType);
 	});
 	element_playerTypes.get(newColor)!.forEach((element) => {
 		element.addEventListener("click", callback_ChangePieceType);
 	});
-	element_playerContainers.get(currentColor)!.classList.add("hidden");
+	element_playerContainers.get(boardeditor.getColor())!.classList.add("hidden");
 	element_playerContainers.get(newColor)!.classList.remove("hidden");
 	element_dot.style.backgroundColor = typeutil.strcolors[newColor];
 
-	currentColor = newColor;
+	boardeditor.setColor(newColor);
 	// Update currentPieceType, if necessary
-	if (typeutil.getColorFromType(currentColor) !== players.NEUTRAL) {
-		currentPieceType = typeutil.buildType(typeutil.getRawType(currentPieceType), currentColor);
+	if (typeutil.getColorFromType(boardeditor.getPiece()) !== players.NEUTRAL) {
+		const currentPieceType = typeutil.buildType(typeutil.getRawType(boardeditor.getPiece()), newColor);
 		boardeditor.setPiece(currentPieceType);
 		markPiece(currentPieceType);
 	}
@@ -239,7 +236,7 @@ function nextColor() {
 	// Is there a better way to do this?
 	const playersSet: Set<Player> = new Set(gameslot.getGamefile()!.basegame.gameRules.turnOrder);
 	const playersArray: Array<Player> = [...playersSet];
-	setColor(playersArray[(playersArray.indexOf(currentColor) + 1) % playersArray.length]!);
+	setColor(playersArray[(playersArray.indexOf(boardeditor.getColor()) + 1) % playersArray.length]!);
 }
 
 export default {
