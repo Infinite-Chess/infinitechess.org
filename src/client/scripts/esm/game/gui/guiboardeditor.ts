@@ -8,7 +8,7 @@ import svgcache from "../../chess/rendering/svgcache.js";
 import typeutil, { rawTypes, players } from "../../chess/util/typeutil.js";
 import gameslot from "../chess/gameslot.js";
 
-import type { Player, RawType } from "../../chess/util/typeutil.js";
+import type { Player } from "../../chess/util/typeutil.js";
 
 
 // Variables ---------------------------------------------------------------
@@ -42,9 +42,8 @@ const coloredTypes = [
 	rawTypes.OBSTACLE,
 ];
 
-const neutralTypes = [ rawTypes.VOID ];
+// const neutralTypes = [ rawTypes.VOID ];
 
-let isOpen = false;
 let initalized = false;
 
 let currentColor: Player = players.WHITE;
@@ -56,13 +55,11 @@ async function open() {
 	element_menu.classList.remove("hidden");
 	await gameloader.startBoardEditor();
 	initListeners();
-	isOpen = true;
 }
 
 function close() {
 	element_menu.classList.add("hidden");
 	closeListeners();
-	isOpen = false;
 }
 
 async function initUI() {
@@ -172,7 +169,7 @@ function callback_ChangePieceType(e: Event) {
 	markPiece(currentPieceType);
 }
 
-function markPiece(type: number) {
+function markPiece(type: number | null) {
 	element_playerTypes.get(currentColor)!.forEach((element) => {
 		const element_type = Number.parseInt(element.id);
 		if (element_type === type) element.classList.add("active");

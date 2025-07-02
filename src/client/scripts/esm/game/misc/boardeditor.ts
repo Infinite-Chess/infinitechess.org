@@ -6,8 +6,6 @@
 import boardchanges from '../../chess/logic/boardchanges.js';
 import { meshChanges } from '../chess/graphicalchanges.js';
 // @ts-ignore
-import input from '../input.js';
-// @ts-ignore
 import mouse from '../../util/mouse.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
@@ -19,9 +17,8 @@ import state from '../../chess/logic/state.js';
 import boardutil from '../../chess/util/boardutil.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { listener_overlay } from '../chess/game.js';
-import { InputListener, Mouse, MouseButton } from '../input.js';
+import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
-import typeutil, { rawTypes, players } from "../../chess/util/typeutil.js";
 
 // Type Definitions -------------------------------------------------------------
 
@@ -31,7 +28,6 @@ import type { gamefile } from '../../chess/logic/gamefile.js';
 import type { Change } from '../../chess/logic/boardchanges.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { MoveState } from '../../chess/logic/state.js';
-import type { RawType, Player } from '../../chess/util/typeutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Move } from '../../chess/logic/movepiece.js';
 
@@ -139,7 +135,7 @@ function update() {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 
-	if (drawing && currentTool === "placer") {
+	if (drawing && ["placer", "eraser", "specialrights"].includes(currentTool)) {
 		if (!listener_overlay.isMouseHeld(Mouse.RIGHT)) return endEdit();
 	} else {
 		if (listener_overlay.isMouseDown(Mouse.RIGHT)) beginEdit();
@@ -214,7 +210,12 @@ function queueRemovePiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | 
 function setTool(tool: string) {
 	if (!validTools.includes(tool as Tool)) return;
 	currentTool = tool as Tool;
+
+	if (tool === "specialrights") specialrighthighlights.enable();
+	else specialrighthighlights.disable();
+
 	guiboardeditor.markTool(tool);
+	if (tool !== "placer") guiboardeditor.markPiece(null);
 }
 
 // Set the piece type to be added to the board

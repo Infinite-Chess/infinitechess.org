@@ -52,6 +52,17 @@ function getEnPassantVertexData(): number[] {
 	return legalmoveshapes.getDataLegalMoveSquare(ENPASSANT_COLOR);
 }
 
+function enable() {
+	enabled = true;
+	regenModel();
+	frametracker.onVisualChange();
+}
+
+function disable() {
+	enabled = false;
+	regenModel();
+	frametracker.onVisualChange();
+}
 
 function toggle() {
 	enabled = !enabled;
@@ -145,6 +156,8 @@ function onGameClose() {
 
 
 export default {
+	enable,
+	disable,
 	toggle,
 	render,
 	regenModel,
