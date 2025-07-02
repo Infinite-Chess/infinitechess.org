@@ -185,6 +185,7 @@ canvas {
     position: absolute;
     width: 100%;
     height: 100%;
+    /* Needed for the board editor UI: */
     display: flex;
     flex-direction: column;
 }
@@ -295,11 +296,6 @@ canvas {
     /* background-color: rgb(255, 255, 255); */
     background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
 }
-
-.active {
-    background-color: green;
-}
-
 
 
 /* Guide */
@@ -1359,6 +1355,10 @@ svg.collapse {
     outline-style: solid;
     outline-width: 0.25em;
     outline-offset: -0.15em;
+}
+
+.active {
+    background-color: green;
 }
 
 .void {
