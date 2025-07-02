@@ -46,7 +46,7 @@ const coloredTypes = [
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
 const neutralTypes = [ rawTypes.OBSTACLE ];
 
-let initalized = false;
+let initialized = false;
 let isOpen = false;
 
 // Functions ---------------------------------------------------------------
@@ -66,7 +66,7 @@ function close() {
 }
 
 async function initUI() {
-	if (initalized) return;
+	if (initialized) return;
 	const gamefile = gameslot.getGamefile()!;
 	const setOfPlayers: Set<Player> = new Set(gamefile.basegame.gameRules.turnOrder);
 
@@ -104,7 +104,7 @@ async function initUI() {
 	}
 	element_neutralTypesContainer.appendChild(neutralPieces);
 
-	initalized = true;
+	initialized = true;
 }
 
 function initListeners() {
@@ -193,7 +193,7 @@ function markPiece(type: number | null) {
 }
 
 function updatePieceColors(newColor: Player) {
-	if (!initalized) return;
+	if (!initialized) return;
 	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
 		element.removeEventListener("click", callback_ChangePieceType);
 	});

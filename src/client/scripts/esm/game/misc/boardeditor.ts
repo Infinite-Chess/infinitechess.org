@@ -75,12 +75,15 @@ let previousSquare: Coords | undefined;
 
 function initBoardEditor() {
 	inBoardEditor = true;
-	setTool("normal", true);
-	setColor(players.WHITE, true);
-	setPiece(rawTypes.VOID, true);
 	selection.enableEditMode();
 	edits = [];
 	indexOfThisEdit = 0;
+	setTool("normal");
+	setColor(players.WHITE);
+	setPiece(rawTypes.VOID);
+
+	guiboardeditor.markTool(currentTool);
+	guiboardeditor.markPiece(currentPieceType);
 }
 
 function closeBoardEditor() {
@@ -97,18 +100,16 @@ function areInBoardEditor() {
 }
 
 /** Set the piece type to be added to the board */
-function setPiece(pieceType: number, make_graphicalchanges = false) {
+function setPiece(pieceType: number) {
 	currentPieceType = pieceType;
-	if (make_graphicalchanges) guiboardeditor.markPiece(pieceType);
 }
 
 function getPiece() {
 	return currentPieceType;
 }
 
-function setColor(color: Player, make_graphicalchanges = false) {
+function setColor(color: Player) {
 	currentColor = color;
-	if (make_graphicalchanges) guiboardeditor.updatePieceColors(color);
 }
 
 function getColor() {
@@ -116,7 +117,7 @@ function getColor() {
 }
 
 /** Change the tool being used. */
-function setTool(tool: string, make_graphicalchanges = false) {
+function setTool(tool: string) {
 	if (!validTools.includes(tool as Tool)) return;
 	currentTool = tool as Tool;
 
@@ -126,8 +127,6 @@ function setTool(tool: string, make_graphicalchanges = false) {
 	guiboardeditor.markTool(tool);
 	if (tool !== "placer") guiboardeditor.markPiece(null);
 	else guiboardeditor.markPiece(currentPieceType);
-
-	if (make_graphicalchanges) guiboardeditor.markTool(tool);
 }
 
 function getTool() {
