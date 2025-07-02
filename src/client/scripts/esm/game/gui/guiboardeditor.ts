@@ -107,6 +107,15 @@ function callback_ChangeTool(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
 	const tool = target.getAttribute("data-tool");
 	switch (tool) {
+		case "undo":
+			boardeditor.undo();
+			return;
+		case "redo":
+			boardeditor.redo();
+			return;
+		case "save":
+			boardeditor.save();
+			return;
 		case "normal":
 			boardeditor.setTool(tool);
 			return;
@@ -120,12 +129,13 @@ function callback_ChangeTool(e: Event) {
 			boardeditor.setTool(tool);
 			return;
 		case "gamerules":
-			boardeditor.setTool(tool);
+			boardeditor.setTool("normal");
 			return;
 		case "specialrights":
 			boardeditor.setTool(tool);
 			return;
 		case "clearall":
+			boardeditor.setTool("normal");
 			boardeditor.clearAll();
 			return;
 		case "color":

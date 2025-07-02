@@ -19,6 +19,8 @@ import state from '../../chess/logic/state.js';
 import boardutil from '../../chess/util/boardutil.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import movepiece, { MoveDraft } from '../../chess/logic/movepiece.js';
+import { listener_overlay } from '../chess/game.js';
+import { InputListener, Mouse, MouseButton } from '../input.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -132,14 +134,12 @@ function update() {
 
 	const gamefile = gameslot.getGamefile()!;
 
-	/*
-	if (drawing) {
-		if (!input.isMouseHeld_Right()) return endEdit();
+	if (drawing && currentTool === "placer") {
+		if (!listener_overlay.isMouseHeld(Mouse.RIGHT)) return endEdit();
 	} else {
-		if (input.isMouseDown_Right()) beginEdit();
+		if (listener_overlay.isMouseDown(Mouse.RIGHT)) beginEdit();
 		else return;
 	}
-		*/
 
 	const coords = mouse.getTileMouseOver_Integer();
 	if (coords === undefined) return;
@@ -151,15 +151,6 @@ function update() {
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
-		case "undo":
-			undo();
-			break;
-		case "redo":
-			redo();
-			break;
-		case "save":
-			save();
-			break;
 		case "normal":
 			break;
 		case "placer":
@@ -176,7 +167,7 @@ function update() {
 			queueToggleSpecialRight(gamefile, edit, pieceHovered);
 			break;
 		default:
-			throw new Error("Invalid tool.");
+			break;
 	}
 
 	runEdit(gamefile, edit, true);
@@ -188,13 +179,13 @@ function update() {
 function queueToggleSpecialRight(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined) {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
-	const current = gamefile.specialRights.has(coordsKey);
+	const current = gamefile.basegame.specialRights.has(coordsKey);
 	const future = !current;
 	state.createSpecialRightsState(edit, coordsKey, current, future);
 }
 
 function queueAddPiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number) {
-	if (pieceHovered) queueRemovePiece(gamefile, edit, pieceHovered);
+	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
 	const piece: Piece = { type, coords, index:-1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
@@ -205,11 +196,11 @@ function queueRemovePiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | 
 	// Remove the piece
 	boardchanges.queueDeletePiece(edit.changes, false, pieceHovered);
 	// Remove its special right
-	const current = gamefile!.specialRights.has(coordsKey);
+	const current = gamefile!.basegame.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordutil.getKeyFromCoords(pieceHovered.coords), current, false);
 	// If the pawn has been removed, the en passant sqare must be too.
-	if (coordutil.areCoordsEqual(pieceHovered.coords, gamefile.enpassant?.pawn)) {
-		state.createEnPassantState(edit, gamefile.enpassant, undefined);
+	if (coordutil.areCoordsEqual(pieceHovered.coords, gamefile.basegame.enpassant?.pawn)) {
+		state.createEnPassantState(edit, gamefile.basegame.enpassant, undefined);
 	}
 }
 
