@@ -132,19 +132,15 @@ function close() {
 function clearUsernameContainers() {
 	// console.log("Clearing username containers");
 
-	if (usernamecontainer_white !== undefined) {
-		// Stop any running number animations
-		usernamecontainer_white.animationCancels.forEach(fn => fn());
-		usernamecontainer_white.element.remove();
-		usernamecontainer_white = undefined;
-	}
+	// Stop any running number animations
+	usernamecontainer_white?.animationCancels.forEach(fn => fn());
+	usernamecontainer_white?.element.remove();
+	usernamecontainer_white = undefined;
 
-	if (usernamecontainer_black !== undefined) {
-		// Stop any running number animations
-		usernamecontainer_black.animationCancels.forEach(fn => fn());
-		usernamecontainer_black.element.remove();
-		usernamecontainer_black = undefined;
-	}
+	// Stop any running number animations
+	usernamecontainer_black?.animationCancels.forEach(fn => fn());
+	usernamecontainer_black?.element.remove();
+	usernamecontainer_black = undefined;
 	
 }
 

@@ -37,8 +37,7 @@ let model: BufferModelInstanced | undefined;
 
 // Functions -------------------------------------------------------------------------------------
 
-/** Met
- * hod that returns the single-instance vertex data for the special rights indicator shape. */
+/** Method that returns the single-instance vertex data for the special rights indicator shape. */
 function getSpecialRightsVertexData(): number[] {
 	// return legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
 	// return legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);

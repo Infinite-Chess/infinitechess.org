@@ -346,9 +346,9 @@ function canDropOnPieceTypeInEditMode(type?: number) {
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
 function isOpponentType(basegame: Game, type: number) {
 	const pieceColor = typeutil.getColorFromType(type);
-	return boardeditor.areInBoardEditor() ? false : 
-		/* Non-editor game */ !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
-		/* Local Game */ : pieceColor !== basegame.whosTurn;
+	if (boardeditor.areInBoardEditor()) return false;
+	else if (gameloader.areInLocalGame()) return pieceColor !== basegame.whosTurn;
+	else return pieceColor !== gameloader.getOurColor();
 }
 
 
