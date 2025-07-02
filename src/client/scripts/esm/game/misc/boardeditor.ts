@@ -189,6 +189,7 @@ function queueToggleSpecialRight(gamefile: gamefile, edit: Edit, pieceHovered: P
 
 function queueAddPiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number) {
 	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
+	if (pieceHovered?.type === type) return; // do not add piece again, if it would be the same piece type
 	const piece: Piece = { type, coords, index:-1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
