@@ -186,7 +186,7 @@ function setColor(newColor: Player) {
 	element_playerTypes.get(currentColor)!.forEach((element) => {
 		element.removeEventListener("click", callback_ChangePieceType);
 	});
-	element_playerTypes.get(currentColor)!.forEach((element) => {
+	element_playerTypes.get(newColor)!.forEach((element) => {
 		element.addEventListener("click", callback_ChangePieceType);
 	});
 	element_playerContainers.get(currentColor)!.classList.add("hidden");
