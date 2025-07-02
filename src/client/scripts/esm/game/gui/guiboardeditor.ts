@@ -45,6 +45,7 @@ const coloredTypes = [
 // const neutralTypes = [ rawTypes.VOID ];
 
 let initalized = false;
+let isOpen = false;
 
 let currentColor: Player = players.WHITE;
 let currentPieceType: number;
@@ -55,11 +56,14 @@ async function open() {
 	element_menu.classList.remove("hidden");
 	await gameloader.startBoardEditor();
 	initListeners();
+	isOpen = true;
 }
 
 function close() {
+	if (!isOpen) return;
 	element_menu.classList.add("hidden");
 	closeListeners();
+	isOpen = false;
 }
 
 async function initUI() {

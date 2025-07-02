@@ -5,8 +5,6 @@
 
 import boardchanges from '../../chess/logic/boardchanges.js';
 import { meshChanges } from '../chess/graphicalchanges.js';
-// @ts-ignore
-import mouse from '../../util/mouse.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -19,6 +17,10 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
+// @ts-ignore
+import mouse from '../../util/mouse.js';
+// @ts-ignore
+import copypastegame from '../chess/copypastegame.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -276,7 +278,7 @@ function save() {
 }
 
 function load() {
-	console.log("Not yet implemented");
+	copypastegame.callbackPaste(undefined);
 }
 
 function onMovePlayed(move: Move) {
