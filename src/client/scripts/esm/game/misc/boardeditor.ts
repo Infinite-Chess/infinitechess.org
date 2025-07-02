@@ -18,6 +18,8 @@ import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
+import piecemodels from '../rendering/piecemodels.js';
+import frametracker from '../rendering/frametracker.js';
 // @ts-ignore
 import mouse from '../../util/mouse.js';
 // @ts-ignore
@@ -52,7 +54,7 @@ let inBoardEditor = false;
 
 let currentColor: Player = players.WHITE;
 let currentPieceType: number = rawTypes.VOID;
-let currentTool: Tool;
+let currentTool: Tool = "placer";
 
 
 /**
@@ -73,6 +75,23 @@ let previousSquare: Coords | undefined;
 
 function areInBoardEditor() {
 	return inBoardEditor;
+}
+
+// Set the piece type to be added to the board
+function setPiece(pieceType: number) {
+	currentPieceType = pieceType;
+}
+
+function getPiece() {
+	return currentPieceType;
+}
+
+function setColor(color: Player) {
+	currentColor = color;
+}
+
+function getColor() {
+	return currentColor;
 }
 
 function initBoardEditor() {
@@ -123,9 +142,15 @@ function endEdit() {
 function runEdit(gamefile: gamefile, mesh: Mesh, edit: Edit, forward: boolean = true) {
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
-	// Run graphical and logical changes
+
+	// Run logical changes
 	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
-	boardchanges.runChanges(mesh, edit.changes, meshChanges, forward);
+
+	// Run graphical changes
+	if (gamefile.boardsim.pieces.newlyRegenerated) piecemodels.regenAll(gamefile.boardsim, mesh);
+	else boardchanges.runChanges(mesh, edit.changes, meshChanges, true);
+	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
+
 	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: true });
 	specialrighthighlights.onMove();
 }
@@ -225,23 +250,6 @@ function setTool(tool: string) {
 	guiboardeditor.markTool(tool);
 	if (tool !== "placer") guiboardeditor.markPiece(null);
 	else guiboardeditor.markPiece(currentPieceType);
-}
-
-// Set the piece type to be added to the board
-function setPiece(pieceType: number) {
-	currentPieceType = pieceType;
-}
-
-function getPiece() {
-	return currentPieceType;
-}
-
-function setColor(color: Player) {
-	currentColor = color;
-}
-
-function getColor() {
-	return currentColor;
 }
 
 function clearAll() {

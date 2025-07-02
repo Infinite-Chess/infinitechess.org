@@ -171,10 +171,6 @@ function callback_ChangeTool(e: Event) {
 		case "color":
 			nextColor();
 			return;
-		case "void":
-			boardeditor.setTool("placer");
-			boardeditor.setPiece(rawTypes.VOID);
-			return;
 		default:
 			if (tool !== null) boardeditor.setTool(tool);
 			return;
