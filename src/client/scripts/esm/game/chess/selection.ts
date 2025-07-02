@@ -326,7 +326,7 @@ function canMovePieceType(pieceType: number): boolean {
 	if (editMode) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
-	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !boardeditor.areInBoardEditor() && !gameloader.isItOurTurn();
+	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
 	return (!isPremove); // For now we can't premove, can only move our pieces on our turn.
 }
 
@@ -428,7 +428,7 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
 	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
-	isPremove = !gameloader.areInLocalGame() && !boardeditor.areInBoardEditor() && !gameloader.isItOurTurn() && !isOpponentType(gamefile.basegame, piece.type);
+	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(gamefile.basegame, piece.type);
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
