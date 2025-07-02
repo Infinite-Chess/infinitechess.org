@@ -20,6 +20,7 @@ import boardutil from '../../chess/util/boardutil.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { listener_overlay } from '../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../input.js';
+import guiboardeditor from '../gui/guiboardeditor.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -74,6 +75,7 @@ function areInBoardEditor() {
 
 function initBoardEditor() {
 	inBoardEditor = true;
+	setTool("normal");
 	selection.enableEditMode();
 	edits = [];
 	indexOfThisEdit = 0;
@@ -131,7 +133,7 @@ function addEditToHistory(edit: Edit) {
 }
 
 function update() {
-	if (!inBoardEditor || !currentTool) return;
+	if (!inBoardEditor) return;
 
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
@@ -149,7 +151,6 @@ function update() {
 	previousSquare = coords;
 
 	const pieceHovered = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, coords);
-
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
@@ -210,7 +211,9 @@ function queueRemovePiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | 
  * Change the tool being used.
  */
 function setTool(tool: string) {
-	if (validTools.includes(tool as Tool)) currentTool = tool as Tool;
+	if (!validTools.includes(tool as Tool)) return;
+	currentTool = tool as Tool;
+	guiboardeditor.markTool(tool);
 }
 
 // Set the piece type to be added to the board
@@ -280,7 +283,7 @@ function onMovePlayed(move: Move) {
 	};
 	edits!.push(edit);
 	indexOfThisEdit = edits!.length;
-	gamefile.basegame.moves.length = 0;
+	gamefile.boardsim.moves.length = 0;
 	gamefile.boardsim.state.local.moveIndex = -1;
 	guinavigation.update_MoveButtons();
 }

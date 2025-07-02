@@ -94,7 +94,7 @@ interface TypeRange {
  * When these are all exhausted, the large piece lists must be regenerated. */
 const listExtras = 10;
 /** EDITOR-MODE-SPECIFIC {@link listExtras} */
-const listExtras_Editor = 100;
+const listExtras_Editor = 20;
 
 
 // Main Functions ---------------------------------------------------------------------

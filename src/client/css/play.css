@@ -296,6 +296,10 @@ canvas {
     background: linear-gradient(to bottom, white, rgb(255, 255, 255), white);
 }
 
+.active {
+    background-color: green;
+}
+
 
 
 /* Guide */

@@ -151,6 +151,14 @@ function callback_ChangeTool(e: Event) {
 	}
 }
 
+function markTool(tool: string) {
+	Array.from(element_tools.children).forEach((element) => {
+		const element_tool = element.getAttribute("data-tool");
+		if (element_tool === tool) element.classList.add("active");
+		else element.classList.remove("active");
+	});
+}
+
 function callback_ChangePieceType(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
 	const type = Number.parseInt(target.id);
@@ -184,5 +192,6 @@ function nextColor() {
 export default {
 	open,
 	close,
-	initUI
+	initUI,
+	markTool
 };
