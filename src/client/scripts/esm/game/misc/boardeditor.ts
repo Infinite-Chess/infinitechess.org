@@ -178,6 +178,7 @@ function runEdit(gamefile: gamefile, mesh: Mesh, edit: Edit, forward: boolean = 
 }
 
 function addEditToHistory(edit: Edit) {
+	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
 	edits!.length = indexOfThisEdit!;
 	edits!.push(edit);
 	indexOfThisEdit!++;
@@ -218,6 +219,7 @@ function update() {
 			break;
 	}
 
+	if (edit.changes.length === 0 && edit.state.local.length === 0 && edit.state.global.length === 0) return;
 	runEdit(gamefile, mesh, edit, true);
 	thisEdit!.changes.push(...edit.changes);
 	thisEdit!.state.local.push(...edit.state.local);
