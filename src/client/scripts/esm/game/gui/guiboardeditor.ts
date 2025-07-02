@@ -217,8 +217,8 @@ function updatePieceColors(newColor: Player, iterate_over_all_old_colors = false
 	if (typeutil.getColorFromType(boardeditor.getPiece()) !== players.NEUTRAL) {
 		const currentPieceType = typeutil.buildType(typeutil.getRawType(boardeditor.getPiece()), newColor);
 		boardeditor.setPiece(currentPieceType);
-		markPiece(currentPieceType);
 	}
+	markPiece(boardeditor.getPiece());
 }
 
 function nextColor() {
