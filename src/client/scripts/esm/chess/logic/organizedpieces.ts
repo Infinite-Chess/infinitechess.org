@@ -11,7 +11,7 @@
  */
 
 
-import typeutil, { ext, players, rawTypes } from "../util/typeutil.js";
+import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
 import movesets from "./movesets.js";
@@ -457,8 +457,8 @@ function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrde
 		const playersSet: Set<Player> = new Set(turnOrder);
 		if (turnOrder.some(p => p >= 3)) playersSet.add(players.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
 		const playersArray: Array<Player> = [...playersSet];
-
 		existingTypes = typeutil.buildAllTypesForPlayers(playersArray, Object.values(rawTypes));
+		existingTypes = [...new Set([...neutralRawTypes, ...existingTypes])]; // This ensures VOID and OBSTACLE are always added.
 		existingRawTypes = Object.values(rawTypes);
 	} else {
 		if (promotionsAllowed) {
