@@ -185,6 +185,8 @@ canvas {
     position: absolute;
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 
@@ -1003,7 +1005,7 @@ button.join-button, button.copy-button {
 /* Top Navigation: Zoom buttons, coordinates, rewind/forward game, pause */
 
 .navigation-bar {
-    position: absolute;
+    position: relative;
     top: 0;
     width: 100%;
     font-size: 84px; /* Update with doc!! */
@@ -1316,6 +1318,51 @@ svg.collapse {
     aspect-ratio: 1;
     width: 84%;
     transform: translate(0.5px, 0.5px);
+}
+
+
+/* Board Editor UI */
+
+.editor-menu {
+    position: relative;
+    left: 0;
+    height: 100%;
+    width: fit-content;
+    box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
+    -webkit-backdrop-filter: blur(5px); /* Must be BEFORE the unprefixed rules, so Lightning CSS correclty parses! */
+    backdrop-filter: blur(8px); /* Apply a blur effect to the background */
+}
+
+.editor-tools {
+    display: grid;
+    grid-template-columns: repeat(2, 4.5em);
+}
+
+.editor-types {
+    display: grid;
+    grid-template-columns: repeat(3, 3em);
+}
+
+.editor-types svg, .editor-tools div {
+    cursor: pointer;
+    aspect-ratio: 1/1;
+}
+
+.editor-types svg:hover, .editor-tools div:hover {
+    background-color: #e5e5e5;
+}
+
+.void {
+    background-color: black;
+    margin: 10px;
+}
+
+.dot {
+    border: 1px solid black;
+    border-radius: 100%;
+    margin: 12px;
+    flex-shrink: 0;
 }
 
 

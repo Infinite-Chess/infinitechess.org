@@ -27,6 +27,7 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 import frametracker from "../rendering/frametracker.js";
+import boardeditor from "../misc/boardeditor.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 
@@ -63,7 +64,7 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	// GUI changes
 	updateGui(false);
 
-	if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
+	if (!onlinegame.areInOnlineGame() && !boardeditor.areInBoardEditor() && !gamefile.basegame.untimed) {
 		const clockStamp_ = clock.push(basegame, basegame.clocks!);
 		guiclock.push(basegame.clocks!);
 		// Add the clock stamp to the move

@@ -40,6 +40,7 @@ import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
+import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -118,12 +119,15 @@ function toggleEditMode() {
 	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener_document.isKeyHeld('0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
+	if (boardeditor.areInBoardEditor()) return; // Don't toggle if in board editor
 
 	editMode = !editMode;
 	statustext.showStatus(`Toggled Edit Mode: ${editMode}`);
 }
 
 function disableEditMode() { editMode = false; }
+
+function enableEditMode() { editMode = true; }
 
 
 // Updating ---------------------------------------------------------------------------------------------
@@ -322,7 +326,7 @@ function canMovePieceType(pieceType: number): boolean {
 	if (editMode) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
-	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
+	const isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !boardeditor.areInBoardEditor() && !gameloader.isItOurTurn();
 	return (!isPremove); // For now we can't premove, can only move our pieces on our turn.
 }
 
@@ -342,8 +346,9 @@ function canDropOnPieceTypeInEditMode(type?: number) {
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
 function isOpponentType(basegame: Game, type: number) {
 	const pieceColor = typeutil.getColorFromType(type);
-	return !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
-	/* Local Game */ : pieceColor !== basegame.whosTurn;
+	return boardeditor.areInBoardEditor() ? false : 
+		/* Non-editor game */ !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
+		/* Local Game */ : pieceColor !== basegame.whosTurn;
 }
 
 
@@ -423,7 +428,7 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
 	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
-	isPremove = !gameloader.areInLocalGame() && !gameloader.isItOurTurn() && !isOpponentType(gamefile.basegame, piece.type);
+	isPremove = !gameloader.areInLocalGame() && !boardeditor.areInBoardEditor() && !gameloader.isItOurTurn() && !isOpponentType(gamefile.basegame, piece.type);
 
 	legalmovehighlights.onPieceSelected(pieceSelected, legalMoves); // Generate the buffer model for the blue legal move fields.
 }
@@ -452,7 +457,8 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+	const doGameOverChecks = !boardeditor.areInBoardEditor();
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks });
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
@@ -460,6 +466,7 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 
 	movesendreceive.sendMove();
 	enginegame.onMovePlayed();
+	boardeditor.onMovePlayed();
 
 	unselectPiece();
 }
@@ -500,6 +507,7 @@ export default {
 	getSquarePawnIsCurrentlyPromotingOn,
 	toggleEditMode,
 	disableEditMode,
+	enableEditMode,
 	promoteToType,
 	update,
 	renderGhostPiece,
