@@ -466,7 +466,7 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 
 	movesendreceive.sendMove();
 	enginegame.onMovePlayed();
-	boardeditor.onMovePlayed();
+	boardeditor.onMovePlayed(move);
 
 	unselectPiece();
 }
