@@ -21,7 +21,7 @@ import { rawTypes } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import mouse from '../../util/mouse.js';
 // @ts-ignore
-import copypastegame from '../chess/copypastegame.js';
+import statustext from '../gui/statustext.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -280,7 +280,7 @@ function save() {
 }
 
 function load() {
-	copypastegame.callbackPaste(undefined);
+	statustext.showStatus("Loading not yet implementd", true);
 }
 
 function onMovePlayed(move: Move) {
