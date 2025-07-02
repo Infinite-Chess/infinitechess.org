@@ -16,10 +16,12 @@ import type { Player } from "../../chess/util/typeutil.js";
 const element_menu = document.getElementById("editor-menu")!;
 const element_tools = document.getElementById("editor-tools")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
+const element_neutralTypesContainer = document.getElementById("editor-neutralTypes")!;
 const element_dot = document.getElementById("editor-dot")!;
 
 const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
+const element_neutralTypes: Array<Element> = [];
 
 // Pieces in the order they will appear
 const coloredTypes = [
@@ -41,8 +43,7 @@ const coloredTypes = [
 	rawTypes.ROYALQUEEN,
 ];
 
-// TODO: Properly add support for voids and obstacles
-// const neutralTypes = [ rawTypes.VOID, rawTypes.OBSTACLE ];
+const neutralTypes = [ rawTypes.OBSTACLE ];
 
 let initalized = false;
 let isOpen = false;
@@ -71,6 +72,7 @@ async function initUI() {
 	const gamefile = gameslot.getGamefile()!;
 	const setOfPlayers: Set<Player> = new Set(gamefile.basegame.gameRules.turnOrder);
 
+	// Colored pieces
 	for (const player of setOfPlayers) {
 		const svgs = await svgcache.getSVGElements(coloredTypes.map((rawType) => { return typeutil.buildType(rawType, player); }));
 		const playerPieces = document.createElement("div");
@@ -79,10 +81,30 @@ async function initUI() {
 		playerPieces.classList.add("editor-types");
 		if (player !== currentColor) playerPieces.classList.add("hidden");
 		for (const svg of svgs) {
+			svg.classList.add("piece");
 			playerPieces.appendChild(svg);
 		}
 		element_typesContainer.appendChild(playerPieces);
 	}
+
+	// Neutral pieces
+	const neutral_svgs = await svgcache.getSVGElements(neutralTypes.map((rawType) => { return typeutil.buildType(rawType, players.NEUTRAL); }));
+	const neutralPieces = document.createElement("div");
+	neutralPieces.classList.add("editor-types");
+
+	const element_void = document.createElement("div");
+	element_void.classList.add("piece");
+	element_void.classList.add("void");
+	element_void.id = "0";
+	element_neutralTypes.push(element_void);
+	neutralPieces.appendChild(element_void);
+
+	for (const neutral_svg of neutral_svgs) {
+		neutral_svg.classList.add("piece");
+		element_neutralTypes.push(neutral_svg);
+		neutralPieces.appendChild(neutral_svg);
+	}
+	element_neutralTypesContainer.appendChild(neutralPieces);
 
 	initalized = true;
 }
@@ -94,6 +116,9 @@ function initListeners() {
 	element_playerTypes.get(currentColor)!.forEach((element) => {
 		element.addEventListener("click", callback_ChangePieceType);
 	});
+	element_neutralTypes.forEach((element) => {
+		element.addEventListener("click", callback_ChangePieceType);
+	});
 }
 
 function closeListeners() {
@@ -101,6 +126,9 @@ function closeListeners() {
 		element.removeEventListener("click", callback_ChangeTool);
 	});
 	element_playerTypes.get(currentColor)!.forEach((element) => {
+		element.removeEventListener("click", callback_ChangePieceType);
+	});
+	element_neutralTypes.forEach((element) => {
 		element.removeEventListener("click", callback_ChangePieceType);
 	});
 }
@@ -179,6 +207,11 @@ function markPiece(type: number | null) {
 		if (element_type === type) element.classList.add("active");
 		else element.classList.remove("active");
 	});
+	element_neutralTypes.forEach((element) => {
+		const element_type = Number.parseInt(element.id);
+		if (element_type === type) element.classList.add("active");
+		else element.classList.remove("active");
+	});
 }
 
 function setColor(newColor: Player) {
@@ -194,10 +227,12 @@ function setColor(newColor: Player) {
 	element_dot.style.backgroundColor = typeutil.strcolors[newColor];
 
 	currentColor = newColor;
-	// Update currentPieceType
-	currentPieceType = typeutil.buildType(typeutil.getRawType(currentPieceType), currentColor);
-	boardeditor.setPiece(currentPieceType);
-	markPiece(currentPieceType);
+	// Update currentPieceType, if necessary
+	if (typeutil.getColorFromType(currentColor) !== players.NEUTRAL) {
+		currentPieceType = typeutil.buildType(typeutil.getRawType(currentPieceType), currentColor);
+		boardeditor.setPiece(currentPieceType);
+		markPiece(currentPieceType);
+	}
 }
 
 function nextColor() {
