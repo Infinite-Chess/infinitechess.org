@@ -277,10 +277,11 @@ function save() {
 		if (type !== undefined) output += icnconverter.getAbbrFromType(type) + coordsKey + '|';
 	});
 	docutil.copyToClipboard(output.slice(0,-1));
+	statustext.showStatus(translations['copypaste']['copied_game']);
 }
 
 function load() {
-	statustext.showStatus("Loading not yet implementd", true);
+	statustext.showStatus("Loading not yet implemented", true);
 }
 
 function onMovePlayed(move: Move) {
