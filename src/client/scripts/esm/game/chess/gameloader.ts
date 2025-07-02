@@ -299,8 +299,11 @@ async function startBoardEditor() {
 		/**
 		 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
 		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
+		 * 
+		 * This flag triggers the gamefile to add images for EVERY single piece in the spritesheet!
+		 * If that also includes all COLORS, then loading a game can take a few seconds...
 		 */
-		additional: { editor: true } // For some reason, editor: true leads to INCREDIBLY long loading times
+		additional: { editor: true }
 	})
 		.then((result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
