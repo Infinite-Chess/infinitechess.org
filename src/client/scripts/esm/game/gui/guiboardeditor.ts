@@ -148,7 +148,6 @@ function callback_ChangeTool(e: Event) {
 			boardeditor.load();
 			return;
 		case "clearall":
-			boardeditor.setTool("normal");
 			boardeditor.clearAll();
 			return;
 		case "color":

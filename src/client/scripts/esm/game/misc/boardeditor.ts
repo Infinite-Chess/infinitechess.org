@@ -211,8 +211,6 @@ function update() {
 		case "eraser":
 			queueRemovePiece(gamefile, edit, pieceHovered);
 			break;
-		case "selector":
-			break;
 		case "specialrights":
 			queueToggleSpecialRight(gamefile, edit, pieceHovered);
 			break;
