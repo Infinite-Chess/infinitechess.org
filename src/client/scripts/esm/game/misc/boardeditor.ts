@@ -17,6 +17,7 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
+import { rawTypes } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import mouse from '../../util/mouse.js';
 // @ts-ignore
@@ -48,7 +49,7 @@ const validTools: Tool[] = ["undo", "redo", "save", "load", "normal", "placer", 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
 
-let currentPieceType: number = 0;
+let currentPieceType: number = rawTypes.VOID;
 let currentTool: Tool;
 
 
@@ -218,6 +219,7 @@ function setTool(tool: string) {
 
 	guiboardeditor.markTool(tool);
 	if (tool !== "placer") guiboardeditor.markPiece(null);
+	else guiboardeditor.markPiece(currentPieceType);
 }
 
 // Set the piece type to be added to the board

@@ -39,10 +39,10 @@ const coloredTypes = [
 	rawTypes.HUYGEN,
 	rawTypes.ROSE,
 	rawTypes.ROYALQUEEN,
-	rawTypes.OBSTACLE,
 ];
 
-// const neutralTypes = [ rawTypes.VOID ];
+// TODO: Properly add support for voids and obstacles
+// const neutralTypes = [ rawTypes.VOID, rawTypes.OBSTACLE ];
 
 let initalized = false;
 let isOpen = false;
