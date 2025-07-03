@@ -45,15 +45,12 @@ type Change = {
 	/** The type of action this change performs. */
 	action: 'add' | 'delete',
 } | {
-	action: 'capture',
-	endCoords: Coords,
-	capturedPiece: Piece,
-	/** A custom path the moving piece took to make the capture. (e.g. Rose piece) */
-	path?: Coords[],
-} | {
 	action: 'move',
 	endCoords: Coords,
 	path?: Coords[],
+} | {
+	action: 'capture',
+	order: number
 })
 
 /**
@@ -90,13 +87,13 @@ const changeFuncs: ChangeApplication<genericChangeFunc<FullGame>> = {
 		"add": addPiece,
 		"delete": deletePiece,
 		"move": movePiece,
-		"capture": capturePiece,
+		"capture": deletePiece,
 	},
 	backward: {
 		"delete": addPiece,
 		"add": deletePiece,
 		"move": returnPiece,
-		"capture": uncapturePiece,
+		"capture": addPiece,
 	}
 };
 
@@ -108,14 +105,12 @@ const changeFuncs: ChangeApplication<genericChangeFunc<FullGame>> = {
  * Queues a move with catpure
  * Need to differentiate this from move so animations can work and so that royal capture can be recognised
  * @param changes
- * @param piece The piece moved. Its coords are used as starting coords
- * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
- * @param endCoords 
- * @param capturedPiece The piece captured
+ * @param piece The piece captured.
+ * @param main Whether this change is affecting the main piece moved, not a secondary piece.
+ * @param order This is used by animations to tell when this piece was captured. `-1` implies the end of the path the piece moved along
  */
-function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, endCoords: Coords, capturedPiece: Piece, path?: Coords[]) {
-	const change: Change = { action: 'capture', main, piece, endCoords, capturedPiece };
-	if (path !== undefined) change.path = path;
+function queueCapture(changes: Array<Change>, main: boolean, piece: Piece, order: number = -1) {
+	const change: Change = { action: 'capture', main, piece, order};
 	changes.push(change);
 	return changes;
 }
@@ -260,7 +255,7 @@ function deletePiece({ boardsim }: FullGame, change: Change) {
  * @param change - the move data
  */
 function movePiece({ boardsim }: FullGame, change: Change) {
-	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`movePiece called with a non-move change: ${change.action}`);
+	if (change.action !== 'move') throw new Error(`movePiece called with a non-move change: ${change.action}`);
 
 	const pieces = boardsim.pieces;
 	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
@@ -275,7 +270,7 @@ function movePiece({ boardsim }: FullGame, change: Change) {
  * Reverses `movePiece`
  */
 function returnPiece({ boardsim }: FullGame, change: Change) {
-	if (change.action !== 'move' && change.action !== 'capture') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
+	if (change.action !== 'move') throw new Error(`returnPiece called with a non-move change: ${change.action}`);
 
 	const pieces = boardsim.pieces;
 	const range = pieces.typeRanges.get(change.piece.type)!;
@@ -288,29 +283,6 @@ function returnPiece({ boardsim }: FullGame, change: Change) {
 
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
-
-/**
- * Captures a piece.
- * 
- * This is differentiated from move changes so it can be animated.
- */
-function capturePiece(gamefile: FullGame, change: Change) {
-	if (change.action !== 'capture') throw new Error(`capturePiece called with a non-capture change: ${change.action}`);
-
-	deletePiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
-	movePiece(gamefile, change);
-}
-
-/**
- * Undos a capture
- */
-function uncapturePiece(gamefile: FullGame, change: Change) {
-	if (change.action !== 'capture') throw new Error(`uncapturePiece called with a non-capture change: ${change.action}`);
-
-	returnPiece(gamefile, change);
-	addPiece(gamefile, { piece: change.capturedPiece, main: change.main, action: "add" });
-}
-
 
 // Other Change Functions -----------------------------------------------------------------------------------
 
@@ -332,8 +304,6 @@ function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]
 				break;
 			case 'capture':
 				position.delete(startCoordsKey);
-				position.delete(coordutil.getKeyFromCoords(change.capturedPiece.coords));
-				position.set(coordutil.getKeyFromCoords(change.endCoords), change.piece.type);
 				break;
 			case 'add':
 				position.set(startCoordsKey, change.piece.type);
@@ -358,7 +328,7 @@ function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]
 function getCapturedPieceTypes(move: Move): Set<number> {
 	const pieceTypes: Set<number> = new Set();
 	move.changes.forEach(change => {
-		if (change.action === 'capture') pieceTypes.add(change.capturedPiece.type);
+		if (change.action === 'capture') pieceTypes.add(change.piece.type);
 	});
 	return pieceTypes;
 }

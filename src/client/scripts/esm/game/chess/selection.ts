@@ -7,7 +7,6 @@
 
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { MoveDraft } from '../../chess/logic/movepiece.js';
-import type { RawType } from '../../chess/util/typeutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { LegalMoves } from '../../chess/logic/legalmoves.js';
 import type { Game, FullGame } from '../../chess/logic/gamefile.js';
@@ -493,7 +492,7 @@ function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined) {
 function renderGhostPiece() {
 	if (!pieceSelected || !hoverSquareLegal || draganimation.areDraggingPiece() || listener_overlay.isMouseTouch(Mouse.LEFT) || config.VIDEO_MODE) return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
-	if (typeutil.SVGLESS_TYPES.some((type: RawType) => type === rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
+	if (typeutil.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }
