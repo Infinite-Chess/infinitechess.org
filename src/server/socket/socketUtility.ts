@@ -7,8 +7,9 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
-
 import type WebSocket from 'ws';
+import type { MemberInfo } from '../../types.js';
+
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
 interface CustomWebSocket extends WebSocket {
@@ -38,13 +39,7 @@ interface CustomWebSocket extends WebSocket {
 		};
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent?: string;
-		memberInfo: {
-			/** True if they are signed in, if not they MUST have a browser-id cookie! */
-			signedIn: boolean;
-			user_id?: number;
-			username?: string;
-			roles?: string[];
-		};
+		memberInfo: MemberInfo
 		/** The account verification status of the user */
 		verified: boolean;
 		/** The id of their websocket. */
@@ -112,7 +107,7 @@ function getSimplifiedMetadata(ws: CustomWebSocket) {
  */
 function getOwnerFromSocket(ws: CustomWebSocket): { member: string, user_id: number } | { browser: string } {
 	const metadata = ws.metadata;
-	if (metadata.memberInfo.signedIn) return { member: ws.metadata.memberInfo.username!, user_id: ws.metadata.memberInfo.user_id! };
+	if (metadata.memberInfo.signedIn) return { member: metadata.memberInfo.username, user_id: metadata.memberInfo.user_id };
 	else return { browser: metadata.cookies['browser-id']! };
 }
 

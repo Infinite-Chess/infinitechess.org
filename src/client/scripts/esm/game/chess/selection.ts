@@ -40,6 +40,7 @@ import config from '../config.js';
 import legalmoves from '../../chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import premoves from "../chess/premoves.js";
+import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import guipause from '../gui/guipause.js';
 // @ts-ignore
@@ -118,12 +119,15 @@ function toggleEditMode() {
 	const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && listener_document.isKeyHeld('0');
 	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
+	if (boardeditor.areInBoardEditor()) return; // Don't toggle if in board editor
 
 	editMode = !editMode;
 	statustext.showStatus(`Toggled Edit Mode: ${editMode}`);
 }
 
 function disableEditMode() { editMode = false; }
+
+function enableEditMode() { editMode = true; }
 
 
 // Updating ---------------------------------------------------------------------------------------------
@@ -204,7 +208,9 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
-	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords);
+	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) ||
+						editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords) ||
+						boardeditor.areInBoardEditor() && !coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords); // Allow ALL moves in board editor.
 }
 
 
@@ -352,6 +358,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: FullGame, mesh: Mesh | undefi
  */
 function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
+	if (boardeditor.areInBoardEditor()) return preferences.getDragEnabled() ? 2 : 1; // In board editor, we can select and drag ANY piece type, even voids!
 	const [raw, player] = typeutil.splitType(type);
 	if (raw === rawTypes.VOID) return 0; // Can't select voids
 	if (editMode) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged.
@@ -394,8 +401,9 @@ function canDropOnPieceTypeInEditMode(type?: number) {
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
 function isOpponentType(basegame: Game, type: number) {
 	const pieceColor = typeutil.getColorFromType(type);
-	return !gameloader.areInLocalGame() ? pieceColor !== gameloader.getOurColor()
-	/* Local Game */ : pieceColor !== basegame.whosTurn;
+	if (boardeditor.areInBoardEditor()) return false;
+	else if (gameloader.areInLocalGame()) return pieceColor !== basegame.whosTurn;
+	else return pieceColor !== gameloader.getOurColor();
 }
 
 
@@ -451,6 +459,7 @@ function reselectPiece() {
 
 /** Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
 function unselectPiece() {
+	// console.error("Unselecting piece");
 	if (pieceSelected === undefined) return; // No piece to unselect.
 	pieceSelected = undefined;
 	isOpponentPiece = false;
@@ -508,7 +517,8 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const animateMain = !wasBeingDragged; // This needs to be ABOVE makeMove(), since that will terminate the drag if the move ends the game.
-	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+	const doGameOverChecks = !boardeditor.areInBoardEditor();
+	const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks });
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
@@ -516,6 +526,7 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 
 	movesendreceive.sendMove();
 	enginegame.onMovePlayed();
+	boardeditor.onMovePlayed(move);
 
 	unselectPiece();
 }
@@ -557,6 +568,7 @@ export default {
 	getSquarePawnIsCurrentlyPromotingOn,
 	toggleEditMode,
 	disableEditMode,
+	enableEditMode,
 	promoteToType,
 	update,
 	renderGhostPiece,

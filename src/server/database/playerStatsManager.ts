@@ -10,8 +10,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path i
 import db from './database.js';
 import { allPlayerStatsColumns } from './databaseTables.js';
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
-
 
 // Type Definitions -----------------------------------------------------------------------------------
 
@@ -36,9 +34,6 @@ interface PlayerStatsRecord {
     game_count_losses_casual?: number;
     game_count_draws_casual?: number;
 }
-
-/** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
 
 
 // Methods --------------------------------------------------------------------------------------------
@@ -89,61 +84,10 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 	}
 }
 
-/**
- * Updates multiple column values in the player_stats table for a given user.
- * @param user_id - The user ID of the player_stats.
- * @param columnsAndValues - An object containing column-value pairs to update.
- * @returns - A result object indicating success or failure.
- */
-function updatePlayerStatsColumns(user_id: number, columnsAndValues: PlayerStatsRecord): ModifyQueryResult {
-	// Ensure columnsAndValues is an object and not empty
-	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEventsAndPrint(`Invalid or empty columns and values provided for user ID "${user_id}" when updating player_stats columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
-		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
-	}
-
-	for (const column in columnsAndValues) {
-		// Validate all provided columns
-		if (!allPlayerStatsColumns.includes(column)) {
-			logEventsAndPrint(`Invalid column "${column}" provided for user ID "${user_id}" when updating player_stats columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt'); // Detailed logging for debugging
-			return { success: false, reason: 'Invalid column.' }; // Generic error message
-		}
-	}
-
-	// Dynamically build the SET part of the query
-	const setStatements = Object.keys(columnsAndValues).map(column => `${column} = ?`).join(', ');
-	const values = Object.values(columnsAndValues);
-
-	// Add the user_id as the last parameter for the WHERE clause
-	values.push(user_id);
-
-	// Update query to modify multiple columns
-	const updateQuery = `UPDATE player_stats SET ${setStatements} WHERE user_id = ?`;
-
-	try {
-		// Execute the update query
-		const result = db.run(updateQuery, values);
-
-		// Check if the update was successful
-		if (result.changes > 0) return { success: true, result };
-		else {
-			logEventsAndPrint(`No changes made when updating player stats table columns ${JSON.stringify(columnsAndValues)} for member in player_stats table with id "${user_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
-			return { success: false, reason: 'No changes made.' }; // Generic error message
-		}
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEventsAndPrint(`Error updating player stats table columns ${JSON.stringify(columnsAndValues)} for user ID "${user_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`, 'errLog.txt');
-		// Return an error message
-		return { success: false, reason: 'Database error.' }; // Generic error message
-	}
-}
-
 
 // Exports --------------------------------------------------------------------------------------------
 
 
 export {
 	getPlayerStatsData,
-	updatePlayerStatsColumns
 };	

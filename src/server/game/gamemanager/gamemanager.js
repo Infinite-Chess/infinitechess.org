@@ -442,6 +442,8 @@ async function deleteGame(game) {
 	}
 
 	// Monitor suspicion levels for all players who participated in the game
+	// Doesn't have to be in the same transaction as the game logging,
+	// as the rating abuse table's data does not reference other tables.
 	await ratingabuse.measureRatingAbuseAfterGame(game);
 
 	delete activeGames[game.id]; // Delete the game from the activeGames list

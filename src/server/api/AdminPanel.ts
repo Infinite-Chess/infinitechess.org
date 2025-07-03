@@ -125,7 +125,7 @@ function deleteCommand(command: string, commandAndArgs: string[], req: Authentic
 	if (user_id === undefined) return sendAndLogResponse(res, 404, "User " + usernameArgument + " does not exist.");
 	// They were found...
 	const adminsRoles = req.memberInfo.signedIn ? req.memberInfo.roles : null;
-	const rolesOfAffectedUser = JSON.parse(roles);
+	const rolesOfAffectedUser = JSON.parse(roles!);
 	// Don't delete them if they are equal or higher than your status
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser)) return sendAndLogResponse(res, 403, "Forbidden to delete " + username + ".");
 	const result = deleteAccount(user_id, reason); // { success, reason (if failed) }
@@ -214,7 +214,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Authenticat
 	// Valid Syntax
 	logCommand(command, req);
 	const username = commandAndArgs[1];
-	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "verification", "username_history", "checkmates_beaten"], "username", username, { skipErrorLogging: true });
+	const memberData = getMemberDataByCriteria(["user_id", "username", "roles", "joined", "last_seen", "preferences", "is_verified", "is_verification_notified", "username_history", "checkmates_beaten"], "username", username, { skipErrorLogging: true });
 	if (Object.keys(memberData).length === 0) { // Empty (member not found)
 		sendAndLogResponse(res, 404, "User " + username + " does not exist.");
 	}

@@ -37,6 +37,8 @@ import onlinegame from "../misc/onlinegame/onlinegame.js";
 import localstorage from "../../util/localstorage.js";
 import boardpos from "../rendering/boardpos.js";
 import guiclock from "../gui/guiclock.js";
+import boardeditor from "../misc/boardeditor.js";
+import guiboardeditor from "../gui/guiboardeditor.js";
 
 
 // Variables --------------------------------------------------------------------
@@ -79,6 +81,7 @@ function isItOurTurn(color?: Player): boolean {
 	if (typeOfGameWeAreIn === undefined) throw Error("Can't tell if it's our turn when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
+	else if (typeOfGameWeAreIn === 'editor') return true;
 	else if (typeOfGameWeAreIn === 'local') return gameslot.getGamefile()!.basegame.whosTurn === color;
 	else throw Error("Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn);
 }
@@ -271,6 +274,44 @@ async function startEngineGame(options: {
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
 
+/** Initializes the board editor. */
+async function startBoardEditor() {
+
+	typeOfGameWeAreIn = 'editor';
+	gameLoading = true;
+
+	await loadingscreen.open();
+
+	const metadata : MetaData = {
+		Variant: "Classical",
+		TimeControl: '-',
+		Event: `Position created using ingame board editor`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		UTCDate: timeutil.getCurrentUTCDate(),
+		UTCTime: timeutil.getCurrentUTCTime()
+	};
+
+	gameslot.loadGamefile({
+		metadata,
+		viewWhitePerspective: true,
+		allowEditCoords: true,
+		/**
+		 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
+		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
+		 * 
+		 * This flag triggers the gamefile to add images for EVERY single piece in the spritesheet!
+		 * If that also includes all COLORS, then loading a game can take a few seconds...
+		 */
+		additional: { editor: true }
+	})
+		.then((result: any) => onFinishedLoading())
+		.catch((err: Error) => onCatchLoadingError(err));
+
+	await guiboardeditor.initUI();
+	boardeditor.initBoardEditor();
+}
+
 /**
  * Reloads the current local, online, or editor game from the provided metadata, existing moves, and variant options.
  */
@@ -355,10 +396,12 @@ function unloadGame() {
 	
 	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
 	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
+	else if (typeOfGameWeAreIn === 'editor') boardeditor.closeBoardEditor();
 	
 	guinavigation.close();
 	guigameinfo.close();
 	guigameinfo.clearUsernameContainers();
+	guiboardeditor.close();
 	gameslot.unloadGame();
 	perspective.disable();
 	typeOfGameWeAreIn = undefined;
@@ -383,6 +426,7 @@ export default {
 	startLocalGame,
 	startOnlineGame,
 	startEngineGame,
+	startBoardEditor,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
 	unloadGame,

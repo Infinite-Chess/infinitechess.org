@@ -11,7 +11,7 @@
  */
 
 
-import typeutil, { ext, players, rawTypes } from "../util/typeutil.js";
+import typeutil, { ext, players, rawTypes, neutralRawTypes } from "../util/typeutil.js";
 import coordutil from "../util/coordutil.js";
 import math from "../../util/math.js";
 import movesets from "./movesets.js";
@@ -94,7 +94,7 @@ interface TypeRange {
  * When these are all exhausted, the large piece lists must be regenerated. */
 const listExtras = 10;
 /** EDITOR-MODE-SPECIFIC {@link listExtras} */
-const listExtras_Editor = 100;
+const listExtras_Editor = 50;
 
 
 // Main Functions ---------------------------------------------------------------------
@@ -453,8 +453,12 @@ function calcRemainingExistingTypes(positionExistingTypes: Set<number>, turnOrde
 	let existingTypes: number[];
 	let existingRawTypes: RawType[];
 	if (editor) {
-		// ALL pieces may be added in the board editor
-		existingTypes = typeutil.buildAllTypesForPlayers(Object.values(players), Object.values(rawTypes));
+		// ALL pieces may be added in the board editor, but only of the players mentioned in turnOrder
+		const playersSet: Set<Player> = new Set(turnOrder);
+		if (turnOrder.some(p => p >= 3)) playersSet.add(players.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
+		const playersArray: Array<Player> = [...playersSet];
+		existingTypes = typeutil.buildAllTypesForPlayers(playersArray, Object.values(rawTypes));
+		existingTypes = [...new Set([...neutralRawTypes, ...existingTypes])]; // This ensures VOID and OBSTACLE are always added.
 		existingRawTypes = Object.values(rawTypes);
 	} else {
 		if (promotionsAllowed) {

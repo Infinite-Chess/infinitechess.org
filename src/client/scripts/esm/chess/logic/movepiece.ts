@@ -111,19 +111,23 @@ interface MoveDraft extends _Move_Compact {
 	path?: path,
 }
 
-/**
- * Contains all properties a {@link MoveDraft} has, and more.
- * Including the changes it made to the board, the gamefile
- * state before and after the move, etc.
- */
-interface Move extends MoveDraft, BaseMove {
-	/** The type of piece moved */
-	type: number,
+/** Information about some change on the chessboard, either by a move or some other property change (e.g. as used in the board editor) */
+interface Edit {
 	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
 	changes: Array<Change>,
 	/** The state of the move is used to know how to modify specific gamefile
 	 * properties when forwarding/rewinding this move. */
-	state: MoveState,
+	state: MoveState
+}
+
+/**
+ * Contains all properties a {@link MoveDraft} and a {@link Edit} has, and more.
+ * Including the changes it made to the board, the gamefile
+ * state before and after the move, etc.
+ */
+interface Move extends Edit, MoveDraft, BaseMove {
+	/** The type of piece moved */
+	type: number,
 	/** The index this move was generated for. This can act as a safety net
 	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
@@ -408,6 +412,7 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
 function rewindMove(gamefile: FullGame) {
+	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(gamefile.boardsim.moves, gamefile.boardsim.state.local.moveIndex);
 
 	applyMove(gamefile, move, false, { global: true });
@@ -486,6 +491,7 @@ function getSimulatedConclusion(gamefile: FullGame, moveDraft: MoveDraft): strin
 
 export type {
 	Move,
+	Edit,
 	BaseMove,
 	MoveDraft,
 	CoordsSpecial,

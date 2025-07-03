@@ -1,4 +1,6 @@
 
+// src/server/database/databaseTables.ts
+
 /**
  * This script creates our database tables if they aren't already present.
  */
@@ -7,6 +9,7 @@
 import db from './database.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
+import { performFullVerificationMigration } from './migrateVerification.js';
 
 
 // Variables -----------------------------------------------------------------------------------
@@ -29,9 +32,11 @@ const allMemberColumns: string[] = [
 	'joined',
 	'last_seen',
 	'preferences',
-	'verification',
 	'login_count',
-	'checkmates_beaten'
+	'checkmates_beaten',
+	'is_verified',
+	'verification_code',
+	'is_verification_notified',
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
@@ -100,16 +105,18 @@ function generateTables(): void {
 	// Members table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS members (
-			user_id INTEGER PRIMARY KEY,               
+			user_id INTEGER PRIMARY KEY,
 			username TEXT UNIQUE NOT NULL COLLATE NOCASE,
-			email TEXT UNIQUE NOT NULL,                
-			hashed_password TEXT NOT NULL,             
-			roles TEXT,        
+			email TEXT UNIQUE NOT NULL,
+			hashed_password TEXT NOT NULL,
+			roles TEXT,
 			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,                         
-			login_count INTEGER NOT NULL DEFAULT 0,                        
-			preferences TEXT,                        
-			verification TEXT, 
+			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			login_count INTEGER NOT NULL DEFAULT 0,
+			is_verified INTEGER NOT NULL DEFAULT 0,
+			verification_code TEXT,
+			is_verification_notified INTEGER NOT NULL DEFAULT 0,
+			preferences TEXT,
 			username_history TEXT,
 			checkmates_beaten TEXT NOT NULL DEFAULT ''
 		);
@@ -295,6 +302,7 @@ function deleteTable(tableName: string) {
 
 function initDatabase(): void {
 	generateTables();
+	performFullVerificationMigration(); // DELETE AFTER NEXT UPDATE!!
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 }

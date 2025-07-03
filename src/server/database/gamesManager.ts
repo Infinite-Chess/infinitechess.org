@@ -10,7 +10,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path i
 import db from './database.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { RunResult } from 'better-sqlite3';
 
 
 // Type Definitions -----------------------------------------------------------------------------------
@@ -41,88 +41,6 @@ type ModifyGameQueryResult = { success: true; result: RunResult } | { success: f
 
 // Methods --------------------------------------------------------------------------------------------
 
-/**
- * Adds an entry to the games table
- * @param [options] - Parameters for all the entries of the game
- * @returns A result object indicating success or failure.
- */
-function addGameToGamesTable(
-	options: {
-		game_id: number,
-        date: string,
-		base_time_seconds: number | null,
-		increment_seconds: number | null,
-        variant: string,
-		/** 0 => false  1 => true */
-        rated: 0 | 1,
-		leaderboard_id: number | null,
-		/** 0 => false  1 => true */
-        private: 0 | 1,
-        result: string,
-        termination: string,
-        move_count: number,
-		time_duration_millis: number | null,
-        icn: string
-    }): ModifyGameQueryResult {
-
-	const query = `
-	INSERT INTO games (
-		game_id,
-        date,
-		base_time_seconds,
-		increment_seconds,
-        variant,
-        rated,
-		leaderboard_id,
-        private,
-        result,
-        termination,
-        move_count,
-		time_duration_millis,
-        icn
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`;
-
-	try {
-		// Execute the query with the provided values
-		const result = db.run(query, 
-            [
-                options.game_id,
-                options.date,
-				options.base_time_seconds,
-				options.increment_seconds,
-                options.variant,
-                options.rated,
-				options.leaderboard_id,
-                options.private,
-                options.result,
-                options.termination,
-                options.move_count,
-				options.time_duration_millis,
-                options.icn
-            ]
-		);
-
-		// Return success result
-		return { success: true, result };
-
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEventsAndPrint(`Error adding game to games table "${options.game_id}": ${message}`, 'errLog.txt');
-
-		// Return an error message
-		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
-		let reason = 'Failed to add game to games table.';
-		if (error instanceof Error && 'code' in error) {
-			// Example check for better-sqlite3 specific error codes
-			if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
-				reason = 'Game ID already exists in the games table.';
-			}
-		}
-		return { success: false, reason };
-	}
-}
 
 /**
  * Generates a game_id **UNIQUE** to all other game ids in the games table.
@@ -351,7 +269,6 @@ function deleteGame(game_id: number): ModifyGameQueryResult {
 
 
 export {
-	addGameToGamesTable,
 	genUniqueGameID,
 	getGameData,
 	getMultipleGameData,

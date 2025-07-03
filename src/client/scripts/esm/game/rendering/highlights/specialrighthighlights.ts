@@ -37,8 +37,7 @@ let model: BufferModelInstanced | undefined;
 
 // Functions -------------------------------------------------------------------------------------
 
-/** Met
- * hod that returns the single-instance vertex data for the special rights indicator shape. */
+/** Method that returns the single-instance vertex data for the special rights indicator shape. */
 function getSpecialRightsVertexData(): number[] {
 	// return legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
 	// return legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);
@@ -52,6 +51,17 @@ function getEnPassantVertexData(): number[] {
 	return legalmoveshapes.getDataLegalMoveSquare(ENPASSANT_COLOR);
 }
 
+function enable() {
+	enabled = true;
+	regenModel();
+	frametracker.onVisualChange();
+}
+
+function disable() {
+	enabled = false;
+	regenModel();
+	frametracker.onVisualChange();
+}
 
 function toggle() {
 	enabled = !enabled;
@@ -145,6 +155,8 @@ function onGameClose() {
 
 
 export default {
+	enable,
+	disable,
 	toggle,
 	render,
 	regenModel,
