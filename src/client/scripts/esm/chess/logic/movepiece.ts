@@ -412,6 +412,7 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
 function rewindMove(gamefile: FullGame) {
+	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(gamefile.boardsim.moves, gamefile.boardsim.state.local.moveIndex);
 
 	applyMove(gamefile, move, false, { global: true });
