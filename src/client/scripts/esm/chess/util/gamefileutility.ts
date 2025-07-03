@@ -148,6 +148,12 @@ function getPlayerCount(basegame: Game) {
 	return new Set(basegame.gameRules.turnOrder).size;
 }
 
+/** Calculates the unique players in the turn order, in the order they appear. */
+function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
+	// Using a Set removes duplicates before converting to an array
+	return [...new Set(turnOrder)];
+}
+
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -161,5 +167,6 @@ export default {
 	doGameOverChecks,
 	getStartingAreaBox,
 	getPlayerCount,
+	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,
 };

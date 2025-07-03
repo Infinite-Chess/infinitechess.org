@@ -31,6 +31,7 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 import guiclock from '../gui/guiclock.js';
+import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import invites from '../misc/invites.js';
 // @ts-ignore
@@ -114,6 +115,7 @@ function update() {
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE boarddrag.checkIfBoardGrabbed() because that shift arrows needs to overwrite this.
 	animation.update();
+	boardeditor.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()

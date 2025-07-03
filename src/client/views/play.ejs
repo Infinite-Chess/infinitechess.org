@@ -75,7 +75,9 @@
                     <button id="play" class="play titlebubble button"><%=t('play.main-menu.play')%></button>
                     <button id="practice" class="practice titlebubble button"><%=t('play.main-menu.practice')%></button>
                     <button id="rules" class="rules titlebubble button"><%=t('play.main-menu.guide')%></button>
-                    <button id="board-editor" class="board-editor titlebubble button opacity-0_5"><%=t('play.main-menu.editor')%></button>
+                    <!-- <button id="board-editor" class="board-editor titlebubble button opacity-0_5"><%=t('play.main-menu.editor')%></button> -->
+                    <!-- ENABLE WHEN board editor is ready -->
+                    <button id="board-editor" class="board-editor titlebubble button"><%=t('play.main-menu.editor')%></button>
                 </div>
 
                 <!-- Guide -->
@@ -560,6 +562,26 @@
                             <div id="timer-black" class="timer black">XX:XX</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Board Editor UI left bar -->
+                <div id="editor-menu" class="editor-menu unselectable hidden">
+                    <div id="editor-tools" class="editor-tools">
+                        <div data-tool="undo">Undo</div>
+                        <div data-tool="redo">Redo</div>
+                        <div data-tool="save">Save</div>
+                        <div data-tool="load">Load</div>
+                        <div data-tool="normal" class="active">Normal</div>
+                        <div data-tool="placer">Placer</div>
+                        <div data-tool="eraser">Eraser</div>
+                        <div data-tool="selector">Selector</div>
+                        <div data-tool="gamerules">Game Rules</div>
+                        <div data-tool="specialrights">Special Rights</div>
+                        <div data-tool="clearall">Clear all</div>
+                        <div data-tool="color" id="editor-dot" class="dot"></div>
+                    </div>
+                    <div id="editor-pieceTypes"></div>
+                    <div id="editor-neutralTypes" class="editor-types"></div>
                 </div>
 
                 <!-- Promotion UI -->
