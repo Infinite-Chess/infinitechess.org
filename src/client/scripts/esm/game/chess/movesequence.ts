@@ -8,7 +8,7 @@
 
 
 import type { FullGame } from "../../chess/logic/gamefile.js";
-import type { Move, MoveDraft} from "../../chess/logic/movepiece.js";
+import type { Edit, Move, MoveDraft} from "../../chess/logic/movepiece.js";
 
 
 import gameslot from "./gameslot.js";
@@ -45,20 +45,7 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	/**
-	 * Check if boardchanges regenerated the organized pieces to add more undefineds,
-	 * if so, we need to completely regenerate all piece models.
-	 * Otherwise, we run graphical changes as normal.
-	 * 
-	 * We have to regenerate ALL types here, not just the ones whos type ranges
-	 * were affected, because other pieces may still need graphical changes
-	 * from the move's changes! For example, pawn deleted that promoted.
-	 */
-	if (mesh) { // Mesh is generated
-		if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
-		else boardchanges.runChanges(mesh, move.changes, meshChanges, true); // Graphical changes
-		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
-	}
+	if (mesh) runMeshChanges(boardsim, mesh, move, true);
 	
 	// GUI changes
 	updateGui(false);
@@ -83,6 +70,23 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	specialrighthighlights.onMove();
 
 	return move;
+}
+
+/**
+ * Wrapper for performing the graphical mesh changes of an edit.
+ * 
+ * If the newlyRegenerated flag is present, indicating the organized pieces were regenerated,
+ * than we instead need to regenerate all piece models.
+ * Otherwise, we run graphical changes as normal.
+ * 
+ * We have to regenerate ALL types here, not just the ones whos type ranges
+ * were affected, because other pieces may still need graphical changes
+ * from the move's changes! For example, pawn deleted that promoted.
+ */
+function runMeshChanges(boardsim: FullGame["boardsim"], mesh: Mesh, edit: Edit, forward: boolean) {
+	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
+	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
+	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
 /**
@@ -214,4 +218,5 @@ export default {
 	viewFront,
 	viewIndex,
 	animateMove,
+	runMeshChanges,
 };

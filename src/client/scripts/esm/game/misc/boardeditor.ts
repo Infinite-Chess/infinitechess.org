@@ -7,7 +7,6 @@
 
 
 import boardchanges from '../../chess/logic/boardchanges.js';
-import { meshChanges } from '../chess/graphicalchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -20,9 +19,8 @@ import specialrighthighlights from '../rendering/highlights/specialrighthighligh
 import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
-import piecemodels from '../rendering/piecemodels.js';
-import frametracker from '../rendering/frametracker.js';
 import mouse from '../../util/mouse.js';
+import movesequence from '../chess/movesequence.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -158,7 +156,7 @@ function endEdit() {
 }
 
 /** Runs both logical and graphical changes. */
-function runEdit(gamefile: gamefile, mesh: Mesh, edit: Edit, forward: boolean = true) {
+function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = true) {
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 
@@ -166,9 +164,7 @@ function runEdit(gamefile: gamefile, mesh: Mesh, edit: Edit, forward: boolean = 
 	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
 
 	// Run graphical changes
-	if (gamefile.boardsim.pieces.newlyRegenerated) piecemodels.regenAll(gamefile.boardsim, mesh);
-	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward);
-	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
+	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
 
 	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: true });
 	specialrighthighlights.onMove();
