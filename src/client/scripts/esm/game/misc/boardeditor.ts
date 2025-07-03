@@ -22,7 +22,6 @@ import guiboardeditor from '../gui/guiboardeditor.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import piecemodels from '../rendering/piecemodels.js';
 import frametracker from '../rendering/frametracker.js';
-// @ts-ignore
 import mouse from '../../util/mouse.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
@@ -30,7 +29,7 @@ import statustext from '../gui/statustext.js';
 // Type Definitions -------------------------------------------------------------
 
 import type { Coords } from '../../chess/util/coordutil.js';
-import type { Edit } from '../../chess/logic/movepiece.js'; 
+import type { Edit } from '../../chess/logic/movepiece.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Move } from '../../chess/logic/movepiece.js';
@@ -38,12 +37,16 @@ import type { Player } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import type { gamefile } from '../../chess/logic/gamefile.js';
 
-type Tool = "normal" | "placer" | "eraser" | "selector" | "gamerules" | "specialrights";
+
+type Tool = (typeof validTools)[number];
 
 
 // Variables --------------------------------------------------------------------
 
-const validTools: Tool[] = ["normal", "placer", "eraser", "selector", "gamerules", "specialrights"];
+/** All tools that can be used in the board editor. */
+const validTools = ["normal", "placer", "eraser", "selector", "gamerules", "specialrights"] as const;
+/** All tools that support drawing. */
+const drawingTools: Tool[] = ["placer", "eraser", "specialrights"];
 
 /** Whether we are currently using the editor. */
 let inBoardEditor = false;
@@ -55,7 +58,7 @@ let currentTool: Tool = "placer";
 
 /**
  * Changes are stored in `thisEdit` until the user releases the button.
- * Grouping changes together allow the user to undo an entire 
+ * Grouping changes together allow the user to undo an entire
  * brush stroke at once instead of one piece at a time.
  */
 let thisEdit: Edit | undefined;
@@ -77,7 +80,7 @@ function initBoardEditor() {
 	setTool("normal");
 	setColor(players.WHITE);
 	setPiece(rawTypes.VOID);
-	
+
 	guiboardeditor.markTool(currentTool);
 	guiboardeditor.updatePieceColors(currentColor);
 	guiboardeditor.markPiece(currentPieceType);
@@ -179,19 +182,18 @@ function addEditToHistory(edit: Edit) {
 	indexOfThisEdit!++;
 }
 
-function update() {
+function update(): void {
 	if (!inBoardEditor) return;
+
+	// Handle starting and ending the drawing state
+	if (mouse.isMouseDown(Mouse.RIGHT) && !drawing) beginEdit();
+	if (!mouse.isMouseHeld(Mouse.RIGHT) && drawing) return endEdit();
+
+	// If not drawing, or if the current tool doesn't support drawing, there's nothing more to do
+	if (!drawing || !drawingTools.includes(currentTool)) return;
 
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
-
-	if (drawing && ["placer", "eraser", "specialrights"].includes(currentTool)) {
-		if (!mouse.isMouseHeld(Mouse.RIGHT)) return endEdit();
-	} else {
-		if (mouse.isMouseDown(Mouse.RIGHT)) beginEdit();
-		else return;
-	}
-
 	const coords = mouse.getTileMouseOver_Integer();
 	if (coords === undefined) return;
 	if (previousSquare !== undefined && coordutil.areCoordsEqual(coords, previousSquare)) return;
@@ -286,7 +288,7 @@ function redo() {
 }
 
 /**
- * copypastegame uses the move list instead of the position 
+ * copypastegame uses the move list instead of the position
  * which doesn't work for the board editor.
  * This function uses the position of pieces on the board.
  */
