@@ -17,7 +17,6 @@ import selection from '../chess/selection.js';
 import state from '../../chess/logic/state.js';
 import boardutil from '../../chess/util/boardutil.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import { listener_overlay } from '../chess/game.js';
 import { Mouse } from '../input.js';
 import guiboardeditor from '../gui/guiboardeditor.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
@@ -187,9 +186,9 @@ function update() {
 	const mesh = gameslot.getMesh()!;
 
 	if (drawing && ["placer", "eraser", "specialrights"].includes(currentTool)) {
-		if (!listener_overlay.isMouseHeld(Mouse.RIGHT)) return endEdit();
+		if (!mouse.isMouseHeld(Mouse.RIGHT)) return endEdit();
 	} else {
-		if (listener_overlay.isMouseDown(Mouse.RIGHT)) beginEdit();
+		if (mouse.isMouseDown(Mouse.RIGHT)) beginEdit();
 		else return;
 	}
 
