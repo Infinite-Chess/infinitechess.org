@@ -34,8 +34,7 @@ import type { Piece } from '../../chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Move } from '../../chess/logic/movepiece.js';
 import type { Player } from '../../chess/util/typeutil.js';
-// @ts-ignore
-import type { gamefile } from '../../chess/logic/gamefile.js';
+import { FullGame } from '../../chess/logic/gamefile.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -223,7 +222,7 @@ function update(): void {
 	thisEdit!.state.global.push(...edit.state.global);
 }
 
-function queueToggleSpecialRight(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined) {
+function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined) {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
@@ -231,14 +230,14 @@ function queueToggleSpecialRight(gamefile: gamefile, edit: Edit, pieceHovered: P
 	state.createSpecialRightsState(edit, coordsKey, current, future);
 }
 
-function queueAddPiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number) {
+function queueAddPiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined, coords: Coords, type: number) {
 	if (pieceHovered?.type === type) return; // do not do anything if new piece would be equal to old piece
 	if (pieceHovered !== undefined) queueRemovePiece(gamefile, edit, pieceHovered);
 	const piece: Piece = { type, coords, index:-1 };
 	boardchanges.queueAddPiece(edit.changes, piece);
 }
 
-function queueRemovePiece(gamefile: gamefile, edit: Edit, pieceHovered: Piece | undefined) {
+function queueRemovePiece(gamefile: FullGame, edit: Edit, pieceHovered: Piece | undefined) {
 	if (!pieceHovered) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
 	// Remove the piece
