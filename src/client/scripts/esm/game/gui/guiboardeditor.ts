@@ -70,11 +70,10 @@ function close() {
 
 async function initUI() {
 	if (initialized) return;
-	const gamefile = gameslot.getGamefile()!;
-	const setOfPlayers: Set<Player> = new Set(gamefile.basegame.gameRules.turnOrder);
+	const uniquePlayers = _getPlayersInOrder();
 
 	// Colored pieces
-	for (const player of setOfPlayers) {
+	for (const player of uniquePlayers) {
 		const svgs = await svgcache.getSVGElements(coloredTypes.map((rawType) => { return typeutil.buildType(rawType, player); }));
 		const playerPieces = document.createElement("div");
 		element_playerContainers.set(player, playerPieces);
@@ -114,10 +113,7 @@ function initListeners() {
 	Array.from(element_tools.children).forEach((element) => {
 		element.addEventListener("click", callback_ChangeTool);
 	});
-	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
-		element.addEventListener("click", callback_ChangePieceType);
-	});
-	element_neutralTypes.forEach((element) => {
+	_getActivePieceElements().forEach((element) => {
 		element.addEventListener("click", callback_ChangePieceType);
 	});
 }
@@ -126,13 +122,15 @@ function closeListeners() {
 	Array.from(element_tools.children).forEach((element) => {
 		element.removeEventListener("click", callback_ChangeTool);
 	});
-	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
-		element.removeEventListener("click", callback_ChangePieceType);
-	});
-	element_neutralTypes.forEach((element) => {
+	_getActivePieceElements().forEach((element) => {
 		element.removeEventListener("click", callback_ChangePieceType);
 	});
 }
+
+
+// mark tool
+
+// Callbacks ---------------------------------------------------------------
 
 function callback_ChangeTool(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
@@ -182,37 +180,34 @@ function markTool(tool: string) {
 function markPiece(type: number | null) {
 	const placerToolActive = boardeditor.getTool() === "placer";
 
-	element_playerTypes.get(boardeditor.getColor())!.forEach((element) => {
-		const element_type = Number.parseInt(element.id);
-		if (element_type === type && placerToolActive) element.classList.add("active");
-		else element.classList.remove("active");
-	});
-	element_neutralTypes.forEach((element) => {
+	_getActivePieceElements().forEach((element) => {
 		const element_type = Number.parseInt(element.id);
 		if (element_type === type && placerToolActive) element.classList.add("active");
 		else element.classList.remove("active");
 	});
 }
 
-function updatePieceColors(newColor: Player, iterate_over_all_old_colors = false) {
+function updatePieceColors(newColor: Player) {
 	if (!initialized) return;
 
-	// Hide all unused piece colors that may be shown
-	const playersSet: Set<Player> = new Set(gameslot.getGamefile()!.basegame.gameRules.turnOrder);
-	const playersArray: Array<Player> = [...playersSet];
-	const old_colors = iterate_over_all_old_colors ? playersArray.filter((color) => color !== newColor) : [boardeditor.getColor()];
-	for (const old_color of old_colors) {
-		element_playerTypes.get(old_color)!.forEach((element) => {
+	// Hide all player containers and remove their listeners
+	for (const [player, container] of element_playerContainers.entries()) {
+		container.classList.add("hidden");
+		element_playerTypes.get(player)!.forEach((element) => {
 			element.removeEventListener("click", callback_ChangePieceType);
 		});
-		element_playerContainers.get(old_color)!.classList.add("hidden");
 	}
 
-	// Show pieces in correct colors
-	element_playerTypes.get(newColor)!.forEach((element) => {
-		element.addEventListener("click", callback_ChangePieceType);
-	});
-	element_playerContainers.get(newColor)!.classList.remove("hidden");
+	// Show the correct container and add its listeners
+	const newPlayerContainer = element_playerContainers.get(newColor);
+	if (newPlayerContainer) {
+		newPlayerContainer.classList.remove("hidden");
+		element_playerTypes.get(newColor)!.forEach((element) => {
+			element.addEventListener("click", callback_ChangePieceType);
+		});
+	}
+
+	// Update dot color and internal state
 	element_dot.style.backgroundColor = typeutil.strcolors[newColor];
 	boardeditor.setColor(newColor);
 	
@@ -225,10 +220,25 @@ function updatePieceColors(newColor: Player, iterate_over_all_old_colors = false
 }
 
 function nextColor() {
-	// Is there a better way to do this?
-	const playersSet: Set<Player> = new Set(gameslot.getGamefile()!.basegame.gameRules.turnOrder);
-	const playersArray: Array<Player> = [...playersSet];
-	updatePieceColors(playersArray[(playersArray.indexOf(boardeditor.getColor()) + 1) % playersArray.length]!);
+	const playersArray = _getPlayersInOrder();
+	const currentIndex = playersArray.indexOf(boardeditor.getColor());
+	const nextColor = playersArray[(currentIndex + 1) % playersArray.length]!;
+	updatePieceColors(nextColor);
+}
+
+// Helper Functions --------------------------------------------------------
+
+/** Returns an array of all piece elements that are currently clickable (active color + neutral). */
+function _getActivePieceElements(): Element[] {
+	const playerElements = element_playerTypes.get(boardeditor.getColor()) ?? [];
+	return [...playerElements, ...element_neutralTypes];
+}
+
+/** Returns an array of players based on the current gamefile's turn order. */
+function _getPlayersInOrder(): Player[] {
+	const gamefile = gameslot.getGamefile()!;
+	// Using a Set removes duplicates before converting to an array
+	return [...new Set(gamefile.basegame.gameRules.turnOrder)];
 }
 
 export default {

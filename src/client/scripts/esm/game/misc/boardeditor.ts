@@ -80,7 +80,7 @@ function initBoardEditor() {
 	setPiece(rawTypes.VOID);
 	
 	guiboardeditor.markTool(currentTool);
-	guiboardeditor.updatePieceColors(currentColor, true);
+	guiboardeditor.updatePieceColors(currentColor);
 	guiboardeditor.markPiece(currentPieceType);
 }
 
