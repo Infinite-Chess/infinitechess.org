@@ -1,4 +1,3 @@
-
 /**
  * This script tests for piece selection and keeps track of the selected piece,
  * including the legal moves it has available.
@@ -471,8 +470,12 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
 	// Initiate
 	pieceSelected = piece;
 
-	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-	legalMoves = legalmoves.calculateAll(gamefile, piece);
+	// Calculate the legal moves it has. Use premove logic if enabled in preferences.
+	if (preferences.getPremoveMode() && isPremove) {
+		legalMoves = legalmoves.calculateAllPremoves(gamefile, piece);
+	} else {
+		legalMoves = legalmoves.calculateAll(gamefile, piece);
+	}
 	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);

@@ -75,7 +75,7 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 		return onlinegame.reportOpponentsMove(reason);
 	}
 
-	// Rewind all premoves to check if the move is legal
+	// Rewind all premoves to get the real game state for legality check
 	premoves.rewindPremoves(gamefile);
 
 	// If not legal, this will be a string for why it is illegal.

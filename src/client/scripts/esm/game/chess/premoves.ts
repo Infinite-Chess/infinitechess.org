@@ -1,4 +1,3 @@
-
 /**
  * This script handles the processing and execution of premoves
  * after the opponent's move.
@@ -19,6 +18,7 @@ import movesequence from './movesequence.js';
 import boardutil from '../../chess/util/boardutil.js';
 import typeutil from '../../chess/util/typeutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+import legalmoves from '../../chess/logic/legalmoves.js';
 
 let premoves: Premove[] = [];
 interface Premove extends MoveDraft {
@@ -71,14 +71,67 @@ function cancelPremoves(gamefile : FullGame) {
 function rewindPremoves(gamefile: FullGame) {
 	// Reverse the original array so all changes are made in the reverse order they were added
 	premoves.slice().reverse().forEach(premove => {
+		for (let j = 0; j < premove.changes.length; j++) {
+			const change = premove.changes[j];
+			if (!change || !change.action) { continue; } // Skip if change is undefined or has no action
+
+			if (change.action === 'capture') {
+				const capturedPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, change.endCoords);
+				if (!capturedPiece) {
+					// If any capture is not possible, cancel all premoves immediately
+					clearPremoves();
+					return;
+				}
+			}
+		}
+
 		boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, false); // Logical changes.  false for BACKWARDS
 	});
 }
 
 function applyPremoves(gamefile: FullGame) {
-	premoves.forEach((premove : Premove) => {
-		boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, true); // Logical changes
-	});
+	for (let i = 0; i < premoves.length; i++) {
+		const premove = premoves[i];
+		if (!premove || !premove.changes || premove.changes.length === 0) {
+			continue; // Skip if premove is undefined or has no changes
+		}
+
+		for (let j = 0; j < premove.changes.length; j++) {
+			const change = premove.changes[j];
+			if (!change || !change.action) {
+				continue; // Skip if change is undefined or has no action
+			}
+
+			const movingPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, change.piece.coords);
+			if (!movingPiece) {
+				clearPremoves();
+				return;
+			}
+
+			const ourColor = typeutil.getColorFromType(movingPiece.type);
+
+			if (change.action === 'capture') {
+				// Only capture changes have endCoords and capturedPiece
+				const endCoords = (change as any).endCoords;
+				const destPiece = endCoords ? boardutil.getPieceFromCoords(gamefile.boardsim.pieces, endCoords) : undefined;
+				if (!destPiece || typeutil.getColorFromType(destPiece.type) === ourColor) {
+					// Convert to move if possible
+					(change as any).action = 'move';
+					if ('capturedPiece' in change) delete (change as any).capturedPiece;
+				}
+			} else if (change.action === 'move') {
+				// Only move changes have endCoords
+				const endCoords = (change as any).endCoords;
+				const destPiece = endCoords ? boardutil.getPieceFromCoords(gamefile.boardsim.pieces, endCoords) : undefined;
+				if (destPiece && typeutil.getColorFromType(destPiece.type) !== ourColor) {
+					// Convert to capture
+					(change as any).action = 'capture';
+					(change as any).capturedPiece = destPiece;
+				}
+			}
+		}
+		boardchanges.runChanges(gamefile, premove.changes, boardchanges.changeFuncs, true);
+	}
 }
 
 function premoveIsLegal(gamefile: FullGame, premove: Premove): boolean {
@@ -87,6 +140,10 @@ function premoveIsLegal(gamefile: FullGame, premove: Premove): boolean {
 
 	const color = typeutil.getColorFromType(piece.type);
 	if (color !== onlinegame.getOurColor()) { return false; } // Can't premove opponent's piece, happens when opponent captures your piece
+
+	// Check if the move is legal
+	const isLegal = legalmoves.checkIfMoveLegal(gamefile, legalmoves.calculateAll(gamefile, piece), piece.coords, premove.endCoords, color);
+	if (!isLegal) { return false; } // Illegal move
 
 	return true; // All checks pass, legal
 }
