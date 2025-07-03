@@ -190,7 +190,9 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	// Required to pass on the special flag
 	const legal = legalmoves.checkIfMoveLegal(gamefile, legalMoves!, pieceSelected!.coords, hoverSquare, colorOfSelectedPiece);
 	const typeAtHoverCoords = boardutil.getTypeFromCoords(gamefile.boardsim.pieces, hoverSquare);
-	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) || editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords) || boardeditor.areInBoardEditor(); // Allow ALL moves in board editor.
+	hoverSquareLegal = legal && canMovePieceType(pieceSelected!.type) ||
+						editMode && canDropOnPieceTypeInEditMode(typeAtHoverCoords) ||
+						boardeditor.areInBoardEditor() && !coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords); // Allow ALL moves in board editor.
 }
 
 
@@ -404,6 +406,7 @@ function reselectPiece() {
 
 /** Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
 function unselectPiece() {
+	// console.error("Unselecting piece");
 	if (pieceSelected === undefined) return; // No piece to unselect.
 	pieceSelected = undefined;
 	isOpponentPiece = false;
