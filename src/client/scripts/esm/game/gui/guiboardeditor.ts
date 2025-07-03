@@ -16,6 +16,7 @@ import type { Player } from "../../chess/util/typeutil.js";
 
 // Variables ---------------------------------------------------------------
 
+
 const element_menu = document.getElementById("editor-menu")!;
 const element_tools = document.getElementById("editor-tools")!;
 const element_typesContainer = document.getElementById("editor-pieceTypes")!;
@@ -128,47 +129,6 @@ function closeListeners() {
 }
 
 
-// mark tool
-
-// Callbacks ---------------------------------------------------------------
-
-function callback_ChangeTool(e: Event) {
-	const target = (e.currentTarget as HTMLElement);
-	const tool = target.getAttribute("data-tool");
-	switch (tool) {
-		case "undo":
-			boardeditor.undo();
-			return;
-		case "redo":
-			boardeditor.redo();
-			return;
-		case "save":
-			boardeditor.save();
-			return;
-		case "load":
-			boardeditor.load();
-			return;
-		case "clearall":
-			boardeditor.clearAll();
-			return;
-		case "color":
-			nextColor();
-			return;
-		default:
-			if (tool !== null) boardeditor.setTool(tool);
-			return;
-	}
-}
-
-function callback_ChangePieceType(e: Event) {
-	const target = (e.currentTarget as HTMLElement);
-	const currentPieceType = Number.parseInt(target.id);
-	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
-	boardeditor.setPiece(currentPieceType);
-	boardeditor.setTool("placer");
-	markPiece(currentPieceType);
-}
-
 function markTool(tool: string) {
 	Array.from(element_tools.children).forEach((element) => {
 		const element_tool = element.getAttribute("data-tool");
@@ -226,20 +186,60 @@ function nextColor() {
 	updatePieceColors(nextColor);
 }
 
-// Helper Functions --------------------------------------------------------
-
-/** Returns an array of all piece elements that are currently clickable (active color + neutral). */
+/** Helper Function: Returns an array of all piece elements that are currently clickable (active color + neutral). */
 function _getActivePieceElements(): Element[] {
 	const playerElements = element_playerTypes.get(boardeditor.getColor()) ?? [];
 	return [...playerElements, ...element_neutralTypes];
 }
 
-/** Returns an array of players based on the current gamefile's turn order. */
+/** Helper Function: Returns an array of players based on the current gamefile's turn order. */
 function _getPlayersInOrder(): Player[] {
 	const gamefile = gameslot.getGamefile()!;
 	// Using a Set removes duplicates before converting to an array
 	return [...new Set(gamefile.basegame.gameRules.turnOrder)];
 }
+
+// Callbacks ---------------------------------------------------------------
+
+function callback_ChangeTool(e: Event) {
+	const target = (e.currentTarget as HTMLElement);
+	const tool = target.getAttribute("data-tool");
+	switch (tool) {
+		case "undo":
+			boardeditor.undo();
+			return;
+		case "redo":
+			boardeditor.redo();
+			return;
+		case "save":
+			boardeditor.save();
+			return;
+		case "load":
+			boardeditor.load();
+			return;
+		case "clearall":
+			boardeditor.clearAll();
+			return;
+		case "color":
+			nextColor();
+			return;
+		default:
+			if (tool !== null) boardeditor.setTool(tool);
+			return;
+	}
+}
+
+function callback_ChangePieceType(e: Event) {
+	const target = (e.currentTarget as HTMLElement);
+	const currentPieceType = Number.parseInt(target.id);
+	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
+	boardeditor.setPiece(currentPieceType);
+	boardeditor.setTool("placer");
+	markPiece(currentPieceType);
+}
+
+// Exports ----------------------------------------------------------------
+
 
 export default {
 	open,
