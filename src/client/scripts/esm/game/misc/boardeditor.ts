@@ -50,7 +50,7 @@ let inBoardEditor = false;
 
 let currentColor: Player = players.WHITE;
 let currentPieceType: number = rawTypes.VOID;
-let currentTool: Tool = "placer";
+let currentTool: Tool = "normal";
 
 
 /**
