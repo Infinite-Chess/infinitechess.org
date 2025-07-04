@@ -191,8 +191,8 @@ function update(): void {
 	// Handle starting and ending the drawing state
 	if (drawingTools.includes(currentTool)) {
 		if (mouse.isMouseDown(Mouse.LEFT) && !drawing) {
-			beginEdit();
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
+			beginEdit();
 		}
 		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
 	}
