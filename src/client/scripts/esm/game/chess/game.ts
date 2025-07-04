@@ -106,6 +106,10 @@ function update() {
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();
 
+	// NEEDS TO BE BEFORE selection.update() and boarddrag.checkIfBoardGrabbed()
+	// because the drawing tools of the boad editor might take precedence and claim the left mouse click
+	boardeditor.update();
+
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
 	selection.update();
@@ -115,7 +119,6 @@ function update() {
 	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE boarddrag.checkIfBoardGrabbed() because that shift arrows needs to overwrite this.
 	animation.update();
-	boardeditor.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
