@@ -1467,6 +1467,29 @@ svg.collapse {
 }
 
 
+/* Debug stats for video */
+
+#debug {
+    position: absolute;
+    top: 0;
+    width: 33%;
+    font-size: 34px;
+    pointer-events: none;
+    background-color: rgb(66 30 0 / 70%);
+    color: #ffeac4;
+    padding: 0.5em;
+}
+
+#scale, #width, #velocity, #acceleration {
+    font-family: monospace;
+    white-space: pre; /* This is the magic property! */
+}
+
+#debug p:not(:last-child) {
+    margin-bottom: 0.25em;
+}
+
+
 
 /* General classes with basic properties */
 

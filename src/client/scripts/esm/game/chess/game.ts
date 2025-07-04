@@ -43,6 +43,7 @@ import perspective from '../rendering/perspective.js';
 import transition from '../rendering/transition.js';
 // @ts-ignore
 import promotionlines from '../rendering/promotionlines.js';
+import { updateDebugStats } from '../gui/debugstats.js';
 
 
 // Variables -------------------------------------------------------------------------------
@@ -104,6 +105,8 @@ function update() {
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER:transition.update() since that updates the board position
 	boardtiles.recalcVariables();
+
+	updateDebugStats();
 
 	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
 	// BEFORE selection.update(), since this may forward to front, which changes all arrows visible.
