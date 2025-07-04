@@ -119,6 +119,9 @@ function setTool(tool: string) {
 	currentTool = tool as Tool;
 	endEdit();
 
+	// Prevents you from being able to draw while a piece is selected.
+	if (drawingTools.includes(currentTool)) selection.unselectPiece();
+
 	if (tool === "specialrights") specialrighthighlights.enable();
 	else specialrighthighlights.disable();
 
