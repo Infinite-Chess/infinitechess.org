@@ -117,6 +117,7 @@ function getColor() {
 function setTool(tool: string) {
 	if (!validTools.includes(tool as Tool)) return;
 	currentTool = tool as Tool;
+	endEdit();
 
 	if (tool === "specialrights") specialrighthighlights.enable();
 	else specialrighthighlights.disable();
@@ -128,6 +129,10 @@ function setTool(tool: string) {
 
 function getTool() {
 	return currentTool;
+}
+
+function isBoardEditorUsingDrawingTool() {
+	return drawingTools.includes(currentTool);
 }
 
 function canUndo() {
@@ -150,7 +155,7 @@ function beginEdit() {
 function endEdit() {
 	drawing = false;
 	previousSquare = undefined;
-	addEditToHistory(thisEdit!);
+	if (thisEdit !== undefined) addEditToHistory(thisEdit);
 	thisEdit = undefined;
 	guinavigation.update_MoveButtons();
 }
@@ -181,8 +186,13 @@ function update(): void {
 	if (!inBoardEditor) return;
 
 	// Handle starting and ending the drawing state
-	if (mouse.isMouseDown(Mouse.RIGHT) && !drawing) beginEdit();
-	if (!mouse.isMouseHeld(Mouse.RIGHT) && drawing) return endEdit();
+	if (drawingTools.includes(currentTool)) {
+		if (mouse.isMouseDown(Mouse.LEFT) && !drawing) {
+			beginEdit();
+			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
+		}
+		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
+	}
 
 	// If not drawing, or if the current tool doesn't support drawing, there's nothing more to do
 	if (!drawing || !drawingTools.includes(currentTool)) return;
@@ -334,6 +344,7 @@ export default {
 	getColor,
 	setTool,
 	getTool,
+	isBoardEditorUsingDrawingTool,
 	update,
 	canUndo,
 	canRedo,
