@@ -53,18 +53,21 @@ const panAccel2D: number = 145; // Default: 145
 const panAccel3D: number = 75; // Default: 75
 
 /** The acceleration/deration rate of the board SCALE velocity in 2D mode. */
-const scaleAccel_Desktop: number = 6.0; // Acceleration of board scaling   Default: 6
+// const scaleAccel_Desktop: number = 6.0; // Acceleration of board scaling   Default: 6
+const scaleAccel_Desktop: number = 6.0 * 10; // FOR VIDEO
 /**
  * The deceleration rate of the board SCALE velocity in 3D mode.
  * (No accerlation, scale velocity is determined by finger movement)
  */
-const scaleAccel_Mobile: number = 14.0; // Acceleration of board scaling   Default: 14
+// const scaleAccel_Mobile: number = 14.0 * 10; // Acceleration of board scaling   Default: 14
+const scaleAccel_Mobile: number = 14.0 * 10; // FOR VIDEO
 
 /**
  * This is the scale velocity cap when using Space/Shift.
  * It is NOT the absoulte cap which you can reach by scrolling.
  */
-const scaleVelCap = 1.0; // Default: 1
+// const scaleVelCap = 1.0; // Default: 1
+const scaleVelCap = 2; // Default: 2   FOR VIDEO
 
 /** The  scale velocity cap when u sing the scroll wheel (higher). */
 const scaleVelCap_Scroll = 2.5;

@@ -182,6 +182,8 @@ function recalcScale() {
 	// const damp = scaleVel > 0 || boardScale > limitToDampScale ? 1 : boardScale / limitToDampScale;
 	const damp = 1;
 
+	// console.log("boardScale:", boardScale, "scaleVel:", scaleVel, "damp:", damp);
+
 	const newScale = boardScale * (1 + loadbalancer.getDeltaTime() * scaleVel * damp);
 	setBoardScale(newScale);
 }
