@@ -132,7 +132,7 @@ function getTool() {
 }
 
 function isBoardEditorUsingDrawingTool() {
-	return drawingTools.includes(currentTool);
+	return inBoardEditor && drawingTools.includes(currentTool);
 }
 
 function canUndo() {
