@@ -18,6 +18,7 @@ import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import premoves from "../../chess/premoves.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
@@ -74,6 +75,9 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 		return onlinegame.reportOpponentsMove(reason);
 	}
 
+	// Rewind all premoves to get the real game state for legality check
+	premoves.rewindPremoves(gamefile);
+
 	// If not legal, this will be a string for why it is illegal.
 	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 	const moveIsLegal = legalmoves.isOpponentsMoveLegal(gamefile, moveDraft, message.gameConclusion);
@@ -106,6 +110,9 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 
 	onlinegame.onMovePlayed({ isOpponents: true });
 	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
+
+	// Process the next premove, will reapply the premoves
+	premoves.processPremoves(gamefile);
 }
 
 
