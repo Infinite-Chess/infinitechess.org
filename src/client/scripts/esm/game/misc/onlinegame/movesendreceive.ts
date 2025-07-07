@@ -85,7 +85,7 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	// Forward the move...
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-	if (mesh) movesequence.animateMove(move, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	if (mesh) movesequence.animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

@@ -9,8 +9,7 @@
 import boardchanges from '../../chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
-import guinavigation from '../gui/guinavigation.js';
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import icnconverter, { _Move_Compact } from '../../chess/logic/icn/icnconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
 import state from '../../chess/logic/state.js';
@@ -22,6 +21,7 @@ import { players, rawTypes } from '../../chess/util/typeutil.js';
 import mouse from '../../util/mouse.js';
 import movesequence from '../chess/movesequence.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
+import movepiece from '../../chess/logic/movepiece.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -31,9 +31,8 @@ import type { Coords } from '../../chess/util/coordutil.js';
 import type { Edit } from '../../chess/logic/movepiece.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Move } from '../../chess/logic/movepiece.js';
 import type { Player } from '../../chess/util/typeutil.js';
-import { FullGame } from '../../chess/logic/gamefile.js';
+import { Board, FullGame } from '../../chess/logic/gamefile.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -165,7 +164,6 @@ function endEdit() {
 	previousSquare = undefined;
 	if (thisEdit !== undefined) addEditToHistory(thisEdit);
 	thisEdit = undefined;
-	guinavigation.update_MoveButtons();
 }
 
 /** Runs both logical and graphical changes. */
@@ -174,12 +172,11 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	selection.unselectPiece();
 
 	// Run logical changes
-	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
+	movepiece.applyEdit(gamefile, edit, forward, true); // Apply the logical changes to the board state
 
 	// Run graphical changes
 	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
 
-	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: true });
 	specialrighthighlights.onMove();
 }
 
@@ -281,7 +278,6 @@ function clearAll() {
 	};
 	runEdit(gamefile, mesh, edit, true);
 	addEditToHistory(edit);
-	guinavigation.update_MoveButtons();
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 }
 
@@ -292,7 +288,6 @@ function undo() {
 	const mesh = gameslot.getMesh()!;
 	indexOfThisEdit!--;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, false);
-	guinavigation.update_MoveButtons();
 }
 
 function redo() {
@@ -302,7 +297,6 @@ function redo() {
 	const mesh = gameslot.getMesh()!;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, true);
 	indexOfThisEdit!++;
-	guinavigation.update_MoveButtons();
 }
 
 /**
@@ -328,19 +322,52 @@ function load() {
 	statustext.showStatus("Loading not yet implemented", true);
 }
 
-function onMovePlayed(move: Move) {
-	if (!inBoardEditor) return;
-	const gamefile = gameslot.getGamefile()!;
+
+/**
+ * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
+ * moves list, nor update gui, clocks, or do game over checks, nor the moveIndex property updated.
+ */
+function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Move_Compact): Edit {
+	const edit = generateMoveEdit(gamefile.boardsim, moveDraft);
+
+	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
+	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
+
+	specialrighthighlights.onMove();
+
 	edits!.length = indexOfThisEdit!;
-	const edit: Edit = {
-		changes: move.changes,
-		state: {global: move.state.global, local: move.state.local}
-	};
 	edits!.push(edit);
 	indexOfThisEdit = edits!.length;
-	gamefile.boardsim.moves.length = 0;
-	gamefile.boardsim.state.local.moveIndex = -1;
-	guinavigation.update_MoveButtons();
+
+	return edit;
+}
+
+/**
+ * Similar to {@link movepiece.generateMove}, but specifically for editor moves,
+ * which don't execute special moves, nor are appeneded to the game's moves list,
+ * nor the gamefile's moveIndex property updated.
+ */
+function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
+	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
+	if (!piece) throw Error(`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
+
+	// Initialize the state, and change list, as empty for now.
+	const edit: Edit = {
+		changes: [],
+		state: { local: [], global: [] },
+	};
+	
+	movepiece.calcMovesChanges(boardsim, piece, moveDraft, edit); // Move piece regularly (no specials)
+	
+	// Queue the state change transfer of this edit's special right to its new destination.
+	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
+	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
+	const hasSpecialRight = boardsim.state.global.specialRights.has(startCoordsKey);
+	const destinationHasSpecialRight = boardsim.state.global.specialRights.has(endCoordsKey);
+	state.createSpecialRightsState(edit, startCoordsKey, hasSpecialRight, false); // Delete the special right from the startCoords, if it exists
+	state.createSpecialRightsState(edit, endCoordsKey, destinationHasSpecialRight, hasSpecialRight); // Transfer the special right to the endCoords, if it exists
+	
+	return edit;
 }
 
 export type {
@@ -366,5 +393,5 @@ export default {
 	save,
 	load,
 	clearAll,
-	onMovePlayed,
+	makeMoveEdit,
 };
