@@ -65,6 +65,8 @@ let indexOfThisEdit: number | undefined = 0;
 
 let drawing = false;
 let previousSquare: Coords | undefined;
+/** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
+let addingSpecialRights: boolean | undefined;
 
 
 // Functions ------------------------------------------------------------------------
@@ -86,6 +88,7 @@ function initBoardEditor() {
 function closeBoardEditor() {
 	inBoardEditor = false;
 	drawing = false;
+	addingSpecialRights = undefined;
 	thisEdit = undefined;
 	edits = undefined;
 	indexOfThisEdit = undefined;
@@ -157,6 +160,7 @@ function beginEdit() {
 
 function endEdit() {
 	drawing = false;
+	addingSpecialRights = undefined;
 	previousSquare = undefined;
 	if (thisEdit !== undefined) addEditToHistory(thisEdit);
 	thisEdit = undefined;
@@ -236,6 +240,10 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
 	const future = !current;
+
+	if (addingSpecialRights === undefined) addingSpecialRights = future;
+	else if (addingSpecialRights !== future) return;
+
 	state.createSpecialRightsState(edit, coordsKey, current, future);
 }
 
