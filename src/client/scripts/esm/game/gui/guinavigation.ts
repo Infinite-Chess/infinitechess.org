@@ -12,6 +12,7 @@ import mouse from '../../util/mouse.js';
 import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
+import boardeditor from '../misc/boardeditor.js';
 // @ts-ignore
 import boardtiles from '../rendering/boardtiles.js';
 // @ts-ignore
@@ -242,11 +243,13 @@ function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
 	// Add the square annotation highlights, too.
 	allCoords.push(...snapping.getAnnoteSnapPoints(false));
-	area.initTelFromCoordsList(allCoords);
+	if (allCoords.length !== 0) area.initTelFromCoordsList(allCoords);
+	else area.initTelFromCoordsList([[1,1], [1,8], [8,1], [8,8]]); // use the [1,1]-[8,8] area as a fallback
 }
 
 function recenter() {
-	const boundingBox = gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
+	const boundingBox = boardeditor.areInBoardEditor() ? gamefileutility.getClassicalStartingAreaBox() :
+														 gamefileutility.getStartingAreaBox(gameslot.getGamefile()!.boardsim);
 	if (!boundingBox) return console.error("Cannot recenter when the bounding box of the starting position is undefined!");
 	area.initTelFromUnpaddedBox(boundingBox); // If you know the bounding box, you don't need a coordinate list
 }

@@ -103,6 +103,13 @@ function getStartingAreaBox(boardsim: Board) {
 }
 
 /**
+ * Gets the bounding box of the Classical starting position, with pieces on squares [1,1]-[8,8]
+ */
+function getClassicalStartingAreaBox() {
+	return math.getBoxFromCoordsList([[1,1], [1,8], [8,1], [8,8]]);
+}
+
+/**
  * Tests if the provided gamefile has colinear organized lines present in the game.
  * This can occur if there are sliders that can move in the same exact direction as others.
  * For example, [2,0] and [3,0]. We typically like to know this information because
@@ -166,6 +173,7 @@ export default {
 	isOpponentUsingWinCondition,
 	doGameOverChecks,
 	getStartingAreaBox,
+	getClassicalStartingAreaBox,
 	getPlayerCount,
 	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,
