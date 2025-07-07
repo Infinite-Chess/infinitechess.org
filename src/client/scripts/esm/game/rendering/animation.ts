@@ -425,5 +425,6 @@ export default {
 	update,
 	renderTransparentSquares,
 	renderAnimations,
+	getCurrentSegment,
 	getCurrentAnimationPosition,
 };

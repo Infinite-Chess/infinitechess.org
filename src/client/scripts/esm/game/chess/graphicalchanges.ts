@@ -102,7 +102,7 @@ function animateMove(move: Move, forward = true, animateMain = true) {
 
 			// Flip if reversing move
 			waypoints = forward ? waypoints : waypoints.slice().reverse();
-			if (forward) {
+			if (!forward) {
 				const invert = function<V>(x: Map<number,V>, y: Map<number,V>) {
 					y.clear();
 					x.forEach((v, k) => {
