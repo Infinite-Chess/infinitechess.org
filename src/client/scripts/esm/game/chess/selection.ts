@@ -289,7 +289,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: FullGame, mesh: Mesh | undefi
 	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
-	movesequence.animateMove(lastMove);
+	movesequence.animateMove(lastMove.changes);
 	return true;
 }
 
@@ -466,7 +466,7 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
-	movesequence.animateMove(move, true, animateMain);
+	movesequence.animateMove(move.changes, true, animateMain);
 
 	movesendreceive.sendMove();
 	enginegame.onMovePlayed();
