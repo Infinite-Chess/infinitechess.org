@@ -21,6 +21,7 @@ import { players, rawTypes } from '../../chess/util/typeutil.js';
 import mouse from '../../util/mouse.js';
 import movesequence from '../chess/movesequence.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
+import movepiece from '../../chess/logic/movepiece.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -172,12 +173,11 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	selection.unselectPiece();
 
 	// Run logical changes
-	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
+	movepiece.applyEdit(gamefile, edit, forward, true); // Apply the logical changes to the board state
 
 	// Run graphical changes
 	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
 
-	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: true });
 	specialrighthighlights.onMove();
 }
 

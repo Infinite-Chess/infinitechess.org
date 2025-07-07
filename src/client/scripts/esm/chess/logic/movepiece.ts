@@ -291,26 +291,34 @@ function makeMove(gamefile: FullGame, move: Move) {
 }
 
 /**
- * Applies a move's board changes to the gamefile, no graphical changes.
- * Also updates the gamefile's `moveIndex`.
+ * Applies a move's board changes to the gamefile, and updates moveIndex.
+ * No graphical changes.
  * @param gamefile 
  * @param move 
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
- * @param [options.updateMoveIndex] - If true, this will update the moveIndex as necessary. Typcially true in games and false when used in the board editor.
  */
-function applyMove(gamefile: FullGame, move: Move , forward = true, { global = false, updateMoveIndex = true } = {}) {
-	if (updateMoveIndex) {
+function applyMove(gamefile: FullGame, move: Move, forward = true, { global = false } = {}) {
 		gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 		// Stops stupid missing piece errors
 		const indexToApply = gamefile.boardsim.state.local.moveIndex + Number(!forward);
 		if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
-	}
 
-	state.applyMove(gamefile.boardsim.state, move.state, forward, { globalChange: global }); // Apply the State of the move
+	applyEdit(gamefile, move, forward, global); // Apply the board changes
+}
 
-	boardchanges.runChanges(gamefile, move.changes, boardchanges.changeFuncs, forward); // Logical board changes
+/**
+ * Applies a edits board changes to the gamefile.
+ * If we're applying a board editor's move's edits, then global should be true.
+ * @param gamefile - The gamefile to apply the edit to.
+ * @param edit - The edit to apply, which contains the changes and state of the move. 
+ * @param global - If true, we will also apply this move's global state changes to the gamefile. Should be true if the edit is from a board editor move.
+ * @param forward - Whether the move's board changes should be applied forward or backward.
+ */
+function applyEdit(gamefile: FullGame, edit: Edit, forward: boolean, global: boolean) {
+	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: global }); // Apply the State of the move
+	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
 /**
@@ -513,6 +521,7 @@ export default {
 	goToMove,
 	makeAllMovesInGame,
 	applyMove,
+	applyEdit,
 	rewindMove,
 	simulateMoveWrapper,
 	getSimulatedConclusion,
