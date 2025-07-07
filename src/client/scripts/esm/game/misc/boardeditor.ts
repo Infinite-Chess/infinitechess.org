@@ -282,7 +282,7 @@ function clearAll() {
 	runEdit(gamefile, mesh, edit, true);
 	addEditToHistory(edit);
 	guinavigation.update_MoveButtons();
-	annotations.onGameUnload(); // clear all annotations, as when a game is unloaded
+	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 }
 
 function undo() {
