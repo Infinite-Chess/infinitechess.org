@@ -49,6 +49,7 @@ button {
     width: fit-content;
     box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
     background: white;
+    z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
 }
 
 .editor-tools {
@@ -1078,7 +1079,7 @@ button.join-button, button.copy-button {
     height: 1em;
     display: flex;
     justify-content: space-between;
-    box-shadow: 7px 1px 7px 0px rgba(0, 0, 0, 0.659);
+    box-shadow: 0px 1px 7px 0px rgba(0, 0, 0, 0.659);
     background: linear-gradient(to top, rgba(255, 255, 255, 0.104), rgba(255, 255, 255, 0.552), rgba(255, 255, 255, 0.216));
     -webkit-backdrop-filter: blur(5px); /* Must be BEFORE the unprefixed rules, so Lightning CSS correclty parses! */
     backdrop-filter: blur(8px); /* Apply a blur effect to the background */
