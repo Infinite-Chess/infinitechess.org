@@ -21,6 +21,7 @@ import guiboardeditor from '../gui/guiboardeditor.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import mouse from '../../util/mouse.js';
 import movesequence from '../chess/movesequence.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -281,6 +282,7 @@ function clearAll() {
 	runEdit(gamefile, mesh, edit, true);
 	addEditToHistory(edit);
 	guinavigation.update_MoveButtons();
+	annotations.onGameUnload(); // clear all annotations, as when a game is unloaded
 }
 
 function undo() {
