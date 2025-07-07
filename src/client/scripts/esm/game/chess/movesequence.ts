@@ -13,7 +13,7 @@ import type { Edit, Move, MoveDraft} from "../../chess/logic/movepiece.js";
 
 import gameslot from "./gameslot.js";
 import guinavigation from "../gui/guinavigation.js";
-import boardchanges from "../../chess/logic/boardchanges.js";
+import boardchanges, { Change } from "../../chess/logic/boardchanges.js";
 import { animatableChanges, meshChanges } from "./graphicalchanges.js";
 import moveutil from "../../chess/util/moveutil.js";
 import arrowlegalmovehighlights from "../rendering/arrows/arrowlegalmovehighlights.js";
@@ -27,7 +27,6 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 import frametracker from "../rendering/frametracker.js";
-import boardeditor from "../misc/boardeditor.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 
@@ -44,31 +43,24 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	const { basegame, boardsim } = gamefile;
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	
-	if (!boardeditor.areInBoardEditor()) {
-		// Logical changes
-		movepiece.makeMove(gamefile, move);
+	movepiece.makeMove(gamefile, move); // Logical changes
 
-		if (mesh) runMeshChanges(boardsim, mesh, move, true);
+	if (mesh) runMeshChanges(boardsim, mesh, move, true);
+	
+	// GUI changes
+	updateGui(false);
 
-		// GUI changes
-		updateGui(false);
-
-		if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
-			const clockStamp_ = clock.push(basegame, basegame.clocks!);
-			guiclock.push(basegame.clocks!);
-			// Add the clock stamp to the move
-			if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
-		}
-
-		if (doGameOverChecks) {
-			gamefileutility.doGameOverChecks(gamefile);
-			// Only conclude the game if it's not an online game (in that scenario, server is boss)
-			if (gamefileutility.isGameOver(basegame) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
-		}
+	if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
+		const clockStamp_ = clock.push(basegame, basegame.clocks!);
+		guiclock.push(basegame.clocks!);
+		// Add the clock stamp to the move
+		if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
 	}
-	else {
-		movepiece.applyMove(gamefile, move, true, { global: true, updateMoveIndex: false });
-		if (mesh) runMeshChanges(boardsim, mesh, move, true);
+
+	if (doGameOverChecks) {
+		gamefileutility.doGameOverChecks(gamefile);
+		// Only conclude the game if it's not an online game (in that scenario, server is boss)
+		if (gamefileutility.isGameOver(basegame) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
 	}
 
 	// Whenever a move is made in the game, the color of the legal move highlights

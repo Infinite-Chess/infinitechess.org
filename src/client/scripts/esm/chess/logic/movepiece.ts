@@ -131,7 +131,6 @@ interface Move extends Edit, MoveDraft, BaseMove {
 	/** The index this move was generated for. This can act as a safety net
 	 * so we don't accidentally make the move on the wrong index of the game. */
 	generateIndex: number,
-
 	flags: {
 		/** Whether the move delivered check. */
 		check: boolean,
@@ -192,7 +191,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 		// The actual function will return whether a special move was actually made or not.
 		// If a special move IS made, we skip the normal move piece method.
 		if (rawType in boardsim.specialMoves) specialMoveMade = boardsim.specialMoves[rawType]!(boardsim, piece, move);
-		if (!specialMoveMade) calcMovesChanges(boardsim, piece, move); // Move piece regularly (no special tag)
+		if (!specialMoveMade) calcMovesChanges(boardsim, piece, moveDraft, move); // Move piece regularly (no special tag)
 
 		// Must be set before calling queueIncrementMoveRuleStateChange()
 		move.flags.capture = boardchanges.wasACapture(move);
@@ -214,11 +213,11 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
  * @param piece - The piece that's being moved
  * @param move - The move that's being made
  */
-function calcMovesChanges(boardsim: Board, piece: Piece, move: Move) {
-	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
+function calcMovesChanges(boardsim: Board, piece: Piece, moveDraft: _Move_Compact, edit: Edit) {
+	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.endCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
-	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(edit.changes, true, piece, moveDraft.endCoords, capturedPiece);
+	else boardchanges.queueMovePiece(edit.changes, true, piece, moveDraft.endCoords);
 }
 
 /**
@@ -231,22 +230,22 @@ function calcMovesChanges(boardsim: Board, piece: Piece, move: Move) {
  * This will upgrade the repetition algorithm to not delay declaring a draw
  * if a rook moves that had its special right, but could never castle. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-function queueSpecialRightDeletionStateChanges(boardsim: Board, move: Move) {
-	move.changes.forEach(change => {
+function queueSpecialRightDeletionStateChanges(boardsim: Board, edit: Edit) {
+	edit.changes.forEach(change => {
 		if (change.action === 'move') {
 			// Delete the special rights off the start coords, if there is one (createSpecialRightsState() early exits if there isn't)
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
+			state.createSpecialRightsState(edit, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
 		} else if (change.action === 'capture') {
 			// Delete the special rights off the start coords AND the capture coords, if there are ones.
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
+			state.createSpecialRightsState(edit, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
 			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
-			state.createSpecialRightsState(move, captureCoordsKey, boardsim.state.global.specialRights.has(captureCoordsKey), false);
+			state.createSpecialRightsState(edit, captureCoordsKey, boardsim.state.global.specialRights.has(captureCoordsKey), false);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.
 			const coordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, coordsKey, boardsim.state.global.specialRights.has(coordsKey), false);
+			state.createSpecialRightsState(edit, coordsKey, boardsim.state.global.specialRights.has(coordsKey), false);
 		}
 	});
 }
@@ -299,11 +298,11 @@ function makeMove(gamefile: FullGame, move: Move) {
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
 function applyMove(gamefile: FullGame, move: Move, forward = true, { global = false } = {}) {
-		gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
+	gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
-		// Stops stupid missing piece errors
-		const indexToApply = gamefile.boardsim.state.local.moveIndex + Number(!forward);
-		if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
+	// Stops stupid missing piece errors
+	const indexToApply = gamefile.boardsim.state.local.moveIndex + Number(!forward);
+	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
 
 	applyEdit(gamefile, move, forward, global); // Apply the board changes
 }
@@ -516,6 +515,7 @@ export type {
 
 export default {
 	generateMove,
+	calcMovesChanges,
 	makeMove,
 	updateTurn,
 	goToMove,
