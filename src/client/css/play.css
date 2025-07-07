@@ -40,16 +40,8 @@ button {
     cursor: pointer;
 }
 
-#boardUI {
-    position: relative;
-    flex-grow: 1;
-    min-width: 0;
-    height: 100%;
-}
 
-
-/* Board Editor UI */
-
+/* Left vertical bar of Board Editor */
 
 .editor-menu {
     position: relative;
@@ -103,6 +95,15 @@ button {
     border-radius: 100%;
     margin: 12px;
     flex-shrink: 0;
+}
+
+/* Entire board UI, including loading screen, canvas and overlay */
+
+#boardUI {
+    position: relative;
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
 }
 
 
@@ -1070,6 +1071,7 @@ button.join-button, button.copy-button {
 .navigation-bar {
     position: absolute;
     top: 0;
+    left: 0;
     width: 100%;
     font-size: 84px; /* Update with doc!! */
     height: 1em;
