@@ -242,6 +242,7 @@ function callback_Expand() {
 	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
 	// Add the square annotation highlights, too.
 	allCoords.push(...snapping.getAnnoteSnapPoints(false));
+	if (allCoords.length === 0) allCoords.push([1,1], [8,8]); // use the [1,1]-[8,8] area as a fallback
 	area.initTelFromCoordsList(allCoords);
 }
 
