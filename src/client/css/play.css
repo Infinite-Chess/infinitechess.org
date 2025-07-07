@@ -42,8 +42,8 @@ button {
 
 #boardUI {
     position: relative;
-    top: 0;
-    width: 100%;
+    flex-grow: 1;
+    min-width: 0;
     height: 100%;
 }
 
@@ -53,8 +53,6 @@ button {
 
 .editor-menu {
     position: relative;
-    top: 0;
-    left: 0;
     height: 100%;
     width: fit-content;
     box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);

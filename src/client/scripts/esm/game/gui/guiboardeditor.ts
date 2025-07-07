@@ -57,6 +57,7 @@ let isOpen = false;
 
 async function open() {
 	element_menu.classList.remove("hidden");
+	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	await gameloader.startBoardEditor();
 	initListeners();
 	isOpen = true;
@@ -65,6 +66,7 @@ async function open() {
 function close() {
 	if (!isOpen) return;
 	element_menu.classList.add("hidden");
+	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
 	isOpen = false;
 }
