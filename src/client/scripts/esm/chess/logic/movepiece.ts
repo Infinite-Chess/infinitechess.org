@@ -217,8 +217,8 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 function calcMovesChanges(boardsim: Board, piece: Piece, move: Move) {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
-	if (capturedPiece) boardchanges.queueCapture(move.changes, true, piece, move.endCoords, capturedPiece);
-	else boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);
+	if (capturedPiece) boardchanges.queueCapture(move.changes, true, capturedPiece);
+	boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords);
 }
 
 /**
@@ -238,10 +238,8 @@ function queueSpecialRightDeletionStateChanges(boardsim: Board, move: Move) {
 			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
 			state.createSpecialRightsState(move, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
 		} else if (change.action === 'capture') {
-			// Delete the special rights off the start coords AND the capture coords, if there are ones.
-			const startCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
-			state.createSpecialRightsState(move, startCoordsKey, boardsim.state.global.specialRights.has(startCoordsKey), false);
-			const captureCoordsKey = coordutil.getKeyFromCoords(change.capturedPiece.coords); // Future protection if the captured piece is ever not on the move's endCoords
+			 // Future protection if the captured piece is ever not on the move's endCoords
+			const captureCoordsKey = coordutil.getKeyFromCoords(change.piece.coords);
 			state.createSpecialRightsState(move, captureCoordsKey, boardsim.state.global.specialRights.has(captureCoordsKey), false);
 		} else if (change.action === 'delete') {
 			// Delete the special rights of the coords, if there is one.

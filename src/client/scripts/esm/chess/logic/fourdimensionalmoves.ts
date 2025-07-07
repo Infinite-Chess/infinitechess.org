@@ -175,8 +175,8 @@ function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: Move): b
 	const captureCoords = move.enpassant ? boardsim.state.global.enpassant!.pawn : move.endCoords;
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, captureCoords);
 
-	if (capturedPiece !== undefined) boardchanges.queueCapture(moveChanges, true, piece, move.endCoords, capturedPiece); // Delete the piece captured
-	else boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Move the pawn
+	if (capturedPiece !== undefined) boardchanges.queueCapture(moveChanges, true, capturedPiece); // Delete the piece captured
+	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords); // Move the pawn
 
 	if (move.promotion !== undefined) { // Handle promotion special move
 		boardchanges.queueDeletePiece(moveChanges, true, { type: piece.type, coords: move.endCoords, index: piece.index }); // Delete original pawn
