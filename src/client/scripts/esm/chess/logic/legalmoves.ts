@@ -218,16 +218,15 @@ function removeObstructedMoves(boardsim: Board, piece: Piece, moveset: PieceMove
  * Calculates and generates all legal moves of a piece in the provided gamefile.
  * @param gamefile 
  * @param piece 
- * @param [options.ignoreChecks] - If true, checkresolver will be ignored entirely (useful for the board editor)
  * @returns The legal moves of that piece
  */
-function calculateAll(gamefile: FullGame, piece: Piece, { ignoreChecks = false } = {}): LegalMoves {
+function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
 	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);
 	removeObstructedMoves(gamefile.boardsim, piece, moveset, moves);
 	appendSpecialMoves(gamefile, piece, moveset, moves, false);
-	if (!ignoreChecks) checkresolver.removeCheckInvalidMoves(gamefile, piece, moves);
+	checkresolver.removeCheckInvalidMoves(gamefile, piece, moves);
 	return moves;
 }
 

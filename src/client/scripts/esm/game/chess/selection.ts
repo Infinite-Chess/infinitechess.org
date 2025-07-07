@@ -428,7 +428,7 @@ function initSelectedPieceInfo(gamefile: FullGame, piece: Piece) {
 	pieceSelected = piece;
 
 	// Calculate the legal moves it has. Keep a record of this so that when the mouse clicks we can easily test if that is a valid square.
-	legalMoves = legalmoves.calculateAll(gamefile, piece, { ignoreChecks: boardeditor.areInBoardEditor() });
+	legalMoves = legalmoves.calculateAll(gamefile, piece);
 	// console.log('Selected Legal Moves:', legalMoves);
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
