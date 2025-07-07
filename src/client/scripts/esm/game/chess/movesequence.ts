@@ -27,6 +27,7 @@ import guigameinfo from "../gui/guigameinfo.js";
 import guiclock from "../gui/guiclock.js";
 import clock from "../../chess/logic/clock.js";
 import frametracker from "../rendering/frametracker.js";
+import boardeditor from "../misc/boardeditor.js";
 // @ts-ignore
 import stats from "../gui/stats.js";
 
@@ -43,7 +44,9 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	const { basegame, boardsim } = gamefile;
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	
-	movepiece.makeMove(gamefile, move); // Logical changes
+	// Logical changes
+	if (!boardeditor.areInBoardEditor()) movepiece.makeMove(gamefile, move);
+	else movepiece.applyMove(gamefile, move, true, { updateMoveIndex: false });
 
 	if (mesh) runMeshChanges(boardsim, mesh, move, true);
 	

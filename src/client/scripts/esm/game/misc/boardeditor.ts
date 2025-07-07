@@ -9,7 +9,6 @@
 import boardchanges from '../../chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
-import guinavigation from '../gui/guinavigation.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
@@ -165,7 +164,6 @@ function endEdit() {
 	previousSquare = undefined;
 	if (thisEdit !== undefined) addEditToHistory(thisEdit);
 	thisEdit = undefined;
-	guinavigation.update_MoveButtons();
 }
 
 /** Runs both logical and graphical changes. */
@@ -281,7 +279,6 @@ function clearAll() {
 	};
 	runEdit(gamefile, mesh, edit, true);
 	addEditToHistory(edit);
-	guinavigation.update_MoveButtons();
 	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 }
 
@@ -292,7 +289,6 @@ function undo() {
 	const mesh = gameslot.getMesh()!;
 	indexOfThisEdit!--;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, false);
-	guinavigation.update_MoveButtons();
 }
 
 function redo() {
@@ -302,7 +298,6 @@ function redo() {
 	const mesh = gameslot.getMesh()!;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, true);
 	indexOfThisEdit!++;
-	guinavigation.update_MoveButtons();
 }
 
 /**
@@ -330,7 +325,6 @@ function load() {
 
 function onMovePlayed(move: Move) {
 	if (!inBoardEditor) return;
-	const gamefile = gameslot.getGamefile()!;
 	edits!.length = indexOfThisEdit!;
 	const edit: Edit = {
 		changes: move.changes,
@@ -338,9 +332,6 @@ function onMovePlayed(move: Move) {
 	};
 	edits!.push(edit);
 	indexOfThisEdit = edits!.length;
-	gamefile.boardsim.moves.length = 0;
-	gamefile.boardsim.state.local.moveIndex = -1;
-	guinavigation.update_MoveButtons();
 }
 
 export type {

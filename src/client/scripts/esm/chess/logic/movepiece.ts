@@ -297,13 +297,16 @@ function makeMove(gamefile: FullGame, move: Move) {
  * @param move 
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
+ * @param [options.updateMoveIndex] - If true, this will update the moveIndex as necessary. Typcially true in games and false when used in the board editor.
  */
-function applyMove(gamefile: FullGame, move: Move , forward = true, { global = false } = {}) {
-	gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
+function applyMove(gamefile: FullGame, move: Move , forward = true, { global = false, updateMoveIndex = true } = {}) {
+	if (updateMoveIndex) {
+		gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
-	// Stops stupid missing piece errors
-	const indexToApply = gamefile.boardsim.state.local.moveIndex + Number(!forward);
-	if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
+		// Stops stupid missing piece errors
+		const indexToApply = gamefile.boardsim.state.local.moveIndex + Number(!forward);
+		if (indexToApply !== move.generateIndex) throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`);
+	}
 
 	state.applyMove(gamefile.boardsim.state, move.state, forward, { globalChange: global }); // Apply the State of the move
 
