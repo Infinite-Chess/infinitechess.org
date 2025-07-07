@@ -44,26 +44,31 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 	const { basegame, boardsim } = gamefile;
 	const move = movepiece.generateMove(gamefile, moveDraft);
 	
-	// Logical changes
-	if (!boardeditor.areInBoardEditor()) movepiece.makeMove(gamefile, move);
-	else movepiece.applyMove(gamefile, move, true, { updateMoveIndex: false });
+	if (!boardeditor.areInBoardEditor()) {
+		// Logical changes
+		movepiece.makeMove(gamefile, move);
 
-	if (mesh) runMeshChanges(boardsim, mesh, move, true);
-	
-	// GUI changes
-	updateGui(false);
+		if (mesh) runMeshChanges(boardsim, mesh, move, true);
 
-	if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
-		const clockStamp_ = clock.push(basegame, basegame.clocks!);
-		guiclock.push(basegame.clocks!);
-		// Add the clock stamp to the move
-		if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
+		// GUI changes
+		updateGui(false);
+
+		if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
+			const clockStamp_ = clock.push(basegame, basegame.clocks!);
+			guiclock.push(basegame.clocks!);
+			// Add the clock stamp to the move
+			if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
+		}
+
+		if (doGameOverChecks) {
+			gamefileutility.doGameOverChecks(gamefile);
+			// Only conclude the game if it's not an online game (in that scenario, server is boss)
+			if (gamefileutility.isGameOver(basegame) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
+		}
 	}
-
-	if (doGameOverChecks) {
-		gamefileutility.doGameOverChecks(gamefile);
-		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(basegame) && !onlinegame.areInOnlineGame()) gameslot.concludeGame();
+	else {
+		movepiece.applyMove(gamefile, move, true, { updateMoveIndex: false });
+		if (mesh) runMeshChanges(boardsim, mesh, move, true);
 	}
 
 	// Whenever a move is made in the game, the color of the legal move highlights
