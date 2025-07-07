@@ -67,7 +67,7 @@ function makeMove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDra
 		}
 	}
 	else {
-		movepiece.applyMove(gamefile, move, true, { updateMoveIndex: false });
+		movepiece.applyMove(gamefile, move, true, { global: true, updateMoveIndex: false });
 		if (mesh) runMeshChanges(boardsim, mesh, move, true);
 	}
 
