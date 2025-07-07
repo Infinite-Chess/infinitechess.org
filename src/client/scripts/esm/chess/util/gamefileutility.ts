@@ -99,14 +99,8 @@ function doGameOverChecks(gamefile: FullGame) {
 function getStartingAreaBox(boardsim: Board) {
 	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
+	if (coordsList.length === 0) coordsList.push([1,1], [8,8]); // use the [1,1]-[8,8] area as a fallback
 	return math.getBoxFromCoordsList(coordsList);
-}
-
-/**
- * Gets the bounding box of the Classical starting position, with pieces on squares [1,1]-[8,8]
- */
-function getClassicalStartingAreaBox() {
-	return math.getBoxFromCoordsList([[1,1], [1,8], [8,1], [8,8]]);
 }
 
 /**
@@ -173,7 +167,6 @@ export default {
 	isOpponentUsingWinCondition,
 	doGameOverChecks,
 	getStartingAreaBox,
-	getClassicalStartingAreaBox,
 	getPlayerCount,
 	getUniquePlayersInTurnOrder,
 	areColinearSlidesPresentInGame,
