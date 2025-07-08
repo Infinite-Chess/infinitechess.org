@@ -102,14 +102,13 @@ function toggle() {
 
 function open({ allowEditCoords = true }: { allowEditCoords?: boolean }) {
 	element_Navigation.classList.remove('hidden');
-	if (!guiboardeditor.isOpen()) {
+	if (!guiboardeditor.isOpen()) { // Normal game => Show navigate move buttons
 		element_moveRewind.classList.remove("hidden");
 		element_moveForward.classList.remove("hidden");
 		element_undoEdit.classList.add("hidden");
 		element_redoEdit.classList.add("hidden");
 		update_MoveButtons();
-	}
-	else {
+	} else { // Board editor => Show undo/redo edit buttons
 		element_moveRewind.classList.add("hidden");
 		element_moveForward.classList.add("hidden");
 		element_undoEdit.classList.remove("hidden");
@@ -206,8 +205,7 @@ function initListeners_Navigation() {
 		element_moveForward.addEventListener('touchmove', callback_MoveForwardTouchMove);
 		element_moveForward.addEventListener('touchend', callback_MoveForwardTouchEnd);
 		element_moveForward.addEventListener('touchcancel', callback_MoveForwardTouchEnd);
-	}
-	else {
+	} else {
 		element_undoEdit.addEventListener('click', callback_UndoEdit);
 		element_undoEdit.addEventListener('mousedown', callback_UndoEditMouseDown);
 		element_undoEdit.addEventListener('mouseleave', callback_UndoEditMouseLeave);
@@ -256,8 +254,7 @@ function closeListeners_Navigation() {
 		element_moveForward.removeEventListener('touchmove', callback_MoveForwardTouchMove);
 		element_moveForward.removeEventListener('touchend', callback_MoveForwardTouchEnd);
 		element_moveForward.removeEventListener('touchcancel', callback_MoveForwardTouchEnd);
-	}
-	else {
+	} else {
 		element_undoEdit.removeEventListener('click', callback_UndoEdit);
 		element_undoEdit.removeEventListener('mousedown', callback_UndoEditMouseDown);
 		element_undoEdit.removeEventListener('mouseleave', callback_UndoEditMouseLeave);
@@ -361,8 +358,7 @@ function update() {
 	if (!guiboardeditor.isOpen()) {
 		testIfRewindMove();
 		testIfForwardMove();
-	}
-	else {
+	} else {
 		testIfUndoEdit();
 		testIfRedoEdit();
 	}
@@ -371,6 +367,7 @@ function update() {
 
 
 // Move Buttons =====================================================
+
 
 function callback_MoveRewind() {
 	if (rewindIsLocked) return;
