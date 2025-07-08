@@ -65,12 +65,12 @@ const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind o
 const minimumRewindOrEditIntervalMillis = 20; // Rewinding, forwarding, undoing and redoing can never be spammed faster than this
 let lastRewindOrEdit = 0;
 
-let leftArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN rewinding
-let leftArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE rewinding
+let leftArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN rewinding or undoing
+let leftArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE rewinding or undoing
 let touchIsInsideLeft = false;
 
-let rightArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN rewinding
-let rightArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE rewinding
+let rightArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN forwarding or redoing
+let rightArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE forwarding or redoing
 let touchIsInsideRight = false;
 
 let rewindIsLocked = false;
