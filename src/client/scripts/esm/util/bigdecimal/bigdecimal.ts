@@ -9,6 +9,23 @@
  * but also decimals to go with them!
  * 
  * It is in base 2, so most base-10 numbers can't be represented perfectly.
+ * 
+ * ================ HOW IT WORKS ================
+ * 
+ * Javascript's BigInt primitive is one of the fastest methods for performing
+ * arbitrary integer arithmetic in javascript. This library takes advantage of
+ * BigInt's speed, and combines it with fixed-point arithmetic. A set portion
+ * of the least-significant bits of the BigInt are dedicated towards the decimal
+ * portion of the number, indicated by the divex property, and the remaining
+ * most-significant bits are used for the integer portion!
+ * 
+ * If we wanted to store 2.75, that would look like { bigint: 11n, divex: 2}.
+ * In binary, 11n is 1011. But the right-most 2 bits are dedicated for the decimal
+ * part, so we split it into 10, which is 2 in binary, and 11, which is a binary
+ * fraction for 0.75. Added together we get 2.75. Or in other words, if we have
+ * our bigint and divex properties, than our true number equals bigint / 2^divex.
+ * 
+ * This allows us to work with arbitrary-sized numbers with arbitrary levels of decimal precision!
  */
 
 
