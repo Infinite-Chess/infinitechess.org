@@ -422,10 +422,14 @@ function divide(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEF
 	const quotient = scaledDividend / bd2.bigint;
 	
 	// 5. Round the result by shifting it back down by `workingPrecision`.
-	//    We check the most significant bit of the part being discarded to round correctly.
-	const roundingBit = (quotient >> BigInt(workingPrecision - 1)) & ONE;
-	let finalQuotient = quotient >> BigInt(workingPrecision);
-	if (roundingBit === ONE) finalQuotient++;
+    //    We add "0.5" before truncating to round half towards positive infinity.
+    const workingPrecisionBigInt = BigInt(workingPrecision);
+    if (workingPrecisionBigInt <= ZERO) return {
+		bigint: quotient,
+		divex: targetDivex
+	};
+    const half = ONE << (workingPrecisionBigInt - ONE);
+	const finalQuotient = (quotient + half) >> workingPrecisionBigInt;
 
 	return {
 		bigint: finalQuotient,
