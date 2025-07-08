@@ -162,6 +162,10 @@ const getBigintPowerOfTwo: (power: number) => bigint = (function() {
 function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
     if (workingPrecision < 0 || workingPrecision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${workingPrecision}`);
 
+	// Make sure the string is valid
+	const match = num.trim().match(/^(-?)(\d*)?\.?(\d*)$/);
+	if (!match) throw new Error("Invalid number format");
+
     const dotIndex: number = num.lastIndexOf('.');
     const decimalDigitCount: number = dotIndex !== -1 ? num.length - dotIndex - 1 : 0;
 

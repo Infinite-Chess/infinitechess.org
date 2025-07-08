@@ -1,7 +1,6 @@
 
 // src/client/scripts/esm/util/bigdecimal/bigintmath.ts
 
-
 /**
  * This module contains complex math functions
  * for working with bigints.
