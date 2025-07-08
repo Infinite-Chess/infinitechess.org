@@ -31,17 +31,15 @@
             <!-- Left vertical bar of Board Editor -->
             <div id="editor-menu" class="editor-menu unselectable hidden">
                 <div id="editor-tools" class="editor-tools">
-                    <div data-tool="undo">Undo</div>
-                    <div data-tool="redo">Redo</div>
-                    <div data-tool="save">Save</div>
+                    <div data-tool="clearall">Clear all</div>
                     <div data-tool="load">Load</div>
+                    <div data-tool="save">Save</div>
                     <div data-tool="normal" class="active">Normal</div>
                     <div data-tool="placer">Placer</div>
                     <div data-tool="eraser">Eraser</div>
                     <div data-tool="selector">Selector</div>
                     <div data-tool="gamerules">Game Rules</div>
                     <div data-tool="specialrights">Special Rights</div>
-                    <div data-tool="clearall">Clear all</div>
                     <div data-tool="color" id="editor-dot" class="dot"></div>
                 </div>
                 <div id="editor-pieceTypes"></div>
@@ -527,11 +525,18 @@
                             </div>
                             <div class="buttoncontainer">
                                 <div id="move-right" class="button opacity-0_5 tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.forward_move')%>">
-                                    <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4">
-                                        <g transform="scale(-1, 1) translate(-25.16, 0)">
-                                            <path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path>
-                                        </g>
-                                        </svg>
+                                    <svg fill="#333" viewBox="-15.84 -15.84 55.68 55.68" stroke="#333" stroke-width="2.4"><g transform="scale(-1, 1) translate(-25.16, 0)"><path d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"></path></g></svg>
+                                </div>
+                            </div>
+                            <!-- Undo and redo buttons in board editor -->
+                            <div class="buttoncontainer">
+                                <div id="undo-edit" class="hidden button opacity-0_5 tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.undo_edit')%>">
+                                    <svg viewBox="-5 -5 26 26" fill="#333"><g transform="translate(0.4, 1.3)"><path d="M6 3.6V0L0 6l6 6V8c6-.27 7.53 3.76 7.88 5.77a.27.27 0 0 0 .53 0C17.08 2.86 6 3.6 6 3.6"/></g></svg>
+                                </div>
+                            </div>
+                            <div class="buttoncontainer">
+                                <div id="redo-edit" class="hidden button opacity-0_5 tooltip-d" data-tooltip="<%=t('play.gamebuttontooltips.redo_edit')%>">
+                                    <svg viewBox="-5 -5 26 26" fill="#333"><g transform="scale(-1, 1) translate(-15.6, 1.3)"><path d="M6 3.6V0L0 6l6 6V8c6-.27 7.53 3.76 7.88 5.77a.27.27 0 0 0 .53 0C17.08 2.86 6 3.6 6 3.6"/></g></svg>
                                 </div>
                             </div>
                             <div class="buttoncontainer">

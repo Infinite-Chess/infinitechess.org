@@ -22,6 +22,7 @@ import mouse from '../../util/mouse.js';
 import movesequence from '../chess/movesequence.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import movepiece from '../../chess/logic/movepiece.js';
+import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -32,7 +33,7 @@ import type { Edit } from '../../chess/logic/movepiece.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../chess/util/typeutil.js';
-import { Board, FullGame } from '../../chess/logic/gamefile.js';
+import type { Board, FullGame } from '../../chess/logic/gamefile.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -185,6 +186,7 @@ function addEditToHistory(edit: Edit) {
 	edits!.length = indexOfThisEdit!;
 	edits!.push(edit);
 	indexOfThisEdit!++;
+	guinavigation.update_EditButtons();
 }
 
 function update(): void {
@@ -288,6 +290,7 @@ function undo() {
 	const mesh = gameslot.getMesh()!;
 	indexOfThisEdit!--;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, false);
+	guinavigation.update_EditButtons();
 }
 
 function redo() {
@@ -297,6 +300,7 @@ function redo() {
 	const mesh = gameslot.getMesh()!;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, true);
 	indexOfThisEdit!++;
+	guinavigation.update_EditButtons();
 }
 
 /**
@@ -335,9 +339,7 @@ function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Mo
 
 	specialrighthighlights.onMove(); // Updates the model
 
-	edits!.length = indexOfThisEdit!;
-	edits!.push(edit);
-	indexOfThisEdit = edits!.length;
+	addEditToHistory(edit);
 
 	return edit;
 }
