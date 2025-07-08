@@ -22,6 +22,7 @@ import mouse from '../../util/mouse.js';
 import movesequence from '../chess/movesequence.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import movepiece from '../../chess/logic/movepiece.js';
+import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -32,8 +33,7 @@ import type { Edit } from '../../chess/logic/movepiece.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../chess/util/typeutil.js';
-import { Board, FullGame } from '../../chess/logic/gamefile.js';
-import guinavigation from '../gui/guinavigation.js';
+import type { Board, FullGame } from '../../chess/logic/gamefile.js';
 
 
 type Tool = (typeof validTools)[number];

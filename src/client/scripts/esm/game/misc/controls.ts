@@ -38,12 +38,12 @@ import piecemodels from "../rendering/piecemodels.js";
 import guinavigation from "../gui/guinavigation.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
+import boardeditor from "./boardeditor.js";
 
 
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { Coords } from "../../chess/util/coordutil.js";
 import type { FullGame } from "../../chess/logic/gamefile.js";
-import boardeditor from "./boardeditor.js";
 
 // Constants -------------------------------------------------------------------
 
