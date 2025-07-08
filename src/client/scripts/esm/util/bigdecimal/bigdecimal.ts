@@ -369,28 +369,25 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 
 /**
  * Multiplies two BigDecimal numbers.
- * @param bd1 - Factor1
- * @param bd2 - Factor2
- * @param mode - The mode for determining the new divex.
- * - `0` (default): Uses the maximum divex of the two factors.
- * - `1`: Uses the sum of the factors' divexs for full precision.
- * - `2`: Uses the minimum divex of the two factors.
- * @returns The product of BigDecimal1 and BigDecimal2.
+ * The resulting BigDecimal will have a divex equal to the maximum divex of the two factors.
+ * This provides a balance of precision and predictable behavior.
+ * @param bd1 The first factor.
+ * @param bd2 The second factor.
+ * @returns The product of bd1 and bd2.
  */
-function multiply(bd1: BigDecimal, bd2: BigDecimal, mode: 0 | 1 | 2 = 0): BigDecimal {
-	const targetDivex: number = 
-		mode === 0 ? Math.max(bd1.divex, bd2.divex)  // Max
-		: mode === 1 ? bd1.divex + bd2.divex           // Add
-		:              Math.min(bd1.divex, bd2.divex); // Min
+function multiply(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
+    const targetDivex = Math.max(bd1.divex, bd2.divex);
 
-	// The true divex of the raw product is (bd1.divex + bd2.divex).
-	// We shift the raw product to scale it to the targetDivex.
-	const shiftAmount = BigInt((bd1.divex + bd2.divex) - targetDivex);
+    // The true divex of the raw product is (bd1.divex + bd2.divex).
+    // We must shift the raw product to scale it down to the targetDivex.
+    const shiftAmount = BigInt((bd1.divex + bd2.divex) - targetDivex);
 
-	return {
-		bigint: (bd1.bigint * bd2.bigint) >> shiftAmount,
-		divex: targetDivex,
-	};
+    const product = (bd1.bigint * bd2.bigint) >> shiftAmount;
+
+    return {
+        bigint: product,
+        divex: targetDivex,
+    };
 }
 
 /**
