@@ -267,11 +267,17 @@ function update() {
 
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
-	// TODO implement this
-	// const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, getCurrentSegment(animation));
-	// arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
-	// Add the captured piece only after we've shifted the piece that captured it
-	// animation.captured.forEach(captured => arrows.shiftArrow(captured.type, true, undefined, captured.coords));
+	const segment = getCurrentSegment(animation);
+	for (const [k, coords] of animation.hideKeyframes) {
+		if (k < segment) continue;
+		coords.forEach(c => arrows.shiftArrow(1, true, c));
+	}
+	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segment);
+	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
+	for (const [k, pieces] of animation.showKeyframes) {
+		if (k < segment) continue;
+		pieces.forEach(p => arrows.shiftArrow(p.type, true, undefined, p.coords));
+	}
 }
 
 
