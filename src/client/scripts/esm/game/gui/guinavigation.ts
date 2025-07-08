@@ -13,6 +13,7 @@ import boardpos from '../rendering/boardpos.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import snapping from '../rendering/highlights/snapping.js';
 import boardeditor from '../misc/boardeditor.js';
+import guiboardeditor from './guiboardeditor.js';
 import math from '../../util/math.js';
 // @ts-ignore
 import boardtiles from '../rendering/boardtiles.js';
@@ -53,6 +54,8 @@ const element_CoordsY = document.getElementById('y') as HTMLInputElement;
 
 const element_moveRewind = document.getElementById('move-left')!;
 const element_moveForward = document.getElementById('move-right')!;
+const element_undoEdit = document.getElementById('undo-edit')!;
+const element_redoEdit = document.getElementById('redo-edit')!;
 const element_pause = document.getElementById('pause')!;
 
 const MAX_TELEPORT_DIST = Infinity;
@@ -99,8 +102,21 @@ function toggle() {
 
 function open({ allowEditCoords = true }: { allowEditCoords?: boolean }) {
 	element_Navigation.classList.remove('hidden');
+	if (!guiboardeditor.isOpen()) {
+		element_moveRewind.classList.remove("hidden");
+		element_moveForward.classList.remove("hidden");
+		element_undoEdit.classList.add("hidden");
+		element_redoEdit.classList.add("hidden");
+		update_MoveButtons();
+	}
+	else {
+		element_moveRewind.classList.add("hidden");
+		element_moveForward.classList.add("hidden");
+		element_undoEdit.classList.remove("hidden");
+		element_redoEdit.classList.remove("hidden");
+		update_EditButtons();
+	}
 	initListeners_Navigation();
-	update_MoveButtons();
 	initCoordinates({ allowEditCoords });
 	navigationOpen = true;
 	stats.updateStatsCSS();
@@ -168,26 +184,47 @@ function initListeners_Navigation() {
 	element_Annotations.addEventListener('click', callback_Annotations);
 	element_Erase.addEventListener('click', callback__Collapse);
 	element_Collapse.addEventListener('click', callback__Collapse);
-	element_moveRewind.addEventListener('click', callback_MoveRewind);
-	element_moveRewind.addEventListener('mousedown', callback_MoveRewindMouseDown);
-	element_moveRewind.addEventListener('mouseleave', callback_MoveRewindMouseLeave);
-	element_moveRewind.addEventListener('mouseup', callback_MoveRewindMouseUp);
-	element_moveRewind.addEventListener('touchstart', callback_MoveRewindTouchStart);
-	element_moveRewind.addEventListener('touchmove', callback_MoveRewindTouchMove);
-	element_moveRewind.addEventListener('touchend', callback_MoveRewindTouchEnd);
-	element_moveRewind.addEventListener('touchcancel', callback_MoveRewindTouchEnd);
-	element_moveForward.addEventListener('click', callback_MoveForward);
-	element_moveForward.addEventListener('mousedown', callback_MoveForwardMouseDown);
-	element_moveForward.addEventListener('mouseleave', callback_MoveForwardMouseLeave);
-	element_moveForward.addEventListener('mouseup', callback_MoveForwardMouseUp);
-	element_moveForward.addEventListener('touchstart', callback_MoveForwardTouchStart);
-	element_moveForward.addEventListener('touchmove', callback_MoveForwardTouchMove);
-	element_moveForward.addEventListener('touchend', callback_MoveForwardTouchEnd);
-	element_moveForward.addEventListener('touchcancel', callback_MoveForwardTouchEnd);
 	element_pause.addEventListener('click', callback_Pause);
 
 	element_CoordsX.addEventListener('change', callback_CoordsChange);
 	element_CoordsY.addEventListener('change', callback_CoordsChange);
+
+	if (!guiboardeditor.isOpen()) {
+		element_moveRewind.addEventListener('click', callback_MoveRewind);
+		element_moveRewind.addEventListener('mousedown', callback_MoveRewindMouseDown);
+		element_moveRewind.addEventListener('mouseleave', callback_MoveRewindMouseLeave);
+		element_moveRewind.addEventListener('mouseup', callback_MoveRewindMouseUp);
+		element_moveRewind.addEventListener('touchstart', callback_MoveRewindTouchStart);
+		element_moveRewind.addEventListener('touchmove', callback_MoveRewindTouchMove);
+		element_moveRewind.addEventListener('touchend', callback_MoveRewindTouchEnd);
+		element_moveRewind.addEventListener('touchcancel', callback_MoveRewindTouchEnd);
+		element_moveForward.addEventListener('click', callback_MoveForward);
+		element_moveForward.addEventListener('mousedown', callback_MoveForwardMouseDown);
+		element_moveForward.addEventListener('mouseleave', callback_MoveForwardMouseLeave);
+		element_moveForward.addEventListener('mouseup', callback_MoveForwardMouseUp);
+		element_moveForward.addEventListener('touchstart', callback_MoveForwardTouchStart);
+		element_moveForward.addEventListener('touchmove', callback_MoveForwardTouchMove);
+		element_moveForward.addEventListener('touchend', callback_MoveForwardTouchEnd);
+		element_moveForward.addEventListener('touchcancel', callback_MoveForwardTouchEnd);
+	}
+	else {
+		element_undoEdit.addEventListener('click', callback_UndoEdit);
+		element_undoEdit.addEventListener('mousedown', callback_UndoEditMouseDown);
+		element_undoEdit.addEventListener('mouseleave', callback_UndoEditMouseLeave);
+		element_undoEdit.addEventListener('mouseup', callback_UndoEditMouseUp);
+		element_undoEdit.addEventListener('touchstart', callback_UndoEditTouchStart);
+		element_undoEdit.addEventListener('touchmove', callback_UndoEditTouchMove);
+		element_undoEdit.addEventListener('touchend', callback_UndoEditTouchEnd);
+		element_undoEdit.addEventListener('touchcancel', callback_UndoEditTouchEnd);
+		element_redoEdit.addEventListener('click', callback_RedoEdit);
+		element_redoEdit.addEventListener('mousedown', callback_RedoEditMouseDown);
+		element_redoEdit.addEventListener('mouseleave', callback_RedoEditMouseLeave);
+		element_redoEdit.addEventListener('mouseup', callback_RedoEditMouseUp);
+		element_redoEdit.addEventListener('touchstart', callback_RedoEditTouchStart);
+		element_redoEdit.addEventListener('touchmove', callback_RedoEditTouchMove);
+		element_redoEdit.addEventListener('touchend', callback_RedoEditTouchEnd);
+		element_redoEdit.addEventListener('touchcancel', callback_RedoEditTouchEnd);
+	}
 }
 
 function closeListeners_Navigation() {
@@ -197,26 +234,47 @@ function closeListeners_Navigation() {
 	element_Annotations.removeEventListener('click', callback_Annotations);
 	element_Erase.removeEventListener('click', callback__Collapse);
 	element_Collapse.removeEventListener('click', callback__Collapse);
-	element_moveRewind.removeEventListener('click', callback_MoveRewind);
-	element_moveRewind.removeEventListener('mousedown', callback_MoveRewindMouseDown);
-	element_moveRewind.removeEventListener('mouseleave', callback_MoveRewindMouseLeave);
-	element_moveRewind.removeEventListener('mouseup', callback_MoveRewindMouseUp);
-	element_moveRewind.removeEventListener('touchstart', callback_MoveRewindTouchStart);
-	element_moveRewind.removeEventListener('touchmove', callback_MoveRewindTouchMove);
-	element_moveRewind.removeEventListener('touchend', callback_MoveRewindTouchEnd);
-	element_moveRewind.removeEventListener('touchcancel', callback_MoveRewindTouchEnd);
-	element_moveForward.removeEventListener('click', callback_MoveForward);
-	element_moveForward.removeEventListener('mousedown', callback_MoveForwardMouseDown);
-	element_moveForward.removeEventListener('mouseleave', callback_MoveForwardMouseLeave);
-	element_moveForward.removeEventListener('mouseup', callback_MoveForwardMouseUp);
-	element_moveForward.removeEventListener('touchstart', callback_MoveForwardTouchStart);
-	element_moveForward.removeEventListener('touchmove', callback_MoveForwardTouchMove);
-	element_moveForward.removeEventListener('touchend', callback_MoveForwardTouchEnd);
-	element_moveForward.removeEventListener('touchcancel', callback_MoveForwardTouchEnd);
 	element_Back.removeEventListener('click', callback_Pause);
 
 	element_CoordsX.removeEventListener('change', callback_CoordsChange);
 	element_CoordsY.removeEventListener('change', callback_CoordsChange);
+
+	if (!guiboardeditor.isOpen()) {
+		element_moveRewind.removeEventListener('click', callback_MoveRewind);
+		element_moveRewind.removeEventListener('mousedown', callback_MoveRewindMouseDown);
+		element_moveRewind.removeEventListener('mouseleave', callback_MoveRewindMouseLeave);
+		element_moveRewind.removeEventListener('mouseup', callback_MoveRewindMouseUp);
+		element_moveRewind.removeEventListener('touchstart', callback_MoveRewindTouchStart);
+		element_moveRewind.removeEventListener('touchmove', callback_MoveRewindTouchMove);
+		element_moveRewind.removeEventListener('touchend', callback_MoveRewindTouchEnd);
+		element_moveRewind.removeEventListener('touchcancel', callback_MoveRewindTouchEnd);
+		element_moveForward.removeEventListener('click', callback_MoveForward);
+		element_moveForward.removeEventListener('mousedown', callback_MoveForwardMouseDown);
+		element_moveForward.removeEventListener('mouseleave', callback_MoveForwardMouseLeave);
+		element_moveForward.removeEventListener('mouseup', callback_MoveForwardMouseUp);
+		element_moveForward.removeEventListener('touchstart', callback_MoveForwardTouchStart);
+		element_moveForward.removeEventListener('touchmove', callback_MoveForwardTouchMove);
+		element_moveForward.removeEventListener('touchend', callback_MoveForwardTouchEnd);
+		element_moveForward.removeEventListener('touchcancel', callback_MoveForwardTouchEnd);
+	}
+	else {
+		element_undoEdit.removeEventListener('click', callback_UndoEdit);
+		element_undoEdit.removeEventListener('mousedown', callback_UndoEditMouseDown);
+		element_undoEdit.removeEventListener('mouseleave', callback_UndoEditMouseLeave);
+		element_undoEdit.removeEventListener('mouseup', callback_UndoEditMouseUp);
+		element_undoEdit.removeEventListener('touchstart', callback_UndoEditTouchStart);
+		element_undoEdit.removeEventListener('touchmove', callback_UndoEditTouchMove);
+		element_undoEdit.removeEventListener('touchend', callback_UndoEditTouchEnd);
+		element_undoEdit.removeEventListener('touchcancel', callback_UndoEditTouchEnd);
+		element_redoEdit.removeEventListener('click', callback_RedoEdit);
+		element_redoEdit.removeEventListener('mousedown', callback_RedoEditMouseDown);
+		element_redoEdit.removeEventListener('mouseleave', callback_RedoEditMouseLeave);
+		element_redoEdit.removeEventListener('mouseup', callback_RedoEditMouseUp);
+		element_redoEdit.removeEventListener('touchstart', callback_RedoEditTouchStart);
+		element_redoEdit.removeEventListener('touchmove', callback_RedoEditTouchMove);
+		element_redoEdit.removeEventListener('touchend', callback_RedoEditTouchEnd);
+		element_redoEdit.removeEventListener('touchcancel', callback_RedoEditTouchEnd);
+	}
 }
 
 /** Is called when we hit enter after changing one of the coordinate fields */
@@ -278,7 +336,35 @@ document.addEventListener('ray-count-change', (e: CustomEvent) => {
 	}
 });
 
-// ==============================================================
+
+// =====================================================================
+
+/**
+ * Returns true if the coords input box is currently not allowed to be edited.
+ * This was set at the time they were opened.
+ */
+function areCoordsAllowedToBeEdited() {
+	return !element_CoordsX.disabled;
+}
+
+/** Returns the height of the navigation bar in the document, in virtual pixels. */
+function getHeightOfNavBar(): number {
+	return element_Navigation.getBoundingClientRect().height;
+}
+
+function callback_Pause() {
+	guipause.open();
+}
+
+/** Tests if the arrow keys have been pressed outisde of the board editor, signaling to rewind/forward the game. */
+function update() {
+	if (guiboardeditor.isOpen()) return;
+	testIfRewindMove();
+	testIfForwardMove();
+}
+
+
+// Move Buttons =====================================================
 
 function callback_MoveRewind() {
 	if (rewindIsLocked) return;
@@ -312,10 +398,6 @@ function update_MoveButtons() {
 
 	if (incrementingLegal) element_moveForward.classList.remove('opacity-0_5');
 	else element_moveForward.classList.add('opacity-0_5');
-}
-
-function callback_Pause() {
-	guipause.open();
 }
 
 // Mouse
@@ -434,12 +516,6 @@ function lockRewind() {
 }
 let lockLayers = 0;
 
-/** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */
-function update() {
-	testIfRewindMove();
-	testIfForwardMove();
-}
-
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove() {
 	if (!listener_document.isKeyDown('ArrowLeft')) return;
@@ -475,17 +551,129 @@ function forwardMove() {
 	movesequence.navigateMove(gamefile, mesh, true);
 }
 
+// Edit Buttons =====================================================
+
 /**
- * Returns true if the coords input box is currently not allowed to be edited.
- * This was set at the time they were opened.
+ * Makes the undo/redo move buttons transparent if we're at
+ * the very beginning or end of the edits.
  */
-function areCoordsAllowedToBeEdited() {
-	return !element_CoordsX.disabled;
+function update_EditButtons() {
+	if (boardeditor.canUndo()) element_undoEdit.classList.remove('opacity-0_5');
+	else element_undoEdit.classList.add('opacity-0_5');
+
+	if (boardeditor.canRedo()) element_redoEdit.classList.remove('opacity-0_5');
+	else element_redoEdit.classList.add('opacity-0_5');
 }
 
-/** Returns the height of the navigation bar in the document, in virtual pixels. */
-function getHeightOfNavBar(): number {
-	return element_Navigation.getBoundingClientRect().height;
+// Mouse
+
+function callback_UndoEditMouseDown() {
+	leftArrowTimeoutID = setTimeout(() => {
+		leftArrowIntervalID = setInterval(() => {
+			callback_UndoEdit();
+		}, intervalToRepeat);
+	}, timeToHoldMillis);
+}
+
+function callback_UndoEditMouseLeave() {
+	clearTimeout(leftArrowTimeoutID);
+	clearInterval(leftArrowIntervalID);
+}
+
+function callback_UndoEditMouseUp() {
+	clearTimeout(leftArrowTimeoutID);
+	clearInterval(leftArrowIntervalID);
+}
+
+function callback_RedoEditMouseDown() {
+	rightArrowTimeoutID = setTimeout(() => {
+		rightArrowIntervalID = setInterval(() => {
+			callback_RedoEdit();
+		}, intervalToRepeat);
+	}, timeToHoldMillis);
+}
+
+function callback_RedoEditMouseLeave() {
+	clearTimeout(rightArrowTimeoutID);
+	clearInterval(rightArrowIntervalID);
+}
+
+function callback_RedoEditMouseUp() {
+	clearTimeout(rightArrowTimeoutID);
+	clearInterval(rightArrowIntervalID);
+}
+
+// Fingers
+
+function callback_UndoEditTouchStart() {
+	touchIsInsideLeft = true;
+	leftArrowTimeoutID = setTimeout(() => {
+		if (!touchIsInsideLeft) return;
+		leftArrowIntervalID = setInterval(() => {
+			callback_UndoEdit();
+		}, intervalToRepeat);
+	}, timeToHoldMillis);
+}
+
+function callback_UndoEditTouchMove(event: TouchEvent) {
+	if (!touchIsInsideLeft) return;
+	const touch = event.touches[0]!;
+	const rect = element_moveRewind.getBoundingClientRect();
+	if (touch.clientX > rect.left &&
+        touch.clientX < rect.right &&
+        touch.clientY > rect.top &&
+        touch.clientY < rect.bottom) return;
+
+	touchIsInsideLeft = false;
+	clearTimeout(leftArrowTimeoutID);
+	clearInterval(leftArrowIntervalID);
+}
+
+function callback_UndoEditTouchEnd() {
+	touchIsInsideLeft = false;
+	clearTimeout(leftArrowTimeoutID);
+	clearInterval(leftArrowIntervalID);
+}
+
+function callback_RedoEditTouchStart() {
+	touchIsInsideRight = true;
+	rightArrowTimeoutID = setTimeout(() => {
+		if (!touchIsInsideRight) return;
+		rightArrowIntervalID = setInterval(() => {
+			callback_RedoEdit();
+		}, intervalToRepeat);
+	}, timeToHoldMillis);
+}
+
+function callback_RedoEditTouchMove(event: TouchEvent) {
+	event = event || window.event;
+	if (!touchIsInsideRight) return;
+	const touch = event.touches[0]!;
+	const rect = element_moveForward.getBoundingClientRect();
+	if (touch.clientX > rect.left &&
+        touch.clientX < rect.right &&
+        touch.clientY > rect.top &&
+        touch.clientY < rect.bottom) return;
+
+	touchIsInsideRight = false;
+	clearTimeout(rightArrowTimeoutID);
+	clearInterval(rightArrowIntervalID);
+}
+
+function callback_RedoEditTouchEnd() {
+	touchIsInsideRight = false;
+	clearTimeout(rightArrowTimeoutID);
+	clearInterval(rightArrowIntervalID);
+}
+
+/** Undoes one edit */
+function callback_UndoEdit() {
+	boardeditor.undo();
+}
+
+/** Redoes one edit. */
+function callback_RedoEdit() {
+	boardeditor.redo();
 }
 
 export default {
@@ -494,6 +682,7 @@ export default {
 	close,
 	updateElement_Coords,
 	update_MoveButtons,
+	update_EditButtons,
 	callback_Pause,
 	lockRewind,
 	update,
