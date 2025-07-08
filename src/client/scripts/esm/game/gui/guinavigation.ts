@@ -358,9 +358,15 @@ function callback_Pause() {
 
 /** Tests if the arrow keys have been pressed outisde of the board editor, signaling to rewind/forward the game. */
 function update() {
-	if (guiboardeditor.isOpen()) return;
-	testIfRewindMove();
-	testIfForwardMove();
+	if (!guiboardeditor.isOpen()) {
+		testIfRewindMove();
+		testIfForwardMove();
+	}
+	else {
+		testIfUndoEdit();
+		testIfRedoEdit();
+	}
+	
 }
 
 
@@ -664,6 +670,18 @@ function callback_RedoEditTouchEnd() {
 	touchIsInsideRight = false;
 	clearTimeout(rightArrowTimeoutID);
 	clearInterval(rightArrowIntervalID);
+}
+
+/** Tests if the left arrow key has been pressed, signaling to undo an edit. */
+function testIfUndoEdit() {
+	if (!listener_document.isKeyDown('ArrowLeft')) return;
+	callback_UndoEdit();
+}
+
+/** Tests if the right arrow key has been pressed, signaling to redo and edit. */
+function testIfRedoEdit() {
+	if (!listener_document.isKeyDown('ArrowRight')) return;
+	callback_RedoEdit();
 }
 
 /** Undoes one edit */

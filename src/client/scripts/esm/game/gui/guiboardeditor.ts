@@ -211,12 +211,6 @@ function callback_ChangeTool(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
 	const tool = target.getAttribute("data-tool");
 	switch (tool) {
-		case "undo":
-			boardeditor.undo();
-			return;
-		case "redo":
-			boardeditor.redo();
-			return;
 		case "save":
 			boardeditor.save();
 			return;
