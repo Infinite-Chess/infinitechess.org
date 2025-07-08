@@ -43,6 +43,7 @@ import miniimage from "../rendering/miniimage.js";
 import type { Mesh } from "../rendering/piecemodels.js";
 import type { Coords } from "../../chess/util/coordutil.js";
 import type { FullGame } from "../../chess/logic/gamefile.js";
+import boardeditor from "./boardeditor.js";
 
 // Constants -------------------------------------------------------------------
 
@@ -247,7 +248,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined) {
 	}
 	if (listener_document.isKeyDown('KeyN')) {
 		guinavigation.toggle();
-		guigameinfo.toggle();
+		if (!boardeditor.areInBoardEditor()) guigameinfo.toggle();
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 	
