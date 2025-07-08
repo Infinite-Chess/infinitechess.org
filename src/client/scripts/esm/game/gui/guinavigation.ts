@@ -65,6 +65,9 @@ const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind
 const minimumRewindIntervalMillis = 20; // Rewinding can never be spammed faster than this
 let lastRewindOrForward = 0;
 
+const minimumEditIntervalMillis = 20; // Undoing or Redoing Edit can never be spammed faster than this
+let lastUndoEditOrRedoEdit = 0;
+
 let leftArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN rewinding
 let leftArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE rewinding
 let touchIsInsideLeft = false;
@@ -559,6 +562,11 @@ function forwardMove() {
 
 // Edit Buttons =====================================================
 
+function isItOkayToUndoEditOrRedoEdit() {
+	const timeSinceLastUndoEditOrRedoEdit = Date.now() - lastUndoEditOrRedoEdit;
+	return timeSinceLastUndoEditOrRedoEdit >= minimumEditIntervalMillis; // True if enough time has passed!
+}
+
 /**
  * Makes the undo/redo move buttons transparent if we're at
  * the very beginning or end of the edits.
@@ -686,11 +694,15 @@ function testIfRedoEdit() {
 
 /** Undoes one edit */
 function callback_UndoEdit() {
+	if (!isItOkayToUndoEditOrRedoEdit()) return;
+	lastUndoEditOrRedoEdit = Date.now();
 	boardeditor.undo();
 }
 
 /** Redoes one edit. */
 function callback_RedoEdit() {
+	if (!isItOkayToUndoEditOrRedoEdit()) return;
+	lastUndoEditOrRedoEdit = Date.now();
 	boardeditor.redo();
 }
 
