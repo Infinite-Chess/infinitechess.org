@@ -724,6 +724,7 @@ function printInfo(bd: BigDecimal): void {
 	console.log(bd);
 	console.log(`Binary string: ${toDebugBinaryString(bd)}`);
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
+	console.log(`Converted to Exact String: ${toExactString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to String: ${toString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to Number: ${toNumber(bd)}`);
 	console.log(`Converted to BigInt: ${toBigInt(bd)}`);
@@ -822,10 +823,19 @@ export default {
 
 
 
-// const n1: string = '1.11223344';
-// const bd1: BigDecimal = NewBigDecimal_FromString(n1);
-// console.log(`${n1} converted into a BigDecimal:`);
-// printInfo(bd1);
+const n1: string = '1';
+let bd1: BigDecimal = NewBigDecimal_FromString(n1);
+console.log(`${n1} converted into a BigDecimal:`);
+printInfo(bd1);
+
+const n2: string = '0.1';
+const bd2: BigDecimal = NewBigDecimal_FromString(n2);
+for (let i = 0; i < 20; i++) {
+	// Multiply by 0.1 each time.
+	bd1 = multiply(bd1, bd2);
+	printInfo(bd1);
+}
+
 
 
 // (function speedTest_Miscellanious() {
