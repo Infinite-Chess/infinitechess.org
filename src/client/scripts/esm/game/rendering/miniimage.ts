@@ -102,14 +102,8 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 	for (const a of animation.animations) {
 		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
 		callback(animation.getCurrentAnimationPosition(a.segments, segmentPos), a.type);
-		for (const [k, pieces] of a.hideKeyframes) {
-			if (k < segmentPos) continue;
-			pieces.map(coordutil.getKeyFromCoords).forEach(hides.add);
-		}
-		for (const [k, pieces] of a.showKeyframes) {
-			if (k < segmentPos) continue;
-			pieces.forEach(p => callback(p.coords, p.type));
-		}
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(hides.add));
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(p => callback(p.coords, p.type)));
 	}
 
 	// Static pieces
@@ -223,14 +217,8 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
 		// Animated pieces don't have a real index, but we need to pass a piece object
 		pushPieceNoDuplicatesOrVoids({coords: animation.getCurrentAnimationPosition(a.segments, segmentPos), type: a.type, index: -1});
-		for (const [k, pieces] of a.hideKeyframes) {
-			if (k < segmentPos) continue;
-			pieces.map(coordutil.getKeyFromCoords).forEach(hides.add);
-		}
-		for (const [k, pieces] of a.showKeyframes) {
-			if (k < segmentPos) continue;
-			pieces.forEach(pushPieceNoDuplicatesOrVoids);
-		}
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(hides.add));
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
 	}
 
 	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)

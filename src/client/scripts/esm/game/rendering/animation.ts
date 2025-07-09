@@ -268,16 +268,10 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const segment = getCurrentSegment(animation);
-	for (const [k, coords] of animation.hideKeyframes) {
-		if (k < segment) continue;
-		coords.forEach(c => arrows.shiftArrow(1, true, c));
-	}
+	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.shiftArrow(1, true, c)));
 	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segment);
 	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
-	for (const [k, pieces] of animation.showKeyframes) {
-		if (k < segment) continue;
-		pieces.forEach(p => arrows.shiftArrow(p.type, true, undefined, p.coords));
-	}
+	forEachActiveKeyframe(animation.showKeyframes, segment, pieces => pieces.forEach(p => arrows.shiftArrow(p.type, true, undefined, p.coords)));
 }
 
 
@@ -293,20 +287,15 @@ function renderTransparentSquares(): void {
 
 	const color: Color = [0, 0, 0, 0];
 	// Calls map() on each animation, and then flats() the results into a single array.
-	const data = animations.flatMap(animation => 
-		[...animation.hideKeyframes].flatMap(
-			([k, v]) => {
-				if (k < getCurrentSegment(animation)) {
-					return undefined;
-				}
-				return v.flatMap(coords => shapes.getTransformedDataQuad_Color_FromCoord(
-					coords,
-					color
-				)) as number[];
-			}
-		).filter(v => v !== undefined)
-	);
-	console.log(data);
+	const data = animations.flatMap(animation => {
+		const hidesData: number[] = [];
+		const segment = getCurrentSegment(animation);
+		forEachActiveKeyframe(animation.hideKeyframes, segment, v => {
+			v.forEach(coord => hidesData.push(...shapes.getTransformedDataQuad_Color_FromCoord(coord, color)));
+		});
+		return hidesData; 
+	});
+
 	createModel(data, 2, "TRIANGLES", true)
 		.render([0, 0, TRANSPARENT_SQUARE_Z]);
 }
@@ -322,12 +311,9 @@ function renderAnimations() {
 		const segment = getCurrentSegment(animation);
 		const currentPos = getCurrentAnimationPosition(animation.segments, segment);
 		const piecesData: number[] = [];
-		for (const [k, v] of animation.showKeyframes.entries()) {
-			if (k < segment) continue;
-			for (const piece of v) {
-				piecesData.push(...generatePieceData(piece.type, piece.coords));
-			}
-		}; // Render the captured piece
+		forEachActiveKeyframe(animation.showKeyframes, segment, pieces => {
+			pieces.forEach(p => piecesData.push(...generatePieceData(p.type, p.coords)));
+		});
 		piecesData.push(...generatePieceData(animation.type, currentPos)); // Render the moving piece
 		return piecesData;
 	});
@@ -422,6 +408,13 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 
 // -----------------------------------------------------------------------------------------
 
+// eslint-disable-next-line no-unused-vars
+function forEachActiveKeyframe<T>(keyframes: Map<number, T>, segment: number, callback: (value: T) => void): void {
+	for (const [k, v] of keyframes) {
+		if (k < segment) continue;
+		callback(v);
+	}
+}
 
 export default {
 	animations,
@@ -433,4 +426,5 @@ export default {
 	renderAnimations,
 	getCurrentSegment,
 	getCurrentAnimationPosition,
+	forEachActiveKeyframe,
 };
