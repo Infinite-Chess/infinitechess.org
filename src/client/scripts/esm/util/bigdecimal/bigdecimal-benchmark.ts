@@ -1,5 +1,7 @@
 // src/client/scripts/esm/util/bigdecimal/bigdecimal-benchmark.ts
 
+// @ts-nocheck
+
 import { performance } from 'perf_hooks';
 import Decimal from 'decimal.js';
 import BigNumber from 'bignumber.js';
