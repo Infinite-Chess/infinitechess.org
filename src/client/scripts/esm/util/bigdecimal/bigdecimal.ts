@@ -854,3 +854,108 @@ printInfo(bd1)
 //     console.log(`BigNumber product: ${product.toString()}`)
 //     console.log(`BigNumber digits of precision used: ${product.precision()}`)
 // })();
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Comprehensive Interaction Verification Suite
+/////////////////////////////////////////////////////////////////////////////////////
+
+function runComprehensiveVerification() {
+    console.log('--- Running Comprehensive Interaction Verification Suite ---');
+    console.log('Verifying all function outputs by inspecting their internal state.\n');
+
+    // Helper to print a header and then the full info of a BigDecimal result
+    function testAndPrint(name: string, result: BigDecimal) {
+        console.log(`\n▶ TEST: ${name}`);
+        printInfo(result);
+    }
+    
+    // Helper for primitives
+    function testPrimitive(name: string, result: any) {
+        console.log(`\n▶ TEST: ${name}`);
+        console.log(`  Result: ${result}`);
+        console.log('----------------------------');
+    }
+
+    // --- Test Values ---
+    const testValues = [
+		// Do these work?
+        NewBigDecimal_FromString(".5"),
+        NewBigDecimal_FromString("-.5"),
+        NewBigDecimal_FromString(".0"),
+        NewBigDecimal_FromString("0.0"),
+        NewBigDecimal_FromString("50.00000000000000"),
+
+        NewBigDecimal_FromString("10.5"),
+        NewBigDecimal_FromString("-2.5"),
+        NewBigDecimal_FromString("7"),
+        NewBigDecimal_FromString("0.387"),
+        NewBigDecimal_FromString("-0.58"),
+        NewBigDecimal_FromString("0"),
+        NewBigDecimal_FromString("12345678901234567890"),
+        NewBigDecimal_FromString("0.000000000000000000000000000000125"),
+        NewBigDecimal_FromString("10000000000005325325325.00058389299239593235325325235325")
+    ];
+
+    // =================================================================================
+    // Part 1: Single-Operand Function Tests
+    // =================================================================================
+    console.log("--- Part 1: Verifying Single-Operand Functions ---\n");
+    for (const bd of testValues) {
+        const bd_str = toString(bd);
+        console.log(`\n\n################### Testing against value: ${bd_str} ###################`);
+
+        testAndPrint("clone()", clone(bd));
+        testAndPrint("abs()", abs(bd));
+        testPrimitive("toBigInt()", `${toBigInt(bd)}n`);
+        testPrimitive("toNumber()", toNumber(bd));
+        testPrimitive("toDebugBinaryString()", toDebugBinaryString(bd));
+        testPrimitive("getEffectiveDecimalPlaces()", getEffectiveDecimalPlaces(bd));
+        
+        const temp_bd_down = clone(bd);
+        setExponent(temp_bd_down, 20);
+        testAndPrint("setExponent(20) (decrease precision)", temp_bd_down);
+        const temp_bd_up = clone(bd);
+        setExponent(temp_bd_up, temp_bd_up.divex + 20);
+        testAndPrint("setExponent(divex+20) (increase precision)", temp_bd_up);
+    }
+
+    // =================================================================================
+    // Part 2: Two-Operand Function Interaction Tests
+    // =================================================================================
+    console.log("\n\n--- Part 2: Verifying Two-Operand Function Interactions ---\n");
+    for (const bd1 of testValues) {
+        const str1 = toString(bd1);
+        console.log(`\n\n################### Testing interactions with Operand 1: ${str1} ###################`);
+        
+        for (const bd2 of testValues) {
+            const str2 = toString(bd2);
+            
+            testAndPrint(`add(${str1}) + (${str2})`, add(bd1, bd2));
+            testAndPrint(`subtract(${str1}) - (${str2})`, subtract(bd1, bd2));
+            testAndPrint(`multiply(${str1}) * (${str2})`, multiply(bd1, bd2));
+            testPrimitive(`compare(${str1}) vs (${str2})`, compare(bd1, bd2));
+
+            // Divide - Proactively check for zero divisor
+            if (str2 === "0") {
+                console.log(`\n▶ TEST: divide(${str1}) / (${str2})`);
+                console.log("  Result: Skipped (Division by zero)");
+                console.log('----------------------------');
+            } else {
+                testAndPrint(`divide(${str1}) / (${str2})`, divide(bd1, bd2));
+            }
+        }
+    }
+
+    // --- Standalone Helper Verification ---
+    console.log("\n================== Testing Helpers ==================");
+    testPrimitive("howManyBitsForDigitsOfPrecision(15)", howManyBitsForDigitsOfPrecision(15));
+
+    console.log('\n--- Comprehensive Interaction Verification Finished ---');
+}
+
+// Run the verification
+runComprehensiveVerification();
