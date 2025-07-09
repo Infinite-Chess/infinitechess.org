@@ -112,12 +112,6 @@ async function runAllBenchmarks() {
 runAllBenchmarks();
 
 // npm install decimal.js bignumber.js
-// npm install --save-dev @types/decimal.js @types/bignumber.js
 
-// You will also need a way to run TypeScript files directly, like ts-node:
-// Generated bash
-// npm install -g ts-node
-
-// Open your terminal in the project's root directory and run the script using ts-node:
-// Generated bash
-// ts-node benchmark.ts
+// To run:
+// npx tsx src/client/scripts/esm/util/bigdecimal/bigdecimal-benchmark.ts
