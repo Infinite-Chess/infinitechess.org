@@ -610,7 +610,7 @@ function toNumber(bd: BigDecimal): number {
  * @param bd The BigDecimal to convert.
  * @returns The string with the exact value.
  */
-function toString(bd: BigDecimal): string {
+function toExactString(bd: BigDecimal): string {
 	if (bd.bigint === ZERO) return '0';
 	if (bd.divex === 0) return bd.bigint.toString();
 
@@ -648,6 +648,58 @@ function toString(bd: BigDecimal): string {
 	// This check is for robustness in case the entire fraction was zeros.
 	if (decimalString.length === 0)  return sign + integerString;
 	else return sign + integerString + '.' + decimalString;
+}
+
+/**
+ * Converts a BigDecimal to a human-readable string, rounded to its
+ * "effective" number of decimal places. This trims extraneous digits that
+ * arise from the binary-to-decimal conversion, providing a cleaner output.
+ * For the exact stored value, use `toExactString()`.
+ * @param bd The BigDecimal to convert.
+ * @returns The effectively rounded number as a string.
+ */
+function toString(bd: BigDecimal): string {
+	// 1. Handle the zero case simply.
+	if (bd.bigint === ZERO) return '0';
+    
+	// 2. Determine the effective number of decimal places to round to.
+	const decimalPlaces = getEffectiveDecimalPlaces(bd);
+
+	// If there's no fractional part to consider, just round to a BigInt and return.
+	if (decimalPlaces <= 0) return toBigInt(bd).toString();
+    
+	// 3. Round to the target decimal places.
+	// The logic is: multiply by 10^P, round, then format back to a string.
+	const powerOfTen = TEN ** BigInt(decimalPlaces);
+	const scaler = { bigint: powerOfTen, divex: 0 };
+	const scaledBd = multiply(bd, scaler);
+	const roundedScaledInt = toBigInt(scaledBd);
+
+	// 4. Format the resulting integer back into a decimal string.
+	const absStr = bigintmath.abs(roundedScaledInt).toString();
+
+	let integerPart: string;
+	let fractionalPart: string;
+
+	if (absStr.length > decimalPlaces) {
+		// The number is >= 1.0
+		const splitPoint = absStr.length - decimalPlaces;
+		integerPart = absStr.substring(0, splitPoint);
+		fractionalPart = absStr.substring(splitPoint);
+	} else {
+		// The number is < 1.0, requires left-padding with zeros.
+		integerPart = '0';
+		fractionalPart = absStr.padStart(decimalPlaces, '0');
+	}
+
+	// 5. Trim meaningless trailing zeros from the fractional part.
+	const trimmedFractionalPart = fractionalPart.replace(/0+$/, '');
+    
+	const sign = roundedScaledInt < ZERO ? '-' : '';
+
+	// 6. Combine and return the final string.
+	if (trimmedFractionalPart.length === 0) return sign + integerPart; // If the entire fractional part was zeros, don't show the decimal point.
+	else return sign + integerPart + '.' + trimmedFractionalPart;
 }
 
 /**
@@ -756,6 +808,7 @@ export default {
 	// Conversions and Utility
 	toBigInt,
 	toNumber,
+	toExactString,
 	toString,
 	toDebugBinaryString,
 	printInfo,
@@ -897,51 +950,51 @@ function runComprehensiveVerification() {
 	// =================================================================================
 	// Part 1: Single-Operand Function Tests
 	// =================================================================================
-	// console.log("--- Part 1: Verifying Single-Operand Functions ---\n");
-	// for (const bd of testValues) {
-	// 	const bd_str = toString(bd);
-	// 	// console.log(`\n\n################### Testing against value: ${bd_str} ###################\n`);
+	console.log("--- Part 1: Verifying Single-Operand Functions ---\n");
+	for (const bd of testValues) {
+		const bd_str = toString(bd);
+		// console.log(`\n\n################### Testing against value: ${bd_str} ###################\n`);
 
-	// 	printInfo(bd);
+		printInfo(bd);
 
-	// 	// testPrimitive("toBigInt()", `${toBigInt(bd)}n`);
-	// 	// testPrimitive("toNumber()", toNumber(bd));
-	// 	// testPrimitive("getEffectiveDecimalPlaces()", getEffectiveDecimalPlaces(bd));
+		// testPrimitive("toBigInt()", `${toBigInt(bd)}n`);
+		// testPrimitive("toNumber()", toNumber(bd));
+		// testPrimitive("getEffectiveDecimalPlaces()", getEffectiveDecimalPlaces(bd));
         
-	// 	// const temp_bd_down = clone(bd);
-	// 	// setExponent(temp_bd_down, 20);
-	// 	// testAndPrint("setExponent(20) (decrease precision)", temp_bd_down);
-	// 	// const temp_bd_up = clone(bd);
-	// 	// setExponent(temp_bd_up, temp_bd_up.divex + 20);
-	// 	// testAndPrint("setExponent(divex+20) (increase precision)", temp_bd_up);
-	// }
+		// const temp_bd_down = clone(bd);
+		// setExponent(temp_bd_down, 20);
+		// testAndPrint("setExponent(20) (decrease precision)", temp_bd_down);
+		// const temp_bd_up = clone(bd);
+		// setExponent(temp_bd_up, temp_bd_up.divex + 20);
+		// testAndPrint("setExponent(divex+20) (increase precision)", temp_bd_up);
+	}
 
 	// =================================================================================
 	// Part 2: Two-Operand Function Interaction Tests
 	// =================================================================================
-	console.log("\n\n--- Part 2: Verifying Two-Operand Function Interactions ---\n");
-	for (const bd1 of testValues) {
-		const str1 = toString(bd1);
-		console.log(`\n\n################### Testing interactions with Operand 1: ${str1} ###################`);
+	// console.log("\n\n--- Part 2: Verifying Two-Operand Function Interactions ---\n");
+	// for (const bd1 of testValues) {
+	// 	const str1 = toString(bd1);
+	// 	console.log(`\n\n################### Testing interactions with Operand 1: ${str1} ###################`);
         
-		for (const bd2 of testValues) {
-			const str2 = toString(bd2);
+	// 	for (const bd2 of testValues) {
+	// 		const str2 = toString(bd2);
             
-			testAndPrint(`add(${str1}) + (${str2})`, add(bd1, bd2));
-			testAndPrint(`subtract(${str1}) - (${str2})`, subtract(bd1, bd2));
-			testAndPrint(`multiply(${str1}) * (${str2})`, multiply(bd1, bd2));
-			testPrimitive(`compare(${str1}) vs (${str2})`, compare(bd1, bd2));
+	// 		testAndPrint(`add(${str1}) + (${str2})`, add(bd1, bd2));
+	// 		testAndPrint(`subtract(${str1}) - (${str2})`, subtract(bd1, bd2));
+	// 		testAndPrint(`multiply(${str1}) * (${str2})`, multiply(bd1, bd2));
+	// 		testPrimitive(`compare(${str1}) vs (${str2})`, compare(bd1, bd2));
 
-			// Divide - Proactively check for zero divisor
-			if (str2 === "0") {
-				console.log(`\n▶ TEST: divide(${str1}) / (${str2})`);
-				console.log("  Result: Skipped (Division by zero)");
-				console.log('----------------------------');
-			} else {
-				testAndPrint(`divide(${str1}) / (${str2})`, divide(bd1, bd2));
-			}
-		}
-	}
+	// 		// Divide - Proactively check for zero divisor
+	// 		if (str2 === "0") {
+	// 			console.log(`\n▶ TEST: divide(${str1}) / (${str2})`);
+	// 			console.log("  Result: Skipped (Division by zero)");
+	// 			console.log('----------------------------');
+	// 		} else {
+	// 			testAndPrint(`divide(${str1}) / (${str2})`, divide(bd1, bd2));
+	// 		}
+	// 	}
+	// }
 
 	console.log('\n--- Comprehensive Interaction Verification Finished ---');
 }
