@@ -31,16 +31,15 @@ function abs(bigint: bigint): bigint {
 
 // EVERYTHING COMMENTED OUT I AM UNSURE IF WE WILL NEED.
 
-/**
- * Calculate the logarithm base 2 of the specified BigInt. Returns an integer.
- * @param bigint - The BigInt. 0+
- * @returns The logarithm to base 2
- */
+/** Calculates the integer logarithm base 2 of a BigInt. */
 function log2(bigint: bigint): number {
 	if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
 	if (bigint < ZERO) return NaN;
-    
-	return bigint.toString(2).length - 1;
+
+	// The log base 2 is just the bit length - 1.
+	// return bigint.toString(2).length - 1;
+	// Our fastest bitLength algorithm.
+	return bitLength_bisection(bigint) - 1;
 }
 
 /**
@@ -165,12 +164,12 @@ function log10(bigint: bigint): number {
  */
 function toDebugBinaryString(bigint: bigint): string {
 	// 1. Handle the zero case cleanly.
-	if (bigint === 0n) return "0b0000_0000 (8-bit, 1-byte)";
+	if (bigint === ZERO) return "0b0000_0000 (8-bit, 1-byte)";
 
 	// 2. Calculate the minimum number of bits required for two's complement.
 	let minBits: number;
 	if (bigint > ZERO) {
-		minBits = bigint.toString(2).length;
+		minBits = bitLength_bisection(bigint);
 	} else { // bigint < ZERO
 		// For a negative number -N, the bits required are one more than the bits
 		// for N-1. e.g. -8 (1000) needs 4 bits, same as 7 (0111).
@@ -207,6 +206,78 @@ function toDebugBinaryString(bigint: bigint): string {
 }
 
 
+// Big Length Algorithms =============================================================
+
+
+// Global state for the bisection algorithm so it's not re-computed every call
+const testersCoeff: number[] = [];
+const testersBigCoeff: bigint[] = [];
+const testers: bigint[] = [];
+let testersN = 0;
+
+/**
+ * Calculates the bit length of a bigint using a highly optimized dynamic bisection algorithm.
+ * It is 6x faster than then {@link bitLength_hex}, and 25x faster than {@link bitLength_toString}.
+ * Complexity O(log n), where n is the number of bits.
+ */
+function bitLength_bisection(x: bigint): number {
+	if (x === ZERO) return 0;
+	if (x < ZERO) x = -x;
+
+	let k = 0;
+	while (true) {
+		if (testersN === k) {
+			testersCoeff.push(32 << testersN);
+			testersBigCoeff.push(BigInt(testersCoeff[testersN]!));
+			testers.push(1n << testersBigCoeff[testersN]!);
+			testersN++;
+		}
+		if (x < testers[k]!) break;
+		k++;
+	}
+
+	if (!k) return 32 - Math.clz32(Number(x));
+
+	// Determine length by bisection
+	k--;
+	let i = testersCoeff[k]!;
+	let a = x >> testersBigCoeff[k]!;
+	while (k--) {
+		const b = a >> testersBigCoeff[k]!;
+		if (b) {
+			i += testersCoeff[k]!;
+			a = b;
+		}
+	}
+
+	return i + 32 - Math.clz32(Number(a));
+}
+
+/**
+ * Calculates the bit length of a bigint using a fast `toString(16)` and `Math.clz32` trick.
+ * It is 4x faster than {@link string}.
+ */
+function bitLength_hex(n: bigint): number {
+	if (n === ZERO) return 0;
+	if (n < ZERO) n = -n;
+
+	const hexLength = n.toString(16).length;
+	const i = (hexLength - 1) * 4;
+	return i + (32 - Math.clz32(Number(n >> BigInt(i))));
+}
+
+
+/**
+ * Calculates the bit length of a bigint using the simple `toString(2)` method.
+ * This is the most readable but least performant method.
+ */
+function bitLength_toString(n: bigint): number {
+	if (n === ZERO) return 0;
+	if (n < ZERO) n = -n;
+	return n.toString(2).length;
+}
+
+
 // Exports ============================================================
 
 
@@ -218,4 +289,5 @@ export default {
 	// getLeastSignificantBits,
 	// getBitAtPositionFromRight,
 	toDebugBinaryString,
+	bitLength_bisection,
 };

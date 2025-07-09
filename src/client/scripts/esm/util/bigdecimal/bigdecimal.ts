@@ -725,7 +725,7 @@ function printInfo(bd: BigDecimal): void {
 	console.log(`Binary string: ${toDebugBinaryString(bd)}`);
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
 	console.log(`Converted to Exact String: ${toExactString(bd)}`); // This is also its EXACT value.
-	console.log(`Converted to String: ${toString(bd)}`); // This is also its EXACT value.
+	console.log(`Converted to String: ${toString(bd)}`);
 	console.log(`Converted to Number: ${toNumber(bd)}`);
 	console.log(`Converted to BigInt: ${toBigInt(bd)}`);
 	console.log('----------------------------');
@@ -823,18 +823,18 @@ export default {
 
 
 
-const n1: string = '1';
-let bd1: BigDecimal = NewBigDecimal_FromString(n1);
-console.log(`${n1} converted into a BigDecimal:`);
-printInfo(bd1);
+// const n1: string = '1';
+// let bd1: BigDecimal = NewBigDecimal_FromString(n1);
+// console.log(`${n1} converted into a BigDecimal:`);
+// printInfo(bd1);
 
-const n2: string = '0.1';
-const bd2: BigDecimal = NewBigDecimal_FromString(n2);
-for (let i = 0; i < 20; i++) {
-	// Multiply by 0.1 each time.
-	bd1 = multiply(bd1, bd2);
-	printInfo(bd1);
-}
+// const n2: string = '0.1';
+// const bd2: BigDecimal = NewBigDecimal_FromString(n2);
+// for (let i = 0; i < 20; i++) {
+// 	// Multiply by 0.1 each time.
+// 	bd1 = multiply(bd1, bd2);
+// 	printInfo(bd1);
+// }
 
 
 
@@ -860,64 +860,6 @@ for (let i = 0; i < 20; i++) {
 
 
 
-
-
-// For testing with other libraries. You may need to install the types:
-// npm install --save-dev @types/decimal.js @types/bignumber.js
-// import Decimal from 'decimal.js';
-// import BigNumber from 'bignumber.js';
-
-// (function speedTest_Multiply() {
-
-//     const factor1: number = 17.111222333444;
-//     const factor2: number = 5.55;
-
-//     const bitsOfPrecision: number = 50
-//     const f1: BigDecimal = new BigDecimal(factor1, bitsOfPrecision);
-//     const f2: BigDecimal = new BigDecimal(factor2, bitsOfPrecision);
-
-//     console.log(`\nMultiplying factors ${factor1} and ${factor2} together...`)
-//     console.log(`Expected results: ${factor1 * factor2}\n`)
-    
-//     const loopCount: number = 10**6;
-//     let product: any;
-    
-//     // This BigDecimal library
-//     console.time('BigDecimal')
-//     for (let i = 0; i < loopCount; i++) {
-//         product = MathBigDec.multiply(f1, f2);
-//     }
-//     console.timeEnd('BigDecimal')
-//     console.log(`BigDecimal product: ${MathBigDec.toString(product)}`)
-//     console.log(`Bits of precision used: ${product.divex}`)
-//     console.log(`Approximate digits of precision used: ${getEffectiveDecimalPlaces(product)}`)
-//     console.log('')
-    
-    
-//     // Decimal libarary
-//     const d1: Decimal = new Decimal(factor1);
-//     const d2: Decimal = new Decimal(factor2);
-//     console.time('Decimal')
-//     for (let i = 0; i < loopCount; i++) {
-//         product = d1.times(d2);
-//     }
-//     console.timeEnd('Decimal')
-//     console.log(`Decimal product: ${product.toString()}`)
-//     console.log(`Decimal digits of precision used: ${product.precision()}`)
-//     console.log('')
-    
-    
-//     // BigNumber library
-//     const b1: BigNumber = new BigNumber(factor1);
-//     const b2: BigNumber = new BigNumber(factor2);
-//     console.time('BigNumber')
-//     for (let i = 0; i < loopCount; i++) {
-//         product = b1.times(b2);
-//     }
-//     console.timeEnd('BigNumber')
-//     console.log(`BigNumber product: ${product.toString()}`)
-//     console.log(`BigNumber digits of precision used: ${product.precision()}`)
-// })();
 
 
 
@@ -952,9 +894,9 @@ function runComprehensiveVerification() {
         NewBigDecimal_FromString("0.387"),
         NewBigDecimal_FromString("-0.58"),
         NewBigDecimal_FromString("0"),
-        // NewBigDecimal_FromString("1234567890123456789123456789"),
-        // NewBigDecimal_FromString("0.000000000000000000000000000000125"),
-        // NewBigDecimal_FromString("10000000000005325325325.00058389299239593235325325235325")
+        NewBigDecimal_FromString("1234567890123456789123456789"),
+        NewBigDecimal_FromString("0.000000000000000000000000000000125"),
+        NewBigDecimal_FromString("10000000000005325325325.00058389299239593235325325235325")
     ];
 
 	// =================================================================================
