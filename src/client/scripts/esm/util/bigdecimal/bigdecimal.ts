@@ -56,10 +56,10 @@ interface BigDecimal {
 // Constants ========================================================
 
 
-const LOG_TWO: number = Math.log(2);
 const ZERO: bigint = 0n;
 const ONE: bigint = 1n;
 const FIVE: bigint = 5n;
+const TEN: bigint = 10n;
 
 
 // Config ===========================================================
@@ -294,10 +294,10 @@ function toFullDecimalString(num: number): string {
  * @returns The minimum number of bits needed to obtain that precision, rounded up.
  */
 function howManyBitsForDigitsOfPrecision(precision: number): number {
-	const powerOfTen: number = 10 ** precision; // 3 ==> 1000
+	// Use bigints so that in-between values don't become Infinity.
+	const powerOfTen: bigint = TEN ** BigInt(precision); // 3 ==> 1000n
 	// 2^x = powerOfTen. Solve for x
-	const x: number = Math.log(powerOfTen) / LOG_TWO;
-	return Math.ceil(x);
+	return bigintmath.log2(powerOfTen) + 1; // +1 to round up
 }
 
 

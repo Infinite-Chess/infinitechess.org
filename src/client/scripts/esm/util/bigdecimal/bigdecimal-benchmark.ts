@@ -6,8 +6,7 @@ import BigNumber from 'bignumber.js';
 
 // Import your library's functions and types
 // Adjust the path './bigdecimal' if your file structure is different.
-import myBigDecimal from './bigdecimal.js';
-import BigDecimal from './bigdecimal.js';
+import bigdecimal from './bigdecimal.js';
 
 // --- Configuration ---
 const config = {
@@ -38,33 +37,28 @@ async function runAllBenchmarks() {
 	// --- FAIR PRECISION SETUP ---
 
 	// 1. Calculate the equivalent binary divex for your library
-	const equivalentDivex = myBigDecimal.howManyBitsForDigitsOfPrecision(config.DECIMAL_PRECISION);
+	const equivalentDivex = bigdecimal.howManyBitsForDigitsOfPrecision(config.DECIMAL_PRECISION);
 	console.log(`Equivalent Binary Precision (divex): ${equivalentDivex} bits\n`);
 
 	// --- Initialization (Done once, outside the timed loops) ---
 
 	// Your Library - Normalized to the equivalent precision
-	console.log("Initializing My Library with setExponent()...");
-	const myBD1_raw = myBigDecimal.NewBigDecimal_FromString(config.num1Str);
-	const myBD2_raw = myBigDecimal.NewBigDecimal_FromString(config.num2Str);
-	myBigDecimal.setExponent(myBD1_raw, equivalentDivex);
-	myBigDecimal.setExponent(myBD2_raw, equivalentDivex);
+	const myBD1_raw = bigdecimal.NewBigDecimal_FromString(config.num1Str);
+	const myBD2_raw = bigdecimal.NewBigDecimal_FromString(config.num2Str);
+	bigdecimal.setExponent(myBD1_raw, equivalentDivex);
+	bigdecimal.setExponent(myBD2_raw, equivalentDivex);
 	const myBD1 = myBD1_raw; // Use the normalized versions
 	const myBD2 = myBD2_raw;
 
 	// decimal.js - Set to the target decimal precision
-	console.log("Initializing decimal.js...");
 	Decimal.set({ precision: config.DECIMAL_PRECISION });
 	const decimal1 = new Decimal(config.num1Str);
 	const decimal2 = new Decimal(config.num2Str);
 
 	// bignumber.js - Set to the target decimal precision
-	console.log("Initializing bignumber.js...");
 	BigNumber.config({ DECIMAL_PLACES: config.DECIMAL_PRECISION });
 	const bignumber1 = new BigNumber(config.num1Str);
 	const bignumber2 = new BigNumber(config.num2Str);
-
-	console.log("\nInitialization complete. Starting tests...\n");
 
 	// --- Running the tests ---
 	const results: any[] = [];
@@ -72,15 +66,23 @@ async function runAllBenchmarks() {
 	// ADDITION
 	results.push({
 		operation: 'add',
-		'My Library (ms)': benchmark('MyLib Add', () => myBigDecimal.add(myBD1, myBD2)),
+		'BigDecimal (ms)': benchmark('BigDecimal Add', () => bigdecimal.add(myBD1, myBD2)),
 		'decimal.js (ms)': benchmark('Decimal.js Add', () => decimal1.plus(decimal2)),
 		'bignumber.js (ms)': benchmark('BigNumber.js Add', () => bignumber1.plus(bignumber2)),
 	});
 
+	// SUBTRACTION
+	// results.push({
+	// 	operation: 'subtract',
+	// 	'BigDecimal (ms)': benchmark('BigDecimal Subtract', () => bigdecimal.subtract(myBD1, myBD2)),
+	// 	'decimal.js (ms)': benchmark('Decimal.js Subtract', () => decimal1.minus(decimal2)),
+	// 	'bignumber.js (ms)': benchmark('BigNumber.js Subtract', () => bignumber1.minus(bignumber2)),
+	// });
+
 	// MULTIPLICATION
 	results.push({
 		operation: 'multiply',
-		'My Library (ms)': benchmark('MyLib Multiply', () => myBigDecimal.multiply(myBD1, myBD2)),
+		'BigDecimal (ms)': benchmark('BigDecimal Multiply', () => bigdecimal.multiply(myBD1, myBD2)),
 		'decimal.js (ms)': benchmark('Decimal.js Multiply', () => decimal1.times(decimal2)),
 		'bignumber.js (ms)': benchmark('BigNumber.js Multiply', () => bignumber1.times(bignumber2)),
 	});
@@ -88,7 +90,7 @@ async function runAllBenchmarks() {
 	// DIVISION
 	results.push({
 		operation: 'divide',
-		'My Library (ms)': benchmark('MyLib Divide', () => myBigDecimal.divide(myBD1, myBD2, equivalentDivex)),
+		'BigDecimal (ms)': benchmark('BigDecimal Divide', () => bigdecimal.divide(myBD1, myBD2, equivalentDivex)),
 		'decimal.js (ms)': benchmark('Decimal.js Divide', () => decimal1.div(decimal2)),
 		'bignumber.js (ms)': benchmark('BigNumber.js Divide', () => bignumber1.div(bignumber2)),
 	});
@@ -96,7 +98,7 @@ async function runAllBenchmarks() {
 	// toString()
 	results.push({
 		operation: 'toString',
-		'My Library (ms)': benchmark('MyLib toString', () => myBigDecimal.toString(myBD1)),
+		'BigDecimal (ms)': benchmark('BigDecimal toString', () => bigdecimal.toString(myBD1)),
 		'decimal.js (ms)': benchmark('Decimal.js toString', () => decimal1.toString()),
 		'bignumber.js (ms)': benchmark('BigNumber.js toString', () => bignumber1.toString()),
 	});

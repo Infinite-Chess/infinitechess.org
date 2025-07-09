@@ -31,17 +31,17 @@ function abs(bigint: bigint): bigint {
 
 // EVERYTHING COMMENTED OUT I AM UNSURE IF WE WILL NEED.
 
-// /**
-//  * Calculate the logarithm base 2 of the specified BigInt. Returns an integer.
-//  * @param bigint - The BigInt. 0+
-//  * @returns The logarithm to base 2
-//  */
-// function log2(bigint: bigint): number {
-//     if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
-//     if (bigint < ZERO) return NaN;
+/**
+ * Calculate the logarithm base 2 of the specified BigInt. Returns an integer.
+ * @param bigint - The BigInt. 0+
+ * @returns The logarithm to base 2
+ */
+function log2(bigint: bigint): number {
+	if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
+	if (bigint < ZERO) return NaN;
     
-//     return bigint.toString(2).length - 1;
-// }
+	return bigint.toString(2).length - 1;
+}
 
 /**
 * Calculates the logarithm base 10 of the specified BigInt. Returns an integer.
@@ -212,7 +212,7 @@ function toDebugBinaryString(bigint: bigint): string {
 
 export default {
 	abs,
-	// log2,
+	log2,
 	log10,
 	// logN,
 	// getLeastSignificantBits,
