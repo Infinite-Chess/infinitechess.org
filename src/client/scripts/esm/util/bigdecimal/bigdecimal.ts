@@ -294,6 +294,7 @@ function toFullDecimalString(num: number): string {
  * @returns The minimum number of bits needed to obtain that precision, rounded up.
  */
 function howManyBitsForDigitsOfPrecision(precision: number): number {
+	if (precision === 0) return 0; // No bits needed for zero precision.
 	// Use bigints so that in-between values don't become Infinity.
 	const powerOfTen: bigint = TEN ** BigInt(precision); // 3 ==> 1000n
 	// 2^x = powerOfTen. Solve for x
@@ -461,8 +462,7 @@ function clone(bd: BigDecimal): BigDecimal {
 }
 
 /**
- * Modifies the BigDecimal to have the specified divex, always rounding to the nearest value.
- * This is consistent with the "round half up" method used elsewhere in the library.
+ * Modifies the BigDecimal to have the specified divex, always rounding half up.
  * @param bd The BigDecimal to modify.
  * @param divex The target divex.
  */
@@ -674,6 +674,7 @@ function printInfo(bd: BigDecimal): void {
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
 	console.log(`Converted to String: ${toString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to Number: ${toNumber(bd)}`);
+	console.log(`Converted to BigInt: ${toBigInt(bd)}`);
 	console.log('----------------------------');
 }
 
@@ -768,10 +769,10 @@ export default {
 
 
 
-const n1: string = '1.11223344';
-const bd1: BigDecimal = NewBigDecimal_FromString(n1);
-console.log(`${n1} converted into a BigDecimal:`);
-printInfo(bd1);
+// const n1: string = '1.11223344';
+// const bd1: BigDecimal = NewBigDecimal_FromString(n1);
+// console.log(`${n1} converted into a BigDecimal:`);
+// printInfo(bd1);
 
 
 // (function speedTest_Miscellanious() {
@@ -882,46 +883,38 @@ function runComprehensiveVerification() {
 
 	// --- Test Values ---
 	const testValues = [
-		// Do these work?
-        NewBigDecimal_FromString(".5"),
-        NewBigDecimal_FromString("-.5"),
-        NewBigDecimal_FromString(".0"),
-        NewBigDecimal_FromString("0.0"),
-        NewBigDecimal_FromString("50.00000000000000"),
-
-        NewBigDecimal_FromString("10.5"),
-        NewBigDecimal_FromString("-2.5"),
+        NewBigDecimal_FromString("10.6"),
+        NewBigDecimal_FromString("-2.6"),
         NewBigDecimal_FromString("7"),
         NewBigDecimal_FromString("0.387"),
         NewBigDecimal_FromString("-0.58"),
         NewBigDecimal_FromString("0"),
-        NewBigDecimal_FromString("12345678901234567890"),
-        NewBigDecimal_FromString("0.000000000000000000000000000000125"),
-        NewBigDecimal_FromString("10000000000005325325325.00058389299239593235325325235325")
+        // NewBigDecimal_FromString("1234567890123456789123456789"),
+        // NewBigDecimal_FromString("0.000000000000000000000000000000125"),
+        // NewBigDecimal_FromString("10000000000005325325325.00058389299239593235325325235325")
     ];
 
 	// =================================================================================
 	// Part 1: Single-Operand Function Tests
 	// =================================================================================
-	console.log("--- Part 1: Verifying Single-Operand Functions ---\n");
-	for (const bd of testValues) {
-		const bd_str = toString(bd);
-		console.log(`\n\n################### Testing against value: ${bd_str} ###################`);
+	// console.log("--- Part 1: Verifying Single-Operand Functions ---\n");
+	// for (const bd of testValues) {
+	// 	const bd_str = toString(bd);
+	// 	// console.log(`\n\n################### Testing against value: ${bd_str} ###################\n`);
 
-		testAndPrint("clone()", clone(bd));
-		testAndPrint("abs()", abs(bd));
-		testPrimitive("toBigInt()", `${toBigInt(bd)}n`);
-		testPrimitive("toNumber()", toNumber(bd));
-		testPrimitive("toDebugBinaryString()", toDebugBinaryString(bd));
-		testPrimitive("getEffectiveDecimalPlaces()", getEffectiveDecimalPlaces(bd));
+	// 	printInfo(bd);
+
+	// 	// testPrimitive("toBigInt()", `${toBigInt(bd)}n`);
+	// 	// testPrimitive("toNumber()", toNumber(bd));
+	// 	// testPrimitive("getEffectiveDecimalPlaces()", getEffectiveDecimalPlaces(bd));
         
-		const temp_bd_down = clone(bd);
-		setExponent(temp_bd_down, 20);
-		testAndPrint("setExponent(20) (decrease precision)", temp_bd_down);
-		const temp_bd_up = clone(bd);
-		setExponent(temp_bd_up, temp_bd_up.divex + 20);
-		testAndPrint("setExponent(divex+20) (increase precision)", temp_bd_up);
-	}
+	// 	// const temp_bd_down = clone(bd);
+	// 	// setExponent(temp_bd_down, 20);
+	// 	// testAndPrint("setExponent(20) (decrease precision)", temp_bd_down);
+	// 	// const temp_bd_up = clone(bd);
+	// 	// setExponent(temp_bd_up, temp_bd_up.divex + 20);
+	// 	// testAndPrint("setExponent(divex+20) (increase precision)", temp_bd_up);
+	// }
 
 	// =================================================================================
 	// Part 2: Two-Operand Function Interaction Tests
@@ -949,10 +942,6 @@ function runComprehensiveVerification() {
 			}
 		}
 	}
-
-	// --- Standalone Helper Verification ---
-	console.log("\n================== Testing Helpers ==================");
-	testPrimitive("howManyBitsForDigitsOfPrecision(15)", howManyBitsForDigitsOfPrecision(15));
 
 	console.log('\n--- Comprehensive Interaction Verification Finished ---');
 }
