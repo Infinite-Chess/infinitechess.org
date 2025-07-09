@@ -243,7 +243,7 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(animation: Animation) {
-	playSoundOfDistance(animation.totalDistance, animation.showKeyframes.size !== undefined);
+	playSoundOfDistance(animation.totalDistance, animation.showKeyframes.size !== 0);
 	animation.soundPlayed = true;
 }
 
