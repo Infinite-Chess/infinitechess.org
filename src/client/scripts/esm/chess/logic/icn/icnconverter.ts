@@ -242,7 +242,7 @@ const defaultFullMove = 1;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//											REGULAR EXPRESSIONS
+//											REGULAR EXPRESSIONS												//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -284,8 +284,7 @@ const raw_piece_code_regex_source = '[a-z]{1,2}';
  * 
  * This prevents duplicate capture group names when a bigger regex contains
  * multiple smaller pieceAbbrev regexes, as we can make them different.
- * @param playerCapture - The name of the player capture group. If null, it won't be captured.
- * @param abbrevCapture - The name of the abbrev capture group. If null, it won't be captured.
+ * @param capturing - Whether to capture the player number and piece abbreviation.
  */
 function getPieceAbbrevRegexSource(capturing: boolean): string {
 	const player = capturing ? '<player>' : ':';
