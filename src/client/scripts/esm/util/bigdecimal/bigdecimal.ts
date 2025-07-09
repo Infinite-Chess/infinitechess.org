@@ -133,7 +133,7 @@ const getBigintPowerOfTwo: (power: number) => bigint = (function() {
 	function addMorePowers(powerCap: number): void {
 		console.log(`Adding more bigint powers of 2, up to 2^${powerCap}!`);
 		for (let i = powersOfTwo.length - 1; i <= powerCap - 1; i++) {
-			const thisPower = powersOfTwo[i];
+			const thisPower = powersOfTwo[i]!;
 			powersOfTwo[i + 1] = thisPower << ONE;
 		}
 	}
@@ -142,7 +142,7 @@ const getBigintPowerOfTwo: (power: number) => bigint = (function() {
 	return (power: number): bigint => {
 		// Do we have enough powers of two in store?
 		if (power > powersOfTwo.length - 1) addMorePowers(power);
-		return powersOfTwo[power];
+		return powersOfTwo[power]!;
 	};
 })();
 
@@ -248,11 +248,11 @@ function toFullDecimalString(num: number): string {
 	if (!numStr.includes('e')) return numStr;
 
 	// 3. Deconstruct the scientific notation string.
-	const [base, exponentStr] = numStr.split('e');
+	const [base, exponentStr] = numStr.split('e') as [string, string];
 	const exponent: number = Number(exponentStr);
 	const sign: string = base[0] === '-' ? '-' : '';
 	const absBase: string = base.replace('-', '');
-	const [intPart, fracPart = ''] = absBase.split('.');
+	const [intPart, fracPart = ''] = absBase.split('.') as [string, string];
 
 	// 4. Reconstruct the string based on the exponent.
 	if (exponent > 0) { // For large numbers
@@ -739,7 +739,7 @@ function printInfo(bd: BigDecimal): void {
  */
 function getEffectiveDecimalPlaces(bd: BigDecimal): number {
 	if (bd.divex <= MAX_DIVEX_BEFORE_INFINITY) {
-		const powerOfTwo: number = powersOfTwoList[bd.divex];
+		const powerOfTwo: number = powersOfTwoList[bd.divex]!;
 		const precision: number = Math.log10(powerOfTwo);
 		return Math.floor(precision);
 	} else {
