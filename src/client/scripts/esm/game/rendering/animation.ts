@@ -142,6 +142,9 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
+	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.RESOLUTION, path.length);
+	showKeyframes = stretchKeyframesForResolution(showKeyframes, SPLINES.RESOLUTION, path.length);
+
 	const typesInvolved = new Set([typeutil.getRawType(type)]);
 	showKeyframes.forEach(w => w.forEach(p => typesInvolved.add(typeutil.getRawType(p.type))));
 
@@ -194,6 +197,14 @@ function toggleDebug() {
 
 // Helper Functions -----------------------------------------------------------
 
+function stretchKeyframesForResolution<T>(keyframes: Map<number, T>, resolution: number, waypointCount: number): Map<number, T> {
+	if (waypointCount < 3) return keyframes;
+	const t: Map<number, T> = new Map();
+	for (const [k, v] of keyframes) {
+		t.set(k * resolution, v);
+	}
+	return t;
+}
 
 /** Creates the segments between each waypoint. */
 function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
