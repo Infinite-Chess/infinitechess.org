@@ -97,13 +97,20 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
 
-	// Helper to test if a static piece is being animated
-	const isAnimatedStatic = (coords: Coords) => animation.animations.some(a => {
-		for (const c of a.hideKeyframes.values()) {
-			if (c.some(coors => coordutil.areCoordsEqual(coords, coors))) return true;
+	const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+	const hides: Set<CoordsKey> = new Set();
+	for (const a of animation.animations) {
+		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
+		callback(animation.getCurrentAnimationPosition(a.segments, segmentPos), a.type);
+		for (const [k, pieces] of a.hideKeyframes) {
+			if (k < segmentPos) continue;
+			pieces.map(coordutil.getKeyFromCoords).forEach(hides.add);
 		}
-		return false;
-	});
+		for (const [k, pieces] of a.showKeyframes) {
+			if (k < segmentPos) continue;
+			pieces.forEach(p => callback(p.coords, p.type));
+		}
+	}
 
 	// Static pieces
 	gamefile.boardsim.existingTypes.forEach((type: number) => {
@@ -115,25 +122,8 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 
 		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
-			if (!isAnimatedStatic(coords)) callback(coords, type);
+			if (!hides.has(coordutil.getKeyFromCoords(coords))) callback(coords, type);
 		});
-	});
-
-	// Animated pieces
-	animation.animations.forEach(a => {
-		// Animate the main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
-		const position = animation.getCurrentSegment(a, maxDistB4Teleport);
-		const current = animation.getCurrentAnimationPosition(a.segments, position);
-		callback(current, a.type);
-
-		// Animate the captured piece too, if there is one
-		for (const [k, pieces] of a.showKeyframes.entries()) {
-			if (k < position) continue;
-			for (const p of pieces) {
-				callback(p.coords, p.type);
-			}
-		}
 	});
 }
 
