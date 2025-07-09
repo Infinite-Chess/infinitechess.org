@@ -90,13 +90,13 @@ const MAX_DIVEX: number = 1e3; // Default: 1e3 (1,000)
 
 /** A list of powers of 2, 1024 in length, starting at 1 and stopping before Number.MAX_VALUE. This goes up to 2^1023. */
 const powersOfTwoList: number[] = (() => {
-    const powersOfTwo: number[] = [];
-    let currentPower = 1
-    while (currentPower < Number.MAX_VALUE) {
-        powersOfTwo.push(currentPower)
-        currentPower *= 2;
-    }
-    return powersOfTwo;
+	const powersOfTwo: number[] = [];
+	let currentPower = 1;
+	while (currentPower < Number.MAX_VALUE) {
+		powersOfTwo.push(currentPower);
+		currentPower *= 2;
+	}
+	return powersOfTwo;
 })();
 
 /**
@@ -120,30 +120,30 @@ const MAX_DIVEX_BEFORE_INFINITY: number = powersOfTwoList.length - 1; // 1023
  */
 const getBigintPowerOfTwo: (power: number) => bigint = (function() {
 
-    // Initiate the list
-    const powersOfTwo: bigint[] = []
-    let currentPower: bigint = ONE
-    const MAX_VALUE: bigint = BigInt(Number.MAX_VALUE)
-    while (currentPower < MAX_VALUE) {
-        powersOfTwo.push(currentPower)
-        currentPower <<= ONE;
-    }
+	// Initiate the list
+	const powersOfTwo: bigint[] = [];
+	let currentPower: bigint = ONE;
+	const MAX_VALUE: bigint = BigInt(Number.MAX_VALUE);
+	while (currentPower < MAX_VALUE) {
+		powersOfTwo.push(currentPower);
+		currentPower <<= ONE;
+	}
 
-    // Adds more powers of 2 until we reach the provided power
-    function addMorePowers(powerCap: number): void {
-        console.log(`Adding more bigint powers of 2, up to 2^${powerCap}!`)
-        for (let i = powersOfTwo.length - 1; i <= powerCap - 1; i++) {
-            const thisPower = powersOfTwo[i];
-            powersOfTwo[i+1] = thisPower << ONE;
-        }
-    }
+	// Adds more powers of 2 until we reach the provided power
+	function addMorePowers(powerCap: number): void {
+		console.log(`Adding more bigint powers of 2, up to 2^${powerCap}!`);
+		for (let i = powersOfTwo.length - 1; i <= powerCap - 1; i++) {
+			const thisPower = powersOfTwo[i];
+			powersOfTwo[i + 1] = thisPower << ONE;
+		}
+	}
 
-    // Return a function that, when called, returns the specified power of 2
-    return (power: number): bigint => {
-        // Do we have enough powers of two in store?
-        if (power > powersOfTwo.length - 1) addMorePowers(power);
-        return powersOfTwo[power];
-    }
+	// Return a function that, when called, returns the specified power of 2
+	return (power: number): bigint => {
+		// Do we have enough powers of two in store?
+		if (power > powersOfTwo.length - 1) addMorePowers(power);
+		return powersOfTwo[power];
+	};
 })();
 
 
@@ -160,44 +160,44 @@ const getBigintPowerOfTwo: (power: number) => bigint = (function() {
  * @returns A new BigDecimal with the value from the string.
  */
 function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
-    if (workingPrecision < 0 || workingPrecision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${workingPrecision}`);
+	if (workingPrecision < 0 || workingPrecision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${workingPrecision}`);
 
 	// Make sure the string is valid
 	const match = num.trim().match(/^(-?)(\d*)?\.?(\d*)$/);
 	if (!match) throw new Error("Invalid number format");
 
-    const dotIndex: number = num.lastIndexOf('.');
-    const decimalDigitCount: number = dotIndex !== -1 ? num.length - dotIndex - 1 : 0;
+	const dotIndex: number = num.lastIndexOf('.');
+	const decimalDigitCount: number = dotIndex !== -1 ? num.length - dotIndex - 1 : 0;
 
-    // 1. Calculate the minimum bits needed to represent the input string's fractional part.
-    const minBitsForInput: number = howManyBitsForDigitsOfPrecision(decimalDigitCount);
+	// 1. Calculate the minimum bits needed to represent the input string's fractional part.
+	const minBitsForInput: number = howManyBitsForDigitsOfPrecision(decimalDigitCount);
 
-    // 2. The final divex is this minimum, plus the requested "working precision".
-    //    This ensures we always have enough precision for the input, plus a buffer for future math.
-    const divex: number = minBitsForInput + workingPrecision;
-    // Check if the calculated divex is within our library's limits.
-    if (divex > MAX_DIVEX) throw new Error(`Precision after applying working precision exceeded ${MAX_DIVEX}. Please use an input number with fewer decimal places or specify less working precision.`);
+	// 2. The final divex is this minimum, plus the requested "working precision".
+	//    This ensures we always have enough precision for the input, plus a buffer for future math.
+	const divex: number = minBitsForInput + workingPrecision;
+	// Check if the calculated divex is within our library's limits.
+	if (divex > MAX_DIVEX) throw new Error(`Precision after applying working precision exceeded ${MAX_DIVEX}. Please use an input number with fewer decimal places or specify less working precision.`);
 
-    // 1. Calculate 5^N.
-    const powerOfFive: bigint = FIVE ** BigInt(decimalDigitCount);
+	// 1. Calculate 5^N.
+	const powerOfFive: bigint = FIVE ** BigInt(decimalDigitCount);
 
-    // 2. Make the string an integer.
-    if (dotIndex !== -1) num = num.slice(0, dotIndex) + num.slice(dotIndex + 1);
-    let numberAsBigInt: bigint = BigInt(num);
+	// 2. Make the string an integer.
+	if (dotIndex !== -1) num = num.slice(0, dotIndex) + num.slice(dotIndex + 1);
+	let numberAsBigInt: bigint = BigInt(num);
 
-    // 3. Scale the integer by the necessary power of 2.
-    // The total scaling is 2^(divex - decimalDigitCount).
-    const shiftAmount = BigInt(divex - decimalDigitCount);
-    if (shiftAmount > 0) numberAsBigInt <<= shiftAmount;
-    else if (shiftAmount < 0) numberAsBigInt >>= -shiftAmount; // A negative shift is a right shift.
+	// 3. Scale the integer by the necessary power of 2.
+	// The total scaling is 2^(divex - decimalDigitCount).
+	const shiftAmount = BigInt(divex - decimalDigitCount);
+	if (shiftAmount > 0) numberAsBigInt <<= shiftAmount;
+	else if (shiftAmount < 0) numberAsBigInt >>= -shiftAmount; // A negative shift is a right shift.
 
-    // 4. Finally, perform the division by the power of 5.
-    const bigint: bigint = numberAsBigInt / powerOfFive;
+	// 4. Finally, perform the division by the power of 5.
+	const bigint: bigint = numberAsBigInt / powerOfFive;
     
-    return {
-        bigint,
-        divex,
-    };
+	return {
+		bigint,
+		divex,
+	};
 }
 
 /**
@@ -207,11 +207,11 @@ function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAUL
  * @returns A new BigDecimal with the value from the number.
  */
 function NewBigDecimal_FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
-    if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
-    if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
+	if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
+	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
 
-    const fullDecimalString = toFullDecimalString(num);
-    return NewBigDecimal_FromString(fullDecimalString, precision);
+	const fullDecimalString = toFullDecimalString(num);
+	return NewBigDecimal_FromString(fullDecimalString, precision);
 }
 
 /**
@@ -221,11 +221,11 @@ function NewBigDecimal_FromNumber(num: number, precision: number = DEFAULT_WORKI
  * @returns A new BigDecimal with the value from the bigint.
  */
 function NewBigDecimal_FromBigInt(num: bigint, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
-    if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
-    return {
-        bigint: num << BigInt(precision),
-        divex: precision,
-    }
+	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
+	return {
+		bigint: num << BigInt(precision),
+		divex: precision,
+	};
 }
 
 
@@ -240,8 +240,8 @@ function NewBigDecimal_FromBigInt(num: bigint, precision: number = DEFAULT_WORKI
  * @throws {Error} If the input is not a finite number (e.g., Infinity, -Infinity, or NaN).
  */
 function toFullDecimalString(num: number): string {
-    // 1. Input Validation: Fail fast for non-finite numbers.
-    if (!Number.isFinite(num)) throw new Error(`Cannot decimal-stringify a non-finite number. Received: ${num}`);
+	// 1. Input Validation: Fail fast for non-finite numbers.
+	if (!Number.isFinite(num)) throw new Error(`Cannot decimal-stringify a non-finite number. Received: ${num}`);
 
 	// 2. Optimization: Handle numbers that don't need conversion.
 	const numStr: string = String(num);
@@ -294,10 +294,10 @@ function toFullDecimalString(num: number): string {
  * @returns The minimum number of bits needed to obtain that precision, rounded up.
  */
 function howManyBitsForDigitsOfPrecision(precision: number): number {
-	const powerOfTen: number = 10**precision; // 3 ==> 1000
+	const powerOfTen: number = 10 ** precision; // 3 ==> 1000
 	// 2^x = powerOfTen. Solve for x
 	const x: number = Math.log(powerOfTen) / LOG_TWO;
-	return Math.ceil(x)
+	return Math.ceil(x);
 }
 
 
@@ -380,18 +380,18 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * @returns The product of bd1 and bd2.
  */
 function multiply(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
-    const targetDivex = Math.max(bd1.divex, bd2.divex);
+	const targetDivex = Math.max(bd1.divex, bd2.divex);
 
-    // The true divex of the raw product is (bd1.divex + bd2.divex).
-    // We must shift the raw product to scale it down to the targetDivex.
-    const shiftAmount = BigInt((bd1.divex + bd2.divex) - targetDivex);
+	// The true divex of the raw product is (bd1.divex + bd2.divex).
+	// We must shift the raw product to scale it down to the targetDivex.
+	const shiftAmount = BigInt((bd1.divex + bd2.divex) - targetDivex);
 
-    const product = (bd1.bigint * bd2.bigint) >> shiftAmount;
+	const product = (bd1.bigint * bd2.bigint) >> shiftAmount;
 
-    return {
-        bigint: product,
-        divex: targetDivex,
-    };
+	return {
+		bigint: product,
+		divex: targetDivex,
+	};
 }
 
 /**
@@ -422,13 +422,13 @@ function divide(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEF
 	const quotient = scaledDividend / bd2.bigint;
 	
 	// 5. Round the result by shifting it back down by `workingPrecision`.
-    //    We add "0.5" before truncating to round half towards positive infinity.
-    const workingPrecisionBigInt = BigInt(workingPrecision);
-    if (workingPrecisionBigInt <= ZERO) return {
+	//    We add "0.5" before truncating to round half towards positive infinity.
+	const workingPrecisionBigInt = BigInt(workingPrecision);
+	if (workingPrecisionBigInt <= ZERO) return {
 		bigint: quotient,
 		divex: targetDivex
 	};
-    const half = ONE << (workingPrecisionBigInt - ONE);
+	const half = ONE << (workingPrecisionBigInt - ONE);
 	const finalQuotient = (quotient + half) >> workingPrecisionBigInt;
 
 	return {
@@ -467,30 +467,30 @@ function clone(bd: BigDecimal): BigDecimal {
  * @param divex The target divex.
  */
 function setExponent(bd: BigDecimal, divex: number): void {
-    if (divex < 0 || divex > MAX_DIVEX) throw new Error(`Divex must be between 0 and ${MAX_DIVEX}. Received: ${divex}`);
+	if (divex < 0 || divex > MAX_DIVEX) throw new Error(`Divex must be between 0 and ${MAX_DIVEX}. Received: ${divex}`);
 
-    const difference = bd.divex - divex;
+	const difference = bd.divex - divex;
 
-    // If there's no change, do nothing.
-    if (difference === 0) return;
+	// If there's no change, do nothing.
+	if (difference === 0) return;
 
-    // If the difference is negative, we are increasing precision (shifting left).
-    // This is a pure scaling operation and never requires rounding.
-    if (difference < 0) {
-        bd.bigint <<= BigInt(-difference);
-        bd.divex = divex;
-        return;
-    }
+	// If the difference is negative, we are increasing precision (shifting left).
+	// This is a pure scaling operation and never requires rounding.
+	if (difference < 0) {
+		bd.bigint <<= BigInt(-difference);
+		bd.divex = divex;
+		return;
+	}
 
-    // We are now decreasing precision (shifting right), so we must round.
+	// We are now decreasing precision (shifting right), so we must round.
 
-    // To "round half up", we add 0.5 before truncating.
-    // "0.5" relative to the part being discarded is 1 bit shifted by (difference - 1).
-    const half = ONE << BigInt(difference - 1);
+	// To "round half up", we add 0.5 before truncating.
+	// "0.5" relative to the part being discarded is 1 bit shifted by (difference - 1).
+	const half = ONE << BigInt(difference - 1);
     
-    bd.bigint += half;
-    bd.bigint >>= BigInt(difference);
-    bd.divex = divex;
+	bd.bigint += half;
+	bd.bigint >>= BigInt(difference);
+	bd.divex = divex;
 }
 
 /**
@@ -500,25 +500,25 @@ function setExponent(bd: BigDecimal, divex: number): void {
  * @returns -1 if bd1 < bd2, 0 if bd1 === bd2, and 1 if bd1 > bd2.
  */
 function compare(bd1: BigDecimal, bd2: BigDecimal): -1 | 0 | 1 {
-    // To compare, we must bring them to a common divex, just like in add/subtract.
-    // However, we don't need to create new objects.
+	// To compare, we must bring them to a common divex, just like in add/subtract.
+	// However, we don't need to create new objects.
 
-    let bigint1 = bd1.bigint;
-    let bigint2 = bd2.bigint;
+	let bigint1 = bd1.bigint;
+	let bigint2 = bd2.bigint;
 
-    if (bd1.divex > bd2.divex) {
-        // Scale up bd2 to match bd1's divex.
-        bigint2 <<= BigInt(bd1.divex - bd2.divex);
-    } else if (bd2.divex > bd1.divex) {
-        // Scale up bd1 to match bd2's divex.
-        bigint1 <<= BigInt(bd2.divex - bd1.divex);
-    }
-    // If divex are equal, no scaling is needed.
+	if (bd1.divex > bd2.divex) {
+		// Scale up bd2 to match bd1's divex.
+		bigint2 <<= BigInt(bd1.divex - bd2.divex);
+	} else if (bd2.divex > bd1.divex) {
+		// Scale up bd1 to match bd2's divex.
+		bigint1 <<= BigInt(bd2.divex - bd1.divex);
+	}
+	// If divex are equal, no scaling is needed.
 
-    // Now that they are at the same scale, we can directly compare the bigints.
-    if (bigint1 < bigint2) return -1;
-    if (bigint1 > bigint2) return 1;
-    return 0;
+	// Now that they are at the same scale, we can directly compare the bigints.
+	if (bigint1 < bigint2) return -1;
+	if (bigint1 > bigint2) return 1;
+	return 0;
 }
 
 
@@ -669,12 +669,12 @@ function toDebugBinaryString(bd: BigDecimal): string {
  * @param bd - The BigDecimal
  */
 function printInfo(bd: BigDecimal): void {
-	console.log(bd)
+	console.log(bd);
 	console.log(`Binary string: ${toDebugBinaryString(bd)}`);
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
 	console.log(`Converted to String: ${toString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to Number: ${toNumber(bd)}`);
-	console.log('----------------------------')
+	console.log('----------------------------');
 }
 
 /**
@@ -689,7 +689,7 @@ function getEffectiveDecimalPlaces(bd: BigDecimal): number {
 		const precision: number = Math.log10(powerOfTwo);
 		return Math.floor(precision);
 	} else {
-		const powerOfTwo: bigint = getBigintPowerOfTwo(bd.divex)
+		const powerOfTwo: bigint = getBigintPowerOfTwo(bd.divex);
 		return bigintmath.log10(powerOfTwo);
 	}
 }
@@ -770,8 +770,8 @@ export default {
 
 const n1: string = '1.11223344';
 const bd1: BigDecimal = NewBigDecimal_FromString(n1);
-console.log(`${n1} converted into a BigDecimal:`)
-printInfo(bd1)
+console.log(`${n1} converted into a BigDecimal:`);
+printInfo(bd1);
 
 
 // (function speedTest_Miscellanious() {
@@ -864,24 +864,24 @@ printInfo(bd1)
 /////////////////////////////////////////////////////////////////////////////////////
 
 function runComprehensiveVerification() {
-    console.log('--- Running Comprehensive Interaction Verification Suite ---');
-    console.log('Verifying all function outputs by inspecting their internal state.\n');
+	console.log('--- Running Comprehensive Interaction Verification Suite ---');
+	console.log('Verifying all function outputs by inspecting their internal state.\n');
 
-    // Helper to print a header and then the full info of a BigDecimal result
-    function testAndPrint(name: string, result: BigDecimal) {
-        console.log(`\n▶ TEST: ${name}`);
-        printInfo(result);
-    }
+	// Helper to print a header and then the full info of a BigDecimal result
+	function testAndPrint(name: string, result: BigDecimal) {
+		console.log(`\n▶ TEST: ${name}`);
+		printInfo(result);
+	}
     
-    // Helper for primitives
-    function testPrimitive(name: string, result: any) {
-        console.log(`\n▶ TEST: ${name}`);
-        console.log(`  Result: ${result}`);
-        console.log('----------------------------');
-    }
+	// Helper for primitives
+	function testPrimitive(name: string, result: any) {
+		console.log(`\n▶ TEST: ${name}`);
+		console.log(`  Result: ${result}`);
+		console.log('----------------------------');
+	}
 
-    // --- Test Values ---
-    const testValues = [
+	// --- Test Values ---
+	const testValues = [
 		// Do these work?
         NewBigDecimal_FromString(".5"),
         NewBigDecimal_FromString("-.5"),
@@ -900,61 +900,61 @@ function runComprehensiveVerification() {
         NewBigDecimal_FromString("10000000000005325325325.00058389299239593235325325235325")
     ];
 
-    // =================================================================================
-    // Part 1: Single-Operand Function Tests
-    // =================================================================================
-    console.log("--- Part 1: Verifying Single-Operand Functions ---\n");
-    for (const bd of testValues) {
-        const bd_str = toString(bd);
-        console.log(`\n\n################### Testing against value: ${bd_str} ###################`);
+	// =================================================================================
+	// Part 1: Single-Operand Function Tests
+	// =================================================================================
+	console.log("--- Part 1: Verifying Single-Operand Functions ---\n");
+	for (const bd of testValues) {
+		const bd_str = toString(bd);
+		console.log(`\n\n################### Testing against value: ${bd_str} ###################`);
 
-        testAndPrint("clone()", clone(bd));
-        testAndPrint("abs()", abs(bd));
-        testPrimitive("toBigInt()", `${toBigInt(bd)}n`);
-        testPrimitive("toNumber()", toNumber(bd));
-        testPrimitive("toDebugBinaryString()", toDebugBinaryString(bd));
-        testPrimitive("getEffectiveDecimalPlaces()", getEffectiveDecimalPlaces(bd));
+		testAndPrint("clone()", clone(bd));
+		testAndPrint("abs()", abs(bd));
+		testPrimitive("toBigInt()", `${toBigInt(bd)}n`);
+		testPrimitive("toNumber()", toNumber(bd));
+		testPrimitive("toDebugBinaryString()", toDebugBinaryString(bd));
+		testPrimitive("getEffectiveDecimalPlaces()", getEffectiveDecimalPlaces(bd));
         
-        const temp_bd_down = clone(bd);
-        setExponent(temp_bd_down, 20);
-        testAndPrint("setExponent(20) (decrease precision)", temp_bd_down);
-        const temp_bd_up = clone(bd);
-        setExponent(temp_bd_up, temp_bd_up.divex + 20);
-        testAndPrint("setExponent(divex+20) (increase precision)", temp_bd_up);
-    }
+		const temp_bd_down = clone(bd);
+		setExponent(temp_bd_down, 20);
+		testAndPrint("setExponent(20) (decrease precision)", temp_bd_down);
+		const temp_bd_up = clone(bd);
+		setExponent(temp_bd_up, temp_bd_up.divex + 20);
+		testAndPrint("setExponent(divex+20) (increase precision)", temp_bd_up);
+	}
 
-    // =================================================================================
-    // Part 2: Two-Operand Function Interaction Tests
-    // =================================================================================
-    console.log("\n\n--- Part 2: Verifying Two-Operand Function Interactions ---\n");
-    for (const bd1 of testValues) {
-        const str1 = toString(bd1);
-        console.log(`\n\n################### Testing interactions with Operand 1: ${str1} ###################`);
+	// =================================================================================
+	// Part 2: Two-Operand Function Interaction Tests
+	// =================================================================================
+	console.log("\n\n--- Part 2: Verifying Two-Operand Function Interactions ---\n");
+	for (const bd1 of testValues) {
+		const str1 = toString(bd1);
+		console.log(`\n\n################### Testing interactions with Operand 1: ${str1} ###################`);
         
-        for (const bd2 of testValues) {
-            const str2 = toString(bd2);
+		for (const bd2 of testValues) {
+			const str2 = toString(bd2);
             
-            testAndPrint(`add(${str1}) + (${str2})`, add(bd1, bd2));
-            testAndPrint(`subtract(${str1}) - (${str2})`, subtract(bd1, bd2));
-            testAndPrint(`multiply(${str1}) * (${str2})`, multiply(bd1, bd2));
-            testPrimitive(`compare(${str1}) vs (${str2})`, compare(bd1, bd2));
+			testAndPrint(`add(${str1}) + (${str2})`, add(bd1, bd2));
+			testAndPrint(`subtract(${str1}) - (${str2})`, subtract(bd1, bd2));
+			testAndPrint(`multiply(${str1}) * (${str2})`, multiply(bd1, bd2));
+			testPrimitive(`compare(${str1}) vs (${str2})`, compare(bd1, bd2));
 
-            // Divide - Proactively check for zero divisor
-            if (str2 === "0") {
-                console.log(`\n▶ TEST: divide(${str1}) / (${str2})`);
-                console.log("  Result: Skipped (Division by zero)");
-                console.log('----------------------------');
-            } else {
-                testAndPrint(`divide(${str1}) / (${str2})`, divide(bd1, bd2));
-            }
-        }
-    }
+			// Divide - Proactively check for zero divisor
+			if (str2 === "0") {
+				console.log(`\n▶ TEST: divide(${str1}) / (${str2})`);
+				console.log("  Result: Skipped (Division by zero)");
+				console.log('----------------------------');
+			} else {
+				testAndPrint(`divide(${str1}) / (${str2})`, divide(bd1, bd2));
+			}
+		}
+	}
 
-    // --- Standalone Helper Verification ---
-    console.log("\n================== Testing Helpers ==================");
-    testPrimitive("howManyBitsForDigitsOfPrecision(15)", howManyBitsForDigitsOfPrecision(15));
+	// --- Standalone Helper Verification ---
+	console.log("\n================== Testing Helpers ==================");
+	testPrimitive("howManyBitsForDigitsOfPrecision(15)", howManyBitsForDigitsOfPrecision(15));
 
-    console.log('\n--- Comprehensive Interaction Verification Finished ---');
+	console.log('\n--- Comprehensive Interaction Verification Finished ---');
 }
 
 // Run the verification

@@ -26,7 +26,7 @@ const ONE: bigint = 1n;
  * @returns The absolute value
  */
 function abs(bigint: bigint): bigint {
-    return bigint < ZERO ? -bigint : bigint;
+	return bigint < ZERO ? -bigint : bigint;
 }
 
 // EVERYTHING COMMENTED OUT I AM UNSURE IF WE WILL NEED.
@@ -49,10 +49,10 @@ function abs(bigint: bigint): bigint {
 * @returns The logarithm to base 10
 */
 function log10(bigint: bigint): number {
-    if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
-    if (bigint < ZERO) return NaN;
+	if (bigint === ZERO) return -Infinity; // Matches Math.log2(0)
+	if (bigint < ZERO) return NaN;
 
-    return bigint.toString(10).length - 1;
+	return bigint.toString(10).length - 1;
 }
 
 // /**
@@ -164,46 +164,46 @@ function log10(bigint: bigint): number {
  * @returns A formatted binary string ideal for debugging.
  */
 function toDebugBinaryString(bigint: bigint): string {
-    // 1. Handle the zero case cleanly.
-    if (bigint === 0n) return "0b0000_0000 (0n, 8-bit, 1-byte)";
+	// 1. Handle the zero case cleanly.
+	if (bigint === 0n) return "0b0000_0000 (0n, 8-bit, 1-byte)";
 
-    // 2. Calculate the minimum number of bits required for two's complement.
-    let minBits: number;
-    if (bigint > ZERO) {
-        minBits = bigint.toString(2).length;
-    } else { // bigint < ZERO
-        // For a negative number -N, the bits required are one more than the bits
-        // for N-1. e.g. -8 (1000) needs 4 bits, same as 7 (0111).
-        // A simple, reliable way is to find the bit length of its positive counterpart and add 1 for the sign.
-        // For -8, this becomes (-(-8n)) - 1n = 7n. The bit length of 7 (111) is 3. Add 1 for the sign bit = 4.
-        // For -10, this is 9n. Bit length of 9 (1001) is 4. Add 1 for sign bit = 5.
-        minBits = ((bigint * NEGONE) - ONE).toString(2).length + 1;
-    }
+	// 2. Calculate the minimum number of bits required for two's complement.
+	let minBits: number;
+	if (bigint > ZERO) {
+		minBits = bigint.toString(2).length;
+	} else { // bigint < ZERO
+		// For a negative number -N, the bits required are one more than the bits
+		// for N-1. e.g. -8 (1000) needs 4 bits, same as 7 (0111).
+		// A simple, reliable way is to find the bit length of its positive counterpart and add 1 for the sign.
+		// For -8, this becomes (-(-8n)) - 1n = 7n. The bit length of 7 (111) is 3. Add 1 for the sign bit = 4.
+		// For -10, this is 9n. Bit length of 9 (1001) is 4. Add 1 for sign bit = 5.
+		minBits = ((bigint * NEGONE) - ONE).toString(2).length + 1;
+	}
 
-    // 3. Round up the bit-width to the nearest multiple of 8 (a full byte).
-    // This gives us a standard, padded view (8-bit, 16-bit, 24-bit, etc.).
-    const displayBits = Math.ceil(minBits / 8) * 8;
+	// 3. Round up the bit-width to the nearest multiple of 8 (a full byte).
+	// This gives us a standard, padded view (8-bit, 16-bit, 24-bit, etc.).
+	const displayBits = Math.ceil(minBits / 8) * 8;
 
-    // 4. Calculate the two's complement value for this specific display width.
-    const displayMask = (ONE << BigInt(displayBits)) - ONE;
-    const displayValue = bigint & displayMask; // This handles both positive and negative correctly
+	// 4. Calculate the two's complement value for this specific display width.
+	const displayMask = (ONE << BigInt(displayBits)) - ONE;
+	const displayValue = bigint & displayMask; // This handles both positive and negative correctly
 
-    // 5. Convert to a binary string and pad with leading zeros.
-    let binaryString = displayValue.toString(2).padStart(displayBits, '0');
+	// 5. Convert to a binary string and pad with leading zeros.
+	const binaryString = displayValue.toString(2).padStart(displayBits, '0');
 
-    // 6. Add separators for readability (e.g., "1111_0110" instead of "11110110").
-    let formattedString = "0b";
-    for (let i = 0; i < binaryString.length; i++) {
-        if (i > 0 && i % 4 === 0) formattedString += "_";
-        formattedString += binaryString[i];
-    }
+	// 6. Add separators for readability (e.g., "1111_0110" instead of "11110110").
+	let formattedString = "0b";
+	for (let i = 0; i < binaryString.length; i++) {
+		if (i > 0 && i % 4 === 0) formattedString += "_";
+		formattedString += binaryString[i];
+	}
     
-    // 7. Add a helpful annotation.
-    const annotation = `(${bigint}n, ${displayBits}-bit, ${displayBits / 8}-byte)`;
+	// 7. Add a helpful annotation.
+	const annotation = `(${bigint}n, ${displayBits}-bit, ${displayBits / 8}-byte)`;
     
-    // Pad the string so annotations align in console logs
-    // return `${formattedString.padEnd(10 + displayBits + Math.floor(displayBits/4))}${annotation}`;
-    return `${formattedString} ${annotation}`;
+	// Pad the string so annotations align in console logs
+	// return `${formattedString.padEnd(10 + displayBits + Math.floor(displayBits/4))}${annotation}`;
+	return `${formattedString} ${annotation}`;
 }
 
 
@@ -211,11 +211,11 @@ function toDebugBinaryString(bigint: bigint): string {
 
 
 export default {
-    abs,
-    // log2,
-    log10,
-    // logN,
-    // getLeastSignificantBits,
-    // getBitAtPositionFromRight,
-    toDebugBinaryString,
-}
+	abs,
+	// log2,
+	log10,
+	// logN,
+	// getLeastSignificantBits,
+	// getBitAtPositionFromRight,
+	toDebugBinaryString,
+};
