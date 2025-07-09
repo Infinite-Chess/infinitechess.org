@@ -86,7 +86,7 @@ const DEFAULT_WORKING_PRECISION: number = 50; // Default: 50
  * Beyond this, the divex is assumed to be running away towards Infinity, so an error is thrown.
  * Can be adjusted if you want more maximum precision.
  */
-const MAX_DIVEX: number = 1e3; // Default: 1e3 (1,000)
+const MAX_DIVEX: number = 1e5; // Default: 1e3 (100,000)
 
 /** A list of powers of 2, 1024 in length, starting at 1 and stopping before Number.MAX_VALUE. This goes up to 2^1023. */
 const powersOfTwoList: number[] = (() => {
@@ -958,4 +958,4 @@ function runComprehensiveVerification() {
 }
 
 // Run the verification
-runComprehensiveVerification();
+// runComprehensiveVerification();
