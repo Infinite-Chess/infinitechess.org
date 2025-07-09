@@ -162,12 +162,9 @@ function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boole
 	if (move === undefined) throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 	
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
-	animateMove(move, forward); // Animate
+	animateMove(move.changes, forward); // Animate
 	updateGui(true);
 }
-
-
-// Animating ---------------------------------------------------------------------------------------------------------------
 
 /**
  * Updates the display of whos turn it is (if it changed),

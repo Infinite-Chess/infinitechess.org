@@ -154,8 +154,8 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
 		onlinegame.onMovePlayed({ isOpponents: opponentPlayedThisMove });
         
 		const isLastMove = i === moves.length - 1;		// Animate only if it's the last move.
-		const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks: isLastMove});
-		if (isLastMove) movesequence.animateMove(move, true); // Only animate on the last forwarded move.
+		const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks: isLastMove });
+		if (isLastMove) movesequence.animateMove(move.changes, true); // Only animate on the last forwarded move.
 
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;

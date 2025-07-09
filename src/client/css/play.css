@@ -32,12 +32,80 @@ main {
     bottom: 0;
     left: 0;
     right: 0;
+    display: flex;
+    flex-direction: row;
 }
 
 button {
     cursor: pointer;
 }
 
+
+/* Left vertical bar of Board Editor */
+
+.editor-menu {
+    position: relative;
+    height: 100%;
+    width: fit-content;
+    box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
+    background: white;
+    z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
+}
+
+.editor-tools {
+    display: grid;
+    grid-template-columns: repeat(3, 4em);
+    text-align: center;
+    text-justify: center;
+}
+
+.editor-types {
+    display: grid;
+    grid-template-columns: repeat(4, 3em);
+}
+
+.editor-types .piece, .editor-tools div {
+    cursor: pointer;
+    aspect-ratio: 1/1;
+}
+
+.editor-types .piece:hover, .editor-tools div:hover {
+    outline-style: solid;
+    outline-width: 0.25em;
+    outline-offset: -0.15em;
+}
+
+.active {
+    background-color: green;
+}
+
+.void {
+    background-color: black;
+    margin: 5px;
+}
+
+.void.active {
+    margin: 5px;
+    outline-style: solid;
+    outline-color: green;
+    outline-width: 5px;
+}
+
+.dot {
+    border: 1px solid black;
+    border-radius: 100%;
+    margin: 12px;
+    flex-shrink: 0;
+}
+
+/* Entire board UI, including loading screen, canvas and overlay */
+
+#boardUI {
+    position: relative;
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
+}
 
 
 /* Loading Page. A COUPLE OF THSEE CLASSES are also used for the game's loading animation page! */
@@ -185,9 +253,7 @@ canvas {
     position: absolute;
     width: 100%;
     height: 100%;
-    /* Needed for the board editor UI: */
-    display: flex;
-    flex-direction: column;
+    container-type: inline-size; /* Enables container queries on this element */
 }
 
 
@@ -1005,8 +1071,9 @@ button.join-button, button.copy-button {
 /* Top Navigation: Zoom buttons, coordinates, rewind/forward game, pause */
 
 .navigation-bar {
-    position: relative;
+    position: absolute;
     top: 0;
+    left: 0;
     width: 100%;
     font-size: 84px; /* Update with doc!! */
     height: 1em;
@@ -1141,19 +1208,19 @@ svg.collapse {
 
 
 /* Start shrinking top navigation bar */
-@media only screen and (max-width: 700px) and (pointer: fine) { /* Desktop */
+@container (max-width: 700px) { @media only screen and (pointer: fine) { /* Desktop */
     .navigation-bar {
-        font-size: 12vw; /* Update with doc!! */
+        font-size: 12cqw; /* Update with doc!! */
     }
-}
-@media only screen and (max-width: 803px) and (pointer: coarse) { /* Mobile */
+}}
+@container (max-width: 803px) { @media only screen and (pointer: coarse) { /* Mobile */
     .navigation-bar {
-        font-size: 10.5vw; /* Update with doc!! */
+        font-size: 10.5cqw; /* Update with doc!! */
     }
-}
+}}
 
 /* Small screens. HIDE the coords and make the buttons size constant! */
-@media only screen and (max-width: 550px) and (pointer: fine) { /* Desktop */
+@container (max-width: 550px) { @media only screen and (pointer: fine) { /* Desktop */
     .navigation-bar {
         justify-content: space-between;
         font-size: 66px; /* Update with doc!! */
@@ -1161,27 +1228,27 @@ svg.collapse {
     .coords {
         display: none;
     }
-}
-@media only screen and (max-width: 625px) and (pointer: coarse) { /* Mobile */
+}}
+@container (max-width: 625px) { @media only screen and (pointer: coarse) { /* Mobile */
     .navigation-bar {
         font-size: 66px; /* Update with doc!! */
     }
     .coords {
         display: none;
     }
-}
+}}
 
 /* Mobile screen, start shrinking the size again */
-@media only screen and (max-width: 368px) and (pointer: fine) { /* Desktop */
+@container (max-width: 368px) { @media only screen and (pointer: fine) { /* Desktop */
     .navigation-bar {
-        font-size: 17.9vw; /* Update with doc!! */
+        font-size: 17.9cqw; /* Update with doc!! */
     }
-}
-@media only screen and (max-width: 483px) and (pointer: coarse) { /* Mobile */
+}}
+@container (max-width: 483px) { @media only screen and (pointer: coarse) { /* Mobile */
     .navigation-bar {
-        font-size: 13.7vw; /* Update with doc!! */
+        font-size: 13.7cqw; /* Update with doc!! */
     }
-}
+}}
 
 
 
@@ -1318,66 +1385,6 @@ svg.collapse {
     aspect-ratio: 1;
     width: 84%;
     transform: translate(0.5px, 0.5px);
-}
-
-
-/* Board Editor UI */
-
-.editor-menu {
-    position: relative;
-    left: 0;
-    height: 100%;
-    width: fit-content;
-    box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.307), white, rgba(255, 255, 255, 0.84));    
-    -webkit-backdrop-filter: blur(5px); /* Must be BEFORE the unprefixed rules, so Lightning CSS correclty parses! */
-    backdrop-filter: blur(8px); /* Apply a blur effect to the background */
-}
-
-.editor-tools {
-    display: grid;
-    grid-template-columns: repeat(3, 4em);
-    text-align: center;
-    text-justify: center;
-}
-
-.editor-types {
-    display: grid;
-    grid-template-columns: repeat(4, 3em);
-}
-
-.editor-types .piece, .editor-tools div {
-    cursor: pointer;
-    aspect-ratio: 1/1;
-}
-
-.editor-types .piece:hover, .editor-tools div:hover {
-    outline-style: solid;
-    outline-width: 0.25em;
-    outline-offset: -0.15em;
-}
-
-.active {
-    background-color: green;
-}
-
-.void {
-    background-color: black;
-    margin: 5px;
-}
-
-.void.active {
-    margin: 5px;
-    outline-style: solid;
-    outline-color: green;
-    outline-width: 5px;
-}
-
-.dot {
-    border: 1px solid black;
-    border-radius: 100%;
-    margin: 12px;
-    flex-shrink: 0;
 }
 
 

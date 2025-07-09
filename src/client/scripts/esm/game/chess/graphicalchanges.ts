@@ -64,7 +64,7 @@ function returnMeshPiece(mesh: Mesh, change: Change) {
  * @param forward whether this is a forward or back animation
  * @param animateMain Whether the main piece targeted by the move should be animated. All secondary pieces are guaranteed animated. If this is false, the main piece animation will be instantanious, only playing the SOUND.
  */
-function animateMove(move: Move, forward = true, animateMain = true) {
+function animateMove(moveChanges: Change[], forward = true, animateMain = true) {
 	let clearanimations = true; // The first animation of a turn should clear prev turns animation
 
 	// TODO: figure out a way to animate multiple moves of the same piece
@@ -83,7 +83,7 @@ function animateMove(move: Move, forward = true, animateMain = true) {
 
 	let showKeyframes: Map<number, Piece[]> = new Map();
 	let hideKeyframes: Map<number, Piece[]> = new Map();
-	for (const change of move.changes) {
+	for (const change of moveChanges) {
 		if (change.action === "capture") {
 			pushToArrayMap(showKeyframes, change.order, change.piece);
 		} else if (change.action === "move") {

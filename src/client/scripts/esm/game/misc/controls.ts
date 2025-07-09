@@ -38,6 +38,7 @@ import piecemodels from "../rendering/piecemodels.js";
 import guinavigation from "../gui/guinavigation.js";
 import guigameinfo from "../gui/guigameinfo.js";
 import miniimage from "../rendering/miniimage.js";
+import boardeditor from "./boardeditor.js";
 
 
 import type { Mesh } from "../rendering/piecemodels.js";
@@ -247,7 +248,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined) {
 	}
 	if (listener_document.isKeyDown('KeyN')) {
 		guinavigation.toggle();
-		guigameinfo.toggle();
+		if (!boardeditor.areInBoardEditor()) guigameinfo.toggle();
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 	
