@@ -7,7 +7,7 @@
 
 import type { ChangeApplication, Change, genericChangeFunc } from "../../chess/logic/boardchanges.js";
 import type { Mesh } from "../rendering/piecemodels.js";
-import type { Move } from "../../chess/logic/movepiece.js";
+import type { Coords } from "../../chess/util/coordutil.js";
 import type { Piece } from "../../chess/util/boardutil.js";
 
 import animation from "../rendering/animation.js";
@@ -58,9 +58,9 @@ function returnMeshPiece(mesh: Mesh, change: Change) {
 // Animate -----------------------------------------------------------------------------------------
 
 /**
- * Animates a given move.
- * We don't use boardchanges because custom functionality is needed.
- * @param move the move to animate
+ * Animates a given set of changes to the board.
+ * We don't use boardchanges because a custom compositor is needed.
+ * @param moveChanges the changes to animate
  * @param forward whether this is a forward or back animation
  * @param animateMain Whether the main piece targeted by the move should be animated. All secondary pieces are guaranteed animated. If this is false, the main piece animation will be instantanious, only playing the SOUND.
  */
@@ -69,7 +69,6 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true) 
 
 	// TODO: figure out a way to animate multiple moves of the same piece
 	// Keyframing or smth
-
 	// How does the rose animate?
 
 	function pushToArrayMap<K, V>(map: Map<K, V[]>, key: K, apple: V) {
@@ -85,11 +84,13 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true) 
 	let hideKeyframes: Map<number, Piece[]> = new Map();
 	for (const change of moveChanges) {
 		if (change.action === "capture") {
+			// Queue all captures to be associated with the next move
 			pushToArrayMap(showKeyframes, change.order, change.piece);
 		} else if (change.action === "move") {
 			const instant = (change.main && !animateMain) || !preferences.getAnimationsMode(); // Whether the animation should be instantanious, only playing the SOUND.
 			let waypoints = change.path ?? [change.piece.coords, change.endCoords];
 
+			// Put all pieces captured last in the last keyframe
 			const last = waypoints.length - 1;
 			const lastDef = showKeyframes.get(last);
 			const assumeLast = showKeyframes.get(-1);
@@ -100,7 +101,7 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true) 
 				showKeyframes.set(last, [...lastDef, ...assumeLast!]);
 			} // Don't need to do anything 
 
-			// Flip if reversing move
+			// Flip those being hidden and those being shown if it is a reverse move
 			waypoints = forward ? waypoints : waypoints.slice().reverse();
 			if (!forward) {
 				const invert = function<V>(x: Map<number,V>, y: Map<number,V>) {
@@ -115,16 +116,15 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true) 
 				hideKeyframes = t;
 			}
 
-			pushToArrayMap(hideKeyframes, last, {coords: waypoints[last], type: -1, index: -1});
-
 			// Prune those that will never be seen
 			hideKeyframes.delete(0);
 			showKeyframes.delete(0);
 
-			const newHideFrames = new Map();
+			const newHideFrames: Map<number, Coords[]> = new Map();
 			for (const [k, v] of hideKeyframes) newHideFrames.set(k, v.map(p => p.coords)); // Mutate to remove unnessacary info
 
-			console.log(showKeyframes, newHideFrames);
+			// Hide where the moved piece is actually
+			pushToArrayMap(newHideFrames, last, waypoints[last]);
 
 			animation.animatePiece(change.piece.type, waypoints, showKeyframes, newHideFrames, instant, clearanimations);
 			

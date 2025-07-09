@@ -46,8 +46,9 @@ interface Animation {
 	path: Coords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
-	/** The piece captured, if one was captured. This will be rendered in place for the during of the animation. */
+	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures */
 	showKeyframes: Map<number, Piece[]>;
+	/** Pieces that need to be hidded, up until a set path point is reached. Usually needed for reversing captures and hiding the moved piece */
 	hideKeyframes: Map<number, Coords[]>;
 	/** The time the animation started. */
 	startTimeMillis: number;
@@ -356,6 +357,14 @@ function calculateBoardPosition(coords: Coords) {
 
 // Animation Calculations -----------------------------------------------------
 
+/**
+ * Gets the current progress in float form
+ * The whole number is the segment that has been reached
+ * The decimal component is the progress in that segment
+ * @param animation 
+ * @param maxDistB4Teleport 
+ * @returns the animation progress
+ */
 function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANCE_BEFORE_TELEPORT): number {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
@@ -367,9 +376,8 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANC
 }
 
 /**
- * Returns the coordinate the animation's piece should be rendered this frame.
- * @param animation - The animation to calculate the position for.
- * @param maxDistB4Teleport - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
+ * Calculates the position of the moved piece from the progress of the animation.
+ * @returns the coordinate the animation's piece should be rendered this frame.
  */
 function getCurrentAnimationPosition(segments: AnimationSegment[], segmentNum: number): Coords {
 	if (segmentNum >= segments.length) return segments[segments.length - 1]!.end;
@@ -408,6 +416,10 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 
 // -----------------------------------------------------------------------------------------
 
+
+/**
+ * Iterates over all keyframes that have not been passed by the animation
+ */
 // eslint-disable-next-line no-unused-vars
 function forEachActiveKeyframe<T>(keyframes: Map<number, T>, segment: number, callback: (value: T) => void): void {
 	for (const [k, v] of keyframes) {
