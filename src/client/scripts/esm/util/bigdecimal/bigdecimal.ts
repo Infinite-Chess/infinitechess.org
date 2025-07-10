@@ -79,7 +79,7 @@ const TEN: bigint = 10n;
  * I arbitrarily chose 50 bits for the minimum, because that gives us about 15 digits of precision,
  * which is about how much javascript's doubles give us.
  */
-const DEFAULT_WORKING_PRECISION: number = 53; // Default: 50
+const DEFAULT_WORKING_PRECISION: number = 53; // Default: 53 (matches javascript's double precision)
 
 /**
  * The maximum divex a BigDecimal is allowed to have.
