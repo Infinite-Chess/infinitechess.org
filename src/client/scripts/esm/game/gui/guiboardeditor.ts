@@ -51,22 +51,28 @@ const coloredTypes = [
 const neutralTypes = [ rawTypes.OBSTACLE ];
 
 let initialized = false;
-let isOpen = false;
+let boardEditorOpen = false;
 
 // Functions ---------------------------------------------------------------
 
+function isOpen() {
+	return boardEditorOpen;
+}
+
 async function open() {
+	boardEditorOpen = true;
 	element_menu.classList.remove("hidden");
+	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	await gameloader.startBoardEditor();
 	initListeners();
-	isOpen = true;
 }
 
 function close() {
-	if (!isOpen) return;
+	if (!boardEditorOpen) return;
 	element_menu.classList.add("hidden");
+	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
-	isOpen = false;
+	boardEditorOpen = false;
 }
 
 async function initUI() {
@@ -205,12 +211,6 @@ function callback_ChangeTool(e: Event) {
 	const target = (e.currentTarget as HTMLElement);
 	const tool = target.getAttribute("data-tool");
 	switch (tool) {
-		case "undo":
-			boardeditor.undo();
-			return;
-		case "redo":
-			boardeditor.redo();
-			return;
 		case "save":
 			boardeditor.save();
 			return;
@@ -242,6 +242,7 @@ function callback_ChangePieceType(e: Event) {
 
 
 export default {
+	isOpen,
 	open,
 	close,
 	initUI,

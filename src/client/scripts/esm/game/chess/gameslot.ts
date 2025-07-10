@@ -226,7 +226,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
 		if (moveutil.areWeViewingLatestMove(loadedGamefile!.boardsim)) return; // Already viewing the lastest move
 		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
-		movesequence.animateMove(lastmove, true);
+		movesequence.animateMove(lastmove.changes, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 }
 

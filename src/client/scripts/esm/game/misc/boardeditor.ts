@@ -9,8 +9,7 @@
 import boardchanges from '../../chess/logic/boardchanges.js';
 import gameslot from '../chess/gameslot.js';
 import coordutil from '../../chess/util/coordutil.js';
-import guinavigation from '../gui/guinavigation.js';
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import icnconverter, { _Move_Compact } from '../../chess/logic/icn/icnconverter.js';
 import docutil from '../../util/docutil.js';
 import selection from '../chess/selection.js';
 import state from '../../chess/logic/state.js';
@@ -21,6 +20,9 @@ import guiboardeditor from '../gui/guiboardeditor.js';
 import { players, rawTypes } from '../../chess/util/typeutil.js';
 import mouse from '../../util/mouse.js';
 import movesequence from '../chess/movesequence.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import movepiece from '../../chess/logic/movepiece.js';
+import guinavigation from '../gui/guinavigation.js';
 // @ts-ignore
 import statustext from '../gui/statustext.js';
 
@@ -30,9 +32,8 @@ import type { Coords } from '../../chess/util/coordutil.js';
 import type { Edit } from '../../chess/logic/movepiece.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Move } from '../../chess/logic/movepiece.js';
 import type { Player } from '../../chess/util/typeutil.js';
-import { FullGame } from '../../chess/logic/gamefile.js';
+import type { Board, FullGame } from '../../chess/logic/gamefile.js';
 
 
 type Tool = (typeof validTools)[number];
@@ -50,7 +51,7 @@ let inBoardEditor = false;
 
 let currentColor: Player = players.WHITE;
 let currentPieceType: number = rawTypes.VOID;
-let currentTool: Tool = "placer";
+let currentTool: Tool = "normal";
 
 
 /**
@@ -65,6 +66,8 @@ let indexOfThisEdit: number | undefined = 0;
 
 let drawing = false;
 let previousSquare: Coords | undefined;
+/** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
+let addingSpecialRights: boolean | undefined;
 
 
 // Functions ------------------------------------------------------------------------
@@ -86,6 +89,7 @@ function initBoardEditor() {
 function closeBoardEditor() {
 	inBoardEditor = false;
 	drawing = false;
+	addingSpecialRights = undefined;
 	thisEdit = undefined;
 	edits = undefined;
 	indexOfThisEdit = undefined;
@@ -117,6 +121,10 @@ function getColor() {
 function setTool(tool: string) {
 	if (!validTools.includes(tool as Tool)) return;
 	currentTool = tool as Tool;
+	endEdit();
+
+	// Prevents you from being able to draw while a piece is selected.
+	if (drawingTools.includes(currentTool)) selection.unselectPiece();
 
 	if (tool === "specialrights") specialrighthighlights.enable();
 	else specialrighthighlights.disable();
@@ -128,6 +136,10 @@ function setTool(tool: string) {
 
 function getTool() {
 	return currentTool;
+}
+
+function isBoardEditorUsingDrawingTool() {
+	return inBoardEditor && drawingTools.includes(currentTool);
 }
 
 function canUndo() {
@@ -149,10 +161,10 @@ function beginEdit() {
 
 function endEdit() {
 	drawing = false;
+	addingSpecialRights = undefined;
 	previousSquare = undefined;
-	addEditToHistory(thisEdit!);
+	if (thisEdit !== undefined) addEditToHistory(thisEdit);
 	thisEdit = undefined;
-	guinavigation.update_MoveButtons();
 }
 
 /** Runs both logical and graphical changes. */
@@ -161,12 +173,11 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	selection.unselectPiece();
 
 	// Run logical changes
-	boardchanges.runChanges(gamefile, edit.changes, boardchanges.changeFuncs, forward);
+	movepiece.applyEdit(gamefile, edit, forward, true); // Apply the logical changes to the board state
 
 	// Run graphical changes
 	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
 
-	state.applyMove(gamefile.boardsim.state, edit.state, forward, { globalChange: true });
 	specialrighthighlights.onMove();
 }
 
@@ -175,14 +186,20 @@ function addEditToHistory(edit: Edit) {
 	edits!.length = indexOfThisEdit!;
 	edits!.push(edit);
 	indexOfThisEdit!++;
+	guinavigation.update_EditButtons();
 }
 
 function update(): void {
 	if (!inBoardEditor) return;
 
 	// Handle starting and ending the drawing state
-	if (mouse.isMouseDown(Mouse.RIGHT) && !drawing) beginEdit();
-	if (!mouse.isMouseHeld(Mouse.RIGHT) && drawing) return endEdit();
+	if (drawingTools.includes(currentTool)) {
+		if (mouse.isMouseDown(Mouse.LEFT) && !drawing) {
+			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
+			beginEdit();
+		}
+		else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
+	}
 
 	// If not drawing, or if the current tool doesn't support drawing, there's nothing more to do
 	if (!drawing || !drawingTools.includes(currentTool)) return;
@@ -223,6 +240,10 @@ function queueToggleSpecialRight(gamefile: FullGame, edit: Edit, pieceHovered: P
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
 	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
 	const future = !current;
+
+	if (addingSpecialRights === undefined) addingSpecialRights = future;
+	else if (addingSpecialRights !== future) return;
+
 	state.createSpecialRightsState(edit, coordsKey, current, future);
 }
 
@@ -259,7 +280,7 @@ function clearAll() {
 	};
 	runEdit(gamefile, mesh, edit, true);
 	addEditToHistory(edit);
-	guinavigation.update_MoveButtons();
+	annotations.onGameUnload(); // Clear all annotations, as when a game is unloaded
 }
 
 function undo() {
@@ -269,7 +290,7 @@ function undo() {
 	const mesh = gameslot.getMesh()!;
 	indexOfThisEdit!--;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, false);
-	guinavigation.update_MoveButtons();
+	guinavigation.update_EditButtons();
 }
 
 function redo() {
@@ -279,7 +300,7 @@ function redo() {
 	const mesh = gameslot.getMesh()!;
 	runEdit(gamefile, mesh, edits![indexOfThisEdit!]!, true);
 	indexOfThisEdit!++;
-	guinavigation.update_MoveButtons();
+	guinavigation.update_EditButtons();
 }
 
 /**
@@ -305,19 +326,50 @@ function load() {
 	statustext.showStatus("Loading not yet implemented", true);
 }
 
-function onMovePlayed(move: Move) {
-	if (!inBoardEditor) return;
-	const gamefile = gameslot.getGamefile()!;
-	edits!.length = indexOfThisEdit!;
+
+/**
+ * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
+ * moves list, nor update gui, clocks, or do game over checks, nor the moveIndex property updated.
+ */
+function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Move_Compact): Edit {
+	const edit = generateMoveEdit(gamefile.boardsim, moveDraft);
+
+	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
+	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
+
+	specialrighthighlights.onMove(); // Updates the model
+
+	addEditToHistory(edit);
+
+	return edit;
+}
+
+/**
+ * Similar to {@link movepiece.generateMove}, but specifically for editor moves,
+ * which don't execute special moves, nor are appeneded to the game's moves list,
+ * nor the gamefile's moveIndex property updated.
+ */
+function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
+	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
+	if (!piece) throw Error(`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`);
+
+	// Initialize the state, and change list, as empty for now.
 	const edit: Edit = {
-		changes: move.changes,
-		state: {global: move.state.global, local: move.state.local}
+		changes: [],
+		state: { local: [], global: [] },
 	};
-	edits!.push(edit);
-	indexOfThisEdit = edits!.length;
-	gamefile.boardsim.moves.length = 0;
-	gamefile.boardsim.state.local.moveIndex = -1;
-	guinavigation.update_MoveButtons();
+	
+	movepiece.calcMovesChanges(boardsim, piece, moveDraft, edit); // Move piece regularly (no specials)
+	
+	// Queue the state change transfer of this edit's special right to its new destination.
+	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
+	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
+	const hasSpecialRight = boardsim.state.global.specialRights.has(startCoordsKey);
+	const destinationHasSpecialRight = boardsim.state.global.specialRights.has(endCoordsKey);
+	state.createSpecialRightsState(edit, startCoordsKey, hasSpecialRight, false); // Delete the special right from the startCoords, if it exists
+	state.createSpecialRightsState(edit, endCoordsKey, destinationHasSpecialRight, hasSpecialRight); // Transfer the special right to the endCoords, if it exists
+	
+	return edit;
 }
 
 export type {
@@ -334,6 +386,7 @@ export default {
 	getColor,
 	setTool,
 	getTool,
+	isBoardEditorUsingDrawingTool,
 	update,
 	canUndo,
 	canRedo,
@@ -342,5 +395,5 @@ export default {
 	save,
 	load,
 	clearAll,
-	onMovePlayed,
+	makeMoveEdit,
 };
