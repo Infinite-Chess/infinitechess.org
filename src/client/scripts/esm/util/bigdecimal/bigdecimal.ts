@@ -162,36 +162,36 @@ const getBigintPowerOfTwo: (power: number) => bigint = (function() {
 function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
 	if (workingPrecision < 0 || workingPrecision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${workingPrecision}`);
 
-	// Make sure the string is valid
+	// 1. Validate and deconstruct the string using regex.
 	const match = num.trim().match(/^(-?)(\d*)?\.?(\d*)$/);
 	if (!match) throw new Error("Invalid number format");
+	const sign = match[1] || '';
+	const intPart = match[2] || '0';
+	const fracPart = match[3] || '';
+	
+	const decimalDigitCount = fracPart.length;
 
-	const dotIndex: number = num.lastIndexOf('.');
-	const decimalDigitCount: number = dotIndex !== -1 ? num.length - dotIndex - 1 : 0;
-
-	// 1. Calculate the minimum bits needed to represent the input string's fractional part.
+	// Combine parts into a single integer string (e.g., "-1.23" -> "-123")
+	const numAsIntegerString = sign + intPart + fracPart;
+	let numberAsBigInt = BigInt(numAsIntegerString);
+	
+	// 2. Calculate the minimum bits needed to represent the input string's fractional part.
 	const minBitsForInput: number = howManyBitsForDigitsOfPrecision(decimalDigitCount);
 
-	// 2. The final divex is this minimum, plus the requested "working precision".
+	// 3. The final divex is this minimum, plus the requested "working precision".
 	//    This ensures we always have enough precision for the input, plus a buffer for future math.
 	const divex: number = minBitsForInput + workingPrecision;
 	// Check if the calculated divex is within our library's limits.
 	if (divex > MAX_DIVEX) throw new Error(`Precision after applying working precision exceeded ${MAX_DIVEX}. Please use an input number with fewer decimal places or specify less working precision.`);
 
-	// 1. Calculate 5^N.
+	// 4. Calculate 5^N.
 	const powerOfFive: bigint = FIVE ** BigInt(decimalDigitCount);
 
-	// 2. Make the string an integer.
-	if (dotIndex !== -1) num = num.slice(0, dotIndex) + num.slice(dotIndex + 1);
-	let numberAsBigInt: bigint = BigInt(num);
-
-	// 3. Scale the integer by the necessary power of 2.
-	// The total scaling is 2^(divex - decimalDigitCount).
 	const shiftAmount = BigInt(divex - decimalDigitCount);
 	if (shiftAmount > 0) numberAsBigInt <<= shiftAmount;
 	else if (shiftAmount < 0) numberAsBigInt >>= -shiftAmount; // A negative shift is a right shift.
 
-	// 4. Finally, perform the division by the power of 5.
+	// 5. Finally, perform the division by the power of 5.
 	const bigint: bigint = numberAsBigInt / powerOfFive;
     
 	return {
@@ -906,48 +906,21 @@ export default {
 
 
 // const n1: string = '1';
-// let bd1: BigDecimal = NewBigDecimal_FromString(n1, 100);
+// let bd1: BigDecimal = NewBigDecimal_FromString(n1);
 // console.log(`${n1} converted into a BigDecimal:`);
 // printInfo(bd1);
 
 // // const n2: string = '0.5';
-// const n2: string = '10';
-// const bd2: BigDecimal = NewBigDecimal_FromString(n2, 0);
+// const n2: string = '0.1';
+// const bd2: BigDecimal = NewBigDecimal_FromString(n2);
 // for (let i = 0; i < 20; i++) {
 // 	// Multiply by 0.1 each time.
 // 	// bd1 = divide_fixed(bd1, bd2);
-// 	bd1 = divide_floating(bd1, bd2);
-// 	// bd1 = multiply_floating(bd1, bd2);
+// 	// bd1 = divide_floating(bd1, bd2);
+// 	bd1 = multiply_floating(bd1, bd2);
 // 	printInfo(bd1);
 // 	// console.log("Effective digits: ", getEffectiveDecimalPlaces(bd1));
 // }
-
-
-
-// (function speedTest_Miscellanious() {
-
-//     const repeat = 10**6;
-//     let product;
-    
-//     console.time('No round');
-//     for (let i = 0; i < repeat; i++) {
-//         product = MathBigDec.multiply(bd1, bd2, 9);
-//     }
-//     console.timeEnd('No round');
-//     MathBigDec.printInfo(product);
-    
-//     console.time('Round');
-//     for (let i = 0; i < repeat; i++) {
-//         product = MathBigDec.multiply(bd1, bd2, 7);
-//     }
-//     console.timeEnd('Round');
-//     MathBigDec.printInfo(product);
-// })();
-
-
-
-
-
 
 
 
