@@ -1,6 +1,6 @@
 // src/client/scripts/esm/util/bigdecimal/bigdecimal-benchmark.ts
 
-// @ts-nocheck
+
 
 import { performance } from 'perf_hooks';
 import Decimal from 'decimal.js';
@@ -12,10 +12,10 @@ import bigdecimal from './bigdecimal.js';
 
 // --- Configuration ---
 const config = {
-	loopCount: 1_000_000, // 1 million iterations
+	loopCount: 10_000, // 1 million iterations
 	num1Str: "123456789.12345678901234567890",
 	num2Str: "987.65432109876543210",
-	DECIMAL_PRECISION: 50 // The target precision in decimal digits
+	DECIMAL_PRECISION: 3200 // The target precision in decimal digits
 };
 
 // --- Benchmark Runner ---
@@ -84,7 +84,7 @@ async function runAllBenchmarks() {
 	// MULTIPLICATION
 	results.push({
 		operation: 'multiply',
-		'BigDecimal (ms)': benchmark('BigDecimal Multiply', () => bigdecimal.multiply(myBD1, myBD2)),
+		'BigDecimal (ms)': benchmark('BigDecimal Multiply', () => bigdecimal.multiply_fixed(myBD1, myBD2)),
 		'decimal.js (ms)': benchmark('Decimal.js Multiply', () => decimal1.times(decimal2)),
 		'bignumber.js (ms)': benchmark('BigNumber.js Multiply', () => bignumber1.times(bignumber2)),
 	});
@@ -92,7 +92,7 @@ async function runAllBenchmarks() {
 	// DIVISION
 	results.push({
 		operation: 'divide',
-		'BigDecimal (ms)': benchmark('BigDecimal Divide', () => bigdecimal.divide(myBD1, myBD2, equivalentDivex)),
+		'BigDecimal (ms)': benchmark('BigDecimal Divide', () => bigdecimal.divide_fixed(myBD1, myBD2, equivalentDivex)),
 		'decimal.js (ms)': benchmark('Decimal.js Divide', () => decimal1.div(decimal2)),
 		'bignumber.js (ms)': benchmark('BigNumber.js Divide', () => bignumber1.div(bignumber2)),
 	});
