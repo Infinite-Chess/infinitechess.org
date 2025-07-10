@@ -63,7 +63,7 @@ function toggleDrag() {
 	preferences.setDragEnabled(dragCheckbox.checked);
 }
 function togglePremove() {
-	//preferences.setPremoveMode(premoveCheckbox.checked);
+	preferences.setPremoveMode(premoveCheckbox.checked); // Enabled for development
 }
 function toggleAnimations() {
 	preferences.setAnimationsMode(animationsCheckbox.checked);

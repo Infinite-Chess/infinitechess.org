@@ -187,7 +187,7 @@ function setDragEnabled(drag_enabled: boolean): void {
 }
 
 function getPremoveEnabled(): boolean {
-	return preferences.premove_enabled ?? default_premove_enabled;
+	return true; // FOR TESTING  preferences.premove_mode ?? default_premove_mode;
 }
 
 function setPremoveMode(premove_mode: boolean): void {
