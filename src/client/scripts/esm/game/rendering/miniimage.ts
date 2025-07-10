@@ -102,7 +102,7 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 	for (const a of animation.animations) {
 		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
 		callback(animation.getCurrentAnimationPosition(a.segments, segmentPos), a.type);
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(hides.add));
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => hides.add(c)));
 		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(p => callback(p.coords, p.type)));
 	}
 
@@ -217,7 +217,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
 		// Animated pieces don't have a real index, but we need to pass a piece object
 		pushPieceNoDuplicatesOrVoids({coords: animation.getCurrentAnimationPosition(a.segments, segmentPos), type: a.type, index: -1});
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(hides.add));
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => hides.add(c)));
 		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
 	}
 
