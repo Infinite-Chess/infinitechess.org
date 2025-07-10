@@ -1,6 +1,6 @@
 // src/client/scripts/esm/util/bigdecimal/bigdecimal-benchmark.ts
 
-
+// @ts-nocheck
 
 import { performance } from 'perf_hooks';
 import Decimal from 'decimal.js';
@@ -12,10 +12,10 @@ import bigdecimal from './bigdecimal.js';
 
 // --- Configuration ---
 const config = {
-	loopCount: 10_000, // 1 million iterations
+	loopCount: 1_000_000, // 1 million iterations
 	num1Str: "123456789.12345678901234567890",
 	num2Str: "987.65432109876543210",
-	DECIMAL_PRECISION: 3200 // The target precision in decimal digits
+	DECIMAL_PRECISION: 50 // The target precision in decimal digits
 };
 
 // --- Benchmark Runner ---
