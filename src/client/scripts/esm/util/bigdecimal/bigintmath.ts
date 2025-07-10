@@ -246,7 +246,7 @@ function bitLength_bisection(x: bigint): number {
 
 /**
  * Calculates the bit length of a bigint using a fast `toString(16)` and `Math.clz32` trick.
- * It is 4x faster than {@link string}.
+ * It is 4x faster than {@link bitLength_toString}.
  */
 function bitLength_hex(n: bigint): number {
 	if (n === ZERO) return 0;
