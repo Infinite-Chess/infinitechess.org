@@ -79,7 +79,7 @@ const TEN: bigint = 10n;
  * I arbitrarily chose 50 bits for the minimum, because that gives us about 15 digits of precision,
  * which is about how much javascript's doubles give us.
  */
-const DEFAULT_WORKING_PRECISION: number = 50; // Default: 50
+const DEFAULT_WORKING_PRECISION: number = 53; // Default: 50
 
 /**
  * The maximum divex a BigDecimal is allowed to have.
@@ -237,7 +237,6 @@ function NewBigDecimal_FromBigInt(num: bigint, precision: number = DEFAULT_WORKI
  * This method is reliable for all finite numbers, correctly handling all edge cases.
  * @param num The number to convert.
  * @returns The number in decimal format as a string.
- * @throws {Error} If the input is not a finite number (e.g., Infinity, -Infinity, or NaN).
  */
 function toFullDecimalString(num: number): string {
 	// 1. Input Validation: Fail fast for non-finite numbers.
@@ -373,14 +372,14 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 }
 
 /**
- * Multiplies two BigDecimal numbers.
+ * [Fixed-Point Model] Multiplies two BigDecimal numbers.
  * The resulting BigDecimal will have a divex equal to the maximum divex of the two factors.
  * This provides a balance of precision and predictable behavior.
  * @param bd1 The first factor.
  * @param bd2 The second factor.
  * @returns The product of bd1 and bd2.
  */
-function multiply(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
+function multiply_fixed(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	const targetDivex = Math.max(bd1.divex, bd2.divex);
 
 	// The true divex of the raw product is (bd1.divex + bd2.divex).
@@ -396,16 +395,29 @@ function multiply(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 }
 
 /**
- * Divides the first BigDecimal by the second, producing a result with a predictable divex.
+ * [Floating-Point Model] Multiplies two BigDecimals, preserving significant digits.
+ * The divex may grow, but it shouldn't grow uncontrollably.
+ * @param bd1 The first factor.
+ * @param bd2 The second factor.
+ * @param mantissaBits - How many bits of mantissa to use for the result, while still guaranteeing arbitrary integer precision. This only affects really small decimals. If not provided, the default will be used.
+ * @returns The product of bd1 and bd2.
+ */
+function multiply_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits?: number): BigDecimal {
+	const newBigInt = bd1.bigint * bd2.bigint;
+	const newDivex = bd1.divex + bd2.divex;
+	return normalize({ bigint: newBigInt, divex: newDivex }, mantissaBits);
+}
+
+/**
+ * [Fixed-Point Model] Divides the first BigDecimal by the second, producing a result with a predictable divex.
  * The final divex is determined by the maximum of the inputs' divex.
  * This prevents the divex from growing uncontrollably with repeated divisions.
  * @param bd1 - The dividend.
  * @param bd2 - The divisor.
  * @param [workingPrecision=DEFAULT_WORKING_PRECISION] - Extra bits for internal calculation to prevent rounding errors.
  * @returns The quotient of bd1 and bd2 (bd1 / bd2).
- * @throws {Error} If attempting to divide by zero.
  */
-function divide(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
+function divide_fixed(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
 	if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
 
 	// 1. Determine the predictable, final divex for the result.
@@ -436,6 +448,25 @@ function divide(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEF
 		bigint: finalQuotient,
 		divex: targetDivex
 	};
+}
+
+/**
+ * [Floating-Point Model] Divides two BigDecimals, preserving significant digits.
+ * The divex may grow, but it shouldn't grow uncontrollably.
+ * @param bd1 - The dividend.
+ * @param bd2 - The divisor.
+ * @param [workingPrecision=DEFAULT_WORKING_PRECISION] - Extra bits for internal calculation to prevent rounding errors.
+ * @param mantissaBits - How many bits of mantissa to use for the result, while still guaranteeing arbitrary integer precision. This only affects really small decimals. If not provided, the default will be used.
+ * @returns The quotient of bd1 and bd2 (bd1 / bd2).
+ */
+function divide_floating(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEFAULT_WORKING_PRECISION, mantissaBits?: number): BigDecimal {
+	if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
+    
+	const shift = BigInt(bd2.divex + workingPrecision);
+	const scaledDividend = bd1.bigint << shift;
+	const quotient = scaledDividend / bd2.bigint;
+	const newDivex = bd1.divex + workingPrecision;
+	return normalize({ bigint: quotient, divex: newDivex }, mantissaBits);
 }
 
 /**
@@ -519,6 +550,52 @@ function compare(bd1: BigDecimal, bd2: BigDecimal): -1 | 0 | 1 {
 	if (bigint1 < bigint2) return -1;
 	if (bigint1 > bigint2) return 1;
 	return 0;
+}
+
+
+// Floating-Point Model Helpers ====================================================
+
+
+/** The target number of bits for the mantissa in floating-point operations. Higher is more precise but slower. */
+const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us about 16 digits of precision, similar to JavaScript's Number type.
+
+/** Normalizes a BigDecimal to a target number of precision bits for floating-point style operations. */
+function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+	// We work with the absolute value for bit length calculation.
+	const mantissa = bigintmath.abs(bd.bigint);
+    
+	// Use the fast, mathematical bitLength function.
+	const currentBitLength = bigintmath.bitLength_bisection(mantissa);
+
+	if (currentBitLength <= precisionBits) return { bigint: bd.bigint, divex: bd.divex };
+
+	const shiftAmount = BigInt(currentBitLength - precisionBits);
+
+	// Calculate what the new divex *would* be.
+	let newDivex = bd.divex - Number(shiftAmount);
+
+	let finalBigInt: bigint;
+	let finalShift = shiftAmount;
+
+	// Check if the normalization would make the divex negative.
+	if (newDivex < 0) {
+		// If so, we are normalizing a number that is an integer.
+		// The final divex should be 0. We need to adjust our shift amount.
+		finalShift = BigInt(bd.divex);
+		newDivex = 0;
+	}
+
+	// Round using the consistent "half towards positive infinity" method.
+	// We must check if there are bits to round with (finalShift > 0).
+	if (finalShift > ZERO) {
+		const half = ONE << (finalShift - ONE);
+		finalBigInt = (bd.bigint + half) >> finalShift;
+	} else {
+		// This case happens if the divex adjustment consumed the entire shift.
+		finalBigInt = bd.bigint;
+	}
+
+	return { bigint: finalBigInt, divex: newDivex };
 }
 
 
@@ -671,8 +748,11 @@ function toString(bd: BigDecimal): string {
 	// 3. Round to the target decimal places.
 	// The logic is: multiply by 10^P, round, then format back to a string.
 	const powerOfTen = TEN ** BigInt(decimalPlaces);
-	const scaler = { bigint: powerOfTen, divex: 0 };
-	const scaledBd = multiply(bd, scaler);
+	// Use the logic from `multiply_floating` to get an exact scaled value
+	// before rounding, avoiding the precision loss of `multiply_fixed`.
+	const scaledBigInt = bd.bigint * powerOfTen;
+	const scaledDivex = bd.divex;
+	const scaledBd = { bigint: scaledBigInt, divex: scaledDivex };
 	const roundedScaledInt = toBigInt(scaledBd);
 
 	// 4. Format the resulting integer back into a decimal string.
@@ -800,8 +880,10 @@ export default {
 	// Math and Arithmetic
 	add,
 	subtract,
-	multiply,
-	divide,
+	multiply_fixed,
+	multiply_floating,
+	divide_fixed,
+	divide_floating,
 	abs,
 	clone,
 	setExponent,
@@ -824,16 +906,20 @@ export default {
 
 
 // const n1: string = '1';
-// let bd1: BigDecimal = NewBigDecimal_FromString(n1);
+// let bd1: BigDecimal = NewBigDecimal_FromString(n1, 100);
 // console.log(`${n1} converted into a BigDecimal:`);
 // printInfo(bd1);
 
-// const n2: string = '0.1';
-// const bd2: BigDecimal = NewBigDecimal_FromString(n2);
+// // const n2: string = '0.5';
+// const n2: string = '10';
+// const bd2: BigDecimal = NewBigDecimal_FromString(n2, 0);
 // for (let i = 0; i < 20; i++) {
 // 	// Multiply by 0.1 each time.
-// 	bd1 = multiply(bd1, bd2);
+// 	// bd1 = divide_fixed(bd1, bd2);
+// 	bd1 = divide_floating(bd1, bd2);
+// 	// bd1 = multiply_floating(bd1, bd2);
 // 	printInfo(bd1);
+// 	// console.log("Effective digits: ", getEffectiveDecimalPlaces(bd1));
 // }
 
 
