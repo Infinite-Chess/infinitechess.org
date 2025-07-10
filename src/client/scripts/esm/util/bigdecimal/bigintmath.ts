@@ -113,6 +113,8 @@ function log10(bigint: bigint): number {
 // }
 
 // /**
+//  * OLD
+//  *
 //  * Returns the bigint in binary form, **exactly** like how computers store them,
 //  * in two's complement notation. Negative values have all their bits flipped, and then added 1.
 //  * To multiply by -1, reverse all the bits, and add 1. This works both ways.
@@ -150,19 +152,8 @@ function log10(bigint: bigint): number {
 //     return binaryString;
 // }
 
-/**
- * NEW FUNCTION WITH HELP OF GEMINI
- * 
- * Returns a bigint's binary representation in a standardized, debug-friendly format.
- * - It correctly displays negative numbers using two's complement.
- * - It automatically calculates the necessary bit-width and pads it to the nearest byte (8 bits).
- * - It adds separators for readability and an annotation for context.
- * This is the recommended method for reliably inspecting the bits of any bigint.
- *
- * @param bigint The bigint to inspect.
- * @returns A formatted binary string ideal for debugging.
- */
-function toDebugBinaryString(bigint: bigint): string {
+/** Returns a bigint's binary representation in a easy to read string format. */
+function toDebugBinaryString(bigint: bigint): string { 
 	// 1. Handle the zero case cleanly.
 	if (bigint === ZERO) return "0b0000_0000 (8-bit, 1-byte)";
 
