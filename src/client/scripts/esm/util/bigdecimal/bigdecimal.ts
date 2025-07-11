@@ -378,10 +378,10 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * This provides a balance of precision and predictable behavior.
  * @param bd1 The first factor.
  * @param bd2 The second factor.
- * @returns The product of bd1 and bd2.
+ * @returns The product of bd1 and bd2, with the same precision as the first factor.
  */
 function multiply_fixed(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
-	const targetDivex = Math.max(bd1.divex, bd2.divex);
+	const targetDivex = bd1.divex;
 
 	// The true divex of the raw product is (bd1.divex + bd2.divex).
 	// We must shift the raw product to scale it down to the targetDivex.
@@ -416,38 +416,34 @@ function multiply_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits?: numb
  * @param bd1 - The dividend.
  * @param bd2 - The divisor.
  * @param [workingPrecision=DEFAULT_WORKING_PRECISION] - Extra bits for internal calculation to prevent rounding errors.
- * @returns The quotient of bd1 and bd2 (bd1 / bd2).
+ * @returns The quotient of bd1 and bd2 (bd1 / bd2), with the same precision as the dividend.
  */
 function divide_fixed(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
 	if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
 
-	// 1. Determine the predictable, final divex for the result.
-	const targetDivex = Math.max(bd1.divex, bd2.divex);
-
-	// 2. Calculate the total shift needed for the dividend. This includes:
-	//    - The shift to get to the target precision.
+	// 1. Calculate the total shift needed for the dividend. This includes:
 	//    - The extra "workingPrecision" to ensure accuracy during division.
-	const shift = BigInt(targetDivex - bd1.divex + bd2.divex + workingPrecision);
+	const shift = BigInt(bd2.divex + workingPrecision);
 
-	// 3. Scale the dividend up.
+	// 2. Scale the dividend up.
 	const scaledDividend = bd1.bigint << shift;
 
-	// 4. Perform the integer division. The result has `workingPrecision` extra bits.
+	// 3. Perform the integer division. The result has `workingPrecision` extra bits.
 	const quotient = scaledDividend / bd2.bigint;
 	
-	// 5. Round the result by shifting it back down by `workingPrecision`.
+	// 4. Round the result by shifting it back down by `workingPrecision`.
 	//    We add "0.5" before truncating to round half towards positive infinity.
 	const workingPrecisionBigInt = BigInt(workingPrecision);
 	if (workingPrecisionBigInt <= ZERO) return {
 		bigint: quotient,
-		divex: targetDivex
+		divex: bd1.divex
 	};
 	const half = ONE << (workingPrecisionBigInt - ONE);
 	const finalQuotient = (quotient + half) >> workingPrecisionBigInt;
 
 	return {
 		bigint: finalQuotient,
-		divex: targetDivex
+		divex: bd1.divex
 	};
 }
 
