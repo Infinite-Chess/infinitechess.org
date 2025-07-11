@@ -474,7 +474,7 @@ function divide_floating(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: num
  * Calculates the modulo between two BigDecimals.
  * @param bd1 The dividend.
  * a@param bd2 The divisor.
- * @returns The remainder as a new BigDecimal.
+ * @returns The remainder as a new BigDecimal, with the same precision as the dividend.
  */
 function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
     if (bd2.bigint === ZERO) throw new Error("Cannot perform modulo operation with a zero divisor.");
