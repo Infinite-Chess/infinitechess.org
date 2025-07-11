@@ -381,17 +381,29 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * @returns The product of bd1 and bd2, with the same precision as the first factor.
  */
 function multiply_fixed(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
-	const targetDivex = bd1.divex;
-
 	// The true divex of the raw product is (bd1.divex + bd2.divex).
-	// We must shift the raw product to scale it down to the targetDivex.
-	const shiftAmount = BigInt((bd1.divex + bd2.divex) - targetDivex);
+	// We must shift the raw product to scale it down to the targetDivex (first factor).
+	const shiftAmount = BigInt(bd2.divex);
 
-	const product = (bd1.bigint * bd2.bigint) >> shiftAmount;
+	// First, get the raw product of the internal bigints.
+	const rawProduct = bd1.bigint * bd2.bigint;
+	let product: bigint;
+
+	// Now, apply rounding only if precision is being reduced.
+	if (shiftAmount > ZERO) {
+		// We are reducing precision, so we must round.
+		// Add "0.5" at the correct scale before truncating to
+		// implement "round half towards positive infinity".
+		const half = ONE << (shiftAmount - ONE);
+		product = (rawProduct + half) >> shiftAmount;
+	} else {
+		// No precision is being lost, so no rounding is necessary.
+		product = rawProduct;
+	}
 
 	return {
 		bigint: product,
-		divex: targetDivex,
+		divex: bd1.divex,
 	};
 }
 
