@@ -46,8 +46,9 @@ interface BigDecimal {
 	 */
     bigint: bigint,
 	/**
-	 * The inverse exponent. Directly represents how many bits of the
-	 * bigint are utilized to store the decimal portion of the Big Decimal.
+	 * The inverse (or negative) exponent. Directly represents how many bits of the
+	 * bigint are utilized to store the decimal portion of the Big Decimal,
+	 * or tells you what position the decimal point is at from the right.
 	 */
     divex: number,
 }
@@ -470,6 +471,43 @@ function divide_floating(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: num
 }
 
 /**
+ * Calculates the modulo between two BigDecimals.
+ * @param bd1 The dividend.
+ * a@param bd2 The divisor.
+ * @returns The remainder as a new BigDecimal.
+ */
+function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
+    if (bd2.bigint === ZERO) throw new Error("Cannot perform modulo operation with a zero divisor.");
+
+    // The result's scale is determined by the dividend.
+    const targetDivex = bd1.divex;
+
+    let bigint1 = bd1.bigint;
+    let bigint2 = bd2.bigint;
+
+    // We must bring bd2 to the same scale as bd1.
+    const divexDifference = targetDivex - bd2.divex;
+
+    if (divexDifference > 0) {
+        // bd2 has less precision, scale it up (left shift).
+        bigint2 <<= BigInt(divexDifference);
+    } else if (divexDifference < 0) {
+        // bd2 has more precision, scale it down (right shift).
+        // This involves truncation, which is standard for modulo operations.
+        bigint2 >>= BigInt(-divexDifference);
+    }
+
+    // Now that both bigints are at the same scale as the dividend,
+    // we can use the native remainder operator.
+    const remainderBigInt = bigint1 % bigint2;
+
+    return {
+        bigint: remainderBigInt,
+        divex: targetDivex, // The result's divex matches the dividend's.
+    };
+}
+
+/**
  * Returns a new BigDecimal that is the absolute value of the provided BigDecimal.
  * @param bd - The BigDecimal.
  * @returns A new BigDecimal representing the absolute value.
@@ -884,6 +922,7 @@ export default {
 	multiply_floating,
 	divide_fixed,
 	divide_floating,
+	mod,
 	abs,
 	clone,
 	setExponent,
