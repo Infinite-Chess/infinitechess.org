@@ -7,7 +7,6 @@
 import type { Coords } from '../../chess/util/coordutil.js';
 import type { Piece } from '../../chess/util/boardutil.js';
 import type { Color } from '../../util/math.js';
-import type { RawType } from '../../chess/util/typeutil.js';
 
 import arrows from './arrows/arrows.js';
 import { createModel } from './buffermodel.js';
@@ -32,7 +31,6 @@ import statustext from '../gui/statustext.js';
 
 // Type Definitions -----------------------------------------------------------------------
 
-
 /** Represents an animation segment between two waypoints. */
 interface AnimationSegment {
 	start: Coords;
@@ -48,8 +46,10 @@ interface Animation {
 	path: Coords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
-	/** The piece captured, if one was captured. This will be rendered in place for the during of the animation. */
-	captured?: Piece;
+	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures */
+	showKeyframes: Map<number, Piece[]>;
+	/** Pieces that need to be hidded, up until a set path point is reached. Usually needed for reversing captures and hiding the moved piece */
+	hideKeyframes: Map<number, Coords[]>;
 	/** The time the animation started. */
 	startTimeMillis: number;
 	/** The duration of the animation. */
@@ -132,7 +132,7 @@ let DEBUG = false;
  * @param instant - If true, the piece was dropped and should not be animated. The SOUND will still be played.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
-function animatePiece(type: number, path: Coords[], captured?: Piece, instant?: boolean, resetAnimations: boolean = true): void {
+function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, Piece[]>, hideKeyframes: Map<number, Coords[]>, instant?: boolean, resetAnimations: boolean = true): void {
 	if (path.length < 2) throw new Error("Animation requires at least 2 waypoints");
 	if (resetAnimations) clearAnimations(true);
 
@@ -142,19 +142,26 @@ function animatePiece(type: number, path: Coords[], captured?: Piece, instant?: 
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
+	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.RESOLUTION, path.length);
+	showKeyframes = stretchKeyframesForResolution(showKeyframes, SPLINES.RESOLUTION, path.length);
+
+	const typesInvolved = new Set([typeutil.getRawType(type)]);
+	showKeyframes.forEach(w => w.forEach(p => typesInvolved.add(typeutil.getRawType(p.type))));
+
 	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
-	if (typeutil.SVGLESS_TYPES.some((typeNoSVG: RawType) => {
-		return typeutil.getRawType(type) === typeNoSVG || (captured !== undefined && typeutil.getRawType(captured.type) === typeNoSVG);
-	})) instant = true; // But, still instant animate it so that the sound plays
+	if (new Set([...typesInvolved, ...typeutil.SVGLESS_TYPES]).size < typesInvolved.size + typeutil.SVGLESS_TYPES.size) instant = true; // But, still instant animate it so that the sound plays
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
-	if (instant) return playSoundOfDistance(totalDistance, captured !== undefined);
+	if (instant) return playSoundOfDistance(totalDistance, showKeyframes.size !== 0);
+
+	
 
 	const newAnimation: Animation = {
 		type,
 		path: path_HighResolution,
 		segments,
-		captured,
+		showKeyframes,
+		hideKeyframes,
 		startTimeMillis: performance.now(),
 		durationMillis: calculateAnimationDuration(totalDistance, path_HighResolution.length),
 		totalDistance,
@@ -190,6 +197,14 @@ function toggleDebug() {
 
 // Helper Functions -----------------------------------------------------------
 
+function stretchKeyframesForResolution<T>(keyframes: Map<number, T>, resolution: number, waypointCount: number): Map<number, T> {
+	if (waypointCount < 3) return keyframes;
+	const t: Map<number, T> = new Map();
+	for (const [k, v] of keyframes) {
+		t.set(k * resolution, v);
+	}
+	return t;
+}
 
 /** Creates the segments between each waypoint. */
 function createAnimationSegments(waypoints: Coords[]): AnimationSegment[] {
@@ -240,7 +255,7 @@ function scheduleAnimationRemoval(animation: Animation) {
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(animation: Animation) {
-	playSoundOfDistance(animation.totalDistance, animation.captured !== undefined);
+	playSoundOfDistance(animation.totalDistance, animation.showKeyframes.size !== 0);
 	animation.soundPlayed = true;
 }
 
@@ -264,10 +279,11 @@ function update() {
 
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
-	const animationCurrentCoords = getCurrentAnimationPosition(animation);
+	const segment = getCurrentSegment(animation);
+	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.shiftArrow(1, true, c)));
+	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segment);
 	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
-	// Add the captured piece only after we've shifted the piece that captured it
-	if (animation.captured !== undefined) arrows.shiftArrow(animation.captured.type, true, undefined, animation.captured.coords);
+	forEachActiveKeyframe(animation.showKeyframes, segment, pieces => pieces.forEach(p => arrows.shiftArrow(p.type, true, undefined, p.coords)));
 }
 
 
@@ -283,12 +299,14 @@ function renderTransparentSquares(): void {
 
 	const color: Color = [0, 0, 0, 0];
 	// Calls map() on each animation, and then flats() the results into a single array.
-	const data = animations.flatMap(animation => 
-		shapes.getTransformedDataQuad_Color_FromCoord(
-			animation.path[animation.path.length - 1], 
-			color
-		)
-	);
+	const data = animations.flatMap(animation => {
+		const hidesData: number[] = [];
+		const segment = getCurrentSegment(animation);
+		forEachActiveKeyframe(animation.hideKeyframes, segment, v => {
+			v.forEach(coord => hidesData.push(...shapes.getTransformedDataQuad_Color_FromCoord(coord, color)));
+		});
+		return hidesData; 
+	});
 
 	createModel(data, 2, "TRIANGLES", true)
 		.render([0, 0, TRANSPARENT_SQUARE_Z]);
@@ -302,9 +320,12 @@ function renderAnimations() {
 
 	// Calls map() on each animation, and then flats() the results into a single array.
 	const data = animations.flatMap(animation => {
-		const currentPos = getCurrentAnimationPosition(animation);
+		const segment = getCurrentSegment(animation);
+		const currentPos = getCurrentAnimationPosition(animation.segments, segment);
 		const piecesData: number[] = [];
-		if (animation.captured) piecesData.push(...generatePieceData(animation.captured.type, animation.captured.coords)); // Render the captured piece
+		forEachActiveKeyframe(animation.showKeyframes, segment, pieces => {
+			pieces.forEach(p => piecesData.push(...generatePieceData(p.type, p.coords)));
+		});
 		piecesData.push(...generatePieceData(animation.type, currentPos)); // Render the moving piece
 		return piecesData;
 	});
@@ -347,13 +368,15 @@ function calculateBoardPosition(coords: Coords) {
 
 // Animation Calculations -----------------------------------------------------
 
-
 /**
- * Returns the coordinate the animation's piece should be rendered this frame.
- * @param animation - The animation to calculate the position for.
- * @param maxDistB4Teleport - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
+ * Gets the current progress in float form
+ * The whole number is the segment that has been reached
+ * The decimal component is the progress in that segment
+ * @param animation 
+ * @param maxDistB4Teleport 
+ * @returns the animation progress
  */
-function getCurrentAnimationPosition(animation: Animation, maxDistB4Teleport = MAX_DISTANCE_BEFORE_TELEPORT): Coords {
+function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANCE_BEFORE_TELEPORT): number {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
 	const t = Math.min(elapsed / animation.durationMillis, 1);
@@ -363,8 +386,18 @@ function getCurrentAnimationPosition(animation: Animation, maxDistB4Teleport = M
 	return calculateInterpolatedPosition(animation, easedT, maxDistB4Teleport);
 }
 
+/**
+ * Calculates the position of the moved piece from the progress of the animation.
+ * @returns the coordinate the animation's piece should be rendered this frame.
+ */
+function getCurrentAnimationPosition(segments: AnimationSegment[], segmentNum: number): Coords {
+	if (segmentNum >= segments.length) return segments[segments.length - 1]!.end;
+	const segment = segments[Math.floor(segmentNum)]!;
+	return coordutil.lerpCoords(segment.start, segment.end, segmentNum % 1);
+}
+
 /** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
-function calculateInterpolatedPosition(animation: Animation, easedProgress: number, MAX_DISTANCE: number): Coords {
+function calculateInterpolatedPosition(animation: Animation, easedProgress: number, MAX_DISTANCE: number): number {
 	const targetDistance = animation.totalDistance <= MAX_DISTANCE ? easedProgress * animation.totalDistance : calculateTeleportDistance(animation.totalDistance, easedProgress, MAX_DISTANCE);
 	return findPositionInSegments(animation.segments, targetDistance);
 }
@@ -379,21 +412,32 @@ function calculateTeleportDistance(totalDistance: number, easedProgress: number,
 }
 
 /** Finds the position of the piece at a certain distance along the path. */
-function findPositionInSegments(segments: AnimationSegment[], targetDistance: number): Coords {
+function findPositionInSegments(segments: AnimationSegment[], targetDistance: number): number {
 	let accumulated = 0;
-	for (const segment of segments) {
+	for (const [i, segment] of segments.entries()) {
 		if (targetDistance <= accumulated + segment.distance) {
 			const segmentProgress = (targetDistance - accumulated) / segment.distance;
-			return coordutil.lerpCoords(segment.start, segment.end, segmentProgress);
+			return segmentProgress + i;
 		}
 		accumulated += segment.distance;
 	}
-	return segments[segments.length - 1]!.end;
+	return segments.length;
 }
 
 
 // -----------------------------------------------------------------------------------------
 
+
+/**
+ * Iterates over all keyframes that have not been passed by the animation
+ */
+// eslint-disable-next-line no-unused-vars
+function forEachActiveKeyframe<T>(keyframes: Map<number, T>, segment: number, callback: (value: T) => void): void {
+	for (const [k, v] of keyframes) {
+		if (k < segment) continue;
+		callback(v);
+	}
+}
 
 export default {
 	animations,
@@ -403,5 +447,7 @@ export default {
 	update,
 	renderTransparentSquares,
 	renderAnimations,
+	getCurrentSegment,
 	getCurrentAnimationPosition,
+	forEachActiveKeyframe,
 };

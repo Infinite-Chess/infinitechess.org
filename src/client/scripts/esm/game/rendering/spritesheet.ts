@@ -61,7 +61,7 @@ function getSpritesheetDataPieceWidth() {
 
 function getSpritesheetDataTexLocation(type: number): Coords {
 	if (!spritesheetData) throw new Error("Should not be getting texture locations when the spritesheet is not loaded!");
-	if (!spritesheetData!.texLocs[type]) throw Error("No texture location for piece type: " + type);
+	if (!spritesheetData!.texLocs[type]) throw new Error("No texture location for piece type: " + type);
 	return spritesheetData!.texLocs[type]!;
 }
 
@@ -70,7 +70,7 @@ async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Boar
 
 	// Filter our voids from all types in the game.
 	// @ts-ignore
-	const types: number[] = boardsim.existingTypes.filter(type => !typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type)));
+	const types: number[] = boardsim.existingTypes.filter(type => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type)));
 
 	// Convert each SVG element to an Image
 	const readyImages: HTMLImageElement[] = types.map(t => imagecache.getPieceImage(t));

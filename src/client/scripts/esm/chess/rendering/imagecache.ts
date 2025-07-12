@@ -36,7 +36,7 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
 	// console.log("Initializing image cache for game...");
 
 	// 1. Determine required piece types (excluding SVG-less ones)
-	const types = boardsim.existingTypes.filter((t: number) => !(typeutil.getRawType(t) in typeutil.SVGLESS_TYPES) );
+	const types = boardsim.existingTypes.filter((t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)) );
 	if (types.length === 0) return console.log("No piece types with SVGs found for this game. Image cache remains empty.");
 
 	// console.log("Required piece types for image cache:", types);
