@@ -202,17 +202,72 @@ function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAUL
 }
 
 /**
- * Creates a Big Decimal from a javascript number (double)
+ * Creates a Big Decimal from a javascript number (double) by directly
+ * interpreting its IEEE 754 binary representation extremely fast.
  * @param num - The number to convert.
- * @param [workingPrecision=DEFAULT_WORKING_PRECISION] The amount of extra precision to add.
+ * @param [precision=DEFAULT_WORKING_PRECISION] The target divex for the result.
  * @returns A new BigDecimal with the value from the number.
  */
 function NewBigDecimal_FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
-	if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
 	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
+    
+	// 1. Handle non-finite and zero cases first.
+	if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
+    if (num === 0) return { bigint: ZERO, divex: precision };
 
-	const fullDecimalString = toFullDecimalString(num);
-	return NewBigDecimal_FromString(fullDecimalString, precision);
+
+    // 2. Extract the raw 64 bits of the float into a BigInt.
+    // This is a standard and fast technique to get the binary components.
+    const buffer = new ArrayBuffer(8);
+    const floatView = new Float64Array(buffer);
+    const intView = new BigInt64Array(buffer);
+    floatView[0] = num;
+    const bits = intView[0]!;
+
+    // 3. Parse the sign, exponent, and mantissa from the bits.
+    const sign = (bits < ZERO) ? -ONE : ONE;
+    const exponent = Number((bits >> 52n) & 0x7FFn);
+    const mantissa = bits & 0xFFFFFFFFFFFFFn;
+
+    let initialBigInt: bigint;
+    let initialDivex: number;
+
+    if (exponent === 0) {
+        // Subnormal number. The implicit leading bit is 0.
+        // The effective exponent is -1022, and we scale by the mantissa bits (52).
+        initialBigInt = sign * mantissa;
+        initialDivex = 1022 + 52; // 1074
+    } else {
+        // Normal number. The implicit leading bit is 1.
+        // Add the implicit leading bit to the mantissa to get the full significand.
+        const significand = (ONE << 52n) | mantissa;
+        initialBigInt = sign * significand;
+        // The exponent is biased by 1023. We also account for the 52 fractional
+        // bits in the significand to get the final scaling factor.
+        initialDivex = 1023 - exponent + 52;
+    }
+    
+    // 4. Adjust the precision to match the user's request.
+    // This is identical to the logic in `setExponent`.
+    const difference = initialDivex - precision;
+
+    if (difference === 0) {
+        // Precision already matches.
+        return { bigint: initialBigInt, divex: initialDivex };
+    } else if (difference < 0) {
+        // We are increasing precision (shifting left).
+        return {
+            bigint: initialBigInt << BigInt(-difference),
+            divex: precision,
+        };
+    } else {
+        // We are decreasing precision (shifting right), so we must round.
+        const half = ONE << BigInt(difference - 1);
+        return {
+            bigint: (initialBigInt + half) >> BigInt(difference),
+            divex: precision
+        };
+    }
 }
 
 /**
