@@ -46,8 +46,9 @@ interface BigDecimal {
 	 */
     bigint: bigint,
 	/**
-	 * The inverse exponent. Directly represents how many bits of the
-	 * bigint are utilized to store the decimal portion of the Big Decimal.
+	 * The inverse (or negative) exponent. Directly represents how many bits of the
+	 * bigint are utilized to store the decimal portion of the Big Decimal,
+	 * or tells you what position the decimal point is at from the right.
 	 */
     divex: number,
 }
@@ -201,17 +202,72 @@ function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAUL
 }
 
 /**
- * Creates a Big Decimal from a javascript number (double)
+ * Creates a Big Decimal from a javascript number (double) by directly
+ * interpreting its IEEE 754 binary representation extremely fast.
  * @param num - The number to convert.
- * @param [workingPrecision=DEFAULT_WORKING_PRECISION] The amount of extra precision to add.
+ * @param [precision=DEFAULT_WORKING_PRECISION] The target divex for the result.
  * @returns A new BigDecimal with the value from the number.
  */
 function NewBigDecimal_FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
-	if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
 	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
+    
+	// 1. Handle non-finite and zero cases first.
+	if (!isFinite(num)) throw new Error(`Cannot create a BigDecimal from a non-finite number. Received: ${num}`);
+    if (num === 0) return { bigint: ZERO, divex: precision };
 
-	const fullDecimalString = toFullDecimalString(num);
-	return NewBigDecimal_FromString(fullDecimalString, precision);
+
+    // 2. Extract the raw 64 bits of the float into a BigInt.
+    // This is a standard and fast technique to get the binary components.
+    const buffer = new ArrayBuffer(8);
+    const floatView = new Float64Array(buffer);
+    const intView = new BigInt64Array(buffer);
+    floatView[0] = num;
+    const bits = intView[0]!;
+
+    // 3. Parse the sign, exponent, and mantissa from the bits.
+    const sign = (bits < ZERO) ? -ONE : ONE;
+    const exponent = Number((bits >> 52n) & 0x7FFn);
+    const mantissa = bits & 0xFFFFFFFFFFFFFn;
+
+    let initialBigInt: bigint;
+    let initialDivex: number;
+
+    if (exponent === 0) {
+        // Subnormal number. The implicit leading bit is 0.
+        // The effective exponent is -1022, and we scale by the mantissa bits (52).
+        initialBigInt = sign * mantissa;
+        initialDivex = 1022 + 52; // 1074
+    } else {
+        // Normal number. The implicit leading bit is 1.
+        // Add the implicit leading bit to the mantissa to get the full significand.
+        const significand = (ONE << 52n) | mantissa;
+        initialBigInt = sign * significand;
+        // The exponent is biased by 1023. We also account for the 52 fractional
+        // bits in the significand to get the final scaling factor.
+        initialDivex = 1023 - exponent + 52;
+    }
+    
+    // 4. Adjust the precision to match the user's request.
+    // This is identical to the logic in `setExponent`.
+    const difference = initialDivex - precision;
+
+    if (difference === 0) {
+        // Precision already matches.
+        return { bigint: initialBigInt, divex: initialDivex };
+    } else if (difference < 0) {
+        // We are increasing precision (shifting left).
+        return {
+            bigint: initialBigInt << BigInt(-difference),
+            divex: precision,
+        };
+    } else {
+        // We are decreasing precision (shifting right), so we must round.
+        const half = ONE << BigInt(difference - 1);
+        return {
+            bigint: (initialBigInt + half) >> BigInt(difference),
+            divex: precision
+        };
+    }
 }
 
 /**
@@ -240,7 +296,7 @@ function NewBigDecimal_FromBigInt(num: bigint, precision: number = DEFAULT_WORKI
  */
 function toFullDecimalString(num: number): string {
 	// 1. Input Validation: Fail fast for non-finite numbers.
-	if (!Number.isFinite(num)) throw new Error(`Cannot decimal-stringify a non-finite number. Received: ${num}`);
+	if (!isFinite(num)) throw new Error(`Cannot decimal-stringify a non-finite number. Received: ${num}`);
 
 	// 2. Optimization: Handle numbers that don't need conversion.
 	const numStr: string = String(num);
@@ -377,20 +433,32 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * This provides a balance of precision and predictable behavior.
  * @param bd1 The first factor.
  * @param bd2 The second factor.
- * @returns The product of bd1 and bd2.
+ * @returns The product of bd1 and bd2, with the same precision as the first factor.
  */
 function multiply_fixed(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
-	const targetDivex = Math.max(bd1.divex, bd2.divex);
-
 	// The true divex of the raw product is (bd1.divex + bd2.divex).
-	// We must shift the raw product to scale it down to the targetDivex.
-	const shiftAmount = BigInt((bd1.divex + bd2.divex) - targetDivex);
+	// We must shift the raw product to scale it down to the targetDivex (first factor).
+	const shiftAmount = BigInt(bd2.divex);
 
-	const product = (bd1.bigint * bd2.bigint) >> shiftAmount;
+	// First, get the raw product of the internal bigints.
+	const rawProduct = bd1.bigint * bd2.bigint;
+	let product: bigint;
+
+	// Now, apply rounding only if precision is being reduced.
+	if (shiftAmount > ZERO) {
+		// We are reducing precision, so we must round.
+		// Add "0.5" at the correct scale before truncating to
+		// implement "round half towards positive infinity".
+		const half = ONE << (shiftAmount - ONE);
+		product = (rawProduct + half) >> shiftAmount;
+	} else {
+		// No precision is being lost, so no rounding is necessary.
+		product = rawProduct;
+	}
 
 	return {
 		bigint: product,
-		divex: targetDivex,
+		divex: bd1.divex,
 	};
 }
 
@@ -415,38 +483,34 @@ function multiply_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits?: numb
  * @param bd1 - The dividend.
  * @param bd2 - The divisor.
  * @param [workingPrecision=DEFAULT_WORKING_PRECISION] - Extra bits for internal calculation to prevent rounding errors.
- * @returns The quotient of bd1 and bd2 (bd1 / bd2).
+ * @returns The quotient of bd1 and bd2 (bd1 / bd2), with the same precision as the dividend.
  */
 function divide_fixed(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
 	if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
 
-	// 1. Determine the predictable, final divex for the result.
-	const targetDivex = Math.max(bd1.divex, bd2.divex);
-
-	// 2. Calculate the total shift needed for the dividend. This includes:
-	//    - The shift to get to the target precision.
+	// 1. Calculate the total shift needed for the dividend. This includes:
 	//    - The extra "workingPrecision" to ensure accuracy during division.
-	const shift = BigInt(targetDivex - bd1.divex + bd2.divex + workingPrecision);
+	const shift = BigInt(bd2.divex + workingPrecision);
 
-	// 3. Scale the dividend up.
+	// 2. Scale the dividend up.
 	const scaledDividend = bd1.bigint << shift;
 
-	// 4. Perform the integer division. The result has `workingPrecision` extra bits.
+	// 3. Perform the integer division. The result has `workingPrecision` extra bits.
 	const quotient = scaledDividend / bd2.bigint;
 	
-	// 5. Round the result by shifting it back down by `workingPrecision`.
+	// 4. Round the result by shifting it back down by `workingPrecision`.
 	//    We add "0.5" before truncating to round half towards positive infinity.
 	const workingPrecisionBigInt = BigInt(workingPrecision);
 	if (workingPrecisionBigInt <= ZERO) return {
 		bigint: quotient,
-		divex: targetDivex
+		divex: bd1.divex
 	};
 	const half = ONE << (workingPrecisionBigInt - ONE);
 	const finalQuotient = (quotient + half) >> workingPrecisionBigInt;
 
 	return {
 		bigint: finalQuotient,
-		divex: targetDivex
+		divex: bd1.divex
 	};
 }
 
@@ -467,6 +531,43 @@ function divide_floating(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: num
 	const quotient = scaledDividend / bd2.bigint;
 	const newDivex = bd1.divex + workingPrecision;
 	return normalize({ bigint: quotient, divex: newDivex }, mantissaBits);
+}
+
+/**
+ * Calculates the modulo between two BigDecimals.
+ * @param bd1 The dividend.
+ * a@param bd2 The divisor.
+ * @returns The remainder as a new BigDecimal, with the same precision as the dividend.
+ */
+function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
+    if (bd2.bigint === ZERO) throw new Error("Cannot perform modulo operation with a zero divisor.");
+
+    // The result's scale is determined by the dividend.
+    const targetDivex = bd1.divex;
+
+    let bigint1 = bd1.bigint;
+    let bigint2 = bd2.bigint;
+
+    // We must bring bd2 to the same scale as bd1.
+    const divexDifference = targetDivex - bd2.divex;
+
+    if (divexDifference > 0) {
+        // bd2 has less precision, scale it up (left shift).
+        bigint2 <<= BigInt(divexDifference);
+    } else if (divexDifference < 0) {
+        // bd2 has more precision, scale it down (right shift).
+        // This involves truncation, which is standard for modulo operations.
+        bigint2 >>= BigInt(-divexDifference);
+    }
+
+    // Now that both bigints are at the same scale as the dividend,
+    // we can use the native remainder operator.
+    const remainderBigInt = bigint1 % bigint2;
+
+    return {
+        bigint: remainderBigInt,
+        divex: targetDivex, // The result's divex matches the dividend's.
+    };
 }
 
 /**
@@ -627,13 +728,28 @@ function toBigInt(bd: BigDecimal): bigint {
 }
 
 /**
+ * Most efficient method to convert a BigDecimal to a number.
+ * USE IF YOU ARE SURE the BigDecimal's mantissa (bigint property) will
+ * not be intermediately become Infinity when cast to a number,
+ * AND you are sure the divex is <= 1023! Otherwise, use {@link toExactNumber}.
+ * @param bd - The BigDecimal to convert.
+ * @returns The value as a standard javascript number.
+ */
+function toNumber(bd: BigDecimal) {
+	if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
+	const mantissaAsNumber = Number(bd.bigint);
+	if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the mantissa is over Number.MAX_VALUE!");
+	return mantissaAsNumber / powersOfTwoList[bd.divex]!;
+}
+
+/**
  * Converts a BigDecimal to a number (javascript double).
  * This conversion is lossy if the BigDecimal's precision exceeds that of a 64-bit float.
  * If the value exceeds Number.MAX_VALUE, it will correctly return Infinity or -Infinity.
  * @param bd - The BigDecimal to convert.
  * @returns The value as a standard javascript number.
  */
-function toNumber(bd: BigDecimal): number {
+function toExactNumber(bd: BigDecimal): number {
 	const divexBigInt = BigInt(bd.divex);
 
 	// 1. Separate the integer part without losing any precision yet.
@@ -648,7 +764,7 @@ function toNumber(bd: BigDecimal): number {
 	const numberResult = Number(integerPart);
 
 	// If the integer part is already +/- Infinity, the fractional part is irrelevant.
-	if (!Number.isFinite(numberResult)) return numberResult;
+	if (!isFinite(numberResult)) return numberResult;
 	
 	// 4. Convert the fractional part to a number.
 	// We use a MAXIMUM precision (1023 bits) to avoid overflow during this cast.
@@ -806,6 +922,7 @@ function printInfo(bd: BigDecimal): void {
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
 	console.log(`Converted to Exact String: ${toExactString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to String: ${toString(bd)}`);
+	console.log(`Converted to Exact Number: ${toExactNumber(bd)}`);
 	console.log(`Converted to Number: ${toNumber(bd)}`);
 	console.log(`Converted to BigInt: ${toBigInt(bd)}`);
 	console.log('----------------------------');
@@ -884,12 +1001,14 @@ export default {
 	multiply_floating,
 	divide_fixed,
 	divide_floating,
+	mod,
 	abs,
 	clone,
 	setExponent,
 	compare,
 	// Conversions and Utility
 	toBigInt,
+	toExactNumber,
 	toNumber,
 	toExactString,
 	toString,
