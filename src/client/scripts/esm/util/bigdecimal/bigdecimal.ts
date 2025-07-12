@@ -296,7 +296,7 @@ function NewBigDecimal_FromBigInt(num: bigint, precision: number = DEFAULT_WORKI
  */
 function toFullDecimalString(num: number): string {
 	// 1. Input Validation: Fail fast for non-finite numbers.
-	if (!Number.isFinite(num)) throw new Error(`Cannot decimal-stringify a non-finite number. Received: ${num}`);
+	if (!isFinite(num)) throw new Error(`Cannot decimal-stringify a non-finite number. Received: ${num}`);
 
 	// 2. Optimization: Handle numbers that don't need conversion.
 	const numStr: string = String(num);
@@ -728,13 +728,28 @@ function toBigInt(bd: BigDecimal): bigint {
 }
 
 /**
+ * Most efficient method to convert a BigDecimal to a number.
+ * USE IF YOU ARE SURE the BigDecimal's mantissa (bigint property) will
+ * not be intermediately become Infinity when cast to a number,
+ * AND you are sure the divex is <= 1023! Otherwise, use {@link toExactNumber}.
+ * @param bd - The BigDecimal to convert.
+ * @returns The value as a standard javascript number.
+ */
+function toNumber(bd: BigDecimal) {
+	if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
+	const mantissaAsNumber = Number(bd.bigint);
+	if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the mantissa is over Number.MAX_VALUE!");
+	return mantissaAsNumber / powersOfTwoList[bd.divex]!;
+}
+
+/**
  * Converts a BigDecimal to a number (javascript double).
  * This conversion is lossy if the BigDecimal's precision exceeds that of a 64-bit float.
  * If the value exceeds Number.MAX_VALUE, it will correctly return Infinity or -Infinity.
  * @param bd - The BigDecimal to convert.
  * @returns The value as a standard javascript number.
  */
-function toNumber(bd: BigDecimal): number {
+function toExactNumber(bd: BigDecimal): number {
 	const divexBigInt = BigInt(bd.divex);
 
 	// 1. Separate the integer part without losing any precision yet.
@@ -749,7 +764,7 @@ function toNumber(bd: BigDecimal): number {
 	const numberResult = Number(integerPart);
 
 	// If the integer part is already +/- Infinity, the fractional part is irrelevant.
-	if (!Number.isFinite(numberResult)) return numberResult;
+	if (!isFinite(numberResult)) return numberResult;
 	
 	// 4. Convert the fractional part to a number.
 	// We use a MAXIMUM precision (1023 bits) to avoid overflow during this cast.
@@ -907,6 +922,7 @@ function printInfo(bd: BigDecimal): void {
 	// console.log(`Bit length: ${MathBigDec.getBitLength(bd)}`)
 	console.log(`Converted to Exact String: ${toExactString(bd)}`); // This is also its EXACT value.
 	console.log(`Converted to String: ${toString(bd)}`);
+	console.log(`Converted to Exact Number: ${toExactNumber(bd)}`);
 	console.log(`Converted to Number: ${toNumber(bd)}`);
 	console.log(`Converted to BigInt: ${toBigInt(bd)}`);
 	console.log('----------------------------');
@@ -992,6 +1008,7 @@ export default {
 	compare,
 	// Conversions and Utility
 	toBigInt,
+	toExactNumber,
 	toNumber,
 	toExactString,
 	toString,
