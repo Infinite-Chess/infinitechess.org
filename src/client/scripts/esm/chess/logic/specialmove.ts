@@ -95,9 +95,7 @@ function pawns(boardsim: Board, piece: Piece, move: Move) {
 
 	// Delete the piece captured
 
-	if (capturedPiece) {
-		boardchanges.queueCapture(moveChanges, true, capturedPiece);
-	}
+	if (capturedPiece) boardchanges.queueCapture(moveChanges, true, capturedPiece);
 	boardchanges.queueMovePiece(moveChanges, true, piece, move.endCoords);
 
 	if (promotionTag) {
@@ -116,7 +114,7 @@ function roses(boardsim: Board, piece: Piece, move: Move) {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
 	// Delete the piece captured
-	if (capturedPiece !== undefined) boardchanges.queueCapture(move.changes, true, capturedPiece);
+	if (capturedPiece) boardchanges.queueCapture(move.changes, true, capturedPiece);
 	boardchanges.queueMovePiece(move.changes, true, piece, move.endCoords, move.path);
 
 	// Special move was executed!
