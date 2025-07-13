@@ -17,7 +17,7 @@ import coordutil from '../../chess/util/coordutil.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import sound from '../misc/sound.js';
-import typeutil from '../../chess/util/typeutil.js';
+import typeutil, { RawType } from '../../chess/util/typeutil.js';
 // @ts-ignore
 import bufferdata from './bufferdata.js';
 // @ts-ignore
@@ -46,9 +46,9 @@ interface Animation {
 	path: Coords[];
 	/** The segments between each waypoint */
 	segments: AnimationSegment[];
-	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures */
+	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures. 0 is the start of the path. */
 	showKeyframes: Map<number, Piece[]>;
-	/** Pieces that need to be hidded, up until a set path point is reached. Usually needed for reversing captures and hiding the moved piece */
+	/** Pieces that need to be hidded, up until a set path point is reached. Usually needed for reversing captures and hiding the moved piece. 0 is the start of the path. */
 	hideKeyframes: Map<number, Coords[]>;
 	/** The time the animation started. */
 	startTimeMillis: number;
@@ -125,11 +125,13 @@ let DEBUG = false;
 
 
 /**
- * Animates a piece after moving it.
+ * Animates a single piece after moving it. One king/rook in castling counts as one animation.
+ * One animation can hide the animated piece at its destination square, and show captured pieces.
  * @param type - The type of piece to animate
  * @param path - The waypoints the piece will pass throughout the animation. Minimum: 2
- * @param captured - The piece captured, if one was captured. This will be rendered in place for the during of the animation.
- * @param instant - If true, the piece was dropped and should not be animated. The SOUND will still be played.
+ * @param showKeyframes
+ * @param hideKeyframes
+ * @param instant - Whether the animation should be instantanious, only playing the SOUND. If this is true, the animation will not be added to the list of animations, and will not be rendered.
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
 function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, Piece[]>, hideKeyframes: Map<number, Coords[]>, instant?: boolean, resetAnimations: boolean = true): void {
@@ -142,14 +144,15 @@ function animatePiece(type: number, path: Coords[], showKeyframes: Map<number, P
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
 
+	// The hideShowKeyframes need to be stretched to match the resolution of the spline.
 	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.RESOLUTION, path.length);
 	showKeyframes = stretchKeyframesForResolution(showKeyframes, SPLINES.RESOLUTION, path.length);
 
-	const typesInvolved = new Set([typeutil.getRawType(type)]);
+	// If this animation involves rendering a piece that doesn't have an SVG (void),
+	// we can't animate/render it. Make it an instant animationinstead.
+	const typesInvolved: Set<RawType> = new Set([typeutil.getRawType(type)]);
 	showKeyframes.forEach(w => w.forEach(p => typesInvolved.add(typeutil.getRawType(p.type))));
-
-	// Check if the piece type doesn't have an SVG (void). If not, we can't animate it.
-	if (new Set([...typesInvolved, ...typeutil.SVGLESS_TYPES]).size < typesInvolved.size + typeutil.SVGLESS_TYPES.size) instant = true; // But, still instant animate it so that the sound plays
+	if (new Set([...typesInvolved, ...typeutil.SVGLESS_TYPES]).size < typesInvolved.size + typeutil.SVGLESS_TYPES.size) instant = true; // Instant animations still play the sound
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
 	if (instant) return playSoundOfDistance(totalDistance, showKeyframes.size !== 0);
@@ -197,6 +200,10 @@ function toggleDebug() {
 
 // Helper Functions -----------------------------------------------------------
 
+/**
+ * Stretches a {@link Animation.showKeyframes} or {@link Animation.hideKeyframes}
+ * to match the resolution of the animation spline.
+ */
 function stretchKeyframesForResolution<T>(keyframes: Map<number, T>, resolution: number, waypointCount: number): Map<number, T> {
 	if (waypointCount < 3) return keyframes;
 	const t: Map<number, T> = new Map();
@@ -259,7 +266,11 @@ function playAnimationSound(animation: Animation) {
 	animation.soundPlayed = true;
 }
 
-/** Plays the sound of a move from just the distance traveled and whether it made a capture. */
+/**
+ * Plays the sound of a move.
+ * @param distance - The distance the piece traveled.
+ * @param captured - Whether the animation involved a capture.
+ */
 function playSoundOfDistance(distance: number, captured: boolean) {
 	if (captured) sound.playSound_capture(distance);
 	else sound.playSound_move(distance);
@@ -280,9 +291,12 @@ function update() {
 /** Animates the arrow indicator */
 function shiftArrowIndicatorOfAnimatedPiece(animation: Animation) {
 	const segment = getCurrentSegment(animation);
-	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.shiftArrow(1, true, c)));
+	// Delete the arrows of the hidden pieces
+	forEachActiveKeyframe(animation.hideKeyframes, segment, coords => coords.forEach(c => arrows.shiftArrow(1, true, c))); // Use an arbitrary piece type
 	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segment);
+	// Add the arrow of the animated piece (also removes the arrow it off its destination square)
 	arrows.shiftArrow(animation.type, false, animation.path[animation.path.length - 1]!, animationCurrentCoords);
+	// Add the arrows of the captured pieces only after we've shifted the piece that captured it
 	forEachActiveKeyframe(animation.showKeyframes, segment, pieces => pieces.forEach(p => arrows.shiftArrow(p.type, true, undefined, p.coords)));
 }
 
@@ -324,7 +338,7 @@ function renderAnimations() {
 		const currentPos = getCurrentAnimationPosition(animation.segments, segment);
 		const piecesData: number[] = [];
 		forEachActiveKeyframe(animation.showKeyframes, segment, pieces => {
-			pieces.forEach(p => piecesData.push(...generatePieceData(p.type, p.coords)));
+			pieces.forEach(p => piecesData.push(...generatePieceData(p.type, p.coords))); // Render this captured piece
 		});
 		piecesData.push(...generatePieceData(animation.type, currentPos)); // Render the moving piece
 		return piecesData;
@@ -369,12 +383,15 @@ function calculateBoardPosition(coords: Coords) {
 // Animation Calculations -----------------------------------------------------
 
 /**
- * Gets the current progress in float form
- * The whole number is the segment that has been reached
- * The decimal component is the progress in that segment
- * @param animation 
- * @param maxDistB4Teleport 
- * @returns the animation progress
+ * Gets the current progress in float form.
+ * The whole number is the segment that has been reached.
+ * The decimal component is the progress in that segment.
+ * For example, 1.6 means the animation is 60% through the second segment.
+ * Roses's have a higher spline resolution, so they cram a lot more segments
+ * in between each waypoint.
+ * @param animation - The animation to calculate the current segment for.
+ * @param maxDistB4Teleport  - The maximum distance the animation should be allowed to travel before teleporting mid-animation near the end of its destination. This should be specified if we're animating a miniimage, since when we're zoomed out, the animation moving faster is perceivable.
+ * @returns The animation's segment progress
  */
 function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANCE_BEFORE_TELEPORT): number {
 	const elapsed = performance.now() - animation.startTimeMillis;
@@ -383,23 +400,22 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANC
 	/** The eased progress of the animation. */
 	const easedT = math.easeInOut(t);
 
-	return calculateInterpolatedPosition(animation, easedT, maxDistB4Teleport);
+	const targetDistance = animation.totalDistance <= maxDistB4Teleport ?
+		easedT * animation.totalDistance :
+		calculateTeleportDistance(animation.totalDistance, easedT, maxDistB4Teleport);
+	return findPositionInSegments(animation.segments, targetDistance);
 }
 
 /**
  * Calculates the position of the moved piece from the progress of the animation.
+ * @param segments - The segments of the animation.
+ * @param segmentNum - The segment number, which is the progress of the animation from {@link getCurrentSegment}.
  * @returns the coordinate the animation's piece should be rendered this frame.
  */
 function getCurrentAnimationPosition(segments: AnimationSegment[], segmentNum: number): Coords {
 	if (segmentNum >= segments.length) return segments[segments.length - 1]!.end;
 	const segment = segments[Math.floor(segmentNum)]!;
 	return coordutil.lerpCoords(segment.start, segment.end, segmentNum % 1);
-}
-
-/** Returns the coordinate the animation's piece should be rendered at a certain eased progress. */
-function calculateInterpolatedPosition(animation: Animation, easedProgress: number, MAX_DISTANCE: number): number {
-	const targetDistance = animation.totalDistance <= MAX_DISTANCE ? easedProgress * animation.totalDistance : calculateTeleportDistance(animation.totalDistance, easedProgress, MAX_DISTANCE);
-	return findPositionInSegments(animation.segments, targetDistance);
 }
 
 /** Calculates the distance the piece animation should be rendered along the path, when the total distance is great enough to merit teleporting. */
@@ -429,7 +445,8 @@ function findPositionInSegments(segments: AnimationSegment[], targetDistance: nu
 
 
 /**
- * Iterates over all keyframes that have not been passed by the animation
+ * Iterates over all keyframes that have not been passed by the animation.
+ * This is all showKeyframes that are still being shown, or all hideKeyframes that are still being hidden.
  */
 // eslint-disable-next-line no-unused-vars
 function forEachActiveKeyframe<T>(keyframes: Map<number, T>, segment: number, callback: (value: T) => void): void {

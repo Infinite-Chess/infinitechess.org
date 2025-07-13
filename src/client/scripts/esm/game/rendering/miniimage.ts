@@ -97,13 +97,17 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
 
+	// Animated pieces
 	const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
-	const hides: Set<CoordsKey> = new Set();
+	/** Pieces temporarily being hidden via transparent squares on their destination square. */
+	const activeHides: Set<CoordsKey> = new Set();
 	for (const a of animation.animations) {
 		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
-		callback(animation.getCurrentAnimationPosition(a.segments, segmentPos), a.type);
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => hides.add(c)));
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		callback(currentAnimationPosition, a.type);
 		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(p => callback(p.coords, p.type)));
+		// Construct the hidden pieces for below
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
 
 	// Static pieces
@@ -116,7 +120,9 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 
 		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
-			if (!hides.has(coordutil.getKeyFromCoords(coords))) callback(coords, type);
+			const coordsKey = coordutil.getKeyFromCoords(coords);
+			if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
+			callback(coords, type);
 		});
 	});
 }
@@ -212,22 +218,26 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 
 	// 1. Process all animations and add pieces relevant to the current move
 	const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
-	const hides: Set<CoordsKey> = new Set();
+	/** Pieces temporarily being hidden via transparent squares on their destination square. */
+	const activeHides: Set<CoordsKey> = new Set();
 	for (const a of animation.animations) {
 		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
-		// Animated pieces don't have a real index, but we need to pass a piece object
-		pushPieceNoDuplicatesOrVoids({coords: animation.getCurrentAnimationPosition(a.segments, segmentPos), type: a.type, index: -1});
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => hides.add(c)));
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		// Add the main animated piece
+		pushPieceNoDuplicatesOrVoids({coords: currentAnimationPosition, type: a.type, index: -1});
+		// Add the captured pieces being shown
 		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
+		// Construct the hidden pieces for below
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
 	}
 
 	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)
 	const annotePoints = snapping.getAnnoteSnapPoints(true);
-
 	annotePoints.forEach(ap => {
 		const piece = boardutil.getPieceFromCoords(pieces, ap);
 		if (!piece) return; // No piece beneath this highlight
-		if (hides.has(coordutil.getKeyFromCoords(ap))) return; // SKIP PIECES that are being hidden due to animations
+		const coordsKey = coordutil.getKeyFromCoords(ap);
+		if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
 		pushPieceNoDuplicatesOrVoids(piece);
 	});
 
