@@ -67,6 +67,7 @@ function returnMeshPiece(mesh: Mesh, change: Change) {
 function animateMove(moveChanges: Change[], forward = true, animateMain = true) {
 	let clearanimations = true; // The first animation of a turn should clear prev turns animation
 
+	// Helper function for pushing an item to an array in a map, creating the array if it does not exist.
 	function pushToArrayMap<K, V>(map: Map<K, V[]>, key: K, apple: V) {
 		let t = map.get(key);
 		if (!t) {
@@ -98,15 +99,17 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true) 
 			} // Don't need to do anything 
 
 			// Flip those being hidden and those being shown if it is a reverse move
-			waypoints = forward ? waypoints : waypoints.slice().reverse();
 			if (!forward) {
-				const invert = function<V>(x: Map<number,V>, y: Map<number,V>) {
+				waypoints = waypoints.slice().reverse();
+				// Helper that inverts orders at the start of the path to the end, and vice versa.
+				// x remains the same, but y is set to the inverted x.
+				function invert<V>(x: Map<number,V>, y: Map<number,V>) {
 					y.clear();
 					x.forEach((v, k) => {
 						y.set(last - k,v);
 					});
 				};
-				const t = new Map();
+				const t = new Map<number, Piece[]>();
 				invert(showKeyframes, t);
 				invert(hideKeyframes, showKeyframes);
 				hideKeyframes = t;
@@ -116,6 +119,7 @@ function animateMove(moveChanges: Change[], forward = true, animateMain = true) 
 			hideKeyframes.delete(0);
 			showKeyframes.delete(0);
 
+			// Convert hideKeyframes to a Coords[] array, as the animation function expects this.
 			const newHideFrames: Map<number, Coords[]> = new Map();
 			for (const [k, v] of hideKeyframes) newHideFrames.set(k, v.map(p => p.coords)); // Mutate to remove unnessacary info
 
