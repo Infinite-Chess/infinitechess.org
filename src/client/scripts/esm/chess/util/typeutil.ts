@@ -97,7 +97,7 @@ const royals: RawType[] = [...jumpingRoyals, ...slidingRoyals];
 const strcolors = ["neutral", "white", "black", "red", "blue", "yellow", "green"] as const;
 
 /** Raw piece types that don't have an SVG */
-const SVGLESS_TYPES: RawType[] = [rawTypes.VOID];
+const SVGLESS_TYPES: Set<RawType> = new Set([rawTypes.VOID]);
 
 type StrPlayer = typeof strcolors[number]
 type RawType = typeof rawTypes[keyof typeof rawTypes]

@@ -266,7 +266,7 @@ function rotateAll(mesh: Mesh, newInverted: boolean) {
 
 	for (const [stringType, meshData] of Object.entries(mesh.types)) {
 		const rawType = typeutil.getRawType(Number(stringType));
-		if (typeutil.SVGLESS_TYPES.some(t => t === rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
+		if (typeutil.SVGLESS_TYPES.has(rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
 		const vertexData = (meshData as MeshData).model.vertexData;
 		if (vertexData.length !== newVertexData.length) throw Error("New vertex data must be the same length as the existing! Cannot update buffer indices."); // Safety net

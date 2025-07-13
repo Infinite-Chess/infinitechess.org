@@ -44,6 +44,7 @@ import guiclock from "../gui/guiclock.js";
 import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
+import { animateMove } from "./graphicalchanges.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -226,7 +227,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 	if (lastmove !== undefined) animateLastMoveTimeoutID = setTimeout(() => { // A small delay to animate the most recently played move.
 		if (moveutil.areWeViewingLatestMove(loadedGamefile!.boardsim)) return; // Already viewing the lastest move
 		movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
-		movesequence.animateMove(lastmove.changes, true);
+		animateMove(lastmove.changes, true);
 	}, delayOfLatestMoveAnimationOnRejoinMillis);
 }
 

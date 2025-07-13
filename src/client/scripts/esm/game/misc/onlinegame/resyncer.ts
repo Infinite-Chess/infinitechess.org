@@ -30,6 +30,7 @@ import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
 import animation from "../../rendering/animation.js";
 import guiclock from "../../gui/guiclock.js";
+import { animateMove } from "../../chess/graphicalchanges.js";
 
 
 // Functions -----------------------------------------------------------------------------
@@ -155,7 +156,7 @@ function synchronizeMovesList(gamefile: FullGame, mesh: Mesh | undefined, moves:
         
 		const isLastMove = i === moves.length - 1;		// Animate only if it's the last move.
 		const move = movesequence.makeMove(gamefile, mesh, moveDraft, { doGameOverChecks: isLastMove });
-		if (isLastMove) movesequence.animateMove(move.changes, true); // Only animate on the last forwarded move.
+		if (isLastMove) animateMove(move.changes, true); // Only animate on the last forwarded move.
 
 		console.log("Forwarded one move while resyncing to online game.");
 		aChangeWasMade = true;

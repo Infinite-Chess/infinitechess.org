@@ -18,6 +18,7 @@ import movesequence from "../../chess/movesequence.js";
 import icnconverter from "../../../chess/logic/icn/icnconverter.js";
 import guiclock from "../../gui/guiclock.js";
 import legalmoves from "../../../chess/logic/legalmoves.js";
+import { animateMove } from "../../chess/graphicalchanges.js";
 // @ts-ignore
 import guipause from "../../gui/guipause.js";
 // @ts-ignore
@@ -85,7 +86,7 @@ function handleOpponentsMove(gamefile: FullGame, mesh: Mesh | undefined, message
 	// Forward the move...
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-	if (mesh) movesequence.animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 

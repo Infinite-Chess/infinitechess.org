@@ -3,7 +3,7 @@
  */
 
 
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 
 
 import space from '../misc/space.js';
@@ -97,12 +97,22 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.boardsim.pieces;
 
-	// Helper to test if a static piece is being animated
-	const isAnimatedStatic = (coords: Coords) => animation.animations.some(a => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!));
+	// Animated pieces
+	const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+	/** Pieces temporarily being hidden via transparent squares on their destination square. */
+	const activeHides: Set<CoordsKey> = new Set();
+	for (const a of animation.animations) {
+		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		callback(currentAnimationPosition, a.type);
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(p => callback(p.coords, p.type)));
+		// Construct the hidden pieces for below
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
+	}
 
 	// Static pieces
 	gamefile.boardsim.existingTypes.forEach((type: number) => {
-		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
+		if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 
 		const range = pieces.typeRanges.get(type)!;
 		// Skip types with no pieces
@@ -110,19 +120,10 @@ function forEachRenderablePiece(callback: (coords: Coords, type: number) => void
 
 		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
-			if (!isAnimatedStatic(coords)) callback(coords, type);
+			const coordsKey = coordutil.getKeyFromCoords(coords);
+			if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
+			callback(coords, type);
 		});
-	});
-
-	// Animated pieces
-	animation.animations.forEach(a => {
-		// Animate the main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
-		const current = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		callback(current, a.type);
-
-		// Animate the captured piece too, if there is one
-		if (a.captured) callback(a.captured.coords, a.captured.type);
 	});
 }
 
@@ -140,7 +141,7 @@ function getImageInstanceData(): { instanceData: TypeGroup<number[]>, instanceDa
 
 	// Prepare empty arrays by type
 	boardsim.existingTypes.forEach((type: number) => {
-		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(type))) return; // Skip voids
+		if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 
 		instanceData[type] = [];
 		instanceData_hovered[type] = [];
@@ -206,7 +207,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const piecesToRender: Piece[] = [];
 
 	function pushPieceNoDuplicatesOrVoids(piece: Piece) {
-		if (typeutil.SVGLESS_TYPES.includes(typeutil.getRawType(piece.type))) return; // Skip voids
+		if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(piece.type))) return; // Skip voids
 		if (!piecesToRender.some(p => coordutil.areCoordsEqual(p.coords, piece.coords))) {
 			piecesToRender.push(piece);
 		}
@@ -215,35 +216,38 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const boardsim = gameslot.getGamefile()!.boardsim;
 	const pieces = boardsim.pieces;
 
-	// 1. Get pieces on top of highlights (ray starts, intersections, etc.)
+	// 1. Process all animations and add pieces relevant to the current move
+	const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
+	/** Pieces temporarily being hidden via transparent squares on their destination square. */
+	const activeHides: Set<CoordsKey> = new Set();
+	for (const a of animation.animations) {
+		const segmentPos = animation.getCurrentSegment(a, maxDistB4Teleport);
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(a.segments, segmentPos);
+		// Add the main animated piece
+		pushPieceNoDuplicatesOrVoids({coords: currentAnimationPosition, type: a.type, index: -1});
+		// Add the captured pieces being shown
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentPos, pieces => pieces.forEach(pushPieceNoDuplicatesOrVoids));
+		// Construct the hidden pieces for below
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentPos, pieces => pieces.map(coordutil.getKeyFromCoords).forEach(c => activeHides.add(c)));
+	}
+
+	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)
 	const annotePoints = snapping.getAnnoteSnapPoints(true);
 	annotePoints.forEach(ap => {
 		const piece = boardutil.getPieceFromCoords(pieces, ap);
 		if (!piece) return; // No piece beneath this highlight
-		if (animation.animations.some(a => coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!))) return; // SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
+		const coordsKey = coordutil.getKeyFromCoords(ap);
+		if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
 		pushPieceNoDuplicatesOrVoids(piece);
 	});
 
-	// 2. Add the selected piece, if any
+	// 3. Add the selected piece, if any
 	const pieceSelected = selection.getPieceSelected();
 	if (pieceSelected) {
 		pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
 	}
 
-	// 3. Add all currently animated pieces
-	animation.animations.forEach(a => {
-		// The main piece being animated
-		const maxDistB4Teleport = MAX_ANIM_DIST_VPIXELS / boardtiles.gtileWidth_Pixels();
-		const currentCoords = animation.getCurrentAnimationPosition(a, maxDistB4Teleport);
-		// Animated pieces don't have a real index, but we need to pass a piece object
-		pushPieceNoDuplicatesOrVoids({ coords: currentCoords, type: a.type, index: -1 });
-
-		// The captured piece, if there is one
-		if (a.captured) pushPieceNoDuplicatesOrVoids(a.captured);
-	});
-
 	// 4. Add pieces from the last and next moves
-
 	const moveIndex = boardsim.state.local.moveIndex;
 	// Last move's destination piece
 	const lastMove = boardsim.moves[moveIndex];
