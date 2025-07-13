@@ -190,6 +190,5 @@ export default {
 	viewMove,
 	viewFront,
 	viewIndex,
-	animateMove,
 	runMeshChanges,
 };

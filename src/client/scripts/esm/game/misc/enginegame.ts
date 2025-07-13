@@ -12,9 +12,10 @@ import gameslot from '../chess/gameslot.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import jsutil from '../../util/jsutil.js';
+import typeutil from '../../chess/util/typeutil.js';
+import { animateMove } from '../chess/graphicalchanges.js';
 // @ts-ignore
 import perspective from '../rendering/perspective.js';
-import typeutil from '../../chess/util/typeutil.js';
 
 // Type Definitions -------------------------------------------------------------
 
@@ -171,7 +172,7 @@ function makeEngineMove(moveDraft: MoveDraft) {
 	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
 	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-	if (mesh) movesequence.animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+	if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 
