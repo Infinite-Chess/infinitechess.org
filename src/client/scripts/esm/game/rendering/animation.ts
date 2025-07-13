@@ -400,10 +400,32 @@ function getCurrentSegment(animation: Animation, maxDistB4Teleport = MAX_DISTANC
 	/** The eased progress of the animation. */
 	const easedT = math.easeInOut(t);
 
-	const targetDistance = animation.totalDistance <= maxDistB4Teleport ?
-		easedT * animation.totalDistance :
-		calculateTeleportDistance(animation.totalDistance, easedT, maxDistB4Teleport);
-	return findPositionInSegments(animation.segments, targetDistance);
+	/** The total distance along the animation path the animated piece should currently be at. */
+	let targetDistance: number;
+	if (animation.totalDistance <= maxDistB4Teleport) { // Total distance is short enough to animate the whole path
+		targetDistance = easedT * animation.totalDistance;
+	} else { // The total distance is great enough to merit teleporting: Skip the middle of the path
+		if (easedT < 0.5) {
+			// First half
+			targetDistance = easedT * 2 * (maxDistB4Teleport / 2);
+		} else { // easedT >= 0.5
+			// Second half: animate final portion of path
+			const portionFromEnd = (easedT - 0.5) * 2 * (maxDistB4Teleport / 2);
+			targetDistance = (animation.totalDistance - maxDistB4Teleport / 2) + portionFromEnd;
+		}
+	}
+
+	// Return the segment the piece should be at, based on the target distance,
+	// and how far along the segment it currently is.
+	let accumulated = 0;
+	for (const [i, segment] of animation.segments.entries()) {
+		if (targetDistance <= accumulated + segment.distance) { // The piece is in this segment
+			const segmentProgress = (targetDistance - accumulated) / segment.distance;
+			return segmentProgress + i;
+		}
+		accumulated += segment.distance;
+	}
+	return animation.segments.length;
 }
 
 /**
@@ -416,28 +438,6 @@ function getCurrentAnimationPosition(segments: AnimationSegment[], segmentNum: n
 	if (segmentNum >= segments.length) return segments[segments.length - 1]!.end;
 	const segment = segments[Math.floor(segmentNum)]!;
 	return coordutil.lerpCoords(segment.start, segment.end, segmentNum % 1);
-}
-
-/** Calculates the distance the piece animation should be rendered along the path, when the total distance is great enough to merit teleporting. */
-function calculateTeleportDistance(totalDistance: number, easedProgress: number, MAX_DISTANCE: number): number {
-	// First half
-	if (easedProgress < 0.5) return easedProgress * 2 * (MAX_DISTANCE / 2);
-	// Second half: animate final portion of path
-	const portionFromEnd = (easedProgress - 0.5) * 2 * (MAX_DISTANCE / 2);
-	return (totalDistance - MAX_DISTANCE / 2) + portionFromEnd;
-}
-
-/** Finds the position of the piece at a certain distance along the path. */
-function findPositionInSegments(segments: AnimationSegment[], targetDistance: number): number {
-	let accumulated = 0;
-	for (const [i, segment] of segments.entries()) {
-		if (targetDistance <= accumulated + segment.distance) {
-			const segmentProgress = (targetDistance - accumulated) / segment.distance;
-			return segmentProgress + i;
-		}
-		accumulated += segment.distance;
-	}
-	return segments.length;
 }
 
 
