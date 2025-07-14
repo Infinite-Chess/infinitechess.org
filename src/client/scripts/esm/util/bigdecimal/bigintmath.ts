@@ -270,6 +270,35 @@ function bitLength_toString(n: bigint): number {
 }
 
 
+/**
+ * Estimate the memory footprint of a BigInt in bytes, assuming a 64‑bit JavaScript engine
+ * (e.g. V8 in Chrome/Node.js or JavaScriptCore in Safari).
+ *
+ * On a 64‑bit build, each BigInt is represented as a small heap object:
+ * - Two pointer‑sized fields (object header)
+ * - A sequence of 64‑bit “words” holding the integer’s bits, rounded up
+ *
+ * Total size = headerBytes + dataBytes
+ * @param bi - The BigInt to measure.
+ * @returns The estimated number of bytes occupied by `value` in memory.
+ */
+function estimateBigIntSize(bi: bigint): number {
+	// Compute bit length (number of binary digits)
+	const bitLen = bitLength_bisection(bi);
+
+	// In a 64‑bit engine, pointerSize = 8 bytes
+	const pointerSize = 8;
+	// Two pointers for the BigInt object header
+	const headerBytes = pointerSize * 2;
+
+	// Number of 64‑bit chunks needed to store the bits
+	const chunkCount = Math.ceil(bitLen / (pointerSize * 8));
+	const dataBytes = pointerSize * chunkCount;
+
+	return headerBytes + dataBytes;
+}
+
+
 // Exports ============================================================
 
 
@@ -282,4 +311,5 @@ export default {
 	// getBitAtPositionFromRight,
 	toDebugBinaryString,
 	bitLength_bisection,
+	estimateBigIntSize,
 };

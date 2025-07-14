@@ -245,7 +245,7 @@ function estimateMemorySizeOf(obj: any): string {
 		else if (typeof value === 'string') bytes = value.length * 2; // Each char is 2 bytes in JS strings (UTF-16)
 		else if (typeof value === 'number') bytes = 8; // 64-bit float
 		else if (typeof value === 'symbol') bytes = (value.description?.length ?? 0) * 2 + 8; // Description + internal overhead
-		else if (typeof value === 'bigint') bytes = estimateBigIntSize(value); // Precise BigInt estimator
+		else if (typeof value === 'bigint') bytes = bigintmath.estimateBigIntSize(value); // Precise BigInt estimator
 		else if (value === null || typeof value === 'undefined') bytes = 0; // Very small
 		else if (typeof value === 'function') bytes = value.toString().length * 2 + 100; // Very rough guess
 		// --- Object types ---
@@ -330,35 +330,6 @@ function estimateMemorySizeOf(obj: any): string {
 	const totalBytes = roughSizeOfObject(obj);
 	visited.clear(); // Clean up the visited set
 	return formatByteSize(totalBytes);
-}
-
-
-/**
- * Estimate the memory footprint of a BigInt in bytes, assuming a 64‑bit JavaScript engine
- * (e.g. V8 in Chrome/Node.js or JavaScriptCore in Safari).
- *
- * On a 64‑bit build, each BigInt is represented as a small heap object:
- * - Two pointer‑sized fields (object header)
- * - A sequence of 64‑bit “words” holding the integer’s bits, rounded up
- *
- * Total size = headerBytes + dataBytes
- * @param bi - The BigInt to measure.
- * @returns The estimated number of bytes occupied by `value` in memory.
- */
-function estimateBigIntSize(bi: bigint): number {
-	// Compute bit length (number of binary digits)
-	const bitLen = bigintmath.bitLength_bisection(bi);
-
-	// In a 64‑bit engine, pointerSize = 8 bytes
-	const pointerSize = 8;
-	// Two pointers for the BigInt object header
-	const headerBytes = pointerSize * 2;
-
-	// Number of 64‑bit chunks needed to store the bits
-	const chunkCount = Math.ceil(bitLen / (pointerSize * 8));
-	const dataBytes = pointerSize * chunkCount;
-
-	return headerBytes + dataBytes;
 }
 
 
