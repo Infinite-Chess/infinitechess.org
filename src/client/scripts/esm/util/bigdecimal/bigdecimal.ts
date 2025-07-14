@@ -547,6 +547,9 @@ function divide_floating(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: num
 function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	if (bd2.bigint === ZERO) throw new Error("Cannot perform modulo operation with a zero divisor.");
 
+	const bigint1 = bd1.bigint;
+	let bigint2 = bd2.bigint;
+
 	// The result's scale is determined by the dividend.
 	const targetDivex = bd1.divex;
 
@@ -555,16 +558,16 @@ function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 
 	if (divexDifference > 0) {
 		// bd2 has less precision, scale it up (left shift).
-		bd2.bigint <<= BigInt(divexDifference);
+		bigint2 <<= BigInt(divexDifference);
 	} else if (divexDifference < 0) {
 		// bd2 has more precision, scale it down (right shift).
 		// This involves truncation, which is standard for modulo operations.
-		bd2.bigint >>= BigInt(-divexDifference);
+		bigint2 >>= BigInt(-divexDifference);
 	}
 
 	// Now that both bigints are at the same scale as the dividend,
 	// we can use the native remainder operator.
-	const remainderBigInt = bd1.bigint % bd2.bigint;
+	const remainderBigInt = bigint1 % bigint2;
 
 	return {
 		bigint: remainderBigInt,
