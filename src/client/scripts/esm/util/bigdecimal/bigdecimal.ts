@@ -1029,7 +1029,7 @@ export default {
 
 
 
-// const n1 = 1;
+// const n1 = -164;
 // const bd1: BigDecimal = NewBigDecimal_FromNumber(n1);
 // console.log(`${n1} converted into a BigDecimal:`);
 // printInfo(bd1);
