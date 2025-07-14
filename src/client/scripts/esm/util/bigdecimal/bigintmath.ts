@@ -210,6 +210,7 @@ let testersN = 0;
  * Calculates the bit length of a bigint using a highly optimized dynamic bisection algorithm.
  * It is 6x faster than then {@link bitLength_hex}, and 25x faster than {@link bitLength_toString}.
  * Complexity O(log n), where n is the number of bits.
+ * Algorithm pulled from https://stackoverflow.com/a/76616288
  */
 function bitLength_bisection(x: bigint): number {
 	if (x === ZERO) return 0;
