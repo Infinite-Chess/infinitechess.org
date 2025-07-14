@@ -1013,7 +1013,7 @@ export default {
 	compare,
 	// Conversions and Utility
 	toBigInt,
-	toExactNumber,
+	// toExactNumber,
 	toNumber,
 	toExactString,
 	toString,
