@@ -192,8 +192,10 @@ function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAUL
 	if (shiftAmount > 0) numberAsBigInt <<= shiftAmount;
 	else if (shiftAmount < 0) numberAsBigInt >>= -shiftAmount; // A negative shift is a right shift.
 
-	// 5. Finally, perform the division by the power of 5.
-	const bigint: bigint = numberAsBigInt / powerOfFive;
+	// 5. Finally, perform the division by the power of 5, with rounding.
+	//    We add half the divisor before dividing to implement "round half up".
+	const halfDivisor = powerOfFive / 2n;
+	const bigint: bigint = (numberAsBigInt + halfDivisor) / powerOfFive;
     
 	return {
 		bigint,
