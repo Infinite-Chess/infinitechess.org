@@ -21,7 +21,7 @@ import type { Vec2, Vec2Key } from "../../util/math.js";
 import type { Coords, CoordsKey } from "../util/coordutil.js";
 import type { PieceMoveset } from "./movesets.js";
 import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from "../util/typeutil.js";
-import bigintmath from "../../util/bigdecimal/bigintmath.js";
+import bimath from "../../util/bigdecimal/bimath.js";
 
 
 // Type Definitions ----------------------------------------------------------------
@@ -529,8 +529,8 @@ function getTypeUndefinedsBehavior(type: number, editor: boolean, promotionsAllo
 function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 	for (let i = 0; i < slidingPossible.length; i++) {
 		const thisSlideDir: Vec2 = slidingPossible[i]!;
-		if (bigintmath.abs(thisSlideDir[0]) > 1) return true;
-		if (bigintmath.abs(thisSlideDir[1]) > 1) return true;
+		if (bimath.abs(thisSlideDir[0]) > 1) return true;
+		if (bimath.abs(thisSlideDir[1]) > 1) return true;
 	}
 	return false;
 }
@@ -585,7 +585,7 @@ function getXFromLine(step: Coords, coords: Coords): bigint {
 	const lineIsVertical = step[0] === 0n;
 	const deltaAxis = lineIsVertical ? step[1] : step[0];
 	const coordAxis = lineIsVertical ? coords[1] : coords[0];
-	return bigintmath.posMod(coordAxis, deltaAxis);
+	return bimath.posMod(coordAxis, deltaAxis);
 }
 
 

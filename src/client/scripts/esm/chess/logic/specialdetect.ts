@@ -18,7 +18,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { enpassantCreate } from './movepiece.js';
 import type { Player } from '../util/typeutil.js';
-import bigintmath from '../../util/bigdecimal/bigintmath.js';
+import bimath from '../../util/bigdecimal/bimath.js';
 
 "use strict";
 
@@ -101,7 +101,7 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, all_possible: 
 	function isPieceCastleable(pieceCoords: Coords): boolean {
 
 		// Distance should be atleast 3 squares away.
-		const dist = bigintmath.abs(kingX - pieceCoords[0]); // Distance from the king to the piece
+		const dist = bimath.abs(kingX - pieceCoords[0]); // Distance from the king to the piece
 		if (dist < 3) return false; // Piece is too close, can't castle with it
 
 		// Piece should have its special rights
@@ -247,7 +247,7 @@ function addPossibleEnPassant({ boardsim, basegame }: FullGame, individualMoves:
 	if (typeutil.getColorFromType(enpassantCapturedPawn) === color) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
-	if (bigintmath.abs(xDifference) !== 1n) return; // Not immediately left or right of us
+	if (bimath.abs(xDifference) !== 1n) return; // Not immediately left or right of us
 	const yParity = color === players.WHITE ? 1n : -1n;
 	if (coords[1] + yParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 
