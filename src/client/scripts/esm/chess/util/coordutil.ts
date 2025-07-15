@@ -10,7 +10,7 @@
 
 
 /** A length-2 array of coordinates: `[x,y]` */
-type Coords = [number,number];
+type Coords = [bigint,bigint];
 
 /**
  * A pair of coordinates, represented in a string, separated by a `,`.
@@ -20,7 +20,7 @@ type Coords = [number,number];
  * This will never be in scientific notation. However, moves beyond
  * Number.MAX_SAFE_INTEGER can't be expressed exactly.
  */
-type CoordsKey = `${number},${number}`;
+type CoordsKey = `${bigint},${bigint}`;
     
 
 // Functions -------------------------------------------------------------------
@@ -49,7 +49,7 @@ function areCoordsIntegers(coords: Coords): boolean {
 function getKeyFromCoords(coords: Coords): CoordsKey {
 	// Casting to BigInt and back to a string avoids scientific notation.
 	// toFixed(0) doesn't work for numbers above 10^21
-	return `${BigInt(coords[0])},${BigInt(coords[1])}` as CoordsKey;
+	return `${coords[0]},${coords[1]}` as CoordsKey;
 }
 
 /**

@@ -307,6 +307,16 @@ function estimateBigIntSize(bi: bigint): number {
 	return headerBytes + dataBytes;
 }
 
+/**
+ * Computes the positive modulus of two BigInts.
+ * @param a - The dividend.
+ * @param b - The divisor (must be a positive BigInt).
+ * @returns The positive remainder of the division as a BigInt.
+ */
+function posMod(a: bigint, b: bigint): bigint {
+	return (a % b + b) % b;
+}
+
 
 // Exports ============================================================
 
@@ -321,4 +331,5 @@ export default {
 	toDebugBinaryString,
 	bitLength_bisection,
 	estimateBigIntSize,
+	posMod,
 };
