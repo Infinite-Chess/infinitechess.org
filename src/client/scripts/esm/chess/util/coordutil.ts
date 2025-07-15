@@ -5,12 +5,22 @@
  * ZERO dependancies.
  */
 
+import type { BigDecimal } from "../../util/bigdecimal/bigdecimal";
+import bigdecimal from "../../util/bigdecimal/bigdecimal";
+
 
 // Type Definitions ------------------------------------------------------------
 
 
 /** A length-2 array of coordinates: `[x,y]` */
 type Coords = [bigint,bigint];
+
+/**
+ * A pair of arbitrarily large coordinates WITH decimal precision included.
+ * Typically used for calculating graphics on the cpu-side.
+ * BD = BigDecimal
+ */
+type BDCoords = [BigDecimal, BigDecimal]
 
 /**
  * A pair of coordinates, represented in a string, separated by a `,`.
@@ -58,7 +68,7 @@ function getKeyFromCoords(coords: Coords): CoordsKey {
  * @returns The coordinates of the piece, [x,y]
  */
 function getCoordsFromKey(key: CoordsKey): Coords {
-	return key.split(',').map(Number) as Coords;
+	return key.split(',').map(BigInt) as Coords;
 }
 
 /**  Returns true if the coordinates are equal. */
@@ -102,10 +112,14 @@ function copyCoords(coords: Coords): Coords {
  * @param end - The ending coordinate.
  * @param t - The interpolation value (between 0 and 1).
  */
-function lerpCoords(start: Coords, end: Coords, t: number): Coords {
+function lerpCoords(start: Coords, end: Coords, t: number): BDCoords {
+	const diffX = end[0] - start[0];
+	const diffY = end[1] - start[1];
+	const startX = bigdecimal.FromBigInt(start[0]);
+	const startY = bigdecimal.FromBigInt(start[1]);
 	return [
-      start[0] + (end[0] - start[0]) * t,
-      start[1] + (end[1] - start[1]) * t,
+      start[0] + (diffX) * t,
+      start[1] + (diffY) * t,
     ];
 }
 
@@ -124,5 +138,6 @@ export default {
 
 export type {
 	Coords,
+	BDCoords,
 	CoordsKey,
 };
