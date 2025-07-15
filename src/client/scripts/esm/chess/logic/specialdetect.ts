@@ -50,7 +50,7 @@ function kings(gamefile: FullGame, coords: Coords, color: Player, premove: boole
 	const kingX = coords[0];
 	const kingY = coords[1];
 	const oppositeColor = typeutil.invertPlayer(color);
-	const key = organizedpieces.getKeyFromLine([1,0],coords);
+	const key = organizedpieces.getKeyFromLine([1n,0n],coords);
 	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
 
 	// Add legal Castling...
@@ -284,7 +284,7 @@ function appendPawnMoveAndAttachPromoteFlag(basegame: Game, individualMoves: Coo
  * @returns
  */
 function roses({ boardsim }: FullGame, coords: Coords, color: Player, premove: boolean): CoordsSpecial[] {
-	const movements: Coords[] = [[-2, -1], [-1, -2], [1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1]]; // Counter-clockwise
+	const movements: Coords[] = [[-2n, -1n], [-1n, -2n], [1n, -2n], [2n, -1n], [2n, 1n], [1n, 2n], [-1n, 2n], [-2n, 1n]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
 	const individualMoves: CoordsSpecial[] = [];
 

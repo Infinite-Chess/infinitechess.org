@@ -27,7 +27,7 @@ interface Piece {
 }
 
 /** A unique identifier for a single line of pieces. `C|X` */
-type LineKey = `${number}|${number}`
+type LineKey = `${bigint}|${bigint}`
 
 // Counting Pieces ----------------------------------------------------------------------------------------------
 
