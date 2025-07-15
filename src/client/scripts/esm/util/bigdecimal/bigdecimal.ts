@@ -29,7 +29,7 @@
  */
 
 
-import bigintmath from './bigintmath.js';
+import bimath from './bimath.js';
 
 
 // Types ========================================================
@@ -358,7 +358,7 @@ function howManyBitsForDigitsOfPrecision(precision: number): number {
 	// Use bigints so that in-between values don't become Infinity.
 	const powerOfTen: bigint = TEN ** BigInt(precision); // 3 ==> 1000n
 	// 2^x = powerOfTen. Solve for x
-	return bigintmath.log2(powerOfTen) + 1; // +1 to round up
+	return bimath.log2(powerOfTen) + 1; // +1 to round up
 }
 
 
@@ -668,10 +668,10 @@ const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us a
 /** Normalizes a BigDecimal to a target number of precision bits for floating-point style operations. */
 function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
 	// We work with the absolute value for bit length calculation.
-	const mantissa = bigintmath.abs(bd.bigint);
+	const mantissa = bimath.abs(bd.bigint);
     
 	// Use the fast, mathematical bitLength function.
-	const currentBitLength = bigintmath.bitLength_bisection(mantissa);
+	const currentBitLength = bimath.bitLength_bisection(mantissa);
 
 	if (currentBitLength <= precisionBits) return { bigint: bd.bigint, divex: bd.divex };
 
@@ -763,7 +763,7 @@ function toExactNumber(bd: BigDecimal): number {
 	// 2. Isolate the fractional bits. This also works correctly for negative numbers.
 	const fractionalPartShifted = bd.bigint - (integerPart << divexBigInt);
 	// Alternative line, around 10-20% slower:
-	// const fractionalPartShifted = bigintmath.getLeastSignificantBits(bd.bigint, divex_bigint)
+	// const fractionalPartShifted = bimath.getLeastSignificantBits(bd.bigint, divex_bigint)
 
 	// 3. Convert the integer part to a number. This can become Infinity if it's too large.
 	const numberResult = Number(integerPart);
@@ -877,7 +877,7 @@ function toString(bd: BigDecimal): string {
 	const roundedScaledInt = toBigInt(scaledBd);
 
 	// 4. Format the resulting integer back into a decimal string.
-	const absStr = bigintmath.abs(roundedScaledInt).toString();
+	const absStr = bimath.abs(roundedScaledInt).toString();
 
 	let integerPart: string;
 	let fractionalPart: string;
@@ -913,7 +913,7 @@ function toString(bd: BigDecimal): string {
  * @returns The binary string. If it is negative, the leading `1` sign will have a space after it for readability.
  */
 function toDebugBinaryString(bd: BigDecimal): string {
-	return bigintmath.toDebugBinaryString(bd.bigint);
+	return bimath.toDebugBinaryString(bd.bigint);
 }
 
 /**
@@ -946,7 +946,7 @@ function getEffectiveDecimalPlaces(bd: BigDecimal): number {
 		return Math.floor(precision);
 	} else {
 		const powerOfTwo: bigint = getBigintPowerOfTwo(bd.divex);
-		return bigintmath.log10(powerOfTwo);
+		return bimath.log10(powerOfTwo);
 	}
 }
 
