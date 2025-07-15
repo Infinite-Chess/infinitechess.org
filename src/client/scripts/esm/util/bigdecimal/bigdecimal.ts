@@ -80,7 +80,7 @@ const TEN: bigint = 10n;
  * I arbitrarily chose 50 bits for the minimum, because that gives us about 15 digits of precision,
  * which is about how much javascript's doubles give us.
  */
-const DEFAULT_WORKING_PRECISION: number = 53; // Default: 53 (matches javascript's double precision)
+const DEFAULT_WORKING_PRECISION: number = 23; // Default: 53 (matches javascript's double precision)
 
 /**
  * The maximum divex a BigDecimal is allowed to have.
@@ -212,7 +212,7 @@ function NewBigDecimal_FromString(num: string, workingPrecision: number = DEFAUL
  * @param [precision=DEFAULT_WORKING_PRECISION] The target divex for the result.
  * @returns A new BigDecimal with the value from the number.
  */
-function NewBigDecimal_FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
+function FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
 	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
     
 	// 1. Handle non-finite and zero cases first.
@@ -280,7 +280,7 @@ function NewBigDecimal_FromNumber(num: number, precision: number = DEFAULT_WORKI
  * @param [workingPrecision=DEFAULT_WORKING_PRECISION] The amount of extra precision to add.
  * @returns A new BigDecimal with the value from the bigint.
  */
-function NewBigDecimal_FromBigInt(num: bigint, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
+function FromBigInt(num: bigint, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
 	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
 	return {
 		bigint: num << BigInt(precision),
@@ -994,8 +994,8 @@ function getEffectiveDecimalPlaces(bd: BigDecimal): number {
 
 export default {
 	// NewBigDecimal_FromString,
-	NewBigDecimal_FromNumber,
-	NewBigDecimal_FromBigInt,
+	FromNumber,
+	FromBigInt,
 	// Helpers
 	howManyBitsForDigitsOfPrecision,
 	getEffectiveDecimalPlaces,
@@ -1021,6 +1021,10 @@ export default {
 	printInfo,
 };
 
+export type {
+	BigDecimal
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1030,7 +1034,7 @@ export default {
 
 
 // const n1 = -164;
-// const bd1: BigDecimal = NewBigDecimal_FromNumber(n1);
+// const bd1: BigDecimal = FromNumber(n1);
 // console.log(`${n1} converted into a BigDecimal:`);
 // printInfo(bd1);
 
