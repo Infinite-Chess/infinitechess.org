@@ -31,6 +31,8 @@
 
 import bimath from './bimath.js';
 
+import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
+
 
 // Types ========================================================
 
@@ -277,7 +279,7 @@ function FromNumber(num: number, precision: number = DEFAULT_WORKING_PRECISION):
 /**
  * Creates a Big Decimal from a bigint and a desired precision level.
  * @param num
- * @param [workingPrecision=DEFAULT_WORKING_PRECISION] The amount of extra precision to add.
+ * @param [precision=DEFAULT_WORKING_PRECISION] The amount of extra precision to add.
  * @returns A new BigDecimal with the value from the bigint.
  */
 function FromBigInt(num: bigint, precision: number = DEFAULT_WORKING_PRECISION): BigDecimal {
@@ -286,6 +288,20 @@ function FromBigInt(num: bigint, precision: number = DEFAULT_WORKING_PRECISION):
 		bigint: num << BigInt(precision),
 		divex: precision,
 	};
+}
+
+/**
+ * Converts Coords to BDCoords (BigDecimal), capable of decimal arithmetic.
+ * @param coords
+ * @param [precision=DEFAULT_WORKING_PRECISION] The amount of extra precision to add.
+ * @returns New BDCoords with the values from the coords.
+ */
+function FromCoords(coords: Coords, precision: number = DEFAULT_WORKING_PRECISION): BDCoords {
+	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
+	return [
+		FromBigInt(coords[0], precision),
+		FromBigInt(coords[1], precision),
+	];
 }
 
 
@@ -996,6 +1012,7 @@ export default {
 	// NewBigDecimal_FromString,
 	FromNumber,
 	FromBigInt,
+	FromCoords,
 	// Helpers
 	howManyBitsForDigitsOfPrecision,
 	getEffectiveDecimalPlaces,
