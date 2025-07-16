@@ -25,12 +25,11 @@ import coordutil from "../util/coordutil.js";
 import movepiece from "./movepiece.js";
 import jsutil from "../../util/jsutil.js";
 import moveutil from "../util/moveutil.js";
-
 import { players } from "../util/typeutil.js";
 import typeutil from "../util/typeutil.js";
 import checkdetection from "./checkdetection.js";
 import legalmoves from "./legalmoves.js";
-// @ts-ignore
+import bimath from "../../util/bigdecimal/bimath.js";
 import specialdetect from "./specialdetect.js";
 
 // Functions ------------------------------------------------------------------------------
@@ -302,10 +301,10 @@ function removeSlidingMovesThatOpenDiscovered(gamefile: FullGame, moves: LegalMo
 function appendBlockingMoves(gamefile: FullGame, square1: Coords, square2: Coords, moves: LegalMoves, coords: Coords, color: Player): void { // coords is of the selected piece
 	/** The minimum bounding box that contains our 2 squares, at opposite corners. */
 	const box: BoundingBox = {
-		left: Math.min(square1[0],square2[0]),
-		right: Math.max(square1[0],square2[0]),
-		top: Math.max(square1[1],square2[1]),
-		bottom: Math.min(square1[1],square2[1])
+		left: bimath.min(square1[0],square2[0]),
+		right: bimath.max(square1[0],square2[0]),
+		top: bimath.max(square1[1],square2[1]),
+		bottom: bimath.min(square1[1],square2[1])
 	};
 
 
