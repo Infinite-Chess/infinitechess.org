@@ -662,39 +662,6 @@ function calculateVectorComponents(vector: Vec2, length: number): Coords {
 }
 
 
-// Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
-
-
-/**
- * Computes the greatest common divisor (GCD) of two numbers using the Euclidean algorithm.
- */
-function GCD(a: number, b: number): number {
-	while (b !== 0) {
-		[a, b] = [b, a % b];
-	}
-	return Math.abs(a); // Ensure it's always non-negative
-}
-
-/**
- * Calculates the least common multiple between all integers in an array.
- */
-function LCM(array: number[]): number {
-	// Copied from https://www.geeksforgeeks.org/lcm-of-given-array-elements/
-
-	if (array.length === 0) throw Error('Array of numbers must have atleast one number to calculate the LCM.');
-
-	// Initialize result
-	let answer: number = array[0]!;
-
-	// answer will contain the LCM of arr[0], ..arr[i] after the i'th iteration, 
-	for (let i = 1; i < array.length; i++) {
-		answer = ((array[i]! * answer) / GCD(array[i]!, answer)); 
-	}
-
-	return answer; 
-}
-
-
 // Distance Calculation ----------------------------------------------------------------------------
 
 
@@ -865,8 +832,6 @@ export default {
 	getVec2FromKey,
 	negateVector,
 	calculateVectorComponents,
-	GCD,
-	LCM,
 	euclideanDistance,
 	manhattanDistance,
 	chebyshevDistance,

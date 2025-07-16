@@ -13,13 +13,14 @@ import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
 import math, { Vec2 } from '../../util/math.js';
+import bimath from '../../util/bigdecimal/bimath.js';
 // @ts-ignore
 import winconutil from './winconutil.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 // @ts-ignore
-import wincondition from '../logic/wincondition.js'; 
+import wincondition from '../logic/wincondition.js';
 
 
 // Methods -------------------------------------------------------------
@@ -99,7 +100,7 @@ function doGameOverChecks(gamefile: FullGame) {
 function getStartingAreaBox(boardsim: Board) {
 	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
-	if (coordsList.length === 0) coordsList.push([1,1], [8,8]); // use the [1,1]-[8,8] area as a fallback
+	if (coordsList.length === 0) coordsList.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
 	return math.getBoxFromCoordsList(coordsList);
 }
 
@@ -124,7 +125,7 @@ function areColinearSlidesPresentInGame(pieceMovesets: RawTypeGroup<() => PieceM
 	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
 	 */
 
-	if (slides!.some((vector: Vec2) => math.GCD(vector[0], vector[1]) !== 1)) return true; // Colinears are present
+	if (slides!.some((vector: Vec2) => bimath.GCD(vector[0], vector[1]) !== 1n)) return true; // Colinears are present
 
 	/**
 	 * 2. Colinears are present if there's at least one custom ignore function.
