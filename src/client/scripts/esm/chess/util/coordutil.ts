@@ -6,6 +6,7 @@
  */
 
 import type { BigDecimal } from "../../util/bigdecimal/bigdecimal";
+
 import bigdecimal from "../../util/bigdecimal/bigdecimal";
 
 
@@ -113,13 +114,14 @@ function copyCoords(coords: Coords): Coords {
  * @param t - The interpolation value (between 0 and 1).
  */
 function lerpCoords(start: Coords, end: Coords, t: number): BDCoords {
-	const diffX = end[0] - start[0];
-	const diffY = end[1] - start[1];
-	const startX = bigdecimal.FromBigInt(start[0]);
-	const startY = bigdecimal.FromBigInt(start[1]);
+	const bdstart: BDCoords = bigdecimal.FromCoords(start);
+	const bddiff: BDCoords = bigdecimal.FromCoords([end[0] - start[0], end[1] - start[1]]);
+	const bdt: BigDecimal = bigdecimal.FromNumber(t);
+	const travelX = bigdecimal.multiply_fixed(bddiff[0], bdt);
+	const travelY = bigdecimal.multiply_fixed(bddiff[1], bdt);
 	return [
-      start[0] + (diffX) * t,
-      start[1] + (diffY) * t,
+		bigdecimal.add(bdstart[0], travelX),
+		bigdecimal.add(bdstart[1], travelY),
     ];
 }
 
