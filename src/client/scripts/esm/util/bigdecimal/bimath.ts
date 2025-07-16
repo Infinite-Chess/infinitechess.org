@@ -318,6 +318,43 @@ function posMod(a: bigint, b: bigint): bigint {
 }
 
 
+// Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
+
+
+/**
+ * Computes the greatest common divisor (GCD) of two BigInts using the Euclidean algorithm.
+ * @param a The first BigInt.
+ * @param b The second BigInt.
+ * @returns The non-negative GCD of a and b.
+ */
+function GCD(a: bigint, b: bigint): bigint {
+	while (b !== ZERO) {
+		[a, b] = [b, a % b];
+	}
+	return abs(a);
+}
+
+/**
+ * Calculates the least common multiple (LCM) between all BigInts in an array.
+ * @param array An array of BigInts.
+ * @returns The LCM of the numbers in the array.
+ */
+function LCM(array: bigint[]): bigint {
+	if (array.length === 0) throw new Error('Array must contain at least one number to calculate the LCM.');
+
+	let answer: bigint = array[0]!;
+	for (let i = 1; i < array.length; i++) {
+		const currentNumber = array[i]!;
+
+		// A single-line if/else statement without curly braces.
+		if (currentNumber === ZERO || answer === ZERO) answer = ZERO;
+		else answer = abs(currentNumber * answer) / GCD(currentNumber, answer);
+	}
+
+	return answer;
+}
+
+
 // Exports ============================================================
 
 
@@ -332,4 +369,6 @@ export default {
 	bitLength_bisection,
 	estimateBigIntSize,
 	posMod,
+	GCD,
+	LCM,
 };
