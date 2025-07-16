@@ -23,6 +23,9 @@ type Coords = [bigint,bigint];
  */
 type BDCoords = [BigDecimal, BigDecimal]
 
+/** For when we don't need arbitrary size. */
+type DoubleCoords = [number, number]
+
 /**
  * A pair of coordinates, represented in a string, separated by a `,`.
  * 
@@ -141,5 +144,6 @@ export default {
 export type {
 	Coords,
 	BDCoords,
+	DoubleCoords,
 	CoordsKey,
 };

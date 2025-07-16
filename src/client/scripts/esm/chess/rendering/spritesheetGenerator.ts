@@ -5,10 +5,9 @@
  */
 
 
-import type { Coords } from "../logic/movesets.js";
-
-
 import math from "../../util/math.js";
+
+import type { DoubleCoords } from "../util/coordutil.js";
 
 
 
@@ -99,7 +98,7 @@ async function generateSpritesheet(gl: WebGL2RenderingContext, images: HTMLImage
  */
 function generateSpriteSheetData(images: HTMLImageElement[], gridSize: number) {  
 	const pieceWidth = 1 / gridSize;
-	const texLocs: { [key: number]: Coords } = {};
+	const texLocs: { [key: number]: DoubleCoords } = {};
 
 	// Positioning variables
 	let x = 0;
