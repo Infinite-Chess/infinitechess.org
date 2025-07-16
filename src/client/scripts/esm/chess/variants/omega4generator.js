@@ -1,26 +1,27 @@
+
+// src/client/scripts/esm/chess/variants/omega4generator.js
+
+/**
+ * Here lies the position generator for the Omega^4 Showcase variant.
+ */
+
+
 import coordutil from '../util/coordutil.js';
 import { rawTypes as r, ext as e } from '../util/typeutil.js';
 
-/** 
- * Type Definitions 
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- * @typedef {import('../util/coordutil.js').CoordsKey} CoordsKey
-*/
-
-'use strict';
 
 /**
  * Generates the Omega^4 position example
  * @returns {Map<CoordsKey, number>} The position in Map format
  */
-function genPositionOfOmegaFourth() {
+function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 	const dist = 500; // Generate Omega^4 up to a distance of 50 tiles away
 
 	// Create a Map for the starting position.
-	const startingPos = new Map();
+	const startingPos: Map<CoordsKey, number> = new Map();
 
 	// King chamber
-	const kingChamber = {
+	const kingChamber: Record<string, number> = {
 		'-14,17': r.PAWN + e.W,
 		'-14,18': r.PAWN + e.B,
 		'-13,14': r.PAWN + e.W,
@@ -67,7 +68,7 @@ function genPositionOfOmegaFourth() {
 	}
 
 	// Rook towers
-	const startOfRookTowers = {
+	const startOfRookTowers: Record<string, number> = {
 		'0,3': r.PAWN + e.W,
 		'0,4': r.PAWN + e.B,
 		'0,5': r.PAWN + e.W,
@@ -142,21 +143,21 @@ function genPositionOfOmegaFourth() {
 
 	return startingPos;
 
-	function appendPawnTower(startingPos, x, startY, endY) {
+	function appendPawnTower(startingPos: Map<CoordsKey, number>, x: number, startY: number, endY: number): void {
 		if (endY < startY) return; // Don't do negative pawn towers
 		for (let y = startY; y <= endY; y++) {
-			const thisCoords = [x, y];
-			const key = coordutil.getKeyFromCoords(thisCoords);
+			const thisCoords: Coords = [x, y];
+			const key: CoordsKey = coordutil.getKeyFromCoords(thisCoords);
 			startingPos.set(key, r.PAWN + e.W);
 		}
 	}
 
-	function setAir(startingPos, coords) {
-		const key = coordutil.getKeyFromCoords(coords);
+	function setAir(startingPos: Map<CoordsKey, number>, coords: Coords): void {
+		const key: CoordsKey = coordutil.getKeyFromCoords(coords);
 		startingPos.delete(key);
 	}
 
-	function spawnRookTower(startingPos, xStart, yStart, dist) {
+	function spawnRookTower(startingPos: Map<CoordsKey, number>, xStart: number, yStart: number, dist: number): void {
 		// First wall with 4 bishops
 		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart]), r.PAWN + e.W);
 		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 1]), r.PAWN + e.B);
@@ -200,18 +201,18 @@ function genPositionOfOmegaFourth() {
 		appendPawnTower(startingPos, xStart + 2, yStart + 16, dist);
 	}
 
-	function spawnAllRookTowers(startingPos, xStart, yStart, xEnd, yEnd) {
-		let y = yStart;
+	function spawnAllRookTowers(startingPos: Map<CoordsKey, number>, xStart: number, yStart: number, xEnd: number, yEnd: number): void {
+		let y: number = yStart;
 		for (let x = xStart; x < xEnd; x += 3) {
 			spawnRookTower(startingPos, x, y, yEnd);
 			y += 3; // Increment y as well!
 		}
 	}
 
-	function spawnAllBishopCannons(startingPos, startX, startY, endX, endY) {
+	function spawnAllBishopCannons(startingPos: Map<CoordsKey, number>, startX: number, startY: number, endX: number, endY: number): void {
 		const spacing = 7;
-		let currX = startX;
-		let currY = startY;
+		let currX: number = startX;
+		let currY: number = startY;
 		let i = 0;
 		do {
 			genBishopCannon(startingPos, currX, currY, i);
@@ -221,7 +222,7 @@ function genPositionOfOmegaFourth() {
 		} while (currX < endX && currY > endY);
 	}
 
-	function genBishopCannon(startingPos, x, y, i) {
+	function genBishopCannon(startingPos: Map<CoordsKey, number>, x: number, y: number, i: number): void {
 		// Pawn staples that never change
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.W);
@@ -253,13 +254,13 @@ function genPositionOfOmegaFourth() {
 
 		// Generate bishop puzzle pieces.
 		// it tells us how many to iteratively gen!
-		const count = i + 2;
-		let puzzleX = x + 8;
-		let puzzleY = y + 2;
-		const upDiag = puzzleY - puzzleX;
+		const count: number = i + 2;
+		let puzzleX: number = x + 8;
+		let puzzleY: number = y + 2;
+		const upDiag: number = puzzleY - puzzleX;
 		if (upDiag > -990) {
 			for (let a = 1; a <= count; a++) {
-				const isLastIndex = (a === count);
+				const isLastIndex: boolean = (a === count);
 				genBishopPuzzlePiece(startingPos, puzzleX, puzzleY, isLastIndex);
 				puzzleX += 1;
 				puzzleY += 1;
@@ -267,8 +268,8 @@ function genPositionOfOmegaFourth() {
 		}
 
 		// White pawn strip
-		let pawnX = x + 4;
-		let pawnY = y;
+		let pawnX: number = x + 4;
+		let pawnY: number = y;
 		for (let a = 0; a < i; a++) {
 			startingPos.set(coordutil.getKeyFromCoords([pawnX, pawnY]), r.PAWN + e.W);
 			pawnX++;
@@ -276,7 +277,7 @@ function genPositionOfOmegaFourth() {
 		}
 	}
 
-	function genBishopPuzzlePiece(startingPos, x, y, isLastIndex) {
+	function genBishopPuzzlePiece(startingPos: Map<CoordsKey, number>, x: number, y: number, isLastIndex: boolean): void {
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.W);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 2]), r.BISHOP + e.B);
@@ -294,10 +295,10 @@ function genPositionOfOmegaFourth() {
 		startingPos.set(coordutil.getKeyFromCoords([x + 2, y - 2]), r.PAWN + e.B);
 	}
 
-	function spawnAllWings(startingPos, startX, startY, endX, endY) {
+	function spawnAllWings(startingPos: Map<CoordsKey, number>, startX: number, startY: number, endX: number, endY: number): void {
 		const spacing = 8;
-		let currX = startX;
-		let currY = startY;
+		let currX: number = startX;
+		let currY: number = startY;
 		let i = 0;
 		do {
 			spawnWing(startingPos, currX, currY, i);
@@ -307,7 +308,7 @@ function genPositionOfOmegaFourth() {
 		} while (currX > endX && currY > endY);
 	}
 
-	function spawnWing(startingPos, x, y, i) {
+	function spawnWing(startingPos: Map<CoordsKey, number>, x: number, y: number, i: number): void {
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.W);
 		startingPos.set(coordutil.getKeyFromCoords([x - 1, y - 1]), r.PAWN + e.B);
@@ -320,12 +321,12 @@ function genPositionOfOmegaFourth() {
 		startingPos.set(coordutil.getKeyFromCoords([x - 4, y - 5]), r.PAWN + e.W);
 		
 		// Generate segments
-		const count = i + 1;
+		const count: number = i + 1;
 		const segSpacing = 6;
-		let segX = x - 5;
-		let segY = y - 8;
+		let segX: number = x - 5;
+		let segY: number = y - 8;
 		for (let a = 1; a <= count; a++) {
-			const isLastIndex = (a === count);
+			const isLastIndex: boolean = (a === count);
 			genWingSegment(startingPos, segX, segY, isLastIndex);
 			segX -= segSpacing;
 			segY += segSpacing;
@@ -337,7 +338,7 @@ function genPositionOfOmegaFourth() {
 		setAir(startingPos, [x - 5, y - 10]);
 	}
 
-	function genWingSegment(startingPos, x, y, isLastIndex) {
+	function genWingSegment(startingPos: Map<CoordsKey, number>, x: number, y: number, isLastIndex: boolean): void {
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 2]), r.PAWN + e.W);
 		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.B);
 		startingPos.set(coordutil.getKeyFromCoords([x - 1, y - 1]), r.PAWN + e.W);
@@ -383,30 +384,30 @@ function genPositionOfOmegaFourth() {
 		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 5]), r.PAWN + e.W);
 	}
 
-	function addVoidSquaresToOmegaFourth(startingPos, left, top, right, bottomright, bottomleft) {
+	function addVoidSquaresToOmegaFourth(startingPos: Map<CoordsKey, number>, left: number, top: number, right: number, bottomright: number, bottomleft: number): void {
 		for (let x = left; x <= right; x++) {
-			const key = coordutil.getKeyFromCoords([x, top]);
+			const key: CoordsKey = coordutil.getKeyFromCoords([x, top]);
 			startingPos.set(key, r.VOID + e.N);
 		}
 		for (let y = top; y >= bottomright; y--) {
-			const key = coordutil.getKeyFromCoords([right, y]);
+			const key: CoordsKey = coordutil.getKeyFromCoords([right, y]);
 			startingPos.set(key, r.VOID + e.N);
 		}
-		let y = bottomright;
+		let y: number = bottomright;
 		for (let x = right; x >= -3; x--) {
-			let key = coordutil.getKeyFromCoords([x, y]);
+			let key: CoordsKey = coordutil.getKeyFromCoords([x, y]);
 			startingPos.set(key, r.VOID + e.N);
 			key = coordutil.getKeyFromCoords([x, y - 1]);
 			startingPos.set(key, r.VOID + e.N);
 			y--;
 		}
 		for (let y = top; y >= bottomleft; y--) {
-			const key = coordutil.getKeyFromCoords([left, y]);
+			const key: CoordsKey = coordutil.getKeyFromCoords([left, y]);
 			startingPos.set(key, r.VOID + e.N);
 		}
 		y = bottomleft;
 		for (let x = left; x <= -4; x++) {
-			let key = coordutil.getKeyFromCoords([x, y]);
+			let key: CoordsKey = coordutil.getKeyFromCoords([x, y]);
 			startingPos.set(key, r.VOID + e.N);
 			key = coordutil.getKeyFromCoords([x, y - 1]);
 			startingPos.set(key, r.VOID + e.N);
