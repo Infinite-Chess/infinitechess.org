@@ -22,22 +22,22 @@ import icnconverter from "../logic/icn/icnconverter.js";
 
 
 /** Contains all relevant quantities for the size of the 4D chess board. */
-const dim = {
+let dim: {
 	/** The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1 */
-	BOARD_SPACING: NaN,
+	BOARD_SPACING: bigint,
 	/** Number of 2D boards in x direction */
-	BOARDS_X: NaN,
+	BOARDS_X: bigint,
 	/** Number of 2D boards in y direction */
-	BOARDS_Y: NaN,
+	BOARDS_Y: bigint,
 	/** Board edges on the real chessboard */
-	MIN_X: NaN,
+	MIN_X: bigint,
 	/** Board edges on the real chessboard */
-	MAX_X: NaN,
+	MAX_X: bigint,
 	/** Board edges on the real chessboard */
-	MIN_Y: NaN,
+	MIN_Y: bigint,
 	/** Board edges on the real chessboard */
-	MAX_Y: NaN,
-};
+	MAX_Y: bigint,
+} | undefined;
 
 /**
  * mov: Contains all relevant parameters for movement logic on the 4D board
@@ -56,18 +56,22 @@ const mov = {
 // Utility ---------------------------------------------------------------------------------------------------------
 
 
-function set4DBoardDimensions(boards_x: number, boards_y: number, board_spacing: number) {
-	dim.BOARDS_X = boards_x;
-	dim.BOARDS_Y = boards_y;
-	dim.BOARD_SPACING = board_spacing;
-	dim.MIN_X = 0;
-	dim.MAX_X = dim.MIN_X + dim.BOARDS_X * dim.BOARD_SPACING;
-	dim.MIN_Y = 0;
-	dim.MAX_Y = dim.MIN_Y + dim.BOARDS_Y * dim.BOARD_SPACING;
+function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing: bigint) {
+	const MIN_X = 0n;
+	const MIN_Y = 0n;
+	dim = {
+		BOARDS_X: boards_x,
+		BOARDS_Y: boards_y,
+		BOARD_SPACING: board_spacing,
+		MIN_X,
+		MAX_X: MIN_X + boards_x * board_spacing,
+		MIN_Y,
+		MAX_Y: MIN_Y + boards_y * board_spacing,
+	}
 }
 
 function get4DBoardDimensions() {
-	return dim;
+	return dim!;
 }
 
 function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean) {
