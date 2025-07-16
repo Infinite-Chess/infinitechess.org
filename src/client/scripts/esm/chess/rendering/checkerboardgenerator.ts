@@ -17,7 +17,7 @@ function createCheckerboardIMG(lightColor: string, darkColor: string, imageSize:
 	const canvas = document.createElement('canvas');
 	canvas.width = imageSize;
 	canvas.height = imageSize;
-	const ctx = canvas.getContext('2d');
+	const ctx = canvas.getContext('2d')!;
 
 	// Define the size of each square
 	const squareSize: number = imageSize / 2;
