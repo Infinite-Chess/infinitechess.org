@@ -128,7 +128,7 @@ function defaultIgnoreFunction() {
  * @param [slideLimit] Optional. The slideLimit gamerule value.
  * @returns Object containing the movesets of all pieces except pawns.
  */
-function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
+function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 	if (typeof slideLimit !== 'number') throw new Error("slideLimit gamerule is in an unsupported value.");
 
 	return {
@@ -138,143 +138,143 @@ function getPieceDefaultMovesets(slideLimit: number = Infinity): Movesets {
 		},
 		[rawTypes.KNIGHT]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ]
 		},
 		[rawTypes.HAWK]: {
 			individual: [
-                [-3,0],[-2,0],[2,0],[3,0],
-                [0,-3],[0,-2],[0,2],[0,3],
-                [-2,-2],[-2,2],[2,-2],[2,2],
-                [-3,-3],[-3,3],[3,-3],[3,3]
+                [-3n,0n],[-2n,0n],[2n,0n],[3n,0n],
+                [0n,-3n],[0n,-2n],[0n,2n],[0n,3n],
+                [-2n,-2n],[-2n,2n],[2n,-2n],[2n,2n],
+                [-3n,-3n],[-3n,3n],[3n,-3n],[3n,3n]
             ]
 		},
 		[rawTypes.KING]: {
 			individual: [
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1]
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n]
             ],
 			special: specialdetect.kings
 		},
 		[rawTypes.GUARD]: {
 			individual: [
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1]
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n]
             ]
 		},
 		// Infinitely moving
 		[rawTypes.ROOK]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.BISHOP]: {
 			sliding: {
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.QUEEN]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit],
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.ROYALQUEEN]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit],
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.CHANCELLOR]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.ARCHBISHOP]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			sliding: {
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.AMAZON]: {
 			individual: [
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit],
-				'1,1': [-slideLimit, slideLimit],
-				'1,-1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit],
+				'1,1': [slideLimit, slideLimit],
+				'1,-1': [slideLimit, slideLimit]
 			}
 		},
 		[rawTypes.CAMEL]: {
 			individual: [
-                [-3,1],[-1,3],[1,3],[3,1],
-                [-3,-1],[-1,-3],[1,-3],[3,-1]
+                [-3n,1n],[-1n,3n],[1n,3n],[3n,1n],
+                [-3n,-1n],[-1n,-3n],[1n,-3n],[3n,-1n]
             ]
 		},
 		[rawTypes.GIRAFFE]: {
 			individual: [
-                [-4,1],[-1,4],[1,4],[4,1],
-                [-4,-1],[-1,-4],[1,-4],[4,-1]
+                [-4n,1n],[-1n,4n],[1n,4n],[4n,1n],
+                [-4n,-1n],[-1n,-4n],[1n,-4n],[4n,-1n]
             ]
 		},
 		[rawTypes.ZEBRA]: {
 			individual: [
-                [-3,2],[-2,3],[2,3],[3,2],
-                [-3,-2],[-2,-3],[2,-3],[3,-2]
+                [-3n,2n],[-2n,3n],[2n,3n],[3n,2n],
+                [-3n,-2n],[-2n,-3n],[2n,-3n],[3n,-2n]
             ]
 		},
 		[rawTypes.KNIGHTRIDER]: {
 			sliding: {
-				'1,2' : [-slideLimit, slideLimit],
-				'1,-2' : [-slideLimit,slideLimit],
-				'2,1' : [-slideLimit,slideLimit],
-				'2,-1' : [-slideLimit,slideLimit],
+				'1,2': [slideLimit, slideLimit],
+				'1,-2': [slideLimit,slideLimit],
+				'2,1': [slideLimit,slideLimit],
+				'2,-1': [slideLimit,slideLimit],
 			}
 		},
 		[rawTypes.CENTAUR]: {
 			individual: [
                 // Guard moveset
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1],
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n],
                 // + Knight moveset!
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ]
 		},
 		[rawTypes.ROYALCENTAUR]: {
 			individual: [
                 // Guard moveset
-                [-1,0],[-1,1],[0,1],[1,1],
-                [1,0],[1,-1],[0,-1],[-1,-1],
+                [-1n,0n],[-1n,1n],[0n,1n],[1n,1n],
+                [1n,0n],[1n,-1n],[0n,-1n],[-1n,-1n],
                 // + Knight moveset!
-                [-2,1],[-1,2],[1,2],[2,1],
-                [-2,-1],[-1,-2],[1,-2],[2,-1]
+                [-2n,1n],[-1n,2n],[1n,2n],[2n,1n],
+                [-2n,-1n],[-1n,-2n],[1n,-2n],[2n,-1n]
             ],
 			special: specialdetect.kings
 		},
 		[rawTypes.HUYGEN]: {
 			sliding: {
-				'1,0': [-slideLimit, slideLimit],
-				'0,1': [-slideLimit, slideLimit]
+				'1,0': [slideLimit, slideLimit],
+				'0,1': [slideLimit, slideLimit]
 			},
 			blocking: (friendlyColor: Player, blockingPiece: Piece, coords: Coords) => {
 				const distance = math.chebyshevDistance(coords, blockingPiece.coords);
