@@ -6,7 +6,7 @@
  */
 
 
-import coordutil from '../util/coordutil.js';
+import coordutil, { CoordsKey, Coords } from '../util/coordutil.js';
 import { rawTypes as r, ext as e } from '../util/typeutil.js';
 
 
@@ -15,7 +15,7 @@ import { rawTypes as r, ext as e } from '../util/typeutil.js';
  * @returns {Map<CoordsKey, number>} The position in Map format
  */
 function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
-	const dist = 500; // Generate Omega^4 up to a distance of 50 tiles away
+	const dist = 500n; // Generate Omega^4 up to a distance of 50 tiles away
 
 	// Create a Map for the starting position.
 	const startingPos: Map<CoordsKey, number> = new Map();
@@ -64,7 +64,7 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		'-9,27': r.PAWN + e.B,
 	};
 	for (const [key, value] of Object.entries(kingChamber)) {
-		startingPos.set(key, value);
+		startingPos.set(key as CoordsKey, value);
 	}
 
 	// Rook towers
@@ -122,28 +122,28 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		'5,15': r.PAWN + e.B,
 	};
 	for (const [key, value] of Object.entries(startOfRookTowers)) {
-		startingPos.set(key, value);
+		startingPos.set(key as CoordsKey, value);
 	}
 
-	appendPawnTower(startingPos, 0, 13, dist);
-	appendPawnTower(startingPos, 2, 13, dist);
-	appendPawnTower(startingPos, 3, 16, dist);
-	appendPawnTower(startingPos, 5, 16, dist);
+	appendPawnTower(startingPos, 0n, 13n, dist);
+	appendPawnTower(startingPos, 2n, 13n, dist);
+	appendPawnTower(startingPos, 3n, 16n, dist);
+	appendPawnTower(startingPos, 5n, 16n, dist);
 
-	spawnAllRookTowers(startingPos, 6, 3, dist + 3, dist);
+	spawnAllRookTowers(startingPos, 6n, 3n, dist + 3n, dist);
 
 	// Bishop Cannon Battery
-	startingPos.set(coordutil.getKeyFromCoords([0, -6]), r.PAWN + e.B);
-	startingPos.set(coordutil.getKeyFromCoords([0, -7]), r.PAWN + e.W);
+	startingPos.set(coordutil.getKeyFromCoords([0n, -6n]), r.PAWN + e.B);
+	startingPos.set(coordutil.getKeyFromCoords([0n, -7n]), r.PAWN + e.W);
 
-	spawnAllBishopCannons(startingPos, 1, -7, dist, -dist);
-	spawnAllWings(startingPos, -1, -7, -dist, -dist);
+	spawnAllBishopCannons(startingPos, 1n, -7n, dist, -dist);
+	spawnAllWings(startingPos, -1n, -7n, -dist, -dist);
 
-	addVoidSquaresToOmegaFourth(startingPos, -866, 500, 567, -426, -134);
+	addVoidSquaresToOmegaFourth(startingPos, -866n, 500n, 567n, -426n, -134n);
 
 	return startingPos;
 
-	function appendPawnTower(startingPos: Map<CoordsKey, number>, x: number, startY: number, endY: number): void {
+	function appendPawnTower(startingPos: Map<CoordsKey, number>, x: bigint, startY: bigint, endY: bigint): void {
 		if (endY < startY) return; // Don't do negative pawn towers
 		for (let y = startY; y <= endY; y++) {
 			const thisCoords: Coords = [x, y];
@@ -157,62 +157,62 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		startingPos.delete(key);
 	}
 
-	function spawnRookTower(startingPos: Map<CoordsKey, number>, xStart: number, yStart: number, dist: number): void {
+	function spawnRookTower(startingPos: Map<CoordsKey, number>, xStart: bigint, yStart: bigint, dist: bigint): void {
 		// First wall with 4 bishops
 		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 1]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 2]), r.PAWN + e.W);
-		if (yStart + 3 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 3]), r.PAWN + e.B);
-		if (yStart + 6 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 6]), r.PAWN + e.W);
-		if (yStart + 7 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 7]), r.PAWN + e.B);
-		if (yStart + 8 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 8]), r.BISHOP + e.W);
-		if (yStart + 9 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 9]), r.PAWN + e.W);
-		if (yStart + 10 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 10]), r.BISHOP + e.W);
-		if (yStart + 12 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 12]), r.BISHOP + e.W);
-		if (yStart + 14 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 14]), r.BISHOP + e.W);
-		appendPawnTower(startingPos, xStart, yStart + 16, dist);
+		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 1n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 2n]), r.PAWN + e.W);
+		if (yStart + 3n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 3n]), r.PAWN + e.B);
+		if (yStart + 6n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 6n]), r.PAWN + e.W);
+		if (yStart + 7n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 7n]), r.PAWN + e.B);
+		if (yStart + 8n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 8n]), r.BISHOP + e.W);
+		if (yStart + 9n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 9n]), r.PAWN + e.W);
+		if (yStart + 10n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 10n]), r.BISHOP + e.W);
+		if (yStart + 12n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 12n]), r.BISHOP + e.W);
+		if (yStart + 14n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart, yStart + 14n]), r.BISHOP + e.W);
+		appendPawnTower(startingPos, xStart, yStart + 16n, dist);
 
 		// Second wall with rook
-		startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 1]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 2]), r.PAWN + e.B);
-		if (yStart + 3 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 3]), r.PAWN + e.W);
-		if (yStart + 4 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 4]), r.PAWN + e.B);
-		if (yStart + 7 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 7]), r.PAWN + e.W);
-		if (yStart + 8 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 8]), r.PAWN + e.B);
-		if (yStart + 9 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 9]), r.BISHOP + e.W);
-		if (yStart + 11 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 11]), r.BISHOP + e.W);
-		if (yStart + 13 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 13]), r.BISHOP + e.W);
-		if (yStart + 15 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 15]), r.BISHOP + e.W);
-		if (yStart + 16 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1, yStart + 16]), r.ROOK + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 1n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 2n]), r.PAWN + e.B);
+		if (yStart + 3n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 3n]), r.PAWN + e.W);
+		if (yStart + 4n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 4n]), r.PAWN + e.B);
+		if (yStart + 7n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 7n]), r.PAWN + e.W);
+		if (yStart + 8n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 8n]), r.PAWN + e.B);
+		if (yStart + 9n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 9n]), r.BISHOP + e.W);
+		if (yStart + 11n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 11n]), r.BISHOP + e.W);
+		if (yStart + 13n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 13n]), r.BISHOP + e.W);
+		if (yStart + 15n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 15n]), r.BISHOP + e.W);
+		if (yStart + 16n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 1n, yStart + 16n]), r.ROOK + e.B);
 
 		// Third pawn wall
-		startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 2]), r.PAWN + e.W);
-		if (yStart + 3 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 3]), r.PAWN + e.B);
-		if (yStart + 4 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 4]), r.PAWN + e.W);
-		if (yStart + 5 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 5]), r.PAWN + e.B);
-		if (yStart + 8 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 8]), r.PAWN + e.W);
-		if (yStart + 9 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 9]), r.PAWN + e.B);
-		if (yStart + 10 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 10]), r.PAWN + e.W);
-		if (yStart + 11 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 11]), r.PAWN + e.W);
-		if (yStart + 12 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 12]), r.PAWN + e.W);
-		if (yStart + 13 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 13]), r.PAWN + e.W);
-		if (yStart + 14 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 14]), r.PAWN + e.W);
-		if (yStart + 15 <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 15]), r.PAWN + e.B);
-		appendPawnTower(startingPos, xStart + 2, yStart + 16, dist);
+		startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 2n]), r.PAWN + e.W);
+		if (yStart + 3n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 3n]), r.PAWN + e.B);
+		if (yStart + 4n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 4n]), r.PAWN + e.W);
+		if (yStart + 5n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 5n]), r.PAWN + e.B);
+		if (yStart + 8n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 8n]), r.PAWN + e.W);
+		if (yStart + 9n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 9n]), r.PAWN + e.B);
+		if (yStart + 10n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 10n]), r.PAWN + e.W);
+		if (yStart + 11n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 11n]), r.PAWN + e.W);
+		if (yStart + 12n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 12n]), r.PAWN + e.W);
+		if (yStart + 13n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 13n]), r.PAWN + e.W);
+		if (yStart + 14n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 14n]), r.PAWN + e.W);
+		if (yStart + 15n <= dist) startingPos.set(coordutil.getKeyFromCoords([xStart + 2n, yStart + 15n]), r.PAWN + e.B);
+		appendPawnTower(startingPos, xStart + 2n, yStart + 16n, dist);
 	}
 
-	function spawnAllRookTowers(startingPos: Map<CoordsKey, number>, xStart: number, yStart: number, xEnd: number, yEnd: number): void {
-		let y: number = yStart;
-		for (let x = xStart; x < xEnd; x += 3) {
+	function spawnAllRookTowers(startingPos: Map<CoordsKey, number>, xStart: bigint, yStart: bigint, xEnd: bigint, yEnd: bigint): void {
+		let y: bigint = yStart;
+		for (let x = xStart; x < xEnd; x += 3n) {
 			spawnRookTower(startingPos, x, y, yEnd);
-			y += 3; // Increment y as well!
+			y += 3n; // Increment y as well!
 		}
 	}
 
-	function spawnAllBishopCannons(startingPos: Map<CoordsKey, number>, startX: number, startY: number, endX: number, endY: number): void {
-		const spacing = 7;
-		let currX: number = startX;
-		let currY: number = startY;
+	function spawnAllBishopCannons(startingPos: Map<CoordsKey, number>, startX: bigint, startY: bigint, endX: bigint, endY: bigint): void {
+		const spacing = 7n;
+		let currX: bigint = startX;
+		let currY: bigint = startY;
 		let i = 0;
 		do {
 			genBishopCannon(startingPos, currX, currY, i);
@@ -222,54 +222,54 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		} while (currX < endX && currY > endY);
 	}
 
-	function genBishopCannon(startingPos: Map<CoordsKey, number>, x: number, y: number, i: number): void {
+	function genBishopCannon(startingPos: Map<CoordsKey, number>, x: bigint, y: bigint, i: number): void {
 		// Pawn staples that never change
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x + 1, y - 1]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x + 1, y - 2]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x + 2, y - 2]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x + 2, y - 3]), r.PAWN + e.W);
-		if (y - 3 - x + 3 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 3, y - 3]), r.PAWN + e.B);
-		if (y - 4 - x + 3 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 3, y - 4]), r.PAWN + e.W);
-		if (y - 5 - x + 4 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 4, y - 4]), r.PAWN + e.B);
-		if (y - 3 - x + 4 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 4, y - 5]), r.PAWN + e.W);
-		if (y - 4 - x + 5 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 5, y - 3]), r.PAWN + e.B);
-		if (y - 4 - x + 5 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 5, y - 4]), r.PAWN + e.W);
-		if (y - 2 - x + 6 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 6, y - 2]), r.PAWN + e.B);
-		if (y - 3 - x + 6 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 6, y - 3]), r.PAWN + e.W);
-		if (y - 1 - x + 7 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 7, y - 1]), r.PAWN + e.B);
-		if (y - 2 - x + 7 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 7, y - 2]), r.PAWN + e.W);
-		if (y + 1 - x + 7 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 7, y + 1]), r.PAWN + e.B);
-		if (y + 0 - x + 7 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 7, y + 0]), r.PAWN + e.W);
-		if (y - 2 - x + 8 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 8, y - 2]), r.BISHOP + e.B);
-		if (y - 6 - x + 6 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 6, y - 6]), r.PAWN + e.B);
-		if (y - 7 - x + 6 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 6, y - 7]), r.PAWN + e.W);
-		if (y - 5 - x + 7 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 7, y - 5]), r.PAWN + e.B);
-		if (y - 6 - x + 7 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 7, y - 6]), r.PAWN + e.W);
-		if (y - 4 - x + 8 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 8, y - 4]), r.PAWN + e.B);
-		if (y - 5 - x + 8 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 8, y - 5]), r.PAWN + e.W);
-		if (y - 3 - x + 9 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 9, y - 3]), r.PAWN + e.B);
-		if (y - 4 - x + 9 > -980) startingPos.set(coordutil.getKeyFromCoords([x + 9, y - 4]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x, y - 1n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x + 1n, y - 1n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 1n, y - 2n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x + 2n, y - 2n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 2n, y - 3n]), r.PAWN + e.W);
+		if (y - 3n - x + 3n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 3n, y - 3n]), r.PAWN + e.B);
+		if (y - 4n - x + 3n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 3n, y - 4n]), r.PAWN + e.W);
+		if (y - 5n - x + 4n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 4n, y - 4n]), r.PAWN + e.B);
+		if (y - 3n - x + 4n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 4n, y - 5n]), r.PAWN + e.W);
+		if (y - 4n - x + 5n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 5n, y - 3n]), r.PAWN + e.B);
+		if (y - 4n - x + 5n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 5n, y - 4n]), r.PAWN + e.W);
+		if (y - 2n - x + 6n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 6n, y - 2n]), r.PAWN + e.B);
+		if (y - 3n - x + 6n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 6n, y - 3n]), r.PAWN + e.W);
+		if (y - 1n - x + 7n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 7n, y - 1n]), r.PAWN + e.B);
+		if (y - 2n - x + 7n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 7n, y - 2n]), r.PAWN + e.W);
+		if (y + 1n - x + 7n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 7n, y + 1n]), r.PAWN + e.B);
+		if (y + 0n - x + 7n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 7n, y + 0n]), r.PAWN + e.W);
+		if (y - 2n - x + 8n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 8n, y - 2n]), r.BISHOP + e.B);
+		if (y - 6n - x + 6n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 6n, y - 6n]), r.PAWN + e.B);
+		if (y - 7n - x + 6n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 6n, y - 7n]), r.PAWN + e.W);
+		if (y - 5n - x + 7n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 7n, y - 5n]), r.PAWN + e.B);
+		if (y - 6n - x + 7n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 7n, y - 6n]), r.PAWN + e.W);
+		if (y - 4n - x + 8n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 8n, y - 4n]), r.PAWN + e.B);
+		if (y - 5n - x + 8n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 8n, y - 5n]), r.PAWN + e.W);
+		if (y - 3n - x + 9n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 9n, y - 3n]), r.PAWN + e.B);
+		if (y - 4n - x + 9n > -980n) startingPos.set(coordutil.getKeyFromCoords([x + 9n, y - 4n]), r.PAWN + e.W);
 
 		// Generate bishop puzzle pieces.
 		// it tells us how many to iteratively gen!
 		const count: number = i + 2;
-		let puzzleX: number = x + 8;
-		let puzzleY: number = y + 2;
-		const upDiag: number = puzzleY - puzzleX;
-		if (upDiag > -990) {
+		let puzzleX: bigint = x + 8n;
+		let puzzleY: bigint = y + 2n;
+		const upDiag: bigint = puzzleY - puzzleX;
+		if (upDiag > -990n) {
 			for (let a = 1; a <= count; a++) {
 				const isLastIndex: boolean = (a === count);
 				genBishopPuzzlePiece(startingPos, puzzleX, puzzleY, isLastIndex);
-				puzzleX += 1;
-				puzzleY += 1;
+				puzzleX += 1n;
+				puzzleY += 1n;
 			}
 		}
 
 		// White pawn strip
-		let pawnX: number = x + 4;
-		let pawnY: number = y;
+		let pawnX: bigint = x + 4n;
+		let pawnY: bigint = y;
 		for (let a = 0; a < i; a++) {
 			startingPos.set(coordutil.getKeyFromCoords([pawnX, pawnY]), r.PAWN + e.W);
 			pawnX++;
@@ -277,28 +277,28 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		}
 	}
 
-	function genBishopPuzzlePiece(startingPos: Map<CoordsKey, number>, x: number, y: number, isLastIndex: boolean): void {
+	function genBishopPuzzlePiece(startingPos: Map<CoordsKey, number>, x: bigint, y: bigint, isLastIndex: boolean): void {
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x, y - 2]), r.BISHOP + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x + 1, y - 2]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x + 1, y - 3]), r.BISHOP + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x + 2, y - 4]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x + 2, y - 5]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x, y - 1n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x, y - 2n]), r.BISHOP + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 1n, y - 2n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 1n, y - 3n]), r.BISHOP + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 2n, y - 4n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 2n, y - 5n]), r.PAWN + e.W);
 
 		if (!isLastIndex) return;
 
 		// Is last index
-		startingPos.set(coordutil.getKeyFromCoords([x + 1, y - 2]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x + 1, y - 1]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x + 2, y - 3]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x + 2, y - 2]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 1n, y - 2n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x + 1n, y - 1n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x + 2n, y - 3n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x + 2n, y - 2n]), r.PAWN + e.B);
 	}
 
-	function spawnAllWings(startingPos: Map<CoordsKey, number>, startX: number, startY: number, endX: number, endY: number): void {
-		const spacing = 8;
-		let currX: number = startX;
-		let currY: number = startY;
+	function spawnAllWings(startingPos: Map<CoordsKey, number>, startX: bigint, startY: bigint, endX: bigint, endY: bigint): void {
+		const spacing = 8n;
+		let currX: bigint = startX;
+		let currY: bigint = startY;
 		let i = 0;
 		do {
 			spawnWing(startingPos, currX, currY, i);
@@ -308,23 +308,23 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		} while (currX > endX && currY > endY);
 	}
 
-	function spawnWing(startingPos: Map<CoordsKey, number>, x: number, y: number, i: number): void {
+	function spawnWing(startingPos: Map<CoordsKey, number>, x: bigint, y: bigint, i: number): void {
 		startingPos.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 1, y - 1]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 1, y - 2]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y - 2]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y - 3]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 3, y - 3]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 3, y - 4]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y - 4]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y - 5]), r.PAWN + e.W);
-		
+		startingPos.set(coordutil.getKeyFromCoords([x, y - 1n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 1n, y - 1n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 1n, y - 2n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y - 2n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y - 3n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 3n, y - 3n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 3n, y - 4n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y - 4n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y - 5n]), r.PAWN + e.W);
+
 		// Generate segments
 		const count: number = i + 1;
-		const segSpacing = 6;
-		let segX: number = x - 5;
-		let segY: number = y - 8;
+		const segSpacing = 6n;
+		let segX: bigint = x - 5n;
+		let segY: bigint = y - 8n;
 		for (let a = 1; a <= count; a++) {
 			const isLastIndex: boolean = (a === count);
 			genWingSegment(startingPos, segX, segY, isLastIndex);
@@ -332,59 +332,59 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 			segY += segSpacing;
 		}
 
-		setAir(startingPos, [x - 6, y - 8]);
-		setAir(startingPos, [x - 6, y - 9]);
-		setAir(startingPos, [x - 5, y - 9]);
-		setAir(startingPos, [x - 5, y - 10]);
+		setAir(startingPos, [x - 6n, y - 8n]);
+		setAir(startingPos, [x - 6n, y - 9n]);
+		setAir(startingPos, [x - 5n, y - 9n]);
+		setAir(startingPos, [x - 5n, y - 10n]);
 	}
 
-	function genWingSegment(startingPos: Map<CoordsKey, number>, x: number, y: number, isLastIndex: boolean): void {
-		startingPos.set(coordutil.getKeyFromCoords([x, y - 2]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x, y - 1]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 1, y - 1]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 1, y + 0]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 0]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 1]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 3, y + 1]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 3, y + 2]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y + 2]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y + 3]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 3]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 4]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x, y + 2]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x, y + 3]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 1, y + 3]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 1, y + 4]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 4]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 5]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 6]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 7]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 8]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 9]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 10]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 2, y + 11]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 3, y + 11]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 3, y + 12]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y + 12]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y + 13]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 11]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 12]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 10]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 9]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 8]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 7]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y + 7]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y + 6]), r.PAWN + e.W);
-		startingPos.set(coordutil.getKeyFromCoords([x - 4, y + 10]), r.BISHOP + e.W);
+	function genWingSegment(startingPos: Map<CoordsKey, number>, x: bigint, y: bigint, isLastIndex: boolean): void {
+		startingPos.set(coordutil.getKeyFromCoords([x, y - 2n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x, y - 1n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 1n, y - 1n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 1n, y + 0n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 0n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 1n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 3n, y + 1n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 3n, y + 2n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y + 2n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y + 3n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 3n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 4n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x, y + 2n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x, y + 3n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 1n, y + 3n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 1n, y + 4n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 4n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 5n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 6n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 7n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 8n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 9n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 10n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 2n, y + 11n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 3n, y + 11n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 3n, y + 12n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y + 12n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y + 13n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 11n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 12n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 10n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 9n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 8n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 7n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y + 7n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y + 6n]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 4n, y + 10n]), r.BISHOP + e.W);
 
 		if (!isLastIndex) return;
 
 		// Is last wing segment!
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 6]), r.PAWN + e.B);
-		startingPos.set(coordutil.getKeyFromCoords([x - 5, y + 5]), r.PAWN + e.W);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 6n]), r.PAWN + e.B);
+		startingPos.set(coordutil.getKeyFromCoords([x - 5n, y + 5n]), r.PAWN + e.W);
 	}
 
-	function addVoidSquaresToOmegaFourth(startingPos: Map<CoordsKey, number>, left: number, top: number, right: number, bottomright: number, bottomleft: number): void {
+	function addVoidSquaresToOmegaFourth(startingPos: Map<CoordsKey, number>, left: bigint, top: bigint, right: bigint, bottomright: bigint, bottomleft: bigint): void {
 		for (let x = left; x <= right; x++) {
 			const key: CoordsKey = coordutil.getKeyFromCoords([x, top]);
 			startingPos.set(key, r.VOID + e.N);
@@ -393,11 +393,11 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 			const key: CoordsKey = coordutil.getKeyFromCoords([right, y]);
 			startingPos.set(key, r.VOID + e.N);
 		}
-		let y: number = bottomright;
-		for (let x = right; x >= -3; x--) {
+		let y: bigint = bottomright;
+		for (let x = right; x >= -3n; x--) {
 			let key: CoordsKey = coordutil.getKeyFromCoords([x, y]);
 			startingPos.set(key, r.VOID + e.N);
-			key = coordutil.getKeyFromCoords([x, y - 1]);
+			key = coordutil.getKeyFromCoords([x, y - 1n]);
 			startingPos.set(key, r.VOID + e.N);
 			y--;
 		}
@@ -406,14 +406,14 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 			startingPos.set(key, r.VOID + e.N);
 		}
 		y = bottomleft;
-		for (let x = left; x <= -4; x++) {
+		for (let x = left; x <= -4n; x++) {
 			let key: CoordsKey = coordutil.getKeyFromCoords([x, y]);
 			startingPos.set(key, r.VOID + e.N);
-			key = coordutil.getKeyFromCoords([x, y - 1]);
+			key = coordutil.getKeyFromCoords([x, y - 1n]);
 			startingPos.set(key, r.VOID + e.N);
 			y--;
 		}
-		startingPos.set(`492,493`, r.VOID + e.N);
+		startingPos.set(coordutil.getKeyFromCoords([492n, 493n]), r.VOID + e.N);
 	}
 }
 
