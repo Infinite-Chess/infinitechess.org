@@ -7,19 +7,17 @@
  * @maintainer tsevasa
  */
 
-// Import Start
+
 import moveutil from '../util/moveutil.js';
 import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../variants/gamerules.js';
 import { rawTypes as r, ext as e, players, TypeGroup } from '../util/typeutil.js';
-// Import End
+import bimath from '../../util/bigdecimal/bimath.js';
 
-/** 
- * Type Definitions 
- */
+
 import type { GameRules } from '../variants/gamerules.js';
-import type { Board, Piece } from './gamefile.js';
+import type { Board } from './gamefile.js';
 
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
 type PieceCount = number | [number, number];
@@ -186,12 +184,12 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	const bishopsW_count: [number, number] = [0, 0];
 	const bishopsB_count: [number, number] = [0, 0];
 	for (const idx of boardsim.pieces.coords.values()) {
-		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx) as Piece;
+		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
 		const [raw, color] = typeutil.splitType(piece.type);
 		if (raw === r.OBSTACLE) continue;
 		
 		else if (raw === r.BISHOP) {
-			const parity = Math.abs(sum_tuple_coords(piece.coords)) % 2;
+			const parity: 0 | 1 = Number(bimath.abs(piece.coords[0] + piece.coords[1]) % 2n) as 0 | 1;
 			if (color === players.WHITE) bishopsW_count[parity] += 1;
 			else if (color === players.BLACK) bishopsB_count[parity] += 1;
 		}
@@ -212,17 +210,17 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	// This is fully enough for the checkmate practice mode, for now
 	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
 	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed[players.WHITE];
-		const promotionListBlack = gameRules.promotionsAllowed[players.BLACK];
+		const promotionListWhite = gameRules.promotionsAllowed![players.WHITE]!;
+		const promotionListBlack = gameRules.promotionsAllowed![players.BLACK]!;
 		if ((r.PAWN + e.W) in scenario && promotionListWhite.length !== 0) return undefined;
 		if ((r.PAWN + e.B) in scenario && promotionListBlack.length !== 0) return undefined;
 	}
 
 	// Create scenario object with inverted players
 	const invertedScenario: Scenario = {};
-	for (const pieceType in scenario) {
-		const pieceInverted = typeutil.invertType(pieceType);
-		invertedScenario[pieceInverted] = scenario[pieceType]!;
+	for (const pieceTypeStr in scenario) {
+		const pieceInverted = typeutil.invertType(Number(pieceTypeStr));
+		invertedScenario[pieceInverted] = scenario[pieceTypeStr]!;
 	}
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
