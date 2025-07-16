@@ -12,19 +12,26 @@ import enginegame from '../misc/enginegame.js';
 import statustext from '../gui/statustext.js';
 import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
-import gameslot from './gameslot.js';
+import gameslot, { PresetAnnotes } from './gameslot.js';
 import gameloader from './gameloader.js';
-import { players } from '../../chess/util/typeutil.js';
+import { PlayerGroup, players } from '../../chess/util/typeutil.js';
 import guipause from '../gui/guipause.js';
 import gamecompressor from './gamecompressor.js';
 import gameformulator from './gameformulator.js';
 import websocket from '../websocket.js';
 import boardutil from '../../chess/util/boardutil.js';
-import icnconverter from '../../chess/logic/icn/icnconverter.js';
+import icnconverter, { _Move_Out, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
 import variant from '../../chess/variants/variant.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import { pieceCountToDisableCheckmate } from '../../chess/logic/checkmate.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
+
+
+import type { CoordsKey } from '../../chess/util/coordutil.js';
+import type { VariantOptions } from '../../chess/logic/initvariant.js';
+import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../misc/onlinegame/onlinegamerouter.js';
+import type { MetaData } from '../../chess/util/metadata.js';
+import type { GameRules } from '../../chess/variants/gamerules.js';
 
 
 /**
@@ -37,14 +44,15 @@ const retainIfNotOverridden: string[] = ['UTCDate','UTCTime'] as const;
 
 const variantsTooBigToCopyPositionToICN: string[] = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', '5D_Chess'] as const;
 
+
 /**
  * Copies the current game to the clipboard in ICN notation.
  * This callback is called when the "Copy Game" button is pressed.
- * @param {boolean} copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
+ * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
 function copyGame(copySinglePosition: boolean): void {
-	const gamefile = gameslot.getGamefile();
-	const Variant = gamefile.basegame.metadata.Variant;
+	const gamefile = gameslot.getGamefile()!;
+	const Variant = gamefile.basegame.metadata.Variant!;
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();
@@ -72,7 +80,7 @@ function copyGame(copySinglePosition: boolean): void {
 /**
  * Pastes the clipboard ICN to the current game.
  * This callback is called when the "Paste Game" button is pressed.
- * @param {Event} event - The event fired from the event listener
+ * @param event - The event fired from the event listener
  */
 async function callbackPaste(event: Event): Promise<void> {
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
@@ -87,7 +95,7 @@ async function callbackPaste(event: Event): Promise<void> {
 	// Make sure we're not in an engine match
 	if (enginegame.areInEngineGame()) return statustext.showStatus(translations.copypaste.cannot_paste_in_engine);
 	// Make sure it's legal in a private match
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile().boardsim.moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && gameslot.getGamefile()!.boardsim.moves.length > 0) return statustext.showStatus(translations.copypaste.cannot_paste_after_moves);
 
 	// Do we have clipboard permission?
 	let clipboard: string;
@@ -101,7 +109,7 @@ async function callbackPaste(event: Event): Promise<void> {
 	// Convert clipboard text to object
 	let longformOut: LongFormatOut;
 	try {
-		longformOut = icnconverter.ShortToLong_Format(clipboard, true, true);
+		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
 		statustext.showStatus(translations.copypaste.clipboard_invalid, true);
@@ -120,16 +128,16 @@ async function callbackPaste(event: Event): Promise<void> {
 
 /** For now doesn't verify if the required royalty is present. */
 function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
-	for (let i = 0; i < winConditions[players.WHITE].length; i++) {
-		const winCondition = winConditions[players.WHITE][i];
+	for (let i = 0; i < winConditions[players.WHITE]!.length; i++) {
+		const winCondition = winConditions[players.WHITE]![i];
 		if (winconutil.isWinConditionValid(winCondition)) continue;
 		// Not valid
 		statustext.showStatus(`${translations.copypaste.invalid_wincon_white} "${winCondition}".`, true);
 		return false;
 	}
 
-	for (let i = 0; i < winConditions[players.BLACK].length; i++) {
-		const winCondition = winConditions[players.BLACK][i];
+	for (let i = 0; i < winConditions[players.BLACK]!.length; i++) {
+		const winCondition = winConditions[players.BLACK]![i];
 		if (winconutil.isWinConditionValid(winCondition)) continue;
 		// Not valid
 		statustext.showStatus(`${translations.copypaste.invalid_wincon_black} "${winCondition}".`, true);
@@ -145,8 +153,8 @@ function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
  * TODO: REMOVE A LOT OF THE REDUNDANT LOGIC BETWEEN
  * THIS FUNCTION AND gameforulator.formulateGame()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * 
- * @param {LongFormatOut} longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
- * @returns {boolean} Whether the paste was successful
+ * @param longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
+ * @returns Whether the paste was successful
  */
 function pasteGame(longformOut: LongFormatOut): boolean {
 	console.log(translations.copypaste.pasting_game);
@@ -157,7 +165,7 @@ function pasteGame(longformOut: LongFormatOut): boolean {
 	// Create a new gamefile from the longformat...
 
 	// Retain most of the existing metadata on the currently loaded gamefile
-	const currentGamefile = gameslot.getGamefile();
+	const currentGamefile = gameslot.getGamefile()!;
 	const currentGameMetadata = currentGamefile.basegame.metadata;
 	retainMetadataWhenPasting.forEach((metadataName: string) => {
 		delete longformOut.metadata[metadataName];
@@ -180,7 +188,7 @@ function pasteGame(longformOut: LongFormatOut): boolean {
 	let specialRights: Set<CoordsKey>;
 	if (longformOut.position) {
 		position = longformOut.position;
-		specialRights = longformOut.state_global.specialRights;
+		specialRights = longformOut.state_global.specialRights!;
 	} else {
 		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
 		({ position, specialRights } = variant.getStartingPositionOfVariant(longformOut.metadata));
@@ -209,7 +217,10 @@ function pasteGame(longformOut: LongFormatOut): boolean {
 	// What is the warning message if pasting in a private match?
 	const privateMatchWarning: string = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() ? ` ${translations.copypaste.pasting_in_private}` : '';
 
-	const additional: Additional = { variantOptions };
+	const additional: {
+		variantOptions: VariantOptions,
+		moves?: ServerGameMovesMessage,
+	} = { variantOptions };
 	if (longformOut.moves) {
 		// Trim the excess properties from the _Move_Out type, including the comment.
 		additional.moves = longformOut.moves.map((m: _Move_Out) => {
@@ -221,7 +232,14 @@ function pasteGame(longformOut: LongFormatOut): boolean {
 		});
 	}
 
-	const options: LoadOptions = {
+	const options: {
+		metadata: MetaData,
+		additional: {
+			variantOptions: VariantOptions,
+			moves?: ServerGameMovesMessage,
+		},
+		presetAnnotes?: PresetAnnotes
+	} = {
 		metadata: longformOut.metadata,
 		additional
 	};
@@ -229,7 +247,7 @@ function pasteGame(longformOut: LongFormatOut): boolean {
 
 	gameloader.pasteGame(options).then(() => {
 		// This isn't accessible until gameloader.pasteGame() resolves its promise.
-		const gamefile = gameslot.getGamefile();
+		const gamefile = gameslot.getGamefile()!;
 		
 		// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 		const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
@@ -247,11 +265,11 @@ function pasteGame(longformOut: LongFormatOut): boolean {
 
 /**
  * Returns true if all gamerules are valid values.
- * @param {GameRules} gameRules - The gamerules in question
- * @returns {boolean} *true* if the gamerules are valid
+ * @param gameRules - The gamerules in question
+ * @returns *true* if the gamerules are valid
  */
 function verifyGamerules(gameRules: GameRules): boolean {
-	if (gameRules.slideLimit !== undefined && typeof gameRules.slideLimit !== 'number') {
+	if (gameRules.slideLimit !== undefined && typeof gameRules.slideLimit !== 'bigint') {
 		statustext.showStatus(`${translations.copypaste.slidelimit_not_number} "${gameRules.slideLimit}"`, true);
 		return false;
 	}
