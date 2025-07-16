@@ -382,8 +382,9 @@ function howManyBitsForDigitsOfPrecision(precision: number): number {
 
 /**
  * Adds two BigDecimal numbers.
- * The resulting BigDecimal will have a divex equal to the maximum divex of the two operands to prevent precision loss.
- * @param bd1 - The first addend.
+ * The resulting BigDecimal will have a divex equal to the first argument.
+ * If the second argument has a higher divex, it will be rounded before addition.
+ * @param bd1 - The first addend, which also determines the result's precision.
  * @param bd2 - The second addend.
  * @returns The sum of bd1 and bd2.
  */
@@ -405,19 +406,28 @@ function add(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 			divex: bd1.divex
 		};
 	} else { // divex2 > divex1
-		// Scale up bd1 to match bd2's divex
-		const bd1DivexAdjusted = bd1.bigint << BigInt(bd2.divex - bd1.divex);
+		// bd2 has more precision. We must scale it DOWN to match bd1, which requires rounding.
+		const difference = BigInt(bd2.divex - bd1.divex);
+
+		// To "round half up", we add 0.5 before truncating (right-shifting).
+		// "0.5" at the correct scale is 1 bit shifted by (difference - 1).
+		const half = ONE << (difference - ONE);
+
+		// Round bd2's bigint to the precision of bd1
+		const roundedBd2BigInt = (bd2.bigint + half) >> difference;
+
 		return {
-			bigint: bd1DivexAdjusted + bd2.bigint,
-			divex: bd2.divex
+			bigint: bd1.bigint + roundedBd2BigInt,
+			divex: bd1.divex
 		};
 	}
 }
 
 /**
  * Subtracts the second BigDecimal from the first.
- * The resulting BigDecimal will have a divex equal to the maximum divex of the two operands to prevent precision loss.
- * @param bd1 - The minuend.
+ * The resulting BigDecimal will have a divex equal to the first argument (the minuend).
+ * If the second argument has a higher divex, it will be rounded before subtraction.
+ * @param bd1 - The minuend, which also determines the result's precision.
  * @param bd2 - The subtrahend.
  * @returns The difference of bd1 and bd2 (bd1 - bd2).
  */
@@ -439,18 +449,25 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 			divex: bd1.divex
 		};
 	} else { // bd2.divex > bd1.divex
-		// Scale up bd1's bigint to match bd2's divex
-		const bd1BigIntAdjusted = bd1.bigint << BigInt(bd2.divex - bd1.divex);
+		// bd2 has more precision. We must scale it DOWN to match bd1, which requires rounding.
+		const difference = BigInt(bd2.divex - bd1.divex);
+
+		// Use the same "round half up towards positive infinity" logic as in add().
+		const half = ONE << (difference - 1n);
+
+		// Round bd2's bigint to the precision of bd1.
+		const roundedBd2BigInt = (bd2.bigint + half) >> difference;
+
 		return {
-			bigint: bd1BigIntAdjusted - bd2.bigint,
-			divex: bd2.divex
+			bigint: bd1.bigint - roundedBd2BigInt,
+			divex: bd1.divex,
 		};
 	}
 }
 
 /**
  * [Fixed-Point Model] Multiplies two BigDecimal numbers.
- * The resulting BigDecimal will have a divex equal to the maximum divex of the two factors.
+ * The resulting BigDecimal will have a divex equal to the first factor.
  * This provides a balance of precision and predictable behavior.
  * @param bd1 The first factor.
  * @param bd2 The second factor.
@@ -499,7 +516,7 @@ function multiply_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits?: numb
 
 /**
  * [Fixed-Point Model] Divides the first BigDecimal by the second, producing a result with a predictable divex.
- * The final divex is determined by the maximum of the inputs' divex.
+ * The result divex will be equal to the dividend's divex.
  * This prevents the divex from growing uncontrollably with repeated divisions.
  * @param bd1 - The dividend.
  * @param bd2 - The divisor.
