@@ -1,25 +1,28 @@
 
+// src/client/scripts/esm/chess/variants/omega3generator.js
+
+/**
+ * Here lies the position generator for the Omega^3 Showcase variant.
+ */
+
+
 import coordutil from '../util/coordutil.js';
 import { ext as e, rawTypes as r } from '../util/typeutil.js';
 
-/** 
- * Type Definitions 
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- * @typedef {import('../util/coordutil.js').CoordsKey} CoordsKey
- */
 
-'use strict';
+import type { BoundingBox } from '../../util/math.js';
+import type { CoordsKey } from '../util/coordutil.js';
 
 
 /**
  * Generates the Omega^3 position example
- * @returns {Map<CoordsKey, number>} The position in keys format
+ * @returns The position in keys format
  */
-function genPositionOfOmegaCubed() {
+function genPositionOfOmegaCubed(): Map<CoordsKey, number> {
 
 	const dist = 500; // Generate Omega^3 up to a distance of 1000 tiles away
 
-	const startingPos = new Map();
+	const startingPos: Map<CoordsKey, number> = new Map();
 
 	startingPos.set(coordutil.getKeyFromCoords([3,15]), r.KING + e.W);
 	startingPos.set(coordutil.getKeyFromCoords([4,13]), r.ROOK + e.B);
@@ -87,21 +90,21 @@ function genPositionOfOmegaCubed() {
 
 	return startingPos;
 
-	function appendPawnTower(position, x, startY, endY) {
+	function appendPawnTower(position: Map<CoordsKey, number>, x: number, startY: number, endY: number): void {
 		if (endY < startY) return; // Don't do negative pawn towers
 		for (let y = startY; y <= endY; y++) {
-			const thisCoords = [x, y];
+			const thisCoords: Coords = [x, y];
 			const key = coordutil.getKeyFromCoords(thisCoords);
 			position.set(key, r.PAWN + e.W);
 		}
 	}
 		
-	function setAir(position, coords) {
+	function setAir(position: Map<CoordsKey, number>, coords: Coords): void {
 		const key = coordutil.getKeyFromCoords(coords);
 		position.delete(key);
 	}
 		
-	function spawnRookTower(position, xStart, yStart, dist) {
+	function spawnRookTower(position: Map<CoordsKey, number>, xStart: number, yStart: number, dist: number): void {
 		// First wall with 4 bishops
 		position.set(coordutil.getKeyFromCoords([xStart, yStart]), r.BISHOP + e.W);
 		position.set(coordutil.getKeyFromCoords([xStart, yStart + 1]), r.PAWN + e.W);
@@ -122,7 +125,7 @@ function genPositionOfOmegaCubed() {
 		if (yStart + 7 <= dist) position.set(coordutil.getKeyFromCoords([xStart + 2, yStart + 7]), r.PAWN + e.B);
 	}
 	
-	function spawnAllRookTowers(position, xStart, yStart, xEnd, yEnd) {
+	function spawnAllRookTowers(position: Map<CoordsKey, number>, xStart: number, yStart: number, xEnd: number, yEnd: number): void {
 		let y = yStart;
 		for (let x = xStart; x < xEnd; x += 3) {
 			spawnRookTower(position, x, y, yEnd);
@@ -130,7 +133,7 @@ function genPositionOfOmegaCubed() {
 		}
 	}
 	
-	function genBishopTunnel(position, xStart, yStart, xEnd, yEnd) {
+	function genBishopTunnel(position: Map<CoordsKey, number>, xStart: number, yStart: number, xEnd: number, yEnd: number): void {
 		let y = yStart;
 		for (let x = xStart; x < xEnd; x++) {
 			position.set(coordutil.getKeyFromCoords([x, y]), r.PAWN + e.W);
@@ -146,10 +149,10 @@ function genPositionOfOmegaCubed() {
 /**
  * Adds a huge void square around the provided pieces by key.
  * Then deletes any pieces outside it.
- * @param {Map<CoordsKey, number>} position - The position, in key format: Map with key/value pairs.
- * @param {BoundingBox} box - The rectangle to which to form the void box.
+ * @param position - The position, in key format: Map with key/value pairs.
+ * @param box - The rectangle to which to form the void box.
  */
-function surroundPositionInVoidBox(position, box) {
+function surroundPositionInVoidBox(position: Map<CoordsKey, number>, box: BoundingBox): void {
 	for (let x = box.left; x <= box.right; x++) {
 		let key = coordutil.getKeyFromCoords([x, box.bottom]);
 		position.set(key, r.VOID + e.N);
