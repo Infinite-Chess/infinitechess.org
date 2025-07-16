@@ -216,7 +216,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	// Initialize the mesh empty
 	mesh = {
-		offset: [0, 0],
+		offset: [0n, 0n],
 		inverted: false,
 		types: {}
 	};
@@ -354,5 +354,7 @@ export default {
 };
 
 export type {
+	LoadOptions,
+	PresetAnnotes,
 	Additional,
 };
