@@ -1,4 +1,6 @@
 
+// src/client/scripts/esm/chess/util/winconutil.ts
+
 /**
  * This script contains lists of compatible win conditions in the game.
  * And contains a few utility methods for them.
@@ -6,6 +8,7 @@
  */
 
 
+import type { GameRules } from '../variants/gamerules.js';
 import type { Player } from './typeutil.js';
 
 
@@ -87,8 +90,8 @@ function getVictorAndConditionFromGameConclusion(gameConclusion: string): { cond
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
 	if (condition === 'moverule') { // One exception
-		const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
-		return `${(translations.termination.moverule as string[])[0]}${numbWholeMovesUntilAutoDraw}${(translations.termination.moverule as string[])[1]}`;
+		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
+		return `${translations.termination.moverule[0]}${numbWholeMovesUntilAutoDraw}${translations.termination.moverule[1]}`;
 	}
 	return translations.termination[condition] as string;
 }
