@@ -1,24 +1,26 @@
 
+// src/client/scripts/esm/chess/rendering/checkerboardgenerator.js
+
 /**
- * This script can create a 2x2 checkerboard texture of any color
- * light tiles and dark tiles, and if any width.
+ * This script can create a 2x2 checkerboard texture of any color for
+ * light and dark tiles, and of any width.
  */
 
 /**
- * Creates a checkerboard pattern image of a given size with custom players.
- * @param {string} lightColor - The color for the light squares (CSS color format).
- * @param {string} darkColor - The color for the dark squares (CSS color format).
- * @param {number} imageSize - The size of the image (width and height). The final image will be imageSize x imageSize, split into 4 squares.
- * @returns {Promise<HTMLImageElement>} A promise that resolves to the checkerboard image.
+ * Creates a checkerboard pattern image of a given size with custom colors.
+ * @param lightColor - The color for the light squares (CSS color format).
+ * @param darkColor - The color for the dark squares (CSS color format).
+ * @param imageSize - The size of the image (width and height). The final image will be imageSize x imageSize, split into 4 squares.
+ * @returns A promise that resolves to the checkerboard image.
  */
-function createCheckerboardIMG(lightColor, darkColor, imageSize = 2) {
+function createCheckerboardIMG(lightColor: string, darkColor: string, imageSize: number = 2): Promise<HTMLImageElement> {
 	const canvas = document.createElement('canvas');
 	canvas.width = imageSize;
 	canvas.height = imageSize;
 	const ctx = canvas.getContext('2d');
 
 	// Define the size of each square
-	const squareSize = imageSize / 2;
+	const squareSize: number = imageSize / 2;
 
 	// Top-left (light square)
 	ctx.fillStyle = lightColor;
@@ -41,11 +43,12 @@ function createCheckerboardIMG(lightColor, darkColor, imageSize = 2) {
 	img.src = canvas.toDataURL();
 
 	// Return a promise that resolves when the image is loaded
-	return new Promise((resolve, reject) => {
-		img.onload = () => { resolve(img); };
+	return new Promise<HTMLImageElement>((resolve, reject) => {
+		img.onload = () => resolve(img);
 		img.onerror = () => {
-			console.error('Error loading the image!', img);
-			reject(new Error('Error loading the checkerboard texture'));
+			const errorMessage = 'Error loading the checkerboard texture';
+			console.error(errorMessage, img);
+			reject(new Error(errorMessage));
 		};
 	});
 }
