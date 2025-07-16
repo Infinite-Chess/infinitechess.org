@@ -16,13 +16,13 @@ import type { Coords } from "../chess/util/coordutil.js";
 /** A rectangle object with properties for the coordinates of its sides. */
 interface BoundingBox {
 	/** The x-coordinate of the left side of the box. */
-	left: number,
+	left: bigint,
 	/** The x-coordinate of the right side of the box. */
-	right: number,
+	right: bigint,
 	/** The y-coordinate of the bottom side of the box. */
-	bottom: number,
+	bottom: bigint,
 	/** The y-coordinate of the top side of the box. */
-	top: number
+	top: bigint
 };
 
 /** A length-2 number array. Commonly used for storing directions. */
