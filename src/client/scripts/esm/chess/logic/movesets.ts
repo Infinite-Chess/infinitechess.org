@@ -39,14 +39,14 @@ interface PieceMoveset {
 	/**
 	 * Sliding moves the piece can make.
 	 * 
-	 * `"1,0": [-Infinity, Infinity]` => Lets the piece slide horizontally infinitely in both directions.
+	 * `"1,0": [null,null]` => Lets the piece slide horizontally infinitely in both directions.
 	 * 
 	 * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
 	 * 
 	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!!
 	 */
 	sliding?: {
-		[slideDirection: Vec2Key]: Coords
+		[slideDirection: Vec2Key]: [bigint | null, bigint | null]
 	},
 	/**
 	 * The initial function that determines how far a piece is legally able to slide

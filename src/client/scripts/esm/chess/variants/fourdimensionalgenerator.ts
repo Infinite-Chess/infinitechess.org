@@ -16,6 +16,7 @@ import coordutil from "../util/coordutil.js";
 import fourdimensionalmoves from "../logic/fourdimensionalmoves.js";
 import { rawTypes as r, ext as e } from "../util/typeutil.js";
 import icnconverter from "../logic/icn/icnconverter.js";
+import bimath from "../../util/bigdecimal/bimath.js";
 
 
 // Variables ------------------------------------------------------------------------------------------------
@@ -99,7 +100,7 @@ function getMovementType() {
  * @param input_position - If this is a position string, populate all 2D boards with it. If it is a dictionary, populate the boards according to it
  * @returns 
  */
-function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number, input_position: string | { [key: string]: string }): Map<CoordsKey, number> {
+function gen4DPosition(boards_x: bigint, boards_y: bigint, board_spacing: bigint, input_position: string | { [key: string]: string }): Map<CoordsKey, number> {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 	const resultPos = new Map<CoordsKey, number>();
@@ -109,13 +110,13 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 		const input_position_long: Map<CoordsKey, number> = icnconverter.generatePositionFromShortForm(input_position).position;
 		
 		// Loop through from the leftmost column that should be voids to the right most, and also vertically
-		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
-			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
+		for (let i = dim!.MIN_X; i <= dim!.MAX_X; i++) {
+			for (let j = dim!.MIN_Y; j <= dim!.MAX_Y; j++) {
 				// Only the edges of boards should be voids
-				if ((i % dim.BOARD_SPACING === 0) || (j % dim.BOARD_SPACING === 0)) {
+				if ((i % dim!.BOARD_SPACING === 0n) || (j % dim!.BOARD_SPACING === 0n)) {
 					resultPos.set(coordutil.getKeyFromCoords([i, j]), r.VOID + e.N);
 					// Add input_position_long to the board
-					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
+					if ((i < dim!.MAX_X) && (i % dim!.BOARD_SPACING === 0n) && (j < dim!.MAX_Y) && (j % dim!.BOARD_SPACING === 0n)) {
 						for (const [key, value] of input_position_long) {
 							const coords = coordutil.getCoordsFromKey(key);
 							const newKey = coordutil.getKeyFromCoords([coords[0] + i, coords[1] + j]);
@@ -129,15 +130,15 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
 	// position is object and should populate 2D boards according to its entries
 	else if (typeof input_position === 'object') {
 		// Loop through from the leftmost column that should be voids to the right most, and also vertically
-		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
-			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
+		for (let i = dim!.MIN_X; i <= dim!.MAX_X; i++) {
+			for (let j = dim!.MIN_Y; j <= dim!.MAX_Y; j++) {
 				// Only the edges of boards should be voids
-				if ((i % dim.BOARD_SPACING === 0 || i % dim.BOARD_SPACING === 9)
-					|| (j % dim.BOARD_SPACING === 0 || j % dim.BOARD_SPACING === 9)) {
+				if ((i % dim!.BOARD_SPACING === 0n || i % dim!.BOARD_SPACING === 9n)
+					|| (j % dim!.BOARD_SPACING === 0n || j % dim!.BOARD_SPACING === 9n)) {
 					resultPos.set(coordutil.getKeyFromCoords([i, j]), r.VOID + e.N);
 					// Add the subposition to the correct board
-					if ((i < dim.MAX_X) && (i % dim.BOARD_SPACING === 0) && (j < dim.MAX_Y) && (j % dim.BOARD_SPACING === 0)) {
-						const sub_position_short = input_position[`${Math.floor(i / dim.BOARD_SPACING)},${Math.floor(j / dim.BOARD_SPACING)}`];
+					if ((i < dim!.MAX_X) && (i % dim!.BOARD_SPACING === 0n) && (j < dim!.MAX_Y) && (j % dim!.BOARD_SPACING === 0n)) {
+						const sub_position_short = input_position[`${i / dim!.BOARD_SPACING},${j / dim!.BOARD_SPACING}`];
 						const sub_position_long: Map<CoordsKey, number> = sub_position_short ? icnconverter.generatePositionFromShortForm(sub_position_short).position : new Map<CoordsKey, number>();
 						for (const [key, value] of sub_position_long) {
 							const coords = coordutil.getCoordsFromKey(key);
@@ -166,7 +167,7 @@ function gen4DPosition(boards_x: number, boards_y: number, board_spacing: number
  * @param strong_pawns - true: pawns can capture along any diagonal. false: pawns can only capture along strictly spacelike or timelike diagonals
  * @returns 
  */
-function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number, strong_kings_and_queens: boolean, strong_pawns: boolean) {
+function gen4DMoveset(boards_x: bigint, boards_y: bigint, board_spacing: bigint, strong_kings_and_queens: boolean, strong_pawns: boolean) {
 
 	set4DBoardDimensions(boards_x, boards_y, board_spacing);
 	setMovementType(strong_kings_and_queens, strong_pawns);
@@ -176,21 +177,21 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
+				return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
 			}
 		},
 		[r.BISHOP]: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
+				return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
 			}
 		},
 		[r.ROOK]: {
 			individual: [],
 			sliding: {},
 			ignore: (startCoords: Coords, endCoords: Coords) => {
-				return (endCoords[0] > dim.MIN_X && endCoords[0] < dim.MAX_X && endCoords[1] > dim.MIN_Y && endCoords[1] < dim.MAX_Y);
+				return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
 			}
 		},
 		[r.KING]: {
@@ -207,29 +208,29 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
 		}
 	};
 
-	for (let baseH = 1; baseH >= -1; baseH--) {
-		for (let baseV = 1; baseV >= -1; baseV--) {
-			for (let offsetH = 1; offsetH >= -1; offsetH--) {
-				for (let offsetV = 1; offsetV >= -1; offsetV--) {
-					const x = (dim.BOARD_SPACING * baseH + offsetH);
-					const y = (dim.BOARD_SPACING * baseV + offsetV);
+	for (let baseH = 1n; baseH >= -1n; baseH--) {
+		for (let baseV = 1n; baseV >= -1n; baseV--) {
+			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
+				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
+					const x = (dim!.BOARD_SPACING * baseH + offsetH);
+					const y = (dim!.BOARD_SPACING * baseV + offsetV);
 
-					if (x < 0) continue; // If the x coordinate is negative, skip this iteration
-					if (x === 0 && y <= 0) continue; // Skip if x is 0 and y is negative
+					if (x < 0n) continue; // If the x coordinate is negative, skip this iteration
+					if (x === 0n && y <= 0n) continue; // Skip if x is 0 and y is negative
 					// Add the moves
 
 					// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
-					if (mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					if (mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
 					
 					// Only add a bishop move if the move moves in two dimensions
-					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2) {
-						movesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
-						if (!mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 2n) {
+						movesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+						if (!mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
 					}
 					// Only add a rook move if the move moves in one dimension
-					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1) {
-						movesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
-						if (!mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [-Infinity, Infinity];
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 1n) {
+						movesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+						if (!mov.STRONG_KINGS_AND_QUEENS) movesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
 					}
 				}
 			}
@@ -250,24 +251,24 @@ function gen4DMoveset(boards_x: number, boards_y: number, board_spacing: number,
  * 						 false: pawns can only capture along strictly spacelike or timelike diagonals, like in 5D chess
  * @returns 
  */
-function getPawnVicinity(board_spacing: number, strong_pawns: boolean): Coords[] {
+function getPawnVicinity(board_spacing: bigint, strong_pawns: boolean): Coords[] {
 	const individualMoves: Coords[] = [];
 
-	for (let baseH = 1; baseH >= -1; baseH--) {
-		for (let baseV = 1; baseV >= -1; baseV--) {
-			for (let offsetH = 1; offsetH >= -1; offsetH--) {
-				for (let offsetV = 1; offsetV >= -1; offsetV--) {
+	for (let baseH = 1n; baseH >= -1n; baseH--) {
+		for (let baseV = 1n; baseV >= -1n; baseV--) {
+			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
+				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
 					// only allow changing two things at once
-					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV !== 2) continue;
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV !== 2n) continue;
 
 					// do not allow two moves forward
-					if (baseH * baseH + offsetH * offsetH === 2) continue;
+					if (baseH * baseH + offsetH * offsetH === 2n) continue;
 
 					// do not allow two moves sideways
-					if (baseV * baseV + offsetV * offsetV === 2) continue;
+					if (baseV * baseV + offsetV * offsetV === 2n) continue;
 
 					// disallow strong captures if pawns are weak
-					if (!strong_pawns && (Math.abs(baseH) !== Math.abs(baseV) || Math.abs(offsetH) !== Math.abs(offsetV))) continue;
+					if (!strong_pawns && (bimath.abs(baseH) !== bimath.abs(baseV) || bimath.abs(offsetH) !== bimath.abs(offsetV))) continue;
 					
 					const x = board_spacing * baseH + offsetH;
 					const y = board_spacing * baseV + offsetV;
@@ -287,15 +288,15 @@ function getPawnVicinity(board_spacing: number, strong_pawns: boolean): Coords[]
  * @param board_spacing - The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1.
  * @returns 
  */
-function getKnightVicinity(board_spacing: number): Coords[] {
+function getKnightVicinity(board_spacing: bigint): Coords[] {
 	const individualMoves: Coords[] = [];
 
-	for (let baseH = 2; baseH >= -2; baseH--) {
-		for (let baseV = 2; baseV >= -2; baseV--) {
-			for (let offsetH = 2; offsetH >= -2; offsetH--) {
-				for (let offsetV = 2; offsetV >= -2; offsetV--) {
+	for (let baseH = 2n; baseH >= -2n; baseH--) {
+		for (let baseV = 2n; baseV >= -2n; baseV--) {
+			for (let offsetH = 2n; offsetH >= -2n; offsetH--) {
+				for (let offsetV = 2n; offsetV >= -2n; offsetV--) {
 					// If the squared distance to the tile is 5, then add the move
-					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5n) {
 						const x = board_spacing * baseH + offsetH;
 						const y = board_spacing * baseV + offsetV;
 						const endCoords = [x, y] as Coords;
@@ -315,19 +316,19 @@ function getKnightVicinity(board_spacing: number): Coords[] {
  * @param strong_kings_and_queens - true: allow quadragonal and triagonal king and queen movement. false: do not allow it
  * @returns 
  */
-function getKingVicinity(board_spacing: number, strong_kings_and_queens: boolean): Coords[] {
+function getKingVicinity(board_spacing: bigint, strong_kings_and_queens: boolean): Coords[] {
 	const individualMoves: Coords[] = [];
 
-	for (let baseH = 1; baseH >= -1; baseH--) {
-		for (let baseV = 1; baseV >= -1; baseV--) {
-			for (let offsetH = 1; offsetH >= -1; offsetH--) {
-				for (let offsetV = 1; offsetV >= -1; offsetV--) {
+	for (let baseH = 1n; baseH >= -1n; baseH--) {
+		for (let baseV = 1n; baseV >= -1n; baseV--) {
+			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
+				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
 					// only allow moves that change one or two dimensions if triagonals and diagonals are disabled
-					if (!strong_kings_and_queens && baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2) continue;
+					if (!strong_kings_and_queens && baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2n) continue;
 					
 					const x = board_spacing * baseH + offsetH;
 					const y = board_spacing * baseV + offsetV;
-					if (x === 0 && y === 0) continue;
+					if (x === 0n && y === 0n) continue;
 					const endCoords = [x, y] as Coords;
 
 					individualMoves.push(endCoords);
