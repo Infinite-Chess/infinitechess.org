@@ -23,8 +23,8 @@ import boardchanges from "./boardchanges.js";
 import fourdimensionalgenerator from "../variants/fourdimensionalgenerator.js";
 import state from "./state.js";
 import { players, rawTypes as r } from "../util/typeutil.js";
-// @ts-ignore
 import specialdetect from "./specialdetect.js";
+import bimath from "../../util/bigdecimal/bimath.js";
 
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
@@ -48,8 +48,8 @@ function fourDimensionalPawnMove(gamefile: FullGame, coords: Coords, color: Play
 function pawnLegalMoves(gamefile: FullGame, coords: Coords, color: Player, movetype: "spacelike" | "timelike", premove: boolean): Coords[] {
 	const { basegame, boardsim } = gamefile;
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
-	const distance =		    (movetype === "spacelike" ? 1 : dim.BOARD_SPACING);
-	const distance_complement = (movetype === "spacelike" ? dim.BOARD_SPACING : 1);
+	const distance =		    (movetype === "spacelike" ? 1n : dim.BOARD_SPACING);
+	const distance_complement = (movetype === "spacelike" ? dim.BOARD_SPACING : 1n);
 	
 	// White and black pawns move and capture in opposite directions.
 	const yDistanceParity = color === players.WHITE ? distance : -distance;
@@ -122,7 +122,7 @@ function pawnLegalMoves(gamefile: FullGame, coords: Coords, color: Player, movet
  * @param xdistance
  * @param ydistance
  */
-function addPossibleEnPassant({ basegame, boardsim }: FullGame, individualMoves: Coords[], coords: Coords, color: Player, xdistance: number, ydistance: number): void {
+function addPossibleEnPassant({ basegame, boardsim }: FullGame, individualMoves: Coords[], coords: Coords, color: Player, xdistance: bigint, ydistance: bigint): void {
 	if (!boardsim.state.global.enpassant) return; // No enpassant flag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawn = boardutil.getTypeFromCoords(boardsim.pieces, boardsim.state.global.enpassant.pawn)!;
@@ -130,7 +130,7 @@ function addPossibleEnPassant({ basegame, boardsim }: FullGame, individualMoves:
 	if (capturedColor === color || capturedType === r.VOID) return; // The captured pawn is not an enemy pawn. THIS IS ONLY EVER NEEDED if we can move opponent pieces on our turn, which is the case in EDIT MODE.
 
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
-	if (Math.abs(xDifference) !== xdistance) return; // Not immediately left or right of us
+	if (bimath.abs(xDifference) !== xdistance) return; // Not immediately left or right of us
 	const yDistanceParity = (color === players.WHITE ? ydistance : -ydistance);
 
 	if (coords[1] + yDistanceParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
@@ -202,12 +202,12 @@ function fourDimensionalKnightMove({ boardsim }: FullGame, coords: Coords, color
 	const individualMoves: Coords[] = [];
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
-	for (let baseH = 2; baseH >= -2; baseH--) {
-		for (let baseV = 2; baseV >= -2; baseV--) {
-			for (let offsetH = 2; offsetH >= -2; offsetH--) {
-				for (let offsetV = 2; offsetV >= -2; offsetV--) {
+	for (let baseH = 2n; baseH >= -2n; baseH--) {
+		for (let baseV = 2n; baseV >= -2n; baseV--) {
+			for (let offsetH = 2n; offsetH >= -2n; offsetH--) {
+				for (let offsetV = 2n; offsetV >= -2n; offsetV--) {
 					// If the squared distance to the tile is 5, then add the move
-					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5) {
+					if (baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV === 5n) {
 						const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
 						const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
 						const endCoords = [x, y] as Coords;
@@ -222,8 +222,8 @@ function fourDimensionalKnightMove({ boardsim }: FullGame, coords: Coords, color
 						if (endCoords[0] <= dim.MIN_X || endCoords[0] >= dim.MAX_X || endCoords[1] <= dim.MIN_Y || endCoords[1] >= dim.MAX_Y) continue;
 
 						// do not allow the knight to make move if (baseH, baseV) do not match change in 2D chessboard
-						if (Math.floor((endCoords[0] - dim.MIN_X) / dim.BOARD_SPACING) - Math.floor((coords[0] - dim.MIN_X) / dim.BOARD_SPACING) !== baseH || 
-							Math.floor((endCoords[1] - dim.MIN_Y) / dim.BOARD_SPACING) - Math.floor((coords[1] - dim.MIN_Y) / dim.BOARD_SPACING) !== baseV
+						if ((endCoords[0] - dim.MIN_X) / dim.BOARD_SPACING - (coords[0] - dim.MIN_X) / dim.BOARD_SPACING !== baseH || 
+							(endCoords[1] - dim.MIN_Y) / dim.BOARD_SPACING - (coords[1] - dim.MIN_Y) / dim.BOARD_SPACING !== baseV
 						) continue;
 						individualMoves.push(endCoords);
 					}
@@ -256,13 +256,13 @@ function kingLegalMoves(boardsim: Board, coords: Coords, color: Player, premove:
 	const individualMoves: Coords[] = [];
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 
-	for (let baseH = 1; baseH >= -1; baseH--) {
-		for (let baseV = 1; baseV >= -1; baseV--) {
-			for (let offsetH = 1; offsetH >= -1; offsetH--) {
-				for (let offsetV = 1; offsetV >= -1; offsetV--) {
+	for (let baseH = 1n; baseH >= -1n; baseH--) {
+		for (let baseV = 1n; baseV >= -1n; baseV--) {
+			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
+				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
 					// only allow moves that change one or two dimensions if triagonals and diagonals are disabled
 					if (!fourdimensionalgenerator.getMovementType().STRONG_KINGS_AND_QUEENS && baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2) continue;
-					if (baseH === 0 && baseV === 0 && offsetH === 0 && offsetV === 0) continue;
+					if (baseH === 0n && baseV === 0n && offsetH === 0n && offsetV === 0n) continue;
 
 					const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
 					const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
