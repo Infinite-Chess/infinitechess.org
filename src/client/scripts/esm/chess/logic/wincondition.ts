@@ -11,14 +11,14 @@ import insufficientmaterial from './insufficientmaterial.js';
 import gamefileutility from '../util/gamefileutility.js';
 import boardutil from '../util/boardutil.js';
 import moveutil from '../util/moveutil.js';
-import typeutil from '../util/typeutil.js';
+import typeutil, { RawType } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { detectCheckmateOrStalemate, pieceCountToDisableCheckmate } from './checkmate.js';
 import { players, rawTypes, Player } from '../util/typeutil.js';
 
-import type { Game, Board, FullGame } from './gamefile.js';
-import type { GameRules } from '../variants/gamerules.js';
+
+import type { Board, FullGame } from './gamefile.js';
 import type { Coords } from '../util/coordutil.js';
 
 
@@ -67,7 +67,7 @@ function detectAllroyalscaptured({ boardsim, basegame }: FullGame): string | und
     // Remember that whosTurn has already been flipped since the last move.
     const royalCount: Coords[] = boardutil.getRoyalCoordsOfColor(boardsim.pieces, basegame.whosTurn);
 
-    if (royalCount === 0) {
+    if (royalCount.length === 0) {
         const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(basegame, boardsim.moves.length - 1);
         return `${colorThatWon} allroyalscaptured`;
     }
@@ -93,7 +93,7 @@ function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
     if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth')) return undefined; // Not using this gamerule
 
     // Was the last move a king move?
-    const lastMove: Move | undefined = moveutil.getLastMove(boardsim.moves);
+    const lastMove = moveutil.getLastMove(boardsim.moves);
     if (!lastMove) return undefined;
     if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return undefined;
 
@@ -129,8 +129,8 @@ function detectMoveRule({ boardsim, basegame }: FullGame): string | undefined {
 }
 
 // Returns true if the very last move captured a royal piece.
-function wasLastMoveARoyalCapture(boardsim: BoardSim): boolean | undefined {
-    const lastMove: Move | undefined = moveutil.getLastMove(boardsim.moves);
+function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
+    const lastMove = moveutil.getLastMove(boardsim.moves);
     if (!lastMove) return undefined;
 
     const capturedTypes = new Set<RawType>();
@@ -141,19 +141,12 @@ function wasLastMoveARoyalCapture(boardsim: BoardSim): boolean | undefined {
 
     if (capturedTypes.size === 0) return undefined; // Last move not a capture
 
-
-	// OLD
-	// // Does the piece type captured equal any royal piece?
-	// // Idk why vscode does not have set methods
+	// Vscode or the Node.js environment does NOT have set methods!
 	// return !capturedTypes.isDisjointFrom(new Set(typeutil.royals)); // disjoint if they share nothing in common
-
-	// NEW
     // Check if any captured type is a royal piece.
     const royalSet = new Set<RawType>(typeutil.royals);
     for (const capturedType of capturedTypes) {
-        if (royalSet.has(capturedType)) {
-            return true;
-        }
+        if (royalSet.has(capturedType))  return true;
     }
 
     return false;
