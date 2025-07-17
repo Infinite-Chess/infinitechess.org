@@ -23,10 +23,10 @@ import frametracker from './frametracker.js';
 import preferences from '../../components/header/preferences.js';
 import statustext from '../gui/statustext.js';
 import guigameinfo from '../gui/guigameinfo.js';
-import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
+import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
-import type { BoundingBox } from '../../util/math.js';
+import type { DoubleBoundingBox } from '../../util/math.js';
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 type Mat4 = Float32Array;
@@ -60,14 +60,16 @@ let aspect: number; // Aspect ratio of the canvas width to height.
 
 /**
  * The location in world-space of the edges of the screen.
- * Not affected by position or scale (zoom).
+ * SMALL NUMBERS. Not affected by position or scale (zoom).
+ * So we don't need to use BigDecimals.
  */
-let screenBoundingBox: BoundingBox;
+let screenBoundingBox: DoubleBoundingBox;
 /**
  * The location in world-space of the edges of the screen, when in developer mode.
- * Not affected by position or scale (zoom).
+ * SMALL NUMBERS. Not affected by position or scale (zoom).
+ * So we don't need to use BigDecimals.
  */
-let screenBoundingBox_devMode: BoundingBox;
+let screenBoundingBox_devMode: DoubleBoundingBox;
 
 /** Contains the matrix for transforming our camera to look like it's in perspective.
  * This ONLY needs to update on the gpu whenever the screen size changes. */
@@ -118,7 +120,7 @@ function getDebug(): boolean {
  * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
  * @returns The bounding box of the screen
  */
-function getScreenBoundingBox(debugMode?: boolean = DEBUG): BoundingBox {
+function getScreenBoundingBox(debugMode: boolean = DEBUG): DoubleBoundingBox {
 	return jsutil.deepCopyObject(debugMode ? screenBoundingBox_devMode : screenBoundingBox);
 }
 
@@ -128,7 +130,7 @@ function getScreenBoundingBox(debugMode?: boolean = DEBUG): BoundingBox {
  * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
  * @returns The height of the screen in squares
  */
-function getScreenHeightWorld(debugMode?: boolean = DEBUG): number {
+function getScreenHeightWorld(debugMode: boolean = DEBUG): number {
 	const boundingBox = getScreenBoundingBox(debugMode);
 	return boundingBox.top - boundingBox.bottom;
 }
@@ -195,7 +197,7 @@ function updateCanvasDimensions(): void {
 }
 
 function recalcCanvasVariables(): void {
-	aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+	aspect = (gl.canvas as HTMLCanvasElement).clientWidth / (gl.canvas as HTMLCanvasElement).clientHeight;
 	initScreenBoundingBox();
 }
 
@@ -299,7 +301,8 @@ function onPositionChange(): void {
  * Returns the scale at which 1 physical pixel on the screen equals 1 tile. 
  */
 function getScaleWhenTilesInvisible(): BigDecimal {
-	return (screenBoundingBox.right * 2) / canvas.width;
+	// We can cast this to a BigDecimal last because we know the resulting scale isn't arbitrarily small.
+	return bigdecimal.FromNumber((screenBoundingBox.right * 2) / canvas.width);
 }
 
 /** 
@@ -307,7 +310,7 @@ function getScaleWhenTilesInvisible(): BigDecimal {
  * Each tile equals 1 virtual pixel on the screen.
  */
 function getScaleWhenZoomedOut(): BigDecimal {
-	const WDPR_BD = bigdecimal.fromDouble(window.devicePixelRatio);
+	const WDPR_BD = bigdecimal.FromNumber(window.devicePixelRatio);
 	return bigdecimal.multiply_fixed(getScaleWhenTilesInvisible(), WDPR_BD);
 }
 
