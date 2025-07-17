@@ -40,7 +40,7 @@ import type { Board, FullGame } from './gamefile.js';
  * [-2,Infinity] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
  * For knightriders, one [2,1] hop is considered 1 step.
  */
-type SlideLimits = [bigint, bigint]
+type SlideLimits = [bigint | null, bigint | null]
 
 /** An object containing all the legal moves of a piece. */
 interface LegalMoves {
@@ -318,7 +318,7 @@ function slide_CalcLegalLimit(
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
 	const axis = direction[0] === 0n ? 1 : 0; 
-	const limit = coordutil.copyCoords(slideMoveset);
+	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
 	// Iterate through all pieces on same line
 	for (const idx of line) {
 
@@ -340,14 +340,14 @@ function slide_CalcLegalLimit(
 			// What would our new left slide limit be? If it's an opponent, it's legal to capture it.
 			const newLeftSlideLimit = blockResult === 1 ? thisPieceSteps + 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
+			if (limit[0] === null || newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
 
 		} else if (thisPieceSteps > 0) { // To our right
 
 			// What would our new right slide limit be? If it's an opponent, it's legal to capture it.
 			const newRightSlideLimit = blockResult === 1 ? thisPieceSteps - 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
-			if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
+			if (limit[1] === null || newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
 
 		} // else this is us, don't do anything.
 	}
@@ -521,9 +521,9 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
 function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: Vec2, pieceCoords: Coords, coords: Coords, ignoreFunc: IgnoreFunction): boolean {
 	const axis = direction[0] === 0n ? 1 : 0;
 	const coordMag = coords[axis];
-	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
-	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
-	return coordMag >= min && coordMag <= max && ignoreFunc(pieceCoords, coords);
+	const min: bigint | null = slideMoveset[0] === null ? null : slideMoveset[0] * direction[axis] + pieceCoords[axis];
+	const max: bigint | null = slideMoveset[1] === null ? null : slideMoveset[1] * direction[axis] + pieceCoords[axis];
+	return (min === null || coordMag >= min) && (max === null || coordMag <= max) && ignoreFunc(pieceCoords, coords);
 }
 
 /**
@@ -538,8 +538,8 @@ function hasAtleast1Move(moves: LegalMoves): boolean {
 	}
 
 	function doesSlideHaveWidth(slide: SlideLimits) {
-		if (!slide) return false;
-		return slide[1] - slide[0] > 0;
+		if (slide[0] === null || slide[1] === null) return true; // Infinite slide in atleast one direction
+		return slide[1] - slide[0] > 0; // Both are finite, so this produces another bigint.
 
 		// In the future: If the `brute` flag is present, and there isn't
 		// too large of a slide range (maybe 50 max),

@@ -72,7 +72,7 @@ function isConclusionDecisive(condition: string): boolean {
  * @returns An object containing 2 properties: `victor` and `condition`
  */
 function getVictorAndConditionFromGameConclusion(gameConclusion: string): { condition: string, victor?: Player } {
-	let [victorStr, condition] = gameConclusion.split(' ');
+	const [victorStr, condition] = gameConclusion.split(' ');
 	// If the conclusion is "aborted", then the victor isn't specified.
 	if (victorStr === 'aborted') return { condition: victorStr };
 

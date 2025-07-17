@@ -68,7 +68,7 @@ function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing:
 		MAX_X: MIN_X + boards_x * board_spacing,
 		MIN_Y,
 		MAX_Y: MIN_Y + boards_y * board_spacing,
-	}
+	};
 }
 
 function get4DBoardDimensions() {
