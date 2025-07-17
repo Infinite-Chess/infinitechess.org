@@ -1478,6 +1478,7 @@ svg.collapse {
     background-color: rgb(66 30 0 / 70%);
     color: #ffeac4;
     padding: 0.5em;
+    word-wrap: break-word;
 }
 
 #scale, #width, #velocity, #acceleration {
