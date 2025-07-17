@@ -105,10 +105,8 @@ function getSimplifiedMetadata(ws: CustomWebSocket) {
  * @param ws - The websocket
  * @returns An object that contains either the `member` or `browser` property.
  */
-function getOwnerFromSocket(ws: CustomWebSocket): { member: string, user_id: number } | { browser: string } {
-	const metadata = ws.metadata;
-	if (metadata.memberInfo.signedIn) return { member: metadata.memberInfo.username, user_id: metadata.memberInfo.user_id };
-	else return { browser: metadata.cookies['browser-id']! };
+function getOwnerFromSocket(ws: CustomWebSocket): MemberInfo {
+	return ws.metadata.memberInfo;
 }
 
 /**
