@@ -14,12 +14,10 @@ import moveutil from './moveutil.js';
 import metadata from './metadata.js';
 import math, { Vec2 } from '../../util/math.js';
 import bimath from '../../util/bigdecimal/bimath.js';
-// @ts-ignore
 import winconutil from './winconutil.js';
 // @ts-ignore
 import gamerules from '../variants/gamerules.js';
 // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
-// @ts-ignore
 import wincondition from '../logic/wincondition.js';
 
 

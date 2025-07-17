@@ -27,7 +27,6 @@ import legalmoves from './legalmoves.js';
 import math from '../../util/math.js';
 import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
-// @ts-ignore
 import wincondition from './wincondition.js';
 
 

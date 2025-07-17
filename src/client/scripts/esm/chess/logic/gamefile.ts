@@ -24,7 +24,6 @@ import clock from "./clock.js";
 import movepiece from "./movepiece.js";
 import checkdetection from "./checkdetection.js";
 import gamerules from "../variants/gamerules.js";
-// @ts-ignore
 import wincondition from "./wincondition.js";
 
 interface Snapshot {

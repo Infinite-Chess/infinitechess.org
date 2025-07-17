@@ -14,7 +14,6 @@ import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/
 import { computeRatingDataChanges, DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import icnconverter, { LongFormatIn } from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-// @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 // @ts-ignore
 import gameutility from './gameutility.js';

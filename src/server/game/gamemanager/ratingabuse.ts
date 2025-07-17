@@ -17,10 +17,9 @@ import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMultipleGameData } from "../../database/gamesManager.js";
 import timeutil from "../../../client/scripts/esm/util/timeutil.js";
 import { sendRatingAbuseEmail } from "../../controllers/sendMail.js";
+import winconutil from "../../../client/scripts/esm/chess/util/winconutil.js";
 // @ts-ignore
 import { getMultipleMemberDataByCriteria } from "../../database/memberManager.js";
-// @ts-ignore
-import winconutil from "../../../client/scripts/esm/chess/util/winconutil.js";
 
 
 import type { RefreshTokenRecord } from "../../database/refreshTokenManager.js";
