@@ -6,7 +6,6 @@
 
 // @ts-ignore
 import specialdetect from './specialdetect.js';
-// @ts-ignore
 import winconutil from '../util/winconutil.js';
 import movepiece from './movepiece.js';
 import boardutil from '../util/boardutil.js';

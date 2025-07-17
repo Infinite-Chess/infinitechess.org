@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/chess/variants/omega3generator.js
+// src/client/scripts/esm/chess/variants/omega3generator.ts
 
 /**
  * Here lies the position generator for the Omega^3 Showcase variant.

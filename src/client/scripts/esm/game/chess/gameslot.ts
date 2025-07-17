@@ -46,6 +46,7 @@ import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
 import premoves from "./premoves.js";
 import { animateMove } from "./graphicalchanges.js";
+import winconutil from "../../chess/util/winconutil.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
 // @ts-ignore
@@ -60,8 +61,6 @@ import area from "../rendering/area.js";
 import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import winconutil from "../../chess/util/winconutil.js";
 
 // Type Definitions ----------------------------------------------------------
 
