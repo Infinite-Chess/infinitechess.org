@@ -293,7 +293,10 @@ function onPositionChange() {
 	initViewMatrix();
 }
 
-/**  Returns the scale at which 1 physical pixel on the screen equals 1 tile. */
+/**
+ * Returns the scale at which 1 physical pixel on the screen equals 1 tile. 
+ * @returns {import('../../util/bigdecimal/bigdecimal.js').BigDecimal}
+ */
 function getScaleWhenTilesInvisible() {
 	return (screenBoundingBox.right * 2) / canvas.width;
 }
@@ -301,6 +304,7 @@ function getScaleWhenTilesInvisible() {
 /** 
  * Returns the scale at which the game is considered *zoomed out*.
  * Each tile equals 1 virtual pixel on the screen.
+ * @returns {import('../../util/bigdecimal/bigdecimal.js').BigDecimal}
  */
 function getScaleWhenZoomedOut() {
 	return getScaleWhenTilesInvisible() * window.devicePixelRatio;

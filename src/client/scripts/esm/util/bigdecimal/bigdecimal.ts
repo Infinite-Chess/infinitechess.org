@@ -31,7 +31,7 @@
 
 import bimath from './bimath.js';
 
-import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
 
 
 // Types ========================================================
@@ -301,6 +301,15 @@ function FromCoords(coords: Coords, precision: number = DEFAULT_WORKING_PRECISIO
 	return [
 		FromBigInt(coords[0], precision),
 		FromBigInt(coords[1], precision),
+	];
+}
+
+/** Converts coordinates of javascript doubles to BDCoords (BigDecimal) */
+function fromDoubleCoords(coords: DoubleCoords, precision: number = DEFAULT_WORKING_PRECISION): BDCoords {
+	if (precision < 0 || precision > MAX_DIVEX) throw new Error(`Precision must be between 0 and ${MAX_DIVEX}. Received: ${precision}`);
+	return [
+		FromNumber(coords[0], precision),
+		FromNumber(coords[1], precision),
 	];
 }
 
@@ -1030,6 +1039,7 @@ export default {
 	FromNumber,
 	FromBigInt,
 	FromCoords,
+	fromDoubleCoords,
 	// Helpers
 	howManyBitsForDigitsOfPrecision,
 	getEffectiveDecimalPlaces,
