@@ -10,7 +10,8 @@ type MemberInfo = {
 	username: string,
 	roles: string[] | null
 } | {
-	signedIn: false
+	signedIn: false,
+	browser_id: string,
 }
 
 export type {

@@ -8,6 +8,8 @@ import type { Player } from "../../client/scripts/esm/chess/util/typeutil.js";
 import type { PlayerGroup } from "../../client/scripts/esm/chess/util/typeutil.js";
 import type { GameRules } from "../../client/scripts/esm/chess/variants/gamerules.js";
 import type { BaseMove } from "../../client/scripts/esm/chess/logic/movepiece.js";
+import type { MetaData } from "../../client/scripts/esm/chess/util/metadata.js";
+import type { MemberInfo } from "../../types.js";
 
 interface PlayerData {
 	/**
@@ -16,10 +18,8 @@ interface PlayerData {
 	 * If they are signed in, their identifier is `{ member: string }`, where member is their username.
 	 * If they are signed out, their identifier is `{ browser: string }`, where browser is their browser-id cookie.
 	 * 
-	 * TODO: CHANGE THE IDENTIFIER value to match the return type of socketUtility.getSignedInAndIdentifierOfSocket
 	 */
-	identifier: string; // CHANGE TO { signedIn: boolean, identifier: string }
-	signedIn: boolean;
+	identifier: MemberInfo;
 	/** Player's socket, if they are connected. */
 	socket?: CustomWebSocket;
 	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. */
@@ -65,15 +65,15 @@ interface Game {
 	/** The variant of this game. */
 	variant: string;
 	/** The clock value in s+s format (e.g. "600+4"). Untimed games are represented with a "-" */
-	clock: string;
+	clock: MetaData["TimeControl"];
 	/** Whether or not the game is untimed. Clock will be "-". */
 	untimed: boolean;
 	/** The start time for both players, in milliseconds. */
 	startTimeMillis: undefined;
 	/** The increment amount, in seconds. */
 	incrementMillis: undefined;
-	/** Whether the game is rated. @type {boolean}*/
-	rated: undefined;
+	/** Whether the game is rated. */
+	rated: boolean;
 	/**
 	 * The moves list of the game.
 	 * THE startCoords, endCoords, and promotion ARE ALL NEEDED for the formatconverter!!
