@@ -1057,7 +1057,7 @@ export default {
 
 export type {
 	BigDecimal
-}
+};
 
 
 

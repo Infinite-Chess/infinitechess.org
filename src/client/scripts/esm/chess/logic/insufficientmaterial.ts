@@ -99,7 +99,7 @@ const insuffmatScenarios_special: Scenario[] = [
  * @returns *true*, if the scenario is a draw by insufficient material, otherwise *false*
  */
 function isScenarioInsuffMat(scenario: Scenario): boolean {
-    const scenarioCopy = { ...scenario };
+	const scenarioCopy = { ...scenario };
 	// find out if we are in the 1 king vs 1 king, or in the 0 kings vs 1 king situation, and set scenrariosForInsuffMat accordingly
 	let scenrariosForInsuffMat: Scenario[];
 	if (scenarioCopy[r.KING + e.B] === 1) {
@@ -136,11 +136,11 @@ function isScenarioInsuffMat(scenario: Scenario): boolean {
  */
 function has_more_pieces(a: PieceCount, b: PieceCount): boolean {
 	if (typeof a === "number") {
-        return a > (b as number);
-    } else {
-        const bArray = b as [number, number];
-        return a[0] > bArray[0] || a[1] > bArray[1];
-    }
+		return a > (b as number);
+	} else {
+		const bArray = b as [number, number];
+		return a[0] > bArray[0] || a[1] > bArray[1];
+	}
 }
 
 /**
@@ -194,11 +194,11 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 			else if (color === players.BLACK) bishopsB_count[parity] += 1;
 		}
 		else if (piece.type in scenario) {
-            const currentCount = scenario[piece.type];
-            if (typeof currentCount === 'number') {
-                (scenario[piece.type] as number) = currentCount + 1;
-            }
-        }
+			const currentCount = scenario[piece.type];
+			if (typeof currentCount === 'number') {
+				(scenario[piece.type] as number) = currentCount + 1;
+			}
+		}
 		else scenario[piece.type] = 1;
 	}
 
