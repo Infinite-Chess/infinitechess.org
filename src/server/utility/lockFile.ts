@@ -11,17 +11,16 @@
 
 import lockfile from 'proper-lockfile';
 import fs from 'fs';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Locks the file while reading, then immediately unlocks and returns the data.
 // MUST BE CALLED WITH 'await' or this returns a promise!
-const readFile = async(path, errorString) => {
-	let data;
+const readFile = async(path: string, errorString: string, buffer: BufferEncoding = 'utf-8'): Promise<object> => {
+	let data: object;
 	await lockfile.lock(path)
 		.then((releaseFunc) => {
 			// Do something while the file is locked
 			try {
-				data = JSON.parse(fs.readFileSync(path));
+				data = JSON.parse(fs.readFileSync(path, buffer));
 			} catch (e) { // Catching the error within JSON parsing like this allows us to unlock the file afterwards!
 				console.error(e);
 			} finally {
@@ -30,16 +29,15 @@ const readFile = async(path, errorString) => {
 		})
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
-			const errText = `Error when reading file in lockFile: ${errorString}${e.stack}`;
-			logEventsAndPrint(errText, 'errLog.txt');
+			throw new Error(`Error when reading file in lockFile: ${errorString}${e.stack}`);
 		});
+	// @ts-ignore
 	return data;
 };
 
 // Returns false when failed to lock/write file.
 // MUST BE CALLED WITH 'await' or this returns a promise!
-const writeFile = async(path, object, errorString) => {
-	let status = true;
+const writeFile = async(path: string, object: object, errorString: string): Promise<void> => {
 	await lockfile.lock(path)
 		.then((release) => {
 			// Do something while the file is locked
@@ -55,21 +53,19 @@ const writeFile = async(path, object, errorString) => {
 		})
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
-			const errText = `Error while writing file in lockFile: ${errorString}${e.stack}`;
-			logEventsAndPrint(errText, 'errLog.txt');
-			status = false;
+			throw new Error(`Error while writing file in lockFile: ${errorString}${e.stack}`);
 		});
-	return status;
+	return;
 };
 
 // Locks file before reading, editing, and saving.
 // MUST BE CALLED WITH 'await' or this returns a promise!
-const editFile = async(path, callback, errorString) => {
-	let status = true;
+// eslint-disable-next-line no-unused-vars
+const editFile = async(path: string, callback: (data: object) => object, errorString: string, buffer: BufferEncoding = 'utf-8'): Promise<void> => {
 	await lockfile.lock(path)
 		.then((release) => {
 			// Do something while the file is locked
-			let data = JSON.parse(fs.readFileSync(path));
+			let data = JSON.parse(fs.readFileSync(path, buffer));
 			data = callback(data);
 			fs.writeFileSync(
 				path,
@@ -79,11 +75,9 @@ const editFile = async(path, callback, errorString) => {
 		})
 		.catch((e) => {
 			// either lock could not be acquired or releasing it failed
-			const errText = `Error while editing file in lockFile: ${errorString}${e.stack}`;
-			logEventsAndPrint(errText, 'errLog.txt');
-			status = false;
+			throw new Error(`Error while editing file in lockFile: ${errorString}${e.stack}`);
 		});
-	return status;
+	return;
 };
 
 export {
