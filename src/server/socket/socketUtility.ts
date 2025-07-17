@@ -9,6 +9,7 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
 import type { MemberInfo } from '../../types.js';
+import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
@@ -22,10 +23,10 @@ interface CustomWebSocket extends WebSocket {
 			invites?: boolean;
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
-				/** The id of the game they're in. @type {string} */
+				/** The id of the game they're in. */
 				id: number;
-				/** The color they are playing as. @type {Player} */
-				color: string;
+				/** The color they are playing as. */
+				color: Player;
 			};
 		};
 		/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */

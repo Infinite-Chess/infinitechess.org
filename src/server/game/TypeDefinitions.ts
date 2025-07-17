@@ -33,7 +33,7 @@ interface PlayerData {
 		 * This is triggered if their socket unexpectedly closes,
 		 * and lasts for 5 seconds to give them a chance to reconnect.
 		 */
-		startID?: ReturnType<typeof setTimeout>,
+		startID?: NodeJS.Timeout,
 		/**
 		 * The timeout id of the timer that will auto-resign the
 		 * player if they are disconnected for too long.
@@ -59,7 +59,7 @@ interface Game {
 	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
 	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
-	timeEnded: undefined;
+	timeEnded: number;
 	/** Whether this game is "public" or "private". */
 	publicity: 'public' | 'private';
 	/** The variant of this game. */
@@ -69,9 +69,9 @@ interface Game {
 	/** Whether or not the game is untimed. Clock will be "-". */
 	untimed: boolean;
 	/** The start time for both players, in milliseconds. */
-	startTimeMillis: undefined;
+	startTimeMillis: number;
 	/** The increment amount, in seconds. */
-	incrementMillis: undefined;
+	incrementMillis: number;
 	/** Whether the game is rated. */
 	rated: boolean;
 	/**
@@ -86,7 +86,7 @@ interface Game {
 	/** Whos turn it is currently. */
 	whosTurn?: Player;
 	/** If the game is over, this is a string. For example, "1 checkmate". Otherwise false. */
-	gameConclusion: string;
+	gameConclusion?: string;
 	/** The amount of time remaining, in milliseconds, the current player had at the beginning of their turn. */
 	timeRemainAtTurnStart?: number;
 	/** The time, in milliseconds, of the javascript process since the beginning of the current player's turn. */

@@ -54,7 +54,7 @@ import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
  * @param {string} inviteOptions.publicity - The publicity setting of the game. Can be "public" or "private".
  * @param {string} inviteOptions.clock - The clock format for the game, in the form "s+s" or "-" for no clock.
  * @param {string} inviteOptions.rated - The rating type of the game. Can be "casual" or "rated".
- * @param {string} id - The unique identifier to give this game.
+ * @param {number} id - The unique identifier to give this game.
  * @param {Socket | undefined} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
  * @param {CustomWebSocket} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
@@ -451,7 +451,7 @@ function getParticipantState(game, color) {
  * Tests if the given socket belongs in the game. If so, it returns the color they are.
  * @param {Game} game - The game
  * @param {CustomWebSocket} ws - The websocket
- * @returns {string | false} The color they are, if they belong, otherwise *false*.
+ * @returns {Player | void} The color they are, if they belong, otherwise *false*.
  */
 function doesSocketBelongToGame_ReturnColor(game, ws) {
 	if (game.id === ws.metadata.subscriptions.game?.id) return ws.metadata.subscriptions.game?.color;
