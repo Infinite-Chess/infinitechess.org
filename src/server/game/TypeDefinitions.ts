@@ -59,7 +59,7 @@ interface Game {
 	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
 	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
-	timeEnded: number;
+	timeEnded?: number;
 	/** Whether this game is "public" or "private". */
 	publicity: 'public' | 'private';
 	/** The variant of this game. */
@@ -69,9 +69,9 @@ interface Game {
 	/** Whether or not the game is untimed. Clock will be "-". */
 	untimed: boolean;
 	/** The start time for both players, in milliseconds. */
-	startTimeMillis: number;
+	startTimeMillis?: number;
 	/** The increment amount, in seconds. */
-	incrementMillis: number;
+	incrementMillis?: number;
 	/** Whether the game is rated. */
 	rated: boolean;
 	/**
@@ -107,7 +107,7 @@ interface Game {
 
 	/** The ID of the timer to delete the game after it has ended.
      * This can be used to cancel it in case a hacking was reported. */
-	deleteTimeoutID: ReturnType<typeof setTimeout>;
+	deleteTimeoutID?: ReturnType<typeof setTimeout>;
 
 	/**
 	 * Whether a custom position was pasted in by either player.

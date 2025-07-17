@@ -204,7 +204,7 @@ function addGameRecordsInTransaction(game: Game, victor: Player | undefined, ter
 			game_id,
 			player,
 			victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0,
-			ending_clocks[playerStr] ?? null,
+			ending_clocks[player] ?? null,
 			ratingData?.[player]?.elo_at_game ?? null,
 			ratingData?.[player]?.elo_change_from_game ?? null
 		]);

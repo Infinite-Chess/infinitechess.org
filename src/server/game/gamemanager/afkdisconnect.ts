@@ -121,7 +121,7 @@ function cancelDisconnectTimer(game: Game, color: Player, { dontNotifyOpponent =
 	// console.log(`Canceling disconnect timer for player ${color}!`)
 
 	/** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */
-	const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(game, String(color));
+	const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(game, color);
     
 	const playerdata = game.players[color]!;
 

@@ -88,7 +88,7 @@ function closeDrawOffer(game) {
  * Returns the last ply move the provided color has offered a draw,
  * if they have, otherwise undefined.
  * @param {Game} game
- * @param {string} color
+ * @param {Player} color
  * @returns {number | undefined}
  */
 function getLastDrawOfferPlyOfColor(game, color) {
