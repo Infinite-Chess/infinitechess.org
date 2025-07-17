@@ -48,7 +48,7 @@ interface PlayerData {
 		 * Whether the player was disconnected by choice or not.
 		 * If not, they are given extra time to reconnect.
 		 */
-		wasByChoice: boolean,
+		wasByChoice?: boolean,
 	};
 }
 
@@ -93,14 +93,14 @@ interface Game {
 	timeAtTurnStart?: number;
 	/** The ID of the timeout which will auto-lose the player
      * whos turn it currently is when they run out of time. */
-	autoTimeLossTimeoutID: ReturnType<typeof setTimeout>;
+	autoTimeLossTimeoutID?: ReturnType<typeof setTimeout>;
 
 	/** The ID of the timeout which will auto-lose the player
      * whos turn it currently is if they go AFK too long. */
-	autoAFKResignTimeoutID: ReturnType<typeof setTimeout>;
+	autoAFKResignTimeoutID?: ReturnType<typeof setTimeout>;
 	/** The time the current player will be auto-resigned by
      * AFK if they are currently AFK. */
-	autoAFKResignTime: number;
+	autoAFKResignTime?: number;
 
 	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise undefined. */
 	drawOfferState?: Player;

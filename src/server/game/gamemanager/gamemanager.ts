@@ -65,7 +65,7 @@ function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, 
 		// Immediately start the auto-resign by disconnection timer
 		const player2Color = gameutility.doesSocketBelongToGame_ReturnColor(game, player2Socket)!;
 		const player1Color = typeutil.invertPlayer(player2Color);
-		startDisconnectTimer(game, String(player1Color), false, onPlayerLostByDisconnect);
+		startDisconnectTimer(game, player1Color, false, onPlayerLostByDisconnect);
 	}
 	for (const data of Object.values(game.players)) {
 		addUserToActiveGames(data.identifier, game.id);
@@ -144,7 +144,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
 		game.players[color]!.disconnect.startID = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect) as unknown as NodeJS.Timeout;
 	} else { // Closed tab manually. Immediately start auto-resign timer.
-		startDisconnectTimer(game, String(color), unsubNotByChoice, onPlayerLostByDisconnect);
+		startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect);
 	}
 }
 

@@ -483,7 +483,7 @@ function doesPlayerBelongToGame_ReturnColor(game, player) {
  * @param {string} action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto-translate it!
  * @param {*} value - The value to send to the client.
  */
-function sendMessageToSocketOfColor(game, color, sub, action, value) {
+function sendMessageToSocketOfColor(game, color, sub, action, value = undefined) {
 	const data = game.players[color];
 	if (data === undefined) return logEventsAndPrint(`Tried to send a message to player ${color} when there isn't one in game!`, 'errLog.txt');
 	const ws = data.socket;
