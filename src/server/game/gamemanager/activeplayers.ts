@@ -37,7 +37,7 @@ const browsersInActiveGames: Record<string, number> = {};
  */
 function addUserToActiveGames(user: MemberInfo, id: number) {
 	if (user.signedIn) membersInActiveGames[user.user_id] = id;
-	else membersInActiveGames[user.browser_id] = id;
+	else browsersInActiveGames[user.browser_id] = id;
 }
 
 /**

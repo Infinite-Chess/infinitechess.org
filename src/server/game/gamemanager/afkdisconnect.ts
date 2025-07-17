@@ -7,6 +7,7 @@
 
 // Custom imports
 
+// @ts-ignore
 import gameutility from './gameutility.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
@@ -40,7 +41,7 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
  * Cancels the timer that automatically resigns a player due to being AFK (Away From Keyboard).
  * This function should be called when the "AFK-Return" websocket action is received, indicating
  * that the player has returned, OR when a client refreshes the page!
- * @param {Game} game - The game
+ * @param game - The game
  * @param {Object} [options] - Optional parameters.
  * @param {boolean} [options.alertOpponent=false] - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned.
  */
@@ -59,10 +60,10 @@ function cancelAutoAFKResignTimer(game: Game, { alertOpponent = false } = {}) {
 
 /**
  * Starts a timer to auto-resign a player from disconnection.
- * @param {Game} game - The game
- * @param {string} color - The color to start the auto-resign timer for
- * @param {boolean} closureNotByChoice - True if the player didn't close the connection on purpose.
- * @param {Function} onAutoResignFunc - The function to call when the player should be auto resigned from disconnection. This should have 2 arguments: The game, and the color that won.
+ * @param game - The game
+ * @param color - The color to start the auto-resign timer for
+ * @param closureNotByChoice - True if the player didn't close the connection on purpose.
+ * @param onAutoResignFunc - The function to call when the player should be auto resigned from disconnection. This should have 2 arguments: The game, and the color that won.
  */
 // eslint-disable-next-line no-unused-vars
 function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boolean, onAutoResignFunc: (game: Game, winner: Player) => void) {

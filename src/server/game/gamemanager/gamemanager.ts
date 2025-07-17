@@ -8,15 +8,20 @@ import WebSocket from 'ws';
 
 // Custom imports
 
+// @ts-ignore
 import gameutility from './gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import statlogger from '../statlogger.js';
+// @ts-ignore
 import { executeSafely_async } from '../../utility/errorGuard.js';
 import gamelogger from './gamelogger.js';
 
+// @ts-ignore
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
+// @ts-ignore
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
+// @ts-ignore
 import { closeDrawOffer } from './drawoffers.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
@@ -24,8 +29,9 @@ import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import ratingabuse from './ratingabuse.js';
 
-import type { Game } from '../TypeDefinitions.js';
+import type { Game, PlayerData } from '../TypeDefinitions.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+// @ts-ignore
 import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { MemberInfo } from '../../../types.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
@@ -68,7 +74,7 @@ function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, 
 		startDisconnectTimer(game, player1Color, false, onPlayerLostByDisconnect);
 	}
 	for (const data of Object.values(game.players)) {
-		addUserToActiveGames(data.identifier, game.id);
+		addUserToActiveGames((data as PlayerData).identifier, game.id);
 	}
 
 	addGameToActiveGames(game);
@@ -95,9 +101,9 @@ function issueUniqueGameId() {
 
 /**
  * Adds a game to the active games list and increments the active game count.
- * @param {Game} game - The game
+ * @param game - The game
  */
-function addGameToActiveGames(game) {
+function addGameToActiveGames(game: Game) {
 	if (!game) return console.error("Can't add an undefined game to the active games list.");
 	activeGames[game.id] = game;
 	incrementActiveGameCount();
@@ -138,7 +144,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 
 	if (gameutility.isGameOver(game)) return; // It's fine if players unsub/disconnect after the game has ended.
 
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)!;
+	const color = gameutility.doesSocketBelongToGame_ReturnColor(game, ws)! as Player;
 	if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
 		console.log("Waiting 5 seconds before starting disconnection timer.");
 		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
@@ -228,7 +234,7 @@ function pushGameClock(game: Game) {
 	const colorWhoJustMoved = game.whosTurn!; // white/black
 	game.whosTurn = game.gameRules.turnOrder[(game.moves.length) % game.gameRules.turnOrder.length];
 
-	const curPlayerdata = game.players[game.whosTurn]!;
+	const curPlayerdata = game.players[game.whosTurn!]!;
 	const prevPlayerdata = game.players[colorWhoJustMoved]!;
 
 	if (game.untimed) return; // Don't adjust the times if the game isn't timed.
@@ -308,9 +314,9 @@ function setGameConclusion(game: Game, conclusion: string | undefined) {
 function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {}) {
 	if (!dontDecrementActiveGames) decrementActiveGameCount();
 
-	const players = {};
+	const players: Record<string, any> = {};
 	for (const [c, data] of Object.entries(game.players)) {
-		players[c] = data.identifier;
+		players[c] = {id: data.identifier.signedIn ? data.identifier.username : data.identifier.browser_id, s: data.identifier.signedIn};
 	}
 	console.log(`Game ${game.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${game.gameConclusion}. Moves: ${game.moves.length}.`);
 	printActiveGameCount();
@@ -456,8 +462,7 @@ async function deleteGame(game: Game) {
  */
 async function logAllGames() {
 	for (const gameID in activeGames) {
-		/** @type {Game} */
-		const game = activeGames[gameID];
+		const game = activeGames[gameID]!;
 		if (!gameutility.isGameOver(game)) {
 			// Abort the game
 			setGameConclusion(game, 'aborted');
@@ -476,8 +481,7 @@ async function logAllGames() {
  */
 function broadCastGameRestarting() {
 	const timeToRestart = getTimeServerRestarting() as number;
-	for (const gameID in activeGames) {
-		const game = activeGames[gameID];
+	for (const game of Object.values(activeGames)) {
 		for (const color in game.players) {
 			gameutility.sendMessageToSocketOfColor(game, Number(color) as Player, 'game', 'serverrestart', timeToRestart);
 		}

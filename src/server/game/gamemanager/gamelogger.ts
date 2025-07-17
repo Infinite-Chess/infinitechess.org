@@ -76,7 +76,7 @@ async function logGame(game: Game): Promise<RatingData | undefined> {
  * Either ALL operations succeed, or NONE do.
  */
 function logGame_orchestrator(game: Game): RatingData | undefined {
-	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
+	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion!);
 
 	// --- Part 1: Handle Rating Updates ---
 	const ratingData = updateLeaderboardsInTransaction(game, victor);
@@ -108,7 +108,7 @@ function updateLeaderboardsInTransaction(game: Game, victor: Player | undefined)
 	let ratingdata: RatingData = {};
 	for (const playerStr in game.players) {
 		const player: Player = Number(playerStr) as Player;
-		const user_id = game.players[playerStr].identifier.user_id;
+		const user_id = game.players[player]!.identifier.signedIn ? game.players[player]!.identifier.user_id : undefined;
 		if (user_id === undefined) throw new Error(`Attempted to process rating for player ${playerStr} in rated game ${game.id} without a user_id.`);
 
 		// If a player isn't on the leaderboard, add them first.
@@ -134,11 +134,11 @@ function updateLeaderboardsInTransaction(game: Game, victor: Player | undefined)
 	// 3. Write the new ratings to the database.
 	for (const playerStr in ratingdata) {
 		const player: Player = Number(playerStr) as Player;
-		const user_id = game.players[playerStr].identifier.user_id!;
+		// TS is annoying sometimes, we already know all the players have user_ids
+		const user_id = game.players[player]!.identifier.signedIn ? game.players[player]!.identifier.user_id : undefined;
 		const data = ratingdata[player]!;
-
 		// We use the _core version to ensure errors propagate and roll back the transaction.
-		updatePlayerLeaderboardRating_core(user_id, leaderboard_id, data.elo_after_game!, data.rating_deviation_after_game!);
+		updatePlayerLeaderboardRating_core(user_id!, leaderboard_id, data.elo_after_game!, data.rating_deviation_after_game!);
 	}
 
 	return ratingdata;
@@ -196,7 +196,7 @@ function addGameRecordsInTransaction(game: Game, victor: Player | undefined, ter
 	const ending_clocks = gameutility.getGameClockValues(game).clocks;
 	for (const playerStr in game.players) {
 		const player = Number(playerStr) as Player;
-		const user_id = game.players[playerStr].identifier.user_id;
+		const user_id = game.players[player]!.identifier.signedIn ? game.players[player]!.identifier.user_id : undefined;
 		if (!user_id) continue;
 		
 		db.run(playerGamesQuery, [
@@ -238,7 +238,7 @@ function updateAllPlayerStatsInTransaction(game: Game, victor: Player | undefine
 
 	for (const playerStr in game.players) {
 		const player = Number(playerStr) as Player;
-		const user_id = game.players[playerStr].identifier.user_id;
+		const user_id = game.players[player]!.identifier.signedIn ? game.players[player]!.identifier.user_id : undefined;
 		if (!user_id) continue; // Guests dono't have any stats to update.
 
 		updateSinglePlayerStatsInTransaction(user_id, {
