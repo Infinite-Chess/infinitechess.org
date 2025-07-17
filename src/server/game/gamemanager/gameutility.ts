@@ -35,6 +35,7 @@ import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 
 // Type Definitions...
+import { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
 import type { Game } from '../TypeDefinitions.js';
 import type { GameRules } from '../../../client/scripts/esm/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../client/scripts/esm/chess/logic/clock.js';
@@ -656,14 +657,14 @@ function sendMoveToColor(game: Game, color: Player) {
 function getSimplifiedLastMove(game: Game) {
 	const moves = game.moves;
 	if (moves.length === 0) return;
-	const move = moves[moves.length - 1];
+	const move = moves[moves.length - 1]!;
 	return simplyMove(move);
 }
 
 /**
  * Simplifies a game's move into the minimal info needed for the client to reconstruct the move.
  */
-function simplyMove(move) {
+function simplyMove(move: BaseMove) {
 	return { compact: move.compact, };
 }
 
