@@ -1,5 +1,13 @@
 
-// Import Start
+// src/client/scripts/esm/game/rendering/area.js
+
+/**
+ * This script handles the calculation of the "Area"s on screen that
+ * will contain the desired list of piece coordinates when at a specific
+ * camera position and scale (zoom), which can be used to tell
+ * {@link transition} where to teleport to.
+ */
+
 import transition from './transition.js';
 import camera from './camera.js';
 import boardtiles from './boardtiles.js';
@@ -10,70 +18,63 @@ import guinavigation from '../gui/guinavigation.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import boardpos from './boardpos.js';
-// Import End
 
-/** 
- * Type Definitions 
- * @typedef {import('../../chess/logic/gamefile.js').Board} Board
- * @typedef {import('../../util/math.js').BoundingBox} BoundingBox
- * @typedef {import('../../chess/util/coordutil.js').Coords} Coords
-*/
 
-"use strict";
+import type { Board } from '../../chess/logic/gamefile.js';
+import type { BoundingBox } from '../../util/math.js';
+import type { Coords } from '../../chess/util/coordutil.js';
+
+
 
 /**
  * An area object, containing the information {@link transition} needs
  * to teleport/transition to this location on the board.
- * @typedef {Object} Area
- * @property {Coords} coords - The coordinates of the area
- * @property {number} scale - The camera scale (zoom) of the area
- * @property {Object} boundingBox - The bounding box that contains the area of interest.
  */
+export interface Area {
+	/** The coordinates of the area. */
+	coords: Coords;
+	/** The camera scale (zoom) of the area. */
+	scale: number;
+	/** The bounding box that contains the area of interest. */
+	boundingBox: BoundingBox;
+}
 
-/**
- * This script handles the calculation of the "Area"s on screen that
- * will contain the desired list of piece coordinates when at a specific
- * camera position and scale (zoom), which can be used to tell
- * {@link transition} where to teleport to.
- */
 
-const padding = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
-const paddingMiniimage = 0.2; // The padding to use when miniimages are visible (zoomed out far)
+const padding: number = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
+const paddingMiniimage: number = 0.2; // The padding to use when miniimages are visible (zoomed out far)
 /**
  * The minimum number of squares that should be visible when transitioning somewhere. 
  * This is so that it doesn't zoom too close-up on a single piece or small group.
  * */
-const areaMinHeightSquares = 17; // Divided by screen width
+const areaMinHeightSquares: number = 17; // Divided by screen width
 
 // Just the action of adding padding, changes the required scale to have that amount of padding,
 // so we need to iterate it a few times for more accuracy.
-const iterationsToRecalcPadding = 10;
+// MUST BE GREATER THAN 0!
+const iterationsToRecalcPadding: number = 10;
 
 /**
  * Calculates the area object that contains every coordinate in the provided list, *with padding added*,
  * and contains the optional {@link existingBox} bounding box.
- * @param {number[][]} coordsList - An array of coordinates, typically of the pieces.
+ * @param coordsList - An array of coordinates, typically of the pieces.
  * @param {BoundingBox} [existingBox] A bounding box to merge with, if specified.
- * @returns {Area} The area object
+ * @returns {Area | undefined} The area object
  */
-function calculateFromCoordsList(coordsList, existingBox) {
-	if (!coordsList) return console.error("Cannot calculate area from an undefined coords list.");
-	if (coordsList.length === 0) return console.error("Cannot calculate area from an empty coords list.");
+function calculateFromCoordsList(coordsList: Coords[], existingBox?: BoundingBox): Area {
+	if (coordsList.length === 0) throw Error("Cannot calculate area from an empty coords list.");
 
-	let box = math.getBoxFromCoordsList(coordsList); // Unpadded
+	let box: BoundingBox = math.getBoxFromCoordsList(coordsList); // Unpadded
 	if (existingBox) box = math.mergeBoundingBoxes(box, existingBox); // Unpadded
-    
+
 	return calculateFromUnpaddedBox(box);
 }
 
 /**
  * Calulates the area object from the provided bounding box, *with padding added*.
- * @param {BoundingBox} box - A BoundingBox object.
- * @returns {Area} The area object
+ * @param box - A BoundingBox object.
+ * @returns The area object
  */
-function calculateFromUnpaddedBox(box) {
-	if (!box) return console.error("Cannot calculate area from an undefined box.");
-
+function calculateFromUnpaddedBox(box: BoundingBox): Area {
 	const paddedBox = applyPaddingToBox(box);
 	return calculateFromBox(paddedBox);
 }
@@ -81,18 +82,18 @@ function calculateFromUnpaddedBox(box) {
 /**
  * Returns a new bounding box, with added padding so the pieces
  * aren't too close to the edge or underneath the navigation bar.
- * @param {BoundingBox} box - The source bounding box
- * @returns {BoundingBox} The new bounding box
+ * @param box - The source bounding box
+ * @returns The new bounding box
  */
-function applyPaddingToBox(box) { // { left, right, bottom, top }
-	if (!box) { console.error("Cannot apply padding to an undefined box."); return box; }
-	const boxCopy = jsutil.deepCopyObject(box);
-    
+function applyPaddingToBox(box: BoundingBox): BoundingBox { // { left, right, bottom, top }
+
+	const boxCopy: BoundingBox = jsutil.deepCopyObject(box);
+
 	const topNavHeight = guinavigation.getHeightOfNavBar();
 	const bottomNavHeight = guigameinfo.getHeightOfGameInfoBar();
 	const navHeight = topNavHeight + bottomNavHeight;
 	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
-    
+
 	// Round to the furthest away edge of the square.
 	const squareCenter = boardtiles.gsquareCenter();
 	boxCopy.left -= squareCenter;
@@ -100,13 +101,11 @@ function applyPaddingToBox(box) { // { left, right, bottom, top }
 	boxCopy.bottom -= squareCenter;
 	boxCopy.top += 1 - squareCenter;
 
-	/** Start with a copy with zero padding.
-     * @type {BoundingBox} */
-	let paddedBox = jsutil.deepCopyObject(boxCopy);
+	/** Start with a copy with zero padding. */
+	let paddedBox: BoundingBox = jsutil.deepCopyObject(boxCopy);
 	let scale = calcScaleToMatchSides(paddedBox);
 
 	// Iterate until we have desired padding
-	if (iterationsToRecalcPadding <= 0) { console.error("iterationsToRecalcPadding must be greater than 0!"); return boxCopy; }
 	for (let i = 0; i < iterationsToRecalcPadding; i++) {
 		const paddingToUse = scale < camera.getScaleWhenZoomedOut() ? paddingMiniimage : padding;
 		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
@@ -129,18 +128,17 @@ function applyPaddingToBox(box) { // { left, right, bottom, top }
 /**
  * Calculates an Area object from the given bounding box.
  * The box must come PRE-PADDED.
- * @param {BoundingBox} box - The bounding box
- * @returns {Area} The area object
+ * @param box - The bounding box
+ * @returns The area object
  */
-function calculateFromBox(box) { // { left, right, bottom, top }
-	if (!box) return console.error("Cannot calculate area from an undefined box.");
+function calculateFromBox(box: BoundingBox): Area { // { left, right, bottom, top }
 
 	// The new boardPos is the middle point
 	const xHalfLength = (box.right - box.left) / 2;
 	const yHalfLength = (box.top - box.bottom) / 2;
 	const centerX = box.left + xHalfLength;
 	const centerY = box.bottom + yHalfLength;
-	const newBoardPos = [centerX, centerY];
+	const newBoardPos: Coords = [centerX, centerY];
 
 	// What is the scale required to match the sides?
 	const newScale = calcScaleToMatchSides(box);
@@ -148,26 +146,24 @@ function calculateFromBox(box) { // { left, right, bottom, top }
 	// Now maximize the bounding box to fill entire screen when at position and scale, so that
 	// we don't have long thin slices of a bounding box that will fail the math.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
-	box = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
+	const maximizedBox = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
 	math;
 	// PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
 	return {
 		coords: newBoardPos,
 		scale: newScale,
-		boundingBox: box
+		boundingBox: maximizedBox
 	};
 }
 
 /**
  * Calculates the camera scale (zoom) needed to fit
  * the provided board bounding box within the canvas.
- * @param {BoundingBox} boundingBox - The bounding box
- * @returns {number} The scale (zoom) required
+ * @param boundingBox - The bounding box
+ * @returns The scale (zoom) required
  */
-function calcScaleToMatchSides(boundingBox) {
-	if (!boundingBox) return console.log("Cannot calc scale to match sides of an undefined box.");
-
+function calcScaleToMatchSides(boundingBox: BoundingBox): number {
 	const xHalfLength = (boundingBox.right - boundingBox.left) / 2;
 	const yHalfLength = (boundingBox.top - boundingBox.bottom) / 2;
 
@@ -180,18 +176,18 @@ function calcScaleToMatchSides(boundingBox) {
 
 	let newScale = xScale < yScale ? xScale : yScale;
 	if (newScale > capScale) newScale = capScale;
-    
+
 	return newScale;
 }
 
 /**
  * Creates a new bounding box with the added padding.
- * @param {BoundingBox} boundingBox The bounding box
- * @param {number} horzPad - Horizontal padding
- * @param {number} vertPad - Vertical padding
- * @returns {BoundingBox} The padded bounding box
+ * @param boundingBox The bounding box
+ * @param horzPad - Horizontal padding
+ * @param vertPad - Vertical padding
+ * @returns The padded bounding box
  */
-function addPaddingToBoundingBox(boundingBox, horzPad, vertPad) {
+function addPaddingToBoundingBox(boundingBox: BoundingBox, horzPad: number, vertPad: number): BoundingBox {
 	return {
 		left: boundingBox.left - horzPad,
 		right: boundingBox.right + horzPad,
@@ -200,29 +196,24 @@ function addPaddingToBoundingBox(boundingBox, horzPad, vertPad) {
 	};
 }
 
-function initTelFromCoordsList(coordsList) { // pieces is an array of coords
-	if (!coordsList) return console.error("Cannot init teleport from an undefined coords list.");
-	if (coordsList.length === 0) return console.error("Cannot init teleport from an empty coords list.");
+function initTelFromCoordsList(coordsList: Coords[]): void {
+	if (coordsList.length === 0) throw Error("Cannot init teleport from an empty coords list.");
 
 	const box = math.getBoxFromCoordsList(coordsList); // Unpadded
 	initTelFromUnpaddedBox(box);
 }
 
-function initTelFromUnpaddedBox(box) {
-	if (!box) return console.error("Cannot init teleport from an undefined box.");
-
+function initTelFromUnpaddedBox(box: BoundingBox): void {
 	const thisArea = calculateFromUnpaddedBox(box);
 	initTelFromArea(thisArea);
 }
 
 /**
  * Tells {@link transition} where to teleport to based off the provided area object.
- * @param {Area} thisArea - The area object to teleport to
- * @param {boolean} ignoreHistory - Whether to forget adding this teleport to the teleport history.
+ * @param thisArea - The area object to teleport to
+ * @param [ignoreHistory] Whether to forget adding this teleport to the teleport history.
  */
-function initTelFromArea(thisArea, ignoreHistory) {
-	if (!thisArea) return console.error("Cannot init teleport from an undefined area.");
-
+function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 	const thisAreaBox = thisArea.boundingBox;
 
 	const startCoords = boardpos.getBoardPos();
@@ -233,17 +224,21 @@ function initTelFromArea(thisArea, ignoreHistory) {
 	// Will a teleport to this area be a zoom out or in?
 	const isAZoomOut = thisArea.scale < boardpos.getBoardScale();
 
-	let firstArea;
+	let firstArea: Area | undefined;
 
 	if (isAZoomOut) { // If our current screen isn't within the final area, create new area to teleport to first
-		if (!math.boxContainsSquare(thisAreaBox, startCoords)) firstArea = calculateFromCoordsList([startCoords], thisAreaBox);
+		if (!math.boxContainsSquare(thisAreaBox, startCoords)) {
+			firstArea = calculateFromCoordsList([startCoords], thisAreaBox);
+		}
 		// Version that fits the entire screen on the zoom out
 		// if (!math.boxContainsBox(thisAreaBox, currentBoardBoundingBox)) {
 		//     const mergedBoxes = math.mergeBoundingBoxes(currentBoardBoundingBox, thisAreaBox);
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }
 	} else { // zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
-		if (!math.boxContainsSquare(currentBoardBoundingBox, endCoords)) firstArea = calculateFromCoordsList([endCoords], currentBoardBoundingBox);
+		if (!math.boxContainsSquare(currentBoardBoundingBox, endCoords)) {
+			firstArea = calculateFromCoordsList([endCoords], currentBoardBoundingBox);
+		}
 		// Version that fits the entire screen on the zoom out
 		// if (!math.boxContainsBox(currentBoardBoundingBox, thisAreaBox)) {
 		//     const mergedBoxes = math.mergeBoundingBoxes(currentBoardBoundingBox, thisAreaBox);
@@ -261,11 +256,10 @@ function initTelFromArea(thisArea, ignoreHistory) {
 /**
  * Returns the area object that contains all pieces within
  * it from the specified gamefile, with added padding.
- * @param {Board} board - The gamefile
- * @returns {Area} The area object
+ * @param board - The gamefile
+ * @returns The area object
  */
-function getAreaOfAllPieces(board) {
-	if (!board) return console.error("Cannot get the area of all pieces of an undefined game.");
+function getAreaOfAllPieces(board: Board): Area {
 	return calculateFromUnpaddedBox(gamefileutility.getStartingAreaBox(board));
 }
 
