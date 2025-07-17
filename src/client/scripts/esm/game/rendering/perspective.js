@@ -75,7 +75,7 @@ function enable() {
 
 	initCrosshairModel();
 
-	statustext.showStatus(translations.rendering.movement_tutorial);
+	// statustext.showStatus(translations.rendering.movement_tutorial);
 }
 
 function disable() {

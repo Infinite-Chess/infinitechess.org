@@ -93,7 +93,7 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  */
 function regenAll(boardsim: Board, mesh: Mesh | undefined) {
 	if (!mesh) return;
-	console.log("Regenerating all piece type meshes.");
+	// console.log("Regenerating all piece type meshes.");
 
 	// Update the offset
 	mesh.offset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
@@ -203,7 +203,7 @@ function getInstanceDataForTypeRange(boardsim: Board, mesh: Mesh, type: number):
  * Faster than {@link regenAll}.
  */
 function shiftAll(boardsim: Board, mesh: Mesh) {
-	console.log("Shifting all piece meshes.");
+	// console.log("Shifting all piece meshes.");
 
 	const newOffset = math.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 
@@ -212,7 +212,7 @@ function shiftAll(boardsim: Board, mesh: Mesh) {
 	
 	const chebyshevDistance = math.chebyshevDistance(mesh.offset, newOffset);
 	if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
-		console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
+		// console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
 		regenAll(boardsim, mesh);
 		return;
 	}
