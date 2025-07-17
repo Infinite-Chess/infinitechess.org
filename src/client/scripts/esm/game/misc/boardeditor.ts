@@ -304,7 +304,7 @@ function redo() {
 }
 
 /**
- * copypastegame uses the move list instead of the position
+ * copygame uses the move list instead of the position
  * which doesn't work for the board editor.
  * This function uses the position of pieces on the board.
  */

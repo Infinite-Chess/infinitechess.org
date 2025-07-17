@@ -1,8 +1,8 @@
 
-// src/client/scripts/esm/game/chess/copypastegame.js
+// src/client/scripts/esm/game/chess/pastegame.js
 
 /**
- * This script handles copying and pasting games
+ * This script handles pasting games
  */
 
 
@@ -10,72 +10,33 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import localstorage from '../../util/localstorage.js';
 import enginegame from '../misc/enginegame.js';
 import statustext from '../gui/statustext.js';
-import docutil from '../../util/docutil.js';
 import winconutil from '../../chess/util/winconutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 import gameloader from './gameloader.js';
-import { PlayerGroup, players } from '../../chess/util/typeutil.js';
+import { PlayerGroup } from '../../chess/util/typeutil.js';
 import guipause from '../gui/guipause.js';
-import gamecompressor from './gamecompressor.js';
 import gameformulator from './gameformulator.js';
 import websocket from '../websocket.js';
 import boardutil from '../../chess/util/boardutil.js';
 import icnconverter, { _Move_Out, LongFormatOut } from '../../chess/logic/icn/icnconverter.js';
 import variant from '../../chess/variants/variant.js';
-import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import { pieceCountToDisableCheckmate } from '../../chess/logic/checkmate.js';
-import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 
 
 import type { CoordsKey } from '../../chess/util/coordutil.js';
 import type { VariantOptions } from '../../chess/logic/initvariant.js';
 import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../misc/onlinegame/onlinegamerouter.js';
 import type { MetaData } from '../../chess/util/metadata.js';
-import type { GameRules } from '../../chess/variants/gamerules.js';
 
 
 /**
  * A list of metadata properties that are retained from the current game when pasting an external game.
  * These will overwrite the pasted game's metadata with the current game's metadata.
  */
-const retainMetadataWhenPasting: string[] = ['White','Black','WhiteID','BlackID','WhiteElo','BlackElo','WhiteRatingDiff','BlackRatingDiff','TimeControl','Event','Site','Round'] as const;
+const retainMetadataWhenPasting: string[] = ['White','Black','WhiteID','BlackID','WhiteElo','BlackElo','WhiteRatingDiff','BlackRatingDiff','TimeControl','Event','Site','Round'];
 /** The pasted game will refuse to override these unless specified explicitly. This prevents them from just being deleted. */
-const retainIfNotOverridden: string[] = ['UTCDate','UTCTime'] as const;
+const retainIfNotOverridden: string[] = ['UTCDate','UTCTime'];
 
-const variantsTooBigToCopyPositionToICN: string[] = ['Omega_Squared', 'Omega_Cubed', 'Omega_Fourth', '5D_Chess'] as const;
-
-
-/**
- * Copies the current game to the clipboard in ICN notation.
- * This callback is called when the "Copy Game" button is pressed.
- * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
- */
-function copyGame(copySinglePosition: boolean): void {
-	const gamefile = gameslot.getGamefile()!;
-	const Variant = gamefile.basegame.metadata.Variant!;
-
-	// Add the preset annotation overrides from the previously pasted game, if present.
-	const preset_squares = drawsquares.getPresetOverrides();
-	const preset_rays = drawrays.getPresetOverrides();
-	let presetAnnotes: PresetAnnotes | undefined;
-	if (preset_squares || preset_rays) {
-		presetAnnotes = {};
-		if (preset_squares) presetAnnotes.squares = preset_squares;
-		if (preset_rays) presetAnnotes.rays = preset_rays;
-	}
-
-	const longformatIn = gamecompressor.compressGamefile(gamefile, copySinglePosition, presetAnnotes);
-	// Convert the variant metadata code to spoken language if translation is available
-	if (longformatIn.metadata.Variant) longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
-	
-	const largeGame: boolean = variantsTooBigToCopyPositionToICN.includes(Variant);
-	// Also specify the position if we're copying a single position, so the starting position will be different.
-	const skipPosition: boolean = largeGame && !copySinglePosition;
-	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, { skipPosition, compact: false, spaces: false, comments: false, make_new_lines: false, move_numbers: false });
-    
-	docutil.copyToClipboard(shortformat);
-	statustext.showStatus(translations.copypaste.copied_game);
-}
 
 /**
  * Pastes the clipboard ICN to the current game.
@@ -128,23 +89,16 @@ async function callbackPaste(event: Event): Promise<void> {
 
 /** For now doesn't verify if the required royalty is present. */
 function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
-	for (let i = 0; i < winConditions[players.WHITE]!.length; i++) {
-		const winCondition = winConditions[players.WHITE]![i];
-		if (winconutil.isWinConditionValid(winCondition)) continue;
-		// Not valid
-		statustext.showStatus(`${translations.copypaste.invalid_wincon_white} "${winCondition}".`, true);
-		return false;
-	}
+	let oneInvalid = false;
+	Object.values(winConditions).flat().forEach(winCondition => {
+		if (!winconutil.isWinConditionValid(winCondition)) {
+			// Not valid ❌
+			statustext.showStatus(`${translations.copypaste[`invalid_wincon`]} "${winCondition}".`, true);
+			oneInvalid = true;
+		} // else valid ✅
+	});
 
-	for (let i = 0; i < winConditions[players.BLACK]!.length; i++) {
-		const winCondition = winConditions[players.BLACK]![i];
-		if (winconutil.isWinConditionValid(winCondition)) continue;
-		// Not valid
-		statustext.showStatus(`${translations.copypaste.invalid_wincon_black} "${winCondition}".`, true);
-		return false;
-	}
-
-	return true;
+	return !oneInvalid;
 }
 
 /**
@@ -261,6 +215,5 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 
 export default {
-	copyGame,
 	callbackPaste
 };
