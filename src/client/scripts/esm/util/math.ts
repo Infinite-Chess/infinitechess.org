@@ -13,7 +13,7 @@ import type { Coords } from "../chess/util/coordutil.js";
 // Type Definitions ------------------------------------------------------------------
 
 
-/** A rectangle object with properties for the coordinates of its sides. */
+/** A arbitrarily large rectangle object with properties for the coordinates of its sides. */
 interface BoundingBox {
 	/** The x-coordinate of the left side of the box. */
 	left: bigint,
@@ -23,6 +23,18 @@ interface BoundingBox {
 	bottom: bigint,
 	/** The y-coordinate of the top side of the box. */
 	top: bigint
+};
+
+/** A rectangle object with properties for the coordinates of its sides, but using numbers instead of bigints. */
+interface DoubleBoundingBox {
+	/** The x-coordinate of the left side of the box. */
+	left: number,
+	/** The x-coordinate of the right side of the box. */
+	right: number,
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: number,
+	/** The y-coordinate of the top side of the box. */
+	top: number
 };
 
 /** A length-2 number array. Commonly used for storing directions. */
@@ -849,6 +861,7 @@ export default {
 
 export type {
 	BoundingBox,
+	DoubleBoundingBox,
 	Vec2,
 	Vec2Key,
 	Vec3,
