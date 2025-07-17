@@ -1,25 +1,29 @@
 
+// src/client/scripts/esm/chess/logic/insufficientmaterial.ts
+
 /**
  * This script detects draws by insufficient material
  * 
  * @maintainer tsevasa
  */
 
-// Import Start
+
 import moveutil from '../util/moveutil.js';
 import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../variants/gamerules.js';
-import { rawTypes as r, ext as e, players } from '../util/typeutil.js';
-// Import End
+import { rawTypes as r, ext as e, players, TypeGroup } from '../util/typeutil.js';
+import bimath from '../../util/bigdecimal/bimath.js';
 
-/** 
- * Type Definitions 
- * @typedef {import('../variants/gamerules.js').GameRules} GameRules
- * @typedef {import('./gamefile.js').Board} Board
- */
 
-"use strict";
+import type { GameRules } from '../variants/gamerules.js';
+import type { Board } from './gamefile.js';
+
+/** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
+type PieceCount = number | [number, number];
+/** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
+type Scenario = TypeGroup<PieceCount>;
+
 
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
@@ -27,7 +31,7 @@ import { rawTypes as r, ext as e, players } from '../util/typeutil.js';
 
 // Checkmate one black king with one white king for help
 // The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list
-const insuffmatScenarios_1K1k = [
+const insuffmatScenarios_1K1k: Scenario[] = [
     {[r.QUEEN + e.W]: 1},
     {[r.BISHOP + e.W]: [Infinity, 1]},
     {[r.KNIGHT + e.W]: 3},
@@ -49,7 +53,7 @@ const insuffmatScenarios_1K1k = [
 
 // Checkmate one black king without any white kings
 // The piece {[r.KING + e.B]: 1} is assumed for each entry of this list
-const insuffmatScenarios_0K1k = [
+const insuffmatScenarios_0K1k: Scenario[] = [
     {[r.QUEEN + e.W]: 1, [r.ROOK + e.W]: 1},
     {[r.QUEEN + e.W]: 1, [r.KNIGHT + e.W]: 1},
     {[r.QUEEN + e.W]: 1, [r.BISHOP + e.W]: [1, 0]},
@@ -83,7 +87,7 @@ const insuffmatScenarios_0K1k = [
 ];
 
 // other special insuffmat scenarios
-const insuffmatScenarios_special = [
+const insuffmatScenarios_special: Scenario[] = [
     {[r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity},
     {[r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity},
     {[r.ROYALCENTAUR + e.B]: 1, [r.AMAZON + e.W]: 1}
@@ -91,20 +95,21 @@ const insuffmatScenarios_special = [
 
 /**
  * Detects if the provided piecelist scenario is a draw by insufficient material
- * @param {Object} scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
- * @returns {boolean} *true*, if the scenario is a draw by insufficient material, otherwise *false*
+ * @param scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
+ * @returns *true*, if the scenario is a draw by insufficient material, otherwise *false*
  */
-function isScenarioInsuffMat(scenario) {
+function isScenarioInsuffMat(scenario: Scenario): boolean {
+    const scenarioCopy = { ...scenario };
 	// find out if we are in the 1 king vs 1 king, or in the 0 kings vs 1 king situation, and set scenrariosForInsuffMat accordingly
-	let scenrariosForInsuffMat;
-	if (scenario[r.KING + e.B] === 1) {
-		if (scenario[r.KING + e.W] === 1) {
+	let scenrariosForInsuffMat: Scenario[];
+	if (scenarioCopy[r.KING + e.B] === 1) {
+		if (scenarioCopy[r.KING + e.W] === 1) {
 			scenrariosForInsuffMat = insuffmatScenarios_1K1k;
-			delete scenario[r.KING + e.W];
-			delete scenario[r.KING + e.B];
-		} else if (!scenario[r.KING + e.W]) {
+			delete scenarioCopy[r.KING + e.W];
+			delete scenarioCopy[r.KING + e.B];
+		} else if (!scenarioCopy[r.KING + e.W]) {
 			scenrariosForInsuffMat = insuffmatScenarios_0K1k;
-			delete scenario[r.KING + e.B];
+			delete scenarioCopy[r.KING + e.B];
 		} else {
 			scenrariosForInsuffMat = insuffmatScenarios_special;
 		}
@@ -115,9 +120,9 @@ function isScenarioInsuffMat(scenario) {
 	// loop over all applicable draw scenarios to see if they apply here
 	drawscenarioloop:
 	for (const drawScenario of scenrariosForInsuffMat) {
-		for (const piece in scenario) {
+		for (const pieceType in scenarioCopy) {
 			// discard draw scenario if it does not fit the scenario
-			if (!(piece in drawScenario) || has_more_pieces(scenario[piece], drawScenario[piece])) continue drawscenarioloop;
+			if (!(pieceType in drawScenario) || has_more_pieces(scenarioCopy[pieceType]!, drawScenario[pieceType]!)) continue drawscenarioloop;
 		}
 		return true;
 	}
@@ -126,39 +131,42 @@ function isScenarioInsuffMat(scenario) {
 
 /**
  * Checks if a is larger than b, either as a number, or if it has some larger entry as a tuple
- * @param {number | number[]} a - number or tuple of two numbers
- * @param {number | number[]} b - number or tuple of two numbers
- * @returns {boolean}
+ * @param a - number or tuple of two numbers
+ * @param b - number or tuple of two numbers
  */
-function has_more_pieces(a, b) {
-	if (typeof a === "number") return a > b;
-	else return a[0] > b[0] || a[1] > b[1];
+function has_more_pieces(a: PieceCount, b: PieceCount): boolean {
+	if (typeof a === "number") {
+        return a > (b as number);
+    } else {
+        const bArray = b as [number, number];
+        return a[0] > bArray[0] || a[1] > bArray[1];
+    }
 }
 
 /**
- * @param {number[]} tuple - tuple of two numbers
- * @returns {number} sum of tuple entries
+ * @param tuple - tuple of two numbers
+ * @returns sum of tuple entries
  */
-function sum_tuple_coords(tuple) {
+function sum_tuple_coords(tuple: number[]): number {
 	return tuple[0] + tuple[1];
 }
 
 /**
- * @param {number[]} tuple - tuple of two numbers
- * @returns {number[]} tuple ordered in descending order
+ * @param tuple - tuple of two numbers
+ * @returns tuple ordered in descending order
  */
-function ordered_tuple_descending(tuple) {
+function ordered_tuple_descending(tuple: [number, number]): [number, number] {
 	if (tuple[0] < tuple [1]) return [tuple[1], tuple[0]];
 	else return tuple;
 }
 
 /**
  * Detects if the game is drawn for insufficient material
- * @param {GameRules} gameRules
- * @param {Board} boardsim
- * @returns {string | undefined} '0 insuffmat', if the game is over by the insufficient material, otherwise *undefined*.
+ * @param gameRules
+ * @param boardsim
+ * @returns '0 insuffmat', if the game is over by the insufficient material, otherwise *undefined*.
  */
-function detectInsufficientMaterial(gameRules, boardsim) {
+function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): string | undefined {
 	// Only make the draw check if the win condition is checkmate for both players
 	if (!gamerules.doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate') || !gamerules.doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')) return undefined;
 	if (gamerules.getWinConditionCountOfColor(gameRules, players.WHITE) !== 1 || gamerules.getWinConditionCountOfColor(gameRules, players.BLACK) !== 1) return undefined;
@@ -171,21 +179,26 @@ function detectInsufficientMaterial(gameRules, boardsim) {
 	if (boardutil.getPieceCountOfGame(boardsim.pieces, { ignoreRawTypes: new Set([r.OBSTACLE]), ignoreColors: new Set([players.NEUTRAL])}) + boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) >= 11) return undefined;
 
 	// Create scenario object listing amount of all non-obstacle pieces in the game
-	const scenario = {};
+	const scenario: Scenario = {};
 	// bishops are treated specially and separated by parity
-	const bishopsW_count = [0, 0];
-	const bishopsB_count = [0, 0];
+	const bishopsW_count: [number, number] = [0, 0];
+	const bishopsB_count: [number, number] = [0, 0];
 	for (const idx of boardsim.pieces.coords.values()) {
-		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx);
+		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
 		const [raw, color] = typeutil.splitType(piece.type);
 		if (raw === r.OBSTACLE) continue;
 		
 		else if (raw === r.BISHOP) {
-			const parity = Math.abs(sum_tuple_coords(piece.coords)) % 2;
+			const parity: 0 | 1 = Number(bimath.abs(piece.coords[0] + piece.coords[1]) % 2n) as 0 | 1;
 			if (color === players.WHITE) bishopsW_count[parity] += 1;
 			else if (color === players.BLACK) bishopsB_count[parity] += 1;
 		}
-		else if (piece.type in scenario) scenario[piece.type] += 1;
+		else if (piece.type in scenario) {
+            const currentCount = scenario[piece.type];
+            if (typeof currentCount === 'number') {
+                (scenario[piece.type] as number) = currentCount + 1;
+            }
+        }
 		else scenario[piece.type] = 1;
 	}
 
@@ -197,17 +210,17 @@ function detectInsufficientMaterial(gameRules, boardsim) {
 	// This is fully enough for the checkmate practice mode, for now
 	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
 	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed[players.WHITE];
-		const promotionListBlack = gameRules.promotionsAllowed[players.BLACK];
+		const promotionListWhite = gameRules.promotionsAllowed![players.WHITE]!;
+		const promotionListBlack = gameRules.promotionsAllowed![players.BLACK]!;
 		if ((r.PAWN + e.W) in scenario && promotionListWhite.length !== 0) return undefined;
 		if ((r.PAWN + e.B) in scenario && promotionListBlack.length !== 0) return undefined;
 	}
 
 	// Create scenario object with inverted players
-	const invertedScenario = {};
-	for (const piece in scenario) {
-		const pieceInverted = typeutil.invertType(piece);
-		invertedScenario[pieceInverted] = scenario[piece];
+	const invertedScenario: Scenario = {};
+	for (const pieceTypeStr in scenario) {
+		const pieceInverted = typeutil.invertType(Number(pieceTypeStr));
+		invertedScenario[pieceInverted] = scenario[pieceTypeStr]!;
 	}
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat

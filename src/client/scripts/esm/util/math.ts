@@ -16,24 +16,24 @@ import type { Coords } from "../chess/util/coordutil.js";
 /** A rectangle object with properties for the coordinates of its sides. */
 interface BoundingBox {
 	/** The x-coordinate of the left side of the box. */
-	left: number,
+	left: bigint,
 	/** The x-coordinate of the right side of the box. */
-	right: number,
+	right: bigint,
 	/** The y-coordinate of the bottom side of the box. */
-	bottom: number,
+	bottom: bigint,
 	/** The y-coordinate of the top side of the box. */
-	top: number
+	top: bigint
 };
 
 /** A length-2 number array. Commonly used for storing directions. */
-type Vec2 = [number,number]
+type Vec2 = [bigint,bigint]
 
 /** 
  * A pair of x & y vectors, represented in a string, separated by a `,`.
  * 
  * This is often used as the key for a slide direction in an object.
  */
-type Vec2Key = `${number},${number}`
+type Vec2Key = `${bigint},${bigint}`
 
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
@@ -662,39 +662,6 @@ function calculateVectorComponents(vector: Vec2, length: number): Coords {
 }
 
 
-// Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
-
-
-/**
- * Computes the greatest common divisor (GCD) of two numbers using the Euclidean algorithm.
- */
-function GCD(a: number, b: number): number {
-	while (b !== 0) {
-		[a, b] = [b, a % b];
-	}
-	return Math.abs(a); // Ensure it's always non-negative
-}
-
-/**
- * Calculates the least common multiple between all integers in an array.
- */
-function LCM(array: number[]): number {
-	// Copied from https://www.geeksforgeeks.org/lcm-of-given-array-elements/
-
-	if (array.length === 0) throw Error('Array of numbers must have atleast one number to calculate the LCM.');
-
-	// Initialize result
-	let answer: number = array[0]!;
-
-	// answer will contain the LCM of arr[0], ..arr[i] after the i'th iteration, 
-	for (let i = 1; i < array.length; i++) {
-		answer = ((array[i]! * answer) / GCD(array[i]!, answer)); 
-	}
-
-	return answer; 
-}
-
-
 // Distance Calculation ----------------------------------------------------------------------------
 
 
@@ -865,8 +832,6 @@ export default {
 	getVec2FromKey,
 	negateVector,
 	calculateVectorComponents,
-	GCD,
-	LCM,
 	euclideanDistance,
 	manhattanDistance,
 	chebyshevDistance,

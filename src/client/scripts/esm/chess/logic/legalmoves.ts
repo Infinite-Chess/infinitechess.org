@@ -41,7 +41,7 @@ import type { Board, FullGame } from './gamefile.js';
  * [-2,Infinity] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
  * For knightriders, one [2,1] hop is considered 1 step.
  */
-type SlideLimits = [number, number]
+type SlideLimits = [bigint, bigint]
 
 /** An object containing all the legal moves of a piece. */
 interface LegalMoves {
@@ -318,7 +318,7 @@ function slide_CalcLegalLimit(
 	// The default slide is [-Infinity, Infinity], change that if there are any pieces blocking our path!
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
-	const axis = direction[0] === 0 ? 1 : 0; 
+	const axis = direction[0] === 0n ? 1 : 0; 
 	const limit = coordutil.copyCoords(slideMoveset);
 	// Iterate through all pieces on same line
 	for (const idx of line) {
@@ -335,18 +335,18 @@ function slide_CalcLegalLimit(
 		if (blockResult === 0) continue; // Not blocked
 
 		// Is the piece to the left of us or right of us?
-		const thisPieceSteps = Math.floor((thisPiece.coords[axis] - coords[axis]) / direction[axis]);
+		const thisPieceSteps = (thisPiece.coords[axis] - coords[axis]) / direction[axis];
 		if (thisPieceSteps < 0) { // To our left
 
 			// What would our new left slide limit be? If it's an opponent, it's legal to capture it.
-			const newLeftSlideLimit = blockResult === 1 ? thisPieceSteps + 1 : thisPieceSteps;
+			const newLeftSlideLimit = blockResult === 1 ? thisPieceSteps + 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
 			if (newLeftSlideLimit > limit[0]) limit[0] = newLeftSlideLimit;
 
 		} else if (thisPieceSteps > 0) { // To our right
 
 			// What would our new right slide limit be? If it's an opponent, it's legal to capture it.
-			const newRightSlideLimit = blockResult === 1 ? thisPieceSteps - 1 : thisPieceSteps;
+			const newRightSlideLimit = blockResult === 1 ? thisPieceSteps - 1n : thisPieceSteps;
 			// If the piece x is closer to us than our current left slide limit, update it
 			if (newRightSlideLimit < limit[1]) limit[1] = newRightSlideLimit;
 
@@ -520,7 +520,7 @@ function isOpponentsMoveLegal(gamefile: FullGame, moveDraft: MoveDraft, claimedG
  * @returns true if the piece is able to slide to the coordinates
  */
 function doesSlidingMovesetContainSquare(slideMoveset: SlideLimits, direction: Vec2, pieceCoords: Coords, coords: Coords, ignoreFunc: IgnoreFunction): boolean {
-	const axis = direction[0] === 0 ? 1 : 0;
+	const axis = direction[0] === 0n ? 1 : 0;
 	const coordMag = coords[axis];
 	const min = slideMoveset[0] * direction[axis] + pieceCoords[axis];
 	const max = slideMoveset[1] * direction[axis] + pieceCoords[axis];
