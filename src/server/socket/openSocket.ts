@@ -116,15 +116,22 @@ function closeIfInvalidAndAddMetadata(socket: WebSocket, req: Request): CustomWe
 		return;
 	}
 
+	const cookies = socketUtility.getCookiesFromWebsocket(req);
+	if (cookies['browser-id'] === undefined) {
+		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
+		socket.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
+		return;
+	}
+
 	// Initialize the metadata and cast to a custom websocket object
 	const ws = socket as CustomWebSocket; // Cast WebSocket to CustomWebSocket
-	const cookies = socketUtility.getCookiesFromWebsocket(req);
+	
 	ws.metadata = {
 		// Parse cookies from the Upgrade http headers
 		cookies,
 		subscriptions: {},
 		userAgent: req.headers['user-agent'],
-		memberInfo: { signedIn: false, browser_id: cookies['browser-id']! },
+		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		verified: false,
 		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
 		IP,
