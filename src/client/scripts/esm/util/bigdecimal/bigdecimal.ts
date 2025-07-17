@@ -700,6 +700,26 @@ function compare(bd1: BigDecimal, bd2: BigDecimal): -1 | 0 | 1 {
 	return 0;
 }
 
+/**
+ * Returns the smaller of two BigDecimals.
+ * @param bd1 The first BigDecimal.
+ * @param bd2 The second BigDecimal.
+ * @returns The BigDecimal with the smaller value.
+ */
+function min(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
+	return compare(bd1, bd2) === 1 ? bd2 : bd1;
+}
+
+/**
+ * Returns the larger of two BigDecimals.
+ * @param bd1 The first BigDecimal.
+ * @param bd2 The second BigDecimal.
+ * @returns The BigDecimal with the larger value.
+ */
+function max(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
+	return compare(bd1, bd2) === -1 ? bd2 : bd1;
+}
+
 
 // Floating-Point Model Helpers ====================================================
 
@@ -1055,6 +1075,8 @@ export default {
 	clone,
 	setExponent,
 	compare,
+	min,
+	max,
 	// Conversions and Utility
 	toBigInt,
 	// toExactNumber,
