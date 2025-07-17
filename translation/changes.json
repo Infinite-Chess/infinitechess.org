@@ -1,4 +1,8 @@
 {
+	"65": {
+		"note": "Deleted slidelimit_not_number line 397.",
+		"changes": []
+	},
 	"64": {
 		"note": "Added undo_edit and redo_edit on lines 310-311.",
 		"changes": []

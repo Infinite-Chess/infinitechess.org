@@ -120,10 +120,10 @@ async function callbackPaste(event: Event): Promise<void> {
 
 	// console.log(jsutil.deepCopyObject(longformOut));
     
-	const success: boolean = pasteGame(longformOut);
+	pasteGame(longformOut);
 
 	// Let the server know if we pasted a custom position in a private match
-	if (success && onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) websocket.sendmessage('game', 'paste');
+	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) websocket.sendmessage('game', 'paste');
 }
 
 /** For now doesn't verify if the required royalty is present. */
@@ -156,11 +156,8 @@ function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
  * @param longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  * @returns Whether the paste was successful
  */
-function pasteGame(longformOut: LongFormatOut): boolean {
+function pasteGame(longformOut: LongFormatOut): void {
 	console.log(translations.copypaste.pasting_game);
-
-	// If this is false, it will have already displayed the error
-	if (!verifyGamerules(longformOut.gameRules)) return false; // Failed to paste
 
 	// Create a new gamefile from the longformat...
 
@@ -259,21 +256,6 @@ function pasteGame(longformOut: LongFormatOut): boolean {
 	});
 
 	console.log(translations.copypaste.loaded_from_clipboard);
-
-	return true; // Successfully pasted
-}
-
-/**
- * Returns true if all gamerules are valid values.
- * @param gameRules - The gamerules in question
- * @returns *true* if the gamerules are valid
- */
-function verifyGamerules(gameRules: GameRules): boolean {
-	if (gameRules.slideLimit !== undefined && typeof gameRules.slideLimit !== 'bigint') {
-		statustext.showStatus(`${translations.copypaste.slidelimit_not_number} "${gameRules.slideLimit}"`, true);
-		return false;
-	}
-	return true;
 }
 
 
