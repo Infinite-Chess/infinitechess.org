@@ -18,10 +18,11 @@ import guinavigation from '../gui/guinavigation.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import gamefileutility from '../../chess/util/gamefileutility.js';
 import boardpos from './boardpos.js';
+import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
 import type { Board } from '../../chess/logic/gamefile.js';
-import type { BoundingBox } from '../../util/math.js';
+import type { BoundingBox, BoundingBoxBD } from '../../util/math.js';
 import type { Coords } from '../../chess/util/coordutil.js';
 
 
@@ -36,8 +37,12 @@ export interface Area {
 	/** The camera scale (zoom) of the area. */
 	scale: number;
 	/** The bounding box that contains the area of interest. */
-	boundingBox: BoundingBox;
+	boundingBox: BoundingBoxBD;
 }
+
+
+const ONE = bigdecimal.FromNumber(1.0);
+const TWO = bigdecimal.FromNumber(2.0);
 
 
 const padding: number = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
@@ -60,13 +65,14 @@ const iterationsToRecalcPadding: number = 10;
  * @param {BoundingBox} [existingBox] A bounding box to merge with, if specified.
  * @returns {Area | undefined} The area object
  */
-function calculateFromCoordsList(coordsList: Coords[], existingBox?: BoundingBox): Area {
+function calculateFromCoordsList(coordsList: Coords[], existingBox?: BoundingBoxBD): Area {
 	if (coordsList.length === 0) throw Error("Cannot calculate area from an empty coords list.");
 
-	let box: BoundingBox = math.getBoxFromCoordsList(coordsList); // Unpadded
-	if (existingBox) box = math.mergeBoundingBoxes(box, existingBox); // Unpadded
+	const box: BoundingBox = math.getBoxFromCoordsList(coordsList); // Unpadded
+	let boxBD: BoundingBoxBD = math.castBoundingBoxToBigDecimal(box);
+	if (existingBox) boxBD = math.mergeBoundingBoxBDs(boxBD, existingBox); // Unpadded
 
-	return calculateFromUnpaddedBox(box);
+	return calculateFromUnpaddedBox(boxBD);
 }
 
 /**
@@ -74,7 +80,7 @@ function calculateFromCoordsList(coordsList: Coords[], existingBox?: BoundingBox
  * @param box - A BoundingBox object.
  * @returns The area object
  */
-function calculateFromUnpaddedBox(box: BoundingBox): Area {
+function calculateFromUnpaddedBox(box: BoundingBoxBD): Area {
 	const paddedBox = applyPaddingToBox(box);
 	return calculateFromBox(paddedBox);
 }
@@ -85,24 +91,26 @@ function calculateFromUnpaddedBox(box: BoundingBox): Area {
  * @param box - The source bounding box
  * @returns The new bounding box
  */
-function applyPaddingToBox(box: BoundingBox): BoundingBox { // { left, right, bottom, top }
+function applyPaddingToBox(box: BoundingBoxBD): BoundingBox { // { left, right, bottom, top }
 
-	const boxCopy: BoundingBox = jsutil.deepCopyObject(box);
+	const boxCopy: BoundingBoxBD = jsutil.deepCopyObject(box);
 
 	const topNavHeight = guinavigation.getHeightOfNavBar();
 	const bottomNavHeight = guigameinfo.getHeightOfGameInfoBar();
 	const navHeight = topNavHeight + bottomNavHeight;
 	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
 
+	const squareCenterBD = bigdecimal.FromNumber(boardtiles.gsquareCenter());
+	const squareCenterInvertedBD = bigdecimal.subtract(ONE, squareCenterBD);
+
 	// Round to the furthest away edge of the square.
-	const squareCenter = boardtiles.gsquareCenter();
-	boxCopy.left -= squareCenter;
-	boxCopy.right += 1 - squareCenter;
-	boxCopy.bottom -= squareCenter;
-	boxCopy.top += 1 - squareCenter;
+	boxCopy.left = bigdecimal.subtract(boxCopy.left, squareCenterBD);
+	boxCopy.right = bigdecimal.add(boxCopy.right, squareCenterInvertedBD);
+	boxCopy.bottom = bigdecimal.subtract(boxCopy.bottom, squareCenterBD);
+	boxCopy.top = bigdecimal.add(boxCopy.top, squareCenterInvertedBD);
 
 	/** Start with a copy with zero padding. */
-	let paddedBox: BoundingBox = jsutil.deepCopyObject(boxCopy);
+	let paddedBox: BoundingBoxBD = jsutil.deepCopyObject(boxCopy);
 	let scale = calcScaleToMatchSides(paddedBox);
 
 	// Iterate until we have desired padding
@@ -163,16 +171,21 @@ function calculateFromBox(box: BoundingBox): Area { // { left, right, bottom, to
  * @param boundingBox - The bounding box
  * @returns The scale (zoom) required
  */
-function calcScaleToMatchSides(boundingBox: BoundingBox): number {
-	const xHalfLength = (boundingBox.right - boundingBox.left) / 2;
-	const yHalfLength = (boundingBox.top - boundingBox.bottom) / 2;
+function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
+	const xDiff = bigdecimal.subtract(boundingBox.right, boundingBox.left);
+	const yDiff = bigdecimal.subtract(boundingBox.top, boundingBox.bottom);
+	const xHalfLength = bigdecimal.divide_fixed(xDiff, TWO);
+	const yHalfLength = bigdecimal.divide_fixed(yDiff, TWO);
+
+	const screenBoundingBox = camera.getScreenBoundingBox(false); // Get the screen bounding box without the navigation bars
+	const screenBoundingBoxBD: BoundingBoxBD = math.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
 
 	// What is the scale required to match the sides?
-	const xScale = camera.getScreenBoundingBox(false).right / xHalfLength;
-	const yScale = camera.getScreenBoundingBox(false).top / yHalfLength;
-
-	const screenHeight = camera.getScreenHeightWorld(false);
-	const capScale = screenHeight / areaMinHeightSquares;
+	const xScale = bigdecimal.divide_floating(screenBoundingBoxBD.right, xHalfLength);
+	const yScale = bigdecimal.divide_floating(screenBoundingBoxBD.top, yHalfLength);
+	const screenHeight = screenBoundingBox.top - screenBoundingBox.bottom;
+	// Can afterward cast to BigDecimal since they are small numbers.
+	const capScale = bigdecimal.FromNumber(screenHeight / areaMinHeightSquares);
 
 	let newScale = xScale < yScale ? xScale : yScale;
 	if (newScale > capScale) newScale = capScale;
@@ -232,7 +245,7 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!math.boxContainsBox(thisAreaBox, currentBoardBoundingBox)) {
-		//     const mergedBoxes = math.mergeBoundingBoxes(currentBoardBoundingBox, thisAreaBox);
+		//     const mergedBoxes = math.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }
 	} else { // zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
@@ -241,7 +254,7 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!math.boxContainsBox(currentBoardBoundingBox, thisAreaBox)) {
-		//     const mergedBoxes = math.mergeBoundingBoxes(currentBoardBoundingBox, thisAreaBox);
+		//     const mergedBoxes = math.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
 		//     firstArea = calculateFromBox(mergedBoxes);
 		// }
 	}
