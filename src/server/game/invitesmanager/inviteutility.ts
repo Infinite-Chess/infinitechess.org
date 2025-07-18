@@ -70,6 +70,7 @@ function safelyCopyInvite(invite: Invite): SafeInvite {
 }
 
 function memberInfoEq(u1: MemberInfo, u2: MemberInfo): boolean {
+	console.log(u1, u2);
 	// @ts-ignore
 	if (u1.signedIn) return u1.user_id === u2.user_id;
 	// @ts-ignore

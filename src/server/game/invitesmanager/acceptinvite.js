@@ -45,17 +45,17 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	const { invite, index } = inviteAndIndex;
 
-	const { signedIn, identifier } = socketUtility.getOwnerFromSocket(ws);
+	const user = socketUtility.getOwnerFromSocket(ws);
 
 	// Make sure they are not accepting their own.
-	if (memberInfoEq(signedIn, identifier, invite)) {
+	if (memberInfoEq(user, invite.owner)) {
 		sendSocketMessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
 		console.error(`Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 		return;
 	}
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
-	if (invite.rated === 'rated' && !(signedIn && ws.metadata.verified)) {
+	if (invite.rated === 'rated' && !(user.signedIn && ws.metadata.verified)) {
 		return sendSocketMessage(ws, "general", "notify", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
 	}
 
@@ -65,7 +65,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 	// Delete the invite accepted.
 	if (deleteInviteByIndex(ws, invite, index, { dontBroadcast: true })) hadPublicInvite = true;
 	// Delete their existing invites
-	if (deleteUsersExistingInvite(signedIn, identifier, { broadCastNewInvites: false })) hadPublicInvite = true;
+	if (deleteUsersExistingInvite(user, { broadCastNewInvites: false })) hadPublicInvite = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
