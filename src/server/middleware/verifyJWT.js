@@ -107,7 +107,7 @@ function verifyRefreshToken(req, res) {
  * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. These should be `token`, `jwt` (refresh token), and `browser-id`.
  */
 function verifyJWTWebSocket(ws) {
-	ws.metadata.memberInfo = { signedIn: false };
+	ws.metadata.memberInfo = { signedIn: false, browser_id: ws.metadata.cookies['browser-id'] };
 	
 	verifyRefreshToken_WebSocket(ws);
 };

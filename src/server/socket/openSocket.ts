@@ -69,7 +69,7 @@ function onConnectionRequest(socket: WebSocket, req: Request) {
 		return ws.close(1009, 'Too Many Sockets');
 	}
 
-	if (!ws.metadata.memberInfo.signedIn && ws.metadata.cookies['browser-id'] === undefined) { // Terminate web socket connection request, they NEED authentication!
+	if (!ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.browser_id === undefined) { // Terminate web socket connection request, they NEED authentication!
 		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
 		socketUtility.printSocket(ws);
 		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
