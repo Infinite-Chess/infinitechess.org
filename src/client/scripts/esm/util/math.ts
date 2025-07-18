@@ -6,6 +6,7 @@
 
 
 import coordutil from "../chess/util/coordutil.js";
+import bigdecimal, { BigDecimal } from "./bigdecimal/bigdecimal.js";
 
 import type { Coords } from "../chess/util/coordutil.js";
 
@@ -24,6 +25,19 @@ interface BoundingBox {
 	/** The y-coordinate of the top side of the box. */
 	top: bigint
 };
+
+/** A rectangle object with properties for the coordinates of its sides, but using BigDecimal
+ * instead of bigints for arbitrary deciaml precision. */
+interface BoundingBoxBD {
+	/** The x-coordinate of the left side of the box. */
+	left: BigDecimal,
+	/** The x-coordinate of the right side of the box. */
+	right: BigDecimal,
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: BigDecimal,
+	/** The y-coordinate of the top side of the box. */
+	top: BigDecimal
+}
 
 /** A rectangle object with properties for the coordinates of its sides, but using numbers instead of bigints. */
 interface DoubleBoundingBox {
@@ -400,6 +414,24 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
 	return box;
 }
 
+function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
+	return {
+		left: bigdecimal.FromBigInt(box.left),
+		right: bigdecimal.FromBigInt(box.right),
+		bottom: bigdecimal.FromBigInt(box.bottom),
+		top: bigdecimal.FromBigInt(box.top)
+	};
+}
+
+function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxBD {
+	return {
+		left: bigdecimal.FromNumber(box.left),
+		right: bigdecimal.FromNumber(box.right),
+		bottom: bigdecimal.FromNumber(box.bottom),
+		top: bigdecimal.FromNumber(box.top)
+	};
+}
+
 /**
  * Expands the bounding box to include the provided coordinates, if it doesn't already.
  * DESTRUCTIVE. Modifies the original box.
@@ -414,12 +446,12 @@ function expandBoxToContainSquare(box: BoundingBox, coord: Coords): void {
 /**
  * Returns the mimimum bounding box that contains both of the provided boxes.
  */
-function mergeBoundingBoxes(box1: BoundingBox, box2: BoundingBox): BoundingBox {
+function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): BoundingBoxBD {
 	return {
-		left: Math.min(box1.left, box2.left),
-		right: Math.max(box1.right, box2.right),
-		bottom: Math.min(box1.bottom, box2.bottom),
-		top: Math.max(box1.top, box2.top),
+		left: bigdecimal.min(box1.left, box2.left),
+		right: bigdecimal.max(box1.right, box2.right),
+		bottom: bigdecimal.min(box1.bottom, box2.bottom),
+		top: bigdecimal.max(box1.top, box2.top)
 	};
 }
 
@@ -832,8 +864,10 @@ export default {
 	boxContainsBox,
 	boxContainsSquare,
 	getBoxFromCoordsList,
+	castBoundingBoxToBigDecimal,
+	castDoubleBoundingBoxToBigDecimal,
 	expandBoxToContainSquare,
-	mergeBoundingBoxes,
+	mergeBoundingBoxBDs,
 	calcCenterOfBoundingBox,
 	closestPointOnLineSegment,
 	findFarthestPointsALineSweepsABox,
@@ -861,6 +895,7 @@ export default {
 
 export type {
 	BoundingBox,
+	BoundingBoxBD,
 	DoubleBoundingBox,
 	Vec2,
 	Vec2Key,
