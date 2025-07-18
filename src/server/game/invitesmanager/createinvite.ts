@@ -123,10 +123,7 @@ function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageConte
 		owner,
 		usernamecontainer: {
 			type: owner.signedIn ? 'player' : 'guest',
-			username:  {
-				value: owner.signedIn ? owner.username : "(Guest)",
-				openInNewWindow: owner.signedIn
-			},
+			username: owner.signedIn ? owner.username : "(Guest)",
 			rating,
 		},
 		variant: messageContents.variant,

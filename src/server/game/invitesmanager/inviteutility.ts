@@ -6,7 +6,8 @@
 
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
-import type { UsernameContainerProperties } from '../../../client/scripts/esm/util/usernamecontainer.js';
+// @ts-ignore
+import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
 import type { MemberInfo } from '../../../types.js';
 import type { Game } from '../TypeDefinitions.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
@@ -15,7 +16,7 @@ import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js'
 
 interface Invite {
 	id: string // A unique identifier, containing lowercase letters a-z and numbers 0-9.
-	usernamecontainer: UsernameContainerProperties // The type of the owner (guest/player), their username, and elo if applicable.
+	usernamecontainer: ServerUsernameContainer // The type of the owner (guest/player), their username, and elo if applicable.
 	tag: string // Used to verify if an invite is your own.
 	variant: Game['variant']
 	clock: Game['clock']
