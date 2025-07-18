@@ -7,6 +7,7 @@
  */
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -14,6 +15,7 @@ import socketUtility from '../../socket/socketUtility.js';
 /**
  * List of clients currently subscribed to invites list events, with their
  * socket id for the keys, and their socket for the value.
+ * @type {Record<string, CustomWebSocket>}
  */
 const subscribedClients = {}; // { id: ws }
 
@@ -24,7 +26,7 @@ const printSubscriberCount = true;
 /**
  * Returns the object containing all sockets currently subscribed to the invites list,
  * with their socket id for the keys, and their socket for the value.
- * @returns {Object}
+* @returns {Record<string, CustomWebSocket>}
  */
 function getInviteSubscribers() { return subscribedClients; }
 
@@ -72,14 +74,12 @@ function removeSocketFromInvitesSubs(ws) {
 
 /**
  * Checks if a member or browser ID has at least one active connection.
- * @param {boolean} signedIn - Flag to specify if the identifier is for a signed-in member (true) or a browser ID (false).
- * @param {string} identifier - The identifier of the member (username for signed-in members) or browser ID (for non-signed-in users).
+ * @param {MemberInfo} info 
  * @returns {boolean} - Returns true if the member or browser ID has at least one active connection, false otherwise.
  */
-function doesUserHaveActiveConnection(signedIn, identifier) {
+function doesUserHaveActiveConnection(info) {
 	return Object.values(subscribedClients).some(ws => {
-		if (signedIn) return ws.metadata.memberInfo.username === identifier;
-		else return ws.metadata.cookies['browser-id'] === identifier;
+		return memberInfoEq(ws.metadata.memberInfo, info);
 	});
 }
 

@@ -35,7 +35,8 @@ import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 
 // Type Definitions...
-import { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
+import type { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
+import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { Game } from '../TypeDefinitions.js';
 import type { GameRules } from '../../../client/scripts/esm/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../client/scripts/esm/chess/logic/clock.js';
@@ -62,20 +63,14 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  * @returns {Game} The new game.
  */
-function newGame({variantstr, publicity, clock, rated, color}: {
-	variantstr: Game['variant'],
-	publicity: Game['publicity'],
-	clock: Game['clock'],
-	rated: string,
-	color: Player,
-}, id: number, player1Socket: CustomWebSocket, player2Socket: CustomWebSocket, replyto: number) {
+function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, player2Socket: CustomWebSocket, replyto: number) {
 
 
-	const untimed = clockweb.isClockValueInfinite(clock);
+	const untimed = clockweb.isClockValueInfinite(invite.clock);
 	let startTimeMillis: undefined | number;
 	let incrementMillis: undefined | number;
 	if (!untimed) { // Set the start time and increment properties
-		const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(clock);
+		const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(invite.clock);
 		startTimeMillis = timeutil.minutesToMillis(minutes);
 		incrementMillis = timeutil.secondsToMillis(increment);
 	}
@@ -84,7 +79,7 @@ function newGame({variantstr, publicity, clock, rated, color}: {
 	// Set the colors
 	const player1 = player1Socket.metadata.memberInfo; // { member/browser }  The invite owner
 	const player2 = socketUtility.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
-	const { playerColors, colorData } = assignWhiteBlackPlayersFromInvite(color, player1, player2);
+	const { playerColors, colorData } = assignWhiteBlackPlayersFromInvite(invite.color, player1, player2);
 	for (const [c, identifier] of Object.entries(colorData)) {
 		players[Number(c) as Player] = {
 			identifier,
@@ -98,15 +93,15 @@ function newGame({variantstr, publicity, clock, rated, color}: {
 		id,
 		timeCreated: Date.now(),
 		players,
-		publicity: publicity,
-		variant: variantstr,
-		clock: clock,
+		publicity: invite.publicity,
+		variant: invite.variant,
+		clock: invite.clock,
 		untimed,
 		startTimeMillis,
 		incrementMillis,
-		rated: rated === "rated",
+		rated: invite.rated === "rated",
 		moves: [],
-		gameRules: variant.getGameRulesOfVariant({ Variant: variantstr, UTCDate: timeutil.getCurrentUTCDate(), UTCTime: timeutil.getCurrentUTCTime() }),
+		gameRules: variant.getGameRulesOfVariant({ Variant: invite.variant, UTCDate: timeutil.getCurrentUTCDate(), UTCTime: timeutil.getCurrentUTCTime() }),
 		positionPasted: false,
 	} as Game;
 

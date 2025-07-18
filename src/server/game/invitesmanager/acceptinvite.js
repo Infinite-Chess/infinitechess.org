@@ -8,7 +8,7 @@
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
-import { isInviteOursByIdentifier } from './inviteutility.js';
+import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
@@ -45,10 +45,10 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	const { invite, index } = inviteAndIndex;
 
-	const { signedIn, identifier } = socketUtility.getSignedInAndIdentifierOfSocket(ws);
+	const { signedIn, identifier } = socketUtility.getOwnerFromSocket(ws);
 
 	// Make sure they are not accepting their own.
-	if (isInviteOursByIdentifier(signedIn, identifier, invite)) {
+	if (memberInfoEq(signedIn, identifier, invite)) {
 		sendSocketMessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
 		console.error(`Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 		return;

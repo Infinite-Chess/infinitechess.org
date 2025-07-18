@@ -161,7 +161,7 @@ function getIPFromWebsocketUpgradeRequest(req: IncomingMessage): string | undefi
  */
 function getSignedInAndIdentifierOfSocket(ws: CustomWebSocket) {
 	const signedIn = ws.metadata.memberInfo.signedIn;
-	const identifier = signedIn ? ws.metadata.memberInfo.username : ws.metadata.cookies['browser-id'];
+	const identifier = signedIn ? ws.metadata.memberInfo.username : ws.metadata.cookies['browser-id']!;
 	return { signedIn, identifier };
 }
 
