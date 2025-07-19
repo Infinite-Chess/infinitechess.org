@@ -7,7 +7,7 @@
 import gameutility from './gameutility.js';
 import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
 
-/** @typedef {import('../TypeDefinitions.js').Game} Game */
+/** @typedef {import('./gameutility.js').Game} Game */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 

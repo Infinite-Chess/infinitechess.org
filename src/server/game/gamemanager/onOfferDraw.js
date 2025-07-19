@@ -12,7 +12,7 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Game} Game
+ * @typedef {import('./gameutility.js').Game} Game
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */

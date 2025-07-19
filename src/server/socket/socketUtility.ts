@@ -9,6 +9,7 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
 import type { MemberInfo } from '../../types.js';
+import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
@@ -22,10 +23,10 @@ interface CustomWebSocket extends WebSocket {
 			invites?: boolean;
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
-				/** The id of the game they're in. @type {string} */
+				/** The id of the game they're in. */
 				id: number;
-				/** The color they are playing as. @type {Player} */
-				color: string;
+				/** The color they are playing as. */
+				color: Player;
 			};
 		};
 		/** The parsed cookie object, this will contain the 'browser-id' cookie if they are not signed in */
@@ -101,17 +102,6 @@ function getSimplifiedMetadata(ws: CustomWebSocket) {
 }
 
 /**
- * Returns the owner of the websocket.
- * @param ws - The websocket
- * @returns An object that contains either the `member` or `browser` property.
- */
-function getOwnerFromSocket(ws: CustomWebSocket): { member: string, user_id: number } | { browser: string } {
-	const metadata = ws.metadata;
-	if (metadata.memberInfo.signedIn) return { member: metadata.memberInfo.username, user_id: metadata.memberInfo.user_id };
-	else return { browser: metadata.cookies['browser-id']! };
-}
-
-/**
  * Parses cookies from the WebSocket upgrade request headers.
  * @param req - The WebSocket upgrade request object
  * @returns An object with cookie names as keys and their corresponding values
@@ -162,7 +152,7 @@ function getIPFromWebsocketUpgradeRequest(req: IncomingMessage): string | undefi
  */
 function getSignedInAndIdentifierOfSocket(ws: CustomWebSocket) {
 	const signedIn = ws.metadata.memberInfo.signedIn;
-	const identifier = signedIn ? ws.metadata.memberInfo.username : ws.metadata.cookies['browser-id'];
+	const identifier = signedIn ? ws.metadata.memberInfo.username : ws.metadata.cookies['browser-id']!;
 	return { signedIn, identifier };
 }
 
@@ -171,7 +161,6 @@ function getSignedInAndIdentifierOfSocket(ws: CustomWebSocket) {
 export default {
 	printSocket,
 	stringifySocketMetadata,
-	getOwnerFromSocket,
 	getCookiesFromWebsocket,
 	getIPFromWebsocketUpgradeRequest,
 	getSignedInAndIdentifierOfSocket,

@@ -14,8 +14,9 @@ import { createInvite } from './createinvite.js';
 import { cancelInvite } from './cancelinvite.js';
 import { acceptInvite } from './acceptinvite.js';
 
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-function handleInviteRoute(ws, data) { // data: { route, action, value, id }
+function handleInviteRoute(ws: CustomWebSocket, data: any) { // data: { route, action, value, id }
 	// What is their action? Create invite? Cancel invite? Accept invite?
 
 	switch (data.action) {

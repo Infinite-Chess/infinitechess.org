@@ -32,7 +32,7 @@ interface WebsocketInMessage {
 	/** The action to perform with the message's data (e.g., "sub", "unsub", "createinvite"). */
 	action: string;
 	/** The contents of the message. */
-	value: any;
+	value: any; // TODO: create a system for the safety of values
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;

@@ -12,10 +12,14 @@ import path from 'path';
 
 // Middleware imports
 import { readFile, writeFile } from '../utility/lockFile.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Custom imports
+// @ts-ignore
 import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
+// @ts-ignore
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
+// @ts-ignore
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
 /** @typedef {import("../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -39,13 +43,18 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
 	console.log("Generated allowinvites file");
 })();
 
+interface AllowInvites {
+	allowinvites: boolean,
+	restartIn?: number
+}
+
 /**
  * The allowinvites.json file in the "database". This needs to periodically be re-read
  * in order to see our changes made to it. This is typcailly
  * done when a new invite is attempted to be created.
  * `{ allowinvites: true, restartIn: false }`
  */
-let allowinvites = await readFile(allowinvitesPath, 'Unable to read allowinvites.json on startup.');
+let allowinvites = await readFile(allowinvitesPath, 'Unable to read allowinvites.json on startup.') as AllowInvites;
 /**
  * The minimum time required between new reads of allowinvites.json.
  * 
@@ -88,16 +97,15 @@ const updateAllowInvites = (function() {
 		// console.log("Reading allowinvites.json!")
     
 		// If this is not called with 'await', it returns a promise.
-		const newAllowInvitesValue = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`);
-
-		timeLastReadAllowInvites = Date.now();
-    
-		if (newAllowInvitesValue === undefined) { // Not defined, error in reading. Probably file is locked
+		try {
+			allowinvites = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`) as AllowInvites;
+		} catch (e) {
+			if (e instanceof Error) logEventsAndPrint(e.message, 'errLog.txt');
 			console.error(`There was an error reading allowinvites.json. Not updating it in memory.`);
 			return;
 		}
 
-		allowinvites = newAllowInvitesValue;
+		timeLastReadAllowInvites = Date.now();
 
 		// Stop server restarting if we're allowing invites again!
 		if (allowinvites.allowinvites) cancelServerRestart();
@@ -114,7 +122,7 @@ const updateAllowInvites = (function() {
  * periodically informing the user when it gets closer.
  * @param {Object} newAllowInvitesValue - The newly read allowinvites.json file.
  */
-async function initServerRestart(newAllowInvitesValue) { // { allowInvites, restartIn: minutes }
+async function initServerRestart(newAllowInvitesValue: AllowInvites) { // { allowInvites, restartIn: minutes }
 	if (!newAllowInvitesValue.restartIn) return; // We have not changed the value to indicate we're restarting. Return.
 
 	const now = Date.now(); // Current time in milliseconds
@@ -127,7 +135,7 @@ async function initServerRestart(newAllowInvitesValue) { // { allowInvites, rest
 	console.log(`Will be restarting the server in ${newAllowInvitesValue.restartIn} minutes!`);
 
 	// Set our restartIn variable to undefined, so we don't repeat this next time we load the file!
-	newAllowInvitesValue.restartIn = false;
+	delete newAllowInvitesValue.restartIn;
 
 	// Save the file
 	await writeFile(

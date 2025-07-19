@@ -25,7 +25,9 @@ import { logEventsAndPrint } from './logEvents.js';
  * @param {Function} next - The function to call, when finished, to continue the middleware waterfall.
  */
 const verifyJWT = (req, res, next) => {
-	req.memberInfo = { signedIn: false };
+	const cookies = req.cookies;
+	if (!cookies) return logEventsAndPrint("Cookie parser didn't set the req.cookies property!", 'errLog.txt');
+	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
 
 	const hasAccessToken = verifyAccessToken(req, res);
 	if (!hasAccessToken) verifyRefreshToken(req, res);
@@ -61,7 +63,7 @@ function verifyAccessToken(req, res) {
 	console.log("A valid access token was used! :D :D");
 
 	const { user_id, username, roles, allowed_actions } = result;
-	req.memberInfo = { signedIn: true, user_id, username, roles, allowed_actions }; // Username was our payload when we generated the access token
+	req.memberInfo = {...req.memberInfo, signedIn: true, user_id, username, roles, allowed_actions }; // Username was our payload when we generated the access token
 
 	return true; // true if they have a valid ACCESS token
 }
@@ -107,7 +109,7 @@ function verifyRefreshToken(req, res) {
  * @param {Object} cookies - An object containing the pre-read cookies of the websocket connection request. These should be `token`, `jwt` (refresh token), and `browser-id`.
  */
 function verifyJWTWebSocket(ws) {
-	ws.metadata.memberInfo = { signedIn: false };
+	ws.metadata.memberInfo = { signedIn: false, browser_id: ws.metadata.cookies['browser-id'] };
 	
 	verifyRefreshToken_WebSocket(ws);
 };
@@ -134,7 +136,7 @@ function verifyRefreshToken_WebSocket(ws) {
 	}
 
 	const { user_id, username, roles } = result;
-	ws.metadata.memberInfo = { signedIn: true, user_id, username, roles };
+	ws.metadata.memberInfo = {...ws.metadata.memberInfo, signedIn: true, user_id, username, roles };
 }
 
 export {
