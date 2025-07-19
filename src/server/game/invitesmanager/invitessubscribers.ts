@@ -10,14 +10,14 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 
-/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { MemberInfo } from '../../../types.js';
 
 /**
  * List of clients currently subscribed to invites list events, with their
  * socket id for the keys, and their socket for the value.
- * @type {Record<string, CustomWebSocket>}
  */
-const subscribedClients = {}; // { id: ws }
+const subscribedClients: Record<string, CustomWebSocket> = {}; // { id: ws }
 
 const printNewAndClosedSubscriptions = false;
 const printSubscriberCount = true;
@@ -26,16 +26,15 @@ const printSubscriberCount = true;
 /**
  * Returns the object containing all sockets currently subscribed to the invites list,
  * with their socket id for the keys, and their socket for the value.
-* @returns {Record<string, CustomWebSocket>}
  */
 function getInviteSubscribers() { return subscribedClients; }
 
 /**
  * Broadcasts a message to all invites subscribers.
- * @param {string} action - The action of the socket message (i.e. "inviteslist")
- * @param {*} message - The message contents
+ * @param action - The action of the socket message (i.e. "inviteslist")
+ * @param message - The message contents
  */
-function broadcastToAllInviteSubs(action, message) {
+function broadcastToAllInviteSubs(action: string, message: any) {
 	for (const ws of Object.values(subscribedClients)) {
 		sendSocketMessage(ws, "invites", action, message); // In order: socket, sub, action, value
 	}
@@ -43,9 +42,8 @@ function broadcastToAllInviteSubs(action, message) {
 
 /**
  * Adds a new socket to the invite subscriber list.
- * @param {CustomWebSocket} ws 
  */
-function addSocketToInvitesSubs(ws) {
+function addSocketToInvitesSubs(ws: CustomWebSocket) {
 	const socketID = ws.metadata.id;
 	if (subscribedClients[socketID]) return console.error("Cannot sub socket to invites list because they already are!");
 
@@ -57,10 +55,9 @@ function addSocketToInvitesSubs(ws) {
 
 /**
  * Removes a socket from the invite subscriber list.
- * DOES NOT delete any of their existing invites! That should be done before.
- * @param {CustomWebSocket} ws 
+ * DOES NOT delete any of their existing invites! That should be done before. 
  */
-function removeSocketFromInvitesSubs(ws) {
+function removeSocketFromInvitesSubs(ws: CustomWebSocket) {
 	if (!ws) return console.error("Can't remove socket from invites subs list because it's undefined!");
 
 	const socketID = ws.metadata.id;
@@ -74,10 +71,9 @@ function removeSocketFromInvitesSubs(ws) {
 
 /**
  * Checks if a member or browser ID has at least one active connection.
- * @param {MemberInfo} info 
- * @returns {boolean} - Returns true if the member or browser ID has at least one active connection, false otherwise.
+ * @returns true if the member or browser ID has at least one active connection, false otherwise.
  */
-function doesUserHaveActiveConnection(info) {
+function doesUserHaveActiveConnection(info: MemberInfo) {
 	return Object.values(subscribedClients).some(ws => {
 		return memberInfoEq(ws.metadata.memberInfo, info);
 	});

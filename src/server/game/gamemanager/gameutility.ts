@@ -58,7 +58,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  * @returns The new game.
  */
-function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, player2Socket: CustomWebSocket, replyto: number) {
+function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto: number) {
 	const untimed = clockweb.isClockValueInfinite(invite.clock);
 	let startTimeMillis: undefined | number;
 	let incrementMillis: undefined | number;
@@ -70,7 +70,7 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
 
 	const players: Game['players'] = {};
 	// Set the colors
-	const player1 = player1Socket.metadata.memberInfo; // { member/browser }  The invite owner
+	const player1 = player1Socket?.metadata.memberInfo; // { member/browser }  The invite owner
 	const player2 = player2Socket.metadata.memberInfo; // { member/browser }  The invite accepter
 	const { playerColors, colorData } = assignWhiteBlackPlayersFromInvite(invite.color, player1, player2);
 	for (const [c, identifier] of Object.entries(colorData)) {
@@ -124,8 +124,8 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
  * - `player1Color`: The color of player1, the invite owner.
  * - `player2Color`: The color of player2, the invite accepter.
  */
-function assignWhiteBlackPlayersFromInvite<T>(color: Player, player1: T, player2: T) { // { id, owner, variant, clock, color, rated, publicity }
-	const colorData: PlayerGroup<T> = {};
+function assignWhiteBlackPlayersFromInvite<A, B>(color: Player, player1: A, player2: B) { // { id, owner, variant, clock, color, rated, publicity }
+	const colorData: PlayerGroup<A | B> = {};
 	const playerColors: Player[] = [];
 	if (color === players.WHITE) {
 		playerColors.push(players.WHITE, players.BLACK);
