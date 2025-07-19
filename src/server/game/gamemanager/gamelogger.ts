@@ -16,7 +16,6 @@ import icnconverter, { LongFormatIn } from '../../../client/scripts/esm/chess/lo
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-// @ts-ignore
 import gameutility from './gameutility.js';
 // @ts-ignore
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
@@ -28,8 +27,7 @@ import db from '../../database/database.js';
 
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
 import type { RatingData } from './ratingcalculation.js';
-// @ts-ignore
-import type { Game } from '../TypeDefinitions.js';
+import type { Game } from './gameutility.js';
 
 
 // Functions -------------------------------------------------------------------------------

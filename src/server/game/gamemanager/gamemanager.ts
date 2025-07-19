@@ -29,7 +29,7 @@ import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import ratingabuse from './ratingabuse.js';
 
-import type { Game, PlayerData } from '../TypeDefinitions.js';
+import type { Game, PlayerData } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { MemberInfo } from '../../../types.js';

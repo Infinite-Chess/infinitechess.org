@@ -10,7 +10,7 @@
 
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
-/** @typedef {import('../TypeDefinitions.js').Game} Game */
+/** @typedef {import('./gameutility.js').Game} Game */
 
 //--------------------------------------------------------------------------------------------------------
 

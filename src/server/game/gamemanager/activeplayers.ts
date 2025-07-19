@@ -4,7 +4,7 @@
  */
 import type { CustomWebSocket } from "../../socket/socketUtility.js";
 import type { Player } from "../../../client/scripts/esm/chess/util/typeutil.js";
-import type { Game } from "../TypeDefinitions.js";
+import type { Game } from "./gameutility.js";
 import type { MemberInfo } from "../../../types.js"; 
 
 //--------------------------------------------------------------------------------------------------------

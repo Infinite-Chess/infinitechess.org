@@ -12,7 +12,7 @@ import gameutility from './gameutility.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 // Type imports
-import type { Game } from '../TypeDefinitions.js';
+import type { Game } from './gameutility.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 //--------------------------------------------------------------------------------------------------------

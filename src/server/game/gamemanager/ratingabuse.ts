@@ -24,8 +24,7 @@ import winconutil from "../../../client/scripts/esm/chess/util/winconutil.js";
 
 
 import type { RefreshTokenRecord } from "../../database/refreshTokenManager.js";
-// @ts-ignore
-import type { Game } from '../TypeDefinitions.js';
+import type { Game } from './gameutility.js';
 
 
 

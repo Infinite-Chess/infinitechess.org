@@ -9,7 +9,7 @@ import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 // @ts-ignore
 import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
 import type { MemberInfo } from '../../../types.js';
-import type { Game } from '../TypeDefinitions.js';
+import type { Game } from '../gamemanager/gameutility.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 //-------------------------------------------------------------------------------------------

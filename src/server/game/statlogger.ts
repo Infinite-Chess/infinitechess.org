@@ -11,8 +11,7 @@ import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// @ts-ignore
-import type { Game } from './TypeDefinitions.js';
+import type { Game } from './gamemanager/gameutility.js';
 
 
 const statsPath = path.resolve('database/stats.json');
