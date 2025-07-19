@@ -42,11 +42,10 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seco
  * This function should be called when the "AFK-Return" websocket action is received, indicating
  * that the player has returned, OR when a client refreshes the page!
  * @param game - The game
- * @param {Object} [options] - Optional parameters.
- * @param {boolean} [options.alertOpponent=false] - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned.
+ * @param options.alertOpponent - Whether to notify the opponent that the player has returned. This will cause their client to cease counting down the time until their opponent is auto-resigned. [false]
  */
 function cancelAutoAFKResignTimer(game: Game, { alertOpponent = false } = {}) {
-	if (gameutility.isAFKTimerActive(game) && alertOpponent) { // Alert their opponent
+	if (game.autoAFKResignTime !== undefined && alertOpponent) { // Alert their opponent
 		const opponentColor = typeutil.invertPlayer(game.whosTurn!);
 		gameutility.sendMessageToSocketOfColor(game, opponentColor, 'game', 'opponentafkreturn');
 	}
@@ -80,9 +79,9 @@ function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boo
 	// If so, delete it, transferring it's time remaining to this disconnect timer.
 	// We can do this because if player is disconnected, they are afk anyway.
 	// And if if they reconnect, then they're not afk anymore either.
-	if (game.whosTurn === color && gameutility.isAFKTimerActive(game)) {
-		if (game.autoAFKResignTime! > timeToAutoLoss) console.error("The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.");
-		timeToAutoLoss = game.autoAFKResignTime!;
+	if (game.whosTurn === color && game.autoAFKResignTime !== undefined) {
+		if (game.autoAFKResignTime > timeToAutoLoss) console.error("The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.");
+		timeToAutoLoss = game.autoAFKResignTime;
 		timeBeforeAutoResign = timeToAutoLoss - now;
 		cancelAutoAFKResignTimer(game);
 	}

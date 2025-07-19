@@ -17,12 +17,12 @@ import { executeSafely_async } from '../../utility/errorGuard.js';
 import gamelogger from './gamelogger.js';
 
 // @ts-ignore
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
-import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
-// @ts-ignore
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 // @ts-ignore
 import { closeDrawOffer } from './drawoffers.js';
+// @ts-ignore
+import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
@@ -31,7 +31,6 @@ import ratingabuse from './ratingabuse.js';
 
 import type { Game, PlayerData } from '../TypeDefinitions.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-// @ts-ignore
 import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { MemberInfo } from '../../../types.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
@@ -186,7 +185,7 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
 	// The socket is not subscribed to any game. Perhaps this is a resync/refresh?
 
 	// Is the client in a game? What's their username/browser-id?
-	const player = socketUtility.getOwnerFromSocket(ws);
+	const player = ws.metadata.memberInfo;
 	// TODO: decide if needed
 	// if (player.member === undefined && player.browser === undefined) throw new Error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 
@@ -204,7 +203,7 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  * @param game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Game | undefined) {
-	const user = socketUtility.getOwnerFromSocket(ws); // { member, user_id } | { browser }
+	const user = ws.metadata.memberInfo;
 	if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game");
 	removeUserFromActiveGame(user, game.id);
     

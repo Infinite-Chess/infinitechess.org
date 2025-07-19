@@ -102,15 +102,6 @@ function getSimplifiedMetadata(ws: CustomWebSocket) {
 }
 
 /**
- * Returns the owner of the websocket.
- * @param ws - The websocket
- * @returns An object that contains either the `member` or `browser` property.
- */
-function getOwnerFromSocket(ws: CustomWebSocket): MemberInfo {
-	return ws.metadata.memberInfo;
-}
-
-/**
  * Parses cookies from the WebSocket upgrade request headers.
  * @param req - The WebSocket upgrade request object
  * @returns An object with cookie names as keys and their corresponding values
@@ -170,7 +161,6 @@ function getSignedInAndIdentifierOfSocket(ws: CustomWebSocket) {
 export default {
 	printSocket,
 	stringifySocketMetadata,
-	getOwnerFromSocket,
 	getCookiesFromWebsocket,
 	getIPFromWebsocketUpgradeRequest,
 	getSignedInAndIdentifierOfSocket,

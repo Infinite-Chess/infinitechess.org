@@ -45,7 +45,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	const { invite, index } = inviteAndIndex;
 
-	const user = socketUtility.getOwnerFromSocket(ws);
+	const user = ws.metadata.memberInfo;
 
 	// Make sure they are not accepting their own.
 	if (memberInfoEq(user, invite.owner)) {

@@ -10,7 +10,6 @@ import type { RawType, Player, PlayerGroup, RawTypeGroup } from '../util/typeuti
 import type { CoordsKey } from '../util/coordutil.js';
 import type { BaseRay } from '../../game/rendering/highlights/annotations/drawrays.js';
 import type { GameRules } from './gamerules.js';
-import type { MetaData } from '../util/metadata.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
 
 import jsutil from '../../util/jsutil.js';
@@ -81,7 +80,7 @@ interface Variant {
 	}
 }
 
-interface VariantOptions {
+interface VariantContext {
 	Variant?: string,
 	UTCDate: string,
 	UTCTime: string
@@ -350,7 +349,7 @@ function isVariantValid(variantName?: string) {
  * @param options - An object containing the properties `Variant`, and if desired, `Date`.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
  */
-function getStartingPositionOfVariant(metadata: MetaData) {
+function getStartingPositionOfVariant(metadata: VariantContext) {
 	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get starting position of invalid variant "${metadata.Variant}"!`);
 	const variantEntry: Variant = variantDictionary[metadata.Variant!]!;
 
@@ -391,15 +390,15 @@ function getStartingPositionOfVariant(metadata: MetaData) {
  * @param options.Variant - The name of the variant for which to get the gamerules.
  * @returns The gamerules object for the variant.
  */
-function getGameRulesOfVariant(variant: VariantOptions): GameRules {
-	if (!isVariantValid(variant.Variant)) throw new Error(`Cannot get starting position of invalid variant "${variant.Variant}"!`);
+function getGameRulesOfVariant(metadata: VariantContext): GameRules {
+	if (!isVariantValid(metadata.Variant)) throw new Error(`Cannot get starting position of invalid variant "${metadata.Variant}"!`);
 
-	const gameruleModifications: GameRuleModifications = jsutil.deepCopyObject(getVariantGameRuleModifications(variant));
+	const gameruleModifications: GameRuleModifications = jsutil.deepCopyObject(getVariantGameRuleModifications(metadata));
 	
 	return getGameRules(gameruleModifications);
 }
 
-function getVariantGameRuleModifications(metadata: VariantOptions): GameRuleModifications {
+function getVariantGameRuleModifications(metadata: VariantContext): GameRuleModifications {
 
 	const variantEntry = variantDictionary[metadata.Variant!];
 	if (!variantEntry) throw Error(`Cannot get gameruleModifications of invalid variant "${metadata.Variant}".`);
@@ -501,7 +500,7 @@ function getApplicableTimestampEntry<Inner>(object: TimeVariantProperty<Inner>, 
  * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
  * @returns {Object} The pieceMovesets property of the gamefile.
  */
-function getMovesetsOfVariant(metadata: MetaData, slideLimit?: number) {
+function getMovesetsOfVariant(metadata: VariantContext, slideLimit?: number) {
 	// Pasted games with no variant specified use the default movesets
 	// TODO: Transfer the slide limit game rule of pasted games
 	if (metadata.Variant === undefined) return getMovesets(undefined, slideLimit);
@@ -549,7 +548,7 @@ function getMovesets(movesetModifications: Movesets = {}, defaultSlideLimitForOl
 	return pieceMovesets;
 }
 
-function getSpecialMovesOfVariant(metadata: MetaData) {
+function getSpecialMovesOfVariant(metadata: VariantContext) {
 	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	// Pasted games with no variant specified use the default
 	if (metadata.Variant === undefined) return defaultSpecialMoves;
@@ -564,7 +563,7 @@ function getSpecialMovesOfVariant(metadata: MetaData) {
 }
 
 
-function getSpecialVicinityOfVariant(metadata: MetaData) {
+function getSpecialVicinityOfVariant(metadata: VariantContext) {
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
 	if (metadata.Variant === undefined) return defaultSpecialVicinityByPiece;

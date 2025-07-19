@@ -244,7 +244,7 @@ function subToInvitesList(ws: CustomWebSocket) { // data: { route, action, value
 function unsubFromInvitesList(ws: CustomWebSocket, closureNotByChoice?: boolean) { // data: { route, action, value, id }
 	removeSocketFromInvitesSubs(ws);
 
-	const owner = socketUtility.getOwnerFromSocket(ws);
+	const owner = ws.metadata.memberInfo;
 
 	if (!closureNotByChoice) return deleteUserInvitesIfNotConnected(owner); // Delete their existing invites
 		

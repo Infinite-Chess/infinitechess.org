@@ -27,7 +27,6 @@ import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import socketUtility from '../../socket/socketUtility.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
@@ -52,20 +51,14 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * and subscribe the players to the game for receiving updates.
  * 
  * Descriptions for each property can be found in the {@link Game} type definition.
- * @param {Object} inviteOptions - The invite options that contain various settings for the game.
- * @param {string} inviteOptions.variant - The game variant to be played.
- * @param {string} inviteOptions.publicity - The publicity setting of the game. Can be "public" or "private".
- * @param {string} inviteOptions.clock - The clock format for the game, in the form "s+s" or "-" for no clock.
- * @param {string} inviteOptions.rated - The rating type of the game. Can be "casual" or "rated".
- * @param {number} id - The unique identifier to give this game.
- * @param {Socket | undefined} player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
- * @param {CustomWebSocket} player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
- * @param {number} replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
- * @returns {Game} The new game.
+ * @param invite - The invite that contain various settings for the game.
+ * @param id - The unique identifier to give this game.
+ * @param player1Socket - Player 1 (the invite owner)'s websocket. This may not always be defined.
+ * @param player2Socket - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
+ * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
+ * @returns The new game.
  */
 function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, player2Socket: CustomWebSocket, replyto: number) {
-
-
 	const untimed = clockweb.isClockValueInfinite(invite.clock);
 	let startTimeMillis: undefined | number;
 	let incrementMillis: undefined | number;
@@ -78,7 +71,7 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
 	const players: Game['players'] = {};
 	// Set the colors
 	const player1 = player1Socket.metadata.memberInfo; // { member/browser }  The invite owner
-	const player2 = socketUtility.getOwnerFromSocket(player2Socket); // { member/browser }  The invite accepter
+	const player2 = player2Socket.metadata.memberInfo; // { member/browser }  The invite accepter
 	const { playerColors, colorData } = assignWhiteBlackPlayersFromInvite(invite.color, player1, player2);
 	for (const [c, identifier] of Object.entries(colorData)) {
 		players[Number(c) as Player] = {
@@ -418,8 +411,8 @@ function getParticipantState(game: Game, color: Player) {
 
 	// Include other relevant stuff if defined...
 
-	if (isAFKTimerActive(game)) {
-		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime! - now;
+	if (game.autoAFKResignTime !== undefined) {
+		const millisLeftUntilAutoAFKResign = game.autoAFKResignTime - now;
 		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
 	}
 
@@ -443,8 +436,7 @@ function getParticipantState(game: Game, color: Player) {
 function doesSocketBelongToGame_ReturnColor(game: Game, ws: CustomWebSocket) {
 	if (game.id === ws.metadata.subscriptions.game?.id) return ws.metadata.subscriptions.game?.color;
 	// Color isn't provided in their subscriptions, perhaps this is a resync/refresh?
-	const player = socketUtility.getOwnerFromSocket(ws);
-	return doesPlayerBelongToGame_ReturnColor(game, player);
+	return doesPlayerBelongToGame_ReturnColor(game, ws.metadata.memberInfo);
 }
 
 /**
@@ -531,16 +523,6 @@ function getSimplifiedGameString(game: Game) {
  * @returns true if the game is over (gameConclusion truthy)
  */
 function isGameOver(game: Game) { return game.gameConclusion !== undefined; }
-
-/**
- * Returns true if the color whos turn it is has an AFK
- * timer running to auto-resign them from being AFK for too long.
- * @param game - The game
- */
-function isAFKTimerActive(game: Game) {
-	// If this is defined, then the timer is defined.
-	return game.autoAFKResignTime !== undefined;
-}
 
 /**
  * Returns true if the provided color has a disconnect
@@ -725,7 +707,6 @@ export default {
 	printGame,
 	getSimplifiedGameString,
 	isGameOver,
-	isAFKTimerActive,
 	isDisconnectTimerActiveForColor,
 	isAutoResignDisconnectTimerActiveForColor,
 	getGameClockValues,

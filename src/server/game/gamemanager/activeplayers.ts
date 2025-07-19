@@ -2,9 +2,6 @@
 /**
  * This script keeps track of the ID's of games members and browsers are currently in.
  */
-
-import socketUtility from "../../socket/socketUtility.js";
-
 import type { CustomWebSocket } from "../../socket/socketUtility.js";
 import type { Player } from "../../../client/scripts/esm/chess/util/typeutil.js";
 import type { Game } from "../TypeDefinitions.js";
@@ -47,10 +44,7 @@ function addUserToActiveGames(user: MemberInfo, id: number) {
  * @param user - An object containing either the `member` or `browser` property.
  * @param gameID - The id of the game they are in.
  */
-function removeUserFromActiveGame(user: MemberInfo, gameID: number) { // { member/browser }
-	if (!user) return console.error("user must be specified when removing user from players in active games.");
-	if (gameID === undefined) return console.error("gameID must be specified when removing user from players in active games.");
-
+function removeUserFromActiveGame(user: MemberInfo, gameID: number) {
 	// Only removes them from the game if they belong to a game of that ID.
 	// If they DON'T belong to that game, that means they speedily
 	// resigned and started a new game, so don't modify this!
@@ -66,10 +60,10 @@ function removeUserFromActiveGame(user: MemberInfo, gameID: number) { // { membe
 /**
  * Returns true if the player behind the socket is already in an
  * active game, which means they're not allowed to join a new one.
- * @param {CustomWebSocket} ws - The websocket
+ * @param ws - The websocket
  */
 function isSocketInAnActiveGame(ws: CustomWebSocket) {
-	const player = socketUtility.getOwnerFromSocket(ws);
+	const player = ws.metadata.memberInfo;
 	// Allow a member to still join a new game, even if they're browser may be connected to one already.
 	if (player.signedIn) { // Their username trumps their browser id.
 		return player.user_id in membersInActiveGames;
@@ -91,7 +85,7 @@ function hasColorInGameSeenConclusion(game: Game, color: Player): boolean {
 
 /**
  * Gets a game by player.
- * @param player - The player object with one of 2 properties: `member` or `browser`, depending on if they are signed in.
+ * @param player - The player object containing all the memberinfo
  * @returns The game they are in, if they belong in one, otherwise undefined.
  */
 function getIDOfGamePlayerIsIn(player: MemberInfo): number | undefined {
