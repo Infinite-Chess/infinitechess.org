@@ -12,7 +12,6 @@
 		"bcrypt": "^5.1.1",
 		"better-sqlite3": "^11.5.0",
 		"browserslist": "^4.23.2",
-		"caniuse-lite": "^1.0.30001727",
 		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",
 		"date-fns": "^2.23.0",
