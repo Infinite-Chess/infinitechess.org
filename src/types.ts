@@ -5,14 +5,15 @@ interface AuthenticatedRequest extends Request {
 }
 
 type MemberInfo = {
+	browser_id: string,
+} & ({
 	signedIn: true,
 	user_id: number,
 	username: string,
 	roles: string[] | null
 } | {
-	signedIn: false,
-	browser_id: string,
-}
+	signedIn: false
+})
 
 export type {
 	AuthenticatedRequest,
