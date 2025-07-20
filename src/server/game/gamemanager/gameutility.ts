@@ -663,7 +663,6 @@ function sendUpdatedClockToColor(game: Game, color: Player): void {
 	const playerSocket = game.players[color]!.socket;
 	if (!playerSocket) return; // They are not connected, can't send message
 	sendSocketMessage(playerSocket, "game", "clock", message);
-	return;
 }
 
 /**
