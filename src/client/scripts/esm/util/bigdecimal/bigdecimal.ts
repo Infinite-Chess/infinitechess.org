@@ -518,9 +518,14 @@ function multiply_fixed(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * @returns The product of bd1 and bd2.
  */
 function multiply_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits?: number): BigDecimal {
-	const newBigInt = bd1.bigint * bd2.bigint;
-	const newDivex = bd1.divex + bd2.divex;
-	return normalize({ bigint: newBigInt, divex: newDivex }, mantissaBits);
+    // 1. Calculate the raw product of the internal bigints.
+    const newBigInt = bd1.bigint * bd2.bigint;
+    
+    // 2. The new scale is the sum of the original scales.
+    const newDivex = bd1.divex + bd2.divex;
+    
+    // 3. Immediately hand off to normalize to enforce the hybrid (floating) model.
+    return normalize({ bigint: newBigInt, divex: newDivex }, mantissaBits);
 }
 
 /**
@@ -563,21 +568,43 @@ function divide_fixed(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number
 
 /**
  * [Floating-Point Model] Divides two BigDecimals, preserving significant digits.
- * The divex may grow, but it shouldn't grow uncontrollably.
+ * This method dynamically calculates the required internal precision to ensure the result
+ * never truncates to zero unless the dividend is zero.
  * @param bd1 - The dividend.
  * @param bd2 - The divisor.
- * @param [workingPrecision=DEFAULT_WORKING_PRECISION] - Extra bits for internal calculation to prevent rounding errors.
- * @param mantissaBits - How many bits of mantissa to use for the result, while still guaranteeing arbitrary integer precision. This only affects really small decimals. If not provided, the default will be used.
+ * @param [mantissaBits=DEFAULT_MANTISSA_PRECISION_BITS] - How many bits of mantissa to preserve in the result.
  * @returns The quotient of bd1 and bd2 (bd1 / bd2).
  */
-function divide_floating(bd1: BigDecimal, bd2: BigDecimal, workingPrecision: number = DEFAULT_WORKING_PRECISION, mantissaBits?: number): BigDecimal {
-	if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
+function divide_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+    if (bd2.bigint === ZERO) throw new Error("Division by zero is not allowed.");
+    if (bd1.bigint === ZERO) return { bigint: ZERO, divex: mantissaBits }; // Or any divex, normalize will handle it.
+
+    // 1. Calculate bit length of the absolute values for a magnitude comparison.
+    const len1 = bimath.bitLength_bisection(bimath.abs(bd1.bigint));
+    const len2 = bimath.bitLength_bisection(bimath.abs(bd2.bigint));
+
+    // 2. Determine the necessary left shift.
+    // We need to shift bd1.bigint left enough so that the resulting quotient has 'mantissaBits' of precision.
+    const bitDifference = len2 - len1;
     
-	const shift = BigInt(bd2.divex + workingPrecision);
-	const scaledDividend = bd1.bigint << shift;
-	const quotient = scaledDividend / bd2.bigint;
-	const newDivex = bd1.divex + workingPrecision;
-	return normalize({ bigint: quotient, divex: newDivex }, mantissaBits);
+    // We need to shift by the difference in bit lengths (if bd2 is larger) PLUS the desired final mantissa bits.
+    // We add 1 for extra safety against off-by-one truncation errors in the integer division.
+    const requiredShift = BigInt(Math.max(bitDifference, 0) + mantissaBits + 1);
+
+    // 3. Scale the dividend up by the required shift amount.
+    const scaledDividend = bd1.bigint << requiredShift;
+
+    // 4. Perform the single, precise integer division.
+    const quotient = scaledDividend / bd2.bigint;
+    
+    // 5. Calculate the new divex for the result.
+    // The total scaling factor is 2^requiredShift from our scaling,
+    // and we must also account for the original exponents.
+    const newDivex = bd1.divex - bd2.divex + Number(requiredShift);
+
+    // 6. Normalize the result to the target mantissa size. This will trim any excess bits
+    // if the dividend was much larger than the divisor.
+    return normalize({ bigint: quotient, divex: newDivex }, mantissaBits);
 }
 
 /**
@@ -727,7 +754,15 @@ function max(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 /** The target number of bits for the mantissa in floating-point operations. Higher is more precise but slower. */
 const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us about 16 digits of precision, similar to JavaScript's Number type.
 
-/** Normalizes a BigDecimal to a target number of precision bits for floating-point style operations. */
+/**
+ * Normalizes a BigDecimal to enforce the hybrid (floating) precision model. It preserves
+ * the full integer part of numbers with an absolute value of 1 or greater by rounding
+ * off the fraction. For smaller numbers, it trims the mantissa to `precisionBits`
+ * to standardize fractional precision.
+ * @param bd The BigDecimal to normalize.
+ * @param [precisionBits=DEFAULT_MANTISSA_PRECISION_BITS] The target mantissa bits for fractions.
+ * @returns A new, normalized BigDecimal.
+ */
 function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
 	// We work with the absolute value for bit length calculation.
 	const mantissa = bimath.abs(bd.bigint);
