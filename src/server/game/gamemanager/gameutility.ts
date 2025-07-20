@@ -186,7 +186,9 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
 		};
 	}
 
-	const newGame = {
+	const gameRules = variant.getGameRulesOfVariant({ Variant: invite.variant, UTCDate: timeutil.getCurrentUTCDate(), UTCTime: timeutil.getCurrentUTCTime() });
+
+	const newGame: Game = {
 		id,
 		timeCreated: Date.now(),
 		players,
@@ -198,14 +200,10 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
 		incrementMillis,
 		rated: invite.rated === "rated",
 		moves: [],
-		gameRules: variant.getGameRulesOfVariant({ Variant: invite.variant, UTCDate: timeutil.getCurrentUTCDate(), UTCTime: timeutil.getCurrentUTCTime() }),
+		gameRules,
+		whosTurn: gameRules.turnOrder[0],
 		positionPasted: false,
-	} as Game;
-
-
-
-	// Set whos turn
-	newGame.whosTurn = newGame.gameRules.turnOrder[0];
+	};
 
 	// Auto-subscribe the players to this game!
 	// This will link their socket to this game, modify their
