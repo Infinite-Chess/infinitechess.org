@@ -22,7 +22,6 @@ import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 // @ts-ignore
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
-/** @typedef {import("../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -54,7 +53,7 @@ interface AllowInvites {
  * done when a new invite is attempted to be created.
  * `{ allowinvites: true, restartIn: false }`
  */
-let allowinvites = await readFile(allowinvitesPath, 'Unable to read allowinvites.json on startup.') as AllowInvites;
+let allowinvites = await readFile<AllowInvites>(allowinvitesPath, 'Unable to read allowinvites.json on startup.');
 /**
  * The minimum time required between new reads of allowinvites.json.
  * 
@@ -68,8 +67,7 @@ const intervalToReadAllowinviteMillis = 5000; // 5 seconds
  * Returns true if the server is about to restart.
  * This will re-read allowinvites.json if it's
  * been a little bit since it was last read.
- * @param {CustomWebSocket} ws - The socket attempting to create a new invite
- * @returns {Promise<boolean>} true if invite creation is allowed
+ * @returns true if invite creation is allowed
  */
 async function isServerRestarting() {
 	await updateAllowInvites();
@@ -100,7 +98,8 @@ const updateAllowInvites = (function() {
 		try {
 			allowinvites = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`) as AllowInvites;
 		} catch (e) {
-			if (e instanceof Error) logEventsAndPrint(e.message, 'errLog.txt');
+			const errMsg = e instanceof Error ? e.message : String(e);
+			logEventsAndPrint(errMsg, 'errLog.txt');
 			console.error(`There was an error reading allowinvites.json. Not updating it in memory.`);
 			return;
 		}

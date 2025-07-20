@@ -5,7 +5,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 type MemberInfo = {
-	browser_id: string,
+	browser_id?: string,
 } & ({
 	signedIn: true,
 	user_id: number,

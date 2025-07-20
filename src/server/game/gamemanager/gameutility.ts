@@ -20,11 +20,11 @@ import clockweb from '../clockweb.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 // @ts-ignore
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
+// @ts-ignore
+import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
-// @ts-ignore
-import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import metadata from '../../../client/scripts/esm/chess/util/metadata.js';
@@ -163,7 +163,7 @@ interface Game {
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  * @returns The new game.
  */
-function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto: number) {
+function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, player2Socket: CustomWebSocket, replyto: number) {
 	const untimed = clockweb.isClockValueInfinite(invite.clock);
 	let startTimeMillis: undefined | number;
 	let incrementMillis: undefined | number;
@@ -175,14 +175,13 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | un
 
 	const players: Game['players'] = {};
 	// Set the colors
-	const player1 = player1Socket?.metadata.memberInfo; // { member/browser }  The invite owner
+	const player1 = player1Socket.metadata.memberInfo; // { member/browser }  The invite owner
 	const player2 = player2Socket.metadata.memberInfo; // { member/browser }  The invite accepter
 	const { playerColors, colorData } = assignWhiteBlackPlayersFromInvite(invite.color, player1, player2);
 	for (const [c, identifier] of Object.entries(colorData)) {
 		players[Number(c) as Player] = {
 			identifier,
 			disconnect: {},
-			lastOfferPly: 0,
 			timer: startTimeMillis
 		};
 	}
@@ -212,8 +211,7 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | un
 	// This will link their socket to this game, modify their
 	// metadata.subscriptions, and send them the game info!
 	subscribeClientToGame(newGame, player2Socket, playerColors[1]!, { replyto });
-	// Occasionally, player 1's (invite owner) socket will be closed.
-	if (player1Socket) subscribeClientToGame(newGame, player1Socket, playerColors[0]!);
+	subscribeClientToGame(newGame, player1Socket, playerColors[0]!);
 
 	return newGame;
 }
@@ -229,8 +227,8 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | un
  * - `player1Color`: The color of player1, the invite owner.
  * - `player2Color`: The color of player2, the invite accepter.
  */
-function assignWhiteBlackPlayersFromInvite<A, B>(color: Player, player1: A, player2: B) { // { id, owner, variant, clock, color, rated, publicity }
-	const colorData: PlayerGroup<A | B> = {};
+function assignWhiteBlackPlayersFromInvite<PT>(color: Player, player1: PT, player2: PT) { // { id, owner, variant, clock, color, rated, publicity }
+	const colorData: PlayerGroup<PT> = {};
 	const playerColors: Player[] = [];
 	if (color === players.WHITE) {
 		playerColors.push(players.WHITE, players.BLACK);
@@ -264,8 +262,6 @@ function assignWhiteBlackPlayersFromInvite<A, B>(color: Player, player1: A, play
  * @param options.replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function subscribeClientToGame(game: Game, playerSocket: CustomWebSocket, playerColor: Player, { sendGameInfo = true, replyto }: {sendGameInfo?: boolean, replyto?: number} = {}) {
-	if (!playerSocket) return console.error(`Cannot subscribe client to game when they don't have an open socket! ${game.players[playerColor]}`);
-	if (!playerColor) return console.error(`Cannot subscribe client to game without a color!`);
 
 	// 1. Attach their socket to the game for receiving updates
 	const playerData = game.players[playerColor];
@@ -341,7 +337,7 @@ function sendGameInfoToPlayer(game: Game, playerSocket: CustomWebSocket, playerC
  * @param game 
  * @returns An object containing the rating for non-guest in the game, and whether we are confident in that rating, IF the variant has a leaderboard.
  */
-function getRatingDataForGamePlayers(game: Game) {
+function getRatingDataForGamePlayers(game: Game): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
 	const leaderboardId = VariantLeaderboards[game.variant] ?? Leaderboards.INFINITY;
 
@@ -486,7 +482,7 @@ function sendRatingChangeToAllPlayers(game: Game, ratingdata: RatingData) {
  * rating changes from the results of the rated game.
  */
 function getRatingChangeMessageContents(ratingdata: RatingData) {
-	const messageContents: PlayerGroup<{ newRating: { value: number, confident: boolean }, change: number }> = {};
+	const messageContents: PlayerGroup<Rat> = {};
 	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
 		messageContents[Number(playerStr) as Player] = {
 			newRating: {
@@ -502,7 +498,7 @@ function getRatingChangeMessageContents(ratingdata: RatingData) {
 
 import type { ParticipantState } from '../../../client/scripts/esm/game/misc/onlinegame/onlinegamerouter.js';
 
-function getParticipantState(game: Game, color: Player) {
+function getParticipantState(game: Game, color: Player): ParticipantState {
 	const opponentColor = typeutil.invertPlayer(color);
 	const now = Date.now();
 	const opponentData = game.players[opponentColor]!;
@@ -538,7 +534,7 @@ function getParticipantState(game: Game, color: Player) {
  * @param ws - The websocket
  * @returns The color they are, if they belong, otherwise *undefined*.
  */
-function doesSocketBelongToGame_ReturnColor(game: Game, ws: CustomWebSocket) {
+function doesSocketBelongToGame_ReturnColor(game: Game, ws: CustomWebSocket): Player | undefined {
 	if (game.id === ws.metadata.subscriptions.game?.id) return ws.metadata.subscriptions.game?.color;
 	// Color isn't provided in their subscriptions, perhaps this is a resync/refresh?
 	return doesPlayerBelongToGame_ReturnColor(game, ws.metadata.memberInfo);
@@ -550,7 +546,7 @@ function doesSocketBelongToGame_ReturnColor(game: Game, ws: CustomWebSocket) {
  * @param player - The player object with one of 2 properties: `member` or `browser`, depending on if they are signed in.
  * @returns The color they are, if they belong, otherwise *false*.
  */
-function doesPlayerBelongToGame_ReturnColor(game: Game, player: MemberInfo) {
+function doesPlayerBelongToGame_ReturnColor(game: Game, player: MemberInfo): Player | undefined {
 	for (const [splayer, data] of Object.entries(game.players)) {
 		const playercolor = Number(splayer) as Player;
 		if (player.signedIn !== data.identifier.signedIn) continue;
@@ -779,16 +775,17 @@ function isGameBorderlineResignable(game: Game) { return game.moves.length === 2
  * @param i - The moveIndex
  * @returns {Player} - The color that played the moveIndex
  */
-function getColorThatPlayedMoveIndex(game: Game, i: number) {
-	if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
+function getColorThatPlayedMoveIndex(game: Game, i: number): Player {
 	const turnOrder = game.gameRules.turnOrder;
+	if (i === -1) return turnOrder[turnOrder.length - 1];
+
 	return turnOrder[i % turnOrder.length];
 }
 
 /**
  * Returns the termination of the game in english language.
- * @param {GameRules} gameRules
- * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
+ * @param gameRules
+ * @param condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: string) {
 	if (condition === 'moverule') { // One exception

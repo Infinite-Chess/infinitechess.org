@@ -7,13 +7,11 @@
 import WebSocket from 'ws';
 
 // Custom imports
-
 // @ts-ignore
+import { executeSafely_async } from '../../utility/errorGuard.js';
 import gameutility from './gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import statlogger from '../statlogger.js';
-// @ts-ignore
-import { executeSafely_async } from '../../utility/errorGuard.js';
 import gamelogger from './gamelogger.js';
 
 // @ts-ignore
@@ -186,9 +184,6 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
 
 	// Is the client in a game? What's their username/browser-id?
 	const player = ws.metadata.memberInfo;
-	// TODO: decide if needed
-	// if (player.member === undefined && player.browser === undefined) throw new Error(`Cannot get game by socket when they don't have authentication! We should not have allowed this socket creation. Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
-
 	return getGameByPlayer(player);
 }
 
@@ -370,8 +365,6 @@ function onPlayerLostOnTime(game: Game) {
  * @param colorWon - The color that won by opponent disconnection
  */
 function onPlayerLostByDisconnect(game: Game, colorWon: Player) {
-	if (!colorWon) return console.log("Cannot lose player by disconnection when colorWon is undefined");
-
 	if (gameutility.isGameOver(game)) return console.error("We should have cancelled the auto-loss-by-disconnection timer when the game ended!");
 
 	if (gameutility.isGameResignable(game)) {
@@ -394,8 +387,6 @@ function onPlayerLostByDisconnect(game: Game, colorWon: Player) {
  * @param colorWon - The color that won by opponent abandonment (AFK)
  */
 function onPlayerLostByAbandonment(game: Game, colorWon: Player) {
-	if (!colorWon) return console.log("Cannot lose player by abandonment when colorWon is undefined");
-
 	if (gameutility.isGameResignable(game)) {
 		console.log("Someone has lost by abandonment!");
 		setGameConclusion(game, `${colorWon} disconnect`);

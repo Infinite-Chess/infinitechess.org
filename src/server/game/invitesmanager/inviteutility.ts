@@ -71,11 +71,11 @@ function safelyCopyInvite(invite: Invite): SafeInvite {
 }
 
 function memberInfoEq(u1: MemberInfo, u2: MemberInfo): boolean {
-	console.log(u1, u2);
-	// @ts-ignore
-	if (u1.signedIn) return u1.user_id === u2.user_id;
-	// @ts-ignore
-	else return u1.browser_id === u2.browser_id;
+	if (u1.signedIn) {  
+		if (!u2.signedIn) return false;  
+		return u1.user_id === u2.user_id;  
+	} else if (u2.signedIn) return false; // This ensures if they have the same browser-id, but mi2 is signed in, they are not equal.  
+	else return u1.browser_id === u2.browser_id;  
 }
 
 //-------------------------------------------------------------------------------------------

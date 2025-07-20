@@ -6,12 +6,12 @@
  * and broadcasts changes out to the clients.
  */
 
-import socketUtility from '../../socket/socketUtility.js';
-import { isInvitePrivate, safelyCopyInvite, isInvitePublic, memberInfoEq } from './inviteutility.js';
 // @ts-ignore
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs, doesUserHaveActiveConnection } from './invitessubscribers.js';
 // @ts-ignore
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
+import socketUtility from '../../socket/socketUtility.js';
+import { isInvitePrivate, safelyCopyInvite, isInvitePublic, memberInfoEq } from './inviteutility.js';
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
@@ -192,7 +192,7 @@ function existingInviteHasID(id: string) {
  * @param id - The invite ID
  * @returns An object: `{ invite, index }`, or undefined if the invite wasn't found.
  */
-function getInviteAndIndexByID(id: string) {
+function getInviteAndIndexByID(id: string): { invite: UnsafeInvite, index: number } | undefined {
 	for (let i = 0; i < invites.length; i++) {
 		if (id === invites[i]!.id) return { invite: invites[i]!, index: i };
 	}
@@ -206,7 +206,7 @@ function getInviteAndIndexByID(id: string) {
  * Typically called when you need to inform a player their invite was accepted.
  * @returns The websocket, if found, otherwise undefined.
  */
-function findSocketFromOwner(owner: MemberInfo) { // { member/browser }
+function findSocketFromOwner(owner: MemberInfo): CustomWebSocket | undefined { // { member/browser }
 	// Iterate through all sockets, until you find one that matches the authentication of our invite owner
 	const subscribedClients = getInviteSubscribers(); // { id: ws }
 	if (owner.signedIn) {
@@ -216,7 +216,6 @@ function findSocketFromOwner(owner: MemberInfo) { // { member/browser }
 		}
 	} else {
 		for (const ws of Object.values(subscribedClients)) {
-			// @ts-ignore
 			if (ws.metadata.memberInfo.browser_id === owner.browser_id) return ws;
 		}
 	}

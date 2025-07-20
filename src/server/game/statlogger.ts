@@ -29,14 +29,14 @@ const statsPath = path.resolve('database/stats.json');
 	console.log("Generated stats file");
 })();
 
-const stats = await readFile('database/stats.json', 'Unable to read stats.json on startup.') as {
+const stats = await readFile<{
 	moveCount: Record<string, number>,
 	gamesPlayed: {
 		byDay: Record<string, number>,
 		byMonth: Record<string, Record<string, number>>,
 		allTime: Record<string, number>
 	}
-};
+}>('database/stats.json', 'Unable to read stats.json on startup.');
 
 /**
  * 
@@ -74,7 +74,6 @@ async function logGame(game: Game) {
 	if (stats.gamesPlayed.byDay[day] === undefined) stats.gamesPlayed.byDay[day] = 1;
 	else stats.gamesPlayed.byDay[day]++;
 
-	// TODO/FIXME - rewrite the stats format to be safer
 	// @ts-ignore
 	incrementMonthsGamesPlayed(stats.gamesPlayed, 'allTime', variant);
 	incrementMonthsGamesPlayed(stats.gamesPlayed.byMonth, month, variant);

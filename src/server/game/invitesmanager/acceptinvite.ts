@@ -8,18 +8,18 @@
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
-import { memberInfoEq } from './inviteutility.js';
-import socketUtility from '../../socket/socketUtility.js';
-import { createGame } from '../gamemanager/gamemanager.js';
+// @ts-ignore
+import { getTranslation } from '../../utility/translate.js';
 // @ts-ignore
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
 // @ts-ignore
-import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
+import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js'; 
+import { memberInfoEq } from './inviteutility.js';
+import socketUtility from '../../socket/socketUtility.js';
+import { createGame } from '../gamemanager/gamemanager.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-// @ts-ignore
-import { getTranslation } from '../../utility/translate.js'; 
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 

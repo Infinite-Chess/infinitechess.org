@@ -12,21 +12,21 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 // Custom imports
 // @ts-ignore
+import { getTranslation } from '../../utility/translate.js'; 
+// @ts-ignore
 import clockweb from '../clockweb.js';
-import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.js';
-import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 // @ts-ignore
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
 // @ts-ignore
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
+import { existingInviteHasID, userHasInvite, addInvite, IDLengthOfInvites } from './invitesmanager.js';
+import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { isServerRestarting } from '../updateServerRestart.js';
 import uuid from '../../../client/scripts/esm/util/uuid.js';
 import variant from '../../../client/scripts/esm/chess/variants/variant.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
-// @ts-ignore
-import { getTranslation } from '../../utility/translate.js'; 
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
 import type { Invite, UnsafeInvite} from './inviteutility.js';
@@ -80,9 +80,9 @@ async function createInvite(ws: CustomWebSocket, messageContents: any, replyto: 
  * @param ws
  * @param messageContents - The incoming websocket message contents (separate from route and action)
  * @param replyto - The incoming websocket message ID, to include in the reply
- * @returns The Invite object, or undefined it the message contents were invalid.
+ * @returns The Invite object, or void it the message contents were invalid.
  */
-function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageContents: any, replyto: number) {
+function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageContents: any, replyto: number): UnsafeInvite | void {
 
 	// Verify their invite contains the required properties...
 

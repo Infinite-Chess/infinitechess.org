@@ -62,8 +62,7 @@ function verifyAccessToken(req, res) {
 
 	console.log("A valid access token was used! :D :D");
 
-	const { user_id, username, roles, allowed_actions } = result;
-	req.memberInfo = {...req.memberInfo, signedIn: true, user_id, username, roles, allowed_actions }; // Username was our payload when we generated the access token
+	req.memberInfo = {...req.memberInfo, signedIn: true, ...result}; // Username was our payload when we generated the access token
 
 	return true; // true if they have a valid ACCESS token
 }
@@ -135,8 +134,7 @@ function verifyRefreshToken_WebSocket(ws) {
 		return false; // Token was expired or tampered
 	}
 
-	const { user_id, username, roles } = result;
-	ws.metadata.memberInfo = {...ws.metadata.memberInfo, signedIn: true, user_id, username, roles };
+	ws.metadata.memberInfo = {...ws.metadata.memberInfo, signedIn: true, ...result};
 }
 
 export {
