@@ -52,8 +52,7 @@
 		"eslint": "^9.16.0",
 		"globals": "^15.9.0",
 		"madge": "^8.0.0",
-		"typescript": "^5.7.2",
-		"typescript-eslint": "^8.16.0"
+		"typescript": "^5.7.2"
 	},
 	"scripts": {
 		"build": "node build.js",
