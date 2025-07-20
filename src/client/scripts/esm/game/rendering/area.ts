@@ -111,23 +111,23 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBox { // { left, right, 
 
 	/** Start with a copy with zero padding. */
 	let paddedBox: BoundingBoxBD = jsutil.deepCopyObject(boxCopy);
-	let scale = calcScaleToMatchSides(paddedBox);
+	let scaleBD: BigDecimal = calcScaleToMatchSides(paddedBox);
 
 	// Iterate until we have desired padding
 	for (let i = 0; i < iterationsToRecalcPadding; i++) {
-		const paddingToUse = scale < camera.getScaleWhenZoomedOut() ? paddingMiniimage : padding;
+		const paddingToUse: number = bigdecimal.compare(scaleBD, camera.getScaleWhenZoomedOut()) < 0 ? paddingMiniimage : padding;
 		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
 		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
 
-		const paddingHorzWorld = space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels);
-		const paddingVertWorld = space.convertPixelsToWorldSpace_Virtual(paddingVertPixels);
-		const paddingHorz = paddingHorzWorld / scale;
-		const paddingVert = paddingVertWorld / scale;
+		const paddingHorzWorldBD = bigdecimal.FromNumber(space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels));
+		const paddingVertWorldBD = bigdecimal.FromNumber(space.convertPixelsToWorldSpace_Virtual(paddingVertPixels));
+		const paddingHorz: BigDecimal = bigdecimal.divide_fixed(paddingHorzWorldBD, scaleBD);
+		const paddingVert: BigDecimal = bigdecimal.divide_fixed(paddingVertWorldBD, scaleBD);
 
 		paddedBox = addPaddingToBoundingBox(boxCopy, paddingHorz, paddingVert);
 
 		// Prep for next iteration
-		scale = calcScaleToMatchSides(paddedBox);
+		scaleBD = calcScaleToMatchSides(paddedBox);
 	}
 
 	return paddedBox;
@@ -139,7 +139,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBox { // { left, right, 
  * @param box - The bounding box
  * @returns The area object
  */
-function calculateFromBox(box: BoundingBox): Area { // { left, right, bottom, top }
+function calculateFromBox(box: BoundingBoxBD): Area { // { left, right, bottom, top }
 
 	// The new boardPos is the middle point
 	const xHalfLength = (box.right - box.left) / 2;
@@ -176,6 +176,7 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	const yDiff = bigdecimal.subtract(boundingBox.top, boundingBox.bottom);
 	const xHalfLength = bigdecimal.divide_fixed(xDiff, TWO);
 	const yHalfLength = bigdecimal.divide_fixed(yDiff, TWO);
+	// const [xHalfLength, yHalfLength] = getCenterOfBoundingBoxBD(boundingBox);
 
 	const screenBoundingBox = camera.getScreenBoundingBox(false); // Get the screen bounding box without the navigation bars
 	const screenBoundingBoxBD: BoundingBoxBD = math.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
@@ -187,10 +188,19 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	// Can afterward cast to BigDecimal since they are small numbers.
 	const capScale = bigdecimal.FromNumber(screenHeight / areaMinHeightSquares);
 
-	let newScale = xScale < yScale ? xScale : yScale;
-	if (newScale > capScale) newScale = capScale;
+	let newScale = bigdecimal.min(xScale, yScale);
+	newScale = bigdecimal.min(newScale, capScale);
 
 	return newScale;
+}
+
+function getCenterOfBoundingBoxBD(box: BoundingBoxBD): BDCoords {
+	const xDiff = bigdecimal.subtract(boundingBox.right, boundingBox.left);
+	const yDiff = bigdecimal.subtract(boundingBox.top, boundingBox.bottom);
+	return [
+		bigdecimal.divide_fixed(xDiff, TWO),
+		bigdecimal.divide_fixed(yDiff, TWO)
+	]
 }
 
 /**
@@ -200,12 +210,12 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
  * @param vertPad - Vertical padding
  * @returns The padded bounding box
  */
-function addPaddingToBoundingBox(boundingBox: BoundingBox, horzPad: number, vertPad: number): BoundingBox {
+function addPaddingToBoundingBox(boundingBox: BoundingBoxBD, horzPad: BigDecimal, vertPad: BigDecimal): BoundingBoxBD {
 	return {
-		left: boundingBox.left - horzPad,
-		right: boundingBox.right + horzPad,
-		bottom: boundingBox.bottom - vertPad,
-		top: boundingBox.top + vertPad,
+		left: bigdecimal.subtract(boundingBox.left, horzPad),
+		right: bigdecimal.add(boundingBox.right, horzPad),
+		bottom: bigdecimal.subtract(boundingBox.bottom, vertPad),
+		top: bigdecimal.add(boundingBox.top, vertPad),
 	};
 }
 
