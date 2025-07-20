@@ -652,8 +652,11 @@ function isAutoResignDisconnectTimerActiveForColor(game: Game, color: Player) {
  * Sends the current clock values to the player who just moved.
  * @param game - The game
  */
-function sendUpdatedClockToColor(game: Game, color: Player) {
-	if (color !== players.BLACK && color !== players.WHITE) return logEventsAndPrint(`Color must be white or black when sending clock to color! Got: ${color}`, 'errLog.txt');
+function sendUpdatedClockToColor(game: Game, color: Player): void {
+	if (color !== players.BLACK && color !== players.WHITE) {
+		logEventsAndPrint(`Color must be white or black when sending clock to color! Got: ${color}`, 'errLog.txt');
+		return;
+	}
 	if (game.untimed) return; // Don't send clock values in an untimed game
 
 	const message = getGameClockValues(game);
