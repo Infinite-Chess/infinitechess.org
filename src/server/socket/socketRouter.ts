@@ -1,4 +1,6 @@
 
+// src/server/socket/socketRouter.ts
+
 /**
  * This script receives routes incoming socket messages them where they need to go.
  * 

@@ -1,4 +1,6 @@
 
+// src/server/game/invitesmanager/acceptinvite.ts
+
 /**
  * This script handles invite acceptance,
  * creating a new game if successful.

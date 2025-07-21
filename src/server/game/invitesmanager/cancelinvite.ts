@@ -1,4 +1,6 @@
 
+// src/server/game/invitesmanager/cancelinvite.ts
+
 /**
  * This script handles invite cancelation.
  */

@@ -1,4 +1,6 @@
 
+// src/server/game/invitesmanager/createinvite.ts
+
 /**
  * This script handles invite creation, making sure that the invites have valid properties.
  * 

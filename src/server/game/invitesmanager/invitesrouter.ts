@@ -1,4 +1,6 @@
 
+// src/server/game/invitesmanager/invitesrouter.ts
+
 /*
  * This script routes all incoming websocket messages
  * with the "invites" route to where they need to go.
