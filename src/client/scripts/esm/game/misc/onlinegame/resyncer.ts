@@ -14,7 +14,8 @@
 
 // @ts-ignore
 import type { FullGame } from "../../../chess/logic/gamefile.js";
-import type { GameUpdateMessage, ServerGameMoveMessage } from "./onlinegamerouter.js";
+import type { GameUpdateMessage } from "./onlinegamerouter.js";
+import type { ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 import type { Mesh } from "../../rendering/piecemodels.js";
 
 

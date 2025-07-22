@@ -209,15 +209,8 @@ function getInviteAndIndexByID(id: string): { invite: UnsafeInvite, index: numbe
 function findSocketFromOwner(owner: MemberInfo): CustomWebSocket | undefined { // { member/browser }
 	// Iterate through all sockets, until you find one that matches the authentication of our invite owner
 	const subscribedClients = getInviteSubscribers(); // { id: ws }
-	if (owner.signedIn) {
-		for (const ws of Object.values(subscribedClients)) {
-			// @ts-ignore
-			if (ws.metadata.memberInfo.user_id === owner.user_id) return ws;
-		}
-	} else {
-		for (const ws of Object.values(subscribedClients)) {
-			if (ws.metadata.memberInfo.browser_id === owner.browser_id) return ws;
-		}
+	for (const ws of Object.values(subscribedClients)) {
+		if (memberInfoEq(owner, ws.metadata.memberInfo)) return ws;
 	}
 
 	console.log(`Unable to find a socket subbed to the invites list that belongs to ${JSON.stringify(owner)}!`);
@@ -264,8 +257,8 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws: CustomWebSoc
 		clearTimeout(timersMember[ws.metadata.memberInfo.user_id]);
 		delete timersMember[ws.metadata.memberInfo.user_id];
 	} else if (ws.metadata) {
-		clearTimeout(timersBrowser[ws.metadata.memberInfo.browser_id]);
-		delete timersBrowser[ws.metadata.memberInfo.browser_id];
+		clearTimeout(timersBrowser[ws.metadata.memberInfo.browser_id!]);
+		delete timersBrowser[ws.metadata.memberInfo.browser_id!];
 	}
 }
 

@@ -19,12 +19,17 @@ ensureBannedFileExists: {
 	console.log("Generated banned file");
 }
 
-const bannedJSON = await readFile(bannedPath, 'Unable to read banned.json on startup.') as {
-	IPs: Record<string, any>,
-	emails: Record<string, any>,
-	'browser-ids': Record<string, any>
+let bannedJSON: {
+		IPs: Record<string, any>,
+		emails: Record<string, any>,
+		'browser-ids': Record<string, any>
 };
-
+try {
+	bannedJSON = await readFile(bannedPath);
+} catch (e) {
+	const errMsg = 'Unable to read banned.json on startup.' + (e instanceof Error ? e.stack : String(e));
+	throw new Error(errMsg); 
+}
 function isEmailBanned(email: string) {
 	const emailLowercase = email.toLowerCase();
 	return bannedJSON.emails[emailLowercase] !== undefined;

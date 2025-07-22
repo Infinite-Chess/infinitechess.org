@@ -32,18 +32,67 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
+import { memberInfoEq } from '../invitesmanager/inviteutility.js';
 
 // Type Definitions...
 import type { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
 import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { GameRules } from '../../../client/scripts/esm/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../client/scripts/esm/chess/logic/clock.js';
-import type { MemberInfo } from '../../../types.js';
+import type { MemberInfo, AuthMemberInfo } from '../../../types.js';
 import type { Player, PlayerGroup } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+type ServerGameMoveMessage = { compact: string, clockStamp?: number };
+
+/** The message contents expected when we send a websocket 'move' message.  */
+interface OpponentsMoveMessage {
+	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
+	move: ServerGameMoveMessage,
+	gameConclusion?: string,
+	/** Our opponent's move number, 1-based. */
+	moveNumber: number,
+	/** If the game is timed, this will be the current clock values. */
+	clockValues?: ClockValues,
+}
+
+type PlayerRatingChangeInfo = {
+	newRating: Rating,
+	change: number,
+}
+
+interface DisconnectInfo {
+	/**
+	 * How many milliseconds left until our opponent will be auto-resigned from disconnection,
+	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 */
+	millisUntilAutoDisconnectResign: number,
+	/** Whether the opponent disconnected by choice, or if it was non-intentional (lost network). */
+	wasByChoice: boolean
+}
+
+/** Info storing draw offers of the game. */
+interface DrawOfferInfo {
+	/** True if our opponent has extended a draw offer we haven't yet confirmed/denied */
+	unconfirmed: boolean,
+	/** The move ply WE HAVE last offered a draw, if we have, otherwise undefined. */
+	lastOfferPly?: number,
+}
+
+/** The state of the game unique to participants, while the game is ongoing, NOT for spectators, and not when the game is over. */
+type ParticipantState = {
+	drawOffer: DrawOfferInfo,
+	/** If our opponent has disconnected, this will be present. */
+	disconnect?: DisconnectInfo,
+	/**
+	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
+	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 */
+	millisUntilAutoAFKResign?: number,
+}
 
 interface PlayerData {
 	/**
@@ -53,11 +102,11 @@ interface PlayerData {
 	 * If they are signed out, their identifier is `{ browser: string }`, where browser is their browser-id cookie.
 	 * 
 	 */
-	identifier: MemberInfo;
+	identifier: AuthMemberInfo;
 	/** Player's socket, if they are connected. */
 	socket?: CustomWebSocket;
 	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. */
-	lastOfferPly: number;
+	lastOfferPly?: number;
 	/** Players's current time remaining, in milliseconds, if the game is timed, otherwise undefined. */
 	timer?: number;
 	/** Contains information about this players disconnection and auto resign timer. */
@@ -68,22 +117,27 @@ interface PlayerData {
 		 * and lasts for 5 seconds to give them a chance to reconnect.
 		 */
 		startID?: NodeJS.Timeout,
+	} & ({
 		/**
 		 * The timeout id of the timer that will auto-resign the
 		 * player if they are disconnected for too long.
 		 */
-		timeoutID?: ReturnType<typeof setTimeout>,
+		timeoutID: ReturnType<typeof setTimeout>,
 		/**
 		 * The estimated timestamp that the player will
 		 * be auto-resigned from being disconnected too long.
 		 */
-		timeToAutoLoss?: number,
+		timeToAutoLoss: number,
 		/**
 		 * Whether the player was disconnected by choice or not.
 		 * If not, they are given extra time to reconnect.
 		 */
-		wasByChoice?: boolean,
-	};
+		wasByChoice: boolean,
+	} | {
+		timeoutID: undefined,
+		timeToAutoLoss: undefined,
+		wasByChoice: undefined,
+	});
 }
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */
@@ -163,7 +217,7 @@ interface Game {
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  * @returns The new game.
  */
-function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, player2Socket: CustomWebSocket, replyto: number) {
+function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto: number) {
 	const untimed = clockweb.isClockValueInfinite(invite.clock);
 	let startTimeMillis: undefined | number;
 	let incrementMillis: undefined | number;
@@ -175,13 +229,17 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
 
 	const players: Game['players'] = {};
 	// Set the colors
-	const player1 = player1Socket.metadata.memberInfo; // { member/browser }  The invite owner
+	const player1 = player1Socket?.metadata.memberInfo; // { member/browser }  The invite owner
 	const player2 = player2Socket.metadata.memberInfo; // { member/browser }  The invite accepter
 	const { playerColors, colorData } = assignWhiteBlackPlayersFromInvite(invite.color, player1, player2);
 	for (const [c, identifier] of Object.entries(colorData)) {
 		players[Number(c) as Player] = {
 			identifier,
-			disconnect: {},
+			disconnect: {
+				timeoutID: undefined,
+				timeToAutoLoss: undefined,
+				wasByChoice: undefined,
+			},
 			timer: startTimeMillis
 		};
 	}
@@ -209,7 +267,7 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
 	// This will link their socket to this game, modify their
 	// metadata.subscriptions, and send them the game info!
 	subscribeClientToGame(newGame, player2Socket, playerColors[1]!, { replyto });
-	subscribeClientToGame(newGame, player1Socket, playerColors[0]!);
+	if (player1Socket !== undefined) subscribeClientToGame(newGame, player1Socket, playerColors[0]!);
 
 	return newGame;
 }
@@ -217,33 +275,33 @@ function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket, pla
 /**
  * Assigns which player is what color, depending on the `color` property of the invite.
  * @param color - The color property of the invite. "Random" / "White" / "Black"
- * @param player1 - An object with either the `member` or `browser` property.
- * @param player2 - An object with either the `member` or `browser` property.
- * @returns An object with 4 properties:
- * - `white`: An object with either the `member` or `browser` property.
- * - `black`: An object with either the `member` or `browser` property.
- * - `player1Color`: The color of player1, the invite owner.
- * - `player2Color`: The color of player2, the invite accepter.
+ * @param playerlist - A list of data relevent to the player.
+ * @returns An object with 2 properties:
+ * - `colorData`: An object mapping player color to player info
+ * - `playerColors`: the colors of each player. 1:1 with `playerlist`
  */
-function assignWhiteBlackPlayersFromInvite<PT>(color: Player, player1: PT, player2: PT) { // { id, owner, variant, clock, color, rated, publicity }
+function assignWhiteBlackPlayersFromInvite<PT>(color: Player, ...playerlist: Array<PT>): {
+	colorData: PlayerGroup<PT>,
+	playerColors: Player[]
+} { // { id, owner, variant, clock, color, rated, publicity }
 	const colorData: PlayerGroup<PT> = {};
 	const playerColors: Player[] = [];
 	if (color === players.WHITE) {
 		playerColors.push(players.WHITE, players.BLACK);
-		colorData[players.WHITE] = player1;
-		colorData[players.BLACK] = player2;
+		colorData[players.WHITE] = playerlist[0]!;
+		colorData[players.BLACK] = playerlist[1]!;
 	} else if (color === players.BLACK) {
-		colorData[players.WHITE] = player2;
-		colorData[players.BLACK] = player1;
+		colorData[players.WHITE] = playerlist[1]!;
+		colorData[players.BLACK] = playerlist[0]!;
 		playerColors.push(players.BLACK, players.WHITE);
 	} else if (color === players.NEUTRAL) { // Random
 		if (Math.random() > 0.5) {
-			colorData[players.WHITE] = player1;
-			colorData[players.BLACK] = player2;
+			colorData[players.WHITE] = playerlist[0]!;
+			colorData[players.BLACK] = playerlist[1]!;
 			playerColors.push(players.WHITE, players.BLACK);
 		} else {
-			colorData[players.WHITE] = player2;
-			colorData[players.BLACK] = player1;
+			colorData[players.WHITE] = playerlist[1]!;
+			colorData[players.BLACK] = playerlist[0]!;
 			playerColors.push(players.BLACK, players.WHITE);
 		}
 	} else throw Error(`Unsupported color ${color} when assigning players to game.`);
@@ -479,8 +537,8 @@ function sendRatingChangeToAllPlayers(game: Game, ratingdata: RatingData) {
  * Calculates the json object we send to the client's containing the
  * rating changes from the results of the rated game.
  */
-function getRatingChangeMessageContents(ratingdata: RatingData) {
-	const messageContents: PlayerGroup<Rat> = {};
+function getRatingChangeMessageContents(ratingdata: RatingData): PlayerGroup<PlayerRatingChangeInfo> {
+	const messageContents: PlayerGroup<PlayerRatingChangeInfo> = {};
 	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
 		messageContents[Number(playerStr) as Player] = {
 			newRating: {
@@ -493,8 +551,6 @@ function getRatingChangeMessageContents(ratingdata: RatingData) {
 
 	return messageContents;
 }
-
-import type { ParticipantState } from '../../../client/scripts/esm/game/misc/onlinegame/onlinegamerouter.js';
 
 function getParticipantState(game: Game, color: Player): ParticipantState {
 	const opponentColor = typeutil.invertPlayer(color);
@@ -547,11 +603,7 @@ function doesSocketBelongToGame_ReturnColor(game: Game, ws: CustomWebSocket): Pl
 function doesPlayerBelongToGame_ReturnColor(game: Game, player: MemberInfo): Player | undefined {
 	for (const [splayer, data] of Object.entries(game.players)) {
 		const playercolor = Number(splayer) as Player;
-		if (player.signedIn !== data.identifier.signedIn) continue;
-		// @ts-ignore
-		if (player.signedIn && data.identifier.user_id === player.user_id) return playercolor;
-		// @ts-ignore
-		if (!player.signedIn && data.identifier.browser_id === player.browser_id) return playercolor;
+		if (memberInfoEq(player, data.identifier)) return playercolor;
 	}
 	return undefined;
 }
@@ -671,7 +723,7 @@ function sendUpdatedClockToColor(game: Game, color: Player): void {
  * This also updates the clocks, as the players current time should not be the same as when their turn first started.
  * @param game - The game
  */
-function getGameClockValues(game: Game) {
+function getGameClockValues(game: Game): ClockValues {
 	updateClockValues(game);
 	const clockValues: ClockValues = {
 		clocks: {
@@ -708,15 +760,18 @@ function updateClockValues(game: Game) {
 }
 
 /**
- * Sends the most recent played move to the player who's turn it is now.
+ * Sends a move to the player provided
  * @param game - The game
  * @param color - The color of the player to send the latest move to
  */
-function sendMoveToColor(game: Game, color: Player) {
-	if (!(color in game.players)) return logEventsAndPrint(`Color to send move to must be white or black! ${color}`, 'errLog.txt');
+function sendMoveToColor(game: Game, color: Player, move: BaseMove): void {
+	if (!(color in game.players)) {
+		logEventsAndPrint(`Color to send move to must be white or black! ${color}`, 'errLog.txt');
+		return;
+	}
     
-	const message: any = {
-		move: getSimplifiedLastMove(game),
+	const message: OpponentsMoveMessage = {
+		move: simplyMove(move),
 		gameConclusion: game.gameConclusion,
 		moveNumber: game.moves.length,
 	};
@@ -725,18 +780,6 @@ function sendMoveToColor(game: Game, color: Player) {
 	if (!sendToSocket) return; // They are not connected, can't send message
 	sendSocketMessage(sendToSocket, "game", "move", message);
 	return;
-}
-
-/**
- * Returns the last, or most recent, move in the provided game's move list, or undefined if there isn't one.
- * @param game - The moves list, with the moves in most compact notation: `1,2>3,4N`
- * @returns The move, in most compact notation, or undefined if there isn't one.
- */
-function getSimplifiedLastMove(game: Game) {
-	const moves = game.moves;
-	if (moves.length === 0) return;
-	const move = moves[moves.length - 1]!;
-	return simplyMove(move);
 }
 
 /**
@@ -777,9 +820,9 @@ function isGameBorderlineResignable(game: Game) { return game.moves.length === 2
  */
 function getColorThatPlayedMoveIndex(game: Game, i: number): Player {
 	const turnOrder = game.gameRules.turnOrder;
-	if (i === -1) return turnOrder[turnOrder.length - 1];
+	if (i === -1) return turnOrder[turnOrder.length - 1]!;
 
-	return turnOrder[i % turnOrder.length];
+	return turnOrder[i % turnOrder.length]!;
 }
 
 /**
@@ -797,7 +840,12 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string) {
 
 export type {
 	Game,
-	PlayerData
+	PlayerData,
+	PlayerRatingChangeInfo,
+	OpponentsMoveMessage,
+	ParticipantState,
+	ServerGameMoveMessage,
+	DrawOfferInfo,
 };
 
 export default {

@@ -5,9 +5,10 @@ import type { Rating } from "../../../../../../server/database/leaderboardsManag
 import type { ClockValues } from "../../../chess/logic/clock.js";
 import type { MetaData } from "../../../chess/util/metadata.js";
 import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
+import type { Game } from "../../../chess/logic/gamefile.js";
+import type { ParticipantState, ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
-import type { Game } from "../../../chess/logic/gamefile.js";
 
 // @ts-ignore
 import guiplay from "../../gui/guiplay.js";
@@ -40,10 +41,6 @@ import guigameinfo from "../../gui/guigameinfo.js";
 
 // Type Definitions --------------------------------------------------------------------------------------
 
-
-type ServerGameMovesMessage = ServerGameMoveMessage[];
-type ServerGameMoveMessage = { compact: string, clockStamp?: number };
-
 /**
  * Static information about an online game that is unchanging.
  * Only need this once, when we originally load the game,
@@ -75,59 +72,12 @@ interface JoinGameMessage extends GameUpdateMessage {
 interface GameUpdateMessage {
 	gameConclusion?: string,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: ServerGameMovesMessage,
+	moves: ServerGameMoveMessage[],
 	participantState: ParticipantState
 	clockValues?: ClockValues,
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number,
 }
-
-type PlayerRatingChangeInfo = {
-	newRating: Rating,
-	change: number,
-}
-
-/** The message contents expected when we receive a server websocket 'move' message.  */
-interface OpponentsMoveMessage {
-	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
-	move: ServerGameMoveMessage,
-	gameConclusion?: string,
-	/** Our opponent's move number, 1-based. */
-	moveNumber: number,
-	/** If the game is timed, this will be the current clock values. */
-	clockValues?: ClockValues,
-}
-
-/** The state of the game unique to participants, while the game is ongoing, NOT for spectators, and not when the game is over. */
-type ParticipantState = {
-	drawOffer: DrawOfferInfo,
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo,
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number,
-}
-
-interface DisconnectInfo {
-	/**
-	 * How many milliseconds left until our opponent will be auto-resigned from disconnection,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoDisconnectResign: number,
-	/** Whether the opponent disconnected by choice, or if it was non-intentional (lost network). */
-	wasByChoice: boolean
-}
-
-/** Info storing draw offers of the game. */
-interface DrawOfferInfo {
-	/** True if our opponent has extended a draw offer we haven't yet confirmed/denied */
-	unconfirmed: boolean,
-	/** The move ply WE HAVE last offered a draw, if we have, otherwise undefined. */
-	lastOfferPly?: number,
-}
-
 
 // Routers --------------------------------------------------------------------------------------
 
@@ -264,7 +214,7 @@ function handleLoggedGameInfo(message: {
 	const ourRole: Player | undefined = ourUserId !== undefined ? (ourUserId === whiteId ? players.WHITE : ourUserId === blackId ? players.BLACK : undefined) : undefined;
 
 	// The clock values are already ingrained into the moves!
-	const moves: ServerGameMovesMessage = parsedGame.moves ? parsedGame.moves.map(m => {
+	const moves: ServerGameMoveMessage[] = parsedGame.moves ? parsedGame.moves.map(m => {
 		const move: { compact: string, clockStamp?: number } = { compact: m.compact };
 		if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
 		return move;
@@ -367,13 +317,6 @@ export default {
 };
 
 export type {
-	DisconnectInfo,
-	DrawOfferInfo,
 	GameUpdateMessage,
-	OpponentsMoveMessage,
-	ServerGameMovesMessage,
-	ServerGameMoveMessage,
 	ServerGameInfo,
-	ParticipantState,
-	PlayerRatingChangeInfo,
 };

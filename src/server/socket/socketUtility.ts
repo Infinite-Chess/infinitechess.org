@@ -8,7 +8,7 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type WebSocket from 'ws';
-import type { MemberInfo } from '../../types.js';
+import type { AuthMemberInfo } from '../../types.js';
 import type { Player } from '../../client/scripts/esm/chess/util/typeutil.js';
 
 /** The socket object that contains all properties a normal socket has,
@@ -40,7 +40,7 @@ interface CustomWebSocket extends WebSocket {
 		};
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent?: string;
-		memberInfo: MemberInfo
+		memberInfo: AuthMemberInfo
 		/** The account verification status of the user */
 		verified: boolean;
 		/** The id of their websocket. */

@@ -30,7 +30,7 @@ import ratingabuse from './ratingabuse.js';
 import type { Game, PlayerData } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Invite } from '../invitesmanager/inviteutility.js';
-import type { MemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../../types.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 //--------------------------------------------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ function getGameByID(id: number): Game | undefined { return activeGames[id]; }
  * @param player - The player object with one of 2 properties: `member` or `browser`, depending on if they are signed in.
  * @returns The game they are in, if they belong in one, otherwise undefined..
  */
-function getGameByPlayer(player: MemberInfo) {
+function getGameByPlayer(player: AuthMemberInfo) {
 	const gameID = getIDOfGamePlayerIsIn(player);
 	if (gameID === undefined) return; // Not in a game;
 	return getGameByID(gameID);

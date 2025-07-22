@@ -53,7 +53,13 @@ interface AllowInvites {
  * done when a new invite is attempted to be created.
  * `{ allowinvites: true, restartIn: false }`
  */
-let allowinvites = await readFile<AllowInvites>(allowinvitesPath, 'Unable to read allowinvites.json on startup.');
+let allowinvites: AllowInvites;
+try {
+	allowinvites = await readFile(allowinvitesPath);
+} catch (e) {
+	const errMsg = 'Unable to read allowinvites.json on startup.' + (e instanceof Error ? e.message : String(e));
+	throw new Error(errMsg);
+}
 /**
  * The minimum time required between new reads of allowinvites.json.
  * 
@@ -96,9 +102,9 @@ const updateAllowInvites = (function() {
     
 		// If this is not called with 'await', it returns a promise.
 		try {
-			allowinvites = await readFile(allowinvitesPath, `Error locking & reading allowinvites.json after receiving a created invite!`) as AllowInvites;
+			allowinvites = await readFile(allowinvitesPath);
 		} catch (e) {
-			const errMsg = e instanceof Error ? e.message : String(e);
+			const errMsg = `Error locking & reading allowinvites.json after receiving a created invite: ` + (e instanceof Error ? e.message : String(e));
 			logEventsAndPrint(errMsg, 'errLog.txt');
 			console.error(`There was an error reading allowinvites.json. Not updating it in memory.`);
 			return;
@@ -137,11 +143,18 @@ async function initServerRestart(newAllowInvitesValue: AllowInvites) { // { allo
 	delete newAllowInvitesValue.restartIn;
 
 	// Save the file
-	await writeFile(
-		allowinvitesPath,
-		newAllowInvitesValue,
+	try {
+		await writeFile(
+			allowinvitesPath,
+			newAllowInvitesValue
+		);
+	} catch (e) {
+		const errMsg = 
 		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
-	);
+		+ (e instanceof Error ? e.message : String(e));
+	
+		logEventsAndPrint(errMsg, 'errLog.txt');
+	}
 
 	// Alert all people on the invite screen that we will be restarting soon
 	// ...

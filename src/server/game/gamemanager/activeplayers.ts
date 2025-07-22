@@ -5,7 +5,7 @@
 import type { CustomWebSocket } from "../../socket/socketUtility.js";
 import type { Player } from "../../../client/scripts/esm/chess/util/typeutil.js";
 import type { Game } from "./gameutility.js";
-import type { MemberInfo } from "../../../types.js"; 
+import type { AuthMemberInfo } from "../../../types.js"; 
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ const browsersInActiveGames: Record<string, number> = {};
  * Players in this are not allowed to join a second game.
  * @param id - The id of the game they are in.
  */
-function addUserToActiveGames(user: MemberInfo, id: number) {
+function addUserToActiveGames(user: AuthMemberInfo, id: number) {
 	if (user.signedIn) membersInActiveGames[user.user_id] = id;
 	else browsersInActiveGames[user.browser_id] = id;
 }
@@ -44,7 +44,7 @@ function addUserToActiveGames(user: MemberInfo, id: number) {
  * @param user - An object containing either the `member` or `browser` property.
  * @param gameID - The id of the game they are in.
  */
-function removeUserFromActiveGame(user: MemberInfo, gameID: number) {
+function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number) {
 	// Only removes them from the game if they belong to a game of that ID.
 	// If they DON'T belong to that game, that means they speedily
 	// resigned and started a new game, so don't modify this!
@@ -88,7 +88,7 @@ function hasColorInGameSeenConclusion(game: Game, color: Player): boolean {
  * @param player - The player object containing all the memberinfo
  * @returns The game they are in, if they belong in one, otherwise undefined.
  */
-function getIDOfGamePlayerIsIn(player: MemberInfo): number | undefined {
+function getIDOfGamePlayerIsIn(player: AuthMemberInfo): number | undefined {
 	if (player.signedIn) return membersInActiveGames[player.user_id];
 	else return browsersInActiveGames[player.browser_id];
 }

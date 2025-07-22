@@ -29,14 +29,21 @@ const statsPath = path.resolve('database/stats.json');
 	console.log("Generated stats file");
 })();
 
-const stats = await readFile<{
+let stats: {
 	moveCount: Record<string, number>,
 	gamesPlayed: {
 		byDay: Record<string, number>,
 		byMonth: Record<string, Record<string, number>>,
 		allTime: Record<string, number>
 	}
-}>('database/stats.json', 'Unable to read stats.json on startup.');
+};
+try {
+	stats = await readFile('database/stats.json');
+} catch (e) {
+	const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
+	throw new Error(errMsg);
+}
+
 
 /**
  * 
@@ -103,10 +110,10 @@ async function saveStats() {
 		await writeFile(
 			path.join(__dirname, '..', '..', '..', 'database', 'stats.json'),
 			stats,
-			`Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.`
 		);
 	} catch (e) {
-		if (e instanceof Error) logEventsAndPrint(e.message, 'errLog.txt');	
+		const errMsg = `Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.` + (e instanceof Error ? e.message : String(e));
+		logEventsAndPrint(errMsg, 'errLog.txt');	
 	}
 
 }

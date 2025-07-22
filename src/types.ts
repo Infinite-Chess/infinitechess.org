@@ -15,7 +15,10 @@ type MemberInfo = {
 	signedIn: false
 })
 
+type AuthMemberInfo = MemberInfo & {browser_id: string}
+
 export type {
 	AuthenticatedRequest,
-	MemberInfo
+	MemberInfo,
+	AuthMemberInfo
 };

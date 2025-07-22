@@ -107,7 +107,7 @@ function submitMove(ws, game, messageContents) {
 
 	if (gameutility.isGameOver(game)) gameutility.sendGameUpdateToColor(game, color);
 	else gameutility.sendUpdatedClockToColor(game, color);
-	gameutility.sendMoveToColor(game, opponentColor); // Send their move to their opponent.
+	gameutility.sendMoveToColor(game, opponentColor, move); // Send their move to their opponent.
 }
 
 
