@@ -59,6 +59,17 @@ interface OpponentsMoveMessage {
 	clockValues?: ClockValues,
 }
 
+/** The message contents expected when we receive a server websocket 'gameupdate' message.  */
+interface GameUpdateMessage {
+	gameConclusion?: string,
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
+	moves: ServerGameMoveMessage[],
+	participantState: ParticipantState
+	clockValues?: ClockValues,
+	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
+	serverRestartingAt?: number,
+}
+
 type PlayerRatingChangeInfo = {
 	newRating: Rating,
 	change: number,
@@ -503,8 +514,8 @@ function sendGameUpdateToColor(game: Game, color: Player, { replyTo }: { replyTo
 	sendSocketMessage(playerdata.socket, "game", "gameupdate", messageContents, replyTo);
 }
 
-function getGameUpdateMessageContents(game: Game, color: Player) {
-	const messageContents: any = {
+function getGameUpdateMessageContents(game: Game, color: Player): GameUpdateMessage {
+	const messageContents: GameUpdateMessage = {
 		gameConclusion: game.gameConclusion,
 		moves: game.moves.map(m => simplyMove(m)),
 		participantState: getParticipantState(game, color),
@@ -846,6 +857,7 @@ export type {
 	ParticipantState,
 	ServerGameMoveMessage,
 	DrawOfferInfo,
+	GameUpdateMessage,
 };
 
 export default {

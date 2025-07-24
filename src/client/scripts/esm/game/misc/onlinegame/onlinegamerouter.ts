@@ -6,7 +6,7 @@ import type { ClockValues } from "../../../chess/logic/clock.js";
 import type { MetaData } from "../../../chess/util/metadata.js";
 import type { LongFormatOut } from "../../../chess/logic/icn/icnconverter.js";
 import type { Game } from "../../../chess/logic/gamefile.js";
-import type { ParticipantState, ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
+import type { GameUpdateMessage, ServerGameMoveMessage } from "../../../../../../server/game/gamemanager/gameutility.js";
 // @ts-ignore
 import type { WebsocketMessage } from "../websocket.js";
 
@@ -67,17 +67,6 @@ interface JoinGameMessage extends GameUpdateMessage {
 	metadata: MetaData,
 	youAreColor: Player,
 };
-
-/** The message contents expected when we receive a server websocket 'gameupdate' message.  */
-interface GameUpdateMessage {
-	gameConclusion?: string,
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: ServerGameMoveMessage[],
-	participantState: ParticipantState
-	clockValues?: ClockValues,
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number,
-}
 
 // Routers --------------------------------------------------------------------------------------
 
@@ -317,6 +306,5 @@ export default {
 };
 
 export type {
-	GameUpdateMessage,
 	ServerGameInfo,
 };
