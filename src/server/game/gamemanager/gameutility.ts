@@ -133,7 +133,7 @@ interface PlayerData {
 		 * The timeout id of the timer that will auto-resign the
 		 * player if they are disconnected for too long.
 		 */
-		timeoutID: ReturnType<typeof setTimeout>,
+		timeoutID: NodeJS.Timeout,
 		/**
 		 * The estimated timestamp that the player will
 		 * be auto-resigned from being disconnected too long.
@@ -192,11 +192,11 @@ interface Game {
 	timeAtTurnStart?: number;
 	/** The ID of the timeout which will auto-lose the player
      * whos turn it currently is when they run out of time. */
-	autoTimeLossTimeoutID?: ReturnType<typeof setTimeout>;
+	autoTimeLossTimeoutID?: NodeJS.Timeout;
 
 	/** The ID of the timeout which will auto-lose the player
      * whos turn it currently is if they go AFK too long. */
-	autoAFKResignTimeoutID?: ReturnType<typeof setTimeout>;
+	autoAFKResignTimeoutID?: NodeJS.Timeout;
 	/** The time the current player will be auto-resigned by
      * AFK if they are currently AFK. */
 	autoAFKResignTime?: number;
@@ -206,7 +206,7 @@ interface Game {
 
 	/** The ID of the timer to delete the game after it has ended.
      * This can be used to cancel it in case a hacking was reported. */
-	deleteTimeoutID?: ReturnType<typeof setTimeout>;
+	deleteTimeoutID?: NodeJS.Timeout;
 
 	/**
 	 * Whether a custom position was pasted in by either player.
