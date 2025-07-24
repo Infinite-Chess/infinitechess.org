@@ -19,11 +19,12 @@
  * portion of the number, indicated by the divex property, and the remaining
  * most-significant bits are used for the integer portion!
  * 
+ * The value of a BigDecimal is always `bigint / (2^divex)`.
+ * 
  * If we wanted to store 2.75, that would look like { bigint: 11n, divex: 2}.
  * In binary, 11n is 1011. But the right-most 2 bits are dedicated for the decimal
  * part, so we split it into 10, which is 2 in binary, and 11, which is a binary
- * fraction for 0.75. Added together we get 2.75. Or in other words, if we have
- * our bigint and divex properties, than our true number equals bigint / 2^divex.
+ * fraction for 0.75. Added together we get 2.75.
  * 
  * This allows us to work with arbitrary-sized numbers with arbitrary levels of decimal precision!
  */
@@ -51,6 +52,7 @@ interface BigDecimal {
 	 * The inverse (or negative) exponent. Directly represents how many bits of the
 	 * bigint are utilized to store the decimal portion of the Big Decimal,
 	 * or tells you what position the decimal point is at from the right.
+	 * A negative divex represents a positive exponent (a large number).
 	 */
     divex: number,
 }
@@ -486,22 +488,28 @@ function subtract(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  */
 function multiply_fixed(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	// The true divex of the raw product is (bd1.divex + bd2.divex).
-	// We must shift the raw product to scale it down to the targetDivex (first factor).
+	// We must shift the raw product to scale it to the targetDivex (bd1.divex).
+	// The total shift is therefore equal to bd2.divex.
 	const shiftAmount = BigInt(bd2.divex);
 
 	// First, get the raw product of the internal bigints.
 	const rawProduct = bd1.bigint * bd2.bigint;
 	let product: bigint;
 
-	// Now, apply rounding only if precision is being reduced.
 	if (shiftAmount > ZERO) {
-		// We are reducing precision, so we must round.
-		// Add "0.5" at the correct scale before truncating to
-		// implement "round half towards positive infinity".
+		// Case 1: shiftAmount is positive.
+		// We are decreasing precision (e.g., multiplying by 0.5), so we must right-shift and round.
 		const half = ONE << (shiftAmount - ONE);
 		product = (rawProduct + half) >> shiftAmount;
+	} else if (shiftAmount < ZERO) {
+		// Case 2: shiftAmount is negative.
+		// We are increasing precision (e.g., multiplying by a large number), so we must left-shift.
+		// The shift amount must be positive, so we use -shiftAmount.
+		// No rounding is needed as we are not losing bits.
+		product = rawProduct << -shiftAmount;
 	} else {
-		// No precision is being lost, so no rounding is necessary.
+		// Case 3: shiftAmount is zero.
+		// No scaling is needed.
 		product = rawProduct;
 	}
 
@@ -526,7 +534,7 @@ function multiply_floating(bd1: BigDecimal, bd2: BigDecimal, mantissaBits?: numb
     // 2. The new scale is the sum of the original scales.
     const newDivex = bd1.divex + bd2.divex;
     
-    // 3. Immediately hand off to normalize to enforce the hybrid (floating) model.
+    // 3. Immediately hand off to normalize to enforce the floating-point model.
     return normalize({ bigint: newBigInt, divex: newDivex }, mantissaBits);
 }
 
@@ -675,7 +683,7 @@ function clone(bd: BigDecimal): BigDecimal {
  * @param divex The target divex.
  */
 function setExponent(bd: BigDecimal, divex: number): void {
-	if (divex < 0 || divex > MAX_DIVEX) throw new Error(`Divex must be between 0 and ${MAX_DIVEX}. Received: ${divex}`);
+	if (divex < -MAX_DIVEX || divex > MAX_DIVEX) throw new Error(`Divex must be between -${MAX_DIVEX} and ${MAX_DIVEX}. Received: ${divex}`);
 
 	const difference = bd.divex - divex;
 
@@ -757,12 +765,12 @@ function max(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us about 16 digits of precision, similar to JavaScript's Number type.
 
 /**
- * Normalizes a BigDecimal to enforce the hybrid (floating) precision model. It preserves
- * the full integer part of numbers with an absolute value of 1 or greater by rounding
- * off the fraction. For smaller numbers, it trims the mantissa to `precisionBits`
- * to standardize fractional precision.
+ * Normalizes a BigDecimal to enforce a true floating-point precision model.
+ * For any number, it trims the mantissa to `precisionBits` to standardize precision,
+ * adjusting the `divex` accordingly. This allows `divex` to become negative to
+ * represent large numbers.
  * @param bd The BigDecimal to normalize.
- * @param [precisionBits=DEFAULT_MANTISSA_PRECISION_BITS] The target mantissa bits for fractions.
+ * @param [precisionBits=DEFAULT_MANTISSA_PRECISION_BITS] The target mantissa bits.
  * @returns A new, normalized BigDecimal.
  */
 function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
@@ -776,29 +784,12 @@ function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PREC
 
 	const shiftAmount = BigInt(currentBitLength - precisionBits);
 
-	// Calculate what the new divex *would* be.
-	let newDivex = bd.divex - Number(shiftAmount);
-
-	let finalBigInt: bigint;
-	let finalShift = shiftAmount;
-
-	// Check if the normalization would make the divex negative.
-	if (newDivex < 0) {
-		// If so, we are normalizing a number that is an integer.
-		// The final divex should be 0. We need to adjust our shift amount.
-		finalShift = BigInt(bd.divex);
-		newDivex = 0;
-	}
+	// Calculate the new divex. It can now be negative.
+	const newDivex = bd.divex - Number(shiftAmount);
 
 	// Round using the consistent "half towards positive infinity" method.
-	// We must check if there are bits to round with (finalShift > 0).
-	if (finalShift > ZERO) {
-		const half = ONE << (finalShift - ONE);
-		finalBigInt = (bd.bigint + half) >> finalShift;
-	} else {
-		// This case happens if the divex adjustment consumed the entire shift.
-		finalBigInt = bd.bigint;
-	}
+	const half = ONE << (shiftAmount - ONE);
+	const finalBigInt = (bd.bigint + half) >> shiftAmount;
 
 	return { bigint: finalBigInt, divex: newDivex };
 }
@@ -808,13 +799,17 @@ function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PREC
 
 
 /**
- * Converts a BigDecimal to a BigInt, always rounding to the nearest integer.
- * This uses "round half up" (towards positive infinity).
- * For example, 2.5 becomes 3, and -2.5 becomes -2.
+ * Converts a BigDecimal to a BigInt.
+ * If the BigDecimal represents a fractional number, it is rounded to the nearest integer
+ * using "round half up" (towards positive infinity). E.g., 2.5 becomes 3, and -2.5 becomes -2.
+ * If the BigDecimal represents a large integer (with a negative divex), it is scaled appropriately.
  * @param bd The BigDecimal to convert.
  * @returns The rounded BigInt value.
  */
 function toBigInt(bd: BigDecimal): bigint {
+	// Negative divex means it's a large integer. Scale up.
+	if (bd.divex < 0) return bd.bigint << BigInt(-bd.divex);
+
 	// If divex is 0, the number is already a correctly scaled integer.
 	if (bd.divex === 0) return bd.bigint;
 
@@ -833,17 +828,25 @@ function toBigInt(bd: BigDecimal): bigint {
 
 /**
  * Most efficient method to convert a BigDecimal to a number.
- * USE IF YOU ARE SURE the BigDecimal's mantissa (bigint property) will
- * not be intermediately become Infinity when cast to a number,
- * AND you are sure the divex is <= 1023! Otherwise, use {@link toExactNumber}.
+ * USE IF YOU ARE SURE the BigDecimal's mantissa (bigint property)
+ * will not overflow or underflow the standard javascript number
+ * type, AND you are sure the divex is <= 1023!! Otherwise, use {@link toExactNumber}.
  * @param bd - The BigDecimal to convert.
  * @returns The value as a standard javascript number.
  */
 function toNumber(bd: BigDecimal) {
-	if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
-	const mantissaAsNumber = Number(bd.bigint);
-	if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the mantissa is over Number.MAX_VALUE!");
-	return mantissaAsNumber / powersOfTwoList[bd.divex]!;
+	if (bd.divex >= 0) {
+		if (bd.divex > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the divex is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
+		const mantissaAsNumber = Number(bd.bigint);
+		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the mantissa is over Number.MAX_VALUE!");
+		return mantissaAsNumber / powersOfTwoList[bd.divex]!;
+	} else { // divex is negative
+		const exp = -bd.divex;
+		if (exp > MAX_DIVEX_BEFORE_INFINITY) throw new Error(`Cannot convert BigDecimal to number when the positive exponent is greater than ${MAX_DIVEX_BEFORE_INFINITY}!`);
+		const mantissaAsNumber = Number(bd.bigint);
+		if (!isFinite(mantissaAsNumber)) throw new Error("Cannot convert BigDecimal to number when the mantissa is over Number.MAX_VALUE!");
+		return mantissaAsNumber * powersOfTwoList[exp]!;
+	}
 }
 
 /**
@@ -857,6 +860,7 @@ function toExactNumber(bd: BigDecimal): number {
 	const divexBigInt = BigInt(bd.divex);
 
 	// 1. Separate the integer part without losing any precision yet.
+	// A negative divexBigInt correctly results in a left shift.
 	const integerPart = bd.bigint >> divexBigInt;
 
 	// 2. Isolate the fractional bits. This also works correctly for negative numbers.
@@ -909,6 +913,7 @@ function toExactNumber(bd: BigDecimal): number {
  */
 function toExactString(bd: BigDecimal): string {
 	if (bd.bigint === ZERO) return '0';
+	if (bd.divex < 0) return toBigInt(bd).toString(); // Negative divex: It's a large integer.
 	if (bd.divex === 0) return bd.bigint.toString();
 
 	const isNegative = bd.bigint < ZERO;
@@ -962,7 +967,7 @@ function toString(bd: BigDecimal): string {
 	// 2. Determine the effective number of decimal places to round to.
 	const decimalPlaces = getEffectiveDecimalPlaces(bd);
 
-	// If there's no fractional part to consider, just round to a BigInt and return.
+	// If there's no fractional part to consider (or it's a large integer), just round to a BigInt and return.
 	if (decimalPlaces <= 0) return toBigInt(bd).toString();
     
 	// 3. Round to the target decimal places.
@@ -1034,7 +1039,8 @@ function printInfo(bd: BigDecimal): void {
 
 /**
  * Estimates the number of effective decimal place precision of a BigDecimal.
- * This is a little less than one-third of the divex, or the decimal bit-count precision.
+ * This is based on the formula `floor(divex * log10(2))`. A negative result
+ * indicates the approximate number of trailing zeros in a large integer.
  * @param bd - The BigDecimal
  * @returns The number of estimated effective decimal places.
  */
