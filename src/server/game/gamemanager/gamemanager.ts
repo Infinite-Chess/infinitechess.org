@@ -146,7 +146,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
 		console.log("Waiting 5 seconds before starting disconnection timer.");
 		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
-		game.players[color]!.disconnect.startID = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect) as unknown as NodeJS.Timeout;
+		game.players[color]!.disconnect.startID = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect);
 	} else { // Closed tab manually. Immediately start auto-resign timer.
 		startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect);
 	}
