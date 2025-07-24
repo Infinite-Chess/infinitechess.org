@@ -59,6 +59,8 @@ interface BigDecimal {
 // Constants ========================================================
 
 
+const LOG10_OF_2: number = Math.log10(2); // ≈ 0.30103
+
 const ZERO: bigint = 0n;
 const ONE: bigint = 1n;
 const FIVE: bigint = 5n;
@@ -1037,14 +1039,7 @@ function printInfo(bd: BigDecimal): void {
  * @returns The number of estimated effective decimal places.
  */
 function getEffectiveDecimalPlaces(bd: BigDecimal): number {
-	if (bd.divex <= MAX_DIVEX_BEFORE_INFINITY) {
-		const powerOfTwo: number = powersOfTwoList[bd.divex]!;
-		const precision: number = Math.log10(powerOfTwo);
-		return Math.floor(precision);
-	} else {
-		const powerOfTwo: bigint = getBigintPowerOfTwo(bd.divex);
-		return bimath.log10(powerOfTwo);
-	}
+	return Math.floor(bd.divex * LOG10_OF_2);
 }
 
 

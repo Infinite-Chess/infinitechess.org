@@ -91,7 +91,7 @@ function calculateFromUnpaddedBox(box: BoundingBoxBD): Area {
  * @param box - The source bounding box
  * @returns The new bounding box
  */
-function applyPaddingToBox(box: BoundingBoxBD): BoundingBox { // { left, right, bottom, top }
+function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD { // { left, right, bottom, top }
 
 	const boxCopy: BoundingBoxBD = jsutil.deepCopyObject(box);
 
@@ -140,12 +140,11 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBox { // { left, right, 
  * @returns The area object
  */
 function calculateFromBox(box: BoundingBoxBD): Area { // { left, right, bottom, top }
+	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(box);
 
 	// The new boardPos is the middle point
-	const xHalfLength = (box.right - box.left) / 2;
-	const yHalfLength = (box.top - box.bottom) / 2;
-	const centerX = box.left + xHalfLength;
-	const centerY = box.bottom + yHalfLength;
+	const centerX: BigDecimal = box.left + xHalfLength;
+	const centerY: BigDecimal = box.bottom + yHalfLength;
 	const newBoardPos: Coords = [centerX, centerY];
 
 	// What is the scale required to match the sides?
@@ -163,6 +162,15 @@ function calculateFromBox(box: BoundingBoxBD): Area { // { left, right, bottom, 
 		scale: newScale,
 		boundingBox: maximizedBox
 	};
+}
+
+function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): { xHalfLength: BigDecimal, yHalfLength: BigDecimal } {
+	const xDiff = bigdecimal.subtract(boundingBox.right, boundingBox.left);
+	const yDiff = bigdecimal.subtract(boundingBox.top, boundingBox.bottom);
+	return {
+		xHalfLength: bigdecimal.divide_fixed(xDiff, TWO),
+		yHalfLength: bigdecimal.divide_fixed(yDiff, TWO)
+	}
 }
 
 /**
