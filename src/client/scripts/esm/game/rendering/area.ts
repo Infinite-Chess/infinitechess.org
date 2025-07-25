@@ -22,8 +22,8 @@ import bigdecimal, { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
 import type { Board } from '../../chess/logic/gamefile.js';
-import type { BoundingBox, BoundingBoxBD } from '../../util/math.js';
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { BoundingBoxBD } from '../../util/math.js';
+import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
 
 
 
@@ -33,9 +33,9 @@ import type { Coords } from '../../chess/util/coordutil.js';
  */
 export interface Area {
 	/** The coordinates of the area. */
-	coords: Coords;
+	coords: BDCoords;
 	/** The camera scale (zoom) of the area. */
-	scale: number;
+	scale: BigDecimal;
 	/** The bounding box that contains the area of interest. */
 	boundingBox: BoundingBoxBD;
 }
@@ -68,11 +68,10 @@ const iterationsToRecalcPadding: number = 10;
 function calculateFromCoordsList(coordsList: Coords[], existingBox?: BoundingBoxBD): Area {
 	if (coordsList.length === 0) throw Error("Cannot calculate area from an empty coords list.");
 
-	const box: BoundingBox = math.getBoxFromCoordsList(coordsList); // Unpadded
-	let boxBD: BoundingBoxBD = math.castBoundingBoxToBigDecimal(box);
-	if (existingBox) boxBD = math.mergeBoundingBoxBDs(boxBD, existingBox); // Unpadded
+	let box: BoundingBoxBD = math.getBoxFromCoordsList(coordsList); // Unpadded
+	if (existingBox) box = math.mergeBoundingBoxBDs(box, existingBox); // Unpadded
 
-	return calculateFromUnpaddedBox(boxBD);
+	return calculateFromUnpaddedBox(box);
 }
 
 /**
@@ -140,12 +139,9 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD { // { left, right
  * @returns The area object
  */
 function calculateFromBox(box: BoundingBoxBD): Area { // { left, right, bottom, top }
-	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(box);
-
 	// The new boardPos is the middle point
-	const centerX: BigDecimal = box.left + xHalfLength;
-	const centerY: BigDecimal = box.bottom + yHalfLength;
-	const newBoardPos: Coords = [centerX, centerY];
+	const newBoardPos = math.calcCenterOfBoundingBox(box);
+
 
 	// What is the scale required to match the sides?
 	const newScale = calcScaleToMatchSides(box);
@@ -153,7 +149,7 @@ function calculateFromBox(box: BoundingBoxBD): Area { // { left, right, bottom, 
 	// Now maximize the bounding box to fill entire screen when at position and scale, so that
 	// we don't have long thin slices of a bounding box that will fail the math.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
-	const maximizedBox = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
+	const maximizedBox = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, false);
 	math;
 	// PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
@@ -180,11 +176,7 @@ function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): { xHalfLength
  * @returns The scale (zoom) required
  */
 function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
-	const xDiff = bigdecimal.subtract(boundingBox.right, boundingBox.left);
-	const yDiff = bigdecimal.subtract(boundingBox.top, boundingBox.bottom);
-	const xHalfLength = bigdecimal.divide_fixed(xDiff, TWO);
-	const yHalfLength = bigdecimal.divide_fixed(yDiff, TWO);
-	// const [xHalfLength, yHalfLength] = getCenterOfBoundingBoxBD(boundingBox);
+	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(boundingBox);
 
 	const screenBoundingBox = camera.getScreenBoundingBox(false); // Get the screen bounding box without the navigation bars
 	const screenBoundingBoxBD: BoundingBoxBD = math.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
@@ -200,15 +192,6 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	newScale = bigdecimal.min(newScale, capScale);
 
 	return newScale;
-}
-
-function getCenterOfBoundingBoxBD(box: BoundingBoxBD): BDCoords {
-	const xDiff = bigdecimal.subtract(boundingBox.right, boundingBox.left);
-	const yDiff = bigdecimal.subtract(boundingBox.top, boundingBox.bottom);
-	return [
-		bigdecimal.divide_fixed(xDiff, TWO),
-		bigdecimal.divide_fixed(yDiff, TWO)
-	]
 }
 
 /**
@@ -234,7 +217,7 @@ function initTelFromCoordsList(coordsList: Coords[]): void {
 	initTelFromUnpaddedBox(box);
 }
 
-function initTelFromUnpaddedBox(box: BoundingBox): void {
+function initTelFromUnpaddedBox(box: BoundingBoxBD): void {
 	const thisArea = calculateFromUnpaddedBox(box);
 	initTelFromArea(thisArea);
 }
@@ -259,7 +242,8 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 
 	if (isAZoomOut) { // If our current screen isn't within the final area, create new area to teleport to first
 		if (!math.boxContainsSquare(thisAreaBox, startCoords)) {
-			firstArea = calculateFromCoordsList([startCoords], thisAreaBox);
+			math.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
+			firstArea = calculateFromUnpaddedBox(thisAreaBox);
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!math.boxContainsBox(thisAreaBox, currentBoardBoundingBox)) {
@@ -268,7 +252,8 @@ function initTelFromArea(thisArea: Area, ignoreHistory?: boolean): void {
 		// }
 	} else { // zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
 		if (!math.boxContainsSquare(currentBoardBoundingBox, endCoords)) {
-			firstArea = calculateFromCoordsList([endCoords], currentBoardBoundingBox);
+			math.expandBDBoxToContainSquare(thisAreaBox, endCoords); // Unpadded
+			firstArea = calculateFromUnpaddedBox(thisAreaBox);
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!math.boxContainsBox(currentBoardBoundingBox, thisAreaBox)) {

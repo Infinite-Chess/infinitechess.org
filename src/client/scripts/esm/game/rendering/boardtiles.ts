@@ -31,9 +31,10 @@ import texturecache from '../../chess/rendering/texturecache.js';
 // Import End
 
 import type { BufferModel } from './buffermodel.js';
-import type { BoundingBox } from '../../util/math.js';
+import type { BoundingBox, BoundingBoxBD } from '../../util/math.js';
 import type { Color } from '../../util/math.js';
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
+import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 "use strict";
 
@@ -53,19 +54,19 @@ const squareCenter = 0.5; // WITHOUT this, the center of tiles would be their bo
  * The *exact* bounding box of the board currently visible on the canvas.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  */
-let boundingBoxFloat: BoundingBox;
+let boundingBoxFloat: BoundingBoxBD;
 /**
  * The bounding box of the board currently visible on the canvas,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  */
-let boundingBox: BoundingBox;
+let boundingBox: BoundingBoxBD;
 /**
  * The bounding box of the board currently visible on the canvas when the CAMERA IS IN DEBUG MODE,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  */
-let boundingBox_debugMode: BoundingBox;
+let boundingBox_debugMode: BoundingBoxBD;
 
 const perspectiveMode_z = -0.01;
 
@@ -124,18 +125,18 @@ function gtileWidth_Pixels() {
 
 /**
  * Returns a copy of the *exact* board bounding box.
- * @returns {BoundingBox} The board bounding box
+ * @returns The board bounding box
  */
-function gboundingBoxFloat() {
+function gboundingBoxFloat(): BoundingBoxBD {
 	return jsutil.deepCopyObject(boundingBoxFloat);
 }
 
 /**
  * Returns a copy of the board bounding box, rounded away from the center
  * of the canvas to encapsulate the whole of any partially visible squares.
- * @returns {BoundingBox} The board bounding box
+ * @returns The board bounding box
  */
-function gboundingBox(debugMode = camera.getDebug()) {
+function gboundingBox(debugMode = camera.getDebug()): BoundingBoxBD {
 	return debugMode ? jsutil.deepCopyObject(boundingBox_debugMode) : jsutil.deepCopyObject(boundingBox);
 }
 
@@ -171,10 +172,10 @@ function recalcBoundingBox() {
 /**
  * Returns a new board bounding box, with its edges rounded away from the
  * center of the canvas to encapsulate the whole of any squares partially included.
- * @param {BoundingBox} src - The source board bounding box
- * @returns {BoundingBox} The rounded bounding box
+ * @param src - The source board bounding box
+ * @returns The rounded bounding box
  */
-function roundAwayBoundingBox(src: BoundingBox) {
+function roundAwayBoundingBox(src: BoundingBox): BoundingBoxBD {
 
 	const left = Math.floor(src.left + squareCenter);
 	const right = Math.ceil(src.right - 1 + squareCenter);
@@ -414,7 +415,7 @@ function renderZoomedBoard(zoom: number, opacity: number) {
  * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {BoundingBox} The bounding box
  */
-function getBoundingBoxOfBoard(position: Coords = boardpos.getBoardPos(), scale: number = boardpos.getBoardScale(), debugMode: boolean): BoundingBox {
+function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale(), debugMode: boolean): BoundingBoxBD {
 
 	const distToHorzEdgeDivScale = camera.getScreenBoundingBox(debugMode).right / scale;
 

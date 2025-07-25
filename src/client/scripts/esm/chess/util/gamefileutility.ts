@@ -12,7 +12,7 @@ import boardutil from './boardutil.js';
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-import math, { Vec2 } from '../../util/math.js';
+import math, { BoundingBoxBD, Vec2 } from '../../util/math.js';
 import bimath from '../../util/bigdecimal/bimath.js';
 import winconutil from './winconutil.js';
 // @ts-ignore
@@ -95,7 +95,7 @@ function doGameOverChecks(gamefile: FullGame) {
 /**
  * Gets the bounding box of the game's starting position
  */
-function getStartingAreaBox(boardsim: Board) {
+function getStartingAreaBox(boardsim: Board): BoundingBoxBD {
 	if (boardsim.startSnapshot?.box) return boardsim.startSnapshot.box;
 	const coordsList = boardutil.getCoordsOfAllPieces(boardsim.pieces);
 	if (coordsList.length === 0) coordsList.push([1n,1n], [8n,8n]); // use the [1,1]-[8,8] area as a fallback
