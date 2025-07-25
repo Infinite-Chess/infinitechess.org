@@ -27,7 +27,7 @@ let bannedJSON: {
 try {
 	bannedJSON = await readFile(bannedPath);
 } catch (e) {
-	const errMsg = 'Unable to read banned.json on startup.' + (e instanceof Error ? e.stack : String(e));
+	const errMsg = 'Unable to read banned.json on startup. ' + (e instanceof Error ? e.stack : String(e));
 	throw new Error(errMsg); 
 }
 function isEmailBanned(email: string) {

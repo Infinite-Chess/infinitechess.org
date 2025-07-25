@@ -15,7 +15,12 @@ type MemberInfo = {
 	signedIn: false
 })
 
-type AuthMemberInfo = MemberInfo & {browser_id: string}
+/**
+ * @type {MemberInfo}, but the browser_id is guaranteed to be defined.
+ * This means the user is fully authenticated, cause we only need one
+ * identifier to identify them.
+ */
+type AuthMemberInfo = MemberInfo & { browser_id: string }
 
 export type {
 	AuthenticatedRequest,

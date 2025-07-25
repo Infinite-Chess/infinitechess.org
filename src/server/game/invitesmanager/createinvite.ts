@@ -31,6 +31,8 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
+// @ts-ignore
+import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
 import type { Invite, UnsafeInvite} from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
@@ -111,30 +113,32 @@ function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageConte
 	let id: string;
 	do { id = uuid.generateID_Base36(IDLengthOfInvites); } while (existingInviteHasID(id));
 
-
 	const owner = ws.metadata.memberInfo;
+
 	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
 		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
 		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
+
+	const usernamecontainer: ServerUsernameContainer = {
+		type: owner.signedIn ? 'player' : 'guest',
+		username: owner.signedIn ? owner.username : "(Guest)",
+		rating
+	};
     
 	return {
 		id,
 		owner,
-		usernamecontainer: {
-			type: owner.signedIn ? 'player' : 'guest',
-			username: owner.signedIn ? owner.username : "(Guest)",
-			rating,
-		},
+		usernamecontainer,
 		variant: messageContents.variant,
 		clock: messageContents.clock,
 		rated: messageContents.rated,
 		color: messageContents.color,
 		tag: messageContents.tag,
 		publicity: messageContents.publicity,
-	} as UnsafeInvite;
+	};
 }
 
 /**

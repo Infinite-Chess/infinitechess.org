@@ -6,20 +6,18 @@
 // System imports
 import WebSocket from 'ws';
 
-// Custom imports
 // @ts-ignore
 import { executeSafely_async } from '../../utility/errorGuard.js';
-import gameutility from './gameutility.js';
-import socketUtility from '../../socket/socketUtility.js';
-import statlogger from '../statlogger.js';
-import gamelogger from './gamelogger.js';
-
 // @ts-ignore
 import { incrementActiveGameCount, decrementActiveGameCount, printActiveGameCount } from './gamecount.js';
 // @ts-ignore
 import { closeDrawOffer } from './drawoffers.js';
 // @ts-ignore
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import gameutility from './gameutility.js';
+import socketUtility from '../../socket/socketUtility.js';
+import statlogger from '../statlogger.js';
+import gamelogger from './gamelogger.js';
 import { cancelAutoAFKResignTimer, startDisconnectTimer, cancelDisconnectTimers, getDisconnectionForgivenessDuration } from './afkdisconnect.js';
 import { addUserToActiveGames, removeUserFromActiveGame, getIDOfGamePlayerIsIn, hasColorInGameSeenConclusion } from './activeplayers.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
@@ -32,6 +30,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { AuthMemberInfo } from '../../../types.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
+
 //--------------------------------------------------------------------------------------------------------
 
 /**

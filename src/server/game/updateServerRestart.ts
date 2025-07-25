@@ -43,15 +43,20 @@ const allowinvitesPath = path.resolve('database/allowinvites.json');
 })();
 
 interface AllowInvites {
+	/** Whether invites are currently allowed to be created. */
 	allowinvites: boolean,
-	restartIn?: number
+	/**
+	 * If when read, this is a number, and allowinvites is false,
+	 * then the server initiates a restart in that many minutes
+	 * then saves the file with this value as false.
+	 */
+	restartIn: number | false,
 }
 
 /**
  * The allowinvites.json file in the "database". This needs to periodically be re-read
  * in order to see our changes made to it. This is typcailly
  * done when a new invite is attempted to be created.
- * `{ allowinvites: true, restartIn: false }`
  */
 let allowinvites: AllowInvites;
 try {
@@ -139,8 +144,8 @@ async function initServerRestart(newAllowInvitesValue: AllowInvites) { // { allo
 
 	console.log(`Will be restarting the server in ${newAllowInvitesValue.restartIn} minutes!`);
 
-	// Set our restartIn variable to undefined, so we don't repeat this next time we load the file!
-	delete newAllowInvitesValue.restartIn;
+	// Set our restartIn variable to false, so we don't repeat this next time we load the file!
+	newAllowInvitesValue.restartIn = false;
 
 	// Save the file
 	try {
@@ -150,9 +155,8 @@ async function initServerRestart(newAllowInvitesValue: AllowInvites) { // { allo
 		);
 	} catch (e) {
 		const errMsg = 
-		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created.`
+		`Error locking & writing allowinvites.json after receiving a created invite! Didn't save. Retrying after atleast 5 seconds when the next invite created. `
 		+ (e instanceof Error ? e.message : String(e));
-	
 		logEventsAndPrint(errMsg, 'errLog.txt');
 	}
 

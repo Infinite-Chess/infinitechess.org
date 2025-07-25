@@ -257,8 +257,8 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws: CustomWebSoc
 		clearTimeout(timersMember[ws.metadata.memberInfo.user_id]);
 		delete timersMember[ws.metadata.memberInfo.user_id];
 	} else if (ws.metadata) {
-		clearTimeout(timersBrowser[ws.metadata.memberInfo.browser_id!]);
-		delete timersBrowser[ws.metadata.memberInfo.browser_id!];
+		clearTimeout(timersBrowser[ws.metadata.memberInfo.browser_id]);
+		delete timersBrowser[ws.metadata.memberInfo.browser_id];
 	}
 }
 
@@ -270,8 +270,8 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws: CustomWebSoc
  * If the invite belongs to a signed-in member, checks username; 
  * otherwise, it checks the browser ID.
  * If any public invite is deleted, it broadcasts the new invites list to all subscribers.
- * @param {boolean} signedIn - Flag to specify if the invite is for a signed-in member (true) or for a browser ID (false)
- * @param {string} identifier - The identifier of the member or browser (username for signed-in members, browser ID for non-signed-in users)
+ * @param signedIn - Flag to specify if the invite is for a signed-in member (true) or for a browser ID (false)
+ * @param identifier - The identifier of the member or browser (username for signed-in members, browser ID for non-signed-in users)
  */
 function deleteUserInvitesIfNotConnected(info: MemberInfo) {
 	// Don't delete invite if there is an active connection
