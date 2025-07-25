@@ -790,7 +790,6 @@ function sendMoveToColor(game: Game, color: Player, move: BaseMove): void {
 	const sendToSocket = game.players[color]!.socket;
 	if (!sendToSocket) return; // They are not connected, can't send message
 	sendSocketMessage(sendToSocket, "game", "move", message);
-	return;
 }
 
 /**

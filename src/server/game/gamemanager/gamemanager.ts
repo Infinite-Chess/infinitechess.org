@@ -62,7 +62,6 @@ const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
  */
 function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto: number) { // Player 1 is the invite owner.
 	const gameID = issueUniqueGameId();
-	// @ts-ignore
 	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
 	if (!player1Socket) {
 		// Player 1 (invite owner)'s socket closed before their invite was deleted.
