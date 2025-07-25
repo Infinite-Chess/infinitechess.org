@@ -89,7 +89,7 @@ function startDisconnectTimer(game: Game, color: Player, closureNotByChoice: boo
 	const playerdata = game.players[color]!;
 	const opponentColor = typeutil.invertPlayer(color);
 
-	playerdata.disconnect.timeoutID = setTimeout(onAutoResignFunc, timeBeforeAutoResign, game, opponentColor);
+	playerdata.disconnect.timeoutID = setTimeout(() => onAutoResignFunc(game, opponentColor), timeBeforeAutoResign);
 	playerdata.disconnect.timeToAutoLoss = timeToAutoLoss;
 	playerdata.disconnect.wasByChoice = !closureNotByChoice;
 

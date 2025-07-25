@@ -146,7 +146,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	if (unsubNotByChoice) { // Internet interruption. Give them 5 seconds before starting auto-resign timer.
 		console.log("Waiting 5 seconds before starting disconnection timer.");
 		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
-		game.players[color]!.disconnect.startID = setTimeout(startDisconnectTimer, forgivenessDurationMillis, game, color, unsubNotByChoice, onPlayerLostByDisconnect);
+		game.players[color]!.disconnect.startID = setTimeout(() => startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect), forgivenessDurationMillis);
 	} else { // Closed tab manually. Immediately start auto-resign timer.
 		startDisconnectTimer(game, color, unsubNotByChoice, onPlayerLostByDisconnect);
 	}
@@ -254,7 +254,7 @@ function pushGameClock(game: Game) {
 		clearTimeout(game.autoTimeLossTimeoutID);
 		// Set the next one
 		const timeUntilLoseOnTime = Math.max(game.timeRemainAtTurnStart!, 0);
-		game.autoTimeLossTimeoutID = setTimeout(onPlayerLostOnTime, timeUntilLoseOnTime, game);
+		game.autoTimeLossTimeoutID = setTimeout(() => onPlayerLostOnTime(game), timeUntilLoseOnTime);
 	}
 
 	return prevPlayerdata.timer;
@@ -331,7 +331,7 @@ function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {})
 	// Set a 5-second timer to delete it and change elos,
 	// to give the other client time to oppose the conclusion if they want.
 	gameutility.cancelDeleteGameTimer(game); // Cancel first, in case a hacking report just ocurred.
-	game.deleteTimeoutID = setTimeout(deleteGame, timeBeforeGameDeletionMillis, game);
+	game.deleteTimeoutID = setTimeout(() => deleteGame(game), timeBeforeGameDeletionMillis);
 }
 
 /**
