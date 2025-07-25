@@ -827,7 +827,7 @@ function isGameBorderlineResignable(game: Game) { return game.moves.length === 2
  * Returns error if index -1
  * @param game
  * @param i - The moveIndex
- * @returns {Player} - The color that played the moveIndex
+ * @returns - The color that played the moveIndex
  */
 function getColorThatPlayedMoveIndex(game: Game, i: number): Player {
 	const turnOrder = game.gameRules.turnOrder;

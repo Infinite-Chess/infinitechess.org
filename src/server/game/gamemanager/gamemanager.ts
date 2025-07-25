@@ -109,8 +109,8 @@ function addGameToActiveGames(game: Game) {
 
 /**
  * Checks if member with a given username is currently listed as being in some active game
- * @param {string} username - username of some member
- * @returns {boolean} true if member is currently in active game, otherwise false
+ * @param username - username of some member
+ * @returns true if member is currently in active game, otherwise false
  */
 function isMemberInSomeActiveGame(username: string): boolean {
 	for (const game of Object.values(activeGames)) {
@@ -127,7 +127,7 @@ function isMemberInSomeActiveGame(username: string): boolean {
  * Detaches their socket from the game, updates their metadata.subscriptions.
  * @param ws - Their websocket.
  * @param options - Additional options.
- * @param {boolean} [unsubNotByChoice] When true, we will give them a 5-second cushion to re-sub before we start an auto-resignation timer. Set to false if we call this due to them closing the tab.
+ * @param [unsubNotByChoice] When true, we will give them a 5-second cushion to re-sub before we start an auto-resignation timer. Set to false if we call this due to them closing the tab.
  */
 function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = true } = {}) {
 	const gameID = ws.metadata.subscriptions.game?.id;
@@ -302,9 +302,9 @@ function setGameConclusion(game: Game, conclusion: string | undefined) {
  * Fire whenever a game's `gameConclusion` property is set.
  * Stops the game clock, cancels all running timers, closes any draw
  * offer, sets a timer to delete the game and updates players' ELOs.
- * @param {Game} game - The game object representing the current game.
- * @param {Object} [options] - Optional parameters.
- * @param {boolean} [options.dontDecrementActiveGames=false] - If true, prevents decrementing the active game count.
+ * @param game - The game object representing the current game.
+ * @param [options] - Optional parameters.
+ * @param [options.dontDecrementActiveGames=false] - If true, prevents decrementing the active game count.
  */
 function onGameConclusion(game: Game, { dontDecrementActiveGames = false } = {}) {
 	if (!dontDecrementActiveGames) decrementActiveGameCount();

@@ -113,8 +113,8 @@ function cancelDisconnectTimers(game: Game) {
 /**
  * Cancels the player's timer to auto-resign them from disconnection if they were disconnected.
  * This is called when they reconnect/refresh.
- * @param {Game} game - The game
- * @param {string} color - The color to cancel the timer for
+ * @param game - The game
+ * @param color - The color to cancel the timer for
  */
 function cancelDisconnectTimer(game: Game, color: Player, { dontNotifyOpponent = false } = {}) {
 	// console.log(`Canceling disconnect timer for player ${color}!`)
