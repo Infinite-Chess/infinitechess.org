@@ -12,17 +12,18 @@
  */
 
 import lockfile from 'proper-lockfile';
-import fs from 'fs';
+import fs from 'fs/promises';
 
 // Locks the file while reading, then immediately unlocks and returns the data.
 // MUST BE CALLED WITH 'await' or this returns a promise!
-const readFile = async<D>(path: string, buffer: BufferEncoding = 'utf-8'): Promise<D> => {
+async function readFile<D>(path: string, buffer: BufferEncoding = 'utf-8'): Promise<D> {
 	let data: D | undefined;
 	await lockfile.lock(path)
-		.then((releaseFunc) => {
+		.then(async(releaseFunc) => {
 			// Do something while the file is locked
 			try {
-				data = JSON.parse(fs.readFileSync(path, buffer));
+				const fileContents = await fs.readFile(path, buffer);
+				data = JSON.parse(fileContents);
 			} finally {
 				// Don't CATCH the error, but always release the lock, even if we encounter an error!
 				releaseFunc(); // Unlocks file
@@ -33,12 +34,12 @@ const readFile = async<D>(path: string, buffer: BufferEncoding = 'utf-8'): Promi
 
 // Returns false when failed to lock/write file.
 // MUST BE CALLED WITH 'await' or this returns a promise!
-const writeFile = async(path: string, object: any): Promise<void> => {
+async function writeFile(path: string, object: any): Promise<void> {
 	await lockfile.lock(path)
-		.then((release) => {
+		.then(async(release) => {
 			// Do something while the file is locked
 			try {
-				fs.writeFileSync(path, JSON.stringify(object, null, 1));
+				await fs.writeFile(path, JSON.stringify(object, null, 1));
 			} finally {
 				// Don't CATCH the error, but always release the lock, even if we encounter an error!
 				release(); // Unlocks file
