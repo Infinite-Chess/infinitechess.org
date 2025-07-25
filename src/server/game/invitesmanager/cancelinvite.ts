@@ -29,8 +29,9 @@ function cancelInvite(ws: CustomWebSocket, messageContents: any, replyto: number
 	const id = messageContents; // id of invite to delete
 
 	const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index } | undefined
-	// @ts-ignore
-	if (!inviteAndIndex) return sendSocketMessage(ws, undefined, undefined, undefined, replyto); // Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
+	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
+	// The client is expecting a response from us, even if empty, so it knows to unlock the create invite button again!
+	if (!inviteAndIndex) return sendSocketMessage(ws, undefined, undefined, undefined, replyto);
     
 	const { invite, index } = inviteAndIndex;
 

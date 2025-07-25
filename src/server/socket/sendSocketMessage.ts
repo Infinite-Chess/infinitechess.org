@@ -27,9 +27,9 @@ import { getTranslation } from "../utility/translate.js";
  */
 interface WebsocketOutMessage {
 	/** The subscription to forward the message to (e.g., "general", "invites", "game"). */
-	sub: string;
+	sub?: string;
 	/** The action to perform with the message's data (e.g., "sub", "unsub", "joingame", "opponentmove"). */
-	action: string;
+	action?: string;
 	/** The contents of the message. */
 	value: any;
 	/** The ID of the message to echo, indicating the connection is still active.
@@ -63,7 +63,7 @@ const timeOfInactivityToRenewConnection = 10000;
  * @param [options] - Additional options for sending the message.
  * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendSocketMessage(ws: CustomWebSocket, sub: string, action: string, value?: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
+function sendSocketMessage(ws: CustomWebSocket, sub: string | undefined, action: string | undefined, value?: any, replyto?: number, { skipLatency }: { skipLatency?: boolean } = {}) { // socket, invites, createinvite, inviteinfo, messageIDReplyingTo
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(sendSocketMessage, simulatedWebsocketLatencyMillis, ws, sub, action, value, replyto, { skipLatency: true });
