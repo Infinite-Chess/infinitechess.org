@@ -102,7 +102,6 @@ function issueUniqueGameId() {
  * @param game - The game
  */
 function addGameToActiveGames(game: Game) {
-	if (!game) return console.error("Can't add an undefined game to the active games list.");
 	activeGames[game.id] = game;
 	incrementActiveGameCount();
 }
@@ -198,8 +197,8 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  * @param game - The game they belong in, if they belong in one.
  */
 function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Game | undefined) {
+	if (!game) return;
 	const user = ws.metadata.memberInfo;
-	if (!game) return console.error("Can't remove player from players in active games list when they don't belong in a game");
 	removeUserFromActiveGame(user, game.id);
     
 	// If both players have requested this (i.e. have seen the game conclusion),
@@ -406,8 +405,6 @@ function onPlayerLostByAbandonment(game: Game, colorWon: Player) {
  * @param game
  */
 async function deleteGame(game: Game) {
-	if (!game) return console.error(`Unable to delete an undefined game!`);
-
 	// If the pastedGame flag is present, skip logging to the database.
 	// We don't know the starting position.
 	if (game.positionPasted) console.log('Skipping logging custom game.');
