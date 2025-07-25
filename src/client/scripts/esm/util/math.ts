@@ -8,7 +8,7 @@
 import coordutil from "../chess/util/coordutil.js";
 import bigdecimal, { BigDecimal } from "./bigdecimal/bigdecimal.js";
 
-import type { Coords } from "../chess/util/coordutil.js";
+import type { BDCoords, Coords } from "../chess/util/coordutil.js";
 
 
 // Type Definitions ------------------------------------------------------------------
@@ -73,6 +73,13 @@ type Ray = {
 
 /** A color in a length-4 array: `[r,g,b,a]` */
 type Color = [number,number,number,number];
+
+
+// Constants ------------------------------------------------------------------------
+
+
+const TWO = bigdecimal.FromNumber(2.0);
+
 
 // Geometry -------------------------------------------------------------------------------------------
 
@@ -384,11 +391,11 @@ function boxContainsBox(outerBox: BoundingBox, innerBox: BoundingBox): boolean {
 /**
  * Returns true if the provided box contains the square coordinate.
  */
-function boxContainsSquare(box: BoundingBox, square: Coords): boolean {
-	if (square[0] < box.left) return false;
-	if (square[0] > box.right) return false;
-	if (square[1] < box.bottom) return false;
-	if (square[1] > box.top) return false;
+function boxContainsSquare(box: BoundingBoxBD, square: BDCoords): boolean {
+	if (bigdecimal.compare(square[0], box.left) < 0) return false;
+	if (bigdecimal.compare(square[0], box.right) > 0) return false;
+	if (bigdecimal.compare(square[1], box.bottom) < 0) return false;
+	if (bigdecimal.compare(square[1], box.top) > 0) return false;
 
 	return true;
 }
@@ -396,7 +403,7 @@ function boxContainsSquare(box: BoundingBox, square: Coords): boolean {
 /**
  * Calculates the minimum bounding box that contains all the provided coordinates.
  */
-function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
+function getBoxFromCoordsList(coordsList: Coords[]): BoundingBoxBD {
 	// Initialize the bounding box using the first coordinate
 	const firstPiece = coordsList.shift()!;
 	const box: BoundingBox = {
@@ -411,7 +418,7 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
 		expandBoxToContainSquare(box, coord);
 	}
 
-	return box;
+	return castBoundingBoxToBigDecimal(box);
 }
 
 function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
@@ -443,6 +450,13 @@ function expandBoxToContainSquare(box: BoundingBox, coord: Coords): void {
 	else if (coord[1] > box.top) box.top = coord[1];
 }
 
+function expandBDBoxToContainSquare(box: BoundingBoxBD, coord: BDCoords): void {
+	if (bigdecimal.compare(coord[0], box.left) < 0) box.left = coord[0];
+	else if (bigdecimal.compare(coord[0], box.right) > 0) box.right = coord[0];
+	if (bigdecimal.compare(coord[1], box.bottom) < 0) box.bottom = coord[1];
+	else if (bigdecimal.compare(coord[1], box.top) > 0) box.top = coord[1];
+}
+
 /**
  * Returns the mimimum bounding box that contains both of the provided boxes.
  */
@@ -458,11 +472,13 @@ function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): Bounding
 /**
  * Calculates the center of a bounding box.
  */
-function calcCenterOfBoundingBox(box: BoundingBox): Coords {
+function calcCenterOfBoundingBox(box: BoundingBoxBD): CoordsBD {
+	const xSum = bigdecimal.add(box.left, box.right);
+	const ySum = bigdecimal.add(box.bottom, box.top);
 	return [
-		(box.left + box.right) / 2,
-		(box.bottom + box.top) / 2
-	];
+		bigdecimal.divide_fixed(xSum, TWO),
+		bigdecimal.divide_fixed(ySum, TWO)
+	]
 }
 
 /**
@@ -867,6 +883,7 @@ export default {
 	castBoundingBoxToBigDecimal,
 	castDoubleBoundingBoxToBigDecimal,
 	expandBoxToContainSquare,
+	expandBDBoxToContainSquare,
 	mergeBoundingBoxBDs,
 	calcCenterOfBoundingBox,
 	closestPointOnLineSegment,
