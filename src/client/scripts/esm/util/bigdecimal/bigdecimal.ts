@@ -794,6 +794,78 @@ function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PREC
 	return { bigint: finalBigInt, divex: newDivex };
 }
 
+/**
+ * Calculates the floor of a BigDecimal (the largest integer less than or equal to it).
+ * e.g., floor(2.7) -> 2.0, floor(-2.7) -> -3.0
+ * @param bd The BigDecimal to process.
+ * @returns A new BigDecimal representing the floored value, at the same precision.
+ */
+function floor(bd: BigDecimal): BigDecimal {
+	// If divex is non-positive, the number is already an integer value.
+	if (bd.divex <= 0) return { bigint: bd.bigint, divex: bd.divex };
+
+	const divexBigInt = BigInt(bd.divex);
+	const scale = ONE << divexBigInt;
+
+	// The remainder when dividing by the scale factor.
+	// This tells us if there is a fractional part.
+	const remainder = bd.bigint % scale;
+
+	// If there's no remainder, it's already a whole number.
+	if (remainder === ZERO) return { bigint: bd.bigint, divex: bd.divex };
+
+	let flooredBigInt: bigint;
+	if (bd.bigint >= ZERO) {
+		// For positive numbers, floor is simple truncation.
+		// We subtract the remainder to get to the nearest multiple of the scale below.
+		flooredBigInt = bd.bigint - remainder;
+	} else {
+		// For negative numbers, floor means going more negative.
+		// e.g., floor of -2.5 is -3.
+		// We subtract the scale factor and then add back the negative remainder.
+		flooredBigInt = bd.bigint - remainder - scale;
+	}
+
+	return {
+		bigint: flooredBigInt,
+		divex: bd.divex,
+	};
+}
+
+/**
+ * Calculates the ceiling of a BigDecimal (the smallest integer greater than or equal to it).
+ * e.g., ceil(2.1) -> 3.0, ceil(-2.1) -> -2.0
+ * @param bd The BigDecimal to process.
+ * @returns A new BigDecimal representing the ceiled value, at the same precision.
+ */
+function ceil(bd: BigDecimal): BigDecimal {
+	// If divex is non-positive, the number is already an integer value.
+	if (bd.divex <= 0) return { bigint: bd.bigint, divex: bd.divex };
+
+	const divexBigInt = BigInt(bd.divex);
+	const scale = ONE << divexBigInt;
+	const remainder = bd.bigint % scale;
+
+	// If there's no remainder, it's already a whole number.
+	if (remainder === ZERO) return { bigint: bd.bigint, divex: bd.divex };
+	
+	let ceiledBigInt: bigint;
+	if (bd.bigint >= ZERO) {
+		// For positive numbers, ceil means going more positive.
+		// e.g., ceil of 2.1 is 3.
+		// We subtract the remainder and then add the scale factor.
+		ceiledBigInt = bd.bigint - remainder + scale;
+	} else {
+		// For negative numbers, ceil is simple truncation (towards zero).
+		ceiledBigInt = bd.bigint - remainder;
+	}
+
+	return {
+		bigint: ceiledBigInt,
+		divex: bd.divex,
+	};
+}
+
 
 // Conversions & Utility ====================================================================
 
@@ -1113,6 +1185,8 @@ export default {
 	compare,
 	min,
 	max,
+	floor,
+	ceil,
 	// Conversions and Utility
 	toBigInt,
 	// toExactNumber,
