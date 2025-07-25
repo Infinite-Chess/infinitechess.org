@@ -586,7 +586,7 @@ function getParticipantState(game: Game, color: Player): ParticipantState {
 	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
 		participantState.disconnect = {
 			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
-			wasByChoice: opponentData.disconnect.wasByChoice!
+			wasByChoice: opponentData.disconnect.wasByChoice
 		};
 	}
 
@@ -687,22 +687,8 @@ function getSimplifiedGameString(game: Game) {
 function isGameOver(game: Game) { return game.gameConclusion !== undefined; }
 
 /**
- * Returns true if the provided color has a disconnect
- * timer to auto-resign them from being gone for too long,
- * OR THE TIMER to start that timer!
- * @param game - The game they're in
- * @param color - The color they are in this game
- */
-function isDisconnectTimerActiveForColor(game: Game, color: Player) {
-	// If these are defined, then the timer is defined.
-	return game.players[color]!.disconnect.startID !== undefined || game.players[color]!.disconnect.timeToAutoLoss !== undefined;
-}
-
-/**
- * Returns true if the provided color has an actively running
- * auto-resign timer. This differs from {@link isDisconnectTimerActiveForColor}
- * because this returns true only if the timer has started and the opponent has
- * been notified, NOT if the 5s cushion timer to START the auto-resign timer has started.
+ * Returns true if the provided color has an actively running auto-resign timer.
+ * NOT whether the 5-second reconnection cushion window timer has started.
  * @param game - The game they're in
  * @param color - The color they are in this game
  */
@@ -873,7 +859,6 @@ export default {
 	printGame,
 	getSimplifiedGameString,
 	isGameOver,
-	isDisconnectTimerActiveForColor,
 	isAutoResignDisconnectTimerActiveForColor,
 	getGameClockValues,
 	sendUpdatedClockToColor,
