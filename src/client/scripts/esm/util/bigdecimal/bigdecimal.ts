@@ -737,6 +737,11 @@ function compare(bd1: BigDecimal, bd2: BigDecimal): -1 | 0 | 1 {
 	return 0;
 }
 
+/** Tests if two BigDecimals are equal in value. */
+function areEqual(bd1: BigDecimal, bd2: BigDecimal): boolean {
+	return compare(bd1, bd2) === 0;
+}
+
 /**
  * Returns the smaller of two BigDecimals.
  * @param bd1 The first BigDecimal.
@@ -1214,6 +1219,7 @@ export default {
 	clone,
 	setExponent,
 	compare,
+	areEqual,
 	min,
 	max,
 	floor,
