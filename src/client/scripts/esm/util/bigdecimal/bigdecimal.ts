@@ -757,45 +757,9 @@ function max(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	return compare(bd1, bd2) === -1 ? bd2 : bd1;
 }
 
-
-// Floating-Point Model Helpers ====================================================
-
-
-/** The target number of bits for the mantissa in floating-point operations. Higher is more precise but slower. */
-const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us about 16 digits of precision, similar to JavaScript's Number type.
-
-/**
- * Normalizes a BigDecimal to enforce a true floating-point precision model.
- * For any number, it trims the mantissa to `precisionBits` to standardize precision,
- * adjusting the `divex` accordingly. This allows `divex` to become negative to
- * represent large numbers.
- * @param bd The BigDecimal to normalize.
- * @param [precisionBits=DEFAULT_MANTISSA_PRECISION_BITS] The target mantissa bits.
- * @returns A new, normalized BigDecimal.
- */
-function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
-	// We work with the absolute value for bit length calculation.
-	const mantissa = bimath.abs(bd.bigint);
-    
-	// Use the fast, mathematical bitLength function.
-	const currentBitLength = bimath.bitLength_bisection(mantissa);
-
-	if (currentBitLength <= precisionBits) return { bigint: bd.bigint, divex: bd.divex };
-
-	const shiftAmount = BigInt(currentBitLength - precisionBits);
-
-	// Calculate the new divex. It can now be negative.
-	const newDivex = bd.divex - Number(shiftAmount);
-
-	// Round using the consistent "half towards positive infinity" method.
-	const half = ONE << (shiftAmount - ONE);
-	const finalBigInt = (bd.bigint + half) >> shiftAmount;
-
-	return { bigint: finalBigInt, divex: newDivex };
-}
-
 /**
  * Calculates the floor of a BigDecimal (the largest integer less than or equal to it).
+ * The resulting BigDecimal will have the same divex as the input.
  * e.g., floor(2.7) -> 2.0, floor(-2.7) -> -3.0
  * @param bd The BigDecimal to process.
  * @returns A new BigDecimal representing the floored value, at the same precision.
@@ -834,6 +798,7 @@ function floor(bd: BigDecimal): BigDecimal {
 
 /**
  * Calculates the ceiling of a BigDecimal (the smallest integer greater than or equal to it).
+ * The resulting BigDecimal will have the same divex as the input.
  * e.g., ceil(2.1) -> 3.0, ceil(-2.1) -> -2.0
  * @param bd The BigDecimal to process.
  * @returns A new BigDecimal representing the ceiled value, at the same precision.
@@ -864,6 +829,72 @@ function ceil(bd: BigDecimal): BigDecimal {
 		bigint: ceiledBigInt,
 		divex: bd.divex,
 	};
+}
+
+/**
+ * Calculates the base-10 logarithm of a BigDecimal's value, returning a standard `number`.
+ * SHOULD ONLY ever be called with a bigdecimal using floating point operations,
+ * as those have a fixed mantissa size!
+ * It operates by casting the `bigint` mantissa to a standard `Number`, therefore
+ * bounded by the precision of a 64-bit float.
+ * @param bd The BigDecimal.
+ * @returns The base-10 logarithm of the input's value as a standard `number`.
+ */
+function log10(bd: BigDecimal): number {
+	const mantissa = bd.bigint;
+	const exponent = bd.divex;
+
+	const mantissaAsNumber = Number(mantissa);
+
+	// VALIDATE the cast. If it results in Infinity, the mantissa was too large.
+	// This prevents silent precision loss.
+	if (!isFinite(mantissaAsNumber)) throw new Error("Cannot calculate log10 of bigdecimal: The 'bigint' mantissa is too large to be safely cast to a standard Number.");
+
+	// Let Math.log10 efficiently handle the number.
+	const log10OfMantissa = Math.log10(mantissaAsNumber);
+
+	// Calculate the contribution of the exponent.
+	const log10OfScale = exponent * LOG10_OF_2;
+
+	// Apply the logarithm quotient rule and return the final numeric value.
+	return log10OfMantissa - log10OfScale;
+}
+
+
+// Floating-Point Model Helpers ====================================================
+
+
+/** The target number of bits for the mantissa in floating-point operations. Higher is more precise but slower. */
+const DEFAULT_MANTISSA_PRECISION_BITS = DEFAULT_WORKING_PRECISION; // Gives us about 7, or 16 digits of precision, depending whether we have 32 bit or 64 bit precision (javascript doubles are 64 bit).
+
+/**
+ * Normalizes a BigDecimal to enforce a true floating-point precision model.
+ * For any number, it trims the mantissa to `precisionBits` to standardize precision,
+ * adjusting the `divex` accordingly. This allows `divex` to become negative to
+ * represent large numbers.
+ * @param bd The BigDecimal to normalize.
+ * @param [precisionBits=DEFAULT_MANTISSA_PRECISION_BITS] The target mantissa bits.
+ * @returns A new, normalized BigDecimal.
+ */
+function normalize(bd: BigDecimal, precisionBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+	// We work with the absolute value for bit length calculation.
+	const mantissa = bimath.abs(bd.bigint);
+    
+	// Use the fast, mathematical bitLength function.
+	const currentBitLength = bimath.bitLength_bisection(mantissa);
+
+	if (currentBitLength <= precisionBits) return { bigint: bd.bigint, divex: bd.divex };
+
+	const shiftAmount = BigInt(currentBitLength - precisionBits);
+
+	// Calculate the new divex. It can now be negative.
+	const newDivex = bd.divex - Number(shiftAmount);
+
+	// Round using the consistent "half towards positive infinity" method.
+	const half = ONE << (shiftAmount - ONE);
+	const finalBigInt = (bd.bigint + half) >> shiftAmount;
+
+	return { bigint: finalBigInt, divex: newDivex };
 }
 
 
@@ -1187,6 +1218,7 @@ export default {
 	max,
 	floor,
 	ceil,
+	log10,
 	// Conversions and Utility
 	toBigInt,
 	// toExactNumber,
