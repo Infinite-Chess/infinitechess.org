@@ -9,7 +9,7 @@
  */
 
 
-import type { DrawOfferInfo } from './onlinegamerouter.js';
+import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 
 import gameslot from '../../chess/gameslot.js';

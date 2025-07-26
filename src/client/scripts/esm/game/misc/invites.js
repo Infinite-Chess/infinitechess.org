@@ -304,7 +304,9 @@ function clearIfOnPlayPage() {
  * @returns {boolean} true if it is our
  */
 function isInviteOurs(invite) {
-	if (validatorama.areWeLoggedIn() && invite.usernamecontainer.type === 'player' && validatorama.getOurUsername() === invite.usernamecontainer.username) return true;
+	if (validatorama.areWeLoggedIn()) {
+		return invite.usernamecontainer.type === 'player' && validatorama.getOurUsername() === invite.usernamecontainer.username;
+	}
 
 	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
 

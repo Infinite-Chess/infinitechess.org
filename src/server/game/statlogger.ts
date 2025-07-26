@@ -2,14 +2,16 @@
 import path from 'path';
 import fs from 'fs';
 import { readFile, writeFile } from '../utility/lockFile.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import timeutil from '../../client/scripts/esm/util/timeutil.js';
 
+// @ts-ignore
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';
 
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** @typedef {import('./TypeDefinitions.js').Game} Game */
+import type { Game } from './gamemanager/gameutility.js';
 
 
 const statsPath = path.resolve('database/stats.json');
@@ -27,26 +29,28 @@ const statsPath = path.resolve('database/stats.json');
 	console.log("Generated stats file");
 })();
 
-const stats = await readFile('database/stats.json', 'Unable to read stats.json on startup.');
-// {
-//     gamesPlayed: {
-//         allTime: {
-//             all: 0
-//         }
-//     }
-//     moveCount: {
-//         all: 0,
-//         classical: 0,
-//         month: 0,
-//     }
-// }
+let stats: {
+	moveCount: Record<string, number>,
+	gamesPlayed: {
+		byDay: Record<string, number>,
+		byMonth: Record<string, Record<string, number>>,
+		allTime: Record<string, number>
+	}
+};
+try {
+	stats = await readFile('database/stats.json');
+} catch (e) {
+	const errMsg = 'Unable to read stats.json on startup.' + (e instanceof Error ? e.message : String(e));
+	throw new Error(errMsg);
+}
+
 
 /**
  * 
  * @param {Game} game - The game to log
  * @returns 
  */
-async function logGame(game) {
+async function logGame(game: Game) {
 	if (!game) return console.error("Cannot log a null game!");
 
 	// Only log the game if atleast 2 moves were played! (resignable)
@@ -66,25 +70,18 @@ async function logGame(game) {
 	// Now record the number of moves played
 
 	const plyCount = game.moves.length; 
-	if (stats.moveCount.all === undefined) stats.moveCount.all = 0;
-	stats.moveCount.all += plyCount;
+	if (stats.moveCount['all'] === undefined) stats.moveCount['all'] = 0;
+	stats.moveCount['all'] += plyCount;
 	if (stats.moveCount[variant] === undefined) stats.moveCount[variant] = 0;
 	stats.moveCount[variant] += plyCount;
 	if (stats.moveCount[month] === undefined) stats.moveCount[month] = 0;
 	stats.moveCount[month] += plyCount;
 
-
-
-
 	// Increment the games played today
 	if (stats.gamesPlayed.byDay[day] === undefined) stats.gamesPlayed.byDay[day] = 1;
 	else stats.gamesPlayed.byDay[day]++;
 
-
-
-
-	// Atleast 2 moves have been played. Log the game!
-
+	// @ts-ignore
 	incrementMonthsGamesPlayed(stats.gamesPlayed, 'allTime', variant);
 	incrementMonthsGamesPlayed(stats.gamesPlayed.byMonth, month, variant);
 
@@ -93,13 +90,13 @@ async function logGame(game) {
 	await saveStats(); // Saves stats in the database.
 }
 
-function incrementMonthsGamesPlayed(parent, month, variant) { // allTime / yyyy-mm=
+function incrementMonthsGamesPlayed(parent: Record<string, Record<string, number>>, month: string, variant: string) { // allTime / yyyy-mm=
 	// Does this month's property exist yet?
 	if (parent[month] === undefined) parent[month] = {};
 
 	// Increment this month's all-variants by 1
-	if (parent[month].all === undefined) parent[month].all = 1;
-	else parent[month].all++;
+	if (parent[month]['all'] === undefined) parent[month]['all'] = 1;
+	else parent[month]['all']++;
 
 	// Increment this month's this variant by 1
 	if (parent[month][variant] === undefined) parent[month][variant] = 1;
@@ -109,11 +106,16 @@ function incrementMonthsGamesPlayed(parent, month, variant) { // allTime / yyyy-
 // Sometimes this causes a file-already-locked error if multiple games are deleted at once.
 async function saveStats() {
 	// Async function
-	await writeFile(
-		path.join(__dirname, '..', '..', '..', 'database', 'stats.json'),
-		stats,
-		`Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.`
-	);
+	try {
+		await writeFile(
+			path.join(__dirname, '..', '..', '..', 'database', 'stats.json'),
+			stats,
+		);
+	} catch (e) {
+		const errMsg = `Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.` + (e instanceof Error ? e.message : String(e));
+		logEventsAndPrint(errMsg, 'errLog.txt');	
+	}
+
 }
 
 export default {

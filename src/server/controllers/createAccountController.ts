@@ -19,8 +19,6 @@ import bcrypt from 'bcrypt';
 // @ts-ignore
 import { getTranslationForReq } from '../utility/translate.js';
 // @ts-ignore
-import { isEmailBanned } from '../middleware/banned.js';
-// @ts-ignore
 import { sendEmailConfirmation } from './sendMail.js';
 // @ts-ignore
 import { handleLogin } from './loginController.js';
@@ -29,6 +27,7 @@ import { addUser, isEmailTaken, isUsernameTaken } from '../database/memberManage
 // @ts-ignore
 import emailValidator from 'node-email-verifier';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { isEmailBanned } from '../middleware/banned.js';
 
 // Variables -------------------------------------------------------------------------
 

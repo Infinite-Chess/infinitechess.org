@@ -11,7 +11,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-import type { ServerGameMoveMessage, ServerGameMovesMessage } from '../../game/misc/onlinegame/onlinegamerouter.js';
+import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
 
 
@@ -352,7 +352,7 @@ function createCheckState(gamefile: FullGame, move: Move ) {
  * @param gamefile - The gamefile
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
  */
-function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMovesMessage) {
+function makeAllMovesInGame(gamefile: FullGame, moves: ServerGameMoveMessage[]) {
 	if (gamefile.boardsim.moves.length > 0) throw Error("Cannot make all moves in game when there are already moves played.");
 	moves.forEach((shortmove, i) => {
 		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);

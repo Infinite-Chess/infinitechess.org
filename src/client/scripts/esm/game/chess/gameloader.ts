@@ -11,7 +11,8 @@
  */
 
 import type { MetaData } from "../../chess/util/metadata.js";
-import type { ParticipantState, ServerGameInfo, ServerGameMovesMessage } from "../misc/onlinegame/onlinegamerouter.js";
+import type { ParticipantState, ServerGameMoveMessage } from "../../../../../server/game/gamemanager/gameutility.js";
+import type { ServerGameInfo } from "../misc/onlinegame/onlinegamerouter.js";
 import type { Additional } from "./gameslot.js";
 import type { VariantOptions } from "../../chess/logic/initvariant.js";
 import type { EngineConfig } from "../misc/enginegame.js";
@@ -161,7 +162,7 @@ async function startOnlineGame(options: {
 	metadata: MetaData,
 	gameConclusion?: string,
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: ServerGameMovesMessage,
+	moves: ServerGameMoveMessage[],
 	clockValues?: ClockValues,
 	youAreColor?: Player,
 	participantState?: ParticipantState,
@@ -319,7 +320,7 @@ async function pasteGame(options: {
 	metadata: MetaData,
 	additional: {
 		/** If we're in the board editor, this must be empty. */
-		moves?: ServerGameMovesMessage,
+		moves?: ServerGameMoveMessage[],
 		variantOptions: VariantOptions,
 	},
 	presetAnnotes?: PresetAnnotes

@@ -1,4 +1,6 @@
 
+// src/server/socket/socketRouter.ts
+
 /**
  * This script receives routes incoming socket messages them where they need to go.
  * 
@@ -10,12 +12,9 @@ import { handleUnsubbing } from './socketManager.js';
 import socketUtility from './socketUtility.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-// @ts-ignore
-import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
-// @ts-ignore
-import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
-// @ts-ignore
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
+import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
+import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------
@@ -32,7 +31,7 @@ interface WebsocketInMessage {
 	/** The action to perform with the message's data (e.g., "sub", "unsub", "createinvite"). */
 	action: string;
 	/** The contents of the message. */
-	value: any;
+	value: any; // TODO: create a system for the safety of values
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;

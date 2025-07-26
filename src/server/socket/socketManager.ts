@@ -10,12 +10,10 @@
 import socketUtility from "./socketUtility.js";
 import { sendSocketMessage } from "./sendSocketMessage.js";
 import uuid from "../../client/scripts/esm/util/uuid.js";
-// @ts-ignore
-import { printIncomingAndClosingSockets } from "../config/config.js";
-// @ts-ignore
+import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
 import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
 // @ts-ignore
-import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
+import { printIncomingAndClosingSockets } from "../config/config.js";
 
 
 // Type Definitions ---------------------------------------------------------------------------
