@@ -81,6 +81,7 @@ function safelyCopyInvite(invite: Invite): SafeInvite {
 	return makeInviteSafe(inviteDeepCopy);
 }
 
+/** Compares two MemberInfo objects to see if they are the same person or not. */
 function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 	if (u1.signedIn) {  
 		if (!u2.signedIn) return false;  

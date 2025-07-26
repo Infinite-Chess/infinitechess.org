@@ -284,7 +284,7 @@ function stopGameClock(game: Game) {
 }
 
 /**
- * Sets the new conclusion for the game. May be *false*.
+ * Sets the new conclusion for the game.
  * If truthy, it will fire {@link onGameConclusion()}.
  * @param game - The game
  * @param conclusion - The new game conclusion
