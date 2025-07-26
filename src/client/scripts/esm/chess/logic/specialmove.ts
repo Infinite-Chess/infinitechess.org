@@ -33,7 +33,7 @@ type SpecialVicinity = RawTypeGroup<Coords[]>
 // it does NOT calculate if they're legal.
 // In the future, parameters can be added if variants have
 // different special moves for pieces.
-const defaultSpecialMoves = {
+const defaultSpecialMoves: RawTypeGroup<SpecialMoveFunction> = {
 	[rawTypes.KING]: kings,
 	[rawTypes.ROYALCENTAUR]: kings,
 	[rawTypes.PAWN]: pawns,
