@@ -203,7 +203,7 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 	try {
 		message.value = z.parse(schema, message.value);
 	} catch (e) {
-		if (!(z instanceof z.ZodError)) {
+		if (!(e instanceof z.ZodError)) {
 			console.warn("Failed zod parsing without proper error. VERY UNEXPECTED! Could be rejecting legimate requests...");
 			return;
 		}
