@@ -1,42 +1,44 @@
 
+// src/server/game/invitesmanager/acceptinvite.ts
+
 /**
  * This script handles invite acceptance,
  * creating a new game if successful.
  */
 
-// Middleware imports
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-
 // Custom imports
-import { isInviteOursByIdentifier } from './inviteutility.js';
+// @ts-ignore
+import { getTranslation } from '../../utility/translate.js';
+// @ts-ignore
+import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
+// @ts-ignore
+import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js'; 
+import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
-import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
-import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, deleteUsersExistingInvite, findSocketFromOwner, onPublicInvitesChange, IDLengthOfInvites } from './invitesmanager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { getTranslation } from '../../utility/translate.js'; 
 
-/**
- * Type Definitions
- * @typedef {import('./inviteutility.js').Invite} Invite
- */
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+interface AcceptInviteMessage {
+	id: string
+	isPrivate: boolean
+}
 
 /**
  * Attempts to accept an invite of given id.
- * @param {CustomWebSocket} ws - The socket performing this action
- * @param {*} messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
- * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
+ * @param ws - The socket performing this action
+ * @param messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
+ * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
+function acceptInvite(ws: CustomWebSocket, messageContents: any, replyto: number) { // { id, isPrivate }
 
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, "server.javascript.ws-already_in_game", { replyto });
 
 	if (!verifyMessageContents(messageContents)) return sendSocketMessage(ws, "general", "printerror", "Cannot cancel invite when incoming socket message body is in an invalid format!", replyto);
-	const { id, isPrivate } = messageContents;
+	const { id, isPrivate } = messageContents as AcceptInviteMessage;
 
 
 	// Does the invite still exist?
@@ -45,17 +47,17 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 	const { invite, index } = inviteAndIndex;
 
-	const { signedIn, identifier } = socketUtility.getSignedInAndIdentifierOfSocket(ws);
+	const user = ws.metadata.memberInfo;
 
 	// Make sure they are not accepting their own.
-	if (isInviteOursByIdentifier(signedIn, identifier, invite)) {
+	if (memberInfoEq(user, invite.owner)) {
 		sendSocketMessage(ws, "general", "printerror", "Cannot accept your own invite!", replyto);
 		console.error(`Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 		return;
 	}
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
-	if (invite.rated === 'rated' && !(signedIn && ws.metadata.verified)) {
+	if (invite.rated === 'rated' && !(user.signedIn && ws.metadata.verified)) {
 		return sendSocketMessage(ws, "general", "notify", getTranslation("server.javascript.ws-rated_invite_verification_needed", ws.metadata.cookies?.i18next), replyto);
 	}
 
@@ -65,7 +67,7 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 	// Delete the invite accepted.
 	if (deleteInviteByIndex(ws, invite, index, { dontBroadcast: true })) hadPublicInvite = true;
 	// Delete their existing invites
-	if (deleteUsersExistingInvite(signedIn, identifier, { broadCastNewInvites: false })) hadPublicInvite = true;
+	if (deleteUsersExistingInvite(user, { broadCastNewInvites: false })) hadPublicInvite = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
@@ -85,10 +87,10 @@ function acceptInvite(ws, messageContents, replyto) { // { id, isPrivate }
 
 /**
  * Tests if the provided message contents/body is valid for canceling an invite.
- * @param {*} messageContents - The body of the incoming websocket message. It should look like: `{ id, isPrivate }`
- * @returns {boolean} true if the message contents is valid for the cancellation of an invite
+ * @param messageContents - The body of the incoming websocket message. It should look like: `{ id, isPrivate }`
+ * @returns true if the message contents is valid for the cancellation of an invite
  */
-function verifyMessageContents(messageContents) {
+function verifyMessageContents(messageContents: any) {
 	// Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
 	// We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
 	if (typeof messageContents !== 'object' || messageContents === null) return false;
@@ -109,12 +111,9 @@ function verifyMessageContents(messageContents) {
  * Called when a player clicks to accept an invite that gets deleted right before.
  * This tells them the game was aborted, or that the code
  * was invalid, if they entered a private invite code.
- * @param {CustomWebSocket} ws 
- * @param {boolean} isPrivate 
- * @param {string} inviteID 
- * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
+ * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function informThemGameAborted(ws, isPrivate, inviteID, replyto) {
+function informThemGameAborted(ws: CustomWebSocket, isPrivate: boolean, inviteID: string, replyto: number) {
 	const errString = isPrivate ? "server.javascript.ws-invalid_code" : "server.javascript.ws-game_aborted";
 	if (isPrivate) console.log(`User entered incorrect invite code! Code: ${inviteID}   Socket: ${socketUtility.stringifySocketMetadata(ws)}`);
 	return sendNotify(ws, errString, { replyto });

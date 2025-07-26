@@ -4,15 +4,14 @@
  * */
 
 
-import type { ParticipantState, ServerGameInfo } from './onlinegamerouter.js';
+import type { ServerGameInfo } from './onlinegamerouter.js';
+import type { ParticipantState } from '../../../../../../server/game/gamemanager/gameutility.js';
 import type { Player, PlayerGroup } from '../../../chess/util/typeutil.js';
 import type { ClockValues } from '../../../chess/logic/clock.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 
 // @ts-ignore
 import websocket from '../../websocket.js';
-// @ts-ignore
-import guipause from '../../gui/guipause.js';
 import localstorage from '../../../util/localstorage.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 import gameslot from '../../chess/gameslot.js';

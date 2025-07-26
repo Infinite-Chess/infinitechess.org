@@ -11,7 +11,7 @@ import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
 /**
  * Type Definitions
- * @typedef {import('../TypeDefinitions.js').Game} Game
+ * @typedef {import('./gameutility.js').Game} Game
  */
 
 /** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
@@ -48,7 +48,9 @@ function onAFK(ws, game) {
 
 	if (!game.untimed && gameutility.isGameResignable(game)) return console.error("Client submitted they are afk in a timed, resignable game. There is no afk auto-resign timers in timed games anymore.");
     
-	if (gameutility.isDisconnectTimerActiveForColor(game, color)) return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!");
+	if (game.players[color].disconnect.startID !== undefined || game.players[color].disconnect.timeToAutoLoss !== undefined) {
+		return console.error("Player's disconnect timer should have been cancelled before starting their afk timer!");
+	}
 
 	const opponentColor = typeutil.invertPlayer(color);
 

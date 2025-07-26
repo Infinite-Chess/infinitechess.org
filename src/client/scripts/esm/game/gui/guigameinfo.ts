@@ -6,7 +6,7 @@
 
 import type { MetaData } from '../../chess/util/metadata.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
-import type { PlayerRatingChangeInfo } from '../misc/onlinegame/onlinegamerouter.js';
+import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 
 
