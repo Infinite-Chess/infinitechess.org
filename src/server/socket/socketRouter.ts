@@ -8,6 +8,9 @@
  * It also handles subbing to subscription lists.
  */
 
+// Package imports
+import * as z from 'zod';
+
 import { sendSocketMessage } from './sendSocketMessage.js';
 import socketUtility from './socketUtility.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
