@@ -11,7 +11,7 @@ import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { MemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../../types.js';
 
 /**
  * List of clients currently subscribed to invites list events, with their
@@ -73,7 +73,7 @@ function removeSocketFromInvitesSubs(ws: CustomWebSocket) {
  * Checks if a member or browser ID has at least one active connection.
  * @returns true if the member or browser ID has at least one active connection, false otherwise.
  */
-function doesUserHaveActiveConnection(info: MemberInfo) {
+function doesUserHaveActiveConnection(info: AuthMemberInfo) {
 	return Object.values(subscribedClients).some(ws => {
 		return memberInfoEq(ws.metadata.memberInfo, info);
 	});

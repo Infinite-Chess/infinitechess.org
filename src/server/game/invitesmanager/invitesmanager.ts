@@ -8,6 +8,7 @@
 
 // @ts-ignore
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs, doesUserHaveActiveConnection } from './invitessubscribers.js';
+// @ts-ignore
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { isInvitePrivate, safelyCopyInvite, isInvitePublic, memberInfoEq } from './inviteutility.js';
@@ -16,7 +17,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 import type { SafeInvite, Invite, } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { AuthMemberInfo, MemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../../types.js';
 
 //-------------------------------------------------------------------------------------------
 
@@ -272,7 +273,7 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws: CustomWebSoc
  * @param signedIn - Flag to specify if the invite is for a signed-in member (true) or for a browser ID (false)
  * @param identifier - The identifier of the member or browser (username for signed-in members, browser ID for non-signed-in users)
  */
-function deleteUserInvitesIfNotConnected(info: MemberInfo) {
+function deleteUserInvitesIfNotConnected(info: AuthMemberInfo) {
 	// Don't delete invite if there is an active connection
 	const hasActiveConnection = doesUserHaveActiveConnection(info);
 	if (hasActiveConnection) {

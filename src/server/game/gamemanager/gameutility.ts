@@ -32,14 +32,13 @@ import { players } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import { Leaderboards, VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/validleaderboard.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
-import { memberInfoEq } from '../invitesmanager/inviteutility.js';
 
 // Type Definitions...
 import type { BaseMove } from '../../../client/scripts/esm/chess/logic/movepiece.js';
-import type { Invite } from '../invitesmanager/inviteutility.js';
+import { memberInfoEq, type Invite } from '../invitesmanager/inviteutility.js';
 import type { GameRules } from '../../../client/scripts/esm/chess/variants/gamerules.js';
 import type { ClockValues } from '../../../client/scripts/esm/chess/logic/clock.js';
-import type { MemberInfo, AuthMemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../../types.js';
 import type { Player, PlayerGroup } from '../../../client/scripts/esm/chess/util/typeutil.js';
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
@@ -612,7 +611,7 @@ function doesSocketBelongToGame_ReturnColor(game: Game, ws: CustomWebSocket): Pl
  * @param player - The player object with one of 2 properties: `member` or `browser`, depending on if they are signed in.
  * @returns The color they are, if they belong, otherwise *false*.
  */
-function doesPlayerBelongToGame_ReturnColor(game: Game, player: MemberInfo): Player | undefined {
+function doesPlayerBelongToGame_ReturnColor(game: Game, player: AuthMemberInfo): Player | undefined {
 	for (const [splayer, data] of Object.entries(game.players)) {
 		const playercolor = Number(splayer) as Player;
 		if (memberInfoEq(player, data.identifier)) return playercolor;
@@ -658,7 +657,7 @@ function printGame(game: Game) {
 function getSimplifiedGameString(game: Game) {
 
 	// Only transfer interesting information.
-	const players: PlayerGroup<MemberInfo> = {};
+	const players: PlayerGroup<AuthMemberInfo> = {};
 	for (const [c, data] of Object.entries(game.players)) {
 		players[Number(c) as Player] = data.identifier;
 	}

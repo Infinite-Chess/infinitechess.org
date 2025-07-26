@@ -7,7 +7,6 @@
 
 // Custom imports
 
-// @ts-ignore
 import gameutility from './gameutility.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
