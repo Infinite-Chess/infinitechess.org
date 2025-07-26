@@ -99,13 +99,13 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD { // { left, right
 	const navHeight = topNavHeight + bottomNavHeight;
 	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
 
-	const squareCenterBD = bigdecimal.FromNumber(boardtiles.gsquareCenter());
-	const squareCenterInvertedBD = bigdecimal.subtract(ONE, squareCenterBD);
+	const squareCenter = boardtiles.gsquareCenter();
+	const squareCenterInvertedBD = bigdecimal.subtract(ONE, squareCenter);
 
 	// Round to the furthest away edge of the square.
-	boxCopy.left = bigdecimal.subtract(boxCopy.left, squareCenterBD);
+	boxCopy.left = bigdecimal.subtract(boxCopy.left, squareCenter);
 	boxCopy.right = bigdecimal.add(boxCopy.right, squareCenterInvertedBD);
-	boxCopy.bottom = bigdecimal.subtract(boxCopy.bottom, squareCenterBD);
+	boxCopy.bottom = bigdecimal.subtract(boxCopy.bottom, squareCenter);
 	boxCopy.top = bigdecimal.add(boxCopy.top, squareCenterInvertedBD);
 
 	/** Start with a copy with zero padding. */
