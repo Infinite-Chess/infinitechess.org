@@ -472,13 +472,13 @@ function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): Bounding
 /**
  * Calculates the center of a bounding box.
  */
-function calcCenterOfBoundingBox(box: BoundingBoxBD): CoordsBD {
+function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 	const xSum = bigdecimal.add(box.left, box.right);
 	const ySum = bigdecimal.add(box.bottom, box.top);
 	return [
 		bigdecimal.divide_fixed(xSum, TWO),
 		bigdecimal.divide_fixed(ySum, TWO)
-	]
+	];
 }
 
 /**

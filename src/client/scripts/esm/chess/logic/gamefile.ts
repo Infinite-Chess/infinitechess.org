@@ -1,6 +1,6 @@
 import type { ClockData, ClockValues } from "./clock.js";
 import type { CoordsKey } from "../util/coordutil.js";
-import type { BoundingBox, BoundingBoxBD } from "../../util/math.js";
+import type { BoundingBoxBD } from "../../util/math.js";
 import type { MetaData } from "../util/metadata.js";
 import type { GameRules } from "../variants/gamerules.js";
 import type { Player, RawType, RawTypeGroup } from "../util/typeutil.js";
