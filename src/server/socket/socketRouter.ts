@@ -14,7 +14,6 @@ import jsutil from '../../client/scripts/esm/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
 
-import * as z from 'zod';
 
 import type { CustomWebSocket } from './socketUtility.js';
 
