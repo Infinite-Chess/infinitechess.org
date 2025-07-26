@@ -1,4 +1,9 @@
 
+/**
+ * This script renders the board, and changes it's color.
+ * We also keep track of what tile the mouse is currently hovering over.
+ */
+
 // Import Start
 // @ts-ignore
 import webgl from './webgl.js';
@@ -28,44 +33,44 @@ import guipromotion from '../gui/guipromotion.js';
 import spritesheet from './spritesheet.js';
 import boardpos from './boardpos.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
 // Import End
 
 import type { BufferModel } from './buffermodel.js';
-import type { BoundingBox } from '../../util/math.js';
+import type { BoundingBox, BoundingBoxBD } from '../../util/math.js';
 import type { Color } from '../../util/math.js';
-import type { Coords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
+import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
-"use strict";
 
-/**
- * This script renders the board, and changes it's color.
- * We also keep track of what tile the mouse is currently hovering over.
- */
+const ONE = bigdecimal.FromNumber(1.0);
+const TWO = bigdecimal.FromNumber(2.0);
+
 
 /** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
 let tilesTexture_2: WebGLTexture; // Opaque, no mipmaps
 /** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
 let tilesTexture_256mips: WebGLTexture;
 
-const squareCenter = 0.5; // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
+const squareCenter: BigDecimal = bigdecimal.FromNumber(0.5); // WITHOUT this, the center of tiles would be their bottom-left corner.  Range: 0-1
 
 /**
  * The *exact* bounding box of the board currently visible on the canvas.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  */
-let boundingBoxFloat: BoundingBox;
+let boundingBoxFloat: BoundingBoxBD;
 /**
  * The bounding box of the board currently visible on the canvas,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  */
-let boundingBox: BoundingBox;
+let boundingBox: BoundingBoxBD;
 /**
  * The bounding box of the board currently visible on the canvas when the CAMERA IS IN DEBUG MODE,
  * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
  * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
  */
-let boundingBox_debugMode: BoundingBox;
+let boundingBox_debugMode: BoundingBoxBD;
 
 const perspectiveMode_z = -0.01;
 
@@ -117,46 +122,35 @@ function gsquareCenter() {
 function gtileWidth_Pixels() {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox();
-	const tileWidthPixels_Physical = (camera.canvas.height * 0.5 / screenBoundingBox.top) * boardpos.getBoardScale(); // Greater for retina displays
-	const tileWidthPixels_Virtual = tileWidthPixels_Physical / window.devicePixelRatio;
+	const factor1: BigDecimal = bigdecimal.FromNumber(camera.canvas.height * 0.5 / screenBoundingBox.top);
+	const tileWidthPixels_Physical = bigdecimal.multiply_floating(factor1, boardpos.getBoardScale()); // Greater for retina displays
+
+	const divisor = bigdecimal.FromNumber(window.devicePixelRatio);
+	const tileWidthPixels_Virtual = bigdecimal.divide_floating(tileWidthPixels_Physical, divisor);
+
 	return tileWidthPixels_Virtual;
 }
 
 /**
  * Returns a copy of the *exact* board bounding box.
- * @returns {BoundingBox} The board bounding box
+ * @returns The board bounding box
  */
-function gboundingBoxFloat() {
+function gboundingBoxFloat(): BoundingBoxBD {
 	return jsutil.deepCopyObject(boundingBoxFloat);
 }
 
 /**
  * Returns a copy of the board bounding box, rounded away from the center
  * of the canvas to encapsulate the whole of any partially visible squares.
- * @returns {BoundingBox} The board bounding box
+ * @returns The board bounding box
  */
-function gboundingBox(debugMode = camera.getDebug()) {
+function gboundingBox(debugMode = camera.getDebug()): BoundingBoxBD {
 	return debugMode ? jsutil.deepCopyObject(boundingBox_debugMode) : jsutil.deepCopyObject(boundingBox);
 }
 
 // Recalculate board velicity, scale, and other common variables.
 function recalcVariables() {
 	recalcBoundingBox();
-}
-
-function gtileCoordsOver(x: number, y: number) { // Takes xy in screen coords from center
-	const n = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-
-	const tileWidthPixels = gtileWidth_Pixels();
-
-	const boardPos = boardpos.getBoardPos();
-	const tileXFloat = n * x / tileWidthPixels + boardPos[0];
-	const tileYFloat = n * y / tileWidthPixels + boardPos[1];
-
-	const tile_Float: Coords = [tileXFloat, tileYFloat];
-	const tile_Int: Coords = [Math.floor(tileXFloat + squareCenter), Math.floor(tileYFloat + squareCenter)];
-
-	return { tile_Float, tile_Int };
 }
 
 function recalcBoundingBox() {
@@ -171,15 +165,14 @@ function recalcBoundingBox() {
 /**
  * Returns a new board bounding box, with its edges rounded away from the
  * center of the canvas to encapsulate the whole of any squares partially included.
- * @param {BoundingBox} src - The source board bounding box
- * @returns {BoundingBox} The rounded bounding box
+ * @param src - The source board bounding box
+ * @returns The rounded bounding box
  */
-function roundAwayBoundingBox(src: BoundingBox) {
-
-	const left = Math.floor(src.left + squareCenter);
-	const right = Math.ceil(src.right - 1 + squareCenter);
-	const bottom = Math.floor(src.bottom + squareCenter);
-	const top = Math.ceil(src.top - 1 + squareCenter);
+function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBoxBD {
+	const left = bigdecimal.floor(bigdecimal.add(src.left, squareCenter)); // floor(left + squareCenter)
+	const right = bigdecimal.ceil(bigdecimal.add(bigdecimal.subtract(src.right, ONE), squareCenter)); // ceil(right - 1 + squareCenter)
+	const bottom = bigdecimal.floor(bigdecimal.add(src.bottom, squareCenter)); // floor(bottom + squareCenter)
+	const top = bigdecimal.ceil(bigdecimal.add(bigdecimal.subtract(src.top, ONE), squareCenter)); // ceil(top - 1 + squareCenter)
     
 	return { left, right, bottom, top };
 }
@@ -193,22 +186,44 @@ function regenBoardModel(): BufferModel | undefined {
 	if (!boardTexture) return; // Can't create buffer model if texture not loaded.
 
 	const boardScale = boardpos.getBoardScale();
-	const TwoTimesScale = 2 * boardScale;
+	const TwoTimesScale = bigdecimal.multiply_floating(boardScale, TWO);
 
 	const inPerspective = perspective.getEnabled();
 	const distToRenderBoard = perspective.distToRenderBoard;
 
-	const startX = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).left;
-	const endX = inPerspective ? distToRenderBoard : camera.getScreenBoundingBox(false).right;
-	const startY = inPerspective ? -distToRenderBoard : camera.getScreenBoundingBox(false).bottom;
-	const endY = inPerspective ? distToRenderBoard : camera.getScreenBoundingBox(false).top;
+	const screenBoundingBox = camera.getScreenBoundingBox(false);
+	const startX = inPerspective ? -distToRenderBoard : screenBoundingBox.left;
+	const endX = inPerspective ? distToRenderBoard : screenBoundingBox.right;
+	const startY = inPerspective ? -distToRenderBoard : screenBoundingBox.bottom;
+	const endY = inPerspective ? distToRenderBoard : screenBoundingBox.top;
+
+	const startXBD = bigdecimal.FromNumber(startX);
+	const startYBD = bigdecimal.FromNumber(startY);
+
+	const xDiffBD = bigdecimal.FromNumber(endX - startX);
+	const yDiffBD = bigdecimal.FromNumber(endY - startY);
 
 	const boardPos = boardpos.getBoardPos();
-	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)
-	const texCoordStartX = (((boardPos[0] + squareCenter) + startX / boardScale) % 2) / 2;
-	const texCoordStartY = (((boardPos[1] + squareCenter) + startY / boardScale) % 2) / 2;
-	const texCoordEndX = texCoordStartX + (endX - startX) / TwoTimesScale;
-	const texCoordEndY = texCoordStartY + (endY - startY) / TwoTimesScale;
+
+	// This processes the big number board positon to a range betw 0-2  (our texture is 2 tiles wide)...
+
+	const boardPosAdjusted: BDCoords = [
+		bigdecimal.add(boardPos[0], squareCenter),
+		bigdecimal.add(boardPos[1], squareCenter)
+	]
+	const dividendX = bigdecimal.add(boardPosAdjusted[0], startXBD);
+	const dividendY = bigdecimal.add(boardPosAdjusted[1], startYBD);
+	let quotientX = bigdecimal.divide_floating(dividendX, boardScale);
+	let quotientY = bigdecimal.divide_floating(dividendY, boardScale);
+	const mod2X = bigdecimal.mod(quotientX, TWO);
+	const mod2Y = bigdecimal.mod(quotientY, TWO);
+	const texCoordStartX = bigdecimal.divide_fixed(mod2X, TWO);
+	const texCoordStartY = bigdecimal.divide_fixed(mod2Y, TWO);
+	
+	quotientX = bigdecimal.add(texCoordStartX, xDiffBD);
+	quotientY = bigdecimal.add(texCoordStartY, yDiffBD);
+	const texCoordEndX = bigdecimal.divide_fixed(quotientX, TwoTimesScale);
+	const texCoordEndY = bigdecimal.divide_fixed(quotientY, TwoTimesScale);
 
 	const z = perspective.getEnabled() ? perspectiveMode_z : 0;
     
@@ -414,7 +429,7 @@ function renderZoomedBoard(zoom: number, opacity: number) {
  * @param {boolean} [debugMode] Whether developer mode is enabled.
  * @returns {BoundingBox} The bounding box
  */
-function getBoundingBoxOfBoard(position: Coords = boardpos.getBoardPos(), scale: number = boardpos.getBoardScale(), debugMode: boolean): BoundingBox {
+function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale(), debugMode: boolean): BoundingBoxBD {
 
 	const distToHorzEdgeDivScale = camera.getScreenBoundingBox(debugMode).right / scale;
 
@@ -450,7 +465,6 @@ export default {
 	gsquareCenter,
 	gtileWidth_Pixels,
 	recalcVariables,
-	gtileCoordsOver,
 	roundAwayBoundingBox,
 	gboundingBox,
 	gboundingBoxFloat,
