@@ -210,7 +210,7 @@ function regenBoardModel(): BufferModel | undefined {
 	const boardPosAdjusted: BDCoords = [
 		bigdecimal.add(boardPos[0], squareCenter),
 		bigdecimal.add(boardPos[1], squareCenter)
-	]
+	];
 	const dividendX = bigdecimal.add(boardPosAdjusted[0], startXBD);
 	const dividendY = bigdecimal.add(boardPosAdjusted[1], startYBD);
 	let quotientX = bigdecimal.divide_floating(dividendX, boardScale);
