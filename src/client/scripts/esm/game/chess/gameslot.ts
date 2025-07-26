@@ -45,10 +45,11 @@ import drawsquares from "../rendering/highlights/annotations/drawsquares.js";
 import drawrays from "../rendering/highlights/annotations/drawrays.js";
 import gamefile from "../../chess/logic/gamefile.js";
 import { animateMove } from "./graphicalchanges.js";
+import winconutil from "../../chess/util/winconutil.js";
+import copygame from "./copygame.js";
+import pastegame from "./pastegame.js";
 // @ts-ignore
 import { gl } from "../rendering/webgl.js";
-// @ts-ignore
-import copypastegame from "./copypastegame.js";
 // @ts-ignore
 import transition from "../rendering/transition.js";
 // @ts-ignore
@@ -59,8 +60,6 @@ import area from "../rendering/area.js";
 import guipause from "../gui/guipause.js";
 // @ts-ignore
 import perspective from "../rendering/perspective.js";
-// @ts-ignore
-import winconutil from "../../chess/util/winconutil.js";
 
 // Type Definitions ----------------------------------------------------------
 
@@ -215,7 +214,7 @@ async function loadGraphical(loadOptions: LoadOptions) {
 
 	// Initialize the mesh empty
 	mesh = {
-		offset: [0, 0],
+		offset: [0n, 0n],
 		inverted: false,
 		types: {}
 	};
@@ -281,18 +280,18 @@ function startStartingTransition() {
 /** Called when a game is loaded, loads the event listeners for when we are in a game. */
 function initCopyPastGameListeners() {
 	document.addEventListener('copy', callbackCopy);
-	document.addEventListener('paste', copypastegame.callbackPaste);
+	document.addEventListener('paste', pastegame.callbackPaste);
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
 function removeCopyPasteGameListeners() {
 	document.removeEventListener('copy', callbackCopy);
-	document.removeEventListener('paste', copypastegame.callbackPaste);
+	document.removeEventListener('paste', pastegame.callbackPaste);
 }
 
 function callbackCopy(event: Event) {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
-	copypastegame.copyGame(false);
+	copygame.copyGame(false);
 }
 
 /**
@@ -352,5 +351,7 @@ export default {
 };
 
 export type {
+	LoadOptions,
+	PresetAnnotes,
 	Additional,
 };

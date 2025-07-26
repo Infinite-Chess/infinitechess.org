@@ -6,6 +6,7 @@
 
 
 import coordutil from "../chess/util/coordutil.js";
+import bigdecimal, { BigDecimal } from "./bigdecimal/bigdecimal.js";
 
 import type { Coords } from "../chess/util/coordutil.js";
 
@@ -13,8 +14,33 @@ import type { Coords } from "../chess/util/coordutil.js";
 // Type Definitions ------------------------------------------------------------------
 
 
-/** A rectangle object with properties for the coordinates of its sides. */
+/** A arbitrarily large rectangle object with properties for the coordinates of its sides. */
 interface BoundingBox {
+	/** The x-coordinate of the left side of the box. */
+	left: bigint,
+	/** The x-coordinate of the right side of the box. */
+	right: bigint,
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: bigint,
+	/** The y-coordinate of the top side of the box. */
+	top: bigint
+};
+
+/** A rectangle object with properties for the coordinates of its sides, but using BigDecimal
+ * instead of bigints for arbitrary deciaml precision. */
+interface BoundingBoxBD {
+	/** The x-coordinate of the left side of the box. */
+	left: BigDecimal,
+	/** The x-coordinate of the right side of the box. */
+	right: BigDecimal,
+	/** The y-coordinate of the bottom side of the box. */
+	bottom: BigDecimal,
+	/** The y-coordinate of the top side of the box. */
+	top: BigDecimal
+}
+
+/** A rectangle object with properties for the coordinates of its sides, but using numbers instead of bigints. */
+interface DoubleBoundingBox {
 	/** The x-coordinate of the left side of the box. */
 	left: number,
 	/** The x-coordinate of the right side of the box. */
@@ -26,14 +52,14 @@ interface BoundingBox {
 };
 
 /** A length-2 number array. Commonly used for storing directions. */
-type Vec2 = [number,number]
+type Vec2 = [bigint,bigint]
 
 /** 
  * A pair of x & y vectors, represented in a string, separated by a `,`.
  * 
  * This is often used as the key for a slide direction in an object.
  */
-type Vec2Key = `${number},${number}`
+type Vec2Key = `${bigint},${bigint}`
 
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
 type Vec3 = [number,number,number]
@@ -388,6 +414,24 @@ function getBoxFromCoordsList(coordsList: Coords[]): BoundingBox {
 	return box;
 }
 
+function castBoundingBoxToBigDecimal(box: BoundingBox): BoundingBoxBD {
+	return {
+		left: bigdecimal.FromBigInt(box.left),
+		right: bigdecimal.FromBigInt(box.right),
+		bottom: bigdecimal.FromBigInt(box.bottom),
+		top: bigdecimal.FromBigInt(box.top)
+	};
+}
+
+function castDoubleBoundingBoxToBigDecimal(box: DoubleBoundingBox): BoundingBoxBD {
+	return {
+		left: bigdecimal.FromNumber(box.left),
+		right: bigdecimal.FromNumber(box.right),
+		bottom: bigdecimal.FromNumber(box.bottom),
+		top: bigdecimal.FromNumber(box.top)
+	};
+}
+
 /**
  * Expands the bounding box to include the provided coordinates, if it doesn't already.
  * DESTRUCTIVE. Modifies the original box.
@@ -402,12 +446,12 @@ function expandBoxToContainSquare(box: BoundingBox, coord: Coords): void {
 /**
  * Returns the mimimum bounding box that contains both of the provided boxes.
  */
-function mergeBoundingBoxes(box1: BoundingBox, box2: BoundingBox): BoundingBox {
+function mergeBoundingBoxBDs(box1: BoundingBoxBD, box2: BoundingBoxBD): BoundingBoxBD {
 	return {
-		left: Math.min(box1.left, box2.left),
-		right: Math.max(box1.right, box2.right),
-		bottom: Math.min(box1.bottom, box2.bottom),
-		top: Math.max(box1.top, box2.top),
+		left: bigdecimal.min(box1.left, box2.left),
+		right: bigdecimal.max(box1.right, box2.right),
+		bottom: bigdecimal.min(box1.bottom, box2.bottom),
+		top: bigdecimal.max(box1.top, box2.top)
 	};
 }
 
@@ -662,39 +706,6 @@ function calculateVectorComponents(vector: Vec2, length: number): Coords {
 }
 
 
-// Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
-
-
-/**
- * Computes the greatest common divisor (GCD) of two numbers using the Euclidean algorithm.
- */
-function GCD(a: number, b: number): number {
-	while (b !== 0) {
-		[a, b] = [b, a % b];
-	}
-	return Math.abs(a); // Ensure it's always non-negative
-}
-
-/**
- * Calculates the least common multiple between all integers in an array.
- */
-function LCM(array: number[]): number {
-	// Copied from https://www.geeksforgeeks.org/lcm-of-given-array-elements/
-
-	if (array.length === 0) throw Error('Array of numbers must have atleast one number to calculate the LCM.');
-
-	// Initialize result
-	let answer: number = array[0]!;
-
-	// answer will contain the LCM of arr[0], ..arr[i] after the i'th iteration, 
-	for (let i = 1; i < array.length; i++) {
-		answer = ((array[i]! * answer) / GCD(array[i]!, answer)); 
-	}
-
-	return answer; 
-}
-
-
 // Distance Calculation ----------------------------------------------------------------------------
 
 
@@ -853,8 +864,10 @@ export default {
 	boxContainsBox,
 	boxContainsSquare,
 	getBoxFromCoordsList,
+	castBoundingBoxToBigDecimal,
+	castDoubleBoundingBoxToBigDecimal,
 	expandBoxToContainSquare,
-	mergeBoundingBoxes,
+	mergeBoundingBoxBDs,
 	calcCenterOfBoundingBox,
 	closestPointOnLineSegment,
 	findFarthestPointsALineSweepsABox,
@@ -865,8 +878,6 @@ export default {
 	getVec2FromKey,
 	negateVector,
 	calculateVectorComponents,
-	GCD,
-	LCM,
 	euclideanDistance,
 	manhattanDistance,
 	chebyshevDistance,
@@ -884,6 +895,8 @@ export default {
 
 export type {
 	BoundingBox,
+	BoundingBoxBD,
+	DoubleBoundingBox,
 	Vec2,
 	Vec2Key,
 	Vec3,

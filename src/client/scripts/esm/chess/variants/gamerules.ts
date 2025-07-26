@@ -16,7 +16,7 @@ interface GameRules {
      * Contains a list of all promotion ranks each color promotes at, if they can promote.
      * If neither side can promote, this should be left as undefined.
      */
-    promotionRanks?: PlayerGroup<number[]>;
+    promotionRanks?: PlayerGroup<bigint[]>;
     /**
      * An object containing arrays of raw types white and
 	 * black can promote to, if it's legal for them to promote.
@@ -30,7 +30,7 @@ interface GameRules {
      */
     moveRule?: number;
     /** The maximum number of steps any sliding piece can take. */
-    slideLimit?: number;
+    slideLimit?: bigint;
 }
 
 
