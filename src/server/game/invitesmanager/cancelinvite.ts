@@ -11,7 +11,6 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 // Custom imports
 import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
-
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 

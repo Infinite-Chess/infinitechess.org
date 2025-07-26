@@ -6,9 +6,9 @@
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-// @ts-ignore
 import gameutility from './gameutility.js';
-// @ts-ignore
+
+
 import type { Game } from './gameutility.js';
 
 

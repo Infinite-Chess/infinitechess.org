@@ -14,15 +14,14 @@ import { VariantLeaderboards } from '../../../client/scripts/esm/chess/variants/
 import { computeRatingDataChanges, DEFAULT_LEADERBOARD_ELO, DEFAULT_LEADERBOARD_RD, UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import icnconverter, { LongFormatIn } from '../../../client/scripts/esm/chess/logic/icn/icnconverter.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
+import gameutility from './gameutility.js';
+import db from '../../database/database.js'; 
 // @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
-import gameutility from './gameutility.js';
 // @ts-ignore
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';
 // @ts-ignore
 import clockutil from '../../../client/scripts/esm/chess/util/clockutil.js';
-
-import db from '../../database/database.js'; 
 
 
 import type { MetaData } from '../../../client/scripts/esm/chess/util/metadata.js';

@@ -8,7 +8,6 @@
 
 // @ts-ignore
 import { getInviteSubscribers, addSocketToInvitesSubs, removeSocketFromInvitesSubs, doesUserHaveActiveConnection } from './invitessubscribers.js';
-// @ts-ignore
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { isInvitePrivate, safelyCopyInvite, isInvitePublic, memberInfoEq } from './inviteutility.js';

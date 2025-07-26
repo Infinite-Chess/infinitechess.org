@@ -12,12 +12,9 @@ import { handleUnsubbing } from './socketManager.js';
 import socketUtility from './socketUtility.js';
 import jsutil from '../../client/scripts/esm/util/jsutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-// @ts-ignore
-import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
-// @ts-ignore
-import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
-// @ts-ignore
 import { subToInvitesList } from '../game/invitesmanager/invitesmanager.js';
+import { handleInviteRoute } from '../game/invitesmanager/invitesrouter.js';
+import { handleGameRoute } from '../game/gamemanager/gamerouter.js';
 
 
 // Type Definitions ---------------------------------------------------------------------------

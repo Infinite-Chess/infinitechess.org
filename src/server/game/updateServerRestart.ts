@@ -15,7 +15,6 @@ import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Custom imports
-// @ts-ignore
 import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
 // @ts-ignore
 import { writeFile_ensureDirectory } from '../utility/fileUtils.js';

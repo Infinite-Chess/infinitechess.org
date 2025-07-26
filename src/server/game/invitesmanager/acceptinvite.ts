@@ -14,7 +14,6 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getTranslation } from '../../utility/translate.js';
 // @ts-ignore
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
-// @ts-ignore
 import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js'; 
 import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';

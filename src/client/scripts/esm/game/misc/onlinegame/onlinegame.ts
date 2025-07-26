@@ -12,8 +12,6 @@ import type { Rating } from '../../../../../../server/database/leaderboardsManag
 
 // @ts-ignore
 import websocket from '../../websocket.js';
-// @ts-ignore
-import guipause from '../../gui/guipause.js';
 import localstorage from '../../../util/localstorage.js';
 import gamefileutility from '../../../chess/util/gamefileutility.js';
 import gameslot from '../../chess/gameslot.js';
