@@ -4,24 +4,21 @@
  */
 
 import gameutility from './gameutility.js';
-import { setGameConclusion } from './gamemanager.js';
+import { setGameConclusion, getGameBySocket } from './gamemanager.js';
 import typeutil from '../../../client/scripts/esm/chess/util/typeutil.js';
 
-/**
- * Type Definitions
- * @typedef {import('./gameutility.js').Game} Game
- */
-
-/** @typedef {import("../../socket/socketUtility.js").CustomWebSocket} CustomWebSocket */
+import type { Game } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 //--------------------------------------------------------------------------------------------------------
 
 /**
  * Called when a client tries to abort a game.
- * @param {CustomWebSocket} ws - The websocket
- * @param {Game | undefined} game - The game they belong in, if they belong in one.
+ * @param ws - The websocket
+ * @param game - The game they belong in, if they belong in one.
  */
-function abortGame(ws, game) {
+function abortGame(ws: CustomWebSocket): void {
+	const game = getGameBySocket(ws);
 	if (!game) return console.error("Can't abort a game when player isn't in one.");
 
 	// Is it legal?...
@@ -47,10 +44,11 @@ function abortGame(ws, game) {
 
 /**
  * Called when a client tries to resign a game.
- * @param {CustomWebSocket} ws - The websocket
- * @param {Game | undefined} game - The game they belong in, if they belong in one.
+ * @param ws - The websocket
+ * @param game - The game they belong in, if they belong in one.
  */
-function resignGame(ws, game) {
+function resignGame(ws: CustomWebSocket): void {
+	const game = getGameBySocket(ws);
 	if (!game) return console.error("Can't resign a game when player isn't in one.");
 
 	// Is it legal?...
@@ -66,8 +64,11 @@ function resignGame(ws, game) {
 	}
 
 	// Resign
-
 	const ourColor = ws.metadata.subscriptions.game?.color || gameutility.doesSocketBelongToGame_ReturnColor(game, ws);
+	if (ourColor === undefined) {
+		console.warn("Unexpected! Player tried to resign the game they are not in! Ignoring...");
+		return;
+	}
 	const opponentColor = typeutil.invertPlayer(ourColor);
 	const gameConclusion = `${opponentColor} resignation`;
 	setGameConclusion(game, gameConclusion);

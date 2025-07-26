@@ -7,14 +7,14 @@
  * And unsubbing a socket from subscriptions.
  */
 
+// @ts-ignore
+import { printIncomingAndClosingSockets } from "../config/config.js";
 import socketUtility from "./socketUtility.js";
 import { sendSocketMessage } from "./sendSocketMessage.js";
 import uuid from "../../client/scripts/esm/util/uuid.js";
-import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
 import { unsubFromInvitesList } from "../game/invitesmanager/invitesmanager.js";
-// @ts-ignore
-import { printIncomingAndClosingSockets } from "../config/config.js";
-
+import { unsubClientFromGameBySocket } from "../game/gamemanager/gamemanager.js";
+import * as z from 'zod';
 
 // Type Definitions ---------------------------------------------------------------------------
 
@@ -216,6 +216,12 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, closureNotByChoice);
 }
 
+const unsubschem = z.literal(['game', 'invites']);
+
+function unsubMessage(ws: CustomWebSocket, value: z.infer<typeof unsubschem>) {
+	return handleUnsubbing(ws, value);
+}
+
 // Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
 function handleUnsubbing(ws: CustomWebSocket, key: string, closureNotByChoice?: boolean) {
 	// What are they wanting to unsubscribe from updates from?
@@ -253,8 +259,11 @@ export {
 	doesSessionHaveMaxSocketCount,
 	generateUniqueIDForSocket,
 	unsubSocketFromAllSubs,
+	unsubMessage,
 	handleUnsubbing,
 	closeAllSocketsOfSession,
 	closeAllSocketsOfMember,
 	AddVerificationToAllSocketsOfMember,
+
+	unsubschem
 };

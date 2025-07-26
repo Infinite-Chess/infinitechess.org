@@ -59,7 +59,7 @@ const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
  * @param player2Socket  - Player 2 (the invite accepter)'s websocket. This will **always** be defined.
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  */
-function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto: number) { // Player 1 is the invite owner.
+function createGame(invite: Invite, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto?: number) { // Player 1 is the invite owner.
 	const gameID = issueUniqueGameId();
 	const game = gameutility.newGame(invite, gameID, player1Socket, player2Socket, replyto);
 	if (!player1Socket) {
@@ -194,7 +194,8 @@ function getGameBySocket(ws: CustomWebSocket): Game | undefined {
  * @param ws - Their websocket
  * @param game - The game they belong in, if they belong in one.
  */
-function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket, game: Game | undefined) {
+function onRequestRemovalFromPlayersInActiveGames(ws: CustomWebSocket) {
+	const game = getGameBySocket(ws);
 	if (!game) return;
 	const user = ws.metadata.memberInfo;
 	removeUserFromActiveGame(user, game.id);
