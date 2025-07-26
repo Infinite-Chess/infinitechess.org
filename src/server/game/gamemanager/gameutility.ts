@@ -105,6 +105,7 @@ type ParticipantState = {
 	millisUntilAutoAFKResign?: number,
 }
 
+/** Information about a single player in an online game. */
 interface PlayerData {
 	/**
 	 * The identifier of each color.
@@ -153,7 +154,7 @@ interface PlayerData {
 
 /** The Game type definition. THIS SHOULD NOT be called, it is purely for JSDoc dropdowns. */
 interface Game {
-	/** The game's unique ID */
+	/** The game's unique ID. This is also the id it will receive when placed into the database. */
 	id: number;
 	/** The time this game was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;

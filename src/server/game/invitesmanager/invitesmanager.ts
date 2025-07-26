@@ -15,9 +15,9 @@ import { isInvitePrivate, safelyCopyInvite, isInvitePublic, memberInfoEq } from 
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
-import type { UnsafeInvite, SafeInvite, } from './inviteutility.js';
+import type { SafeInvite, Invite, } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { MemberInfo } from '../../../types.js';
+import type { AuthMemberInfo, MemberInfo } from '../../../types.js';
 
 //-------------------------------------------------------------------------------------------
 
@@ -28,7 +28,7 @@ const printNewInviteCreationsAndDeletions = true;
 const IDLengthOfInvites = 5;
 
 /** The list of all active invites, including private ones. */
-const invites: UnsafeInvite[] = [];
+const invites: Invite[] = [];
 
 /**
  * Time to allow the client to reconnect after an UNEXPECTED (not purposeful)
@@ -132,7 +132,7 @@ function sendClientInvitesList(ws: CustomWebSocket, { invitesList = getPublicInv
  * @param invite - The invite to sdd
  * @param replyto - The incoming websocket message ID, to include in the reply, if applicable
  */
-function addInvite(ws: CustomWebSocket, invite: UnsafeInvite, replyto?: number) {
+function addInvite(ws: CustomWebSocket, invite: Invite, replyto?: number) {
 	invites.push(invite);
 
 	if (isInvitePublic(invite)) onPublicInvitesChange(ws, replyto);
@@ -154,7 +154,7 @@ function addInvite(ws: CustomWebSocket, invite: UnsafeInvite, replyto?: number) 
  * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
  * @returns true if there was a public invite change
  */
-function deleteInviteByIndex(ws: CustomWebSocket, invite: UnsafeInvite, index: number, { dontBroadcast = false, replyto = undefined }: { dontBroadcast?: boolean, replyto?: number } = {}) {
+function deleteInviteByIndex(ws: CustomWebSocket, invite: Invite, index: number, { dontBroadcast = false, replyto = undefined }: { dontBroadcast?: boolean, replyto?: number } = {}) {
 	if (index > invites.length - 1) return console.error(`Cannot delete invite of index ${index} when the length of our invites list is ${invites.length}!`);
 	invites.splice(index, 1); // Delete the invite
 
@@ -192,7 +192,7 @@ function existingInviteHasID(id: string) {
  * @param id - The invite ID
  * @returns An object: `{ invite, index }`, or undefined if the invite wasn't found.
  */
-function getInviteAndIndexByID(id: string): { invite: UnsafeInvite, index: number } | undefined {
+function getInviteAndIndexByID(id: string): { invite: Invite, index: number } | undefined {
 	for (let i = 0; i < invites.length; i++) {
 		if (id === invites[i]!.id) return { invite: invites[i]!, index: i };
 	}
@@ -206,7 +206,7 @@ function getInviteAndIndexByID(id: string): { invite: UnsafeInvite, index: numbe
  * Typically called when you need to inform a player their invite was accepted.
  * @returns The websocket, if found, otherwise undefined.
  */
-function findSocketFromOwner(owner: MemberInfo): CustomWebSocket | undefined { // { member/browser }
+function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined { // { member/browser }
 	// Iterate through all sockets, until you find one that matches the authentication of our invite owner
 	const subscribedClients = getInviteSubscribers(); // { id: ws }
 	for (const ws of Object.values(subscribedClients)) {
@@ -292,7 +292,7 @@ function deleteUserInvitesIfNotConnected(info: MemberInfo) {
  * @param options.broadCastNewInvites - Flag to specify whether to broadcast the new invites list after deleting (defaults to true). [true]
  * @returns Returns true if any public invite was deleted, otherwise false.
  */
-function deleteUsersExistingInvite(info: MemberInfo, { broadCastNewInvites = true } = {}) {
+function deleteUsersExistingInvite(info: AuthMemberInfo, { broadCastNewInvites = true } = {}) {
 	let deletedPublicInvite = false;
 	for (let i = invites.length - 1; i >= 0; i--) {
 		const invite = invites[i]!;

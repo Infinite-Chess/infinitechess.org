@@ -27,7 +27,7 @@ import { logEventsAndPrint } from './logEvents.js';
 const verifyJWT = (req, res, next) => {
 	const cookies = req.cookies;
 	if (!cookies) {
-		logEventsAndPrint("Cookie parser didn't set the req.cookies property!", 'errLog.txt');
+		logEventsAndPrint("Cookie parser didn't set the req.cookies property when verifying JWT!", 'errLog.txt');
 		return;
 	}
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };

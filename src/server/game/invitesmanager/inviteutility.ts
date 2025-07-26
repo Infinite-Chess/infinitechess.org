@@ -4,17 +4,30 @@
  * with single invites, not multiple
  */
 
+
 import jsutil from '../../../client/scripts/esm/util/jsutil.js';
 
 // @ts-ignore
 import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
-import type { MemberInfo } from '../../../types.js';
+import type { AuthMemberInfo } from '../../../types.js';
 import type { Game } from '../gamemanager/gameutility.js';
 import type { Player } from '../../../client/scripts/esm/chess/util/typeutil.js';
 
-//-------------------------------------------------------------------------------------------
 
-interface Invite {
+// Type Definitions -------------------------------------------------------------------------------------------
+
+
+/** A lobby game invite. */
+interface Invite extends SafeInvite {
+	/** Contains the identifier of the owner of the invite, whether a member or browser. */
+	owner: AuthMemberInfo
+}
+
+/**
+ * All properties of an invite that is safe to send to clients.
+ * Doesn't contain sensitive information such as browser-id cookies.
+ */
+interface SafeInvite {
 	id: string // A unique identifier, containing lowercase letters a-z and numbers 0-9.
 	usernamecontainer: ServerUsernameContainer // The type of the owner (guest/player), their username, and elo if applicable.
 	tag: string // Used to verify if an invite is your own.
@@ -23,16 +36,8 @@ interface Invite {
 	color: Player
 	rated: "casual" | "rated"
 	publicity: "public" | "private"
-	
 }
 
-interface UnsafeInvite extends Invite {
-	owner: MemberInfo // An object with either the `member` or `browser` property, which tells us who owns it.
-}
-
-interface SafeInvite extends Invite {
-	owner: undefined
-}
 
 //-------------------------------------------------------------------------------------------
 
@@ -52,13 +57,19 @@ function isInvitePublic(invite: Invite) {
 
 /**
  * Removes sensitive data such as their browser-id.
- * MODIFIES the invite! Make sure it's a copy!
- * @param =invite - A copy of the invite
+ * Returns a deep copy of the original invite.
  */
-function makeInviteSafe(invite: Invite) {
-	// @ts-ignore
-	delete invite.owner;
-	return invite as SafeInvite;
+function makeInviteSafe(invite: Invite): SafeInvite {
+	return {
+		id: invite.id,
+		usernamecontainer: jsutil.deepCopyObject(invite.usernamecontainer),
+		tag: invite.tag,
+		variant: invite.variant,
+		clock: invite.clock,
+		color: invite.color,
+		rated: invite.rated,
+		publicity: invite.publicity,
+	};
 }
 
 /**
@@ -70,7 +81,7 @@ function safelyCopyInvite(invite: Invite): SafeInvite {
 	return makeInviteSafe(inviteDeepCopy);
 }
 
-function memberInfoEq(u1: MemberInfo, u2: MemberInfo): boolean {
+function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 	if (u1.signedIn) {  
 		if (!u2.signedIn) return false;  
 		return u1.user_id === u2.user_id;  
@@ -82,7 +93,6 @@ function memberInfoEq(u1: MemberInfo, u2: MemberInfo): boolean {
 
 export type {
 	Invite,
-	UnsafeInvite,
 	SafeInvite,
 };
 

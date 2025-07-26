@@ -33,7 +33,7 @@ import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.
 
 // @ts-ignore
 import type { ServerUsernameContainer } from '../../../client/scripts/esm/game/misc/invites.js';
-import type { Invite, UnsafeInvite} from './inviteutility.js';
+import type { Invite } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 
@@ -86,7 +86,7 @@ async function createInvite(ws: CustomWebSocket, messageContents: any, replyto: 
  * @param replyto - The incoming websocket message ID, to include in the reply
  * @returns The Invite object, or void it the message contents were invalid.
  */
-function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageContents: any, replyto: number): UnsafeInvite | void {
+function getInviteFromWebsocketMessageContents(ws: CustomWebSocket, messageContents: any, replyto: number): Invite | void {
 
 	// Verify their invite contains the required properties...
 
