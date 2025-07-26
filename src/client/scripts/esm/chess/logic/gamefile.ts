@@ -1,6 +1,6 @@
 import type { ClockData, ClockValues } from "./clock.js";
 import type { CoordsKey } from "../util/coordutil.js";
-import type { BoundingBox } from "../../util/math.js";
+import type { BoundingBoxBD } from "../../util/math.js";
 import type { MetaData } from "../util/metadata.js";
 import type { GameRules } from "../variants/gamerules.js";
 import type { Player, RawType, RawTypeGroup } from "../util/typeutil.js";
@@ -24,7 +24,6 @@ import clock from "./clock.js";
 import movepiece from "./movepiece.js";
 import checkdetection from "./checkdetection.js";
 import gamerules from "../variants/gamerules.js";
-// @ts-ignore
 import wincondition from "./wincondition.js";
 
 interface Snapshot {
@@ -35,7 +34,7 @@ interface Snapshot {
 	/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
 	fullMove: number,
 	/** The bounding box surrounding the starting position, without padding.*/
-	box: BoundingBox
+	box: BoundingBoxBD
 }
 
 /**

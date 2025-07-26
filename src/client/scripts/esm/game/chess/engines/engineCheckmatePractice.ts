@@ -9,7 +9,6 @@
 
 // @ts-ignore
 import isprime from '../../../util/isprime.js';
-// @ts-ignore
 import insufficientmaterial from '../../../chess/logic/insufficientmaterial.js';
 import { rawTypes as r, ext as e, players, numTypes} from '../../../chess/util/typeutil.js';
 import organizedpieces from '../../../chess/logic/organizedpieces.js';

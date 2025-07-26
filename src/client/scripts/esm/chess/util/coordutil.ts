@@ -5,12 +5,26 @@
  * ZERO dependancies.
  */
 
+import type { BigDecimal } from "../../util/bigdecimal/bigdecimal";
+
+import bigdecimal from "../../util/bigdecimal/bigdecimal";
+
 
 // Type Definitions ------------------------------------------------------------
 
 
 /** A length-2 array of coordinates: `[x,y]` */
-type Coords = [number,number];
+type Coords = [bigint,bigint];
+
+/**
+ * A pair of arbitrarily large coordinates WITH decimal precision included.
+ * Typically used for calculating graphics on the cpu-side.
+ * BD = BigDecimal
+ */
+type BDCoords = [BigDecimal, BigDecimal]
+
+/** For when we don't need arbitrary size. */
+type DoubleCoords = [number, number]
 
 /**
  * A pair of coordinates, represented in a string, separated by a `,`.
@@ -20,7 +34,7 @@ type Coords = [number,number];
  * This will never be in scientific notation. However, moves beyond
  * Number.MAX_SAFE_INTEGER can't be expressed exactly.
  */
-type CoordsKey = `${number},${number}`;
+type CoordsKey = `${bigint},${bigint}`;
     
 
 // Functions -------------------------------------------------------------------
@@ -49,7 +63,7 @@ function areCoordsIntegers(coords: Coords): boolean {
 function getKeyFromCoords(coords: Coords): CoordsKey {
 	// Casting to BigInt and back to a string avoids scientific notation.
 	// toFixed(0) doesn't work for numbers above 10^21
-	return `${BigInt(coords[0])},${BigInt(coords[1])}` as CoordsKey;
+	return `${coords[0]},${coords[1]}` as CoordsKey;
 }
 
 /**
@@ -58,7 +72,7 @@ function getKeyFromCoords(coords: Coords): CoordsKey {
  * @returns The coordinates of the piece, [x,y]
  */
 function getCoordsFromKey(key: CoordsKey): Coords {
-	return key.split(',').map(Number) as Coords;
+	return key.split(',').map(BigInt) as Coords;
 }
 
 /**  Returns true if the coordinates are equal. */
@@ -102,10 +116,15 @@ function copyCoords(coords: Coords): Coords {
  * @param end - The ending coordinate.
  * @param t - The interpolation value (between 0 and 1).
  */
-function lerpCoords(start: Coords, end: Coords, t: number): Coords {
+function lerpCoords(start: Coords, end: Coords, t: number): BDCoords {
+	const bdstart: BDCoords = bigdecimal.FromCoords(start);
+	const bddiff: BDCoords = bigdecimal.FromCoords([end[0] - start[0], end[1] - start[1]]);
+	const bdt: BigDecimal = bigdecimal.FromNumber(t);
+	const travelX = bigdecimal.multiply_fixed(bddiff[0], bdt);
+	const travelY = bigdecimal.multiply_fixed(bddiff[1], bdt);
 	return [
-      start[0] + (end[0] - start[0]) * t,
-      start[1] + (end[1] - start[1]) * t,
+		bigdecimal.add(bdstart[0], travelX),
+		bigdecimal.add(bdstart[1], travelY),
     ];
 }
 
@@ -124,5 +143,7 @@ export default {
 
 export type {
 	Coords,
+	BDCoords,
+	DoubleCoords,
 	CoordsKey,
 };

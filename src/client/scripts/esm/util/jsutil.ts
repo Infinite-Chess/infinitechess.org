@@ -5,7 +5,7 @@
  * This scripts contains utility methods for working with javascript objects.
  */
 
-import bigintmath from "./bigdecimal/bigintmath.js";
+import bimath from "./bigdecimal/bimath.js";
 
 
 /**
@@ -245,7 +245,7 @@ function estimateMemorySizeOf(obj: any): string {
 		else if (typeof value === 'string') bytes = value.length * 2; // Each char is 2 bytes in JS strings (UTF-16)
 		else if (typeof value === 'number') bytes = 8; // 64-bit float
 		else if (typeof value === 'symbol') bytes = (value.description?.length ?? 0) * 2 + 8; // Description + internal overhead
-		else if (typeof value === 'bigint') bytes = bigintmath.estimateBigIntSize(value); // Precise BigInt estimator
+		else if (typeof value === 'bigint') bytes = bimath.estimateBigIntSize(value); // Precise BigInt estimator
 		else if (value === null || typeof value === 'undefined') bytes = 0; // Very small
 		else if (typeof value === 'function') bytes = value.toString().length * 2 + 100; // Very rough guess
 		// --- Object types ---

@@ -4,7 +4,7 @@
  */
 
 
-import type { CoordsKey } from '../../chess/util/coordutil.js';
+import type { Coords, CoordsKey } from '../../chess/util/coordutil.js';
 import type { VariantOptions } from '../../chess/logic/initvariant.js';
 import type { Player } from '../../chess/util/typeutil.js';
 
@@ -27,8 +27,8 @@ import { players, ext as e, rawTypes as r } from '../../chess/util/typeutil.js';
 import icnconverter from '../../chess/logic/icn/icnconverter.js';
 import enginegame from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
-// @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
+import bimath from '../../util/bigdecimal/bimath.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -164,19 +164,19 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 				if (blackpieceplaced) throw Error("Must place all white pieces before placing black pieces.");
 
 				// randomly generate white piece coordinates in square around origin
-				const x: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
-				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3 : 5);
+				const x: bigint = BigInt(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3n : 5n);
+				const y: bigint = BigInt(Math.random() * (blackroyalnearer ? 7 : 11)) - (blackroyalnearer ? 3n : 5n);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 
 				// check if square is occupied and white bishop parity is fulfilled
-				if (!position.has(key) && !(piece === r.BISHOP + e.W && (x + y) % 2 !== whitebishopparity)) {
+				if (!position.has(key) && !(piece === r.BISHOP + e.W && Number((x + y) % 2n) !== whitebishopparity)) {
 					position.set(key, piece);
 					amount -= 1;
 				}
 			} else {
 				// randomly generate black piece coordinates at a distance
-				const x: number = Math.floor(Math.random() * 3) + (blackroyalnearer ? 8 : 12);
-				const y: number = Math.floor(Math.random() * (blackroyalnearer ? 17 : 35)) - (blackroyalnearer ? 9 : 17);
+				const x: bigint = BigInt(Math.random() * 3) + (blackroyalnearer ? 8n : 12n);
+				const y: bigint = BigInt(Math.random() * (blackroyalnearer ? 17 : 35)) - (blackroyalnearer ? 9n : 17n);
 				const key: CoordsKey = coordutil.getKeyFromCoords([x,y]);
 				// check if square is occupied or potentially threatened
 				if (!position.has(key) && squareNotInSight(key, position)) {
@@ -202,12 +202,12 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
  * @returns true or false, depending on if the square is in sight or not
  */
 function squareNotInSight(square: CoordsKey, position: Map<CoordsKey, number>): boolean {
-	const [sx, sy]: number[] = coordutil.getCoordsFromKey(square);
+	const [sx, sy]: Coords = coordutil.getCoordsFromKey(square);
 	for (const [key, value] of position) {
-		const [x, y]: number[] = coordutil.getCoordsFromKey(key);
-		if (x === sx || y === sy || Math.abs(sx - x) === Math.abs(sy - y)) return false;
+		const [x, y]: Coords = coordutil.getCoordsFromKey(key);
+		if (x === sx || y === sy || bimath.abs(sx - x) === bimath.abs(sy - y)) return false;
 		if (value === r.KNIGHTRIDER + e.W) {
-			if (Math.abs(sx - x) === 2 * Math.abs(sy - y) || 2 * Math.abs(sx - x) === Math.abs(sy - y)) {
+			if (bimath.abs(sx - x) === 2n * bimath.abs(sy - y) || 2n * bimath.abs(sx - x) === bimath.abs(sy - y)) {
 				return false;
 			}
 		}

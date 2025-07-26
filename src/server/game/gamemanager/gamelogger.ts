@@ -16,7 +16,6 @@ import icnconverter, { LongFormatIn } from '../../../client/scripts/esm/chess/lo
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import gameutility from './gameutility.js';
 import db from '../../database/database.js'; 
-// @ts-ignore
 import winconutil from '../../../client/scripts/esm/chess/util/winconutil.js';
 // @ts-ignore
 import timeutil from '../../../client/scripts/esm/util/timeutil.js';

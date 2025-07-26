@@ -21,8 +21,7 @@ import websocket from "../websocket.js";
 import stats from "../gui/stats.js";
 // @ts-ignore
 import statustext from "../gui/statustext.js";
-// @ts-ignore
-import copypastegame from "../chess/copypastegame.js";
+import copygame from "../chess/copygame.js";
 import docutil from "../../util/docutil.js";
 import math, { Vec2 } from "../../util/math.js";
 import mouse from "../../util/mouse.js";
@@ -238,7 +237,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined) {
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 	}
 	if (listener_document.isKeyDown('Digit3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (listener_document.isKeyDown('Digit5')) copypastegame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
+	if (listener_document.isKeyDown('Digit5')) copygame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (listener_document.isKeyDown('Digit6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 	
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();

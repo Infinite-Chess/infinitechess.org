@@ -16,10 +16,17 @@ import camera from "./camera.js";
 // @ts-ignore
 import loadbalancer from "../misc/loadbalancer.js";
 import frametracker from "./frametracker.js";
+import bigdecimal, { BigDecimal } from "../../util/bigdecimal/bigdecimal.js";
+import jsutil from "../../util/jsutil.js";
 
 
-import type { Coords } from "../../chess/util/coordutil.js";
+import type { BDCoords, DoubleCoords } from "../../chess/util/coordutil.js";
 
+
+// BigDecimal Constants ---------------------------------------------------
+
+const ZERO = bigdecimal.FromNumber(0.0);
+const ONE = bigdecimal.FromNumber(1.0);
 
 // Variables -------------------------------------------------------------
 
@@ -29,15 +36,15 @@ import type { Coords } from "../../chess/util/coordutil.js";
  * The camera never moves, only the board beneath it.
  * A positon of [0,0] places the [0,0] square in the center of the screen.
  */
-let boardPos: Coords = [0,0]; // Coordinates
+let boardPos: BDCoords = bigdecimal.FromCoords([0n,0n]); // Coordinates
 /** The current board panning velocity. */
-let panVel: Coords = [0,0];
+let panVel: DoubleCoords = [0,0];
 /**
  * The current board scale (zoom).
  * Higher => zoomed IN
  * Lower => zoomed OUT
  */
-let boardScale: number = 1;
+let boardScale: BigDecimal = bigdecimal.FromNumber(1.0); // Default: 1.0
 /** The current board scale (zoom) velocity. */
 let scaleVel: number = 0;
 
@@ -48,14 +55,14 @@ const panVelCap2D = 22.0; // Default: 22
 const panVelCap3D = 16.0; // Default: 16
 
 /** The furthest we can be zoomed IN. */
-const maximumScale = 5.0; // Default: 5
+const maximumScale = bigdecimal.FromNumber(5.0); // Default: 5.0
 const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn't break
 
 
 // Getters -------------------------------------------------------
 
 
-function getBoardPos(): Coords {
+function getBoardPos(): BDCoords {
 	return [...boardPos]; // Copies
 }
 
@@ -63,7 +70,7 @@ function getBoardScale() {
 	return boardScale;
 }
 
-function getPanVel(): Coords {
+function getPanVel(): DoubleCoords {
 	return [...panVel]; // Copies
 }
 
@@ -83,18 +90,16 @@ function glimitToDampScale() {
 // Setters ----------------------------------------------------------------------------------------
 
 
-function setBoardPos(newPos: Coords) {
-	if (isNaN(newPos[0]) || isNaN(newPos[1])) return console.error(`Cannot set boardPos to ${newPos}!`);
-	boardPos = [...newPos];
+function setBoardPos(newPos: BDCoords) {
+	boardPos = jsutil.deepCopyObject(newPos); // Copy
 	frametracker.onVisualChange();
 }
 
-function setBoardScale(newScale: number) {
-	if (isNaN(newScale)) return console.error(`Cannot set scale to ${newScale}!`);
-	if (newScale <= 0) return console.error(`Cannot set scale to ${newScale}!`);
+function setBoardScale(newScale: BigDecimal) {
+	if (bigdecimal.compare(newScale, ZERO) <= 0) return console.error(`Cannot set scale to ${newScale}!`);
 
 	// Cap the scale
-	if (newScale > maximumScale) {
+	if (bigdecimal.compare(newScale, maximumScale) > 0) {
 		newScale = maximumScale;
 		scaleVel = 0; // Cut the scale momentum immediately
 	}
@@ -103,7 +108,7 @@ function setBoardScale(newScale: number) {
 	frametracker.onVisualChange();
 }
 
-function setPanVel(newPanVel: Coords) {
+function setPanVel(newPanVel: DoubleCoords) {
 	if (isNaN(newPanVel[0]) || isNaN(newPanVel[1])) return console.error(`Cannot set panVel to ${newPanVel}!`);
 
 	// Can't enforce a cap, as otherwise we wouldn't
@@ -139,7 +144,7 @@ function boardHasMomentum() {
  * * Pieces rendering as mini-images.
  */
 function areZoomedOut() {
-	return boardScale < camera.getScaleWhenZoomedOut();
+	return bigdecimal.compare(boardScale, camera.getScaleWhenZoomedOut()) < 0;
 }
 
 /**
@@ -148,7 +153,7 @@ function areZoomedOut() {
  * On retina displays you have to zoom out even more to reach this.
  */
 function isScaleSmallForInvisibleTiles() {
-	return boardScale < camera.getScaleWhenTilesInvisible();
+	return bigdecimal.compare(boardScale, camera.getScaleWhenTilesInvisible()) < 0;
 }
 
 
@@ -168,8 +173,20 @@ function update() {
 /** Shifts the board position by its velocity. */
 function panBoard() {
 	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
-	boardPos[0] += loadbalancer.getDeltaTime() * panVel[0] / boardScale;
-	boardPos[1] += loadbalancer.getDeltaTime() * panVel[1] / boardScale;
+
+	const panVelBD: BDCoords = bigdecimal.fromDoubleCoords(panVel);
+
+	// What the change would be if all frames were the exact same time length.
+	const baseXChange = bigdecimal.divide_fixed(panVelBD[0], boardScale);
+	const baseYChange = bigdecimal.divide_fixed(panVelBD[1], boardScale);
+
+	// Account for delta time
+	const deltaTimeBD: BigDecimal = bigdecimal.FromNumber(loadbalancer.getDeltaTime());
+	const actualXChange = bigdecimal.multiply_fixed(baseXChange, deltaTimeBD);
+	const actualYChange = bigdecimal.multiply_fixed(baseYChange, deltaTimeBD);
+
+	boardPos[0] = bigdecimal.add(boardPos[0], actualXChange);
+	boardPos[1] = bigdecimal.add(boardPos[1], actualYChange);
 	frametracker.onVisualChange();
 }
 
@@ -177,11 +194,13 @@ function panBoard() {
 function recalcScale() {
 	if (scaleVel === 0) return; // Exit if we're not zooming
 
-	// Dampen the scale change to create a soft zoom limit
-	// to prevent players from breaking a game too fast.
-	const damp = scaleVel > 0 || boardScale > limitToDampScale ? 1 : boardScale / limitToDampScale;
+	const scaleVelBD: BigDecimal = bigdecimal.FromNumber(scaleVel);
+	const deltaTimeBD: BigDecimal = bigdecimal.FromNumber(loadbalancer.getDeltaTime());
 
-	const newScale = boardScale * (1 + loadbalancer.getDeltaTime() * scaleVel * damp);
+	const product = bigdecimal.multiply_fixed(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
+	const factor2 = bigdecimal.add(product, ONE); // scaleVel * deltaTime + 1
+
+	const newScale = bigdecimal.multiply_fixed(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
 	setBoardScale(newScale);
 }
 
