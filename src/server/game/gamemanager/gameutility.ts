@@ -228,7 +228,7 @@ interface Game {
  * @param replyto - The ID of the incoming socket message of player 2, accepting the invite. This is used for the `replyto` property on our response.
  * @returns The new game.
  */
-function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto: number) {
+function newGame(invite: Invite, id: number, player1Socket: CustomWebSocket | undefined, player2Socket: CustomWebSocket, replyto?: number) {
 	const untimed = clockweb.isClockValueInfinite(invite.clock);
 	let startTimeMillis: undefined | number;
 	let incrementMillis: undefined | number;

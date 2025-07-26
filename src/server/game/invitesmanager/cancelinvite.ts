@@ -14,7 +14,14 @@ import socketUtility from '../../socket/socketUtility.js';
 import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
+import * as z from 'zod';
+
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+const cancelinviteschem = z.string().length(IDLengthOfInvites);
+
+type CancelInviteMessage = z.infer<typeof cancelinviteschem>
+
 
 /**
  * Cancels/deletes the specified invite.
@@ -22,9 +29,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * @param messageContents - The incoming socket message that SHOULD be the ID of the invite to be cancelled!
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function cancelInvite(ws: CustomWebSocket, messageContents: any, replyto: number) { // Value should be the ID of the invite to cancel!
-	if (typeof messageContents !== 'string' || messageContents.length !== IDLengthOfInvites) return sendSocketMessage(ws, 'general', 'printerror', 'Body of socket message is invalid!', replyto);
-
+function cancelInvite(ws: CustomWebSocket, messageContents: CancelInviteMessage, replyto?: number) { // Value should be the ID of the invite to cancel!
 	const id = messageContents; // id of invite to delete
 
 	const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index } | undefined
@@ -43,7 +48,8 @@ function cancelInvite(ws: CustomWebSocket, messageContents: any, replyto: number
 	deleteInviteByIndex(ws, invite, index, { replyto });
 }
 
-
 export {
-	cancelInvite
+	cancelInvite,
+
+	cancelinviteschem
 };
