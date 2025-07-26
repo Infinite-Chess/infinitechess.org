@@ -203,11 +203,15 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 	try {
 		message.value = z.parse(schema, message.value);
 	} catch (e) {
+		if (!(z instanceof z.ZodError)) {
+			console.warn("Failed zod parsing without proper error. VERY UNEXPECTED! Could be rejecting legimate requests...");
+			return;
+		}
 		// Bad format
-		logEventsAndPrint(`INVALID PARAMETERS  User submitted invalid parameters for "${message.route}:${message.action}"! Errors: ${e instanceof z.ZodError ? z.treeifyError(e) : "Error"} Websocket: ${socketUtility.stringifySocketMetadata(ws)}`, 'routerLog.txt');
+		logEventsAndPrint(`INVALID PARAMETERS  User submitted invalid parameters for "${message.route}:${message.action}"! Errors: ${jsutil.ensureJSONString(z.treeifyError(e))} Request data: ${jsutil.ensureJSONString(message.value)} Websocket: ${socketUtility.stringifySocketMetadata(ws)}`, 'routerLog.txt');
 		sendSocketMessage(ws, 'general', 'printerror', "You cannot modify message parameters, if this is unintentional please hard-refresh the page.", message.id);
 
-		console.log(e instanceof z.ZodError ? z.treeifyError(e) : "Error");
+		console.log(z.prettifyError(e));
 		return;
 	}
 	route(ws, message.value, message.id);
