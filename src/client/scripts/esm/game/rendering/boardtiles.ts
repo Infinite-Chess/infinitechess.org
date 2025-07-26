@@ -14,7 +14,6 @@ import perspective from './perspective.js';
 import camera from './camera.js';
 // @ts-ignore
 import { gl } from './webgl.js';
-// @ts-ignore
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';

@@ -1,5 +1,5 @@
 
-// src/client/scripts/esm/util/bigdecimal/bigintmath.ts
+// src/client/scripts/esm/util/bigdecimal/bimath.ts
 
 /**
  * This module contains complex math functions
@@ -307,6 +307,63 @@ function estimateBigIntSize(bi: bigint): number {
 	return headerBytes + dataBytes;
 }
 
+/**
+ * Computes the positive modulus of two BigInts.
+ * @param a - The dividend.
+ * @param b - The divisor (must be a positive BigInt).
+ * @returns The positive remainder of the division as a BigInt.
+ */
+function posMod(a: bigint, b: bigint): bigint {
+	return (a % b + b) % b;
+}
+
+/** Finds the larger of two BigInts. */
+function max(a: bigint, b: bigint): bigint {
+	return a > b ? a : b;
+}
+
+/** Finds the smaller of two BigInts. */
+function min(a: bigint, b: bigint): bigint {
+	return a < b ? a : b;
+}
+
+
+// Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
+
+
+/**
+ * Computes the greatest common divisor (GCD) of two BigInts using the Euclidean algorithm.
+ * @param a The first BigInt.
+ * @param b The second BigInt.
+ * @returns The non-negative GCD of a and b.
+ */
+function GCD(a: bigint, b: bigint): bigint {
+	while (b !== ZERO) {
+		[a, b] = [b, a % b];
+	}
+	return abs(a);
+}
+
+/**
+ * Calculates the least common multiple (LCM) between all BigInts in an array.
+ * @param array An array of BigInts.
+ * @returns The LCM of the numbers in the array.
+ */
+function LCM(array: bigint[]): bigint {
+	if (array.length === 0) throw new Error('Array must contain at least one number to calculate the LCM.');
+
+	let answer: bigint = array[0]!;
+	for (let i = 1; i < array.length; i++) {
+		const currentNumber = array[i]!;
+
+		// A single-line if/else statement without curly braces.
+		if (currentNumber === ZERO || answer === ZERO) answer = ZERO;
+		else answer = abs(currentNumber * answer) / GCD(currentNumber, answer);
+	}
+
+	return answer;
+}
+
 
 // Exports ============================================================
 
@@ -321,4 +378,9 @@ export default {
 	toDebugBinaryString,
 	bitLength_bisection,
 	estimateBigIntSize,
+	posMod,
+	max,
+	min,
+	GCD,
+	LCM,
 };

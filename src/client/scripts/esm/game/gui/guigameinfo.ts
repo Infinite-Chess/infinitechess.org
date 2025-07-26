@@ -10,7 +10,6 @@ import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemana
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 
 
-// @ts-ignore
 import winconutil from '../../chess/util/winconutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import frametracker from '../rendering/frametracker.js';

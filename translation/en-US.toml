@@ -1,6 +1,6 @@
 name = "English" # Name of language
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "64"
+version = "65"
 maintainer = "Naviary"
 
 [header]
@@ -386,15 +386,13 @@ cannot_paste_after_moves = "Cannot paste game after moves are made!"
 clipboard_denied = "Clipboard permission denied. This might be your browser."
 clipboard_invalid = "Clipboard is not in valid ICN notation."
 game_needs_to_specify = "Game needs to specify either the 'Variant' metadata, or 'position' property."
-invalid_wincon_white = "White has an invalid win condition"
-invalid_wincon_black = "Black has an invalid win condition"
+invalid_wincon = "Player has an invalid win condition"
 pasting_game = "Pasting game..."
 pasting_in_private = "Pasting a game in a private match will cause a desync if your opponent doesn't do the same!"
 piece_count = "Piece count"
 exceeded = "exceeded"
 changed_wincon = "Changed checkmate win conditions to royalcapture, and toggled off icon rendering. Hit 'P' to re-enable (not recommended)."
 loaded_from_clipboard = "Loaded game from clipboard!"
-slidelimit_not_number = "slideLimit gamerule must be a number. Received"
 
 [play.javascript.rendering]
 on = "On"

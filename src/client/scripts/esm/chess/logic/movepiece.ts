@@ -27,7 +27,6 @@ import legalmoves from './legalmoves.js';
 import math from '../../util/math.js';
 import checkdetection from './checkdetection.js';
 import specialdetect from './specialdetect.js';
-// @ts-ignore
 import wincondition from './wincondition.js';
 
 
@@ -69,7 +68,7 @@ type promotion = number;
 /** A special move tag for castling. */
 type castle = {
 	/** 1 => King castled right   2 => King castled left */
-	dir: 1 | -1,
+	dir: 1n | -1n,
 	/** The coordinate of the piece the king castled with, usually a rook. */
 	coord: Coords
 }
