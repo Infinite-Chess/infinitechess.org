@@ -655,6 +655,36 @@ function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 }
 
 /**
+ * Calculates the integer power of a BigDecimal (base^exp).
+ * This uses the "exponentiation by squaring" algorithm for efficiency.
+ */
+function power(base: BigDecimal, exp: number): BigDecimal {
+    if (!Number.isInteger(exp)) throw new Error("Exponent must be an integer.");
+
+    // Handle negative exponents by inverting the base: base^-n = (1/base)^n
+    if (exp < 0) {
+        const ONE = FromNumber(1.0);
+        // Use floating-point division for a precise reciprocal
+        const invertedBase = divide_floating(ONE, base);
+        return power(invertedBase, -exp);
+    }
+    
+    let res = FromNumber(1.0); // Start with the identity element for multiplication
+    let currentPower = base;   // Start with base^1
+
+    while (exp > 0) {
+        // If the last bit of exp is 1, we need to multiply by the current power of the base.
+        if (exp % 2 === 1) res = multiply_floating(res, currentPower);
+        // Square the current power of the base for the next iteration (e.g., x -> x^2 -> x^4 -> x^8).
+        currentPower = multiply_floating(currentPower, currentPower);
+        // Integer division by 2 is equivalent to a right bit shift.
+        exp = Math.floor(exp / 2);
+    }
+
+    return res;
+}
+
+/**
  * Returns a new BigDecimal that is the absolute value of the provided BigDecimal.
  * @param bd - The BigDecimal.
  * @returns A new BigDecimal representing the absolute value.
@@ -1215,6 +1245,7 @@ export default {
 	divide_fixed,
 	divide_floating,
 	mod,
+	power,
 	abs,
 	clone,
 	setExponent,
