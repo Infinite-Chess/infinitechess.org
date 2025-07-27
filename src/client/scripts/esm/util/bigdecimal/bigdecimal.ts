@@ -86,14 +86,14 @@ const TEN: bigint = 10n;
  * I arbitrarily chose 50 bits for the minimum, because that gives us about 15 digits of precision,
  * which is about how much javascript's doubles give us.
  */
-const DEFAULT_WORKING_PRECISION: number = 23; // Default: 53 (matches javascript's double precision)
+const DEFAULT_WORKING_PRECISION = 23; // Default: 53 (matches javascript's double precision)
 
 /**
  * The maximum divex a BigDecimal is allowed to have.
  * Beyond this, the divex is assumed to be running away towards Infinity, so an error is thrown.
  * Can be adjusted if you want more maximum precision.
  */
-const MAX_DIVEX: number = 1e5; // Default: 1e3 (100,000)
+const MAX_DIVEX = 1e5; // Default: 1e3 (100,000)
 
 /** A list of powers of 2, 1024 in length, starting at 1 and stopping before Number.MAX_VALUE. This goes up to 2^1023. */
 const powersOfTwoList: number[] = (() => {
@@ -685,6 +685,67 @@ function power(base: BigDecimal, exp: number): BigDecimal {
 }
 
 /**
+ * [Floating-Point Model] Calculates the square root of a BigDecimal using Newton's method.
+ * The precision of the result is determined by the `mantissaBits` parameter.
+ * @param bd The BigDecimal to find the square root of. Must be non-negative.
+ * @param [mantissaBits=DEFAULT_MANTISSA_PRECISION_BITS] The number of mantissa bits for the result's precision.
+ * @returns The square root of the input BigDecimal.
+ */
+function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+    // 1. Validate input
+    if (bd.bigint < ZERO) throw new Error("Cannot calculate the square root of a negative number.");
+    if (bd.bigint === ZERO) return { bigint: ZERO, divex: bd.divex };
+
+    // 2. Setup for Newton's method
+    // To ensure the result has `mantissaBits` of precision, we need to add that
+    // much working precision to our input number. We also add one extra bit
+    // to prevent rounding errors from affecting the final result.
+    const workingPrecision = mantissaBits + 1;
+    
+    // Scale the input number up by shifting it left. This is the 'n' in our formula.
+    const scaledBigInt = bd.bigint << BigInt(2 * workingPrecision);
+    const scaledDivex = bd.divex + 2 * workingPrecision;
+    const n = { bigint: scaledBigInt, divex: scaledDivex };
+
+    // 3. Make an initial guess (x_0)
+    // A good initial guess is crucial for fast convergence. A common technique is to
+    // use a value related to 2^(bitLength/2).
+    const bitLength = bimath.bitLength_bisection(n.bigint);
+    const initialGuessBigInt = ONE << BigInt(bitLength / 2);
+    let x_k = { bigint: initialGuessBigInt, divex: 0 }; // Our guess is an integer, so divex is 0.
+
+    // 4. Iterate using Newton's method: x_{k+1} = (x_k + n / x_k) / 2
+    // We continue until the guess stabilizes.
+    let last_x_k = clone(x_k); // A copy to check for convergence
+
+    // A safety limit to prevent infinite loops in case of unexpected behavior.
+    const maxIterations = 100; 
+    for (let i = 0; i < maxIterations; i++) {
+        // Calculate `n / x_k` using high-precision floating division
+        const n_div_xk = divide_floating(n, x_k, mantissaBits * 2);
+        // Calculate `x_k + (n / x_k)`
+        const sum = add(x_k, n_div_xk);
+        // Divide by 2: `(sum) / 2`. A right shift is equivalent to division by 2.
+        x_k = { bigint: sum.bigint >> ONE, divex: sum.divex };
+        // Check for convergence: if the guess is no longer changing, we've found our answer.
+        if (areEqual(x_k, last_x_k)) break;
+
+        last_x_k = clone(x_k);
+    }
+    
+    // 5. Final result
+    // The value we found is the square root of the *scaled* number. The resulting
+    // divex is now (original_divex / 2) + working_precision. We need to normalize
+    // it back to the target precision.
+    const finalDivex = Math.floor(bd.divex / 2);
+    
+    setExponent(x_k, finalDivex + workingPrecision);
+
+    // Normalize the result to the desired number of mantissa bits.
+    return normalize(x_k, mantissaBits);
+}
+
+/**
  * Returns a new BigDecimal that is the absolute value of the provided BigDecimal.
  * @param bd - The BigDecimal.
  * @returns A new BigDecimal representing the absolute value.
@@ -1246,6 +1307,7 @@ export default {
 	divide_floating,
 	mod,
 	power,
+	sqrt,
 	abs,
 	clone,
 	setExponent,
