@@ -20,7 +20,6 @@ import camera from './camera.js';
 // @ts-ignore
 import { gl } from './webgl.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
-import math from '../../util/math.js';
 import { createModel } from './buffermodel.js';
 import jsutil from '../../util/jsutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
@@ -37,9 +36,9 @@ import bigdecimal from '../../util/bigdecimal/bigdecimal.js';
 // Import End
 
 import type { BufferModel } from './buffermodel.js';
-import type { BoundingBox, BoundingBoxBD } from '../../util/math.js';
+import type { BoundingBoxBD } from '../../util/math.js';
 import type { Color } from '../../util/math.js';
-import type { BDCoords, Coords } from '../../chess/util/coordutil.js';
+import type { BDCoords } from '../../chess/util/coordutil.js';
 import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 
@@ -223,7 +222,7 @@ function generateBoardModel(isFractal: boolean, zoom: BigDecimal = ONE, opacity:
 		const diff = end - start;
 		const texdiff = diff / zoomTimesScaleTwo;
 		const texend = texstart + texdiff;
-		return [texstart, texend]
+		return [texstart, texend];
 	}
 
 	const [texstartX, texendX] = getAxisTexCoords(boardPos[0], startX, endX);
