@@ -45,6 +45,7 @@ import type { BigDecimal } from '../../util/bigdecimal/bigdecimal.js';
 
 const ONE = bigdecimal.FromNumber(1.0);
 const TWO = bigdecimal.FromNumber(2.0);
+const TEN = bigdecimal.FromNumber(10);
 
 
 /** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
@@ -337,24 +338,25 @@ function renderFractalBoards() {
 
 	const interval = 3;
 	const length = 6;
-
-	let firstInterval = Math.floor((e - startE) / interval) * interval + startE;
-	const zeroCount = 3 * (firstInterval - startE) / interval + 3; // Always a multiple of 3
-	// console.log(firstInterval, zeroCount)
-
 	const capOpacity = 0.7;
 
+	let firstInterval = Math.floor((e - startE) / interval) * interval + startE;
+	let zeroCount = 3 * (firstInterval - startE) / interval + 3; // Always a multiple of 3
+	// console.log(firstInterval, zeroCount)
+
 	// Most-zoomed out board
-	let zoom = Math.pow(10, zeroCount);
-	let x = (firstInterval - e) / length; // 0 - 1
-	// console.log(`x: ${x}`)
-	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7); // 0.7  the lower the pow, the faster the opacity
+	let zoom = bigdecimal.power(TEN, zeroCount);
+	let x = (firstInterval - e) / length;
+	let opacity = capOpacity * Math.pow((-0.5 * Math.cos(2 * x * Math.PI) + 0.5), 0.7);
 	generateBoardModel(true, zoom, opacity)?.render();
 
 	// 2nd most-zoomed out board
 	firstInterval -= interval;
 	if (firstInterval < 0) return;
-	zoom /= Math.pow(10, 3);
+
+	// To divide a bigdecimal by 10^3, we just subtract 3 from the exponent
+	zeroCount -= 3;
+	zoom = bigdecimal.power(TEN, zeroCount);
 	x = (firstInterval - e) / length; // 0 - 1
 	opacity = capOpacity * (-0.5 * Math.cos(2 * x * Math.PI) + 0.5);
 	generateBoardModel(true, zoom, opacity)?.render();
@@ -383,29 +385,32 @@ function renderSolidCover() {
 
 /**
  * Calculates the bounding box of the board visible on screen,
- * when the camera is at the specified position.
+ * when the camera is at the specified position, up to a certain precision level.
+ * 
  * This is different from the bounding box of the canvas, because
  * this is effected by the camera's scale (zoom) property.
  * 
  * Returns in float form. To round away from the origin to encapsulate
  * the whole of all tiles atleast partially visible, further use {@link roundAwayBoundingBox}
- * @param {number[]} [position] - The position of the camera.
- * @param {number} [scale] - The scale (zoom) of the camera.
- * @param {boolean} [debugMode] Whether developer mode is enabled.
- * @returns {BoundingBox} The bounding box
+ * @param [position] The position of the camera.
+ * @param [scale] The scale (zoom) of the camera.
+ * @param debugMode - Whether developer mode is enabled.
+ * @returns The bounding box
  */
 function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scale: BigDecimal = boardpos.getBoardScale(), debugMode: boolean): BoundingBoxBD {
+	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 
-	const distToHorzEdgeDivScale = camera.getScreenBoundingBox(debugMode).right / scale;
+	function getAxisEdges(position: BigDecimal, screenEnd: number): [BigDecimal, BigDecimal] {
+		const screenEndBD = bigdecimal.FromNumber(screenEnd);
+		const distToEdgeInSquares: BigDecimal = bigdecimal.divide_floating(screenEndBD, scale);
+		const start = bigdecimal.subtract(position, distToEdgeInSquares);
+		const end = bigdecimal.add(position, distToEdgeInSquares);
+		return [start, end];
+	}
 
-	const left = position[0] - distToHorzEdgeDivScale;
-	const right = position[0] + distToHorzEdgeDivScale;
-
-	const distToVertEdgeDivScale = camera.getScreenBoundingBox(debugMode).top / scale;
-
-	const bottom = position[1] - distToVertEdgeDivScale;
-	const top = position[1] + distToVertEdgeDivScale;
-
+	const [left, right] = getAxisEdges(position[0], screenBoundingBox.right);
+	const [bottom, top] = getAxisEdges(position[1], screenBoundingBox.top);
+	
 	return { left, right, bottom, top };
 }
 
@@ -414,15 +419,17 @@ function getBoundingBoxOfBoard(position: BDCoords = boardpos.getBoardPos(), scal
  * @param {number} rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
  * @returns {BoundingBox} The perspective mode render range bounding box
  */
-function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBox { // ~18
-	const coords = boardpos.getBoardPos();
-	const renderDistInSquares = rangeOfView / boardpos.getBoardScale();
+function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD { // ~18
+	const position = boardpos.getBoardPos();
+	const scale = boardpos.getBoardScale();
+	const rangeOfViewBD = bigdecimal.FromNumber(rangeOfView);
+	const renderDistInSquares = bigdecimal.divide_floating(rangeOfViewBD, scale);
 
 	return {
-		left: coords[0] - renderDistInSquares,
-		right: coords[0] + renderDistInSquares,
-		bottom: coords[1] - renderDistInSquares,
-		top: coords[1] + renderDistInSquares,
+		left: bigdecimal.subtract(position[0], renderDistInSquares),
+		right: bigdecimal.add(position[0], renderDistInSquares),
+		bottom: bigdecimal.subtract(position[1], renderDistInSquares),
+		top: bigdecimal.add(position[1], renderDistInSquares),
 	};
 }
 
