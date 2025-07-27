@@ -659,29 +659,29 @@ function mod(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
  * This uses the "exponentiation by squaring" algorithm for efficiency.
  */
 function power(base: BigDecimal, exp: number): BigDecimal {
-    if (!Number.isInteger(exp)) throw new Error("Exponent must be an integer.");
+	if (!Number.isInteger(exp)) throw new Error("Exponent must be an integer.");
 
-    // Handle negative exponents by inverting the base: base^-n = (1/base)^n
-    if (exp < 0) {
-        const ONE = FromNumber(1.0);
-        // Use floating-point division for a precise reciprocal
-        const invertedBase = divide_floating(ONE, base);
-        return power(invertedBase, -exp);
-    }
+	// Handle negative exponents by inverting the base: base^-n = (1/base)^n
+	if (exp < 0) {
+		const ONE = FromNumber(1.0);
+		// Use floating-point division for a precise reciprocal
+		const invertedBase = divide_floating(ONE, base);
+		return power(invertedBase, -exp);
+	}
     
-    let res = FromNumber(1.0); // Start with the identity element for multiplication
-    let currentPower = base;   // Start with base^1
+	let res = FromNumber(1.0); // Start with the identity element for multiplication
+	let currentPower = base;   // Start with base^1
 
-    while (exp > 0) {
-        // If the last bit of exp is 1, we need to multiply by the current power of the base.
-        if (exp % 2 === 1) res = multiply_floating(res, currentPower);
-        // Square the current power of the base for the next iteration (e.g., x -> x^2 -> x^4 -> x^8).
-        currentPower = multiply_floating(currentPower, currentPower);
-        // Integer division by 2 is equivalent to a right bit shift.
-        exp = Math.floor(exp / 2);
-    }
+	while (exp > 0) {
+		// If the last bit of exp is 1, we need to multiply by the current power of the base.
+		if (exp % 2 === 1) res = multiply_floating(res, currentPower);
+		// Square the current power of the base for the next iteration (e.g., x -> x^2 -> x^4 -> x^8).
+		currentPower = multiply_floating(currentPower, currentPower);
+		// Integer division by 2 is equivalent to a right bit shift.
+		exp = Math.floor(exp / 2);
+	}
 
-    return res;
+	return res;
 }
 
 /**
@@ -692,61 +692,61 @@ function power(base: BigDecimal, exp: number): BigDecimal {
  * @returns The square root of the input BigDecimal.
  */
 function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
-    // 1. Validate input
-    if (bd.bigint < ZERO) throw new Error("Cannot calculate the square root of a negative number.");
-    if (bd.bigint === ZERO) return { bigint: ZERO, divex: bd.divex };
+	// 1. Validate input
+	if (bd.bigint < ZERO) throw new Error("Cannot calculate the square root of a negative number.");
+	if (bd.bigint === ZERO) return { bigint: ZERO, divex: bd.divex };
 
-    // 2. Setup for Newton's method
-    // To ensure the result has `mantissaBits` of precision, we need to add that
-    // much working precision to our input number. We also add one extra bit
-    // to prevent rounding errors from affecting the final result.
-    const workingPrecision = mantissaBits + 1;
+	// 2. Setup for Newton's method
+	// To ensure the result has `mantissaBits` of precision, we need to add that
+	// much working precision to our input number. We also add one extra bit
+	// to prevent rounding errors from affecting the final result.
+	const workingPrecision = mantissaBits + 1;
     
-    // Scale the input number up by shifting it left. This is the 'n' in our formula.
-    const scaledBigInt = bd.bigint << BigInt(2 * workingPrecision);
-    const scaledDivex = bd.divex + 2 * workingPrecision;
-    const n = { bigint: scaledBigInt, divex: scaledDivex };
+	// Scale the input number up by shifting it left. This is the 'n' in our formula.
+	const scaledBigInt = bd.bigint << BigInt(2 * workingPrecision);
+	const scaledDivex = bd.divex + 2 * workingPrecision;
+	const n = { bigint: scaledBigInt, divex: scaledDivex };
 
-    // 3. Make an initial guess (x_0)
-    // A good initial guess is crucial for fast convergence. A common technique is to
-    // use a value related to 2^(bitLength/2).
-    const bitLength = bimath.bitLength_bisection(n.bigint);
-    const initialGuessBigInt = ONE << BigInt(bitLength / 2);
-    let x_k = { bigint: initialGuessBigInt, divex: 0 }; // Our guess is an integer, so divex is 0.
+	// 3. Make an initial guess (x_0)
+	// A good initial guess is crucial for fast convergence. A common technique is to
+	// use a value related to 2^(bitLength/2).
+	const bitLength = bimath.bitLength_bisection(n.bigint);
+	const initialGuessBigInt = ONE << BigInt(bitLength / 2);
+	let x_k = { bigint: initialGuessBigInt, divex: 0 }; // Our guess is an integer, so divex is 0.
 
-    // 4. Iterate using Newton's method: x_{k+1} = (x_k + n / x_k) / 2
-    // We continue until the guess stabilizes.
-    let last_x_k = clone(x_k); // A copy to check for convergence
+	// 4. Iterate using Newton's method: x_{k+1} = (x_k + n / x_k) / 2
+	// We continue until the guess stabilizes.
+	let last_x_k = clone(x_k); // A copy to check for convergence
 
-    // A safety limit to prevent infinite loops in case of unexpected behavior.
-    const maxIterations = 100; 
-    for (let i = 0; i < maxIterations; i++) {
-        // Calculate `n / x_k` using high-precision floating division
-        const n_div_xk = divide_floating(n, x_k, mantissaBits * 2);
-        // Calculate `x_k + (n / x_k)`
-        const sum = add(x_k, n_div_xk);
-        // Divide by 2: `(sum) / 2`. A right shift is equivalent to division by 2.
-        x_k = { bigint: sum.bigint >> ONE, divex: sum.divex };
-        // Check for convergence: if the guess is no longer changing, we've found our answer.
-        if (areEqual(x_k, last_x_k)) {
+	// A safety limit to prevent infinite loops in case of unexpected behavior.
+	const maxIterations = 100; 
+	for (let i = 0; i < maxIterations; i++) {
+		// Calculate `n / x_k` using high-precision floating division
+		const n_div_xk = divide_floating(n, x_k, mantissaBits * 2);
+		// Calculate `x_k + (n / x_k)`
+		const sum = add(x_k, n_div_xk);
+		// Divide by 2: `(sum) / 2`. A right shift is equivalent to division by 2.
+		x_k = { bigint: sum.bigint >> ONE, divex: sum.divex };
+		// Check for convergence: if the guess is no longer changing, we've found our answer.
+		if (areEqual(x_k, last_x_k)) {
 			console.log(`Reached convergence in sqrt after ${i} iterations.`);
 			break;
 		}
 
-        last_x_k = clone(x_k);
-    }
+		last_x_k = clone(x_k);
+	}
     
-    // 5. Final result
-    // The value we found is the square root of the *scaled* number. The resulting
-    // divex is now (original_divex / 2) + working_precision. We need to normalize
-    // it back to the target precision.
-    // const finalDivex = Math.floor(bd.divex / 2);
+	// 5. Final result
+	// The value we found is the square root of the *scaled* number. The resulting
+	// divex is now (original_divex / 2) + working_precision. We need to normalize
+	// it back to the target precision.
+	// const finalDivex = Math.floor(bd.divex / 2);
     
 	// NOT NEEDED???
-    // setExponent(x_k, finalDivex + workingPrecision);
+	// setExponent(x_k, finalDivex + workingPrecision);
 
-    // Normalize the result to the desired number of mantissa bits.
-    return normalize(x_k, mantissaBits);
+	// Normalize the result to the desired number of mantissa bits.
+	return normalize(x_k, mantissaBits);
 }
 
 /**
@@ -1349,7 +1349,7 @@ const bd1: BigDecimal = FromNumber(n1);
 console.log(`${n1} converted into a BigDecimal:`);
 printInfo(bd1);
 
-const n2: string = '5.56';
+const n2: number = 5.56;
 const bd2: BigDecimal = FromNumber(n2);
 console.log(`\n${n2} converted into a BigDecimal:`);
 printInfo(bd2);
