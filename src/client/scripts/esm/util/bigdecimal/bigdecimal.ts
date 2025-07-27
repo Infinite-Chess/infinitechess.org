@@ -845,24 +845,21 @@ function areEqual(bd1: BigDecimal, bd2: BigDecimal): boolean {
 	return compare(bd1, bd2) === 0;
 }
 
-/**
- * Returns the smaller of two BigDecimals.
- * @param bd1 The first BigDecimal.
- * @param bd2 The second BigDecimal.
- * @returns The BigDecimal with the smaller value.
- */
+/** Returns the smaller of two BigDecimals. */
 function min(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	return compare(bd1, bd2) === 1 ? bd2 : bd1;
 }
 
-/**
- * Returns the larger of two BigDecimals.
- * @param bd1 The first BigDecimal.
- * @param bd2 The second BigDecimal.
- * @returns The BigDecimal with the larger value.
- */
+/** Returns the larger of two BigDecimals. */
 function max(bd1: BigDecimal, bd2: BigDecimal): BigDecimal {
 	return compare(bd1, bd2) === -1 ? bd2 : bd1;
+}
+
+/** Returns a new BigDecimal that is clamped between the specified minimum and maximum values. */
+function clamp(bd: BigDecimal, minValue: BigDecimal, maxValue: BigDecimal): BigDecimal {
+	if (compare(bd, minValue) < 0) return minValue;
+	if (compare(bd, maxValue) > 0) return maxValue;
+	return bd; // Within bounds, return original.
 }
 
 /**
@@ -1326,6 +1323,7 @@ export default {
 	areEqual,
 	min,
 	max,
+	clamp,
 	floor,
 	ceil,
 	log10,
