@@ -85,6 +85,8 @@ type Color = [number,number,number,number];
 // Constants ------------------------------------------------------------------------
 
 
+const ZERO = bigdecimal.FromNumber(0.0);
+const ONE = bigdecimal.FromNumber(1.0);
 const TWO = bigdecimal.FromNumber(2.0);
 
 
@@ -520,30 +522,39 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
  * @returns An object containing the properties `coords`, which is the closest point on the segment,
  *          and `distance` to that point.
  */
-function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: Coords): { coords: Coords, distance: BigDecimal } {
+function closestPointOnLineSegment(lineStart: Coords, lineEnd: Coords, point: BDCoords): { coords: BDCoords, distance: BigDecimal } {
+	const lineStartBD = bigdecimal.FromCoords(lineStart);
+
 	const dx = lineEnd[0] - lineStart[0];
 	const dy = lineEnd[1] - lineStart[1];
+	const dxBD = bigdecimal.FromBigInt(dx);
+	const dyBD = bigdecimal.FromBigInt(dy);
 
 	// Calculate the squared length of the segment.
 	// If the segment has zero length, the start point is the closest point.
 	const lineLengthSquared = dx * dx + dy * dy;
-	if (lineLengthSquared < 1e-10) { // Use a small epsilon for floating point comparison
-		const distance = euclideanDistance(lineStart, point);
-		return { coords: [...lineStart], distance }; // Return a copy
+	if (lineLengthSquared === 0n) { // If the segment has zero length, return the start point
+		const distance = euclideanDistance(lineStartBD, point);
+		return { coords: lineStartBD, distance };
 	}
+	const lineLengthSquaredBD = bigdecimal.FromBigInt(lineLengthSquared);
 
 	// Calculate the projection parameter t.
 	// t = dotProduct((point - lineStart), (lineEnd - lineStart)) / lineLengthSquared
-	const dotProduct = ((point[0] - lineStart[0]) * dx + (point[1] - lineStart[1]) * dy);
-	let t = dotProduct / lineLengthSquared;
+	const xDiff = bigdecimal.subtract(point[0], lineStartBD[0]);
+	const yDiff = bigdecimal.subtract(point[1], lineStartBD[1]);
+	const addend1 = bigdecimal.multiply_fixed(xDiff, dxBD);
+	const addend2 = bigdecimal.multiply_fixed(yDiff, dyBD);
+	const dotProduct = bigdecimal.add(addend1, addend2);
+	let t = bigdecimal.divide_fixed(dotProduct, lineLengthSquaredBD);
 
 	// Clamp t to the range [0, 1] to stay within the segment.
-	t = Math.max(0, Math.min(1, t));
+	t = bigdecimal.clamp(t, ZERO, ONE);
 
 	// Calculate the coordinates of the closest point on the segment.
-	const closestX = lineStart[0] + t * dx;
-	const closestY = lineStart[1] + t * dy;
-	const closestPoint: Coords = [closestX, closestY];
+	const closestX = bigdecimal.add(lineStartBD[0], bigdecimal.multiply_fixed(t, dxBD)); // lineStart[0] + t * dx
+	const closestY = bigdecimal.add(lineStartBD[1], bigdecimal.multiply_fixed(t, dyBD)); // lineStart[1] + t * dy
+	const closestPoint: BDCoords = [closestX, closestY];
 
 	// Calculate the distance from the original point to the closest point on the segment.
 	const distance = euclideanDistance(closestPoint, point);
@@ -759,8 +770,10 @@ function calculateVectorComponents(vector: Vec2, length: number): Coords {
 /**
  * Returns the euclidean (hypotenuse) distance between 2 points.
  */
-function euclideanDistance(point1: Coords, point2: Coords): number { // [x,y]
-	return Math.hypot(point2[0] - point1[0], point2[1] - point1[1]);
+function euclideanDistance(point1: BDCoords, point2: BDCoords): BigDecimal { // [x,y]
+	const xDiff = bigdecimal.subtract(point2[0], point1[0]);
+	const yDiff = bigdecimal.subtract(point2[1], point1[1]);
+	return bigdecimal.hypot(xDiff, yDiff);
 }
 
 /**
