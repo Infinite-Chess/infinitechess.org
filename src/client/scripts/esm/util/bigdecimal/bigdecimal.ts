@@ -728,7 +728,10 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
         // Divide by 2: `(sum) / 2`. A right shift is equivalent to division by 2.
         x_k = { bigint: sum.bigint >> ONE, divex: sum.divex };
         // Check for convergence: if the guess is no longer changing, we've found our answer.
-        if (areEqual(x_k, last_x_k)) break;
+        if (areEqual(x_k, last_x_k)) {
+			console.log(`Reached convergence in sqrt after ${i} iterations.`);
+			break;
+		}
 
         last_x_k = clone(x_k);
     }
@@ -737,9 +740,10 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
     // The value we found is the square root of the *scaled* number. The resulting
     // divex is now (original_divex / 2) + working_precision. We need to normalize
     // it back to the target precision.
-    const finalDivex = Math.floor(bd.divex / 2);
+    // const finalDivex = Math.floor(bd.divex / 2);
     
-    setExponent(x_k, finalDivex + workingPrecision);
+	// NOT NEEDED???
+    // setExponent(x_k, finalDivex + workingPrecision);
 
     // Normalize the result to the desired number of mantissa bits.
     return normalize(x_k, mantissaBits);
@@ -1340,20 +1344,29 @@ export type {
 
 
 
-// const n1 = -164;
-// const bd1: BigDecimal = FromNumber(n1);
-// console.log(`${n1} converted into a BigDecimal:`);
-// printInfo(bd1);
+const n1 = 164;
+const bd1: BigDecimal = FromNumber(n1);
+console.log(`${n1} converted into a BigDecimal:`);
+printInfo(bd1);
 
-// const n2: string = '100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'; // This is a very small number, but not zero.
-// // const n2: string = '0.1';
-// const bd2: BigDecimal = NewBigDecimal_FromString(n2);
-// console.log(`\n${n2} converted into a BigDecimal:`);
-// printInfo(bd2);
+const n2: string = '5.56';
+const bd2: BigDecimal = FromNumber(n2);
+console.log(`\n${n2} converted into a BigDecimal:`);
+printInfo(bd2);
 
-// const bd3 = divide_floating(bd1, bd2, 2000);
-// console.log(`\nDividing ${n1} and ${n2} using floating-point model:`);
-// printInfo(bd3);
+const bd3 = sqrt(bd1);
+console.log(`\nSqrt ${n1}:`);
+printInfo(bd3);
+
+const power2 = 3;
+const bd4 = power(bd1, 3);
+console.log(`\nPower ${n1} by ${power2}:`);
+printInfo(bd4);
+
+const bd5 = mod(bd1, bd2);
+console.log(`\nMod ${n1} by ${n2}:`);
+printInfo(bd5);
+
 
 
 // for (let i = 0; i < 20; i++) {
