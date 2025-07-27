@@ -739,6 +739,25 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
 }
 
 /**
+ * [Floating-Point Model] Calculates the hypotenuse of two BigDecimals (sqrt(a^2 + b^2)).
+ * This is equivalent to the length of the vector (bd1, bd2).
+ * The precision of the result is determined by the `mantissaBits` parameter.
+ */
+function hypot(bd1: BigDecimal, bd2: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_BITS): BigDecimal {
+	// 1. Square the inputs
+	const bd1_squared = multiply_fixed(bd1, bd1);
+	const bd2_squared = multiply_fixed(bd2, bd2);
+
+	// 2. Add the squares together.
+	const sum_of_squares: BigDecimal = add(bd1_squared, bd2_squared);
+
+	// 3. Calculate the square root of the sum to get the final result.
+	const result = sqrt(sum_of_squares, mantissaBits);
+
+	return result;
+}
+
+/**
  * Returns a new BigDecimal that is the absolute value of the provided BigDecimal.
  * @param bd - The BigDecimal.
  * @returns A new BigDecimal representing the absolute value.
@@ -1299,6 +1318,7 @@ export default {
 	mod,
 	power,
 	sqrt,
+	hypot,
 	abs,
 	clone,
 	setExponent,
