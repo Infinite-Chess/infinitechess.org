@@ -698,22 +698,22 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
 	// A common technique is to use a value related to 2^(bitLength/2).
 	// But that's the bitlength of the INTEGER portion, none of the decimal bits.
 	const bitLength = bimath.bitLength_bisection(bd.bigint) - bd.divex; // Subtract the decimal bits
-	// Initial guess
 	let x_k = {
 		bigint: ONE,
 		divex: Math.round(-bitLength / 2)
 	};
 	// console.log("Initial guess for sqrt (before normalization):"); printInfo(x_k);
+	// Align the guess to same precision as subsequent calculations.
 	x_k = normalize(x_k, mantissaBits); // Normalize the guess to the desired mantissa bits.
 	// console.log(`Initial guess for sqrt:`); printInfo(x_k);
 
-	// 4. Iterate using Newton's method: x_{k+1} = (x_k + n / x_k) / 2
+	// 3. Iterate using Newton's method: x_{k+1} = (x_k + n / x_k) / 2
 	// We continue until the guess stabilizes.
 	let last_x_k = clone(x_k); // A copy to check for convergence
 
-	let i = 0;
-	while (true) {
-		if (i >= 100) throw Error(`Reached maximum iterations ${100} in sqrt calculation without convergence!`);
+	const MAX_ITERATIONS = 100; // Limit iterations to prevent infinite loops in case of non-convergence.
+	// console.log(`Starting sqrt iterations with mantissaBits = ${mantissaBits}`);
+	for (let i = 0; i < MAX_ITERATIONS; i++) {
 
 		// Calculate `n / x_k` using high-precision floating division
 		const n_div_xk = divide_floating(bd, x_k, mantissaBits * 2);
@@ -726,7 +726,7 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
 		// console.log(`Iteration ${i}: x_k = ${toExactString(x_k)}`);
 		if (areEqual(x_k, last_x_k)) {
 			// console.log(`Reached convergence in sqrt after ${i} iterations.`);
-			break;
+			return x_k;
 		}
 
 		// Prepare for the next iteration.
@@ -734,7 +734,8 @@ function sqrt(bd: BigDecimal, mantissaBits: number = DEFAULT_MANTISSA_PRECISION_
 		i++;
 	}
 
-	return x_k;
+	// If the loop completes without converging, something is wrong.
+	throw new Error(`sqrt failed to converge after ${MAX_ITERATIONS} iterations.`);
 }
 
 /**
@@ -1330,7 +1331,7 @@ export type {
 
 
 
-const n1 = 144;
+const n1 = 155.66;
 const bd1: BigDecimal = FromNumber(n1);
 console.log(`${n1} converted into a BigDecimal:`);
 printInfo(bd1);
